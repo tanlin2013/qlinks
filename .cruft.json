@@ -8,7 +8,7 @@
       "email": "tanlin2013@gmail.com",
       "github_username": "tanlin2013",
       "project_name": "qlinks",
-      "description": "Project short description.",
+      "description": "Quantum link model",
       "version": "0.0.1",
       "_template": "https://github.com/tanlin2013/cookiecutter-python"
     }
