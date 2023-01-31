@@ -1,7 +1,6 @@
 ### Custom field
 .github/
 docs/
-tests/
 .dockerignore
 .gitignore
 .pre-commit-config.yml
