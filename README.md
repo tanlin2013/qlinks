@@ -1,4 +1,4 @@
-qlinks
+# qlinks
 _________________
 
 [![PyPI version](https://badge.fury.io/py/qlinks.svg)](http://badge.fury.io/py/qlinks)
@@ -12,10 +12,10 @@ _________________
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://timothycrosley.github.io/isort/)
 _________________
 
-[Read Latest Documentation](https://tanlin2013.github.io/qlinks/) - [Browse GitHub Code Repository](https://github.com/tanlin2013/qlinks/)
+[Documentation](https://tanlin2013.github.io/qlinks/) |
 _________________
 
-**qlinks** Quantum link model
+Quantum link model
 
 Development guideline
 ---------------------
