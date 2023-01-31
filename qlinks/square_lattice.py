@@ -1,5 +1,5 @@
-from dataclasses import dataclass, astuple, field
-from typing import Tuple, Sequence, Self
+from dataclasses import astuple, dataclass, field
+from typing import Self, Sequence, Tuple
 
 import numpy as np
 
@@ -12,12 +12,8 @@ class Spin:
 
 @dataclass(frozen=True)
 class SpinOperators:
-    Sp: np.ndarray = field(
-        default_factory=lambda: np.ndarray([[0, 1], [0, 0]], dtype=float)
-    )
-    Sm: np.ndarray = field(
-        default_factory=lambda: np.ndarray([[0, 0], [1, 0]], dtype=float)
-    )
+    Sp: np.ndarray = field(default_factory=lambda: np.ndarray([[0, 1], [0, 0]], dtype=float))
+    Sm: np.ndarray = field(default_factory=lambda: np.ndarray([[0, 0], [1, 0]], dtype=float))
     I2: np.ndarray = field(default_factory=lambda: np.identity(2, dtype=float))
     O2: np.ndarray = field(default_factory=lambda: np.zeros((2, 2), dtype=float))
 
