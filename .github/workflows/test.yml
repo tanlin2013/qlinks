@@ -7,6 +7,18 @@ on:
       - completed
 
 jobs:
+  docker:
+    runs-on: ubuntu-latest
+    container:
+      image: docker://${{ github.repository }}:sha-${{ github.sha }}
+    steps:
+      - name: Install dev dependencies
+        run: |
+          poetry install
+
+      - name: Test
+        run: pytest tests/
+
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -62,21 +74,9 @@ jobs:
       - name: Test
         shell: bash
         run: |
-          poetry run pytest tests/ -s --cov=qlinks/ --cov-report=term-missing ${@-}
+          poetry run pytest tests/ -s --cov=${{ github.event.repository.name }}/ --cov-report=term-missing ${@-}
           poetry run coverage xml
 
       - name: Report Coverage
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         uses: codecov/codecov-action@v3
-
-  docker:
-    runs-on: ubuntu-latest
-    container:
-      image: docker://${{ github.repository }}:sha-${{ github.sha }}
-    steps:
-      - name: Install dev dependencies
-        run: |
-          poetry install
-
-      - name: Test
-        run: pytest tests/
