@@ -2,8 +2,9 @@
 _________________
 
 [![PyPI version](https://badge.fury.io/py/qlinks.svg)](http://badge.fury.io/py/qlinks)
-[![Test Status](https://github.com/tanlin2013/qlinks/workflows/Test/badge.svg?branch=develop)](https://github.com/tanlin2013/qlinks/actions?query=workflow%3ATest)
-[![Lint Status](https://github.com/tanlin2013/qlinks/workflows/Lint/badge.svg?branch=develop)](https://github.com/tanlin2013/qlinks/actions?query=workflow%3ALint)
+[![Docker build](https://github.com/tanlin2013/qlinks/actions/workflows/build.yml/badge.svg)](https://github.com/tanlin2013/qlinks/actions/workflows/build.yml)
+[![Test Status](https://github.com/tanlin2013/qlinks/actions/workflows/test.yml/badge.svg)](https://github.com/tanlin2013/qlinks/actions/workflows/test.yml)
+[![Lint Status](https://github.com/tanlin2013/qlinks/actions/workflows/lint.yml/badge.svg)](https://github.com/tanlin2013/qlinks/actions/workflows/lint.yml)
 [![codecov](https://codecov.io/gh/tanlin2013/qlinks/branch/main/graph/badge.svg)](https://codecov.io/gh/tanlin2013/qlinks)
 [![Join the chat at https://gitter.im/tanlin2013/qlinks](https://badges.gitter.im/tanlin2013/qlinks.svg)](https://gitter.im/tanlin2013/qlinks?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://pypi.python.org/pypi/qlinks/)
@@ -17,11 +18,5 @@ _________________
 
 Quantum link model
 
-Development guideline
----------------------
-
-1. Install pre-commit hook on localhost (first time only)
-
-```
-pre-commit install --hook-type commit-msg --hook-type pre-push
-```
+Installation
+------------
