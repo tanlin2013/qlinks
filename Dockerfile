@@ -3,6 +3,12 @@ ENV PYTHONUNBUFFERED=true
 WORKDIR /app
 
 
+FROM python as lapack
+RUN apt update && \
+    apt-get install -y --no-install-recommends \
+      gfortran libblas-dev liblapack-dev
+
+
 FROM python as poetry
 ENV POETRY_HOME=/opt/poetry
 ENV PATH="$POETRY_HOME/bin:$PATH"
