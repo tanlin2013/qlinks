@@ -1,4 +1,4 @@
-import numpy as np  # flake8: noqa
+import numpy as np  # noqa: F401
 
 
 class GaussLaw:

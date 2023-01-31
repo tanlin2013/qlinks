@@ -1,6 +1,6 @@
-import pytest
+import pytest  # noqa: F401
 
-from qlinks.square_lattice import *
+from qlinks.square_lattice import Site, UnitVector
 
 
 def test_unit_vector():
