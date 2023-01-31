@@ -1,6 +1,5 @@
 import pytest
 
-
 from qlinks.square_lattice import *
 
 
