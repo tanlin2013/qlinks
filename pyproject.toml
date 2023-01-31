@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "qlinks"
+version = "0.1.0"
+description = ""
+authors = ["taolin <tanlin2013@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^1.24.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.1"
+cruft = ">=2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
