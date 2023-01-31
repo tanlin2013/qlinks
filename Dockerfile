@@ -1,22 +1,18 @@
-FROM python:3.11
-MAINTAINER "TaoLin" <tanlin2013@gmail.com>
+FROM python:3.11-slim as python
+ENV PYTHONUNBUFFERED=true
+WORKDIR /app
 
-ARG WORKDIR=/home/qlinks
-ENV PYTHONPATH="${PYTHONPATH}:$WORKDIR" \
-    PATH="/root/.local/bin:$PATH"
-WORKDIR $WORKDIR
-COPY . $WORKDIR
 
-# Install fortran, blas, lapack
-RUN apt update && \
-    apt-get install -y --no-install-recommends \
-      gfortran libblas-dev liblapack-dev
-RUN apt-get -y clean && \
-    rm -rf /var/lib/apt/lists/*
+FROM python as poetry
+ENV POETRY_HOME=/opt/poetry
+ENV PATH="$POETRY_HOME/bin:$PATH"
+RUN poetry config virtualenvs.in-project true
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
+COPY . ./
+RUN poetry install --no-interaction --no-ansi -vvv --no-dev
 
-# Install required python packages and the module
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    poetry config virtualenvs.create false --local && \
-    poetry install --no-dev
 
+FROM python as runtime
+ENV PATH="/app/.venv/bin:$PATH"
+COPY --from=poetry /app /app
 ENTRYPOINT /bin/bash
