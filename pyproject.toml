@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "qlinks"
 version = "0.1.0"
-description = ""
+description = "Quantum link model"
 authors = ["taolin <tanlin2013@gmail.com>"]
 readme = "README.md"
 
