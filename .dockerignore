@@ -1,11 +1,15 @@
 ### Custom field
 .github/
 docs/
+.coveragerc
 .dockerignore
 .gitignore
 .pre-commit-config.yml
+CHANGELOG.md
 Dockerfile
 LICENSE
+README.md
+setup.cfg
 
 ### VisualStudioCode template
 .vscode/*
