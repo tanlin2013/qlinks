@@ -1,4 +1,5 @@
 # qlinks
+
 _________________
 
 [![PyPI version](https://badge.fury.io/py/qlinks.svg)](http://badge.fury.io/py/qlinks)
@@ -20,3 +21,12 @@ Quantum link model
 
 Installation
 ------------
+
+Getting started
+---------------
+
+License
+-------
+© Tan Tao-Lin, 2023. Licensed under
+a [MIT](https://github.com/tanlin2013/qlinks/master/LICENSE)
+license.
