@@ -23,4 +23,6 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2 &&  
 FROM python as runtime
 ENV PATH="/app/.venv/bin:$PATH"
 COPY --from=poetry /app /app
+RUN apt-get -y clean && \
+    rm -rf /var/lib/apt/lists/*
 ENTRYPOINT /bin/bash
