@@ -1,29 +1,25 @@
-FROM python:3.11-slim as python
+FROM python:3.11 as python
 LABEL maintainer="TaoLin tanlin2013@gmail.com"
-ENV PYTHONUNBUFFERED=true
-WORKDIR /app
 
-
-FROM python as lapack
-RUN apt update && \
-    apt-get install -y --no-install-recommends \
-      gfortran libblas-dev liblapack-dev
-
-
-FROM python as poetry
-ENV POETRY_HOME=/opt/poetry
-ENV PATH="$POETRY_HOME/bin:$PATH"
-COPY . ./
-RUN apt update && \
-    apt-get install -y curl
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2 &&  \
-    poetry config virtualenvs.in-project true && \
-    poetry install --no-interaction --no-ansi -vvv --without dev
+ARG WORKDIR=/home
+ENV PYTHONPATH="${PYTHONPATH}:$WORKDIR" \
+    PATH="/root/.local/bin:$PATH" \
+    PYTHONUNBUFFERED=true
+WORKDIR $WORKDIR
 
 
 FROM python as runtime
-ENV PATH="/app/.venv/bin:$PATH"
-COPY --from=poetry /app /app
-RUN apt-get -y clean && \
+COPY . $WORKDIR
+
+RUN apt update && \
+    apt-get install -y --no-install-recommends  \
+    gfortran libblas-dev liblapack-dev
+
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2 &&  \
+    poetry config virtualenvs.create false &&  \
+    poetry install -vvv --without dev --all-extras
+
+RUN apt-get -y clean &&  \
     rm -rf /var/lib/apt/lists/*
+
 ENTRYPOINT /bin/bash
