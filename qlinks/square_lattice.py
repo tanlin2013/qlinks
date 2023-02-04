@@ -1,69 +1,122 @@
+from __future__ import annotations
+
+from copy import deepcopy
 from dataclasses import astuple, dataclass, field
-from typing import Self, Sequence, Tuple
+from functools import reduce
+from itertools import product
+from typing import Sequence, Tuple, Iterator, Generator
 
 import numpy as np
 
-
-@dataclass(frozen=True)
-class Spin:
-    up: np.ndarray = field(default_factory=lambda: np.array([1, 0]))
-    down: np.ndarray = field(default_factory=lambda: np.array([0, 1]))
-
-
-@dataclass(frozen=True)
-class SpinOperators:
-    Sp: np.ndarray = field(default_factory=lambda: np.ndarray([[0, 1], [0, 0]], dtype=float))
-    Sm: np.ndarray = field(default_factory=lambda: np.ndarray([[0, 0], [1, 0]], dtype=float))
-    I2: np.ndarray = field(default_factory=lambda: np.identity(2, dtype=float))
-    O2: np.ndarray = field(default_factory=lambda: np.zeros((2, 2), dtype=float))
+from qlinks.coordinate import Site, UnitVectorCollection
+from qlinks.spin_object import Link, SpinOperatorCollection, SpinOperator
 
 
 @dataclass
-class Site:
-    coor_x: int
-    coor_y: int
-
-    def __array__(self):
-        return np.array(astuple(self))
-
-    def __add__(self, other: "Site" | Tuple[int, int]) -> Self:
-        return Site(*(np.array(self) + np.array(other)))
-
-
-@dataclass(frozen=True)
-class UnitVector:
-    upward: Tuple[int, int] = field(default_factory=lambda: (0, 1))
-    downward: Tuple[int, int] = field(default_factory=lambda: (0, -1))
-    leftward: Tuple[int, int] = field(default_factory=lambda: (-1, 0))
-    rightward: Tuple[int, int] = field(default_factory=lambda: (1, 0))
-
-
-class Link:
-    site: Site
-    unit_vec: UnitVector
-    spin: Spin
-    operator: SpinOperators
-
-
-class Plaquette:
-    corner_site: Site
-    links: list[Link]
-    operator: np.ndarray
-
-    def __post__init__(self):
-        self.operator = self.kron_operators()
-
-    @staticmethod
-    def kron_operators(operators: Sequence[np.ndarray]) -> np.ndarray:
-        opt = operators[0]
-        for next_opt in operators[1:]:
-            opt = np.kron(opt, next_opt)
-        return opt
-
-
 class SquareLattice:
-    def __init__(self):
-        pass
+    length: int
+    width: int
 
-    def apply_plaqutte(self):
+    def __post_init__(self):
+        if any(axis < 2 for axis in self.shape):
+            raise ValueError("Lattice size should be least 2 by 2.")
+
+    def __getitem__(self, coord: Sequence[int, int] | Site) -> Site:
+        coord = astuple(coord) if isinstance(coord, Site) else coord
+        return Site(coord[0] % self.length, coord[1] % self.width)  # assume periodic b.c.
+
+    def __iter__(self) -> Generator[Site]:
+        for coord_y, coord_x in product(range(self.width), range(self.length)):
+            yield Site(coord_x, coord_y)
+
+    def iter_links(self) -> Generator[Link]:
+        for site, unit_vector in product(self, UnitVectorCollection()):
+            yield Link(site, unit_vector)
+
+    def iter_plaquettes(self) -> Generator[Plaquette]:
+        for corner_site in self:
+            yield Plaquette(self, corner_site)
+
+    @property
+    def shape(self) -> Tuple[int, int]:
+        return self.length, self.width
+
+    @property
+    def size(self) -> int:
+        return self.length * self.width
+
+    @property
+    def num_links(self) -> int:
+        return 2 * self.size
+
+    @property
+    def hilbert_dims(self) -> Tuple[int, int]:
+        return 2 ** self.num_links, 2 ** self.num_links
+
+
+@dataclass
+class Plaquette:
+    lattice: SquareLattice
+    corner_site: Site
+    link_t: Link = field(init=False)
+    link_d: Link = field(init=False)
+    link_l: Link = field(init=False)
+    link_r: Link = field(init=False)
+    _spin_opts: SpinOperatorCollection = field(default_factory=lambda: SpinOperatorCollection(),
+                                               repr=False)
+    _unit_vectors: UnitVectorCollection = field(default_factory=lambda: UnitVectorCollection(),
+                                                repr=False)
+
+    def __post_init__(self):
+        self.link_d = Link(site=self.lattice[self.corner_site],
+                           unit_vector=self._unit_vectors.rightward,
+                           operator=self._spin_opts.Sp)
+        self.link_r = Link(site=self.lattice[self.corner_site + self._unit_vectors.rightward],
+                           unit_vector=self._unit_vectors.upward,
+                           operator=self._spin_opts.Sp)
+        self.link_t = Link(site=self.lattice[self.corner_site + self._unit_vectors.upward],
+                           unit_vector=self._unit_vectors.rightward,
+                           operator=self._spin_opts.Sm)
+        self.link_l = Link(site=self.lattice[self.corner_site],
+                           unit_vector=self._unit_vectors.upward,
+                           operator=self._spin_opts.Sm)
+
+    def __array__(self) -> np.ndarray:
+        plaquette = [link for link in self]
+        skip_links = [link.reset() for link in self]
+        for link in self.lattice.iter_links():
+            if link not in skip_links:
+                plaquette.append(link)
+        operators = [link.operator for link in sorted(plaquette)]
+        return reduce((lambda x, y: x ^ y), operators).reshape(self.lattice.hilbert_dims)
+
+    def __iter__(self) -> Iterator[Link]:
+        return iter((self.link_d, self.link_l, self.link_r, self.link_t))
+
+    def __add__(self, other: Plaquette) -> SpinOperator:
+        if self.corner_site != other.corner_site:
+            raise ValueError("Plaquettes on different position can not be directly added.")
+        return (np.array(self) + np.array(other)).view(SpinOperator)
+
+    def conj(self, inplace: bool = False) -> Plaquette | None:
+        conj_plaquette = self if inplace else deepcopy(self)
+        _ = [link.conj(inplace=True) for link in conj_plaquette]
+        if not inplace:
+            return conj_plaquette
+
+
+@dataclass
+class Cross:
+    lattice: SquareLattice
+    center_site: Site
+    link_t: Link = field(init=False)
+    link_d: Link = field(init=False)
+    link_l: Link = field(init=False)
+    link_r: Link = field(init=False)
+    _spin_opts: SpinOperatorCollection = field(default_factory=lambda: SpinOperatorCollection(),
+                                               repr=False)
+    _unit_vectors: UnitVectorCollection = field(default_factory=lambda: UnitVectorCollection(),
+                                                repr=False)
+
+    def __post_init__(self):
         pass
