@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from scipy.linalg import ishermitian
 
-from qlinks.lattice import Plaquette, SquareLattice
+from qlinks.lattice.square_lattice import Cross, Plaquette, SquareLattice
 from qlinks.lattice.component import Site
 from qlinks.spin_object import SpinOperator
 

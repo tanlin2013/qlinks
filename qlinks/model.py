@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from qlinks.spin_object import SpinOperator
-from qlinks.lattice import SquareLattice
+from qlinks.lattice.square_lattice import SquareLattice
 
 
 @dataclass
