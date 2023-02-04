@@ -34,7 +34,7 @@ class Spin(np.ndarray):
         return ((self.T @ SpinOperatorCollection().Sz @ self) / (self.T @ self)).item()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpinConfig:
     up: Spin = field(default_factory=lambda: Spin([1, 0], read_only=True))
     down: Spin = field(default_factory=lambda: Spin([0, 1], read_only=True))
@@ -66,7 +66,7 @@ class SpinOperator(np.ndarray):
         return self.T.conj if np.iscomplexobj(self) else self.T
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpinOperatorCollection:
     Sp: SpinOperator = field(
         default_factory=lambda: SpinOperator([[0, 1], [0, 0]], dtype=float, read_only=True)
