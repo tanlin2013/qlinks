@@ -11,7 +11,7 @@ class TestSpin:
         assert Spin([0, 1])[1] == 1
 
     def test_overwrite_elems(self):
-        spin = Spin([0, 1])
+        spin = Spin([0, 1], read_only=True)
         with pytest.raises(ValueError):
             spin[1] = 2
 
