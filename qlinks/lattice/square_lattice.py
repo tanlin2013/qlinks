@@ -38,6 +38,10 @@ class SquareLattice:
         for corner_site in self:
             yield Plaquette(self, corner_site)
 
+    def iter_crosses(self) -> Generator[Cross]:
+        for center_site in self:
+            yield Cross(self, center_site)
+
     @property
     def shape(self) -> Tuple[int, int]:
         return self.length, self.width
