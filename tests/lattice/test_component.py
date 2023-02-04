@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from qlinks.lattice.component import Site, UnitVector
@@ -45,3 +46,5 @@ class TestUnitVector:
         assert UnitVector(0, 1).sign == 1
         assert UnitVector(-1, 0).sign == -1
         assert UnitVector(0, -1).sign == -1
+        with pytest.raises(TypeError):
+            _ = UnitVector(1, 1).sign

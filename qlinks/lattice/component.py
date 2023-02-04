@@ -60,6 +60,8 @@ class UnitVector:
 
     @property
     def sign(self) -> int:
+        if all(map(bool, astuple(self))):
+            raise TypeError("UnitVector has sign only when aligning with x or y axis.")
         return -1 if np.any(np.array(self) < 0) else 1
 
 
