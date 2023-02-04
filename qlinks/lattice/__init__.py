@@ -1,1 +1,1 @@
-from square_lattice import SquareLattice, Plaquette, Cross
+from qlinks.lattice.square_lattice import SquareLattice, Plaquette, Cross
