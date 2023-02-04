@@ -12,7 +12,6 @@ from qlinks.coordinate import Site, UnitVector
 
 
 class Spin(np.ndarray):
-
     def __new__(cls, data: ArrayLike | Sequence, read_only: bool = False):
         arr = np.asarray(data).view(cls)
         arr.setflags(write=not read_only)
@@ -36,7 +35,6 @@ class SpinConfig:
 
 
 class SpinOperator(np.ndarray):
-
     def __new__(cls, data: ArrayLike | Sequence, read_only: bool = False, **kwargs):
         arr = np.asarray(data, **kwargs).view(cls)
         arr.setflags(write=not read_only)
@@ -62,15 +60,20 @@ class SpinOperator(np.ndarray):
 @dataclass(frozen=True)
 class SpinOperatorCollection:
     Sp: SpinOperator = field(
-        default_factory=lambda: SpinOperator([[0, 1], [0, 0]], dtype=float, read_only=True))
+        default_factory=lambda: SpinOperator([[0, 1], [0, 0]], dtype=float, read_only=True)
+    )
     Sm: SpinOperator = field(
-        default_factory=lambda: SpinOperator([[0, 0], [1, 0]], dtype=float, read_only=True))
+        default_factory=lambda: SpinOperator([[0, 0], [1, 0]], dtype=float, read_only=True)
+    )
     Sz: SpinOperator = field(
-        default_factory=lambda: SpinOperator([[1, 0], [0, -1]], dtype=float, read_only=True))
+        default_factory=lambda: SpinOperator([[1, 0], [0, -1]], dtype=float, read_only=True)
+    )
     I2: SpinOperator = field(
-        default_factory=lambda: SpinOperator(np.identity(2), dtype=float, read_only=True))
+        default_factory=lambda: SpinOperator(np.identity(2), dtype=float, read_only=True)
+    )
     O2: SpinOperator = field(
-        default_factory=lambda: SpinOperator(np.zeros((2, 2)), dtype=float, read_only=True))
+        default_factory=lambda: SpinOperator(np.zeros((2, 2)), dtype=float, read_only=True)
+    )
 
 
 @total_ordering

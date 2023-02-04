@@ -4,12 +4,12 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import reduce
 from itertools import product
-from typing import Sequence, Tuple, Iterator, Generator
+from typing import Generator, Iterator, Sequence, Tuple
 
 import numpy as np
 
 from qlinks.coordinate import Site, UnitVectorCollection
-from qlinks.spin_object import Link, SpinOperatorCollection, SpinOperator
+from qlinks.spin_object import Link, SpinOperator, SpinOperatorCollection
 
 
 @dataclass
@@ -51,7 +51,7 @@ class SquareLattice:
 
     @property
     def hilbert_dims(self) -> Tuple[int, int]:
-        return 2 ** self.num_links, 2 ** self.num_links
+        return 2**self.num_links, 2**self.num_links
 
 
 @dataclass
@@ -62,24 +62,34 @@ class Plaquette:
     link_d: Link = field(init=False)
     link_l: Link = field(init=False)
     link_r: Link = field(init=False)
-    _spin_opts: SpinOperatorCollection = field(default_factory=lambda: SpinOperatorCollection(),
-                                               repr=False)
-    _unit_vectors: UnitVectorCollection = field(default_factory=lambda: UnitVectorCollection(),
-                                                repr=False)
+    _spin_opts: SpinOperatorCollection = field(
+        default_factory=lambda: SpinOperatorCollection(), repr=False
+    )
+    _unit_vectors: UnitVectorCollection = field(
+        default_factory=lambda: UnitVectorCollection(), repr=False
+    )
 
     def __post_init__(self):
-        self.link_d = Link(site=self.lattice[self.corner_site],
-                           unit_vector=self._unit_vectors.rightward,
-                           operator=self._spin_opts.Sp)
-        self.link_r = Link(site=self.lattice[self.corner_site + self._unit_vectors.rightward],
-                           unit_vector=self._unit_vectors.upward,
-                           operator=self._spin_opts.Sp)
-        self.link_t = Link(site=self.lattice[self.corner_site + self._unit_vectors.upward],
-                           unit_vector=self._unit_vectors.rightward,
-                           operator=self._spin_opts.Sm)
-        self.link_l = Link(site=self.lattice[self.corner_site],
-                           unit_vector=self._unit_vectors.upward,
-                           operator=self._spin_opts.Sm)
+        self.link_d = Link(
+            site=self.lattice[self.corner_site],
+            unit_vector=self._unit_vectors.rightward,
+            operator=self._spin_opts.Sp,
+        )
+        self.link_r = Link(
+            site=self.lattice[self.corner_site + self._unit_vectors.rightward],
+            unit_vector=self._unit_vectors.upward,
+            operator=self._spin_opts.Sp,
+        )
+        self.link_t = Link(
+            site=self.lattice[self.corner_site + self._unit_vectors.upward],
+            unit_vector=self._unit_vectors.rightward,
+            operator=self._spin_opts.Sm,
+        )
+        self.link_l = Link(
+            site=self.lattice[self.corner_site],
+            unit_vector=self._unit_vectors.upward,
+            operator=self._spin_opts.Sm,
+        )
 
     def __array__(self) -> np.ndarray:
         plaquette = [link for link in self]
@@ -113,10 +123,12 @@ class Cross:
     link_d: Link = field(init=False)
     link_l: Link = field(init=False)
     link_r: Link = field(init=False)
-    _spin_opts: SpinOperatorCollection = field(default_factory=lambda: SpinOperatorCollection(),
-                                               repr=False)
-    _unit_vectors: UnitVectorCollection = field(default_factory=lambda: UnitVectorCollection(),
-                                                repr=False)
+    _spin_opts: SpinOperatorCollection = field(
+        default_factory=lambda: SpinOperatorCollection(), repr=False
+    )
+    _unit_vectors: UnitVectorCollection = field(
+        default_factory=lambda: UnitVectorCollection(), repr=False
+    )
 
     def __post_init__(self):
         pass

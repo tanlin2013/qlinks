@@ -1,12 +1,11 @@
 import numpy as np
 import pytest
 
-from qlinks.coordinate import UnitVectorCollection, Site
-from qlinks.spin_object import Spin, SpinOperator, SpinOperatorCollection, Link
+from qlinks.coordinate import Site, UnitVectorCollection
+from qlinks.spin_object import Link, Spin, SpinOperator, SpinOperatorCollection
 
 
 class TestSpin:
-
     def test_get_item(self):
         assert Spin([0, 1])[0] == 0
         assert Spin([0, 1])[1] == 1
@@ -21,7 +20,6 @@ class TestSpin:
 
 
 class TestSpinOperator:
-
     def test_constructor(self):
         spin = SpinOperator([[0, 1], [0, 0]], dtype=float)
         assert spin.dtype == np.float64
@@ -47,7 +45,6 @@ class TestSpinOperator:
 
 
 class TestLink:
-
     @pytest.fixture(scope="class")
     def spin_opts(self):
         return SpinOperatorCollection()
@@ -60,56 +57,59 @@ class TestLink:
         assert Link(Site(1, 1), unit_vectors.rightward) < Link(Site(2, 1), unit_vectors.rightward)
         assert Link(Site(1, 1), unit_vectors.rightward) < Link(Site(1, 1), unit_vectors.upward)
         assert Link(Site(1, 1), unit_vectors.rightward) == Link(Site(2, 1), unit_vectors.leftward)
-        assert Link(Site(1, 1), unit_vectors.rightward) != Link(Site(1, 1), unit_vectors.rightward,
-                                                                spin_opts.Sp)
+        assert Link(Site(1, 1), unit_vectors.rightward) != Link(
+            Site(1, 1), unit_vectors.rightward, spin_opts.Sp
+        )
 
     def test_sorting(self, unit_vectors):
-        assert sorted([
-            Link(Site(2, 1), unit_vectors.leftward),
-            Link(Site(2, 1), unit_vectors.rightward),
+        assert sorted(
+            [
+                Link(Site(2, 1), unit_vectors.leftward),
+                Link(Site(2, 1), unit_vectors.rightward),
+                Link(Site(1, 1), unit_vectors.upward),
+                Link(Site(1, 1), unit_vectors.rightward),
+            ]
+        ) == [
+            Link(Site(1, 1), unit_vectors.rightward),
+            Link(Site(1, 1), unit_vectors.rightward),
             Link(Site(1, 1), unit_vectors.upward),
-            Link(Site(1, 1), unit_vectors.rightward)
-        ]) == [
-                   Link(Site(1, 1), unit_vectors.rightward),
-                   Link(Site(1, 1), unit_vectors.rightward),
-                   Link(Site(1, 1), unit_vectors.upward),
-                   Link(Site(2, 1), unit_vectors.rightward)
-               ]
+            Link(Site(2, 1), unit_vectors.rightward),
+        ]
 
     def test_set_method(self, spin_opts, unit_vectors):
         assert {
-                   Link(Site(1, 1), unit_vectors.rightward),
-                   Link(Site(1, 1), unit_vectors.rightward),
-                   Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sp),
-                   Link(Site(1, 1), unit_vectors.rightward, spin_opts.I2),
-                   Link(Site(1, 1), unit_vectors.upward)
-               } == {
-                   Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sp),
-                   Link(Site(1, 1), unit_vectors.rightward),
-                   Link(Site(1, 1), unit_vectors.upward)
-               }
+            Link(Site(1, 1), unit_vectors.rightward),
+            Link(Site(1, 1), unit_vectors.rightward),
+            Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sp),
+            Link(Site(1, 1), unit_vectors.rightward, spin_opts.I2),
+            Link(Site(1, 1), unit_vectors.upward),
+        } == {
+            Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sp),
+            Link(Site(1, 1), unit_vectors.rightward),
+            Link(Site(1, 1), unit_vectors.upward),
+        }
 
     def test_conj(self, spin_opts, unit_vectors):
-        assert Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.Sp).conj() == Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.Sm)
-        assert Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.Sm).conj() == Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.Sp)
-        assert Link(
-            Site(1, 1), unit_vectors.upward, spin_opts.Sp).conj() != Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.Sm)
-        assert Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.Sp).conj() != Link(
-            Site(2, 2), unit_vectors.rightward, spin_opts.Sm)
+        assert Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sp).conj() == Link(
+            Site(1, 1), unit_vectors.rightward, spin_opts.Sm
+        )
+        assert Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sm).conj() == Link(
+            Site(1, 1), unit_vectors.rightward, spin_opts.Sp
+        )
+        assert Link(Site(1, 1), unit_vectors.upward, spin_opts.Sp).conj() != Link(
+            Site(1, 1), unit_vectors.rightward, spin_opts.Sm
+        )
+        assert Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sp).conj() != Link(
+            Site(2, 2), unit_vectors.rightward, spin_opts.Sm
+        )
 
     def test_reset(self, spin_opts, unit_vectors):
-        assert Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.Sp).reset() == Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.I2)
-        assert Link(
-            Site(1, 1), unit_vectors.upward, spin_opts.Sp).reset() != Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.I2)
-        assert Link(
-            Site(1, 1), unit_vectors.rightward, spin_opts.Sp).reset() != Link(
-            Site(2, 2), unit_vectors.rightward, spin_opts.Sm)
+        assert Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sp).reset() == Link(
+            Site(1, 1), unit_vectors.rightward, spin_opts.I2
+        )
+        assert Link(Site(1, 1), unit_vectors.upward, spin_opts.Sp).reset() != Link(
+            Site(1, 1), unit_vectors.rightward, spin_opts.I2
+        )
+        assert Link(Site(1, 1), unit_vectors.rightward, spin_opts.Sp).reset() != Link(
+            Site(2, 2), unit_vectors.rightward, spin_opts.Sm
+        )

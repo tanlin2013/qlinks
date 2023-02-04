@@ -4,7 +4,6 @@ from qlinks.coordinate import Site, UnitVector
 
 
 class TestSite:
-
     def test_comparison(self):
         assert Site(1, 2) > Site(1, 1)  # fix x, compare y
         assert Site(2, 2) > Site(1, 2)  # fix y, compare x
@@ -26,7 +25,6 @@ class TestSite:
 
 
 class TestUnitVector:
-
     def test_scalar_multiplication(self):
         assert -1 * UnitVector(1, 0) == UnitVector(-1, 0)
         assert -1 * UnitVector(0, 1) == UnitVector(0, -1)

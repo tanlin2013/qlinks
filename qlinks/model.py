@@ -18,7 +18,7 @@ class QuantumLinkModel(SquareLattice):
         self._hamiltonian = SpinOperator(np.zeros(self.hilbert_dims))
         for plaquette in self.iter_plaquettes():
             flipper = plaquette + plaquette.conj()
-            self._hamiltonian += -self.coup_j * flipper + self.coup_rk * flipper ** 2
+            self._hamiltonian += -self.coup_j * flipper + self.coup_rk * flipper**2
 
     @property
     def hamiltonian(self) -> SpinOperator:

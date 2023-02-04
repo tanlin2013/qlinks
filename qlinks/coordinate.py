@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, astuple, field
+from dataclasses import astuple, dataclass, field
 from functools import total_ordering
 from typing import Iterator
 
@@ -27,10 +27,7 @@ class Site:
         return Site(*(np.array(self) + np.array(other)))
 
     def __getitem__(self, item: int) -> int:
-        return {
-            0: self.coord_x,
-            1: self.coord_y
-        }[item]
+        return {0: self.coord_x, 1: self.coord_y}[item]
 
     def __lt__(self, other: Site) -> bool:
         return (self.coord_y, self.coord_x) < (other.coord_y, other.coord_x)  # tuple comparison

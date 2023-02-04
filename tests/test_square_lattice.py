@@ -3,11 +3,10 @@ import numpy as np
 import pytest
 
 from qlinks.coordinate import Site
-from qlinks.square_lattice import SquareLattice, Plaquette
+from qlinks.square_lattice import Plaquette, SquareLattice
 
 
 class TestSquareLattice:
-
     def test_get_item(self):
         lattice = SquareLattice(4, 4)  # assume periodic b.c.
         assert lattice[0, 0] == Site(0, 0)
@@ -31,11 +30,10 @@ class TestSquareLattice:
 
     def test_hilbert_dims(self):
         lattice = SquareLattice(2, 2)
-        assert lattice.hilbert_dims[0] == 2 ** 8
+        assert lattice.hilbert_dims[0] == 2**8
 
 
 class TestPlaquette:
-
     @pytest.fixture(scope="class")
     def lattice(self):
         return SquareLattice(2, 2)
