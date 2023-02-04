@@ -25,7 +25,7 @@ class Spin(np.ndarray):
 
     @property
     def magnetization(self) -> int | float:
-        return (self.T @ SpinOperatorCollection().Sz @ self / self.T @ self).item()
+        return ((self.T @ SpinOperatorCollection().Sz @ self) / (self.T @ self)).item()
 
 
 @dataclass(frozen=True)

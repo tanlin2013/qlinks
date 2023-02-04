@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from qlinks.coordinate import Site, UnitVectorCollection
-from qlinks.spin_object import Link, Spin, SpinOperator, SpinOperatorCollection
+from qlinks.spin_object import Link, Spin, SpinConfig, SpinOperator, SpinOperatorCollection
 
 
 class TestSpin:
@@ -17,6 +17,10 @@ class TestSpin:
 
     def test_tensor_product(self):
         assert Spin([1, 0]) ^ Spin([0, 1]) == Spin([0, 1, 0, 0])
+
+    @pytest.mark.parametrize("spin, expected", [(SpinConfig().up, 1), (SpinConfig().down, -1)])
+    def test_magnetization(self, spin, expected):
+        assert spin.magnetization == expected
 
 
 class TestSpinOperator:
