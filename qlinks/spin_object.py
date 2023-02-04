@@ -17,6 +17,9 @@ class Spin(np.ndarray):
         arr.setflags(write=not read_only)
         return arr
 
+    def __hash__(self) -> int:
+        return hash(self.data.tobytes())
+
     def __eq__(self, other: Spin) -> bool:
         return np.array_equal(self, other)
 
