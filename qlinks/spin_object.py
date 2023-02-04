@@ -23,6 +23,9 @@ class Spin(np.ndarray):
     def __eq__(self, other: Spin) -> bool:
         return np.array_equal(self, other)
 
+    def __ne__(self, other: Spin) -> bool:
+        return not np.array_equal(self, other)
+
     def __xor__(self, other: Spin) -> Spin:
         return np.kron(self, other).view(Spin)
 
@@ -48,6 +51,9 @@ class SpinOperator(np.ndarray):
 
     def __eq__(self, other: SpinOperator) -> bool:
         return np.array_equal(self, other)
+
+    def __ne__(self, other: SpinOperator) -> bool:
+        return not np.array_equal(self, other)
 
     def __xor__(self, other: SpinOperator) -> SpinOperator:
         return np.kron(self, other).view(SpinOperator)
@@ -96,6 +102,10 @@ class Link:
         return hash((self.site, self.unit_vector, self.operator, self.config))
 
     def __lt__(self, other: Link) -> bool:
+        if (self.site, self.unit_vector) == (other.site, other.unit_vector) and (
+                self.operator != other.operator or self.config != other.config):
+            raise TypeError("Links on same position but with different operators or configurations"
+                            " are not comparable.")
         return (self.site, self.unit_vector) < (other.site, other.unit_vector)  # tuple comparison
 
     def __xor__(self, other: Link) -> SpinOperator:

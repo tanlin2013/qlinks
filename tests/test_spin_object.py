@@ -64,6 +64,10 @@ class TestLink:
         assert Link(Site(1, 1), unit_vectors.rightward) != Link(
             Site(1, 1), unit_vectors.rightward, spin_opts.Sp
         )
+        with pytest.raises(TypeError):
+            assert Link(Site(1, 1), unit_vectors.rightward) > Link(
+                Site(1, 1), unit_vectors.rightward, spin_opts.Sp
+            )
 
     def test_sorting(self, unit_vectors):
         assert sorted(
