@@ -94,9 +94,9 @@ class Plaquette:
     def __array__(self) -> np.ndarray:
         plaquette = [link for link in self]
         skip_links = [link.reset() for link in self]
-        for link in self.lattice.iter_links():
-            if link not in skip_links:
-                plaquette.append(link)
+        for identity_link in self.lattice.iter_links():
+            if identity_link not in skip_links:
+                plaquette.append(identity_link)
         operators = [link.operator for link in sorted(plaquette)]
         return reduce((lambda x, y: x ^ y), operators).reshape(self.lattice.hilbert_dims)
 
