@@ -74,6 +74,30 @@ class QuasiLocalSpinObject(abc.ABC):
     def __post_init__(self):
         ...
 
+    def __array__(self) -> np.ndarray:
+        spin_obj = [link for link in self]
+        skip_links = [link.reset() for link in self]
+        for identity_link in self.lattice.iter_links():
+            if identity_link not in skip_links:
+                spin_obj.append(identity_link)
+        operators = [link.operator for link in sorted(spin_obj)]
+        return reduce((lambda x, y: x ^ y), operators).reshape(self.lattice.hilbert_dims)
+
+    def __add__(self, other: QuasiLocalSpinObject) -> SpinOperator:
+        if self.site != other.site:
+            raise ValueError(
+                f"{self.__class__.__name__} in different positions can not be directly added.")
+        return (np.array(self) + np.array(other)).view(SpinOperator)
+
+    def __iter__(self) -> Iterator[Link]:
+        return iter((self.link_t, self.link_d, self.link_l, self.link_r))
+
+    def conj(self, inplace: bool = False) -> QuasiLocalSpinObject | None:
+        conj_spin_obj = self if inplace else deepcopy(self)
+        _ = [link.conj(inplace=True) for link in conj_spin_obj]
+        if not inplace:
+            return conj_spin_obj
+
 
 @dataclass
 class Plaquette(QuasiLocalSpinObject):
@@ -99,32 +123,12 @@ class Plaquette(QuasiLocalSpinObject):
             operator=self._spin_opts.Sm,
         )
 
-    def __array__(self) -> np.ndarray:
-        plaquette = [link for link in self]
-        skip_links = [link.reset() for link in self]
-        for identity_link in self.lattice.iter_links():
-            if identity_link not in skip_links:
-                plaquette.append(identity_link)
-        operators = [link.operator for link in sorted(plaquette)]
-        return reduce((lambda x, y: x ^ y), operators).reshape(self.lattice.hilbert_dims)
-
-    def __iter__(self) -> Iterator[Link]:
-        return iter((self.link_t, self.link_d, self.link_l, self.link_r))
-
-    def __add__(self, other: Plaquette) -> SpinOperator:
-        if self.corner_site != other.corner_site:
-            raise ValueError("Plaquettes in different positions can not be directly added.")
-        return (np.array(self) + np.array(other)).view(SpinOperator)
-
     @property
     def corner_site(self) -> Site:
         return self.site
 
     def conj(self, inplace: bool = False) -> Plaquette | None:
-        conj_plaquette = self if inplace else deepcopy(self)
-        _ = [link.conj(inplace=True) for link in conj_plaquette]
-        if not inplace:
-            return conj_plaquette
+        return super().conj(inplace)
 
 
 @dataclass
@@ -136,3 +140,6 @@ class Cross(QuasiLocalSpinObject):
     @property
     def center_site(self) -> Site:
         return self.site
+
+    def conj(self, inplace: bool = False) -> Cross | None:
+        return super().conj(inplace)
