@@ -10,7 +10,7 @@ from typing import Generator, Iterator, Sequence, Self, Tuple
 import numpy as np
 
 from qlinks.lattice.component import Site, UnitVectorCollection
-from qlinks.spin_object import Link, SpinOperator, SpinOperatorCollection
+from qlinks.spin_object import Link, Spin, SpinOperator, SpinOperatorCollection
 
 
 @dataclass
@@ -101,6 +101,10 @@ class QuasiLocalSpinObject(abc.ABC):
         _ = [link.conj(inplace=True) for link in conj_spin_obj]
         if not inplace:
             return conj_spin_obj
+
+    def set_config(self, config: Tuple[Spin, ...]) -> None:
+        for idx, link in enumerate(self):
+            link.config = config[idx]
 
 
 @dataclass
