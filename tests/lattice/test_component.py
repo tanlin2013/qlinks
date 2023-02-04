@@ -1,6 +1,6 @@
 import pytest
 
-from qlinks.coordinate import Site, UnitVector
+from qlinks.lattice.component import Site, UnitVector
 
 
 class TestSite:

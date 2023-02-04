@@ -8,7 +8,7 @@ from typing import Optional, Sequence
 import numpy as np
 from numpy.typing import ArrayLike
 
-from qlinks.coordinate import Site, UnitVector
+from qlinks.lattice.component import Site, UnitVector
 
 
 class Spin(np.ndarray):

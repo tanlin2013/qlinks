@@ -9,7 +9,7 @@ from typing import Generator, Iterator, Sequence, Tuple
 
 import numpy as np
 
-from qlinks.coordinate import Site, UnitVectorCollection
+from qlinks.lattice.component import Site, UnitVectorCollection
 from qlinks.spin_object import Link, SpinOperator, SpinOperatorCollection
 
 
@@ -109,11 +109,11 @@ class Plaquette(QuasiLocalSpinObject):
         return reduce((lambda x, y: x ^ y), operators).reshape(self.lattice.hilbert_dims)
 
     def __iter__(self) -> Iterator[Link]:
-        return iter((self.link_d, self.link_l, self.link_r, self.link_t))
+        return iter((self.link_t, self.link_d, self.link_l, self.link_r))
 
     def __add__(self, other: Plaquette) -> SpinOperator:
         if self.corner_site != other.corner_site:
-            raise ValueError("Plaquettes on different position can not be directly added.")
+            raise ValueError("Plaquettes in different positions can not be directly added.")
         return (np.array(self) + np.array(other)).view(SpinOperator)
 
     @property

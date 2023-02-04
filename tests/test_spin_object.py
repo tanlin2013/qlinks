@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from qlinks.coordinate import Site, UnitVectorCollection
+from qlinks.lattice.component import Site, UnitVectorCollection
 from qlinks.spin_object import Link, Spin, SpinConfig, SpinOperator, SpinOperatorCollection
 
 
