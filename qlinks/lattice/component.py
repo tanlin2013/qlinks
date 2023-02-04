@@ -36,8 +36,8 @@ class Site:
 @total_ordering
 @dataclass
 class UnitVector:
-    pos_x: int
-    pos_y: int
+    pos_x: int | float
+    pos_y: int | float
 
     def __array__(self) -> np.ndarray:
         return np.array(astuple(self))
