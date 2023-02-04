@@ -133,9 +133,23 @@ class Plaquette(QuasiLocalSpinObject):
 
 @dataclass
 class Cross(QuasiLocalSpinObject):
-
     def __post_init__(self):
-        pass
+        self.link_t = Link(
+            site=self.lattice[self.center_site],
+            unit_vector=self._unit_vectors.upward
+        )
+        self.link_d = Link(
+            site=self.lattice[self.center_site + self._unit_vectors.downward],
+            unit_vector=self._unit_vectors.upward
+        )
+        self.link_l = Link(
+            site=self.lattice[self.center_site + self._unit_vectors.leftward],
+            unit_vector=self._unit_vectors.rightward
+        )
+        self.link_r = Link(
+            site=self.lattice[self.center_site],
+            unit_vector=self._unit_vectors.rightward
+        )
 
     @property
     def center_site(self) -> Site:
