@@ -47,6 +47,11 @@ class TestSpinOperator:
         assert spin_opts.Sp ^ spin_opts.O2 == SpinOperator(np.zeros((4, 4)))
         assert spin_opts.Sm ^ spin_opts.O2 == SpinOperator(np.zeros((4, 4)))
 
+    def test_power(self, spin_opts):
+        assert spin_opts.Sz ** 2 == spin_opts.I2
+        assert (spin_opts.Sp + spin_opts.Sm) ** 2 == spin_opts.I2
+        assert -1 * (spin_opts.Sp - spin_opts.Sm) ** 2 == spin_opts.I2
+
 
 class TestLink:
     @pytest.fixture(scope="class")
