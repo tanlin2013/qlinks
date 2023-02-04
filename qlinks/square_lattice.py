@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import reduce
@@ -55,9 +56,9 @@ class SquareLattice:
 
 
 @dataclass
-class Plaquette:
+class QuasiLocalSpinObject(abc.ABC):
     lattice: SquareLattice
-    corner_site: Site
+    site: Site
     link_t: Link = field(init=False)
     link_d: Link = field(init=False)
     link_l: Link = field(init=False)
@@ -69,6 +70,13 @@ class Plaquette:
         default_factory=lambda: UnitVectorCollection(), repr=False
     )
 
+    @abc.abstractmethod
+    def __post_init__(self):
+        ...
+
+
+@dataclass
+class Plaquette(QuasiLocalSpinObject):
     def __post_init__(self):
         self.link_d = Link(
             site=self.lattice[self.corner_site],
@@ -108,6 +116,10 @@ class Plaquette:
             raise ValueError("Plaquettes on different position can not be directly added.")
         return (np.array(self) + np.array(other)).view(SpinOperator)
 
+    @property
+    def corner_site(self) -> Site:
+        return self.site
+
     def conj(self, inplace: bool = False) -> Plaquette | None:
         conj_plaquette = self if inplace else deepcopy(self)
         _ = [link.conj(inplace=True) for link in conj_plaquette]
@@ -116,19 +128,11 @@ class Plaquette:
 
 
 @dataclass
-class Cross:
-    lattice: SquareLattice
-    center_site: Site
-    link_t: Link = field(init=False)
-    link_d: Link = field(init=False)
-    link_l: Link = field(init=False)
-    link_r: Link = field(init=False)
-    _spin_opts: SpinOperatorCollection = field(
-        default_factory=lambda: SpinOperatorCollection(), repr=False
-    )
-    _unit_vectors: UnitVectorCollection = field(
-        default_factory=lambda: UnitVectorCollection(), repr=False
-    )
+class Cross(QuasiLocalSpinObject):
 
     def __post_init__(self):
         pass
+
+    @property
+    def center_site(self) -> Site:
+        return self.site
