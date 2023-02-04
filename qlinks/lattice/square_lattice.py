@@ -5,7 +5,7 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import reduce
 from itertools import product
-from typing import Generator, Iterator, Sequence, Tuple
+from typing import Generator, Iterator, Sequence, Self, Tuple
 
 import numpy as np
 
@@ -92,7 +92,7 @@ class QuasiLocalSpinObject(abc.ABC):
     def __iter__(self) -> Iterator[Link]:
         return iter((self.link_t, self.link_d, self.link_l, self.link_r))
 
-    def conj(self, inplace: bool = False) -> QuasiLocalSpinObject | None:
+    def conj(self, inplace: bool = False) -> Self | None:
         conj_spin_obj = self if inplace else deepcopy(self)
         _ = [link.conj(inplace=True) for link in conj_spin_obj]
         if not inplace:
@@ -127,9 +127,6 @@ class Plaquette(QuasiLocalSpinObject):
     def corner_site(self) -> Site:
         return self.site
 
-    def conj(self, inplace: bool = False) -> Plaquette | None:
-        return super().conj(inplace)
-
 
 @dataclass
 class Cross(QuasiLocalSpinObject):
@@ -154,6 +151,3 @@ class Cross(QuasiLocalSpinObject):
     @property
     def center_site(self) -> Site:
         return self.site
-
-    def conj(self, inplace: bool = False) -> Cross | None:
-        return super().conj(inplace)
