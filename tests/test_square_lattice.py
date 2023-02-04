@@ -14,8 +14,7 @@ class TestSquareLattice:
         assert lattice[0, 5] == Site(0, 1)
         assert lattice[Site(4, 0)] == Site(0, 0)
         assert lattice[Site(5, 0)] == Site(1, 0)
-        with pytest.raises(AssertionError):
-            _ = lattice[-1, 0]
+        assert lattice[-1, 0] == Site(3, 0)
 
     def test_iter(self):
         for site in SquareLattice(4, 4):
