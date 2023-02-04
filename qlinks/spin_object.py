@@ -94,6 +94,8 @@ class Link:
     config: Optional[Spin] = None
 
     def __post_init__(self):
+        if self.unit_vector.length != 1:
+            raise ValueError("Link can only accept UnitVector with length 1.")
         if self.unit_vector.sign < 0:
             self.site += self.unit_vector
             self.unit_vector *= -1

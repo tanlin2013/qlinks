@@ -55,6 +55,10 @@ class UnitVector:
         return (self.pos_y, self.pos_x) < (other.pos_y, other.pos_x)  # tuple comparison
 
     @property
+    def length(self) -> int | float:
+        return np.linalg.norm(self)
+
+    @property
     def sign(self) -> int:
         return -1 if np.any(np.array(self) < 0) else 1
 

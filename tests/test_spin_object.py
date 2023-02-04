@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from qlinks.lattice.component import Site, UnitVectorCollection
+from qlinks.lattice.component import Site, UnitVector, UnitVectorCollection
 from qlinks.spin_object import Link, Spin, SpinConfig, SpinOperator, SpinOperatorCollection
 
 
@@ -61,6 +61,10 @@ class TestLink:
     @pytest.fixture(scope="class")
     def unit_vectors(self):
         return UnitVectorCollection()
+
+    def test_constructor(self):
+        with pytest.raises(ValueError):
+            _ = Link(Site(1, 1), UnitVector(1, 1))
 
     def test_comparison(self, spin_opts, unit_vectors):
         assert Link(Site(1, 1), unit_vectors.rightward) < Link(Site(2, 1), unit_vectors.rightward)
