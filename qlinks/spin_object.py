@@ -123,5 +123,6 @@ class Link:
     def reset(self, inplace: bool = False) -> Link | None:
         reset_link = self if inplace else deepcopy(self)
         reset_link.operator = SpinOperatorCollection().I2
+        reset_link.config = None
         if not inplace:
             return reset_link
