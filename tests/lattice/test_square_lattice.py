@@ -51,10 +51,15 @@ class TestPlaquette:
         for link in plaquette:
             print(link)
 
-    def test_array(self, plaquette):
+    def test_array(self, lattice, plaquette):
         arr = np.array(plaquette)
         assert np.allclose(arr, np.triu(arr), atol=1e-12)
+        assert arr.shape == lattice.hilbert_dims
+        unique_value_counts = dict(zip(*np.unique(arr, return_counts=True)))
+        assert tuple(unique_value_counts) == (0, 1)  # dict keys to tuple
+        assert unique_value_counts[1] == 2 ** (lattice.num_links - 4)
         plt.matshow(arr)
+        plt.colorbar()
         plt.show()
 
     def test_conj(self, plaquette):
