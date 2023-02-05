@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Iterator
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -42,6 +42,9 @@ class Spin(np.ndarray):
 class SpinConfig:
     up: Spin = field(default_factory=lambda: Spin([1, 0], read_only=True))
     down: Spin = field(default_factory=lambda: Spin([0, 1], read_only=True))
+
+    def __iter__(self) -> Iterator[Spin]:
+        return iter((self.up, self.down))
 
 
 class SpinOperator(np.ndarray):
