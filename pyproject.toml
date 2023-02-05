@@ -58,6 +58,7 @@ profile = "black"
 [tool.mypy]
 ignore_missing_imports = true
 strict_optional = false
+warn_no_return = false
 
 [tool.bandit]
 skips = ["B101"]
