@@ -5,7 +5,7 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import reduce
 from itertools import product
-from typing import Generator, Iterator, Sequence, Self, Tuple
+from typing import Iterator, Self, Tuple
 
 import numpy as np
 
@@ -22,23 +22,23 @@ class SquareLattice:
         if any(axis < 2 for axis in self.shape):
             raise ValueError("Lattice size should be least 2 by 2.")
 
-    def __getitem__(self, coord: Sequence[int, int] | Site) -> Site:
+    def __getitem__(self, coord: Tuple[int, int] | Site) -> Site:
         coord = astuple(coord) if isinstance(coord, Site) else coord
         return Site(coord[0] % self.length, coord[1] % self.width)  # assume periodic b.c.
 
-    def __iter__(self) -> Generator[Site]:
+    def __iter__(self) -> Iterator[Site]:
         for coord_y, coord_x in product(range(self.width), range(self.length)):
             yield Site(coord_x, coord_y)
 
-    def iter_links(self) -> Generator[Link]:
+    def iter_links(self) -> Iterator[Link]:
         for site, unit_vector in product(self, UnitVectorCollection()):
             yield Link(site, unit_vector)
 
-    def iter_plaquettes(self) -> Generator[Plaquette]:
+    def iter_plaquettes(self) -> Iterator[Plaquette]:
         for corner_site in self:
             yield Plaquette(self, corner_site)
 
-    def iter_crosses(self) -> Generator[Cross]:
+    def iter_crosses(self) -> Iterator[Cross]:
         for center_site in self:
             yield Cross(self, center_site)
 
