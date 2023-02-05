@@ -122,13 +122,13 @@ class Link:
         fore_link, post_link = sorted([self, other])
         return fore_link.operator ^ post_link.operator
 
-    def conj(self, inplace: bool = False) -> Link | None:
+    def conj(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
         conj_link = self if inplace else deepcopy(self)
         conj_link.operator = self.operator.conj
         if not inplace:
             return conj_link
 
-    def reset(self, inplace: bool = False) -> Link | None:
+    def reset(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
         reset_link = self if inplace else deepcopy(self)
         reset_link.operator = SpinOperatorCollection().I2
         reset_link.config = None

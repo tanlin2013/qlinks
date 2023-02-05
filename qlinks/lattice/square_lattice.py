@@ -96,7 +96,7 @@ class QuasiLocalSpinObject(abc.ABC):
     def __iter__(self) -> Iterator[Link]:
         return iter((self.link_t, self.link_d, self.link_l, self.link_r))
 
-    def conj(self, inplace: bool = False) -> Self | None:
+    def conj(self, inplace: bool = False) -> Self | None:  # type: ignore[return]
         conj_spin_obj = self if inplace else deepcopy(self)
         _ = [link.conj(inplace=True) for link in conj_spin_obj]
         if not inplace:
