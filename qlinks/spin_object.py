@@ -17,16 +17,20 @@ class Spin(np.ndarray):
         arr.setflags(write=not read_only)
         return arr
 
-    def __hash__(self) -> int:
+    def __hash__(self) -> int:  # type: ignore[override]
         return hash(self.data.tobytes())
 
-    def __eq__(self, other: Spin) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Spin):
+            return NotImplemented
         return np.array_equal(self, other)
 
-    def __ne__(self, other: Spin) -> bool:
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, Spin):
+            return NotImplemented
         return not np.array_equal(self, other)
 
-    def __xor__(self, other: Spin) -> Spin:
+    def __xor__(self, other: Spin) -> Spin:  # type: ignore[override]
         return np.kron(self, other).view(Spin)
 
     @property
@@ -46,23 +50,27 @@ class SpinOperator(np.ndarray):
         arr.setflags(write=not read_only)
         return arr
 
-    def __hash__(self) -> int:
+    def __hash__(self) -> int:  # type: ignore[override]
         return hash(self.data.tobytes())
 
-    def __eq__(self, other: SpinOperator) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SpinOperator):
+            return NotImplemented
         return np.array_equal(self, other)
 
-    def __ne__(self, other: SpinOperator) -> bool:
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, SpinOperator):
+            return NotImplemented
         return not np.array_equal(self, other)
 
-    def __xor__(self, other: SpinOperator) -> SpinOperator:
+    def __xor__(self, other: SpinOperator) -> SpinOperator:  # type: ignore[override]
         return np.kron(self, other).view(SpinOperator)
 
-    def __pow__(self, power: int) -> SpinOperator:
+    def __pow__(self, power: int) -> SpinOperator:  # type: ignore[override]
         return np.linalg.matrix_power(self, power).view(SpinOperator)
 
     @property
-    def conj(self) -> SpinOperator:
+    def conj(self) -> SpinOperator:  # type: ignore[override]
         return self.T.conj if np.iscomplexobj(self) else self.T
 
 
