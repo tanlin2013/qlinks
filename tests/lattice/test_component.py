@@ -34,7 +34,9 @@ class TestUnitVector:
 
     def test_comparison(self):
         assert UnitVector(1, 0) < UnitVector(0, 1)
-        assert UnitVector(-1, 0) < UnitVector(1, 0)
+        assert UnitVector(1, 0) > UnitVector(-1, 0)
+        assert UnitVector(1, 0) > UnitVector(0, -1)
+        assert UnitVector(-1, 0) > UnitVector(0, -1)
 
     def test_length(self):
         assert abs(UnitVector(1, 0)) == 1
