@@ -19,6 +19,9 @@ class Site:
     def __array__(self) -> np.ndarray:
         return np.array(astuple(self))
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.coord_x}, {self.coord_y})"
+
     def __hash__(self) -> int:
         return hash((self.coord_x, self.coord_y))
 
@@ -40,6 +43,9 @@ class UnitVector:
 
     def __array__(self) -> np.ndarray:
         return np.array(astuple(self))
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.pos_x}, {self.pos_y})"
 
     def __hash__(self) -> int:
         return hash((self.pos_x, self.pos_y))

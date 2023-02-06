@@ -125,6 +125,10 @@ class Link:
         fore_link, post_link = sorted([self, other])
         return fore_link.operator ^ post_link.operator
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.site}, {self.unit_vector}," \
+               f" operator={self.operator}, config={self.config})"
+
     def conj(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
         conj_link = self if inplace else deepcopy(self)
         conj_link.operator = self.operator.conj
