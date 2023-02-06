@@ -80,7 +80,7 @@ class __UnitVectorCollection:
         return iter((self.rightward, self.upward))
 
     def iter_all_directions(self) -> Iterator[UnitVector]:
-        return iter(astuple(self))
+        return iter((self.rightward, self.upward, self.leftward, self.downward))
 
 
 UnitVectors = __UnitVectorCollection()
