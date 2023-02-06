@@ -16,7 +16,7 @@ class TestGaussLaw:
         configs = GaussLaw(charge).possible_configs()
         for config in configs:
             mag = list(map(lambda spin: spin.magnetization, config))
-            assert np.sum(np.multiply(mag, [1, 1, -1, -1])) / 2 == charge
+            assert np.sum(np.multiply(mag, [-1, -1, 1, 1])) / 2 == charge
 
 
 class TestSpinConfigSnapshot:
