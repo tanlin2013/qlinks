@@ -12,17 +12,14 @@ from qlinks.lattice.square_lattice import SquareLattice
 class QuantumLinkModel(SquareLattice):
     coup_j: float
     coup_rk: float
-    _hamiltonian: SpinOperator = field(init=False, repr=False)
+    __hamiltonian: SpinOperator = field(init=False, repr=False)
 
     def __post_init__(self):
-        self._hamiltonian = SpinOperator(np.zeros(self.hilbert_dims))
+        self.__hamiltonian = SpinOperator(np.zeros(self.hilbert_dims))
         for plaquette in self.iter_plaquettes():
             flipper = plaquette + plaquette.conj()
-            self._hamiltonian += -self.coup_j * flipper + self.coup_rk * flipper**2
+            self.__hamiltonian += -self.coup_j * flipper + self.coup_rk * flipper ** 2
 
     @property
     def hamiltonian(self) -> SpinOperator:
-        return self._hamiltonian
-
-    def gen_config(self):
-        pass
+        return self.__hamiltonian
