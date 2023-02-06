@@ -100,7 +100,8 @@ class SquareLattice:
         for link_index in self._get_cross_link_indices(site):
             link = self.get_link(link_index)
             if link.config is not None:
-                charge += link.config.magnetization
+                mag = link.config.magnetization
+                charge += mag if link.site == self[site] else -1 * mag
             else:
                 return np.nan
         return charge / 2
