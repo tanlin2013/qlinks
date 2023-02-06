@@ -20,12 +20,12 @@ LinkIndex: Type = Tuple[Site, UnitVector]
 class SquareLattice:
     length: int
     width: int
-    _links: Dict[LinkIndex, Link] = field(init=False, repr=False)
+    __links: Dict[LinkIndex, Link] = field(init=False, repr=False)
 
     def __post_init__(self):
         if any(axis < 2 for axis in self.shape):
             raise InvalidArgumentError("Lattice size should be least 2 by 2.")
-        self._links = {(link.site, link.unit_vector): link for link in self.iter_links()}
+        self.__links = {(link.site, link.unit_vector): link for link in self.iter_links()}
 
     def __getitem__(self, coord: Tuple[int, int] | Site) -> Site:
         coord = astuple(coord) if isinstance(coord, Site) else coord
@@ -63,12 +63,16 @@ class SquareLattice:
     def hilbert_dims(self) -> Tuple[int, int]:
         return 2**self.num_links, 2**self.num_links
 
+    @property
+    def links(self) -> Dict[LinkIndex, Link]:
+        return self.__links
+
     def get_link(self, link_index: LinkIndex) -> Link:
         site, unit_vector = link_index
         if unit_vector.sign < 0:
             site = self[site + unit_vector]
             unit_vector *= -1
-        return self._links[(site, unit_vector)]
+        return self.__links[(site, unit_vector)]
 
     def set_link(self, link_index: LinkIndex, config: Spin) -> None:
         link = self.get_link(link_index)

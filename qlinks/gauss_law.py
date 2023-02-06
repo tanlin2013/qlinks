@@ -11,9 +11,9 @@ from numpy.typing import ArrayLike
 
 from qlinks.exceptions import LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.lattice.square_lattice import SquareLattice
+from qlinks.lattice.square_lattice import SquareLattice, LinkIndex
 from qlinks.solver.deep_first_search import Node
-from qlinks.spin_object import Spin, SpinConfigs
+from qlinks.spin_object import Spin, SpinConfigs, Link
 
 
 class Flow(IntEnum):
@@ -58,7 +58,7 @@ class SpinConfigSnapshot(Node, SquareLattice):
         if not isinstance(other, SpinConfigSnapshot):
             raise NotImplemented
         assert self.shape == other.shape
-        return set(self._links.values()) == set(other._links.values())
+        return set(self.links.values()) == set(other.links.values())
 
     def __str__(self) -> str:
         return ",\n".join(map(repr, list(self.links.values())))
@@ -89,9 +89,9 @@ class SpinConfigSnapshot(Node, SquareLattice):
         return True
 
     @property
-    def links(self):
+    def links(self) -> Dict[LinkIndex, Link]:
         assert self.is_the_solution()
-        return self._links
+        return super().links
 
     @property
     def adjacency_matrix(self):
