@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from qlinks.lattice.component import Site, UnitVector
+from qlinks.lattice.component import Site, UnitVector, UnitVectors
 
 
 class TestSite:
@@ -49,3 +49,25 @@ class TestUnitVector:
         assert UnitVector(0, -1).sign == -1
         with pytest.raises(ValueError):
             _ = UnitVector(1, 1).sign
+
+
+class TestUnitVectorCollection:
+    def test_instance(self):
+        assert UnitVectors.rightward == -1 * UnitVectors.leftward
+        assert UnitVectors.upward == -1 * UnitVectors.downward
+        with pytest.raises(TypeError):
+            _ = UnitVectors.upward + UnitVectors.rightward
+
+    def test_iter(self):
+        it = iter(UnitVectors)
+        assert next(it) == UnitVectors.rightward
+        assert next(it) == UnitVectors.upward
+
+    def test_iter_all_directions(self):
+        it = UnitVectors.iter_all_directions()
+        assert next(it) == UnitVectors.downward
+        assert next(it) == UnitVectors.leftward
+        assert next(it) == UnitVectors.rightward
+        assert next(it) == UnitVectors.upward
+        with pytest.raises(StopIteration):
+            _ = next(it)

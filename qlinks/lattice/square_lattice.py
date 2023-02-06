@@ -136,7 +136,7 @@ class QuasiLocalSpinObject(abc.ABC):
         return (np.array(self) + np.array(other)).view(SpinOperator)
 
     def __iter__(self) -> Iterator[Link]:
-        return iter((self.link_t, self.link_d, self.link_l, self.link_r))
+        return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))
 
     def conj(self, inplace: bool = False) -> Self | None:  # type: ignore[return]
         conj_spin_obj = self if inplace else deepcopy(self)

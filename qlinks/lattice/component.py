@@ -77,10 +77,10 @@ class __UnitVectorCollection:
     leftward: UnitVector = field(default_factory=lambda: -1 * UnitVector(1, 0))
 
     def __iter__(self) -> Iterator[UnitVector]:
-        return iter((self.rightward, self.upward))
+        return iter(sorted((self.rightward, self.upward)))
 
     def iter_all_directions(self) -> Iterator[UnitVector]:
-        return iter((self.rightward, self.upward, self.leftward, self.downward))
+        return iter(sorted((self.downward, self.leftward, self.rightward, self.upward)))
 
 
 UnitVectors = __UnitVectorCollection()
