@@ -47,5 +47,5 @@ class TestUnitVector:
         assert UnitVector(0, 1).sign == 1
         assert UnitVector(-1, 0).sign == -1
         assert UnitVector(0, -1).sign == -1
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             _ = UnitVector(1, 1).sign
