@@ -3,8 +3,11 @@ from __future__ import annotations
 from dataclasses import astuple, dataclass, field
 from functools import total_ordering
 from typing import Iterator
+from types import UnionType
 
 import numpy as np
+
+Real: UnionType = int | float
 
 
 @total_ordering
@@ -32,8 +35,8 @@ class Site:
 @total_ordering
 @dataclass
 class UnitVector:
-    pos_x: int | float
-    pos_y: int | float
+    pos_x: Real
+    pos_y: Real
 
     def __array__(self) -> np.ndarray:
         return np.array(astuple(self))
@@ -41,17 +44,16 @@ class UnitVector:
     def __hash__(self) -> int:
         return hash((self.pos_x, self.pos_y))
 
-    def __rmul__(self, scalar: int | float) -> UnitVector:
+    def __rmul__(self, scalar: Real) -> UnitVector:
         return UnitVector(scalar * self.pos_x, scalar * self.pos_y)
 
-    def __imul__(self, scalar: int | float) -> UnitVector:
+    def __imul__(self, scalar: Real) -> UnitVector:
         return scalar * self
 
     def __lt__(self, other: UnitVector) -> bool:
         return (self.pos_y, self.pos_x) < (other.pos_y, other.pos_x)  # tuple comparison
 
-    @property
-    def length(self) -> int | float:
+    def __abs__(self) -> Real:
         return np.linalg.norm(self)
 
     @property
