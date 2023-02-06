@@ -13,7 +13,6 @@ from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkO
 from qlinks.lattice.component import Site, UnitVector, UnitVectors
 from qlinks.spin_object import Link, Spin, SpinOperator, SpinOperators
 
-
 LinkIndex: Type = Tuple[Site, UnitVector]
 
 

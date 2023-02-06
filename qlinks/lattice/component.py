@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
 from functools import total_ordering
-from typing import Iterator
 from types import UnionType
+from typing import Iterator
 
 import numpy as np
 
