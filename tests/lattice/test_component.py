@@ -37,10 +37,10 @@ class TestUnitVector:
         assert UnitVector(-1, 0) < UnitVector(1, 0)
 
     def test_length(self):
-        assert UnitVector(1, 0).length == 1
-        assert UnitVector(0, 1).length == 1
-        assert UnitVector(-1, 0).length == 1
-        assert UnitVector(1, 1).length == np.sqrt(2)
+        assert abs(UnitVector(1, 0)) == 1
+        assert abs(UnitVector(0, 1)) == 1
+        assert abs(UnitVector(-1, 0)) == 1
+        assert abs(UnitVector(1, 1)) == np.sqrt(2)
 
     def test_sign(self):
         assert UnitVector(1, 0).sign == 1
