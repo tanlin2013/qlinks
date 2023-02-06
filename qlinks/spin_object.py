@@ -124,8 +124,8 @@ class Link:
     def __lt__(self, other: Link) -> bool:
         if (self.site, self.unit_vector) == (other.site, other.unit_vector) and (
                 self.operator != other.operator or self.config != other.config):
-            raise InvalidOperationError("Links on same position but with different operators or"
-                                        " spin configurations are not comparable.")
+            raise InvalidOperationError("Links on same position but with different operators or "
+                                        "spin configurations are not comparable.")
         return (self.site, self.unit_vector) < (other.site, other.unit_vector)  # tuple comparison
 
     def __xor__(self, other: Link) -> SpinOperator:
@@ -133,8 +133,8 @@ class Link:
         return fore_link.operator ^ post_link.operator
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.site}, {self.unit_vector}," \
-               f" operator={self.operator}, config={self.config})"
+        return f"{type(self).__name__}({self.site}, {self.unit_vector}, " \
+               f"operator={self.operator}, config={self.config})"
 
     def conj(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
         conj_link = self if inplace else deepcopy(self)
