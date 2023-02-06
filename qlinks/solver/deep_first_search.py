@@ -59,7 +59,7 @@ class DeepFirstSearch:
 
             if selected_node.is_the_solution():
                 logger.info(f"Solution Found in {n_step} steps.")
-                logger.info(selected_node)
+                logger.info(f"\n{selected_node}")
                 return selected_node
 
             new_nodes = selected_node.extend_node()
