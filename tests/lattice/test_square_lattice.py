@@ -53,6 +53,43 @@ class TestSquareLattice:
     def test_hilbert_dims(self, shape, expected):
         assert SquareLattice(*shape).hilbert_dims[0] == expected
 
+    @pytest.mark.parametrize("site", [Site(0, 0), Site(3, 3)])
+    @pytest.mark.parametrize("unit_vector",
+                             [UnitVectors.upward, UnitVectors.rightward, UnitVectors.downward])
+    def test_get_link(self, lattice, site, unit_vector):
+        link = lattice.get_link((site, unit_vector))
+        if unit_vector.sign > 0:
+            assert link.site == site
+            assert link.unit_vector == unit_vector
+        else:
+            assert link.site == lattice[site + unit_vector]
+            assert link.unit_vector == -1 * unit_vector
+        assert link.operator == SpinOperators.I2
+        assert link.config is None
+
+    def test_set_cross(self, lattice):
+        lattice.set_cross(Site(0, 0),
+                          (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up))
+        with pytest.raises(LinkOverridingError):
+            lattice.set_cross(
+                Site(1, 0),
+                (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
+            )
+
+    def test_reset_cross(self, lattice):
+        lattice.reset_cross(Site(0, 0))
+        assert np.isnan(lattice.charge(Site(0, 0)))
+
+    def test_charge(self):
+        lattice = SquareLattice(2, 2)
+        assert np.isnan(lattice.charge(Site(0, 0)))
+        lattice.set_cross(Site(0, 0),
+                          (SpinConfigs.up, SpinConfigs.up, SpinConfigs.down, SpinConfigs.down))
+        assert lattice.charge(Site(0, 0)) == -2
+        lattice.set_cross(Site(1, 1),
+                          (SpinConfigs.up, SpinConfigs.up, SpinConfigs.up, SpinConfigs.up))
+        assert lattice.charge(Site(1, 1)) == 0
+
 
 class TestPlaquette:
     @pytest.fixture(scope="class")
