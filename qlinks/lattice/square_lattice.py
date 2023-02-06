@@ -21,10 +21,12 @@ LinkIndex: Type = Tuple[Site, UnitVector]
 class SquareLattice:
     length: int
     width: int
+    _links: Dict[LinkIndex, Link] = field(init=False, repr=False)
 
     def __post_init__(self):
         if any(axis < 2 for axis in self.shape):
-            raise ValueError("Lattice size should be least 2 by 2.")
+            raise InvalidArgumentError("Lattice size should be least 2 by 2.")
+        self._links = {(link.site, link.unit_vector): link for link in self.iter_links()}
 
     def __getitem__(self, coord: Tuple[int, int] | Site) -> Site:
         coord = astuple(coord) if isinstance(coord, Site) else coord
@@ -61,6 +63,50 @@ class SquareLattice:
     @property
     def hilbert_dims(self) -> Tuple[int, int]:
         return 2**self.num_links, 2**self.num_links
+
+    def get_link(self, link_index: LinkIndex) -> Link:
+        site, unit_vector = link_index
+        if unit_vector.sign < 0:
+            site = self[site + unit_vector]
+            unit_vector *= -1
+        return self._links[(site, unit_vector)]
+
+    def set_link(self, link_index: LinkIndex, config: Spin) -> None:
+        link = self.get_link(link_index)
+        if link.config is not None and link.config != config:
+            raise LinkOverridingError("Link has been set, try .reset_link() if needed.")
+        link.config = config
+
+    def reset_link(self, link_index: LinkIndex) -> None:
+        self.get_link(link_index).reset(inplace=True)
+
+    def _get_cross_link_indices(self, site: Site) -> List[LinkIndex]:
+        return [
+            (self[site], UnitVectors.upward),
+            (self[site + UnitVectors.downward], UnitVectors.upward),
+            (self[site + UnitVectors.leftward], UnitVectors.rightward),
+            (self[site], UnitVectors.rightward)
+        ]
+
+    def set_cross(self, site: Site, configs: Tuple[Spin, ...]) -> None:
+        if len(configs) != 4:
+            raise InvalidArgumentError(f"Expected 4 Spins in configs, got {len(configs)}.")
+        for idx, link_index in enumerate(self._get_cross_link_indices(site)):
+            self.set_link(link_index, config=configs[idx])
+
+    def reset_cross(self, site: Site) -> None:
+        for link_index in self._get_cross_link_indices(site):
+            self.reset_link(link_index)
+
+    def charge(self, site: Site) -> int | float:
+        charge = 0
+        for link_index in self._get_cross_link_indices(site):
+            link = self.get_link(link_index)
+            if link.config is not None:
+                charge += link.config.magnetization
+            else:
+                return np.nan
+        return charge / 2
 
 
 @dataclass
