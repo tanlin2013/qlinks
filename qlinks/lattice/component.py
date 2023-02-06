@@ -13,10 +13,6 @@ class Site:
     coord_x: int
     coord_y: int
 
-    def __post_init__(self):
-        if (self.coord_x < 0) or (self.coord_y < 0):
-            raise ValueError("Coordinate starts from (0, 0).")
-
     def __array__(self) -> np.ndarray:
         return np.array(astuple(self))
 

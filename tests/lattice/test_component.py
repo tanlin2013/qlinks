@@ -12,6 +12,7 @@ class TestSite:
         assert Site(2, 3) < Site(1, 4)  # should compare y first
         assert Site(2, 2) == Site(2, 2)
         assert Site(1, 1) != Site(2, 2)
+        assert Site(0, 0) > Site(-1, 0)
 
     def test_addition(self):
         assert Site(1, 1) + UnitVector(0, 1) == Site(1, 2)  # fix y, add x
