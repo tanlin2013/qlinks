@@ -52,7 +52,7 @@ class TestSpinOperator:
 
 class TestLink:
     def test_constructor(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidArgumentError):
             _ = Link(Site(1, 1), UnitVector(1, 1))
 
     def test_mutation(self):

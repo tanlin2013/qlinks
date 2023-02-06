@@ -8,6 +8,7 @@ from typing import Optional, Sequence, Iterator
 import numpy as np
 from numpy.typing import ArrayLike
 
+from qlinks.exceptions import InvalidArgumentError, InvalidOperationError
 from qlinks.lattice.component import Site, UnitVector
 
 
@@ -111,8 +112,8 @@ class Link:
     config: Optional[Spin] = None
 
     def __post_init__(self):
-        if self.unit_vector.length != 1:
-            raise ValueError("Link can only accept UnitVector with length 1.")
+        if abs(self.unit_vector) != 1:
+            raise InvalidArgumentError("Link can only accept UnitVector with length 1.")
         if self.unit_vector.sign < 0:
             self.site += self.unit_vector
             self.unit_vector *= -1
@@ -123,8 +124,8 @@ class Link:
     def __lt__(self, other: Link) -> bool:
         if (self.site, self.unit_vector) == (other.site, other.unit_vector) and (
                 self.operator != other.operator or self.config != other.config):
-            raise TypeError("Links on same position but with different operators or configurations"
-                            " are not comparable.")
+            raise InvalidOperationError("Links on same position but with different operators or"
+                                        " spin configurations are not comparable.")
         return (self.site, self.unit_vector) < (other.site, other.unit_vector)  # tuple comparison
 
     def __xor__(self, other: Link) -> SpinOperator:

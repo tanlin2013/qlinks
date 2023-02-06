@@ -87,8 +87,8 @@ class QuasiLocalSpinObject(abc.ABC):
 
     def __add__(self, other: QuasiLocalSpinObject) -> SpinOperator:
         if self.site != other.site:
-            raise ValueError(
-                f"{self.__class__.__name__} in different positions can not be directly added.")
+            raise InvalidOperationError(
+                f"{type(self).__name__} in different positions can not be directly added.")
         return (np.array(self) + np.array(other)).view(SpinOperator)
 
     def __iter__(self) -> Iterator[Link]:

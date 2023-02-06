@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from scipy.linalg import ishermitian
 
+from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkOverridingError
 from qlinks.lattice.square_lattice import Cross, Plaquette, SquareLattice
 from qlinks.lattice.component import Site
 from qlinks.spin_object import SpinOperator
@@ -29,7 +30,7 @@ class TestSquareLattice:
 
     def test_shape(self):
         assert SquareLattice(2, 2).shape == (2, 2)
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidArgumentError):
             _ = SquareLattice(1, 2).shape
 
     @pytest.mark.parametrize("shape, expected", [((2, 2), 2**8), ((4, 2), 2**16)])
@@ -73,5 +74,5 @@ class TestPlaquette:
 
     def test_addition(self, lattice, plaquette):
         assert isinstance(plaquette + plaquette.conj(), SpinOperator)
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidOperationError):
             _ = Plaquette(lattice, Site(0, 0)) + Plaquette(lattice, Site(0, 1))
