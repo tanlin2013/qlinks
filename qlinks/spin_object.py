@@ -35,16 +35,19 @@ class Spin(np.ndarray):
 
     @property
     def magnetization(self) -> int | float:
-        return ((self.T @ SpinOperatorCollection().Sz @ self) / (self.T @ self)).item()
+        return ((self.T @ SpinOperators.Sz @ self) / (self.T @ self)).item()
 
 
 @dataclass(frozen=True, slots=True)
-class SpinConfig:
+class __SpinConfigCollection:
     up: Spin = field(default_factory=lambda: Spin([1, 0], read_only=True))
     down: Spin = field(default_factory=lambda: Spin([0, 1], read_only=True))
 
     def __iter__(self) -> Iterator[Spin]:
         return iter((self.up, self.down))
+
+
+SpinConfigs = __SpinConfigCollection()
 
 
 class SpinOperator(np.ndarray):
@@ -78,7 +81,7 @@ class SpinOperator(np.ndarray):
 
 
 @dataclass(frozen=True, slots=True)
-class SpinOperatorCollection:
+class __SpinOperatorCollection:
     Sp: SpinOperator = field(
         default_factory=lambda: SpinOperator([[0, 1], [0, 0]], dtype=float, read_only=True)
     )
@@ -96,12 +99,15 @@ class SpinOperatorCollection:
     )
 
 
+SpinOperators = __SpinOperatorCollection()
+
+
 @total_ordering
 @dataclass
 class Link:
     site: Site
     unit_vector: UnitVector
-    operator: SpinOperator = field(default_factory=lambda: SpinOperatorCollection().I2)
+    operator: SpinOperator = field(default_factory=lambda: SpinOperators.I2)
     config: Optional[Spin] = None
 
     def __post_init__(self):
@@ -137,7 +143,7 @@ class Link:
 
     def reset(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
         reset_link = self if inplace else deepcopy(self)
-        reset_link.operator = SpinOperatorCollection().I2
+        reset_link.operator = SpinOperators.I2
         reset_link.config = None
         if not inplace:
             return reset_link

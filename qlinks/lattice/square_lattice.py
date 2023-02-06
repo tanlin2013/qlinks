@@ -5,12 +5,16 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import reduce
 from itertools import product
-from typing import Iterator, Self, Tuple
+from typing import Dict, Iterator, Self, Tuple, List, Type
 
 import numpy as np
 
-from qlinks.lattice.component import Site, UnitVectorCollection
-from qlinks.spin_object import Link, Spin, SpinOperator, SpinOperatorCollection
+from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkOverridingError
+from qlinks.lattice.component import Site, UnitVector, UnitVectors
+from qlinks.spin_object import Link, Spin, SpinOperator, SpinOperators
+
+
+LinkIndex: Type = Tuple[Site, UnitVector]
 
 
 @dataclass
@@ -31,7 +35,7 @@ class SquareLattice:
             yield Site(coord_x, coord_y)
 
     def iter_links(self) -> Iterator[Link]:
-        for site, unit_vector in product(self, UnitVectorCollection()):
+        for site, unit_vector in product(self, UnitVectors):
             yield Link(site, unit_vector)
 
     def iter_plaquettes(self) -> Iterator[Plaquette]:
@@ -67,12 +71,6 @@ class QuasiLocalSpinObject(abc.ABC):
     link_d: Link = field(init=False)
     link_l: Link = field(init=False)
     link_r: Link = field(init=False)
-    _spin_opts: SpinOperatorCollection = field(
-        default_factory=lambda: SpinOperatorCollection(), repr=False
-    )
-    _unit_vectors: UnitVectorCollection = field(
-        default_factory=lambda: UnitVectorCollection(), repr=False
-    )
 
     @abc.abstractmethod
     def __post_init__(self):
@@ -112,23 +110,23 @@ class Plaquette(QuasiLocalSpinObject):
     def __post_init__(self):
         self.link_d = Link(
             site=self.lattice[self.corner_site],
-            unit_vector=self._unit_vectors.rightward,
-            operator=self._spin_opts.Sp,
+            unit_vector=UnitVectors.rightward,
+            operator=SpinOperators.Sp,
         )
         self.link_r = Link(
-            site=self.lattice[self.corner_site + self._unit_vectors.rightward],
-            unit_vector=self._unit_vectors.upward,
-            operator=self._spin_opts.Sp,
+            site=self.lattice[self.corner_site + UnitVectors.rightward],
+            unit_vector=UnitVectors.upward,
+            operator=SpinOperators.Sp,
         )
         self.link_t = Link(
-            site=self.lattice[self.corner_site + self._unit_vectors.upward],
-            unit_vector=self._unit_vectors.rightward,
-            operator=self._spin_opts.Sm,
+            site=self.lattice[self.corner_site + UnitVectors.upward],
+            unit_vector=UnitVectors.rightward,
+            operator=SpinOperators.Sm,
         )
         self.link_l = Link(
             site=self.lattice[self.corner_site],
-            unit_vector=self._unit_vectors.upward,
-            operator=self._spin_opts.Sm,
+            unit_vector=UnitVectors.upward,
+            operator=SpinOperators.Sm,
         )
 
     @property
@@ -140,22 +138,18 @@ class Plaquette(QuasiLocalSpinObject):
 class Cross(QuasiLocalSpinObject):
     def __post_init__(self):
         self.link_t = Link(
-            site=self.lattice[self.center_site],
-            unit_vector=self._unit_vectors.upward
+            site=self.lattice[self.site],
+            unit_vector=UnitVectors.upward
         )
         self.link_d = Link(
-            site=self.lattice[self.center_site + self._unit_vectors.downward],
-            unit_vector=self._unit_vectors.upward
+            site=self.lattice[self.site + UnitVectors.downward],
+            unit_vector=UnitVectors.upward
         )
         self.link_l = Link(
-            site=self.lattice[self.center_site + self._unit_vectors.leftward],
-            unit_vector=self._unit_vectors.rightward
+            site=self.lattice[self.site + UnitVectors.leftward],
+            unit_vector=UnitVectors.rightward
         )
         self.link_r = Link(
-            site=self.lattice[self.center_site],
-            unit_vector=self._unit_vectors.rightward
+            site=self.lattice[self.site],
+            unit_vector=UnitVectors.rightward
         )
-
-    @property
-    def center_site(self) -> Site:
-        return self.site

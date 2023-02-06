@@ -70,7 +70,7 @@ class UnitVector:
 
 
 @dataclass(frozen=True)
-class UnitVectorCollection:
+class __UnitVectorCollection:
     upward: UnitVector = field(default_factory=lambda: UnitVector(0, 1))
     downward: UnitVector = field(default_factory=lambda: -1 * UnitVector(0, 1))
     rightward: UnitVector = field(default_factory=lambda: UnitVector(1, 0))
@@ -78,3 +78,9 @@ class UnitVectorCollection:
 
     def __iter__(self) -> Iterator[UnitVector]:
         return iter((self.rightward, self.upward))
+
+    def iter_all_directions(self) -> Iterator[UnitVector]:
+        return iter(astuple(self))
+
+
+UnitVectors = __UnitVectorCollection()
