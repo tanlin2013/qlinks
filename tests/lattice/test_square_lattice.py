@@ -100,10 +100,12 @@ class TestPlaquette:
     def plaquette(self, lattice):
         return Plaquette(lattice, Site(0, 0))
 
-    def test_iter(self, lattice):
-        plaquette = Plaquette(lattice, Site(0, 0))
-        for link in plaquette:
-            print(link)
+    def test_iter(self, plaquette):
+        it = iter(plaquette)
+        assert next(it) == plaquette.link_d
+        assert next(it) == plaquette.link_l
+        assert next(it) == plaquette.link_r
+        assert next(it) == plaquette.link_t
 
     def test_array(self, lattice, plaquette):
         arr = np.array(plaquette)
