@@ -5,33 +5,49 @@ from scipy.linalg import ishermitian
 
 from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkOverridingError
 from qlinks.lattice.square_lattice import Cross, Plaquette, SquareLattice
-from qlinks.lattice.component import Site
-from qlinks.spin_object import SpinOperator
+from qlinks.lattice.component import Site, UnitVectors
+from qlinks.spin_object import SpinOperator, SpinOperators, SpinConfigs, Link
 
 
 class TestSquareLattice:
-    def test_get_item(self):
-        lattice = SquareLattice(4, 4)  # assume periodic b.c.
+    def test_shape(self):
+        assert SquareLattice(2, 2).shape == (2, 2)
+        with pytest.raises(InvalidArgumentError):
+            _ = SquareLattice(1, 2).shape
+
+    @pytest.fixture(scope="class")
+    def lattice(self):
+        return SquareLattice(4, 4)
+
+    def test_get_item(self, lattice):
         assert lattice[0, 0] == Site(0, 0)
-        assert lattice[0, 4] == Site(0, 0)
+        assert lattice[0, 4] == Site(0, 0)  # assume periodic b.c.
         assert lattice[0, 5] == Site(0, 1)
         assert lattice[Site(4, 0)] == Site(0, 0)
         assert lattice[Site(5, 0)] == Site(1, 0)
         assert lattice[-1, 0] == Site(3, 0)
 
     def test_iter(self):
-        lattice = SquareLattice(4, 4)
-        for site in lattice:
-            print(site)
-        for link in lattice.iter_links():
-            print(link)
-        for plaquette in lattice.iter_plaquettes():
-            print(plaquette)
+        lattice = SquareLattice(2, 2)
+        it = iter(lattice)
+        assert next(it) == Site(0, 0)
+        assert next(it) == Site(1, 0)
+        assert next(it) == Site(0, 1)
+        assert next(it) == Site(1, 1)
 
-    def test_shape(self):
-        assert SquareLattice(2, 2).shape == (2, 2)
-        with pytest.raises(InvalidArgumentError):
-            _ = SquareLattice(1, 2).shape
+    def test_iter_links(self):
+        lattice = SquareLattice(2, 2)
+        it = lattice.iter_links()
+        assert next(it) == Link(Site(0, 0), UnitVectors.rightward)
+        assert next(it) == Link(Site(0, 0), UnitVectors.upward)
+        assert next(it) == Link(Site(1, 0), UnitVectors.rightward)
+
+    def test_iter_plaquettes(self, lattice):
+        lattice = SquareLattice(2, 2)
+        it = lattice.iter_plaquettes()
+        assert next(it).site == Site(0, 0)
+        assert next(it).site == Site(1, 0)
+        assert next(it).site == Site(0, 1)
 
     @pytest.mark.parametrize("shape, expected", [((2, 2), 2**8), ((4, 2), 2**16)])
     def test_hilbert_dims(self, shape, expected):
