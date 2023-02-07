@@ -2,15 +2,16 @@ from dataclasses import astuple
 
 import numpy as np
 import pytest
+from scipy.special import binom
 
 from qlinks.symmetry.gauss_law import GaussLaw, SpinConfigSnapshot
 from qlinks.solver.deep_first_search import DeepFirstSearch
 
 
 class TestGaussLaw:
-    @pytest.mark.parametrize("charge, n_config", [(-2, 1), (-1, 4), (0, 6), (1, 4), (2, 1)])
-    def test_possible_flows(self, charge, n_config):
-        assert len(GaussLaw(charge).possible_flows()) == n_config
+    @pytest.mark.parametrize("charge", [-2, -1, 0, 1, 2])
+    def test_possible_flows(self, charge):
+        assert len(GaussLaw(charge).possible_flows()) == binom(4, 2 - abs(charge))
 
     @pytest.mark.parametrize("charge", [-2, -1, 0, 1, 2])
     def test_possible_configs(self, charge):
