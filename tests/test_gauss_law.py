@@ -1,11 +1,12 @@
+from contextlib import nullcontext as does_not_raise
 from dataclasses import astuple
 
 import numpy as np
 import pytest
 from scipy.special import binom
 
-from qlinks.symmetry.gauss_law import GaussLaw, SpinConfigSnapshot
 from qlinks.solver.deep_first_search import DeepFirstSearch
+from qlinks.symmetry.gauss_law import GaussLaw, SpinConfigSnapshot
 
 
 class TestGaussLaw:
@@ -30,12 +31,20 @@ class TestSpinConfigSnapshot:
             print(snap.links)
 
     @pytest.mark.parametrize(
-        "charge_distri", [np.zeros((2, 2)), [[1, 0], [-1, 0]], [[-2, 0], [0, 2]]]
+        "charge_distri, expectation",
+        [
+            (np.zeros((2, 2)), does_not_raise()),
+            ([[1, 0], [-1, 0]], does_not_raise()),
+            ([[-2, 0], [0, 2]], does_not_raise()),
+            ([[1, 1, -2], [-2, 0, 0], [0, 2, 0]], does_not_raise()),
+            ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], pytest.raises(StopIteration))
+        ]
     )
-    def test_search(self, charge_distri):
+    def test_search(self, charge_distri, expectation):
         width, length = np.asarray(charge_distri).shape
         snapshot = SpinConfigSnapshot(length, width, charge_distri)
         dfs = DeepFirstSearch(snapshot)
-        filled_snapshot = dfs.search()
-        for site in filled_snapshot:
-            assert filled_snapshot.charge(site) == filled_snapshot.charge_distri[*astuple(site)]
+        with expectation:
+            filled_snapshot = dfs.search()
+            for site in filled_snapshot:
+                assert filled_snapshot.charge(site) == filled_snapshot.charge_distri[*astuple(site)]

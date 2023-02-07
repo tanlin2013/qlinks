@@ -67,10 +67,11 @@ class SpinConfigSnapshot(Node, SquareLattice):
         for site in self:
             if np.isnan(self.charge(site)):
                 return site
-        raise StopIteration("No empty site found, all links have been set.")
 
     def extend_node(self) -> List[SpinConfigSnapshot]:
         site = self.find_first_empty_site()
+        if site is None:
+            return []
         charge = self.charge_distri[*astuple(site)]
         new_nodes = []
         for config in GaussLaw(charge).possible_configs():
@@ -84,7 +85,8 @@ class SpinConfigSnapshot(Node, SquareLattice):
 
     def is_the_solution(self) -> bool:
         for site in self:
-            if np.isnan(self.charge(site)):
+            if np.isnan(self.charge(site)) or \
+                    self.charge(site) != self.charge_distri[*astuple(site)]:
                 return False
         return True
 
