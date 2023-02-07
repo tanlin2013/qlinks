@@ -74,9 +74,9 @@ class SquareLattice:
     def get_link(self, link_index: LinkIndex) -> Link:
         site, unit_vector = link_index
         if unit_vector.sign < 0:
-            site = self[site + unit_vector]
+            site += unit_vector
             unit_vector *= -1
-        return self.__links[(site, unit_vector)]
+        return self.__links[(self[site], unit_vector)]
 
     def set_link(self, link_index: LinkIndex, config: Spin) -> None:
         link = self.get_link(link_index)
