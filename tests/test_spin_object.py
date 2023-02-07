@@ -45,7 +45,7 @@ class TestSpinOperator:
         assert SpinOperators.Sm ^ SpinOperators.O2 == SpinOperator(np.zeros((4, 4)))
 
     def test_power(self):
-        assert SpinOperators.Sz ** 2 == SpinOperators.I2
+        assert SpinOperators.Sz**2 == SpinOperators.I2
         assert (SpinOperators.Sp + SpinOperators.Sm) ** 2 == SpinOperators.I2
         assert -1 * (SpinOperators.Sp - SpinOperators.Sm) ** 2 == SpinOperators.I2
 

@@ -4,16 +4,16 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from enum import IntEnum
 from itertools import product
-from typing import Tuple, List, Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike
 
 from qlinks.exceptions import LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.lattice.square_lattice import SquareLattice, LinkIndex
+from qlinks.lattice.square_lattice import LinkIndex, SquareLattice
 from qlinks.solver.deep_first_search import Node
-from qlinks.spin_object import Spin, SpinConfigs, Link
+from qlinks.spin_object import Link, Spin, SpinConfigs
 
 
 class Flow(IntEnum):
@@ -56,7 +56,7 @@ class SpinConfigSnapshot(Node, SquareLattice):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SpinConfigSnapshot):
-            raise NotImplemented
+            return NotImplemented
         assert self.shape == other.shape
         return set(self.links.values()) == set(other.links.values())
 

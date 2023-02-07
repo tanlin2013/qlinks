@@ -3,10 +3,14 @@ import numpy as np
 import pytest
 from scipy.linalg import ishermitian
 
-from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkOverridingError
-from qlinks.lattice.square_lattice import Cross, Plaquette, SquareLattice
+from qlinks.exceptions import (
+    InvalidArgumentError,
+    InvalidOperationError,
+    LinkOverridingError,
+)
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.spin_object import SpinOperator, SpinOperators, SpinConfigs, Link
+from qlinks.lattice.square_lattice import Cross, Plaquette, SquareLattice
+from qlinks.spin_object import Link, SpinConfigs, SpinOperator, SpinOperators
 
 
 class TestSquareLattice:
@@ -54,8 +58,9 @@ class TestSquareLattice:
         assert SquareLattice(*shape).hilbert_dims[0] == expected
 
     @pytest.mark.parametrize("site", [Site(0, 0), Site(3, 3)])
-    @pytest.mark.parametrize("unit_vector",
-                             [UnitVectors.upward, UnitVectors.rightward, UnitVectors.downward])
+    @pytest.mark.parametrize(
+        "unit_vector", [UnitVectors.upward, UnitVectors.rightward, UnitVectors.downward]
+    )
     def test_get_link(self, lattice, site, unit_vector):
         link = lattice.get_link((site, unit_vector))
         if unit_vector.sign > 0:
@@ -68,12 +73,12 @@ class TestSquareLattice:
         assert link.config is None
 
     def test_set_cross(self, lattice):
-        lattice.set_cross(Site(0, 0),
-                          (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up))
+        lattice.set_cross(
+            Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
+        )
         with pytest.raises(LinkOverridingError):
             lattice.set_cross(
-                Site(1, 0),
-                (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
+                Site(1, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
             )
 
     def test_reset_cross(self, lattice):
@@ -83,11 +88,13 @@ class TestSquareLattice:
     def test_charge(self):
         lattice = SquareLattice(2, 2)
         assert np.isnan(lattice.charge(Site(0, 0)))
-        lattice.set_cross(Site(0, 0),
-                          (SpinConfigs.up, SpinConfigs.up, SpinConfigs.down, SpinConfigs.down))
+        lattice.set_cross(
+            Site(0, 0), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.down, SpinConfigs.down)
+        )
         assert lattice.charge(Site(0, 0)) == -2
-        lattice.set_cross(Site(1, 1),
-                          (SpinConfigs.up, SpinConfigs.up, SpinConfigs.up, SpinConfigs.up))
+        lattice.set_cross(
+            Site(1, 1), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.up, SpinConfigs.up)
+        )
         assert lattice.charge(Site(1, 1)) == 0
 
 

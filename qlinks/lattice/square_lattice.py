@@ -5,11 +5,15 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import reduce
 from itertools import product
-from typing import Dict, Iterator, Self, Tuple, List, Type
+from typing import Dict, Iterator, List, Self, Tuple, Type
 
 import numpy as np
 
-from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkOverridingError
+from qlinks.exceptions import (
+    InvalidArgumentError,
+    InvalidOperationError,
+    LinkOverridingError,
+)
 from qlinks.lattice.component import Site, UnitVector, UnitVectors
 from qlinks.spin_object import Link, Spin, SpinOperator, SpinOperators
 
@@ -85,8 +89,10 @@ class SquareLattice:
 
     def _get_cross_link_indices(self, site: Site) -> List[LinkIndex]:
         return [
-            (self[site + unit_vector], -1 * unit_vector) if unit_vector.sign < 0 else
-            (self[site], unit_vector) for unit_vector in UnitVectors.iter_all_directions()
+            (self[site + unit_vector], -1 * unit_vector)
+            if unit_vector.sign < 0
+            else (self[site], unit_vector)
+            for unit_vector in UnitVectors.iter_all_directions()
         ]
 
     def set_cross(self, site: Site, configs: Tuple[Spin, ...]) -> None:
@@ -136,7 +142,8 @@ class QuasiLocalSpinObject(abc.ABC):
     def __add__(self, other: QuasiLocalSpinObject) -> SpinOperator:
         if self.site != other.site:
             raise InvalidOperationError(
-                f"{type(self).__name__} in different positions can not be directly added.")
+                f"{type(self).__name__} in different positions can not be directly added."
+            )
         return (np.array(self) + np.array(other)).view(SpinOperator)
 
     def __iter__(self) -> Iterator[Link]:
@@ -185,19 +192,11 @@ class Plaquette(QuasiLocalSpinObject):
 @dataclass
 class Cross(QuasiLocalSpinObject):
     def __post_init__(self):
-        self.link_t = Link(
-            site=self.lattice[self.site],
-            unit_vector=UnitVectors.upward
-        )
+        self.link_t = Link(site=self.lattice[self.site], unit_vector=UnitVectors.upward)
         self.link_d = Link(
-            site=self.lattice[self.site + UnitVectors.downward],
-            unit_vector=UnitVectors.upward
+            site=self.lattice[self.site + UnitVectors.downward], unit_vector=UnitVectors.upward
         )
         self.link_l = Link(
-            site=self.lattice[self.site + UnitVectors.leftward],
-            unit_vector=UnitVectors.rightward
+            site=self.lattice[self.site + UnitVectors.leftward], unit_vector=UnitVectors.rightward
         )
-        self.link_r = Link(
-            site=self.lattice[self.site],
-            unit_vector=UnitVectors.rightward
-        )
+        self.link_r = Link(site=self.lattice[self.site], unit_vector=UnitVectors.rightward)

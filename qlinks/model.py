@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from qlinks.spin_object import SpinOperator
 from qlinks.lattice.square_lattice import SquareLattice
+from qlinks.spin_object import SpinOperator
 
 
 @dataclass
@@ -18,7 +18,7 @@ class QuantumLinkModel(SquareLattice):
         self.__hamiltonian = SpinOperator(np.zeros(self.hilbert_dims))
         for plaquette in self.iter_plaquettes():
             flipper = plaquette + plaquette.conj()
-            self.__hamiltonian += -self.coup_j * flipper + self.coup_rk * flipper ** 2
+            self.__hamiltonian += -self.coup_j * flipper + self.coup_rk * flipper**2
 
     @property
     def hamiltonian(self) -> SpinOperator:

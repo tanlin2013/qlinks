@@ -1,6 +1,7 @@
-import pytest
-import numpy as np
 from dataclasses import astuple
+
+import numpy as np
+import pytest
 
 from qlinks.gauss_law import GaussLaw, SpinConfigSnapshot
 from qlinks.solver.deep_first_search import DeepFirstSearch
@@ -27,8 +28,9 @@ class TestSpinConfigSnapshot:
         for snap in snapshot.extend_node():
             print(snap.links)
 
-    @pytest.mark.parametrize("charge_distri",
-                             [np.zeros((2, 2)), [[1, 0], [-1, 0]], [[-2, 0], [0, 2]]])
+    @pytest.mark.parametrize(
+        "charge_distri", [np.zeros((2, 2)), [[1, 0], [-1, 0]], [[-2, 0], [0, 2]]]
+    )
     def test_search(self, charge_distri):
         width, length = np.asarray(charge_distri).shape
         snapshot = SpinConfigSnapshot(length, width, charge_distri)
