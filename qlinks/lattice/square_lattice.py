@@ -89,9 +89,7 @@ class SquareLattice:
 
     def _get_cross_link_indices(self, site: Site) -> List[LinkIndex]:
         return [
-            (self[site + unit_vector], -1 * unit_vector)
-            if unit_vector.sign < 0
-            else (self[site], unit_vector)
+            (self[site], unit_vector)
             for unit_vector in UnitVectors.iter_all_directions()
         ]
 
