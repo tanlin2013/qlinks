@@ -11,8 +11,8 @@ from numpy.typing import ArrayLike
 
 from qlinks.exceptions import LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.lattice.spin_object import Link, Spin, SpinConfigs
-from qlinks.lattice.square_lattice import LinkIndex, SquareLattice
+from qlinks.lattice.spin_object import Spin, SpinConfigs
+from qlinks.lattice.square_lattice import SquareLattice
 from qlinks.solver.deep_first_search import Node
 
 
@@ -87,11 +87,6 @@ class SpinConfigSnapshot(Node, SquareLattice):
             if np.isnan(self.charge(site)):
                 return False
         return True
-
-    @property
-    def links(self) -> Dict[LinkIndex, Link]:
-        assert self.is_the_solution()
-        return super().links
 
     @property
     def adjacency_matrix(self):
