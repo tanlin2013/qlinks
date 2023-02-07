@@ -105,8 +105,7 @@ class SquareLattice:
 
     def charge(self, site: Site) -> int | float:
         charge = 0
-        for link_index in self._get_cross_link_indices(site):
-            link = self.get_link(link_index)
+        for link in self.get_cross_links(site):
             if link.config is not None:
                 mag = link.config.magnetization
                 charge += mag if link.site == self[site] else -1 * mag
