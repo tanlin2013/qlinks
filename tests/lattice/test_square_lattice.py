@@ -138,3 +138,13 @@ class TestPlaquette:
         assert isinstance(plaquette + plaquette.conj(), SpinOperator)
         with pytest.raises(InvalidOperationError):
             _ = Plaquette(lattice, Site(0, 0)) + Plaquette(lattice, Site(0, 1))
+
+
+class TestCross:
+    @pytest.fixture(scope="class")
+    def lattice(self):
+        return SquareLattice(2, 2)
+
+    @pytest.fixture(scope="class")
+    def cross(self, lattice):
+        return Cross(lattice, Site(1, 1))
