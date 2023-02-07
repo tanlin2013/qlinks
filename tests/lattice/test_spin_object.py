@@ -3,7 +3,7 @@ import pytest
 
 from qlinks.exceptions import InvalidArgumentError, InvalidOperationError
 from qlinks.lattice.component import Site, UnitVector, UnitVectors
-from qlinks.spin_object import Link, Spin, SpinConfigs, SpinOperator, SpinOperators
+from qlinks.lattice.spin_object import Link, Spin, SpinConfigs, SpinOperator, SpinOperators
 
 
 class TestSpin:

@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from qlinks.lattice.spin_object import SpinOperator
 from qlinks.lattice.square_lattice import SquareLattice
-from qlinks.spin_object import SpinOperator
 
 
 @dataclass

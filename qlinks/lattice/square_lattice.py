@@ -15,7 +15,7 @@ from qlinks.exceptions import (
     LinkOverridingError,
 )
 from qlinks.lattice.component import Site, UnitVector, UnitVectors
-from qlinks.spin_object import Link, Spin, SpinOperator, SpinOperators
+from qlinks.lattice.spin_object import Link, Spin, SpinOperator, SpinOperators
 
 LinkIndex: Type = Tuple[Site, UnitVector]
 

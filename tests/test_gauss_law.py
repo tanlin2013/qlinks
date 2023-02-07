@@ -3,7 +3,7 @@ from dataclasses import astuple
 import numpy as np
 import pytest
 
-from qlinks.gauss_law import GaussLaw, SpinConfigSnapshot
+from qlinks.symmetry.gauss_law import GaussLaw, SpinConfigSnapshot
 from qlinks.solver.deep_first_search import DeepFirstSearch
 
 

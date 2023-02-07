@@ -11,9 +11,9 @@ from numpy.typing import ArrayLike
 
 from qlinks.exceptions import LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
+from qlinks.lattice.spin_object import Link, Spin, SpinConfigs
 from qlinks.lattice.square_lattice import LinkIndex, SquareLattice
 from qlinks.solver.deep_first_search import Node
-from qlinks.spin_object import Link, Spin, SpinConfigs
 
 
 class Flow(IntEnum):
