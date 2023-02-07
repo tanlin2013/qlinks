@@ -73,26 +73,26 @@ class TestSquareLattice:
         assert link.config is None
 
     def test_set_cross(self, lattice):
-        lattice.set_cross(
+        lattice.set_cross_links(
             Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
         )
         with pytest.raises(LinkOverridingError):
-            lattice.set_cross(
+            lattice.set_cross_links(
                 Site(1, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
             )
 
     def test_reset_cross(self, lattice):
-        lattice.reset_cross(Site(0, 0))
+        lattice.reset_cross_links(Site(0, 0))
         assert np.isnan(lattice.charge(Site(0, 0)))
 
     def test_charge(self):
         lattice = SquareLattice(2, 2)
         assert np.isnan(lattice.charge(Site(0, 0)))
-        lattice.set_cross(
+        lattice.set_cross_links(
             Site(0, 0), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.down, SpinConfigs.down)
         )
         assert lattice.charge(Site(0, 0)) == -2
-        lattice.set_cross(
+        lattice.set_cross_links(
             Site(1, 1), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.up, SpinConfigs.up)
         )
         assert lattice.charge(Site(1, 1)) == 0

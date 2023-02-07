@@ -76,7 +76,7 @@ class SpinConfigSnapshot(Node, SquareLattice):
         for config in GaussLaw(charge).possible_configs():
             try:
                 new_node = deepcopy(self)
-                new_node.set_cross(site, config)
+                new_node.set_cross_links(site, config)
                 new_nodes.append(new_node)
             except LinkOverridingError:
                 continue

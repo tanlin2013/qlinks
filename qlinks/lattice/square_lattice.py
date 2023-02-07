@@ -93,13 +93,16 @@ class SquareLattice:
             for unit_vector in UnitVectors.iter_all_directions()
         ]
 
-    def set_cross(self, site: Site, configs: Tuple[Spin, ...]) -> None:
+    def get_cross_links(self, site: Site) -> List[Link]:
+        return [self.get_link(link_index) for link_index in self._get_cross_link_indices(site)]
+
+    def set_cross_links(self, site: Site, configs: Tuple[Spin, ...]) -> None:
         if len(configs) != 4:
             raise InvalidArgumentError(f"Expected 4 Spins in configs, got {len(configs)}.")
         for idx, link_index in enumerate(self._get_cross_link_indices(site)):
             self.set_link(link_index, config=configs[idx])
 
-    def reset_cross(self, site: Site) -> None:
+    def reset_cross_links(self, site: Site) -> None:
         for link_index in self._get_cross_link_indices(site):
             self.reset_link(link_index)
 
