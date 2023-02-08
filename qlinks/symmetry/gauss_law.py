@@ -94,14 +94,13 @@ class SpinConfigSnapshot(Node, SquareLattice):
     def adjacency_matrix(self) -> np.ndarray:
         adj_mat = np.zeros((self.size, self.size))
         hash_table = {site: idx for idx, site in enumerate(self)}
-        for site in self:
-            for unit_vector in UnitVectors.iter_all_directions():
-                inds = (hash_table[site], hash_table[self[site + unit_vector]])  # head to tail
-                link = self.get_link((site, unit_vector))
-                if unit_vector.sign * link.config.magnetization > 0:
-                    adj_mat[*inds] += 1
-                else:
-                    adj_mat[*inds[::-1]] += 1
+        for site, unit_vector in product(self, UnitVectors.iter_all_directions()):
+            inds = (hash_table[site], hash_table[self[site + unit_vector]])  # head to tail
+            link = self.get_link((site, unit_vector))
+            if unit_vector.sign * link.config.magnetization > 0:
+                adj_mat[*inds] += 1
+            else:
+                adj_mat[*inds[::-1]] += 1
         return (adj_mat / 2).astype(int)
 
     def plot(self):
