@@ -135,6 +135,7 @@ class TestPlaquette:
         plt.matshow(arr)
         plt.colorbar()
         plt.show()
+        # TODO: test plaque apply on state can flip flux loop
 
     def test_conj(self, plaquette):
         arr = plaquette.conj()
