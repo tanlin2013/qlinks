@@ -83,7 +83,7 @@ class TestSquareLattice:
                 assert links[idx].site == Site(1, 1)
                 assert links[idx].unit_vector == unit_vector
 
-    def test_set_cross(self, lattice):
+    def test_set_cross_links(self, lattice):
         lattice.set_cross_links(
             Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
         )
@@ -92,7 +92,7 @@ class TestSquareLattice:
                 Site(1, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
             )
 
-    def test_reset_cross(self, lattice):
+    def test_reset_cross_links(self, lattice):
         lattice.reset_cross_links(Site(0, 0))
         assert np.isnan(lattice.charge(Site(0, 0)))
 
