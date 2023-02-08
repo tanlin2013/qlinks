@@ -5,7 +5,8 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import reduce
 from itertools import product
-from typing import Dict, Iterator, List, Self, Tuple, Type
+from types import UnionType
+from typing import Dict, Iterator, List, Self, Tuple, Type, Optional
 
 import numpy as np
 
@@ -17,6 +18,7 @@ from qlinks.exceptions import (
 from qlinks.lattice.component import Site, UnitVector, UnitVectors
 from qlinks.lattice.spin_object import Link, Spin, SpinOperator, SpinOperators
 
+Real: UnionType = int | float
 LinkIndex: Type = Tuple[Site, UnitVector]
 
 
@@ -106,7 +108,7 @@ class SquareLattice:
         for link_index in self._get_cross_link_indices(site):
             self.reset_link(link_index)
 
-    def charge(self, site: Site) -> int | float:
+    def charge(self, site: Site) -> Real:
         charge = 0
         for link in self.get_cross_links(site):
             if link.config is not None:
