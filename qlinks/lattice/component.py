@@ -28,6 +28,9 @@ class Site:
     def __add__(self, other: Site | UnitVector) -> Site:
         return Site(*(np.array(self) + np.array(other)))
 
+    def __sub__(self, other: Site) -> UnitVector:
+        return UnitVector(*(np.array(self) - np.array(other)))
+
     def __getitem__(self, item: int) -> int:
         return {0: self.coord_x, 1: self.coord_y}[item]
 

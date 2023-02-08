@@ -19,6 +19,11 @@ class TestSite:
         assert Site(1, 1) + UnitVector(1, 0) == Site(2, 1)  # fix x, add y
         assert Site(1, 1) + Site(2, 3) == Site(3, 4)
 
+    def test_subtraction(self):
+        assert Site(1, 1) - Site(1, 0) == UnitVector(0, 1)  # fix x, sub y
+        assert Site(1, 1) - Site(0, 1) == UnitVector(1, 0)  # fix y, sub x
+        assert Site(3, 3) - Site(1, 1) == UnitVector(2, 2)
+
     def test_get_item(self):
         assert Site(1, 2)[0] == 1
         assert Site(1, 2)[1] == 2
