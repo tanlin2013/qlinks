@@ -1,6 +1,8 @@
 from contextlib import nullcontext as does_not_raise
 from dataclasses import astuple
 
+import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pytest
 from scipy.special import binom
@@ -79,3 +81,31 @@ class TestSpinConfigSnapshot:
         assert np.all(np.sum(adj_mat, axis=0) + np.sum(adj_mat, axis=1) == 4), f"got {adj_mat}"
         assert adj_mat.dtype == np.int64
         assert np.all(adj_mat >= 0)
+
+    def test_as_graph(self, snapshot):
+        graph = snapshot.as_graph()
+        assert len(graph.edges()) == snapshot.num_links
+
+        pos = {idx: astuple(site) for idx, site in enumerate(snapshot)}
+        labels = {idx: str(site) for idx, site in pos.items()}
+        nx.draw(graph, pos, labels=labels, with_labels=True, node_color="tab:orange",
+                node_size=2000, arrowstyle="simple", arrowsize=30,
+                width=1, connectionstyle="arc3,rad=0.2", alpha=0.5)
+
+        # nx.draw_networkx_nodes(
+        #     graph, pos, label=labels,
+        #     node_color="tab:orange", node_size=2000, margins=(0.3, 0.3)
+        # )
+        # nx.draw_networkx_labels(
+        #     graph, pos, labels=labels
+        # )
+
+        # nx.draw_networkx_edges(
+        #     graph, pos, edgelist=,
+        #     arrowstyle="simple", arrowsize=30, width=1
+        # )
+        # nx.draw_networkx_edges(
+        #     graph, pos, edgelist=
+        # )
+
+        plt.show()
