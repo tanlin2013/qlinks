@@ -45,7 +45,7 @@ class GaussLaw:
 
     @staticmethod
     def random_charge_distri(
-            length: int, width: int, seed: Optional[int] = None, max_iter: Optional[int] = 1000
+        length: int, width: int, seed: Optional[int] = None, max_iter: Optional[int] = 1000
     ) -> np.ndarray:
         r"""Randomly sample static charges spread on 2d square lattice.
 
@@ -71,7 +71,7 @@ class GaussLaw:
         """
         sum_val, min_val, max_val = 0, -2, 2
         size = length * width
-        prob = np.full(shape=size, fill_value=1/size, dtype=float)
+        prob = np.full(shape=size, fill_value=1 / size, dtype=float)
         rng = np.random.default_rng(seed=seed)
         for _ in range(max_iter):
             samples = min_val + rng.multinomial(n=sum_val - size * min_val, pvals=prob).flatten()
@@ -123,8 +123,10 @@ class SpinConfigSnapshot(Node, SquareLattice):
 
     def is_the_solution(self) -> bool:
         for site in self:
-            if np.isnan(self.charge(site)) or \
-                    self.charge(site) != self.charge_distri[*astuple(site)]:
+            if (
+                np.isnan(self.charge(site))
+                or self.charge(site) != self.charge_distri[*astuple(site)]
+            ):
                 return False
         return True
 

@@ -54,6 +54,7 @@ class DeepFirstSearch:
     References:
         https://python.plainenglish.io/solve-sudoku-using-depth-first-search-algorithm-dfs-in-python-2be3caa08ccd
     """
+
     start_state: AnyNode
     max_steps: int = 1000
     frontier: Deque[AnyNode] = field(default_factory=deque)

@@ -51,8 +51,8 @@ class TestSpinConfigSnapshot:
             ([[1, 0], [-1, 0]], does_not_raise()),
             ([[-2, 0], [0, 2]], does_not_raise()),
             ([[1, 1, -2], [-2, 0, 0], [0, 2, 0]], does_not_raise()),
-            ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], pytest.raises(StopIteration))
-        ]
+            ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], pytest.raises(StopIteration)),
+        ],
     )
     def test_search(self, charge_distri, expectation):
         width, length = np.asarray(charge_distri).shape
@@ -63,11 +63,10 @@ class TestSpinConfigSnapshot:
             for site in filled_snapshot:
                 assert filled_snapshot.charge(site) == filled_snapshot.charge_distri[*astuple(site)]
 
-    @pytest.fixture(scope="class", params=[
-        [[-1, 0], [0, 1]],
-        [[-2, 0], [0, 2]],
-        [[1, 1, -2], [-2, 0, 0], [0, 2, 0]]
-    ])
+    @pytest.fixture(
+        scope="class",
+        params=[[[-1, 0], [0, 1]], [[-2, 0], [0, 2]], [[1, 1, -2], [-2, 0, 0], [0, 2, 0]]],
+    )
     def snapshot(self, request):
         charge_distri = request.param
         width, length = np.asarray(charge_distri).shape
@@ -88,9 +87,19 @@ class TestSpinConfigSnapshot:
 
         pos = {idx: astuple(site) for idx, site in enumerate(snapshot)}
         labels = {idx: str(site) for idx, site in pos.items()}
-        nx.draw(graph, pos, labels=labels, with_labels=True, node_color="tab:orange",
-                node_size=2000, arrowstyle="simple", arrowsize=30,
-                width=1, connectionstyle="arc3,rad=0.2", alpha=0.5)
+        nx.draw(
+            graph,
+            pos,
+            labels=labels,
+            with_labels=True,
+            node_color="tab:orange",
+            node_size=2000,
+            arrowstyle="simple",
+            arrowsize=30,
+            width=1,
+            connectionstyle="arc3,rad=0.2",
+            alpha=0.5,
+        )
 
         # nx.draw_networkx_nodes(
         #     graph, pos, label=labels,

@@ -6,7 +6,7 @@ from dataclasses import astuple, dataclass, field
 from functools import reduce
 from itertools import product
 from types import UnionType
-from typing import Dict, Iterator, List, Self, Tuple, Type, Optional
+from typing import Dict, Iterator, List, Optional, Self, Tuple, Type
 
 import numpy as np
 
@@ -90,10 +90,7 @@ class SquareLattice:
         self.get_link(link_index).reset(inplace=True)
 
     def _get_cross_link_indices(self, site: Site) -> List[LinkIndex]:
-        return [
-            (self[site], unit_vector)
-            for unit_vector in UnitVectors.iter_all_directions()
-        ]
+        return [(self[site], unit_vector) for unit_vector in UnitVectors.iter_all_directions()]
 
     def get_cross_links(self, site: Site) -> List[Link]:
         return [self.get_link(link_index) for link_index in self._get_cross_link_indices(site)]
