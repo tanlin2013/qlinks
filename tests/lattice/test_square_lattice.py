@@ -72,6 +72,17 @@ class TestSquareLattice:
         assert link.operator == SpinOperators.I2
         assert link.config is None
 
+    def test_get_cross_links(self):
+        lattice = SquareLattice(2, 2)
+        links = lattice.get_cross_links(Site(1, 1))
+        for idx, unit_vector in enumerate(UnitVectors.iter_all_directions()):
+            if unit_vector.sign < 1:
+                assert links[idx].site == Site(1, 1) + unit_vector
+                assert links[idx].unit_vector == -1 * unit_vector
+            else:
+                assert links[idx].site == Site(1, 1)
+                assert links[idx].unit_vector == unit_vector
+
     def test_set_cross(self, lattice):
         lattice.set_cross_links(
             Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
