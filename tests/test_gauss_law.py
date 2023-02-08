@@ -48,3 +48,22 @@ class TestSpinConfigSnapshot:
             filled_snapshot = dfs.search()
             for site in filled_snapshot:
                 assert filled_snapshot.charge(site) == filled_snapshot.charge_distri[*astuple(site)]
+
+    @pytest.fixture(scope="class", params=[
+        [[-1, 0], [0, 1]],
+        [[-2, 0], [0, 2]],
+        [[1, 1, -2], [-2, 0, 0], [0, 2, 0]]
+    ])
+    def snapshot(self, request):
+        charge_distri = request.param
+        width, length = np.asarray(charge_distri).shape
+        snapshot = SpinConfigSnapshot(length, width, charge_distri)
+        dfs = DeepFirstSearch(snapshot)
+        filled_snapshot = dfs.search()
+        return filled_snapshot
+
+    def test_adjacency_matrix(self, snapshot):
+        adj_mat = snapshot.adjacency_matrix
+        assert np.all(np.sum(adj_mat, axis=0) + np.sum(adj_mat, axis=1) == 4), f"got {adj_mat}"
+        assert adj_mat.dtype == np.int64
+        assert np.all(adj_mat >= 0)
