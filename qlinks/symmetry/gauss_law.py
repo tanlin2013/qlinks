@@ -6,6 +6,7 @@ from enum import IntEnum
 from itertools import product
 from typing import Dict, List, Optional, Tuple
 
+import networkx as nx
 import numpy as np
 from numpy.typing import ArrayLike
 
@@ -140,5 +141,10 @@ class SpinConfigSnapshot(Node, SquareLattice):
                 adj_mat[*inds[::-1]] += 1
         return (adj_mat / 2).astype(int)
 
-    def plot(self):
+    def as_graph(self) -> nx.MultiDiGraph:
+        return nx.from_numpy_array(
+            self.adjacency_matrix, parallel_edges=True, create_using=nx.MultiDiGraph
+        )
+
+    def plot(self) -> None:
         pass
