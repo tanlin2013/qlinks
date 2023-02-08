@@ -63,10 +63,11 @@ class SpinConfigSnapshot(Node, SquareLattice):
     def __str__(self) -> str:
         return ",\n".join(map(repr, list(self.links.values())))
 
-    def find_first_empty_site(self) -> Site | None:  # type: ignore[return]
+    def find_first_empty_site(self) -> Site | None:
         for site in self:
             if np.isnan(self.charge(site)):
                 return site
+        return None
 
     def extend_node(self) -> List[SpinConfigSnapshot]:
         site = self.find_first_empty_site()
