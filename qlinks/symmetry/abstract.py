@@ -1,11 +1,17 @@
 import abc
 from dataclasses import dataclass
-from typing import TypeAlias, TypeVar
+from typing import TypeAlias, TypeVar, Tuple
 
-Real: TypeAlias = int | float
+import numpy as np
+
+Real: TypeAlias = int | float | np.floating
 AnySymmetry = TypeVar("AnySymmetry", bound="AbstractSymmetry")
 
 
 @dataclass
 class AbstractSymmetry(abc.ABC):
-    quantum_number: Real
+    quantum_numbers: Real | Tuple[Real, ...]
+
+    @abc.abstractmethod
+    def symmetry_operation(self, state) -> "state":
+        ...
