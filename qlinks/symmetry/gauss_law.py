@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from enum import IntEnum
 from itertools import product
-from typing import Dict, Generic, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
@@ -14,7 +14,7 @@ from qlinks.exceptions import LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Spin, SpinConfigs
 from qlinks.lattice.square_lattice import SquareLattice
-from qlinks.solver.deep_first_search import AnyNode
+from qlinks.solver.deep_first_search import Node, DeepFirstSearch
 
 
 class Flow(IntEnum):
@@ -81,7 +81,7 @@ class GaussLaw:
 
 
 @dataclass
-class SpinConfigSnapshot(Generic[AnyNode], SquareLattice):
+class SpinConfigSnapshot(Node, SquareLattice):
     charge_distri: Optional[NDArray[np.int64]] = None
 
     def __post_init__(self):
