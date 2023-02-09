@@ -114,7 +114,7 @@ class SquareLattice:
                 return np.nan
         return charge / 2
 
-    def flux(self, idx: int, axis: Optional[int] = 0) -> Real:
+    def axial_flux(self, idx: int, axis: Optional[int] = 0) -> Real:
         return NotImplemented
 
 
