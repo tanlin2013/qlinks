@@ -79,11 +79,11 @@ class SquareLattice:
             unit_vector *= -1
         return self.__links[(self[site], unit_vector)]
 
-    def set_link(self, link_index: LinkIndex, config: Spin) -> None:
+    def set_link(self, link_index: LinkIndex, state: Spin) -> None:
         link = self.get_link(link_index)
-        if link.config is not None and link.config != config:
+        if link.state is not None and link.state != state:
             raise LinkOverridingError("Link has been set, try .reset_link() if needed.")
-        link.config = config
+        link.state = state
 
     def reset_link(self, link_index: LinkIndex) -> None:
         self.get_link(link_index).reset(inplace=True)
@@ -94,11 +94,11 @@ class SquareLattice:
     def get_cross_links(self, site: Site) -> List[Link]:
         return [self.get_link(link_index) for link_index in self._get_cross_link_indices(site)]
 
-    def set_cross_links(self, site: Site, configs: Tuple[Spin, ...]) -> None:
-        if len(configs) != 4:
-            raise InvalidArgumentError(f"Expected 4 Spins in configs, got {len(configs)}.")
+    def set_cross_links(self, site: Site, states: Tuple[Spin, ...]) -> None:
+        if len(states) != 4:
+            raise InvalidArgumentError(f"Expected 4 Spins in states, got {len(states)}.")
         for idx, link_index in enumerate(self._get_cross_link_indices(site)):
-            self.set_link(link_index, config=configs[idx])
+            self.set_link(link_index, state=states[idx])
 
     def reset_cross_links(self, site: Site) -> None:
         for link_index in self._get_cross_link_indices(site):
@@ -156,9 +156,9 @@ class QuasiLocalSpinObject(abc.ABC):
         if not inplace:
             return conj_spin_obj
 
-    def set_config(self, config: Tuple[Spin, ...]) -> None:
+    def set_state(self, state: Tuple[Spin, ...]) -> None:
         for idx, link in enumerate(self):
-            link.config = config[idx]
+            link.state = state[idx]
 
 
 @dataclass

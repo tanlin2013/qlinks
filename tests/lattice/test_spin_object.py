@@ -66,9 +66,9 @@ class TestLink:
         assert link.operator == SpinOperators.I2
         link.operator = SpinOperators.Sp
         assert link.operator == SpinOperators.Sp
-        assert link.config is None
-        link.config = SpinConfigs.up
-        assert link.config == SpinConfigs.up
+        assert link.state is None
+        link.state = SpinConfigs.up
+        assert link.state == SpinConfigs.up
 
     def test_comparison(self):
         assert Link(Site(1, 1), UnitVectors.rightward) < Link(Site(2, 1), UnitVectors.rightward)

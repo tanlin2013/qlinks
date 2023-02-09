@@ -70,7 +70,7 @@ class TestSquareLattice:
             assert link.site == lattice[site + unit_vector]
             assert link.unit_vector == -1 * unit_vector
         assert link.operator == SpinOperators.I2
-        assert link.config is None
+        assert link.state is None
 
     def test_get_cross_links(self):
         lattice = SquareLattice(2, 2)

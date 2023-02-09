@@ -109,7 +109,7 @@ class Link:
     site: Site
     unit_vector: UnitVector
     operator: SpinOperator = field(default_factory=lambda: SpinOperators.I2)
-    config: Optional[Spin] = None
+    state: Optional[Spin] = None
 
     def __post_init__(self):
         if abs(self.unit_vector) != 1:
@@ -119,11 +119,11 @@ class Link:
             self.unit_vector *= -1
 
     def __hash__(self) -> int:
-        return hash((self.site, self.unit_vector, self.operator, self.config))
+        return hash((self.site, self.unit_vector, self.operator, self.state))
 
     def __lt__(self, other: Link) -> bool:
         if (self.site, self.unit_vector) == (other.site, other.unit_vector) and (
-            self.operator != other.operator or self.config != other.config
+                self.operator != other.operator or self.state != other.state
         ):
             raise InvalidOperationError(
                 "Links on same position but with different operators or "
@@ -138,7 +138,7 @@ class Link:
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}({self.site}, {self.unit_vector}, "
-            f"operator={self.operator}, config={self.config})"
+            f"operator={self.operator}, config={self.state})"
         )
 
     def conj(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
@@ -150,6 +150,6 @@ class Link:
     def reset(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
         reset_link = self if inplace else deepcopy(self)
         reset_link.operator = SpinOperators.I2
-        reset_link.config = None
+        reset_link.state = None
         if not inplace:
             return reset_link
