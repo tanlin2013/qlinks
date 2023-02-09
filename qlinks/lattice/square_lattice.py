@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from copy import deepcopy
 from dataclasses import astuple, dataclass, field
-from functools import reduce
+from functools import reduce, total_ordering
 from itertools import product
 from typing import Dict, Iterator, List, Optional, Self, Tuple, TypeAlias
 
@@ -118,6 +118,31 @@ class SquareLattice:
         return NotImplemented
 
 
+@total_ordering
+@dataclass
+class LatticeState(SquareLattice):
+    link_data: Dict[LinkIndex, Link]
+
+    def __post_init__(self):
+        self.__links = deepcopy(self.link_data)
+
+    def __hash__(self) -> int:
+        return hash(frozenset(self.links.items()))
+
+    def __lt__(self, other: LatticeState) -> bool:
+        return tuple(link.flux for link in self.links.values()) < tuple(
+            link.flux for link in other.links.values()
+        )
+
+    @classmethod
+    def from_snapshot(cls, snapshot) -> Self:
+        return cls(snapshot.length, snapshot.width, snapshot.links)
+
+    @property
+    def tsp(self):
+        return NotImplemented
+
+
 @dataclass
 class QuasiLocalOperator(abc.ABC):
     lattice: SquareLattice
@@ -149,6 +174,12 @@ class QuasiLocalOperator(abc.ABC):
 
     def __iter__(self) -> Iterator[Link]:
         return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))
+
+    def __matmul__(self, other: LatticeState):
+        pass
+
+    def __rmatmul__(self, other: LatticeState):
+        pass
 
     def conj(self, inplace: bool = False) -> Self | None:  # type: ignore[return]
         conj_spin_obj = self if inplace else deepcopy(self)
