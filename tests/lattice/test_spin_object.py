@@ -29,6 +29,10 @@ class TestSpin:
     def test_magnetization(self, spin, expected):
         assert spin.magnetization == expected
 
+    def test_equality(self):
+        assert Spin([1, 0]) == Spin([1, 0])
+        assert Spin([1, 0]) != Spin([0, 1])
+
 
 class TestSpinOperator:
     def test_constructor(self):
