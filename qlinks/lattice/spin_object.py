@@ -156,4 +156,6 @@ class Link:
 
     @property
     def flux(self) -> int | float:
+        if self.state is None:
+            raise ValueError("Link has not been set with any state yet, got None.")
         return self.state.magnetization
