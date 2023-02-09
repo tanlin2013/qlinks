@@ -107,9 +107,9 @@ class SquareLattice:
     def charge(self, site: Site) -> Real:
         charge: Real = 0
         for link in self.get_cross_links(site):
-            if link.config is not None:
-                mag = link.config.magnetization
-                charge += mag if link.site == self[site] else -1 * mag
+            if link.state is not None:
+                flux = link.flux
+                charge += flux if link.site == self[site] else -1 * flux
             else:
                 return np.nan
         return charge / 2

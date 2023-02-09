@@ -137,7 +137,7 @@ class SpinConfigSnapshot(Generic[AnyNode], SquareLattice):
         for site, unit_vector in product(self, UnitVectors.iter_all_directions()):
             inds = (hash_table[site], hash_table[self[site + unit_vector]])  # head to tail
             link = self.get_link((site, unit_vector))
-            if unit_vector.sign * link.config.magnetization > 0:
+            if unit_vector.sign * link.flux > 0:
                 adj_mat[*inds] += 1
             else:
                 adj_mat[*inds[::-1]] += 1

@@ -153,3 +153,7 @@ class Link:
         reset_link.state = None
         if not inplace:
             return reset_link
+
+    @property
+    def flux(self) -> int | float:
+        return self.state.magnetization
