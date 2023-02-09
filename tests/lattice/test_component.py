@@ -36,6 +36,7 @@ class TestUnitVector:
         assert -1 * UnitVector(1, 0) == UnitVector(-1, 0)
         assert -1 * UnitVector(0, 1) == UnitVector(0, -1)
         assert 3 * UnitVector(0, 1) == UnitVector(0, 3)
+        assert UnitVector(0, -1) * -2 == UnitVector(0, 2)
 
     def test_comparison(self):
         assert UnitVector(1, 0) < UnitVector(0, 1)

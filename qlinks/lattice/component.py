@@ -52,7 +52,12 @@ class UnitVector:
     def __hash__(self) -> int:
         return hash((self.pos_x, self.pos_y))
 
-    def __rmul__(self, scalar: Real) -> UnitVector:
+    def __mul__(self, scalar: Real) -> UnitVector:
+        return UnitVector(self.pos_x * scalar, self.pos_y * scalar)
+
+    def __rmul__(self, scalar: Real) -> UnitVector:  # type: ignore[misc]
+        # TODO: somehow mypy complains this, dunno why
+        # >>> component.py:58: error: Forward operator "__mul__" is not callable  [misc]
         return UnitVector(scalar * self.pos_x, scalar * self.pos_y)
 
     def __imul__(self, scalar: Real) -> UnitVector:
