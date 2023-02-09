@@ -10,7 +10,7 @@ from qlinks.exceptions import (
 )
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Link, SpinConfigs, SpinOperator, SpinOperators
-from qlinks.lattice.square_lattice import Cross, Plaquette, SquareLattice
+from qlinks.lattice.square_lattice import Vertex, Plaquette, SquareLattice
 
 
 class TestSquareLattice:
@@ -72,9 +72,9 @@ class TestSquareLattice:
         assert link.operator == SpinOperators.I2
         assert link.state is None
 
-    def test_get_cross_links(self):
+    def test_get_vertex_links(self):
         lattice = SquareLattice(2, 2)
-        links = lattice.get_cross_links(Site(1, 1))
+        links = lattice.get_vertex_links(Site(1, 1))
         for idx, unit_vector in enumerate(UnitVectors.iter_all_directions()):
             if unit_vector.sign < 1:
                 assert links[idx].site == Site(1, 1) + unit_vector
@@ -83,27 +83,27 @@ class TestSquareLattice:
                 assert links[idx].site == Site(1, 1)
                 assert links[idx].unit_vector == unit_vector
 
-    def test_set_cross_links(self, lattice):
-        lattice.set_cross_links(
+    def test_set_vertex_links(self, lattice):
+        lattice.set_vertex_links(
             Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
         )
         with pytest.raises(LinkOverridingError):
-            lattice.set_cross_links(
+            lattice.set_vertex_links(
                 Site(1, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
             )
 
-    def test_reset_cross_links(self, lattice):
-        lattice.reset_cross_links(Site(0, 0))
+    def test_reset_vertex_links(self, lattice):
+        lattice.reset_vertex_links(Site(0, 0))
         assert np.isnan(lattice.charge(Site(0, 0)))
 
     def test_charge(self):
         lattice = SquareLattice(2, 2)
         assert np.isnan(lattice.charge(Site(0, 0)))
-        lattice.set_cross_links(
+        lattice.set_vertex_links(
             Site(0, 0), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.down, SpinConfigs.down)
         )
         assert lattice.charge(Site(0, 0)) == -2
-        lattice.set_cross_links(
+        lattice.set_vertex_links(
             Site(1, 1), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.up, SpinConfigs.up)
         )
         assert lattice.charge(Site(1, 1)) == 0
@@ -152,11 +152,11 @@ class TestPlaquette:
             _ = Plaquette(lattice, Site(0, 0)) + Plaquette(lattice, Site(0, 1))
 
 
-class TestCross:
+class TestVertex:
     @pytest.fixture(scope="class")
     def lattice(self):
         return SquareLattice(2, 2)
 
     @pytest.fixture(scope="class")
-    def cross(self, lattice):
-        return Cross(lattice, Site(1, 1))
+    def vertex(self, lattice):
+        return Vertex(lattice, Site(1, 1))

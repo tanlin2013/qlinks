@@ -48,9 +48,9 @@ class SquareLattice:
         for corner_site in self:
             yield Plaquette(self, corner_site)
 
-    def iter_crosses(self) -> Iterator[Cross]:
+    def iter_vertices(self) -> Iterator[Vertex]:
         for center_site in self:
-            yield Cross(self, center_site)
+            yield Vertex(self, center_site)
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -88,25 +88,25 @@ class SquareLattice:
     def reset_link(self, link_index: LinkIndex) -> None:
         self.get_link(link_index).reset(inplace=True)
 
-    def _get_cross_link_indices(self, site: Site) -> List[LinkIndex]:
+    def _get_vertex_link_indices(self, site: Site) -> List[LinkIndex]:
         return [(self[site], unit_vector) for unit_vector in UnitVectors.iter_all_directions()]
 
-    def get_cross_links(self, site: Site) -> List[Link]:
-        return [self.get_link(link_index) for link_index in self._get_cross_link_indices(site)]
+    def get_vertex_links(self, site: Site) -> List[Link]:
+        return [self.get_link(link_index) for link_index in self._get_vertex_link_indices(site)]
 
-    def set_cross_links(self, site: Site, states: Tuple[Spin, ...]) -> None:
+    def set_vertex_links(self, site: Site, states: Tuple[Spin, ...]) -> None:
         if len(states) != 4:
             raise InvalidArgumentError(f"Expected 4 Spins in states, got {len(states)}.")
-        for idx, link_index in enumerate(self._get_cross_link_indices(site)):
+        for idx, link_index in enumerate(self._get_vertex_link_indices(site)):
             self.set_link(link_index, state=states[idx])
 
-    def reset_cross_links(self, site: Site) -> None:
-        for link_index in self._get_cross_link_indices(site):
+    def reset_vertex_links(self, site: Site) -> None:
+        for link_index in self._get_vertex_link_indices(site):
             self.reset_link(link_index)
 
     def charge(self, site: Site) -> Real:
         charge: Real = 0
-        for link in self.get_cross_links(site):
+        for link in self.get_vertex_links(site):
             if link.state is not None:
                 flux = link.flux
                 charge += flux if link.site == self[site] else -1 * flux
@@ -119,7 +119,7 @@ class SquareLattice:
 
 
 @dataclass
-class QuasiLocalSpinObject(abc.ABC):
+class QuasiLocalOperator(abc.ABC):
     lattice: SquareLattice
     site: Site
     link_t: Link = field(init=False)
@@ -140,7 +140,7 @@ class QuasiLocalSpinObject(abc.ABC):
         operators = [link.operator for link in sorted(spin_obj)]
         return reduce((lambda x, y: x ^ y), operators).reshape(self.lattice.hilbert_dims)
 
-    def __add__(self, other: QuasiLocalSpinObject) -> SpinOperator:
+    def __add__(self, other: QuasiLocalOperator) -> SpinOperator:
         if self.site != other.site:
             raise InvalidOperationError(
                 f"{type(self).__name__} in different positions can not be directly added."
@@ -162,7 +162,7 @@ class QuasiLocalSpinObject(abc.ABC):
 
 
 @dataclass
-class Plaquette(QuasiLocalSpinObject):
+class Plaquette(QuasiLocalOperator):
     def __post_init__(self):
         self.link_d = Link(
             site=self.lattice[self.corner_site],
@@ -191,7 +191,7 @@ class Plaquette(QuasiLocalSpinObject):
 
 
 @dataclass
-class Cross(QuasiLocalSpinObject):
+class Vertex(QuasiLocalOperator):
     def __post_init__(self):
         self.link_t = Link(site=self.lattice[self.site], unit_vector=UnitVectors.upward)
         self.link_d = Link(
