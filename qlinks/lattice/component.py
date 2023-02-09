@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
 from functools import total_ordering
-from types import UnionType
-from typing import Iterator
+from typing import Iterator, TypeAlias
 
 import numpy as np
 
-Real: UnionType = int | float
+Real: TypeAlias = int | float | np.floating
 
 
 @total_ordering

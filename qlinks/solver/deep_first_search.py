@@ -4,7 +4,7 @@ import abc
 from collections import deque
 from dataclasses import dataclass, field
 from itertools import count
-from typing import Deque, List, TypeVar
+from typing import Deque, Generic, List, TypeVar
 
 from qlinks import logger
 
@@ -30,7 +30,7 @@ class Node(abc.ABC):
 
 
 @dataclass
-class DeepFirstSearch:
+class DeepFirstSearch(Generic[AnyNode]):
     """Deep first search (DFS) algorithm.
 
     Args:
@@ -95,7 +95,7 @@ class DeepFirstSearch:
                 logger.info(f"\n{selected_node}")
                 return selected_node  # TODO: Do I need to find all possibilities, or just one?
 
-            new_nodes = selected_node.extend_node()
+            new_nodes: List[AnyNode] = selected_node.extend_node()
 
             if len(new_nodes) > 0:
                 for new_node in new_nodes:

@@ -1,9 +1,8 @@
 import abc
 from dataclasses import dataclass
-from types import UnionType
-from typing import TypeVar
+from typing import TypeAlias, TypeVar
 
-Real: UnionType = int | float
+Real: TypeAlias = int | float
 AnySymmetry = TypeVar("AnySymmetry", bound="AbstractSymmetry")
 
 

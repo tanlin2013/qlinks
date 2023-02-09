@@ -4,17 +4,17 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from enum import IntEnum
 from itertools import product
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Generic, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray
 
 from qlinks.exceptions import LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Spin, SpinConfigs
 from qlinks.lattice.square_lattice import SquareLattice
-from qlinks.solver.deep_first_search import Node
+from qlinks.solver.deep_first_search import AnyNode
 
 
 class Flow(IntEnum):
@@ -45,7 +45,7 @@ class GaussLaw:
 
     @staticmethod
     def random_charge_distri(
-        length: int, width: int, seed: Optional[int] = None, max_iter: Optional[int] = 1000
+        length: int, width: int, seed: Optional[int] = None, max_iter: int = 1000
     ) -> np.ndarray:
         r"""Randomly sample static charges spread on 2d square lattice.
 
@@ -81,8 +81,8 @@ class GaussLaw:
 
 
 @dataclass
-class SpinConfigSnapshot(Node, SquareLattice):
-    charge_distri: Optional[ArrayLike | np.ndarray] = None
+class SpinConfigSnapshot(Generic[AnyNode], SquareLattice):
+    charge_distri: Optional[NDArray[np.int64]] = None
 
     def __post_init__(self):
         super().__post_init__()
