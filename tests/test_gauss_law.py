@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 from scipy.special import binom
 
+from qlinks.exceptions import InvalidArgumentError
 from qlinks.solver.deep_first_search import DeepFirstSearch
 from qlinks.symmetry.gauss_law import GaussLaw, SpinConfigSnapshot
 
@@ -34,6 +35,21 @@ class TestGaussLaw:
         assert len(sampled_vals) == 5
         assert max(sampled_vals) == 2
         assert min(sampled_vals) == -2
+
+    @pytest.mark.parametrize(
+        "length, width, expectation",
+        [
+            (2, 2, does_not_raise()),
+            (6, 8, does_not_raise()),
+            (3, 3, pytest.raises(InvalidArgumentError))
+        ]
+    )
+    def test_staggered_charge_distri(self, length, width, expectation):
+        with expectation:
+            charges = GaussLaw.staggered_charge_distri(length, width)
+            assert np.sum(charges) == 0
+            assert np.all(np.unique(charges) == [-1, 1])
+            assert charges.shape == (width, length)
 
 
 class TestSpinConfigSnapshot:

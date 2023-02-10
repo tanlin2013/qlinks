@@ -83,6 +83,13 @@ class GaussLaw:
                 return samples.reshape((length, width))
         raise StopIteration(f"Couldn't sample a valid distribution within {max_iter} steps.")
 
+    @staticmethod
+    def staggered_charge_distri(length: int, width: int) -> np.ndarray:
+        if length % 2 != 0 or width % 2 != 0:
+            raise InvalidArgumentError("Length and width must be even number.")
+        stagger = np.array([[1, -1], [-1, 1]])
+        return np.tile(stagger, (width // 2, length // 2))
+
 
 @dataclass
 class SpinConfigSnapshot(Node, SquareLattice):
