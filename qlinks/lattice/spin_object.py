@@ -44,8 +44,8 @@ class Spin(np.ndarray):
 
 @dataclass(frozen=True, slots=True)
 class __SpinConfigCollection:
-    up: Spin = field(default_factory=lambda: Spin([1, 0], read_only=True))
-    down: Spin = field(default_factory=lambda: Spin([0, 1], read_only=True))
+    up: Spin = field(default_factory=lambda: Spin([[1], [0]], read_only=True))
+    down: Spin = field(default_factory=lambda: Spin([[0], [1]], read_only=True))
 
     def __iter__(self) -> Iterator[Spin]:
         return iter((self.up, self.down))
