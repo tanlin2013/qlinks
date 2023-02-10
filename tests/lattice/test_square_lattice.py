@@ -101,17 +101,26 @@ class TestSquareLattice:
         lattice.reset_vertex_links(Site(0, 0))
         assert np.isnan(lattice.charge(Site(0, 0)))
 
-    def test_charge(self):
+    @pytest.fixture(scope="function")
+    def preset_lattice(self):
         lattice = SquareLattice(2, 2)
+        lattice.set_vertex_links(
+            Site(0, 0), (SpinConfigs.down, SpinConfigs.up, SpinConfigs.down, SpinConfigs.up)
+        )
+        lattice.set_vertex_links(
+            Site(1, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
+        )
+        lattice.set_vertex_links(
+            Site(0, 1), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.down, SpinConfigs.down)
+        )
+        return lattice
+
+    def test_charge(self, lattice, preset_lattice):
         assert np.isnan(lattice.charge(Site(0, 0)))
-        lattice.set_vertex_links(
-            Site(0, 0), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.down, SpinConfigs.down)
-        )
-        assert lattice.charge(Site(0, 0)) == -2
-        lattice.set_vertex_links(
-            Site(1, 1), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.up, SpinConfigs.up)
-        )
-        assert lattice.charge(Site(1, 1)) == 0
+        assert preset_lattice.charge(Site(0, 0)) == 0
+        assert preset_lattice.charge(Site(1, 0)) == 2
+        assert preset_lattice.charge(Site(0, 1)) == -2
+        assert preset_lattice.charge(Site(1, 1)) == 0
 
 
 class TestPlaquette:
