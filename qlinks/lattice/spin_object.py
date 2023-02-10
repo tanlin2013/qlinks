@@ -129,8 +129,7 @@ class Link:
                 self.operator != other.operator or self.state != other.state
         ):
             raise InvalidOperationError(
-                "Links on same position but with different operators or "
-                "spin configurations are not comparable."
+                "Links on same position but with different operators or states are not comparable."
             )
         return (self.site, self.unit_vector) < (other.site, other.unit_vector)  # tuple comparison
 
@@ -141,7 +140,7 @@ class Link:
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}({self.site}, {self.unit_vector}, "
-            f"operator={self.operator}, config={self.state})"
+            f"operator={self.operator}, state={self.state})"
         )
 
     def conj(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
