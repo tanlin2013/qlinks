@@ -10,7 +10,11 @@ import networkx as nx
 import numpy as np
 from numpy.typing import NDArray
 
-from qlinks.exceptions import LinkOverridingError
+from qlinks.exceptions import (
+    InvalidArgumentError,
+    InvalidOperationError,
+    LinkOverridingError,
+)
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Spin, SpinConfigs
 from qlinks.lattice.square_lattice import SquareLattice
@@ -88,13 +92,15 @@ class SpinConfigSnapshot(Node, SquareLattice):
         super().__post_init__()
         if self.charge_distri is None:
             self.charge_distri = np.zeros(self.shape)
-        self.charge_distri = np.flipud(self.charge_distri).T
-        assert self.charge_distri.shape == self.shape
+        self.charge_distri = np.flipud(self.charge_distri)
+        if self.charge_distri.shape != self.shape:
+            raise InvalidArgumentError("Shape of charge distribution mismatches with the lattice.")
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SpinConfigSnapshot):
             return NotImplemented
-        assert self.shape == other.shape
+        if self.shape != other.shape:
+            raise InvalidOperationError(f"Shape of two {type(self).__name__} are mismatched.")
         return set(self.links.values()) == set(other.links.values())
 
     def __str__(self) -> str:
