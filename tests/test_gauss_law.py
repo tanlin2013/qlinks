@@ -32,6 +32,7 @@ class TestGaussLaw:
             sampled_vals.update(set(charges.flatten()))
             assert np.all(np.isin(charges, [-2, -1, 0, 1, 2])), f"got {charges}"
             assert np.sum(charges) == 0
+            assert charges.shape == (width, length)
         assert len(sampled_vals) == 5
         assert max(sampled_vals) == 2
         assert min(sampled_vals) == -2

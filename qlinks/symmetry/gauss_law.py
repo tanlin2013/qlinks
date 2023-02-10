@@ -68,7 +68,8 @@ class GaussLaw:
             max_iter: The maximum number of iterations for trial sampling. Default `1000`.
 
         Returns:
-            The drawn samples of shape (`length` :math:`\times` `width`).
+            The drawn samples of shape (`width` :math:`\times` `length`). Note that we have swapped
+            rows and columns to match with the lattice shape.
 
         Raises:
             StopIteration: If no valid distribution can be sampled within `max_iter` iterations.
@@ -80,7 +81,7 @@ class GaussLaw:
         for _ in range(max_iter):
             samples = min_val + rng.multinomial(n=sum_val - size * min_val, pvals=prob).flatten()
             if not np.any(samples > max_val):
-                return samples.reshape((length, width))
+                return samples.reshape((width, length))
         raise StopIteration(f"Couldn't sample a valid distribution within {max_iter} steps.")
 
     @staticmethod
