@@ -122,6 +122,14 @@ class TestSquareLattice:
         assert preset_lattice.charge(Site(0, 1)) == -2
         assert preset_lattice.charge(Site(1, 1)) == 0
 
+    def test_axial_flux(self, lattice, preset_lattice):
+        with pytest.raises(ValueError):
+            _ = lattice.axial_flux(0, axis=0)
+        assert preset_lattice.axial_flux(0, axis=0) == -2
+        assert preset_lattice.axial_flux(1, axis=0) == 2
+        assert preset_lattice.axial_flux(0, axis=1) == 2
+        assert preset_lattice.axial_flux(1, axis=1) == -2
+
 
 class TestPlaquette:
     @pytest.fixture(scope="class")

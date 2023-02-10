@@ -115,7 +115,12 @@ class SquareLattice:
         return charge / 2
 
     def axial_flux(self, idx: int, axis: Optional[int] = 0) -> Real:
-        return NotImplemented
+        unit_vector = {0: UnitVectors.rightward, 1: UnitVectors.upward}[axis]
+        sites = {
+            0: [Site(idx, y) for y in range(self.width)],
+            1: [Site(x, idx) for x in range(self.length)]
+        }[axis]
+        return sum([self.get_link((site, unit_vector)).flux for site in sites])
 
 
 @total_ordering
