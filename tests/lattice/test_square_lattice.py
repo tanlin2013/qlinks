@@ -19,7 +19,7 @@ class TestSquareLattice:
         with pytest.raises(InvalidArgumentError):
             _ = SquareLattice(1, 2).shape
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def lattice(self):
         return SquareLattice(4, 4)
 
@@ -93,6 +93,11 @@ class TestSquareLattice:
             )
 
     def test_reset_vertex_links(self, lattice):
+        assert np.isnan(lattice.charge(Site(0, 0)))
+        lattice.set_vertex_links(
+            Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
+        )
+        assert not np.isnan(lattice.charge(Site(0, 0)))
         lattice.reset_vertex_links(Site(0, 0))
         assert np.isnan(lattice.charge(Site(0, 0)))
 
