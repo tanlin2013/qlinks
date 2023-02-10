@@ -60,6 +60,7 @@ class TestSpinConfigSnapshot:
         dfs = DeepFirstSearch(snapshot)
         with expectation:
             filled_snapshot = dfs.search()
+            assert isinstance(filled_snapshot, SpinConfigSnapshot)
             for site in filled_snapshot:
                 assert filled_snapshot.charge(site) == filled_snapshot.charge_distri[*astuple(site)]
 
