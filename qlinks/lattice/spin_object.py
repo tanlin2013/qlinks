@@ -158,6 +158,10 @@ class Link:
             return reset_link
 
     @property
+    def index(self) -> LinkIndex:
+        return tuple((self.site, self.unit_vector))
+
+    @property
     def flux(self) -> Real:
         if self.state is None:
             raise ValueError("Link has not been set with any state yet, got None.")
