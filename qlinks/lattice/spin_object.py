@@ -3,13 +3,16 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Iterator, Optional, Sequence
+from typing import Iterator, Optional, Sequence, Tuple, TypeAlias
 
 import numpy as np
 from numpy.typing import ArrayLike
 
 from qlinks.exceptions import InvalidArgumentError, InvalidOperationError
 from qlinks.lattice.component import Site, UnitVector
+
+Real: TypeAlias = int | float | np.floating
+LinkIndex: TypeAlias = Tuple[Site, UnitVector]
 
 
 class Spin(np.ndarray):
@@ -35,7 +38,7 @@ class Spin(np.ndarray):
         return np.kron(self, other).view(Spin)
 
     @property
-    def magnetization(self) -> int | float:
+    def magnetization(self) -> Real:
         return ((self.T @ SpinOperators.Sz @ self) / (self.T @ self)).item()
 
 
@@ -155,7 +158,7 @@ class Link:
             return reset_link
 
     @property
-    def flux(self) -> int | float:
+    def flux(self) -> Real:
         if self.state is None:
             raise ValueError("Link has not been set with any state yet, got None.")
         return self.state.magnetization

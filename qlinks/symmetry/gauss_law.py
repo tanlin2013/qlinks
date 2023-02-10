@@ -136,6 +136,12 @@ class SpinConfigSnapshot(Node, SquareLattice):
                 return False
         return True
 
+    def solve(self) -> SpinConfigSnapshot:
+        dfs = DeepFirstSearch(self)
+        snapshot = dfs.search()
+        assert isinstance(snapshot, SpinConfigSnapshot)
+        return snapshot
+
     @property
     def adjacency_matrix(self) -> np.ndarray:
         adj_mat = np.zeros((self.size, self.size))
