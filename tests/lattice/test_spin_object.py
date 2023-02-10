@@ -33,6 +33,11 @@ class TestSpin:
         assert Spin([1, 0]) == Spin([1, 0])
         assert Spin([1, 0]) != Spin([0, 1])
 
+    def test_inner_product(self):
+        assert (SpinConfigs.up.T @ SpinConfigs.up).item() == 1
+        assert (SpinConfigs.down.T @ SpinConfigs.down).item() == 1
+        assert (SpinConfigs.up.T @ SpinConfigs.down).item() == 0
+
 
 class TestSpinOperator:
     def test_constructor(self):
