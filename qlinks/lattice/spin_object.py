@@ -158,7 +158,7 @@ class Link:
 
     @property
     def index(self) -> LinkIndex:
-        return tuple((self.site, self.unit_vector))
+        return self.site, self.unit_vector
 
     @property
     def flux(self) -> Real:
