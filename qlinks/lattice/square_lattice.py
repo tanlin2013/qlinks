@@ -192,10 +192,6 @@ class QuasiLocalOperator(abc.ABC):
         if not inplace:
             return conj_spin_obj
 
-    def set_state(self, state: Tuple[Spin, ...]) -> None:
-        for idx, link in enumerate(self):
-            link.state = state[idx]
-
 
 @dataclass
 class Plaquette(QuasiLocalOperator):
