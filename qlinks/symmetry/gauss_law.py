@@ -17,7 +17,7 @@ from qlinks.exceptions import (
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Spin, SpinConfigs
 from qlinks.lattice.square_lattice import SquareLattice, LatticeState
-from qlinks.solver.deep_first_search import Node, DeepFirstSearch
+from qlinks.solver.deep_first_search import Node
 
 
 class Flow(IntEnum):
@@ -148,12 +148,8 @@ class SpinConfigSnapshot(Node, SquareLattice):
                 return False
         return True
 
-    def solve(self, n_solution: Optional[int] = None, max_steps: int = 50000) -> List[LatticeState]:
-        dfs = DeepFirstSearch(self, max_steps)
-        n_solution = self.hilbert_dims[0] if n_solution is None else n_solution
-        snapshots = dfs.search(n_solution)
-        assert all(isinstance(s, SpinConfigSnapshot) for s in snapshots)
-        return [LatticeState(*s.shape, link_data=s.links) for s in snapshots]
+    def to_state(self) -> LatticeState:
+        return LatticeState(*self.shape, link_data=self.links)
 
     def plot(self) -> None:
         pass
