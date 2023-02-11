@@ -145,13 +145,24 @@ class LatticeState(SquareLattice):
             link.flux for link in other.links.values()
         )
 
+    def __matmul__(self, other: LatticeState) -> Real:
+        if not isinstance(other, LatticeState):
+            return NotImplemented
+        val: Real = 1
+        for contra_link, co_link in zip(self.links.values(), other.links.values()):
+            val *= (contra_link.state @ co_link.state).item()
+        return val
+
     @classmethod
     def from_snapshot(cls, snapshot) -> Self:
         return cls(snapshot.length, snapshot.width, snapshot.links)
 
     @property
-    def tsp(self):
-        return NotImplemented
+    def T(self):  # noqa: N802
+        transpose_state = deepcopy(self)
+        for idx, link in transpose_state.links.items():
+            transpose_state._links[idx].state = link.state.T
+        return transpose_state
 
 
 @dataclass
@@ -186,11 +197,32 @@ class QuasiLocalOperator(abc.ABC):
     def __iter__(self) -> Iterator[Link]:
         return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))
 
-    def __matmul__(self, other: LatticeState):
-        pass
+    def _get_extended_loc_opt(self) -> Dict[LinkIndex, SpinOperator]:
+        quasi_loc_opt = {link.index: link.operator for link in self}
+        return {
+            link.index: (
+                link.operator if link.index not in quasi_loc_opt else quasi_loc_opt[link.index]
+            )
+            for link in self.lattice.iter_links()
+        }
 
-    def __rmatmul__(self, other: LatticeState):
-        pass
+    def __matmul__(self, other: LatticeState) -> LatticeState:
+        if self.lattice.shape != other.shape:
+            raise InvalidOperationError("Dimensions mismatch.")
+        link_data = deepcopy(other.links)
+        extended_loc_opt = self._get_extended_loc_opt()
+        for idx, link in link_data.items():
+            link_data[idx].state = (extended_loc_opt[idx] @ other.links[idx].state).view(Spin)
+        return LatticeState(*other.shape, link_data=link_data)
+
+    def __rmatmul__(self, other: LatticeState) -> LatticeState:
+        if self.lattice.shape != other.shape:
+            raise InvalidOperationError("Dimensions mismatch.")
+        link_data = deepcopy(other.links)
+        extended_loc_opt = self._get_extended_loc_opt()
+        for idx, link in link_data.items():
+            link_data[idx].state = (other.links[idx].state @ extended_loc_opt[idx]).view(Spin)
+        return LatticeState(*other.shape, link_data=link_data)
 
     def conj(self, inplace: bool = False) -> Self | None:  # type: ignore[return]
         conj_spin_obj = self if inplace else deepcopy(self)
