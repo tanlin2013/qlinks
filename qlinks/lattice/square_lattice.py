@@ -202,6 +202,9 @@ class QuasiLocalOperator(abc.ABC):
         operators = [link.operator for link in sorted(quasi_loc_opt)]
         return reduce((lambda x, y: x ^ y), operators)
 
+    def __iter__(self) -> Iterator[Link]:
+        return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))
+
     def __add__(self, other: QuasiLocalOperator) -> SpinOperator:
         if self.site != other.site:
             raise InvalidOperationError(
@@ -209,8 +212,13 @@ class QuasiLocalOperator(abc.ABC):
             )
         return (np.array(self) + np.array(other)).view(SpinOperator)
 
-    def __iter__(self) -> Iterator[Link]:
-        return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))
+    def __mul__(self, other: QuasiLocalOperator) -> QuasiLocalOperator:
+        if not isinstance(other, QuasiLocalOperator):
+            return NotImplemented
+        quasi_loc_opt = deepcopy(self)
+        for fore_link, post_link in zip(quasi_loc_opt, other):
+            fore_link.operator = fore_link.operator @ post_link.operator
+        return quasi_loc_opt
 
     def _get_extended_loc_opt(self) -> Dict[LinkIndex, SpinOperator]:
         quasi_loc_opt = {link.index: link.operator for link in self}

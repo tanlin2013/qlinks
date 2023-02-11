@@ -226,6 +226,22 @@ class TestPlaquette:
         with pytest.raises(InvalidOperationError):
             _ = Plaquette(lattice, Site(0, 0)) + Plaquette(lattice, Site(0, 1))
 
+    def test_multiplication(self, plaquette):
+        opt = plaquette.conj() * plaquette
+        assert opt.link_d.operator == SpinOperators.Sm @ SpinOperators.Sp
+        assert opt.link_r.operator == SpinOperators.Sm @ SpinOperators.Sp
+        assert opt.link_t.operator == SpinOperators.Sp @ SpinOperators.Sm
+        assert opt.link_l.operator == SpinOperators.Sp @ SpinOperators.Sm
+        opt2 = plaquette * plaquette.conj()
+        assert opt2.link_d.operator == SpinOperators.Sp @ SpinOperators.Sm
+        assert opt2.link_r.operator == SpinOperators.Sp @ SpinOperators.Sm
+        assert opt2.link_t.operator == SpinOperators.Sm @ SpinOperators.Sp
+        assert opt2.link_l.operator == SpinOperators.Sm @ SpinOperators.Sp
+        for link in (plaquette * plaquette):
+            assert link.operator == SpinOperators.O2
+        for link in (plaquette.conj() * plaquette.conj()):
+            assert link.operator == SpinOperators.O2
+
     @pytest.fixture(scope="function")
     def clockwise_state(self):
         lattice = SquareLattice(2, 2)
