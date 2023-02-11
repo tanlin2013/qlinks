@@ -4,12 +4,16 @@ import abc
 from collections import deque
 from dataclasses import dataclass, field
 from itertools import count
-from typing import Deque, List, Self
+from typing import Deque, List, Self, Set
 
 from qlinks import logger
 
 
 class Node(abc.ABC):
+    @abc.abstractmethod
+    def __hash__(self) -> int:
+        ...
+
     @abc.abstractmethod
     def __eq__(self, other: object) -> bool:
         ...
@@ -37,8 +41,8 @@ class DeepFirstSearch:
 
     Attributes:
         frontier: A :class:`deque` of :class:`Node` to be determined.
-        checked_nodes: A list of checked :class:`Node`.
-        selected_nodes: A list of :class:`Node` representing candidate solutions.
+        checked_nodes: A :class:`set` of checked :class:`Node`.
+        selected_nodes: A :class:`deque` of :class:`Node` representing candidate solutions.
 
     Examples:
         If :class:`Node` has been implemented, the algorithm can be launched through
@@ -57,8 +61,8 @@ class DeepFirstSearch:
     start_state: Node
     max_steps: int = 1000
     frontier: Deque[Node] = field(default_factory=deque)
-    checked_nodes: List[Node] = field(default_factory=list)
-    selected_nodes: List[Node] = field(default_factory=list)
+    checked_nodes: Set[Node] = field(default_factory=set)
+    selected_nodes: Deque[Node] = field(default_factory=deque)
 
     def __post_init__(self):
         self.frontier.append(self.start_state)
@@ -68,7 +72,7 @@ class DeepFirstSearch:
 
     def remove_from_frontier(self) -> Node:
         first_node = self.frontier.popleft()
-        self.checked_nodes.append(first_node)
+        self.checked_nodes.add(first_node)
         return first_node
 
     def frontier_is_empty(self) -> bool:
@@ -99,7 +103,7 @@ class DeepFirstSearch:
                     f"No more new Solutions can be found, end up with "
                     f"{len(self.selected_nodes)} Solutions."
                 )
-                return self.selected_nodes
+                return list(self.selected_nodes)
 
             selected_node = self.remove_from_frontier()
 
@@ -111,7 +115,8 @@ class DeepFirstSearch:
                 if n_solution == 1:
                     return selected_node
                 elif len(self.selected_nodes) >= n_solution:
-                    return self.selected_nodes
+                    logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
+                    return list(self.selected_nodes)
 
             new_nodes: List[Node] = selected_node.extend_node()
 

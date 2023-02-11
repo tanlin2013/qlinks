@@ -104,6 +104,9 @@ class SpinConfigSnapshot(Node, SquareLattice):
         if self.charge_distri.shape != self.shape:
             raise InvalidArgumentError("Shape of charge distribution mismatches with the lattice.")
 
+    def __hash__(self) -> int:
+        return hash(frozenset(self.links.values()))
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SpinConfigSnapshot):
             return NotImplemented
