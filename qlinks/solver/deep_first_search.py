@@ -109,9 +109,12 @@ class DeepFirstSearch:
 
             if selected_node.is_the_solution():
                 self.selected_nodes.append(selected_node)
-                logger.info(f"A New solution is Found in {n_step} steps.")
-                logger.info(f"Totally, we have Found {len(self.selected_nodes)} Solutions.")
-                logger.info(f"New Solution: \n{selected_node}")
+                logger.debug(f"A New solution is Found after {n_step} steps.")
+                logger.debug(
+                    f"Totally, we have Found {len(self.selected_nodes)} Solutions "
+                    f"[{len(self.checked_nodes)} checked | {len(self.frontier)} unchecked]."
+                )
+                logger.debug(f"New Solution: \n{selected_node}")
                 if n_solution == 1:
                     return selected_node
                 elif len(self.selected_nodes) >= n_solution:
