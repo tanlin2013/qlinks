@@ -13,6 +13,10 @@ from qlinks.lattice.spin_object import (
 
 
 class TestSpin:
+    def test_constructor(self):
+        assert SpinConfigs.up.dtype == np.float64
+        assert SpinConfigs.down.dtype == np.float64
+
     def test_get_item(self):
         assert Spin([0, 1])[0] == 0
         assert Spin([0, 1])[1] == 1

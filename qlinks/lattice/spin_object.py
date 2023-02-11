@@ -16,8 +16,8 @@ LinkIndex: TypeAlias = Tuple[Site, UnitVector]
 
 
 class Spin(np.ndarray):
-    def __new__(cls, data: ArrayLike | Sequence, read_only: bool = False):
-        arr = np.asarray(data).view(cls)
+    def __new__(cls, data: ArrayLike | Sequence, read_only: bool = False, **kwargs):
+        arr = np.asarray(data, **kwargs).view(cls)
         arr.setflags(write=not read_only)
         return arr
 
@@ -44,8 +44,8 @@ class Spin(np.ndarray):
 
 @dataclass(frozen=True, slots=True)
 class __SpinConfigCollection:
-    up: Spin = field(default_factory=lambda: Spin([[1], [0]], read_only=True))
-    down: Spin = field(default_factory=lambda: Spin([[0], [1]], read_only=True))
+    up: Spin = field(default_factory=lambda: Spin([[1], [0]], dtype=float, read_only=True))
+    down: Spin = field(default_factory=lambda: Spin([[0], [1]], dtype=float, read_only=True))
 
     def __iter__(self) -> Iterator[Spin]:
         return iter((self.up, self.down))
