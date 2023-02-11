@@ -27,12 +27,12 @@ class Spin(np.ndarray):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Spin):
             return NotImplemented
-        return np.array_equal(self, other)
+        return np.allclose(self, other, atol=1e-12)
 
     def __ne__(self, other: object) -> bool:
         if not isinstance(other, Spin):
             return NotImplemented
-        return not np.array_equal(self, other)
+        return not np.allclose(self, other, atol=1e-12)
 
     def __xor__(self, other: Spin) -> Spin:  # type: ignore[override]
         return np.kron(self, other).view(Spin)
@@ -66,12 +66,12 @@ class SpinOperator(np.ndarray):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SpinOperator):
             return NotImplemented
-        return np.array_equal(self, other)
+        return np.allclose(self, other, atol=1e-12)
 
     def __ne__(self, other: object) -> bool:
         if not isinstance(other, SpinOperator):
             return NotImplemented
-        return not np.array_equal(self, other)
+        return not np.allclose(self, other, atol=1e-12)
 
     def __xor__(self, other: SpinOperator) -> SpinOperator:  # type: ignore[override]
         return np.kron(self, other).view(SpinOperator)
