@@ -157,7 +157,7 @@ class LatticeState(SquareLattice):
         return super().__str__().replace("\n", "")
 
     def __hash__(self) -> int:
-        return hash(frozenset(self.links.items()))
+        return hash(frozenset(self.links.values()))
 
     def __lt__(self, other: LatticeState) -> bool:
         return tuple(link.flux for link in self.links.values()) < tuple(
