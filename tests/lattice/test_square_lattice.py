@@ -12,7 +12,7 @@ from qlinks.exceptions import (
 )
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Link, SpinConfigs, SpinOperator, SpinOperators
-from qlinks.lattice.square_lattice import Vertex, Plaquette, SquareLattice, LatticeState
+from qlinks.lattice.square_lattice import LatticeState, Plaquette, SquareLattice, Vertex
 
 
 class TestSquareLattice:
@@ -237,9 +237,9 @@ class TestPlaquette:
         assert opt2.link_r.operator == SpinOperators.Sp @ SpinOperators.Sm
         assert opt2.link_t.operator == SpinOperators.Sm @ SpinOperators.Sp
         assert opt2.link_l.operator == SpinOperators.Sm @ SpinOperators.Sp
-        for link in (plaquette * plaquette):
+        for link in plaquette * plaquette:
             assert link.operator == SpinOperators.O2
-        for link in (plaquette.conj() * plaquette.conj()):
+        for link in plaquette.conj() * plaquette.conj():
             assert link.operator == SpinOperators.O2
 
     @pytest.fixture(scope="function")

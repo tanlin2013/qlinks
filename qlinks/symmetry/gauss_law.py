@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from enum import IntEnum
 from itertools import product
-from typing import Dict, List, Optional, Tuple, Self
+from typing import Dict, List, Optional, Self, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -16,7 +16,7 @@ from qlinks.exceptions import (
 )
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Spin, SpinConfigs
-from qlinks.lattice.square_lattice import SquareLattice, LatticeState
+from qlinks.lattice.square_lattice import LatticeState, SquareLattice
 from qlinks.solver.deep_first_search import Node
 
 

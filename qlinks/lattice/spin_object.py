@@ -126,7 +126,7 @@ class Link:
 
     def __lt__(self, other: Link) -> bool:
         if (self.site, self.unit_vector) == (other.site, other.unit_vector) and (
-                self.operator != other.operator or self.state != other.state
+            self.operator != other.operator or self.state != other.state
         ):
             raise InvalidOperationError(
                 "Links on same position but with different operators or states are not comparable."

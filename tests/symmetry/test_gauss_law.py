@@ -42,8 +42,8 @@ class TestGaussLaw:
         [
             (2, 2, does_not_raise()),
             (6, 8, does_not_raise()),
-            (3, 3, pytest.raises(InvalidArgumentError))
-        ]
+            (3, 3, pytest.raises(InvalidArgumentError)),
+        ],
     )
     def test_staggered_charge_distri(self, length, width, expectation):
         with expectation:
@@ -88,7 +88,7 @@ class TestSpinConfigSnapshot:
             ([[1, -1], [-1, 1]], 8, does_not_raise()),
             ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, pytest.raises(StopIteration)),
             # (np.zeros((4, 4)), 2970, does_not_raise()),
-        ]
+        ],
     )
     def test_multi_solutions(self, charge_distri, n_expected_solution, expectation):
         width, length = np.asarray(charge_distri).shape

@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from typing import TypeAlias, Tuple
+from typing import Tuple, TypeAlias
 
 import numpy as np
 
