@@ -217,7 +217,7 @@ class QuasiLocalOperator(abc.ABC):
             return NotImplemented
         quasi_loc_opt = deepcopy(self)
         for fore_link, post_link in zip(quasi_loc_opt, other):
-            fore_link.operator = fore_link.operator @ post_link.operator
+            fore_link.operator = (fore_link.operator @ post_link.operator).view(SpinOperator)
         return quasi_loc_opt
 
     def _get_extended_loc_opt(self) -> Dict[LinkIndex, SpinOperator]:
