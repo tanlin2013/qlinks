@@ -198,13 +198,13 @@ class QuasiLocalOperator(abc.ABC):
         ...
 
     def __array__(self) -> np.ndarray:
-        spin_obj = [link for link in self]
+        quasi_loc_opt = [link for link in self]
         skip_links = [link.reset() for link in self]
         for identity_link in self.lattice.iter_links():
             if identity_link not in skip_links:
-                spin_obj.append(identity_link)
-        operators = [link.operator for link in sorted(spin_obj)]
-        return reduce((lambda x, y: x ^ y), operators).reshape(self.lattice.hilbert_dims)
+                quasi_loc_opt.append(identity_link)
+        operators = [link.operator for link in sorted(quasi_loc_opt)]
+        return reduce((lambda x, y: x ^ y), operators)
 
     def __add__(self, other: QuasiLocalOperator) -> SpinOperator:
         if self.site != other.site:
