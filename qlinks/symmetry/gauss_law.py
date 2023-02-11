@@ -6,7 +6,6 @@ from enum import IntEnum
 from itertools import product
 from typing import Dict, List, Optional, Tuple
 
-import networkx as nx
 import numpy as np
 from numpy.typing import NDArray
 
@@ -154,24 +153,6 @@ class SpinConfigSnapshot(Node, SquareLattice):
         snapshot = dfs.search()
         assert isinstance(snapshot, SpinConfigSnapshot)
         return snapshot
-
-    @property
-    def adjacency_matrix(self) -> np.ndarray:
-        adj_mat = np.zeros((self.size, self.size))
-        hash_table = {site: idx for idx, site in enumerate(self)}
-        for site, unit_vector in product(self, UnitVectors.iter_all_directions()):
-            inds = (hash_table[site], hash_table[self[site + unit_vector]])  # head to tail
-            link = self.get_link((site, unit_vector))
-            if unit_vector.sign * link.flux > 0:
-                adj_mat[*inds] += 1
-            else:
-                adj_mat[*inds[::-1]] += 1
-        return (adj_mat / 2).astype(int)
-
-    def as_graph(self) -> nx.MultiDiGraph:
-        return nx.from_numpy_array(
-            self.adjacency_matrix, parallel_edges=True, create_using=nx.MultiDiGraph
-        )
 
     def plot(self) -> None:
         pass

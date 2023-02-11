@@ -7,6 +7,7 @@ from functools import reduce, total_ordering
 from itertools import product
 from typing import Dict, Iterator, List, Optional, Self, Tuple, TypeAlias
 
+import networkx as nx
 import numpy as np
 
 from qlinks.exceptions import (
@@ -121,6 +122,24 @@ class SquareLattice:
             1: [Site(x, idx) for x in range(self.length)]
         }[axis]
         return sum([self.get_link((site, unit_vector)).flux for site in sites])
+
+    @property
+    def adjacency_matrix(self) -> np.ndarray:
+        adj_mat = np.zeros((self.size, self.size))
+        hash_table = {site: idx for idx, site in enumerate(self)}
+        for site, unit_vector in product(self, UnitVectors.iter_all_directions()):
+            inds = (hash_table[site], hash_table[self[site + unit_vector]])  # head to tail
+            link = self.get_link((site, unit_vector))
+            if unit_vector.sign * link.flux > 0:
+                adj_mat[*inds] += 1
+            else:
+                adj_mat[*inds[::-1]] += 1
+        return (adj_mat / 2).astype(int)
+
+    def as_graph(self) -> nx.MultiDiGraph:
+        return nx.from_numpy_array(
+            self.adjacency_matrix, parallel_edges=True, create_using=nx.MultiDiGraph
+        )
 
 
 @total_ordering
