@@ -172,10 +172,6 @@ class LatticeState(SquareLattice):
             val *= (contra_link.state @ co_link.state).item()
         return val
 
-    @classmethod
-    def from_snapshot(cls, snapshot) -> Self:
-        return cls(snapshot.length, snapshot.width, snapshot.links)
-
     @property
     def T(self):  # noqa: N802
         transpose_state = deepcopy(self)
