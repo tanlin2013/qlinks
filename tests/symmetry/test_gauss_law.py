@@ -86,21 +86,28 @@ class TestSpinConfigSnapshot:
         [
             (np.zeros((2, 2)), 18, does_not_raise()),
             ([[1, -1], [-1, 1]], 8, does_not_raise()),
-            ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, pytest.raises(StopIteration))
+            ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, pytest.raises(StopIteration)),
+            # (np.zeros((4, 4)), 2970, does_not_raise()),
         ]
     )
     def test_multi_solutions(self, charge_distri, n_expected_solution, expectation):
         width, length = np.asarray(charge_distri).shape
         snapshot = SpinConfigSnapshot(length, width, charge_distri)
-        dfs = DeepFirstSearch(snapshot)
+        dfs = DeepFirstSearch(snapshot, max_steps=30000)
         with expectation:
-            filled_snapshots = dfs.search(n_solution=1000)  # far more than all possibilities
+            filled_snapshots = dfs.search(n_solution=3000)  # far more than all possibilities
             assert all(isinstance(s, SpinConfigSnapshot) for s in filled_snapshots)
             assert len(filled_snapshots) == n_expected_solution
 
     @pytest.fixture(
         scope="class",
-        params=[[[-1, 0], [0, 1]], [[-2, 0], [0, 2]], [[1, 1, -2], [-2, 0, 0], [0, 2, 0]]],
+        params=[
+            [[-1, 0], [0, 1]],
+            [[-2, 0], [0, 2]],
+            [[1, 1, -2], [-2, 0, 0], [0, 2, 0]],
+            np.zeros((4, 4)),
+            GaussLaw.staggered_charge_distri(4, 4),
+        ],
     )
     def snapshot(self, request):
         charge_distri = request.param
