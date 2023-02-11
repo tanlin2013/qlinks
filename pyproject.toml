@@ -11,11 +11,11 @@ python = ">=3.8,<3.12"
 tqdm = "^4.63.0"
 numpy = "^1.22"
 scipy = "^1.10.0"
+networkx = "^3.0"
 matplotlib = { version = "^3.6.3", optional = true}
-networkx = { version = "^3.0", optional = true}
 
 [tool.poetry.extras]
-drawing = ["matplotlib", "networkx"]
+drawing = ["matplotlib"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.19.0"
