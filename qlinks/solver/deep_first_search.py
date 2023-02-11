@@ -37,7 +37,7 @@ class DeepFirstSearch:
 
     Args:
         start_state: The initial state as the first :class:`Node`.
-        max_steps: The maximum number of steps for deep first search. Default 1000.
+        max_steps: The maximum number of steps for deep first search. Default 50000.
 
     Attributes:
         frontier: A :class:`deque` of :class:`Node` to be determined.
@@ -59,7 +59,7 @@ class DeepFirstSearch:
     """
 
     start_state: Node
-    max_steps: int = 1000
+    max_steps: int = 50000
     frontier: Deque[Node] = field(default_factory=deque)
     checked_nodes: Set[Node] = field(default_factory=set)
     selected_nodes: Deque[Node] = field(default_factory=deque)
@@ -99,9 +99,11 @@ class DeepFirstSearch:
             if self.frontier_is_empty() or n_step == self.max_steps:
                 if len(self.selected_nodes) == 0:
                     raise StopIteration(f"No Solution Found after {n_step} steps!")
+                elif n_step == self.max_steps:
+                    logger.warning("Reach maximally allowed steps, search ends beforehand.")
                 logger.info(
                     f"No more new Solutions can be found, end up with "
-                    f"{len(self.selected_nodes)} Solutions."
+                    f"{len(self.selected_nodes)} Solutions in {n_step} steps."
                 )
                 return list(self.selected_nodes)
 
@@ -116,6 +118,7 @@ class DeepFirstSearch:
                 )
                 logger.debug(f"New Solution: \n{selected_node}")
                 if n_solution == 1:
+                    logger.info(f"Found {n_solution} Solution as required in {n_step} steps.")
                     return selected_node
                 elif len(self.selected_nodes) >= n_solution:
                     logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
