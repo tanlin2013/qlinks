@@ -29,9 +29,15 @@ class TestSpin:
     def test_tensor_product(self):
         assert Spin([1, 0]) ^ Spin([0, 1]) == Spin([0, 1, 0, 0])
 
-    @pytest.mark.parametrize("spin, expected", [(SpinConfigs.up, 1), (SpinConfigs.down, -1)])
+    @pytest.mark.parametrize(
+        "spin, expected",
+        [(SpinConfigs.up, 1), (SpinConfigs.down, -1), (Spin([[0], [0]]), np.nan)]
+    )
     def test_magnetization(self, spin, expected):
-        assert spin.magnetization == expected
+        if np.isnan(expected):
+            assert np.isnan(spin.magnetization)
+        else:
+            assert spin.magnetization == expected
 
     def test_equality(self):
         assert Spin([1, 0]) == Spin([1, 0])
