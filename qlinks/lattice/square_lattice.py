@@ -25,12 +25,12 @@ LinkIndex: TypeAlias = Tuple[Site, UnitVector]
 class SquareLattice:
     length: int
     width: int
-    __links: Dict[LinkIndex, Link] = field(init=False, repr=False)
+    _links: Dict[LinkIndex, Link] = field(init=False, repr=False)
 
     def __post_init__(self):
         if any(axis < 2 for axis in self.shape):
             raise InvalidArgumentError("Lattice size should be least 2 by 2.")
-        self.__links = {(link.site, link.unit_vector): link for link in self.iter_links()}
+        self._links = {link.index: link for link in self.iter_links()}
 
     def __getitem__(self, coord: Tuple[int, int] | Site) -> Site:
         coord = astuple(coord) if isinstance(coord, Site) else coord  # type: ignore[assignment]
@@ -70,14 +70,14 @@ class SquareLattice:
 
     @property
     def links(self) -> Dict[LinkIndex, Link]:
-        return self.__links
+        return self._links
 
     def get_link(self, link_index: LinkIndex) -> Link:
         site, unit_vector = link_index
         if unit_vector.sign < 0:
             site += unit_vector
             unit_vector *= -1
-        return self.__links[(self[site], unit_vector)]
+        return self._links[(self[site], unit_vector)]
 
     def set_link(self, link_index: LinkIndex, state: Spin) -> None:
         link = self.get_link(link_index)
@@ -129,7 +129,13 @@ class LatticeState(SquareLattice):
     link_data: Dict[LinkIndex, Link]
 
     def __post_init__(self):
-        self.__links = deepcopy(self.link_data)
+        self._links = deepcopy(self.link_data)
+        for link in self.links.values():
+            if link.state is None:
+                raise InvalidArgumentError("Provided link data has state in None.")
+
+    def __str__(self) -> str:
+        return super().__str__().replace("\n", "")
 
     def __hash__(self) -> int:
         return hash(frozenset(self.links.items()))
