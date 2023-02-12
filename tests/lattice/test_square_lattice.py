@@ -86,6 +86,13 @@ class TestSquareLattice:
                 assert links[idx].unit_vector == unit_vector
 
     def test_set_vertex_links(self, lattice):
+        """
+              ▲      │
+              │      ▼
+        ◄─────o◄────►o◄─────
+              │      ▲
+              ▼      │
+        """
         lattice.set_vertex_links(
             Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
         )
@@ -95,6 +102,13 @@ class TestSquareLattice:
             )
 
     def test_reset_vertex_links(self, lattice):
+        """
+              ▲
+              │
+        ◄─────o─────►
+              │
+              ▼
+        """
         assert np.isnan(lattice.charge(Site(0, 0)))
         lattice.set_vertex_links(
             Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
@@ -105,6 +119,16 @@ class TestSquareLattice:
 
     @pytest.fixture(scope="function")
     def preset_lattice(self):
+        """
+           │      │
+           ▼      ▼
+        ──►o◄─────o──►
+           ▲      ▲
+           │      │
+        ──►o◄─────o──►
+           │      │
+           ▼      ▼
+        """
         lattice = SquareLattice(2, 2)
         lattice.set_vertex_links(
             Site(0, 0), (SpinConfigs.down, SpinConfigs.up, SpinConfigs.down, SpinConfigs.up)
@@ -136,6 +160,16 @@ class TestSquareLattice:
 class TestLatticeState:
     @pytest.fixture(scope="function")
     def state_data(self):
+        """
+           ▲      ▲           │     │            ▲      ▲           │      │
+           │      │           ▼     ▼            │      │           ▼      ▼
+        ──►o─────►o──►     ──►o─────►o──►     ◄──o◄─────o◄──     ◄──o◄─────o◄──
+           ▲      ▲           │     │            ▲      ▲           │      │
+           │      │           ▼     ▼            │      │           ▼      ▼
+        ──►o─────►o──►     ──►o─────►o──►     ◄──o◄─────o◄──     ◄──o◄─────o◄──
+           ▲      ▲           │     │            ▲      ▲           │      │
+           │      │           ▼     ▼            │      │           ▼      ▼
+        """
         return [
             (SpinConfigs.up, SpinConfigs.up),
             (SpinConfigs.up, SpinConfigs.down),
@@ -173,9 +207,6 @@ class TestLatticeState:
         assert states[2].T @ states[1] == 0
         assert states[0].T @ states[3] == 0
 
-    def test_from_snapshot(self):
-        pass
-
     def test_transpose(self, states):
         for state in states:
             for link in state.links.values():
@@ -210,7 +241,7 @@ class TestPlaquette:
         plt.matshow(arr)
         plt.colorbar()
         plt.show()
-        # TODO: test plaque apply on state can flip flux loop
+        # TODO: test plaquette apply on state can flip flux loop
 
     def test_conj(self, plaquette):
         arr = plaquette.conj()
@@ -244,6 +275,16 @@ class TestPlaquette:
 
     @pytest.fixture(scope="function")
     def clockwise_state(self):
+        """
+           ▲      │
+           │      ▼
+        ──►o─────►o──►
+           ▲      │
+           │      ▼
+        ◄──o◄─────o◄──
+           ▲      │
+           │      ▼
+        """
         lattice = SquareLattice(2, 2)
         lattice.set_vertex_links(
             Site(0, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.up)
@@ -261,6 +302,16 @@ class TestPlaquette:
 
     @pytest.fixture(scope="function")
     def anti_clockwise_state(self):
+        """
+           ▲      │
+           │      ▼
+        ──►o◄─────o──►
+           │      ▲
+           ▼      │
+        ◄──o─────►o◄──
+           ▲      │
+           │      ▼
+        """
         lattice = SquareLattice(2, 2)
         lattice.set_vertex_links(
             Site(0, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.up, SpinConfigs.down)
