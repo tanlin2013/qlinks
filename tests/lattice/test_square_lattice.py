@@ -328,6 +328,18 @@ class TestPlaquette:
         return LatticeState(*lattice.shape, link_data=lattice.links)
 
     def test_matrix_multiplication(self, lattice, plaquette, clockwise_state, anti_clockwise_state):
+        """
+        - Invalid state: 2 links become zero state.
+
+           │      ▲
+           ▼   0  │
+        ──►o──────o──►
+           ▲      │
+           │      ▼
+        ◄──o──────o◄──
+           ▲   0  │
+           │      ▼
+        """
         assert plaquette @ clockwise_state == anti_clockwise_state
         assert plaquette.conj() @ anti_clockwise_state == clockwise_state
         assert clockwise_state.T @ plaquette @ clockwise_state == 0
