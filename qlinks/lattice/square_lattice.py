@@ -234,7 +234,7 @@ class QuasiLocalOperator(abc.ABC):
             raise InvalidOperationError("Dimensions mismatch.")
         link_data = deepcopy(other.links)
         extended_loc_opt = self._get_extended_loc_opt()
-        for idx, link in link_data.items():
+        for idx in link_data.keys():
             link_data[idx].state = (extended_loc_opt[idx] @ other.links[idx].state).view(Spin)
         return LatticeState(*other.shape, link_data=link_data)
 
@@ -243,7 +243,7 @@ class QuasiLocalOperator(abc.ABC):
             raise InvalidOperationError("Dimensions mismatch.")
         link_data = deepcopy(other.links)
         extended_loc_opt = self._get_extended_loc_opt()
-        for idx, link in link_data.items():
+        for idx in link_data.keys():
             link_data[idx].state = (other.links[idx].state @ extended_loc_opt[idx]).view(Spin)
         return LatticeState(*other.shape, link_data=link_data)
 
