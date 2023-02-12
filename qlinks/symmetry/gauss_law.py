@@ -117,9 +117,7 @@ class SpinConfigSnapshot(Node, SquareLattice):
         return set(self.links.values()) == set(other.links.values())
 
     def __str__(self) -> str:
-        str_links = list(map(repr, list(self.links.values())))
-        str_links = [str_link.replace("\n", "") for str_link in str_links]
-        return ",\n".join(str_links)
+        return ",\n".join(list(map(repr, list(self.links.values()))))
 
     def find_first_empty_site(self) -> Site | None:
         for site in self:

@@ -153,9 +153,6 @@ class LatticeState(SquareLattice):
             if link.state is None:
                 raise InvalidArgumentError("Provided link data has state in None.")
 
-    def __str__(self) -> str:
-        return super().__str__().replace("\n", "")
-
     def __hash__(self) -> int:
         return hash(frozenset(self.links.values()))
 

@@ -143,6 +143,9 @@ class Link:
             f"operator={self.operator}, state={self.state})"
         )
 
+    def __str__(self) -> str:
+        return super().__str__().replace("\n", "")
+
     def conj(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
         conj_link = self if inplace else deepcopy(self)
         conj_link.operator = self.operator.conj
