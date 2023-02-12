@@ -7,6 +7,7 @@ from itertools import product
 from typing import Dict, List, Optional, Self, Tuple
 
 import numpy as np
+import ring
 from numpy.typing import NDArray
 
 from qlinks.exceptions import (
@@ -35,10 +36,12 @@ class GaussLaw:
             raise ValueError("Charge ranges from -2 to +2.")
         self.__hash_table = {spin.magnetization: spin for spin in SpinConfigs}
 
+    @ring.lru()
     def possible_flows(self) -> List[Tuple[int, ...]]:
         flows = product([flow.value for flow in Flow], repeat=4)
         return [quartet for quartet in flows if sum(quartet) / 2 == self.charge]
 
+    @ring.lru()
     def possible_configs(self) -> List[Tuple[Spin, ...]]:
         local_coord_sys = [unit_vec.sign for unit_vec in UnitVectors.iter_all_directions()]
         return [
