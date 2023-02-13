@@ -95,7 +95,7 @@ class GaussLaw:
 
 
 @dataclass
-class SpinConfigSnapshot(Node, SquareLattice):
+class GaugeInvariantSnapshot(Node, SquareLattice):
     charge_distri: Optional[NDArray[np.int64]] = None
 
     def __post_init__(self):
@@ -110,7 +110,7 @@ class SpinConfigSnapshot(Node, SquareLattice):
         return hash(frozenset(self.links.values()))
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, SpinConfigSnapshot):
+        if not isinstance(other, GaugeInvariantSnapshot):
             return NotImplemented
         if self.shape != other.shape:
             raise InvalidOperationError(f"Shape of two {type(self).__name__} are mismatched.")

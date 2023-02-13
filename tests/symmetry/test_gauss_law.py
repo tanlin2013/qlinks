@@ -9,7 +9,7 @@ from scipy.special import binom
 
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.solver.deep_first_search import DeepFirstSearch
-from qlinks.symmetry.gauss_law import GaussLaw, SpinConfigSnapshot
+from qlinks.symmetry.gauss_law import GaussLaw, GaugeInvariantSnapshot
 
 
 class TestGaussLaw:
@@ -53,11 +53,11 @@ class TestGaussLaw:
             assert charges.shape == (width, length)
 
 
-class TestSpinConfigSnapshot:
+class TestGaugeInvariantSnapshot:
     @pytest.mark.parametrize("length, width", [(2, 2)])
     def test_extend_node(self, length, width):
         charge_distri = np.zeros((length, width))
-        snapshot = SpinConfigSnapshot(length, width, charge_distri)
+        snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
         for snap in snapshot.extend_node():
             print(snap.links)
 
@@ -73,11 +73,11 @@ class TestSpinConfigSnapshot:
     )
     def test_search(self, charge_distri, expectation):
         width, length = np.asarray(charge_distri).shape
-        snapshot = SpinConfigSnapshot(length, width, charge_distri)
+        snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
         dfs = DeepFirstSearch(snapshot)
         with expectation:
             filled_snapshot = dfs.search(n_solution=1)
-            assert isinstance(filled_snapshot, SpinConfigSnapshot)
+            assert isinstance(filled_snapshot, GaugeInvariantSnapshot)
             for site in filled_snapshot:
                 assert filled_snapshot.charge(site) == filled_snapshot.charge_distri[*astuple(site)]
 
@@ -92,11 +92,11 @@ class TestSpinConfigSnapshot:
     )
     def test_multi_solutions(self, charge_distri, n_expected_solution, expectation):
         width, length = np.asarray(charge_distri).shape
-        snapshot = SpinConfigSnapshot(length, width, charge_distri)
+        snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
         dfs = DeepFirstSearch(snapshot, max_steps=30000)
         with expectation:
             filled_snapshots = dfs.search(n_solution=3000)  # far more than all possibilities
-            assert all(isinstance(s, SpinConfigSnapshot) for s in filled_snapshots)
+            assert all(isinstance(s, GaugeInvariantSnapshot) for s in filled_snapshots)
             assert len(filled_snapshots) == n_expected_solution
 
     @pytest.fixture(
@@ -112,7 +112,7 @@ class TestSpinConfigSnapshot:
     def snapshot(self, request):
         charge_distri = request.param
         width, length = np.asarray(charge_distri).shape
-        snapshot = SpinConfigSnapshot(length, width, charge_distri)
+        snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
         dfs = DeepFirstSearch(snapshot)
         filled_snapshot = dfs.search()
         return filled_snapshot
