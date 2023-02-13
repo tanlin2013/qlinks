@@ -116,6 +116,26 @@ class SquareLattice:
         return charge / 2
 
     def axial_flux(self, idx: int, axis: Optional[int] = 0) -> Real:
+        """Compute the flux along the axis.
+
+           ▲  |   │
+           │  |   ▼         ▲
+        ──►o──|──►o──►      │
+           ▲  |   │
+        ---│------▼----  axis=1
+        ◄──o◄─|───o◄──
+           ▲  |   │
+           │  |   ▼
+
+            axis=0  ──►
+
+        Args:
+            idx: The `idx`-th row or column in lattice.
+            axis: 0 for x-axis and 1 for y-axis.
+
+        Returns:
+            The flux flowing along the axis.
+        """
         unit_vector = {0: UnitVectors.rightward, 1: UnitVectors.upward}[axis]
         sites = {
             0: [Site(idx, y) for y in range(self.width)],
