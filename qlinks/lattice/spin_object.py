@@ -141,10 +141,7 @@ class Link:
         return (
             f"{type(self).__name__}({self.site}, {self.unit_vector}, "
             f"operator={self.operator}, state={self.state})"
-        )
-
-    def __str__(self) -> str:
-        return super().__str__().replace("\n", "")
+        ).replace("\n", "")
 
     def conj(self, inplace: bool = False) -> Link | None:  # type: ignore[return]
         conj_link = self if inplace else deepcopy(self)
