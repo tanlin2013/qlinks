@@ -253,7 +253,10 @@ class QuasiLocalOperator(abc.ABC):
 
     def __matmul__(self, other: LatticeState) -> LatticeState:
         if self.lattice.shape != other.shape:
-            raise InvalidOperationError("Dimensions mismatch.")
+            raise InvalidOperationError(
+                f"Dimension mismatch. Cannot multiply shape {self.lattice.shape} with shape "
+                f"{other.shape}."
+            )
         link_data = deepcopy(other.links)
         extended_loc_opt = self._get_extended_loc_opt()
         for idx in link_data.keys():
@@ -262,7 +265,10 @@ class QuasiLocalOperator(abc.ABC):
 
     def __rmatmul__(self, other: LatticeState) -> LatticeState:
         if self.lattice.shape != other.shape:
-            raise InvalidOperationError("Dimensions mismatch.")
+            raise InvalidOperationError(
+                f"Dimension mismatch. Cannot multiply shape {self.lattice.shape} with shape "
+                f"{other.shape}."
+            )
         link_data = deepcopy(other.links)
         extended_loc_opt = self._get_extended_loc_opt()
         for idx in link_data.keys():
