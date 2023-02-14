@@ -58,6 +58,12 @@ class TestUnitVector:
         with pytest.raises(ValueError):
             _ = UnitVector(1, 1).sign
 
+    def test_get_item(self):
+        assert UnitVector(1, 0)[0] == 1
+        assert UnitVector(1, 0)[1] == 0
+        assert UnitVector(-1, 0)[0] == -1
+        assert UnitVector(0, -2)[1] == -2
+
 
 class TestUnitVectorCollection:
     def test_instance(self):

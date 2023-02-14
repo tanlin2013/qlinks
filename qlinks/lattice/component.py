@@ -63,6 +63,9 @@ class UnitVector:
     def __imul__(self, scalar: Real) -> UnitVector:
         return scalar * self
 
+    def __getitem__(self, item: int) -> int:
+        return {0: self.pos_x, 1: self.pos_y}[item]
+
     def __lt__(self, other: UnitVector) -> bool:
         return (self.pos_y, self.pos_x) < (other.pos_y, other.pos_x)  # tuple comparison
 
