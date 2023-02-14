@@ -174,6 +174,10 @@ class LatticeState(SquareLattice):
             if link.state is None:
                 raise InvalidArgumentError("Provided link data has state in None.")
 
+    def __array__(self) -> np.ndarray:
+        states = [link.state for link in self.links.values()]
+        return reduce((lambda x, y: x ^ y), states)
+
     def __hash__(self) -> int:
         return hash(frozenset(self.links.values()))
 

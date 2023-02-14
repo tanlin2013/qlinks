@@ -231,17 +231,24 @@ class TestPlaquette:
         assert next(it) == plaquette.link_r
         assert next(it) == plaquette.link_t
 
-    def test_array(self, lattice, plaquette):
-        arr = np.array(plaquette)
-        assert np.allclose(arr, np.triu(arr), atol=1e-12)
-        assert arr.shape == lattice.hilbert_dims
-        unique_value_counts = dict(zip(*np.unique(arr, return_counts=True)))
+    def test_array(self, lattice, plaquette, clockwise_state, anti_clockwise_state):
+        plaquette_arr = np.array(plaquette)
+        assert np.allclose(plaquette_arr, np.triu(plaquette_arr), atol=1e-12)
+        assert plaquette_arr.shape == lattice.hilbert_dims
+        unique_value_counts = dict(zip(*np.unique(plaquette_arr, return_counts=True)))
         assert tuple(unique_value_counts) == (0, 1)  # dict keys to tuple
         assert unique_value_counts[1] == 2 ** (lattice.num_links - 4)
-        plt.matshow(arr)
+        assert np.allclose(
+            plaquette_arr @ np.array(clockwise_state), np.array(anti_clockwise_state), atol=1e-12
+        )
+        assert np.allclose(
+            np.array(plaquette.conj()) @ np.array(anti_clockwise_state),
+            np.array(clockwise_state),
+            atol=1e-12,
+        )
+        plt.matshow(plaquette_arr)
         plt.colorbar()
         plt.show()
-        # TODO: test plaquette apply on state can flip flux loop
 
     def test_conj(self, plaquette):
         arr = plaquette.conj()
