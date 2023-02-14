@@ -58,8 +58,14 @@ class TestGaugeInvariantSnapshot:
     def test_extend_node(self, length, width):
         charge_distri = np.zeros((length, width))
         snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
-        for snap in snapshot.extend_node():
-            print(snap.links)
+        new_nodes = snapshot.extend_node()
+        assert len(set(new_nodes)) == len(new_nodes)
+        extended_site = snapshot.find_first_empty_site()
+        for node in new_nodes:
+            new_empty_site = node.find_first_empty_site()
+            assert new_empty_site > extended_site
+            assert not np.isnan(node.charge(extended_site))
+            assert np.isnan(node.charge(new_empty_site))
 
     @pytest.mark.parametrize(
         "charge_distri, expectation",
