@@ -63,7 +63,7 @@ class UnitVector:
     def __imul__(self, scalar: Real) -> UnitVector:
         return scalar * self
 
-    def __getitem__(self, item: int) -> int:
+    def __getitem__(self, item: int) -> Real:
         return {0: self.pos_x, 1: self.pos_y}[item]
 
     def __lt__(self, other: UnitVector) -> bool:
