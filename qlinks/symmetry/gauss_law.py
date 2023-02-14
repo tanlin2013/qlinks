@@ -151,6 +151,3 @@ class GaugeInvariantSnapshot(Node, SquareLattice):
 
     def to_state(self) -> LatticeState:
         return LatticeState(*self.shape, link_data=self.links)
-
-    def plot(self) -> None:
-        pass
