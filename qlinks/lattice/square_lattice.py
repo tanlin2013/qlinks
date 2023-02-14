@@ -169,7 +169,7 @@ class LatticeState(SquareLattice):
     link_data: Dict[LinkIndex, Link]
 
     def __post_init__(self):
-        self._links = deepcopy(self.link_data)
+        self._links = {idx: self.link_data[idx] for idx in sorted(self.link_data)}
         for link in self.links.values():
             if link.state is None:
                 raise InvalidArgumentError("Provided link data has state in None.")
