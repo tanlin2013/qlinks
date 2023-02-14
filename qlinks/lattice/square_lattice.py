@@ -142,7 +142,7 @@ class SquareLattice:
             0: [Site(idx, y) for y in range(self.width)],
             1: [Site(x, idx) for x in range(self.length)],
         }[axis]
-        return np.mean([self.get_link((site, unit_vector)).flux for site in sites])
+        return np.mean(np.asarray([self.get_link((site, unit_vector)).flux for site in sites]))
 
     @property
     def adjacency_matrix(self) -> np.ndarray:
