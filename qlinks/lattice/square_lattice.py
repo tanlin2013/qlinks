@@ -134,14 +134,15 @@ class SquareLattice:
             axis: 0 for x-axis and 1 for y-axis.
 
         Returns:
-            The flux flowing along the axis.
+            The flux flowing along the axis, normalized by width ( `axis` = 0 ) or
+            length ( `axis` = 1 ).
         """
         unit_vector = {0: UnitVectors.rightward, 1: UnitVectors.upward}[axis]
         sites = {
             0: [Site(idx, y) for y in range(self.width)],
             1: [Site(x, idx) for x in range(self.length)],
         }[axis]
-        return sum([self.get_link((site, unit_vector)).flux for site in sites])
+        return np.mean([self.get_link((site, unit_vector)).flux for site in sites])
 
     @property
     def adjacency_matrix(self) -> np.ndarray:
