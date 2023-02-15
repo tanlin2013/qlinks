@@ -3,11 +3,11 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from enum import IntEnum
+from functools import cache
 from itertools import product
 from typing import Dict, List, Optional, Self, Tuple, TypeAlias
 
 import numpy as np
-import ring
 from numpy.typing import NDArray
 
 from qlinks.exceptions import (
@@ -50,14 +50,14 @@ class GaussLaw(AbstractSymmetry):
     def shape(self) -> Tuple[int, ...]:
         return self.charge_distri.shape
 
-    @ring.lru()
     @staticmethod
+    @cache
     def possible_flows(charge: int) -> List[Tuple[int, ...]]:
         flows = product([flow.value for flow in Flow], repeat=4)
         return [quartet for quartet in flows if sum(quartet) / 2 == charge]
 
-    @ring.lru()
     @staticmethod
+    @cache
     def possible_configs(charge: int) -> List[Tuple[Spin, ...]]:
         hash_table: Dict[int, Spin] = {int(2 * spin.magnetization): spin for spin in SpinConfigs}
         local_coord_sys = [unit_vec.sign for unit_vec in UnitVectors.iter_all_directions()]
