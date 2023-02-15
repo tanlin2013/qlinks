@@ -86,7 +86,7 @@ class TestGaugeInvariantSnapshot:
             filled_snapshot = dfs.search(n_solution=1)
             assert isinstance(filled_snapshot, GaugeInvariantSnapshot)
             for site in filled_snapshot:
-                assert filled_snapshot.charge(site) == filled_snapshot.charge_distri[*astuple(site)]
+                assert filled_snapshot.charge(site) == filled_snapshot.gauss_law[site]
 
     @pytest.mark.parametrize(
         "charge_distri, n_expected_solution, expectation",
