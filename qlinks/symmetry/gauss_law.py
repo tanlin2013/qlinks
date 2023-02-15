@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from enum import IntEnum
 from itertools import product
-from typing import Dict, List, Optional, Self, Tuple
+from typing import Dict, List, Optional, Self, Tuple, TypeAlias
 
 import numpy as np
 import ring
@@ -18,7 +18,10 @@ from qlinks.exceptions import (
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Spin, SpinConfigs
 from qlinks.lattice.square_lattice import LatticeState, SquareLattice
+from qlinks.symmetry.abstract import AbstractSymmetry
 from qlinks.solver.deep_first_search import Node
+
+Real: TypeAlias = int | float | np.floating
 
 
 class Flow(IntEnum):
@@ -27,26 +30,40 @@ class Flow(IntEnum):
 
 
 @dataclass
-class GaussLaw:
-    charge: int = 0
-    __hash_table: Dict[int, Spin] = field(init=False, repr=False)
+class GaussLaw(AbstractSymmetry):
+    charge_distri: NDArray[np.int64]
 
     def __post_init__(self):
-        if abs(self.charge) > 2:
-            raise ValueError("Charge ranges from -2 to +2.")
-        self.__hash_table = {spin.magnetization: spin for spin in SpinConfigs}
+        self.charge_distri = np.asarray(self.charge_distri)
+        if not np.all((self.charge_distri >= -2) & (self.charge_distri <= 2)):
+            raise InvalidArgumentError("Charge ranges from -2 to +2.")
+        self.charge_distri = np.flipud(self.charge_distri)
+
+    def __getitem__(self, site: Site) -> int:
+        return self.charge_distri[*astuple(site)]
+
+    @property
+    def quantum_numbers(self) -> np.ndarray:
+        return self.charge_distri
+
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        return self.charge_distri.shape
 
     @ring.lru()
-    def possible_flows(self) -> List[Tuple[int, ...]]:
+    @staticmethod
+    def possible_flows(charge: int) -> List[Tuple[int, ...]]:
         flows = product([flow.value for flow in Flow], repeat=4)
-        return [quartet for quartet in flows if sum(quartet) / 2 == self.charge]
+        return [quartet for quartet in flows if sum(quartet) / 2 == charge]
 
     @ring.lru()
-    def possible_configs(self) -> List[Tuple[Spin, ...]]:
+    @staticmethod
+    def possible_configs(charge: int) -> List[Tuple[Spin, ...]]:
+        hash_table: Dict[Real, Spin] = {spin.magnetization: spin for spin in SpinConfigs}
         local_coord_sys = [unit_vec.sign for unit_vec in UnitVectors.iter_all_directions()]
         return [
-            tuple(map(lambda idx: self.__hash_table[idx], np.multiply(quartet, local_coord_sys)))
-            for quartet in self.possible_flows()
+            tuple(map(lambda idx: hash_table[idx], np.multiply(quartet, local_coord_sys)))
+            for quartet in GaussLaw.possible_flows(charge)
         ]
 
     @staticmethod
@@ -96,14 +113,14 @@ class GaussLaw:
 
 @dataclass
 class GaugeInvariantSnapshot(Node, SquareLattice):
-    charge_distri: Optional[NDArray[np.int64]] = None
+    charge_distri: Optional[NDArray[np.int64]] = field(default=None)
 
     def __post_init__(self):
         super().__post_init__()
         if self.charge_distri is None:
             self.charge_distri = np.zeros(self.shape)
-        self.charge_distri = np.flipud(self.charge_distri)
-        if self.charge_distri.shape != self.shape:
+        self._gauss_law = GaussLaw(self.charge_distri)
+        if self.gauss_law.shape != self.shape:
             raise InvalidArgumentError("Shape of charge distribution mismatches with the lattice.")
 
     def __hash__(self) -> int:
@@ -129,9 +146,8 @@ class GaugeInvariantSnapshot(Node, SquareLattice):
         site = self.find_first_empty_site()
         if site is None:
             return []
-        charge = self.charge_distri[*astuple(site)]
         new_nodes = []
-        for config in GaussLaw(charge).possible_configs():
+        for config in GaussLaw.possible_configs(charge=self.gauss_law[site]):
             try:
                 new_node = deepcopy(self)
                 new_node.set_vertex_links(site, config)
@@ -142,12 +158,13 @@ class GaugeInvariantSnapshot(Node, SquareLattice):
 
     def is_the_solution(self) -> bool:
         for site in self:
-            if (
-                np.isnan(self.charge(site))
-                or self.charge(site) != self.charge_distri[*astuple(site)]
-            ):
+            if np.isnan(self.charge(site)) or self.charge(site) != self.gauss_law[site]:
                 return False
         return True
 
     def to_state(self) -> LatticeState:
         return LatticeState(*self.shape, link_data=self.links)
+
+    @property
+    def gauss_law(self) -> GaussLaw:
+        return self._gauss_law

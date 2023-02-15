@@ -15,11 +15,11 @@ from qlinks.symmetry.gauss_law import GaussLaw, GaugeInvariantSnapshot
 class TestGaussLaw:
     @pytest.mark.parametrize("charge", [-2, -1, 0, 1, 2])
     def test_possible_flows(self, charge):
-        assert len(GaussLaw(charge).possible_flows()) == binom(4, 2 - abs(charge))
+        assert len(GaussLaw.possible_flows(charge)) == binom(4, 2 - abs(charge))
 
     @pytest.mark.parametrize("charge", [-2, -1, 0, 1, 2])
     def test_possible_configs(self, charge):
-        configs = GaussLaw(charge).possible_configs()
+        configs = GaussLaw.possible_configs(charge)
         for config in configs:
             mag = list(map(lambda spin: spin.magnetization, config))
             assert np.sum(np.multiply(mag, [-1, -1, 1, 1])) / 2 == charge
