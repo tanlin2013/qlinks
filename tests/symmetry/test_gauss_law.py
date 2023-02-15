@@ -20,6 +20,7 @@ class TestGaussLaw:
     @pytest.mark.parametrize("charge", [-2, -1, 0, 1, 2])
     def test_possible_configs(self, charge):
         configs = GaussLaw.possible_configs(charge)
+        assert len(configs) == binom(4, 2 - abs(charge))
         for config in configs:
             mag = list(map(lambda spin: spin.magnetization, config))
             assert np.sum(np.multiply(mag, [-1, -1, 1, 1])) == charge
