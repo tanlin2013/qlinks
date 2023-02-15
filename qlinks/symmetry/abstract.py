@@ -1,18 +1,14 @@
 import abc
-from dataclasses import dataclass
 from typing import Tuple, TypeAlias
 
 import numpy as np
-
-from qlinks.lattice.square_lattice import LatticeState
+from numpy.typing import NDArray
 
 Real: TypeAlias = int | float | np.floating
 
 
-@dataclass
 class AbstractSymmetry(abc.ABC):
-    quantum_numbers: Real | Tuple[Real, ...]
-
+    @property
     @abc.abstractmethod
-    def symmetry_operation(self, state: LatticeState) -> LatticeState:
+    def quantum_numbers(self) -> Real | Tuple[Real, ...] | NDArray:
         ...
