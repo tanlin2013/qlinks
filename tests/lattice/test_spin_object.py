@@ -30,7 +30,8 @@ class TestSpin:
         assert Spin([1, 0]) ^ Spin([0, 1]) == Spin([0, 1, 0, 0])
 
     @pytest.mark.parametrize(
-        "spin, expected", [(SpinConfigs.up, 1), (SpinConfigs.down, -1), (Spin([[0], [0]]), np.nan)]
+        "spin, expected",
+        [(SpinConfigs.up, 0.5), (SpinConfigs.down, -0.5), (Spin([[0], [0]]), np.nan)],
     )
     def test_magnetization(self, spin, expected):
         if np.isnan(expected):

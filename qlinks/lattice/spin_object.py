@@ -93,7 +93,7 @@ class __SpinOperatorCollection:
         default_factory=lambda: SpinOperator([[0, 0], [1, 0]], dtype=float, read_only=True)
     )
     Sz: SpinOperator = field(
-        default_factory=lambda: SpinOperator([[1, 0], [0, -1]], dtype=float, read_only=True)
+        default_factory=lambda: 0.5 * SpinOperator([[1, 0], [0, -1]], dtype=float, read_only=True)
     )
     I2: SpinOperator = field(
         default_factory=lambda: SpinOperator(np.identity(2), dtype=float, read_only=True)

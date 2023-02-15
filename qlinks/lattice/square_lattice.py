@@ -113,7 +113,7 @@ class SquareLattice:
                 charge += flux if link.site == self[site] else -1 * flux
             else:
                 return np.nan
-        return charge / 2
+        return charge
 
     def axial_flux(self, idx: int, axis: Optional[int] = 0) -> Real:
         """Compute the flux along the axis.
@@ -134,15 +134,14 @@ class SquareLattice:
             axis: 0 for x-axis and 1 for y-axis.
 
         Returns:
-            The flux flowing along the axis, normalized by width ( `axis` = 0 ) or
-            length ( `axis` = 1 ).
+            The total flux flowing along the axis.
         """
         unit_vector = {0: UnitVectors.rightward, 1: UnitVectors.upward}[axis]
         sites = {
             0: [Site(idx, y) for y in range(self.width)],
             1: [Site(x, idx) for x in range(self.length)],
         }[axis]
-        return np.mean(np.asarray([self.get_link((site, unit_vector)).flux for site in sites]))
+        return sum([self.get_link((site, unit_vector)).flux for site in sites])
 
     @property
     def adjacency_matrix(self) -> np.ndarray:

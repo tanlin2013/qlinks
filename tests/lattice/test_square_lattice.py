@@ -151,10 +151,10 @@ class TestSquareLattice:
     def test_axial_flux(self, lattice, preset_lattice):
         with pytest.raises(ValueError):
             _ = lattice.axial_flux(0, axis=0)
-        assert preset_lattice.axial_flux(0, axis=0) == -1
-        assert preset_lattice.axial_flux(1, axis=0) == 1
-        assert preset_lattice.axial_flux(0, axis=1) == 1
-        assert preset_lattice.axial_flux(1, axis=1) == -1
+        assert preset_lattice.axial_flux(0, axis=0) == 0.5 * -2
+        assert preset_lattice.axial_flux(1, axis=0) == 0.5 * 2
+        assert preset_lattice.axial_flux(0, axis=1) == 0.5 * 2
+        assert preset_lattice.axial_flux(1, axis=1) == 0.5 * -2
 
 
 class TestLatticeState:

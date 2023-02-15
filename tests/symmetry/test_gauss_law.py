@@ -22,7 +22,7 @@ class TestGaussLaw:
         configs = GaussLaw.possible_configs(charge)
         for config in configs:
             mag = list(map(lambda spin: spin.magnetization, config))
-            assert np.sum(np.multiply(mag, [-1, -1, 1, 1])) / 2 == charge
+            assert np.sum(np.multiply(mag, [-1, -1, 1, 1])) == charge
 
     @pytest.mark.parametrize("length, width", [(2, 2), (3, 3), (6, 8)])
     def test_random_charge_distri(self, length, width):

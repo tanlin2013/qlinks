@@ -59,7 +59,7 @@ class GaussLaw(AbstractSymmetry):
     @ring.lru()
     @staticmethod
     def possible_configs(charge: int) -> List[Tuple[Spin, ...]]:
-        hash_table: Dict[Real, Spin] = {spin.magnetization: spin for spin in SpinConfigs}
+        hash_table: Dict[int, Spin] = {int(2 * spin.magnetization): spin for spin in SpinConfigs}
         local_coord_sys = [unit_vec.sign for unit_vec in UnitVectors.iter_all_directions()]
         return [
             tuple(map(lambda idx: hash_table[idx], np.multiply(quartet, local_coord_sys)))
