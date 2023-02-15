@@ -132,6 +132,8 @@ class TestGaugeInvariantSnapshot:
     def test_as_graph(self, snapshot):
         graph = snapshot.as_graph()
         assert len(graph.edges()) == snapshot.num_links
+        for _, degree in graph.degree:
+            assert degree == 4
 
         pos = {idx: astuple(site) for idx, site in enumerate(snapshot)}
         labels = {idx: str(site) for idx, site in pos.items()}
