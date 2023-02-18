@@ -28,7 +28,7 @@ class ComputationBasis(Generic[AnySnapshot]):
 
     def __post_init__(self):
         if all(
-            symmetry is None for symmetry in (self.charge_distri, self.flux_sector, self.momentum)
+            symmetry is None for symmetry in (self.flux_sector, self.momentum)
         ):
             self._init_snapshot = GaugeInvariantSnapshot(
                 self.length, self.width, self.charge_distri
