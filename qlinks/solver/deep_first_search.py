@@ -4,9 +4,11 @@ import abc
 from collections import deque
 from dataclasses import dataclass, field
 from itertools import count
-from typing import Deque, List, Self, Set
+from typing import Deque, Generic, List, Self, Set, TypeVar
 
 from qlinks import logger
+
+AnyNode = TypeVar("AnyNode", bound="Node")
 
 
 class Node(abc.ABC):
@@ -32,7 +34,7 @@ class Node(abc.ABC):
 
 
 @dataclass
-class DeepFirstSearch:
+class DeepFirstSearch(Generic[AnyNode]):
     """Deep first search (DFS) algorithm.
 
     Args:
@@ -47,9 +49,9 @@ class DeepFirstSearch:
     Examples:
         If :class:`Node` has been implemented, the algorithm can be launched through
 
-        >>> init_state: Node = Node()  # replace with any derived child class from Node
+        >>> init_state: AnyNode = Node()  # replace with any derived child class from Node
         >>> dfs = DeepFirstSearch(init_state)
-        >>> selected_state: Node = dfs.search()
+        >>> selected_state: AnyNode = dfs.search()
 
     Notes:
         For general purpose, users must implement all abstractive methods in :class:`Node`.
@@ -58,19 +60,19 @@ class DeepFirstSearch:
         https://python.plainenglish.io/solve-sudoku-using-depth-first-search-algorithm-dfs-in-python-2be3caa08ccd
     """
 
-    start_state: Node
+    start_state: AnyNode
     max_steps: int = 50000
-    frontier: Deque[Node] = field(default_factory=deque)
-    checked_nodes: Set[Node] = field(default_factory=set)
-    selected_nodes: Deque[Node] = field(default_factory=deque)
+    frontier: Deque[AnyNode] = field(default_factory=deque)
+    checked_nodes: Set[AnyNode] = field(default_factory=set)
+    selected_nodes: Deque[AnyNode] = field(default_factory=deque)
 
     def __post_init__(self):
         self.frontier.append(self.start_state)
 
-    def insert_to_frontier(self, node: Node) -> None:
+    def insert_to_frontier(self, node: AnyNode) -> None:
         self.frontier.appendleft(node)
 
-    def remove_from_frontier(self) -> Node:
+    def remove_from_frontier(self) -> AnyNode:
         first_node = self.frontier.popleft()
         self.checked_nodes.add(first_node)
         return first_node
@@ -78,7 +80,7 @@ class DeepFirstSearch:
     def frontier_is_empty(self) -> bool:
         return True if len(self.frontier) == 0 else False
 
-    def search(self, n_solution: int = 1) -> Node | List[Node]:  # type: ignore[return]
+    def search(self, n_solution: int = 1) -> AnyNode | List[AnyNode]:  # type: ignore[return]
         """Search for the solutions.
 
         Args:
@@ -124,7 +126,7 @@ class DeepFirstSearch:
                     logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
                     return list(self.selected_nodes)
 
-            new_nodes: List[Node] = selected_node.extend_node()
+            new_nodes: List[AnyNode] = selected_node.extend_node()
 
             if len(new_nodes) > 0:
                 for new_node in new_nodes:
