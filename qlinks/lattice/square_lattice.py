@@ -5,10 +5,11 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import total_ordering
 from itertools import product
-from typing import Dict, Iterator, List, Optional, Self, Tuple, TypeAlias
+from typing import Dict, Iterator, List, Optional, Sequence, Self, Tuple, TypeAlias
 
 import networkx as nx
 import numpy as np
+from numpy.typing import NDArray
 
 from qlinks.exceptions import (
     InvalidArgumentError,
@@ -200,6 +201,59 @@ class LatticeState(SquareLattice):
         for idx, link in transpose_state.links.items():
             transpose_state._links[idx].state = link.state.T
         return transpose_state
+
+
+@dataclass
+class LatticeMultiStates(SquareLattice):
+    states: Sequence[LatticeState] | NDArray
+
+    def __post_init__(self):
+        if not isinstance(self.states, np.ndarray):
+            self.states = np.asarray(self.states, dtype=object)
+
+    def __matmul__(
+        self, other: QuasiLocalOperator | LatticeMultiStates
+    ) -> LatticeMultiStates | SpinOperator:
+        if isinstance(other, QuasiLocalOperator):
+            new_states = [state @ other for state in self.states]
+            return LatticeMultiStates(*self.shape, states=new_states)
+        elif isinstance(other, LatticeMultiStates):
+            return self | other
+        else:
+            return NotImplemented
+
+    def __rmatmul__(
+        self, other: QuasiLocalOperator | LatticeMultiStates
+    ) -> LatticeMultiStates | SpinOperator:
+        if isinstance(other, QuasiLocalOperator):
+            new_states = [other @ state for state in self.states]
+            return LatticeMultiStates(*self.shape, states=new_states)
+        elif isinstance(other, LatticeMultiStates):
+            return self | other
+        else:
+            return NotImplemented
+
+    def __or__(self, other: LatticeMultiStates) -> SpinOperator:
+        cartesian_prod = np.array(
+            np.meshgrid(self.states, other.states)  # type: ignore[arg-type]
+        ).T.reshape(-1, 2)
+        iterable = (fore_state @ post_state for fore_state, post_state in cartesian_prod[:,])
+        return (
+            np.fromiter(iterable, dtype=float, count=np.prod(self.hilbert_dims))
+            .reshape(self.hilbert_dims)
+            .view(SpinOperator)
+        )
+
+    @property
+    def hilbert_dims(self) -> Tuple[int, int]:
+        n_states = len(self.states)
+        return n_states, n_states
+
+    @property
+    def T(self) -> Self:  # noqa: N802
+        transpose = deepcopy(self)
+        transpose.states = [state.T for state in self.states]
+        return transpose
 
 
 @dataclass
