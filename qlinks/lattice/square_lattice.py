@@ -112,7 +112,7 @@ class SquareLattice:
             else:
                 return np.nan
 
-        return np.sum(np.vectorize(flux)(self.get_vertex_links(site)))
+        return sum([flux(link) for link in self.get_vertex_links(site)])
 
     def axial_flux(self, idx: int, axis: Optional[int] = 0) -> Real:
         """Compute the flux along the axis.
