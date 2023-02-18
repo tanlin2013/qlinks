@@ -195,7 +195,7 @@ class LatticeState(SquareLattice):
         return np.product(np.fromiter(iterable, dtype=float, count=self.num_links))
 
     @property
-    def T(self):  # noqa: N802
+    def T(self) -> Self:  # noqa: N802
         transpose_state = deepcopy(self)
         for idx, link in transpose_state.links.items():
             transpose_state._links[idx].state = link.state.T
