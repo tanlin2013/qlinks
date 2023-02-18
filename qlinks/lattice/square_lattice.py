@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from copy import deepcopy
 from dataclasses import astuple, dataclass, field
-from functools import reduce, total_ordering
+from functools import total_ordering
 from itertools import product
 from typing import Dict, Iterator, List, Optional, Self, Tuple, TypeAlias
 
@@ -106,14 +106,13 @@ class SquareLattice:
             self.reset_link(link_index)
 
     def charge(self, site: Site) -> Real:
-        charge: Real = 0
-        for link in self.get_vertex_links(site):
+        def flux(link: Link) -> Real:
             if link.state is not None:
-                flux = link.flux
-                charge += flux if link.site == self[site] else -1 * flux
+                return link.flux if link.site == self[site] else -1 * link.flux
             else:
                 return np.nan
-        return charge
+
+        return np.sum(np.vectorize(flux)(self.get_vertex_links(site)))
 
     def axial_flux(self, idx: int, axis: Optional[int] = 0) -> Real:
         """Compute the flux along the axis.
@@ -136,12 +135,13 @@ class SquareLattice:
         Returns:
             The total flux flowing along the axis.
         """
-        unit_vector = {0: UnitVectors.rightward, 1: UnitVectors.upward}[axis]
-        sites = {
-            0: [Site(idx, y) for y in range(self.width)],
-            1: [Site(x, idx) for x in range(self.length)],
+        fluxes = {
+            0: (
+                self.get_link((Site(idx, y), UnitVectors.rightward)).flux for y in range(self.width)
+            ),
+            1: (self.get_link((Site(x, idx), UnitVectors.upward)).flux for x in range(self.length)),
         }[axis]
-        return sum([self.get_link((site, unit_vector)).flux for site in sites])
+        return np.sum(np.fromiter(fluxes, dtype=float))
 
     @property
     def adjacency_matrix(self) -> np.ndarray:
@@ -174,8 +174,8 @@ class LatticeState(SquareLattice):
                 raise InvalidArgumentError("Provided link data has state in None.")
 
     def __array__(self) -> np.ndarray:
-        states = [link.state for link in self.links.values()]
-        return reduce((lambda x, y: x ^ y), states)
+        states = (link.state for link in self.links.values())
+        return np.bitwise_xor.reduce(np.fromiter(states, dtype=object))
 
     def __hash__(self) -> int:
         return hash(frozenset(self.links.values()))
@@ -188,10 +188,11 @@ class LatticeState(SquareLattice):
     def __matmul__(self, other: LatticeState) -> Real:
         if not isinstance(other, LatticeState):
             return NotImplemented
-        val: Real = 1
-        for contra_link, co_link in zip(self.links.values(), other.links.values()):
-            val *= (contra_link.state @ co_link.state).item()
-        return val
+        iterable = (
+            contra_link.state @ co_link.state
+            for contra_link, co_link in zip(self.links.values(), other.links.values())
+        )
+        return np.product(np.fromiter(iterable, dtype=float, count=self.num_links))
 
     @property
     def T(self):  # noqa: N802
@@ -217,11 +218,15 @@ class QuasiLocalOperator(abc.ABC):
     def __array__(self) -> np.ndarray:
         quasi_loc_opt = [link for link in self]
         skip_links = [link.reset() for link in self]
-        for identity_link in self.lattice.iter_links():
-            if identity_link not in skip_links:
-                quasi_loc_opt.append(identity_link)
-        operators = [link.operator for link in sorted(quasi_loc_opt)]
-        return reduce((lambda x, y: x ^ y), operators)
+        quasi_loc_opt += [
+            identity_link
+            for identity_link in self.lattice.iter_links()
+            if identity_link not in skip_links
+        ]
+        operators = (link.operator for link in np.sort(quasi_loc_opt))
+        return np.bitwise_xor.reduce(
+            np.fromiter(operators, dtype=object, count=self.lattice.num_links)
+        )
 
     def __iter__(self) -> Iterator[Link]:
         return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))
