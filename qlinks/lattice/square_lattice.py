@@ -173,9 +173,9 @@ class LatticeState(SquareLattice):
             if link.state is None:
                 raise InvalidArgumentError("Provided link data has state in None.")
 
-    def __array__(self) -> np.ndarray:
+    def toarray(self) -> np.ndarray:
         states = (link.state for link in self.links.values())
-        return np.bitwise_xor.reduce(np.fromiter(states, dtype=object))
+        return np.asarray(np.bitwise_xor.reduce(np.fromiter(states, dtype=object)))
 
     def __hash__(self) -> int:
         return hash(frozenset(self.links.values()))
@@ -215,7 +215,7 @@ class QuasiLocalOperator(abc.ABC):
     def __post_init__(self):
         ...
 
-    def __array__(self) -> np.ndarray:
+    def toarray(self) -> np.ndarray:
         quasi_loc_opt = [link for link in self]
         skip_links = [link.reset() for link in self]
         quasi_loc_opt += [
@@ -223,9 +223,11 @@ class QuasiLocalOperator(abc.ABC):
             for identity_link in self.lattice.iter_links()
             if identity_link not in skip_links
         ]
-        operators = (link.operator for link in np.sort(quasi_loc_opt))
-        return np.bitwise_xor.reduce(
-            np.fromiter(operators, dtype=object, count=self.lattice.num_links)
+        operators = (link.operator for link in sorted(quasi_loc_opt))
+        return np.asarray(
+            np.bitwise_xor.reduce(
+                np.fromiter(operators, dtype=object, count=self.lattice.num_links)
+            )
         )
 
     def __iter__(self) -> Iterator[Link]:
@@ -236,7 +238,7 @@ class QuasiLocalOperator(abc.ABC):
             raise InvalidOperationError(
                 f"{type(self).__name__} in different positions can not be directly added."
             )
-        return (np.array(self) + np.array(other)).view(SpinOperator)
+        return (self.toarray() + other.toarray()).view(SpinOperator)
 
     def __mul__(self, other: QuasiLocalOperator) -> QuasiLocalOperator:
         if not isinstance(other, QuasiLocalOperator):

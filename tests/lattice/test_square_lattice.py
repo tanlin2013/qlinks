@@ -232,18 +232,18 @@ class TestPlaquette:
         assert next(it) == plaquette.link_t
 
     def test_array(self, lattice, plaquette, clockwise_state, anti_clockwise_state):
-        plaquette_arr = np.array(plaquette)
+        plaquette_arr = plaquette.toarray()
         assert np.allclose(plaquette_arr, np.triu(plaquette_arr), atol=1e-12)
         assert plaquette_arr.shape == lattice.hilbert_dims
-        unique_value_counts = dict(zip(*np.unique(plaquette_arr, return_counts=True)))
+        unique_value_counts = dict(zip(*np.unique(plaquette_arr.astype(float), return_counts=True)))
         assert tuple(unique_value_counts) == (0, 1)  # dict keys to tuple
-        assert unique_value_counts[1] == 2 ** (lattice.num_links - 4)
+        assert unique_value_counts[1] == 2 ** (lattice.num_links - 4)  # count non-zero elems
         assert np.allclose(
-            plaquette_arr @ np.array(clockwise_state), np.array(anti_clockwise_state), atol=1e-12
+            plaquette_arr @ clockwise_state.toarray(), anti_clockwise_state.toarray(), atol=1e-12
         )
         assert np.allclose(
-            np.array(plaquette.conj()) @ np.array(anti_clockwise_state),
-            np.array(clockwise_state),
+            plaquette.conj().toarray() @ anti_clockwise_state.toarray(),
+            clockwise_state.toarray(),
             atol=1e-12,
         )
         plt.matshow(plaquette_arr)
