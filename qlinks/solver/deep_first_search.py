@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import abc
-from collections import deque
 from dataclasses import dataclass, field
 from itertools import count
-from typing import Deque, Generic, List, Self, Set, TypeVar
+from typing import Generic, List, Self, Set, TypeVar
 
 from qlinks import logger
 
@@ -62,18 +61,18 @@ class DeepFirstSearch(Generic[AnyNode]):
 
     start_state: AnyNode
     max_steps: int = 50000
-    frontier: Deque[AnyNode] = field(default_factory=deque)
+    frontier: List[AnyNode] = field(default_factory=list)
     checked_nodes: Set[AnyNode] = field(default_factory=set)
-    selected_nodes: Deque[AnyNode] = field(default_factory=deque)
+    selected_nodes: List[AnyNode] = field(default_factory=list)
 
     def __post_init__(self):
         self.frontier.append(self.start_state)
 
     def insert_to_frontier(self, node: AnyNode) -> None:
-        self.frontier.appendleft(node)
+        self.frontier.append(node)
 
     def remove_from_frontier(self) -> AnyNode:
-        first_node = self.frontier.popleft()
+        first_node = self.frontier.pop()
         self.checked_nodes.add(first_node)
         return first_node
 
@@ -107,7 +106,7 @@ class DeepFirstSearch(Generic[AnyNode]):
                     f"No more new Solutions can be found, end up with "
                     f"{len(self.selected_nodes)} Solutions in {n_step} steps."
                 )
-                return list(self.selected_nodes)
+                return self.selected_nodes
 
             selected_node = self.remove_from_frontier()
 
@@ -124,7 +123,7 @@ class DeepFirstSearch(Generic[AnyNode]):
                     return selected_node
                 elif len(self.selected_nodes) >= n_solution:
                     logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
-                    return list(self.selected_nodes)
+                    return self.selected_nodes
 
             new_nodes: List[AnyNode] = selected_node.extend_node()
 
