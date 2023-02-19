@@ -12,13 +12,7 @@ from qlinks.exceptions import (
 )
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Link, SpinConfigs, SpinOperator, SpinOperators
-from qlinks.lattice.square_lattice import (
-    # LatticeMultiStates,
-    LatticeState,
-    Plaquette,
-    SquareLattice,
-    Vertex,
-)
+from qlinks.lattice.square_lattice import LatticeState, Plaquette, SquareLattice, Vertex
 
 
 class TestSquareLattice:
