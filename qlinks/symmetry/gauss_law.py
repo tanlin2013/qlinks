@@ -34,7 +34,7 @@ class GaussLaw(AbstractSymmetry):
     charge_distri: NDArray[np.int64]
 
     def __post_init__(self):
-        self.charge_distri = np.flipud(self.charge_distri)
+        self.charge_distri = np.flipud(self.charge_distri).T
         if not np.all((self.charge_distri >= -2) & (self.charge_distri <= 2)):
             raise InvalidArgumentError("Charge ranges from -2 to +2.")
 

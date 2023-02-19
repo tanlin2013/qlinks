@@ -7,12 +7,41 @@ import numpy as np
 import pytest
 from scipy.special import binom
 
+from qlinks.lattice.component import Site
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.solver.deep_first_search import DeepFirstSearch
 from qlinks.symmetry.gauss_law import GaussLaw, GaugeInvariantSnapshot
 
 
 class TestGaussLaw:
+    @pytest.mark.parametrize(
+        "charge_distri, expectation",
+        [
+            (np.array([[1, 0, 2], [-2, 0, -1], [1, 0, -1]]), does_not_raise()),
+            (np.array([[3, 0], [0, -3]]), pytest.raises(InvalidArgumentError))
+        ]
+    )
+    def test_constructor(self, charge_distri, expectation):
+        with expectation:
+            gauss_law = GaussLaw(charge_distri)
+            assert gauss_law.charge_distri[0, 0] == 1
+            assert gauss_law.charge_distri[1, 0] == 0
+            assert gauss_law.charge_distri[2, 0] == -1
+            assert gauss_law.charge_distri[0, 1] == -2
+            assert gauss_law.charge_distri[1, 1] == 0
+            assert gauss_law.charge_distri[2, 1] == -1
+            assert gauss_law.charge_distri[0, 2] == 1
+            assert gauss_law.charge_distri[1, 2] == 0
+            assert gauss_law.charge_distri[2, 2] == 2
+
+    @pytest.mark.parametrize("charge_distri", [np.array([[1, 0], [0, -1]])])
+    def test_get_item(self, charge_distri):
+        gauss_law = GaussLaw(charge_distri)
+        assert gauss_law[Site(0, 0)] == 0
+        assert gauss_law[Site(1, 0)] == -1
+        assert gauss_law[Site(0, 1)] == 1
+        assert gauss_law[Site(0, 0)] == 0
+
     @pytest.mark.parametrize("charge", [-2, -1, 0, 1, 2])
     def test_possible_flows(self, charge):
         assert len(GaussLaw.possible_flows(charge)) == binom(4, 2 - abs(charge))
