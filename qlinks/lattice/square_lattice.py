@@ -237,7 +237,9 @@ class LatticeMultiStates(SquareLattice):
         cartesian_prod = np.array(
             np.meshgrid(self.states, other.states)  # type: ignore[arg-type]
         ).T.reshape(-1, 2)
-        iterable = (fore_state @ post_state for fore_state, post_state in cartesian_prod[:,])
+        iterable = (
+            fore_state @ post_state for fore_state, post_state in cartesian_prod[:, ]  # fmt: skip
+        )
         return (
             np.fromiter(iterable, dtype=float, count=np.prod(self.hilbert_dims))
             .reshape(self.hilbert_dims)
