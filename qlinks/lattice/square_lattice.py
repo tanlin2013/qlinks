@@ -5,7 +5,7 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import total_ordering
 from itertools import product
-from typing import Dict, Iterator, List, Optional, Sequence, Self, Tuple, TypeAlias
+from typing import Dict, Iterator, List, Optional, Self, Sequence, Tuple, TypeAlias
 
 import networkx as nx
 import numpy as np

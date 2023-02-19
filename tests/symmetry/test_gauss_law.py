@@ -8,7 +8,7 @@ from scipy.special import binom
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import Site
 from qlinks.solver.deep_first_search import DeepFirstSearch
-from qlinks.symmetry.gauss_law import GaussLaw, GaugeInvariantSnapshot
+from qlinks.symmetry.gauss_law import GaugeInvariantSnapshot, GaussLaw
 from qlinks.visualizer.graph import Graph
 from qlinks.visualizer.quiver import Quiver
 
@@ -18,8 +18,8 @@ class TestGaussLaw:
         "charge_distri, expectation",
         [
             (np.array([[1, 0, 2], [-2, 0, -1], [1, 0, -1]]), does_not_raise()),
-            (np.array([[3, 0], [0, -3]]), pytest.raises(InvalidArgumentError))
-        ]
+            (np.array([[3, 0], [0, -3]]), pytest.raises(InvalidArgumentError)),
+        ],
     )
     def test_constructor(self, charge_distri, expectation):
         with expectation:

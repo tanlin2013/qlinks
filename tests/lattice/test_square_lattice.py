@@ -13,8 +13,8 @@ from qlinks.exceptions import (
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Link, SpinConfigs, SpinOperator, SpinOperators
 from qlinks.lattice.square_lattice import (
+    # LatticeMultiStates,
     LatticeState,
-    LatticeMultiStates,
     Plaquette,
     SquareLattice,
     Vertex,

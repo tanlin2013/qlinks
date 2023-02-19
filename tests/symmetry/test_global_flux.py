@@ -1,11 +1,11 @@
 from contextlib import nullcontext as does_not_raise
 
-import pytest
 import numpy as np
+import pytest
 
 from qlinks.exceptions import InvalidArgumentError
-from qlinks.symmetry.global_flux import GlobalFlux, FluxSectorSnapshot
 from qlinks.solver.deep_first_search import DeepFirstSearch
+from qlinks.symmetry.global_flux import FluxSectorSnapshot, GlobalFlux
 
 
 class TestGlobalFlux:

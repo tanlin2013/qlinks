@@ -18,8 +18,8 @@ from qlinks.exceptions import (
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Spin, SpinConfigs
 from qlinks.lattice.square_lattice import LatticeState, SquareLattice
-from qlinks.symmetry.abstract import AbstractSymmetry
 from qlinks.solver.deep_first_search import Node
+from qlinks.symmetry.abstract import AbstractSymmetry
 
 Real: TypeAlias = int | float | np.floating
 

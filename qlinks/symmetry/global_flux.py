@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import List, Tuple, TypeAlias, TypeVar, Self
+from typing import List, Self, Tuple, TypeAlias, TypeVar
 
 import numpy as np
 
@@ -10,7 +10,7 @@ from qlinks.exceptions import InvalidArgumentError, LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.square_lattice import SquareLattice
 from qlinks.symmetry.abstract import AbstractSymmetry
-from qlinks.symmetry.gauss_law import GaussLaw, GaugeInvariantSnapshot
+from qlinks.symmetry.gauss_law import GaugeInvariantSnapshot, GaussLaw
 
 Real: TypeAlias = int | float | np.floating
 AnySquareLattice = TypeVar("AnySquareLattice", bound=SquareLattice)

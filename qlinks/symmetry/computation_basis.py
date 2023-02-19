@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import List, Generic, Optional, Tuple, TypeAlias, TypeVar
+from typing import Generic, List, Optional, Tuple, TypeAlias, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
 from qlinks.lattice.square_lattice import LatticeMultiStates
-from qlinks.symmetry.gauss_law import GaussLaw, GaugeInvariantSnapshot
-from qlinks.symmetry.global_flux import GlobalFlux, FluxSectorSnapshot
 from qlinks.solver.deep_first_search import DeepFirstSearch
+from qlinks.symmetry.gauss_law import GaugeInvariantSnapshot, GaussLaw
+from qlinks.symmetry.global_flux import FluxSectorSnapshot, GlobalFlux
 
 Real: TypeAlias = int | float | np.floating
 AnySnapshot = TypeVar("AnySnapshot", bound="GaugeInvariantSnapshot")
@@ -27,9 +27,7 @@ class ComputationBasis(Generic[AnySnapshot]):
     n_solutions: Optional[int] = field(default=3000)
 
     def __post_init__(self):
-        if all(
-            symmetry is None for symmetry in (self.flux_sector, self.momentum)
-        ):
+        if all(symmetry is None for symmetry in (self.flux_sector, self.momentum)):
             self._init_snapshot = GaugeInvariantSnapshot(
                 self.length, self.width, self.charge_distri
             )

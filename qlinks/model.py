@@ -7,7 +7,7 @@ from typing import Optional, TypeAlias
 import numpy as np
 
 from qlinks.lattice.spin_object import SpinOperator
-from qlinks.lattice.square_lattice import SquareLattice, LatticeMultiStates
+from qlinks.lattice.square_lattice import LatticeMultiStates, SquareLattice
 
 Real: TypeAlias = int | float | np.floating
 
