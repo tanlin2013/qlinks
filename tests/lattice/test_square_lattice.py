@@ -307,8 +307,8 @@ class TestPlaquette:
         plt.show()
 
     def test_conj(self, plaquette):
-        arr = plaquette.conj()
-        assert np.allclose(arr, np.tril(arr), atol=1e-12)
+        conj_plaquette_arr = plaquette.conj().toarray()
+        assert np.allclose(conj_plaquette_arr, np.tril(conj_plaquette_arr), atol=1e-12)
         flipper = plaquette + plaquette.conj()
         assert ishermitian(flipper)
         assert np.all(
