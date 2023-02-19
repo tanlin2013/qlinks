@@ -123,7 +123,8 @@ class TestGaugeInvariantSnapshot:
             (np.zeros((2, 2)), 18, does_not_raise()),
             ([[1, -1], [-1, 1]], 8, does_not_raise()),
             ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, pytest.raises(StopIteration)),
-            # (np.zeros((4, 4)), 2970, does_not_raise()),
+            # (np.zeros((4, 4)), 2970, does_not_raise()),  # 4 mins
+            # (GaussLaw.staggered_charge_distri(4, 4), 272, does_not_raise()),  # 28 secs
         ],
     )
     def test_multi_solutions(self, charge_distri, n_expected_solution, expectation):
