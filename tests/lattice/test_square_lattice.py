@@ -12,7 +12,13 @@ from qlinks.exceptions import (
 )
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.spin_object import Link, SpinConfigs, SpinOperator, SpinOperators
-from qlinks.lattice.square_lattice import LatticeState, Plaquette, SquareLattice, Vertex
+from qlinks.lattice.square_lattice import (
+    LatticeState,
+    LatticeMultiStates,
+    Plaquette,
+    SquareLattice,
+    Vertex,
+)
 
 
 class TestSquareLattice:
@@ -215,6 +221,62 @@ class TestLatticeState:
                 assert link.state.shape == (1, 2)
 
 
+@pytest.fixture(scope="class")
+def clockwise_state():
+    """
+       ▲      │
+       │      ▼
+    ──►o─────►o──►
+       ▲      │
+       │      ▼
+    ◄──o◄─────o◄──
+       ▲      │
+       │      ▼
+    """
+    lattice = SquareLattice(2, 2)
+    lattice.set_vertex_links(
+        Site(0, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.up)
+    )
+    lattice.set_vertex_links(
+        Site(1, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
+    )
+    lattice.set_vertex_links(
+        Site(0, 1), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.up, SpinConfigs.up)
+    )
+    lattice.set_vertex_links(
+        Site(1, 1), (SpinConfigs.down, SpinConfigs.up, SpinConfigs.up, SpinConfigs.down)
+    )
+    return LatticeState(*lattice.shape, link_data=lattice.links)
+
+
+@pytest.fixture(scope="class")
+def anti_clockwise_state():
+    """
+       ▲      │
+       │      ▼
+    ──►o◄─────o──►
+       │      ▲
+       ▼      │
+    ◄──o─────►o◄──
+       ▲      │
+       │      ▼
+    """
+    lattice = SquareLattice(2, 2)
+    lattice.set_vertex_links(
+        Site(0, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.up, SpinConfigs.down)
+    )
+    lattice.set_vertex_links(
+        Site(1, 0), (SpinConfigs.down, SpinConfigs.up, SpinConfigs.down, SpinConfigs.up)
+    )
+    lattice.set_vertex_links(
+        Site(0, 1), (SpinConfigs.down, SpinConfigs.up, SpinConfigs.down, SpinConfigs.up)
+    )
+    lattice.set_vertex_links(
+        Site(1, 1), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.up, SpinConfigs.down)
+    )
+    return LatticeState(*lattice.shape, link_data=lattice.links)
+
+
 class TestPlaquette:
     @pytest.fixture(scope="function")
     def lattice(self):
@@ -279,60 +341,6 @@ class TestPlaquette:
             assert link.operator == SpinOperators.O2
         for link in plaquette.conj() * plaquette.conj():
             assert link.operator == SpinOperators.O2
-
-    @pytest.fixture(scope="function")
-    def clockwise_state(self):
-        """
-           ▲      │
-           │      ▼
-        ──►o─────►o──►
-           ▲      │
-           │      ▼
-        ◄──o◄─────o◄──
-           ▲      │
-           │      ▼
-        """
-        lattice = SquareLattice(2, 2)
-        lattice.set_vertex_links(
-            Site(0, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.up)
-        )
-        lattice.set_vertex_links(
-            Site(1, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
-        )
-        lattice.set_vertex_links(
-            Site(0, 1), (SpinConfigs.up, SpinConfigs.up, SpinConfigs.up, SpinConfigs.up)
-        )
-        lattice.set_vertex_links(
-            Site(1, 1), (SpinConfigs.down, SpinConfigs.up, SpinConfigs.up, SpinConfigs.down)
-        )
-        return LatticeState(*lattice.shape, link_data=lattice.links)
-
-    @pytest.fixture(scope="function")
-    def anti_clockwise_state(self):
-        """
-           ▲      │
-           │      ▼
-        ──►o◄─────o──►
-           │      ▲
-           ▼      │
-        ◄──o─────►o◄──
-           ▲      │
-           │      ▼
-        """
-        lattice = SquareLattice(2, 2)
-        lattice.set_vertex_links(
-            Site(0, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.up, SpinConfigs.down)
-        )
-        lattice.set_vertex_links(
-            Site(1, 0), (SpinConfigs.down, SpinConfigs.up, SpinConfigs.down, SpinConfigs.up)
-        )
-        lattice.set_vertex_links(
-            Site(0, 1), (SpinConfigs.down, SpinConfigs.up, SpinConfigs.down, SpinConfigs.up)
-        )
-        lattice.set_vertex_links(
-            Site(1, 1), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.up, SpinConfigs.down)
-        )
-        return LatticeState(*lattice.shape, link_data=lattice.links)
 
     def test_matrix_multiplication(self, lattice, plaquette, clockwise_state, anti_clockwise_state):
         """
