@@ -1,16 +1,16 @@
 from contextlib import nullcontext as does_not_raise
-from dataclasses import astuple
 
 import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
 import pytest
 from scipy.special import binom
 
-from qlinks.lattice.component import Site
 from qlinks.exceptions import InvalidArgumentError
+from qlinks.lattice.component import Site
 from qlinks.solver.deep_first_search import DeepFirstSearch
 from qlinks.symmetry.gauss_law import GaussLaw, GaugeInvariantSnapshot
+from qlinks.visualizer.graph import Graph
+from qlinks.visualizer.quiver import Quiver
 
 
 class TestGaussLaw:
@@ -165,36 +165,11 @@ class TestGaugeInvariantSnapshot:
         for _, degree in graph.degree:
             assert degree == 4
 
-        pos = {idx: astuple(site) for idx, site in enumerate(snapshot)}
-        labels = {idx: str(site) for idx, site in pos.items()}
-        nx.draw(
-            graph,
-            pos,
-            labels=labels,
-            with_labels=True,
-            node_color="tab:orange",
-            node_size=2000,
-            arrowstyle="simple",
-            arrowsize=30,
-            width=1,
-            connectionstyle="arc3,rad=0.2",
-            alpha=0.5,
-        )
+    def test_plot(self, snapshot):
+        g = Graph(snapshot)
+        g.plot()
+        plt.show()
 
-        # nx.draw_networkx_nodes(
-        #     graph, pos, label=labels,
-        #     node_color="tab:orange", node_size=2000, margins=(0.3, 0.3)
-        # )
-        # nx.draw_networkx_labels(
-        #     graph, pos, labels=labels
-        # )
-
-        # nx.draw_networkx_edges(
-        #     graph, pos, edgelist=,
-        #     arrowstyle="simple", arrowsize=30, width=1
-        # )
-        # nx.draw_networkx_edges(
-        #     graph, pos, edgelist=
-        # )
-
+        q = Quiver(snapshot)
+        q.plot()
         plt.show()
