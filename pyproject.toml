@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qlinks"
-version = "0.0.1"
+version = "0.1.0rc1"
 description = "Quantum link model"
 authors = ["Tan Tao-Lin <tanlin2013@gmail.com>"]
 license = "MIT"
