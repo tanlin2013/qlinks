@@ -310,15 +310,6 @@ class QuasiLocalOperator(abc.ABC):
             fore_link.operator = (fore_link.operator @ post_link.operator).view(SpinOperator)
         return quasi_loc_opt
 
-    def _get_extended_loc_opt(self) -> Dict[LinkIndex, SpinOperator]:
-        quasi_loc_opt = {link.index: link.operator for link in self}
-        return {
-            link.index: (
-                link.operator if link.index not in quasi_loc_opt else quasi_loc_opt[link.index]
-            )
-            for link in self.lattice.iter_links()
-        }
-
     def __matmul__(self, other: LatticeState) -> LatticeState:
         if not isinstance(other, LatticeState):
             return NotImplemented
@@ -327,11 +318,11 @@ class QuasiLocalOperator(abc.ABC):
                 f"Dimension mismatch. Cannot multiply shape {self.lattice.shape} with shape "
                 f"{other.shape}."
             )
-        link_data = deepcopy(other.links)
-        extended_loc_opt = self._get_extended_loc_opt()
-        for idx in link_data.keys():
-            link_data[idx].state = (extended_loc_opt[idx] @ other.links[idx].state).view(Spin)
-        return LatticeState(*other.shape, link_data=link_data)
+        applied_state = deepcopy(other)
+        for link in self:
+            target_link = applied_state.get_link(link.index)
+            target_link.state = (link.operator @ target_link.state).view(Spin)
+        return applied_state
 
     def __rmatmul__(self, other: LatticeState) -> LatticeState:
         if not isinstance(other, LatticeState):
@@ -341,11 +332,11 @@ class QuasiLocalOperator(abc.ABC):
                 f"Dimension mismatch. Cannot multiply shape {self.lattice.shape} with shape "
                 f"{other.shape}."
             )
-        link_data = deepcopy(other.links)
-        extended_loc_opt = self._get_extended_loc_opt()
-        for idx in link_data.keys():
-            link_data[idx].state = (other.links[idx].state @ extended_loc_opt[idx]).view(Spin)
-        return LatticeState(*other.shape, link_data=link_data)
+        applied_state = deepcopy(other)
+        for link in self:
+            target_link = applied_state.get_link(link.index)
+            target_link.state = (target_link.state @ link.operator).view(Spin)
+        return applied_state
 
     def conj(self, inplace: bool = False) -> Self | None:  # type: ignore[return]
         conj_spin_obj = self if inplace else deepcopy(self)
