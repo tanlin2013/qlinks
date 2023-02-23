@@ -322,8 +322,7 @@ class QuasiLocalOperator(abc.ABC):
             return NotImplemented
         if self.lattice.shape != other.shape:
             raise InvalidOperationError(
-                f"Dimension mismatch. Cannot multiply shape {self.lattice.shape} with shape "
-                f"{other.shape}."
+                f"Cannot multiply shape {self.lattice.shape} with shape {other.shape}."
             )
         applied_state = deepcopy(other)
         for link in self:
@@ -336,8 +335,7 @@ class QuasiLocalOperator(abc.ABC):
             return NotImplemented
         if self.lattice.shape != other.shape:
             raise InvalidOperationError(
-                f"Dimension mismatch. Cannot multiply shape {self.lattice.shape} with shape "
-                f"{other.shape}."
+                f"Cannot multiply shape {self.lattice.shape} with shape {other.shape}."
             )
         applied_state = deepcopy(other)
         for link in self:
