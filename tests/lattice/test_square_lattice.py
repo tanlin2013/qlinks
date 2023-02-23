@@ -102,6 +102,10 @@ class TestSquareLattice:
         lattice.set_vertex_links(
             Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
         )
+        with pytest.raises(InvalidArgumentError):
+            lattice.set_vertex_links(
+                Site(1, 0), (SpinConfigs.up, SpinConfigs.down)
+            )
         with pytest.raises(LinkOverridingError):
             lattice.set_vertex_links(
                 Site(1, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
@@ -393,7 +397,7 @@ class TestPlaquette:
         with pytest.raises(InvalidOperationError):
             _ = Plaquette(lattice, Site(0, 0)) + Plaquette(lattice, Site(0, 1))
 
-    def test_multiplication(self, plaquette):
+    def test_multiplication(self, plaquette, clockwise_state):
         opt = plaquette.conj() * plaquette
         assert opt.link_d.operator == SpinOperators.Sm @ SpinOperators.Sp
         assert opt.link_r.operator == SpinOperators.Sm @ SpinOperators.Sp
@@ -408,6 +412,8 @@ class TestPlaquette:
             assert link.operator == SpinOperators.O2
         for link in plaquette.conj() * plaquette.conj():
             assert link.operator == SpinOperators.O2
+        with pytest.raises(TypeError):
+            _ = plaquette * clockwise_state
 
     def test_matrix_multiplication(self, lattice, plaquette, clockwise_state, anti_clockwise_state):
         """
@@ -430,6 +436,8 @@ class TestPlaquette:
         invalid_state = Plaquette(lattice, Site(0, 1)) @ clockwise_state
         assert np.isnan(invalid_state.charge(Site(0, 0)))
         assert np.isnan(invalid_state.charge(Site(0, 1)))
+        with pytest.raises(TypeError):
+            _ = plaquette.conj() @ plaquette
 
 
 class TestVertex:
