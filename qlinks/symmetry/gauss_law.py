@@ -113,6 +113,7 @@ class GaussLaw(AbstractSymmetry):
 @dataclass
 class GaugeInvariantSnapshot(Node, SquareLattice):
     charge_distri: Optional[NDArray[np.int64]] = field(default=None)
+    _gauss_law: GaussLaw = field(init=False, repr=False)
 
     def __post_init__(self):
         super().__post_init__()
