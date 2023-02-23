@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import astuple, dataclass, field
+from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import cache
 from itertools import product
@@ -39,7 +39,7 @@ class GaussLaw(AbstractSymmetry):
             raise InvalidArgumentError("Charge ranges from -2 to +2.")
 
     def __getitem__(self, site: Site) -> int:
-        return self.charge_distri[*astuple(site)]
+        return self.charge_distri[*site]
 
     @property
     def quantum_numbers(self) -> np.ndarray:
