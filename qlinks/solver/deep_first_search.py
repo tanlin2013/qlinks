@@ -77,7 +77,7 @@ class DeepFirstSearch(Generic[AnyNode]):
         return first_node
 
     def frontier_is_empty(self) -> bool:
-        return True if len(self.frontier) == 0 else False
+        return not bool(self.frontier)
 
     def search(self, n_solution: int = 1) -> AnyNode | List[AnyNode]:  # type: ignore[return]
         """Search for the solutions.
@@ -127,7 +127,7 @@ class DeepFirstSearch(Generic[AnyNode]):
 
             new_nodes: List[AnyNode] = selected_node.extend_node()
 
-            if len(new_nodes) > 0:
+            if new_nodes:
                 for new_node in new_nodes:
                     if new_node not in self.frontier and new_node not in self.checked_nodes:
                         self.insert_to_frontier(new_node)
