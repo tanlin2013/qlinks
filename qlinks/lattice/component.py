@@ -12,29 +12,32 @@ Real: TypeAlias = int | float | np.floating
 @total_ordering
 @dataclass
 class Site:
-    coord_x: int
-    coord_y: int
+    pos_x: int
+    pos_y: int
 
     def __array__(self) -> np.ndarray:
         return np.array(astuple(self))
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.coord_x}, {self.coord_y})"
+        return f"{type(self).__name__}({self.pos_x}, {self.pos_y})"
 
     def __hash__(self) -> int:
-        return hash((self.coord_x, self.coord_y))
+        return hash((self.pos_x, self.pos_y))
+
+    def __iter__(self) -> Iterator[int]:
+        return (pos for pos in (self.pos_x, self.pos_y))
 
     def __add__(self, other: Site | UnitVector) -> Site:
-        return Site(*(np.array(self) + np.array(other)))
+        return Site(self.pos_x + other.pos_x, self.pos_y + other.pos_y)
 
     def __sub__(self, other: Site) -> UnitVector:
-        return UnitVector(*(np.array(self) - np.array(other)))
+        return UnitVector(self.pos_x - other.pos_x, self.pos_y - other.pos_y)
 
     def __getitem__(self, item: int) -> int:
-        return {0: self.coord_x, 1: self.coord_y}[item]
+        return {0: self.pos_x, 1: self.pos_y}[item]
 
     def __lt__(self, other: Site) -> bool:
-        return (self.coord_y, self.coord_x) < (other.coord_y, other.coord_x)  # tuple comparison
+        return (self.pos_y, self.pos_x) < (other.pos_y, other.pos_x)  # tuple comparison
 
 
 @total_ordering
