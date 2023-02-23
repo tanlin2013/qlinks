@@ -11,8 +11,14 @@ from qlinks.exceptions import (
     LinkOverridingError,
 )
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.lattice.spin_object import Link, SpinConfigs, SpinOperator, SpinOperators
-from qlinks.lattice.square_lattice import LatticeState, Plaquette, SquareLattice, Vertex
+from qlinks.lattice.spin_object import Link, Spin, SpinConfigs, SpinOperator, SpinOperators
+from qlinks.lattice.square_lattice import (
+    LatticeState,
+    Plaquette,
+    SquareLattice,
+    Vertex,
+    LatticeMultiStates,
+)
 
 
 class TestSquareLattice:
@@ -269,6 +275,73 @@ def anti_clockwise_state():
         Site(1, 1), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.up, SpinConfigs.down)
     )
     return LatticeState(*lattice.shape, link_data=lattice.links)
+
+
+@pytest.fixture(scope="class")
+def zero_clock_state():
+    """
+       ▲      │
+       │   0  ▼
+    ──►o──────o──►
+       │      │
+      0│      │0
+    ◄──o──────o◄──
+       ▲   0  │
+       │      ▼
+    """
+    lattice = SquareLattice(2, 2)
+    spin_zero = Spin([[0], [0]], dtype=float, read_only=True)
+    lattice.set_vertex_links(
+        Site(0, 0), (SpinConfigs.up, SpinConfigs.down, spin_zero, spin_zero)
+    )
+    lattice.set_vertex_links(
+        Site(1, 0), (SpinConfigs.down, spin_zero, SpinConfigs.down, spin_zero)
+    )
+    lattice.set_vertex_links(
+        Site(0, 1), (spin_zero, SpinConfigs.up, spin_zero, SpinConfigs.up)
+    )
+    lattice.set_vertex_links(
+        Site(1, 1), (spin_zero, spin_zero, SpinConfigs.up, SpinConfigs.down)
+    )
+    return LatticeState(*lattice.shape, link_data=lattice.links)
+
+
+class TestLatticeMultiStates:
+    @pytest.fixture(scope="function")
+    def lattice(self):
+        return SquareLattice(2, 2)
+
+    @pytest.fixture(scope="function")
+    def plaquette(self, lattice):
+        return Plaquette(lattice, Site(0, 0))
+
+    @pytest.fixture(scope="function")
+    def states(self, lattice, clockwise_state, anti_clockwise_state, zero_clock_state):
+        return [
+            LatticeMultiStates(*lattice.shape, states=[clockwise_state, clockwise_state]),
+            LatticeMultiStates(*lattice.shape, states=[clockwise_state, anti_clockwise_state]),
+            LatticeMultiStates(*lattice.shape, states=[anti_clockwise_state, clockwise_state]),
+            LatticeMultiStates(*lattice.shape, states=[anti_clockwise_state, anti_clockwise_state]),
+            LatticeMultiStates(*lattice.shape, states=[anti_clockwise_state, zero_clock_state]),
+            LatticeMultiStates(*lattice.shape, states=[clockwise_state, zero_clock_state]),
+        ]
+
+    def test_matrix_multiplication(self, plaquette, states):
+        assert plaquette @ states[0] == states[3]
+        assert plaquette.conj() @ states[3] == states[0]
+        assert plaquette @ states[1] == states[4]
+        assert plaquette.conj() @ states[2] == states[5]
+        assert plaquette.conj() * plaquette @ states[0] == states[0]
+
+    def test_inner_product(self, plaquette, states):
+        assert states[0].T @ states[3] == SpinOperators.O2
+        assert states[1].T @ states[1] == SpinOperators.I2
+        assert states[2].T @ states[1] == SpinOperator([[0, 1], [1, 0]])
+        assert states[3].T @ states[1] == SpinOperator([[0, 1], [0, 1]])
+        assert states[3].T @ plaquette @ states[0] == SpinOperator([[1, 1], [1, 1]])
+        assert (states[3].T @ states[1]).dtype == np.float64
+        with pytest.raises((ValueError, SystemError)):
+            _ = states[1] @ states[1]
 
 
 class TestPlaquette:
