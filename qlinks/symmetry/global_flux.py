@@ -59,17 +59,16 @@ class FluxSectorSnapshot(GaugeInvariantSnapshot):
 
     def extend_node(self) -> List[Self]:
         site = self.find_first_empty_site()
-        if site is None:
-            return []
         new_nodes = []
-        for config in GaussLaw.possible_configs(charge=self.gauss_law[site]):
-            try:
-                new_node = deepcopy(self)
-                new_node.set_vertex_links(site, config)
-                if self.valid_for_axial_flux(site):
-                    new_nodes.append(new_node)
-            except LinkOverridingError:
-                continue
+        if site is not None:
+            for config in GaussLaw.possible_configs(charge=self.gauss_law[site]):
+                try:
+                    new_node = deepcopy(self)
+                    new_node.set_vertex_links(site, config)
+                    if self.valid_for_axial_flux(site):
+                        new_nodes.append(new_node)
+                except LinkOverridingError:
+                    continue
         return new_nodes
 
     @property
