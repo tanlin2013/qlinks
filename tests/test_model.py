@@ -1,11 +1,11 @@
-import pytest
 import numpy as np
+import pytest
 from matplotlib import pyplot as plt
-from scipy.linalg import ishermitian, eigh
+from scipy.linalg import eigh, ishermitian
 
+from qlinks.model import QuantumLinkModel
 from qlinks.symmetry.computation_basis import ComputationBasis
 from qlinks.symmetry.gauss_law import GaussLaw
-from qlinks.model import QuantumLinkModel
 
 
 class TestQuantumLinkModel:
@@ -29,7 +29,7 @@ class TestQuantumLinkModel:
             # (GaussLaw.staggered_charge_distri(4, 4), None),  # 1 mins 20 secs
             (np.zeros((2, 2)), None),
             # (np.zeros((4, 4)), (0, 0)),  # 9 mins 26 secs
-        ]
+        ],
     )
     @pytest.mark.parametrize("coup_j, coup_rk", [(1, 0.9)])
     def test_symmetry_sector_hamiltonian(self, charge_distri, flux_sector, coup_j, coup_rk):
