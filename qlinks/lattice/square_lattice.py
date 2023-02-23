@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import abc
-import pickle
+import pickle  # nosec B403
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import total_ordering
@@ -39,7 +39,7 @@ class SquareLattice:
         return Site(coord[0] % self.length, coord[1] % self.width)  # assume periodic b.c.
 
     def __deepcopy__(self, memodict):
-        return pickle.loads(pickle.dumps(self, protocol=-1))
+        return pickle.loads(pickle.dumps(self, protocol=-1))  # nosec B301
 
     def __iter__(self) -> Iterator[Site]:
         for coord_y, coord_x in product(range(self.width), range(self.length)):
@@ -297,7 +297,7 @@ class QuasiLocalOperator(abc.ABC):
         )
 
     def __deepcopy__(self, memodict):
-        return pickle.loads(pickle.dumps(self, protocol=-1))
+        return pickle.loads(pickle.dumps(self, protocol=-1))  # nosec B301
 
     def __iter__(self) -> Iterator[Link]:
         return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))
