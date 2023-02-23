@@ -28,6 +28,7 @@ class Site:
         return (pos for pos in (self.pos_x, self.pos_y))
 
     def __add__(self, other: Site | UnitVector) -> Site:
+        assert isinstance(other.pos_x, int) and isinstance(other.pos_y, int)
         return Site(self.pos_x + other.pos_x, self.pos_y + other.pos_y)
 
     def __sub__(self, other: Site) -> UnitVector:
