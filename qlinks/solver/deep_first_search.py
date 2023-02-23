@@ -32,7 +32,7 @@ class Node(abc.ABC):
         ...
 
 
-@dataclass
+@dataclass(slots=True)
 class DeepFirstSearch(Generic[AnyNode]):
     """Deep first search (DFS) algorithm.
 

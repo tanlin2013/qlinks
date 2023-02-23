@@ -29,7 +29,7 @@ class Flow(IntEnum):
     inward = -1
 
 
-@dataclass
+@dataclass(slots=True)
 class GaussLaw(AbstractSymmetry):
     charge_distri: NDArray[np.int64]
 

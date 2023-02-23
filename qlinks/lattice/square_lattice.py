@@ -24,7 +24,7 @@ Real: TypeAlias = int | float | np.floating
 LinkIndex: TypeAlias = Tuple[Site, UnitVector]
 
 
-@dataclass
+@dataclass(slots=True)
 class SquareLattice:
     length: int
     width: int
@@ -168,7 +168,7 @@ class SquareLattice:
 
 
 @total_ordering
-@dataclass
+@dataclass(slots=True)
 class LatticeState(SquareLattice):
     link_data: Dict[LinkIndex, Link]
 
@@ -207,7 +207,7 @@ class LatticeState(SquareLattice):
         return transpose_state
 
 
-@dataclass
+@dataclass(slots=True)
 class LatticeMultiStates(SquareLattice):
     states: Sequence[LatticeState] | NDArray
 
@@ -262,7 +262,7 @@ class LatticeMultiStates(SquareLattice):
         return transpose
 
 
-@dataclass
+@dataclass(slots=True)
 class QuasiLocalOperator(abc.ABC):
     lattice: SquareLattice
     site: Site
@@ -355,7 +355,7 @@ class QuasiLocalOperator(abc.ABC):
             return conj_spin_obj
 
 
-@dataclass
+@dataclass(slots=True)
 class Plaquette(QuasiLocalOperator):
     def __post_init__(self):
         self.link_d = Link(
@@ -384,7 +384,7 @@ class Plaquette(QuasiLocalOperator):
         return self.site
 
 
-@dataclass
+@dataclass(slots=True)
 class Vertex(QuasiLocalOperator):
     def __post_init__(self):
         self.link_t = Link(site=self.lattice[self.site], unit_vector=UnitVectors.upward)

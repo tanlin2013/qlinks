@@ -108,7 +108,7 @@ SpinOperators = __SpinOperatorCollection()
 
 
 @total_ordering
-@dataclass
+@dataclass(slots=True)
 class Link:
     site: Site
     unit_vector: UnitVector
