@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import cached_property
 from typing import Optional, TypeAlias
 
 import numpy as np
@@ -12,7 +11,7 @@ from qlinks.lattice.square_lattice import LatticeMultiStates, SquareLattice
 Real: TypeAlias = int | float | np.floating
 
 
-@dataclass
+@dataclass(slots=True)
 class QuantumLinkModel(SquareLattice):
     coup_j: float
     coup_rk: float
@@ -50,6 +49,6 @@ class QuantumLinkModel(SquareLattice):
                 self.basis.T @ (plaquette * plaquette.conj()) @ self.basis
             )
 
-    @cached_property
+    @property
     def hamiltonian(self) -> SpinOperator:
         return self._hamiltonian
