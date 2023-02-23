@@ -244,17 +244,15 @@ class LatticeMultiStates(SquareLattice):
             return NotImplemented
 
     def __or__(self, other: LatticeMultiStates) -> SpinOperator:
-        cartesian_prod = np.array(
-            np.meshgrid(self.states, other.states)  # type: ignore[arg-type]
-        ).T.reshape(-1, 2)
-        iterable = (
-            fore_state @ post_state for fore_state, post_state in cartesian_prod[:, ]  # fmt: skip
-        )
-        return (
-            np.fromiter(iterable, dtype=float, count=np.prod(self.hilbert_dims))
-            .reshape(self.hilbert_dims)
-            .view(SpinOperator)
-        )
+        fore_tensor = np.array(
+            [link.state for state in self.states for link in state.links.values()]
+        ).reshape(self.hilbert_dims[0], self.num_links, 2)
+        post_tensor = np.array(
+            [link.state for state in other.states for link in state.links.values()]
+        ).reshape(other.hilbert_dims[1], other.num_links, 2)
+        partial_dot = np.tensordot(fore_tensor, post_tensor, axes=(2, 2))  # sum over j
+        partial_dot = np.diagonal(partial_dot, axis1=1, axis2=3)  # choose i = i diag term
+        return np.product(partial_dot, axis=2).view(SpinOperator)  # product along i axis
 
     @property
     def hilbert_dims(self) -> Tuple[int, int]:
