@@ -61,15 +61,15 @@ class DeepFirstSearch(Generic[AnyNode]):
 
     start_state: AnyNode
     max_steps: int = 50000
-    frontier: List[AnyNode] = field(default_factory=list)
+    frontier: Set[AnyNode] = field(default_factory=set)
     checked_nodes: Set[AnyNode] = field(default_factory=set)
     selected_nodes: List[AnyNode] = field(default_factory=list)
 
     def __post_init__(self):
-        self.frontier.append(self.start_state)
+        self.frontier.add(self.start_state)
 
     def insert_to_frontier(self, node: AnyNode) -> None:
-        self.frontier.append(node)
+        self.frontier.add(node)
 
     def remove_from_frontier(self) -> AnyNode:
         first_node = self.frontier.pop()
