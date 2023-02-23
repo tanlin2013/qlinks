@@ -42,7 +42,9 @@ class ComputationBasis(Generic[AnySnapshot]):
 
     def get(self) -> LatticeMultiStates:
         return LatticeMultiStates(
-            self.length, self.width, states=[snapshot.to_state() for snapshot in self._snapshots]
+            self.length,
+            self.width,
+            states=sorted([snapshot.to_state() for snapshot in self._snapshots]),
         )
 
     @cached_property
