@@ -214,6 +214,13 @@ class LatticeMultiStates(SquareLattice):
         if not isinstance(self.states, np.ndarray):
             self.states = np.asarray(self.states, dtype=object)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, LatticeMultiStates):
+            return NotImplemented
+        return all(
+            fore_state == post_state for fore_state, post_state in zip(self.states, other.states)
+        )
+
     def __matmul__(
         self, other: QuasiLocalOperator | LatticeMultiStates
     ) -> LatticeMultiStates | SpinOperator:
