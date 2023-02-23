@@ -59,6 +59,11 @@ class TestSpinOperator:
         with pytest.raises(ValueError):
             opt[0, 1] = 0
 
+    def test_equality(self):
+        assert SpinOperator(np.eye(2)) == SpinOperators.I2
+        assert np.all(SpinOperators.I2 == np.eye(2))  # elementwise
+        assert np.any(SpinOperators.Sp != np.zeros((2, 2)))  # elementwise
+
     def test_conj(self):
         assert SpinOperators.Sp.conj == SpinOperators.Sm
         assert SpinOperators.Sm.conj == SpinOperators.Sp
