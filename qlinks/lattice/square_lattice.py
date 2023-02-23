@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import abc
+import pickle
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import total_ordering
 from itertools import product
-import pickle
 from typing import Dict, Iterator, List, Optional, Self, Sequence, Tuple, TypeAlias
 
 import networkx as nx

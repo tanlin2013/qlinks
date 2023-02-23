@@ -142,7 +142,9 @@ class TestLink:
         ) == SpinOperator([[0, 0, 0, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
         assert Link(Site(1, 1), UnitVectors.rightward, SpinOperators.Sm) ^ Link(
             Site(0, 0), UnitVectors.upward, SpinOperators.Sp
-        ) == SpinOperator([[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])  # auto sorted
+        ) == SpinOperator(
+            [[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+        )  # auto sorted
 
     def test_conj(self):
         assert Link(Site(1, 1), UnitVectors.rightward, SpinOperators.Sp).conj() == Link(

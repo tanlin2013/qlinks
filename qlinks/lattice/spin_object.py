@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import pickle
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import total_ordering
-import pickle
 from typing import Iterator, Optional, Sequence, Tuple, TypeAlias
 
 import numpy as np

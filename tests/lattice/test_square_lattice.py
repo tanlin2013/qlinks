@@ -11,13 +11,19 @@ from qlinks.exceptions import (
     LinkOverridingError,
 )
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.lattice.spin_object import Link, Spin, SpinConfigs, SpinOperator, SpinOperators
+from qlinks.lattice.spin_object import (
+    Link,
+    Spin,
+    SpinConfigs,
+    SpinOperator,
+    SpinOperators,
+)
 from qlinks.lattice.square_lattice import (
+    LatticeMultiStates,
     LatticeState,
     Plaquette,
     SquareLattice,
     Vertex,
-    LatticeMultiStates,
 )
 
 
@@ -103,9 +109,7 @@ class TestSquareLattice:
             Site(0, 0), (SpinConfigs.down, SpinConfigs.down, SpinConfigs.up, SpinConfigs.up)
         )
         with pytest.raises(InvalidArgumentError):
-            lattice.set_vertex_links(
-                Site(1, 0), (SpinConfigs.up, SpinConfigs.down)
-            )
+            lattice.set_vertex_links(Site(1, 0), (SpinConfigs.up, SpinConfigs.down))
         with pytest.raises(LinkOverridingError):
             lattice.set_vertex_links(
                 Site(1, 0), (SpinConfigs.up, SpinConfigs.down, SpinConfigs.down, SpinConfigs.down)
@@ -295,18 +299,10 @@ def zero_clock_state():
     """
     lattice = SquareLattice(2, 2)
     spin_zero = Spin([[0], [0]], dtype=float, read_only=True)
-    lattice.set_vertex_links(
-        Site(0, 0), (SpinConfigs.up, SpinConfigs.down, spin_zero, spin_zero)
-    )
-    lattice.set_vertex_links(
-        Site(1, 0), (SpinConfigs.down, spin_zero, SpinConfigs.down, spin_zero)
-    )
-    lattice.set_vertex_links(
-        Site(0, 1), (spin_zero, SpinConfigs.up, spin_zero, SpinConfigs.up)
-    )
-    lattice.set_vertex_links(
-        Site(1, 1), (spin_zero, spin_zero, SpinConfigs.up, SpinConfigs.down)
-    )
+    lattice.set_vertex_links(Site(0, 0), (SpinConfigs.up, SpinConfigs.down, spin_zero, spin_zero))
+    lattice.set_vertex_links(Site(1, 0), (SpinConfigs.down, spin_zero, SpinConfigs.down, spin_zero))
+    lattice.set_vertex_links(Site(0, 1), (spin_zero, SpinConfigs.up, spin_zero, SpinConfigs.up))
+    lattice.set_vertex_links(Site(1, 1), (spin_zero, spin_zero, SpinConfigs.up, SpinConfigs.down))
     return LatticeState(*lattice.shape, link_data=lattice.links)
 
 
