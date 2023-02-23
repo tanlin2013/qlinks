@@ -5,6 +5,7 @@ from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from functools import total_ordering
 from itertools import product
+import pickle
 from typing import Dict, Iterator, List, Optional, Self, Sequence, Tuple, TypeAlias
 
 import networkx as nx
@@ -37,6 +38,9 @@ class SquareLattice:
     def __getitem__(self, coord: Tuple[int, int] | Site) -> Site:
         coord = astuple(coord) if isinstance(coord, Site) else coord  # type: ignore[assignment]
         return Site(coord[0] % self.length, coord[1] % self.width)  # assume periodic b.c.
+
+    def __deepcopy__(self, memodict):
+        return pickle.loads(pickle.dumps(self, protocol=-1))
 
     def __iter__(self) -> Iterator[Site]:
         for coord_y, coord_x in product(range(self.width), range(self.length)):
@@ -285,6 +289,9 @@ class QuasiLocalOperator(abc.ABC):
                 np.fromiter(operators, dtype=object, count=self.lattice.num_links)
             )
         )
+
+    def __deepcopy__(self, memodict):
+        return pickle.loads(pickle.dumps(self, protocol=-1))
 
     def __iter__(self) -> Iterator[Link]:
         return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))

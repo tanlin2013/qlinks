@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import total_ordering
+import pickle
 from typing import Iterator, Optional, Sequence, Tuple, TypeAlias
 
 import numpy as np
@@ -120,6 +121,9 @@ class Link:
         if self.unit_vector.sign < 0:
             self.site += self.unit_vector
             self.unit_vector *= -1
+
+    def __deepcopy__(self, memodict):
+        return pickle.loads(pickle.dumps(self, protocol=-1))
 
     def __hash__(self) -> int:
         return hash((self.site, self.unit_vector, self.operator, self.state))
