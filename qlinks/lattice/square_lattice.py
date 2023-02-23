@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 from copy import deepcopy
-from dataclasses import astuple, dataclass, field
+from dataclasses import dataclass, field
 from functools import total_ordering
 from itertools import product
 import pickle
@@ -36,7 +36,6 @@ class SquareLattice:
         self._links = {link.index: link for link in self.iter_links()}
 
     def __getitem__(self, coord: Tuple[int, int] | Site) -> Site:
-        coord = astuple(coord) if isinstance(coord, Site) else coord  # type: ignore[assignment]
         return Site(coord[0] % self.length, coord[1] % self.width)  # assume periodic b.c.
 
     def __deepcopy__(self, memodict):
