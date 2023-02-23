@@ -55,6 +55,9 @@ class UnitVector:
     def __hash__(self) -> int:
         return hash((self.pos_x, self.pos_y))
 
+    def __iter__(self) -> Iterator[Real]:
+        return (pos for pos in (self.pos_x, self.pos_y))
+
     def __mul__(self, scalar: Real) -> UnitVector:
         return UnitVector(self.pos_x * scalar, self.pos_y * scalar)
 
