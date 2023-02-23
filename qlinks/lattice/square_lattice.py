@@ -93,8 +93,8 @@ class SquareLattice:
     def reset_link(self, link_index: LinkIndex) -> None:
         self.get_link(link_index).reset(inplace=True)
 
-    def _get_vertex_link_indices(self, site: Site) -> List[LinkIndex]:
-        return [(self[site], unit_vector) for unit_vector in UnitVectors.iter_all_directions()]
+    def _get_vertex_link_indices(self, site: Site) -> Iterator[LinkIndex]:
+        return ((self[site], unit_vector) for unit_vector in UnitVectors.iter_all_directions())
 
     def get_vertex_links(self, site: Site) -> List[Link]:
         return [self.get_link(link_index) for link_index in self._get_vertex_link_indices(site)]
