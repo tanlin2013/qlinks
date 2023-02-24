@@ -249,15 +249,31 @@ class LatticeMultiStates(SquareLattice):
             return NotImplemented
 
     def __or__(self, other: LatticeMultiStates) -> SpinOperator:
+        """
+                      s
+                  ┌────────┐
+        \alpha    │        │    \beta
+             ─────O        O─────
+                  │        │
+                  │        │
+
+                  l        l
+
+        Args:
+            other:
+
+        Returns:
+            Cartesian product of all :class:`LatticeState` pairing :math:`(\alpha, \beta)`.
+        """
         fore_tensor = np.array(
             [link.state for state in self.states for link in state.links.values()]
-        ).reshape(self.hilbert_dims[0], self.num_links, 2)
+        ).reshape(self.hilbert_dims[0], self.num_links, self.local_hilbert_dims)
         post_tensor = np.array(
             [link.state for state in other.states for link in state.links.values()]
-        ).reshape(other.hilbert_dims[1], other.num_links, 2)
-        partial_dot = np.tensordot(fore_tensor, post_tensor, axes=(2, 2))  # sum over j
-        partial_dot = np.diagonal(partial_dot, axis1=1, axis2=3)  # choose i = i diag term
-        return np.product(partial_dot, axis=2).view(SpinOperator)  # product along i axis
+        ).reshape(other.hilbert_dims[0], other.num_links, other.local_hilbert_dims)
+        partial_dot = np.tensordot(fore_tensor, post_tensor, axes=(2, 2))  # sum over s
+        partial_dot = np.diagonal(partial_dot, axis1=1, axis2=3)  # choose l = l diag term
+        return np.product(partial_dot, axis=2).view(SpinOperator)  # product along l axis
 
     @property
     def hilbert_dims(self) -> Tuple[int, int]:
