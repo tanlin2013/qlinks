@@ -301,9 +301,8 @@ class QuasiLocalOperator(abc.ABC):
         ...
 
     def toarray(self) -> np.ndarray:
-        quasi_loc_opt = [link for link in self]
-        skip_links = [link.reset() for link in self]
-        quasi_loc_opt += [
+        skip_links = {link.reset() for link in self}
+        quasi_loc_opt = [link for link in self] + [
             identity_link
             for identity_link in self.lattice.iter_links()
             if identity_link not in skip_links
