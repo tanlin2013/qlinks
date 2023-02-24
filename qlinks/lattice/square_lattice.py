@@ -70,8 +70,13 @@ class SquareLattice:
         return 2 * self.size
 
     @property
+    def local_hilbert_dims(self) -> int:
+        return 2
+
+    @property
     def hilbert_dims(self) -> Tuple[int, int]:
-        return 2**self.num_links, 2**self.num_links
+        dims = self.local_hilbert_dims**self.num_links
+        return dims, dims
 
     @property
     def links(self) -> Dict[LinkIndex, Link]:
