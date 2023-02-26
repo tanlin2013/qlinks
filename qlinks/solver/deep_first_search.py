@@ -90,7 +90,7 @@ class DeepFirstSearch(Generic[AnyNode]):
             it has exceeded `max_steps`).
 
         Returns:
-            A :class:`Node` which fulfills :func:`~Node.is_the_solution`.
+            A :class:`Node` or a list of :class:`Node` which fulfills :func:`~Node.is_the_solution`.
 
         Raises:
             StopIteration: if no solution can be found or the number of iteration
