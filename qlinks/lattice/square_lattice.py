@@ -265,6 +265,11 @@ class LatticeMultiStates(SquareLattice):
         Returns:
             Cartesian product of all :class:`LatticeState` pairing :math:`(\alpha, \beta)`.
         """
+        if (
+            self.states[0].links[(Site(0, 0), UnitVectors.rightward)].state.shape[1]
+            != other.states[0].links[(Site(0, 0), UnitVectors.rightward)].state.shape[0]
+        ):
+            raise ValueError(f"Shape of link states in two {type(self).__name__} mismatch.")
         fore_tensor = np.array(
             [link.state for state in self.states for link in state.links.values()]
         ).reshape(self.hilbert_dims[0], self.num_links, self.local_hilbert_dims)

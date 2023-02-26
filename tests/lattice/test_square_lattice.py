@@ -340,7 +340,7 @@ class TestLatticeMultiStates:
         assert states[3].T @ states[1] == SpinOperator([[0, 1], [0, 1]])
         assert states[3].T @ plaquette @ states[0] == SpinOperator([[1, 1], [1, 1]])
         assert (states[3].T @ states[1]).dtype == np.float64
-        with pytest.raises((ValueError, SystemError)):
+        with pytest.raises(ValueError):
             _ = states[1] @ states[1]
 
 
