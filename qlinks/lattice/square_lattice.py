@@ -367,10 +367,10 @@ class QuasiLocalOperator(abc.ABC):
         return applied_state
 
     def conj(self, inplace: bool = False) -> Self | None:  # type: ignore[return]
-        conj_spin_obj = self if inplace else deepcopy(self)
-        _ = [link.conj(inplace=True) for link in conj_spin_obj]
+        conj_opt = self if inplace else deepcopy(self)
+        _ = [link.conj(inplace=True) for link in conj_opt]
         if not inplace:
-            return conj_spin_obj
+            return conj_opt
 
 
 @dataclass(slots=True)
