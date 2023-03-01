@@ -63,8 +63,7 @@ class UnitVector:
         return UnitVector(self.pos_x * scalar, self.pos_y * scalar)
 
     def __rmul__(self, scalar: Real) -> UnitVector:  # type: ignore[misc]
-        # TODO: somehow mypy complains this, dunno why
-        # >>> component.py:58: error: Forward operator "__mul__" is not callable  [misc]
+        # mypy >>> component.py:65: error: Forward operator "__mul__" is not callable  [misc]
         return UnitVector(scalar * self.pos_x, scalar * self.pos_y)
 
     def __imul__(self, scalar: Real) -> UnitVector:
