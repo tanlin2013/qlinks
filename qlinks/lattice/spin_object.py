@@ -52,7 +52,7 @@ class __SpinConfigCollection:
         return iter((self.up, self.down))
 
 
-SpinConfigs = __SpinConfigCollection()
+SpinConfigs = __SpinConfigCollection()  # as singleton
 
 
 class SpinOperator(np.ndarray):
@@ -104,7 +104,7 @@ class __SpinOperatorCollection:
     )
 
 
-SpinOperators = __SpinOperatorCollection()
+SpinOperators = __SpinOperatorCollection()  # as singleton
 
 
 @total_ordering

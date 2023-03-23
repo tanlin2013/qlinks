@@ -99,4 +99,4 @@ class __UnitVectorCollection:
         return iter(sorted((self.downward, self.leftward, self.rightward, self.upward)))
 
 
-UnitVectors = __UnitVectorCollection()
+UnitVectors = __UnitVectorCollection()  # as singleton
