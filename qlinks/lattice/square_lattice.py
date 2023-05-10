@@ -319,6 +319,9 @@ class QuasiLocalOperator(abc.ABC):
             )
         )
 
+    def __hash__(self) -> int:
+        return hash((self.site, self.link_d, self.link_l, self.link_r, self.link_t))
+
     def __deepcopy__(self, memodict):
         return pickle.loads(pickle.dumps(self, protocol=-1))  # nosec B301
 
@@ -374,7 +377,7 @@ class QuasiLocalOperator(abc.ABC):
             return conj_opt
 
 
-@dataclass(slots=True)
+@dataclass
 class Plaquette(QuasiLocalOperator):
     def __post_init__(self):
         self.link_d = Link(
@@ -397,6 +400,9 @@ class Plaquette(QuasiLocalOperator):
             unit_vector=UnitVectors.upward,
             operator=SpinOperators.Sm,
         )
+
+    def __hash__(self) -> int:
+        return super().__hash__()
 
     @property
     def corner_site(self) -> Site:
