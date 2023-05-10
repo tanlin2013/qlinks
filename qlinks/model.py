@@ -26,7 +26,7 @@ class QuantumLinkModel(SquareLattice):
             self._build_symmetry_sector_hamiltonian()
 
     def _build_full_hamiltonian(self) -> None:
-        self._hamiltonian = SpinOperator(np.zeros(self.hilbert_dims))
+        self._hamiltonian = SpinOperator(np.zeros(self.hilbert_dims), dtype=float)
         for plaquette in self.iter_plaquettes():
             flipper = plaquette + plaquette.conj()
             self._hamiltonian += (  # type: ignore[misc]
@@ -34,7 +34,7 @@ class QuantumLinkModel(SquareLattice):
             )
 
     def _build_symmetry_sector_hamiltonian(self) -> None:
-        self._hamiltonian = SpinOperator(np.zeros(self.basis.hilbert_dims))
+        self._hamiltonian = SpinOperator(np.zeros(self.basis.hilbert_dims), dtype=float)
         for plaquette in self.iter_plaquettes():
             self._hamiltonian += -self.coup_j * (  # type: ignore[misc, operator]
                 self.basis.T @ plaquette @ self.basis
