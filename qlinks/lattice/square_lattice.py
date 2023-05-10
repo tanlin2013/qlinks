@@ -4,7 +4,7 @@ import abc
 import pickle  # nosec B403
 from copy import deepcopy
 from dataclasses import dataclass, field
-from functools import total_ordering
+from functools import total_ordering, cache
 from itertools import product
 from typing import Dict, Iterator, List, Optional, Self, Sequence, Tuple, TypeAlias
 
@@ -366,6 +366,7 @@ class QuasiLocalOperator(abc.ABC):
             target_link.state = (target_link.state @ link.operator).view(Spin)
         return applied_state
 
+    @cache
     def conj(self, inplace: bool = False) -> Self | None:  # type: ignore[return]
         conj_opt = self if inplace else deepcopy(self)
         _ = [link.conj(inplace=True) for link in conj_opt]
