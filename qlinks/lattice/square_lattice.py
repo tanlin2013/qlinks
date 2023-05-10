@@ -323,7 +323,14 @@ class QuasiLocalOperator(abc.ABC):
         return hash((self.site, self.link_d, self.link_l, self.link_r, self.link_t))
 
     def __deepcopy__(self, memodict):
-        return pickle.loads(pickle.dumps(self, protocol=-1))  # nosec B301
+        new_inst = type(self).__new__(self.__class__)
+        new_inst.lattice = self.lattice
+        new_inst.site = self.site
+        new_inst.link_d = deepcopy(self.link_d, memodict)
+        new_inst.link_l = deepcopy(self.link_l, memodict)
+        new_inst.link_r = deepcopy(self.link_r, memodict)
+        new_inst.link_t = deepcopy(self.link_t, memodict)
+        return new_inst
 
     def __iter__(self) -> Iterator[Link]:
         return iter(sorted((self.link_d, self.link_l, self.link_r, self.link_t)))
