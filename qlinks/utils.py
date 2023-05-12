@@ -1,6 +1,6 @@
 from functools import wraps
-from typing import Any, Callable
 from time import perf_counter
+from typing import Any, Callable
 
 
 def timeit(func: Callable) -> Callable:

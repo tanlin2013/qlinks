@@ -4,7 +4,7 @@ import abc
 import pickle  # nosec B403
 from copy import deepcopy
 from dataclasses import dataclass, field
-from functools import total_ordering, cache
+from functools import cache, total_ordering
 from itertools import product
 from typing import Dict, Iterator, List, Optional, Self, Sequence, Tuple, TypeAlias
 

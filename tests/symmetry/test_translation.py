@@ -2,12 +2,11 @@ import pytest
 
 from qlinks.lattice.component import UnitVector
 from qlinks.symmetry.translation import Translation
-
-from tests.lattice.test_square_lattice import (
-    clockwise_state,
+from tests.lattice.test_square_lattice import (  # noqa: F401
     anti_clockwise_state,
+    clockwise_state,
     zero_clock_state,
-)  # noqa: F401
+)
 
 
 class TestTranslation:
