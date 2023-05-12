@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: F401
 
 from qlinks.lattice.component import UnitVector
 from qlinks.symmetry.translation import Translation
@@ -10,7 +10,9 @@ from tests.lattice.test_square_lattice import (  # noqa: F401
 
 
 class TestTranslation:
-    def test_matrix_multiplication(self, clockwise_state, anti_clockwise_state, zero_clock_state):
+    def test_matrix_multiplication(
+        self, clockwise_state, anti_clockwise_state, zero_clock_state  # noqa: F811
+    ):
         for state in [clockwise_state, anti_clockwise_state, zero_clock_state]:
             # translate by lattice size
             assert Translation(UnitVector(0, state.shape[1])) @ state == state
