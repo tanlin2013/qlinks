@@ -19,6 +19,7 @@ class QuantumLinkModel(SquareLattice):
     _hamiltonian: SpinOperator = field(init=False, repr=False)
 
     def __post_init__(self):
+        SquareLattice.__post_init__(self)
         if self.basis is None:
             assert self.num_links <= 14
             self._build_full_hamiltonian()
