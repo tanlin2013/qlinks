@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 import pytest
 from matplotlib import pyplot as plt
 from scipy.linalg import eigh, ishermitian
@@ -19,6 +20,18 @@ class TestQuantumLinkModel:
         print(evals)
         plt.matshow(ham)
         plt.colorbar()
+        plt.show()
+
+        graph = nx.from_numpy_array(ham)
+        edges, weights = zip(*nx.get_edge_attributes(graph, "weight").items())
+        nx.draw(
+            graph,
+            # pos=nx.circular_layout(graph),
+            with_labels=True,
+            edgelist=edges,
+            edge_color=weights,
+            edge_cmap=plt.cm.jet,
+        )
         plt.show()
 
     @pytest.mark.parametrize(
@@ -43,3 +56,23 @@ class TestQuantumLinkModel:
         plt.matshow(ham)
         plt.colorbar()
         plt.show()
+
+        diag = np.diagonal(ham)
+        plt.hist(diag, np.linspace(np.min(diag), np.max(diag), 20))
+        plt.show()
+
+        plt.hist(evals, np.linspace(np.min(evals), np.max(evals), 100))
+        plt.show()
+
+        graph = nx.from_numpy_array(ham)
+        edges, weights = zip(*nx.get_edge_attributes(graph, "weight").items())
+        nx.draw(
+            graph,
+            pos=nx.spectral_layout(graph),
+            with_labels=True,
+            edgelist=edges,
+            edge_color=weights,
+            edge_cmap=plt.cm.jet,
+        )
+        plt.show()
+        print([len(c) for c in nx.connected_components(graph)])
