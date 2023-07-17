@@ -11,7 +11,7 @@ from qlinks.lattice.square_lattice import LatticeMultiStates, SquareLattice
 Real: TypeAlias = int | float | np.floating
 
 
-@dataclass(slots=True)
+@dataclass
 class QuantumLinkModel(SquareLattice):
     coup_j: float
     coup_rk: float
@@ -19,7 +19,7 @@ class QuantumLinkModel(SquareLattice):
     _hamiltonian: SpinOperator = field(init=False, repr=False)
 
     def __post_init__(self):
-        SquareLattice.__post_init__(self)
+        super().__post_init__()
         if self.basis is None:
             assert self.num_links <= 14
             self._build_full_hamiltonian()
