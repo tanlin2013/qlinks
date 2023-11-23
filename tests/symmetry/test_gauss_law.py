@@ -8,7 +8,7 @@ from scipy.special import binom
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import Site
 from qlinks.solver.deep_first_search import DeepFirstSearch
-from qlinks.symmetry.gauss_law import GaugeInvariantSnapshot, GaussLaw
+from qlinks.symmetry.gauss_law import GaussLaw
 from qlinks.visualizer.graph import Graph
 from qlinks.visualizer.quiver import Quiver
 
@@ -43,16 +43,19 @@ class TestGaussLaw:
         assert gauss_law[Site(0, 0)] == 0
 
     @pytest.mark.parametrize("charge", [-2, -1, 0, 1, 2])
-    def test_possible_flows(self, charge):
-        assert len(GaussLaw.possible_flows(charge)) == binom(4, 2 - abs(charge))
+    def test_possible_flows(self, charge: int):
+        configs = GaussLaw.possible_flows(charge)
+        assert len(configs) == binom(4, 2 - abs(charge))
+        for config in configs:
+            assert np.sum(config) / 2 == charge
 
     @pytest.mark.parametrize("charge", [-2, -1, 0, 1, 2])
-    def test_possible_configs(self, charge):
+    def test_possible_configs(self, charge: int):
         configs = GaussLaw.possible_configs(charge)
         assert len(configs) == binom(4, 2 - abs(charge))
         for config in configs:
-            mag = list(map(lambda spin: spin.magnetization, config))
-            assert np.sum(np.multiply(mag, [-1, -1, 1, 1])) == charge
+            flow = (config - (config == 0)) * np.array([-1, -1, 1, 1])  # turn 0 to -1
+            assert np.sum(flow) / 2 == charge
 
     @pytest.mark.parametrize("length, width", [(2, 2), (3, 3), (6, 8)])
     def test_random_charge_distri(self, length, width):
@@ -82,20 +85,35 @@ class TestGaussLaw:
             assert np.all(np.unique(charges) == [-1, 1])
             assert charges.shape == (width, length)
 
+    def test_next_empty_site(self):
+        """
+           │      │
+           ▼      ▼
+        ──►o◄─────o──►
+           ▲      ▲
+           │      │
+        ──►o◄─────o──►
+           │      │
+           ▼      ▼
+        """
+        gauss_law = GaussLaw.from_zero_charge_distri(2, 2)
+        assert gauss_law._next_empty_site() == Site(0, 0)
+        gauss_law._lattice.links = np.array([0, 1, 1, -1, -1, 0, -1, -1])
+        assert gauss_law._next_empty_site() == Site(1, 0)
+        gauss_law._lattice.links = np.array([0, 1, 1, 1, -1, 0, -1, 0])
+        assert gauss_law._next_empty_site() == Site(0, 1)
 
-class TestGaugeInvariantSnapshot:
-    @pytest.mark.parametrize("length, width", [(2, 2)])
-    def test_extend_node(self, length, width):
-        charge_distri = np.zeros((length, width))
-        snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
-        new_nodes = snapshot.extend_node()
+    @pytest.mark.parametrize("length_x, length_y", [(2, 2)])
+    def test_extend_node(self, length_x: int, length_y: int):
+        base_node = GaussLaw.from_zero_charge_distri(length_x, length_y)
+        new_nodes = base_node.extend_node()
         assert len(set(new_nodes)) == len(new_nodes)
-        extended_site = snapshot.find_first_empty_site()
-        for node in new_nodes:
-            new_empty_site = node.find_first_empty_site()
-            assert new_empty_site > extended_site
-            assert not np.isnan(node.charge(extended_site))
-            assert np.isnan(node.charge(new_empty_site))
+        first_site = base_node._next_empty_site()
+        for new_node in new_nodes:
+            new_empty_site = new_node._next_empty_site()
+            assert new_empty_site > first_site
+            assert not np.isnan(new_node._lattice.charge(first_site))
+            assert np.isnan(new_node._lattice.charge(new_empty_site))
 
     @pytest.mark.parametrize(
         "charge_distri, expectation",
@@ -108,17 +126,16 @@ class TestGaugeInvariantSnapshot:
         ],
     )
     def test_search(self, charge_distri, expectation):
-        width, length = np.asarray(charge_distri).shape
-        snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
-        dfs = DeepFirstSearch(snapshot)
+        gauss_law = GaussLaw(charge_distri)
+        dfs = DeepFirstSearch(gauss_law)
         with expectation:
-            filled_snapshot = dfs.search(n_solution=1)
-            assert isinstance(filled_snapshot, GaugeInvariantSnapshot)
-            for site in filled_snapshot:
-                assert filled_snapshot.charge(site) == filled_snapshot.gauss_law[site]
+            filled_gauss_law, = dfs.solve(n_solution=1)
+            assert isinstance(filled_gauss_law, GaussLaw)
+            for site in filled_gauss_law._lattice:
+                assert filled_gauss_law.charge(site) == filled_gauss_law[site]
 
     @pytest.mark.parametrize(
-        "charge_distri, n_expected_solution, expectation",
+        "charge_distri, flux_sector, n_expected_solution, expectation",
         [
             (np.zeros((2, 2)), 18, does_not_raise()),
             ([[1, -1], [-1, 1]], 8, does_not_raise()),
@@ -127,14 +144,10 @@ class TestGaugeInvariantSnapshot:
             (GaussLaw.staggered_charge_distri(4, 4), 272, does_not_raise()),  # 10 secs
         ],
     )
-    def test_multi_solutions(self, charge_distri, n_expected_solution, expectation):
-        width, length = np.asarray(charge_distri).shape
-        snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
-        dfs = DeepFirstSearch(snapshot, max_steps=30000)
+    def test_multi_solutions(self, charge_distri, flux_sector, n_expected_solution, expectation):
+        gauss_law = GaussLaw(charge_distri, flux_sector)
+        dfs = DeepFirstSearch(gauss_law, max_steps=np.iinfo(np.int32).max)
         with expectation:
-            filled_snapshots = dfs.search(n_solution=3000)  # far more than all possibilities
-            assert all(isinstance(s, GaugeInvariantSnapshot) for s in filled_snapshots)
-            assert len(filled_snapshots) == n_expected_solution
 
     @pytest.fixture(
         scope="class",
@@ -174,3 +187,7 @@ class TestGaugeInvariantSnapshot:
         q = Quiver(snapshot)
         q.plot()
         plt.show()
+            filled_gauss_laws = dfs.solve(n_solution=n_expected_solution+1)
+            assert all(isinstance(s, GaussLaw) for s in filled_gauss_laws)
+            assert len(filled_gauss_laws) == n_expected_solution
+            assert dfs.frontier_is_empty
