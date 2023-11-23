@@ -66,13 +66,12 @@ class GaussLaw(Node):
 
     @staticmethod
     @cache
-    def possible_configs(charge: int) -> List[Tuple[Spin, ...]]:
-        hash_table: Dict[int, Spin] = {int(2 * spin.magnetization): spin for spin in SpinConfigs}
-        local_coord_sys = [unit_vec.sign for unit_vec in UnitVectors.iter_all_directions()]
-        return [
-            tuple(map(lambda idx: hash_table[idx], np.multiply(quartet, local_coord_sys)))
-            for quartet in GaussLaw.possible_flows(charge)
-        ]
+    def possible_configs(charge: int) -> List[npt.NDArray[int]]:
+        def flow_to_spin(flow: npt.NDArray[int]):
+            flow *= Vertex.order()
+            return flow * (flow == 1)  # turn -1 to 0
+
+        return [flow_to_spin(quartet) for quartet in GaussLaw.possible_flows(charge)]
 
     @staticmethod
     def random_charge_distri(
