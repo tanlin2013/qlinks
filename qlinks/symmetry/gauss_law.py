@@ -5,10 +5,10 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import cache
 from itertools import product
-from typing import Dict, List, Optional, Self, Tuple, TypeAlias
+from typing import Dict, List, Optional, Self, Tuple
 
 import numpy as np
-from numpy.typing import NDArray
+import numpy.typing as npt
 
 from qlinks.exceptions import (
     InvalidArgumentError,
@@ -16,12 +16,8 @@ from qlinks.exceptions import (
     LinkOverridingError,
 )
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.lattice.spin_object import Spin, SpinConfigs
-from qlinks.lattice.square_lattice import LatticeState, SquareLattice
+from qlinks.lattice.square_lattice import SquareLattice, Vertex, ComputationBasis
 from qlinks.solver.deep_first_search import Node
-from qlinks.symmetry.abstract import AbstractSymmetry
-
-Real: TypeAlias = int | float | np.floating
 
 
 class Flow(IntEnum):
@@ -30,20 +26,33 @@ class Flow(IntEnum):
 
 
 @dataclass(slots=True)
-class GaussLaw(AbstractSymmetry):
-    charge_distri: NDArray[np.int64]
+class GaussLaw(Node):
+    """
+
+
+    Args:
+        charge_distri: The charge distribution on the lattice.
+                       The (N, M)-shaped input array is repositioned in the first quadrant,
+                       aligning the element at (N - 1, 0) to (0, 0),
+                       and the element at (0, M - 1) to (M - 1, N - 1).
+        flux_sector: The flux sector of the lattice, optional.
+    """
+
+    charge_distri: npt.NDArray[int]
+    flux_sector: Optional[Tuple[int, int]] = field(default=None)
+    _lattice: SquareLattice = field(init=False, repr=False)
 
     def __post_init__(self):
         self.charge_distri = np.flipud(self.charge_distri).T
         if not np.all((self.charge_distri >= -2) & (self.charge_distri <= 2)):
             raise InvalidArgumentError("Charge ranges from -2 to +2.")
+        self._lattice = SquareLattice(*self.shape)
 
     def __getitem__(self, site: Site) -> int:
         return self.charge_distri[*site]
 
-    @property
-    def quantum_numbers(self) -> np.ndarray:
-        return self.charge_distri
+    def charge(self, site: Site) -> int:
+        return self._lattice.charge(site)
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -109,29 +118,35 @@ class GaussLaw(AbstractSymmetry):
         stagger = np.array([[1, -1], [-1, 1]])
         return np.tile(stagger, (width // 2, length // 2))
 
+    @classmethod
+    def from_random_charge_distri(cls, length_x: int, length_y: int) -> Self:
+        return cls(cls.random_charge_distri(length_x, length_y))
 
-@dataclass
-class GaugeInvariantSnapshot(Node, SquareLattice):
-    charge_distri: Optional[NDArray[np.int64]] = field(default=None)
-    _gauss_law: GaussLaw = field(init=False, repr=False)
+    @classmethod
+    def from_staggered_charge_distri(cls, length_x: int, length_y: int) -> Self:
+        return cls(cls.staggered_charge_distri(length_x, length_y))
 
-    def __post_init__(self):
-        super().__post_init__()
-        if self.charge_distri is None:
-            self.charge_distri = np.zeros(self.shape)
-        self._gauss_law = GaussLaw(self.charge_distri)
-        if self.gauss_law.shape != self.shape:
-            raise InvalidArgumentError("Shape of charge distribution mismatches with the lattice.")
+    @classmethod
+    def from_zero_charge_distri(cls, length_x: int, length_y: int) -> Self:
+        return cls(np.zeros((length_y, length_x), dtype=int))
+
+    def __deepcopy__(self, memo: Dict) -> Self:
+        new_inst = type(self).__new__(self.__class__)
+        new_inst.charge_distri = self.charge_distri
+        new_inst.flux_sector = self.flux_sector
+        new_inst._lattice = SquareLattice(*self.shape)
+        new_inst._lattice.links = deepcopy(self._lattice.links)
+        return new_inst
 
     def __hash__(self) -> int:
-        return hash(frozenset(self.links.values()))
+        return hash(str(self._lattice.links))
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, GaugeInvariantSnapshot):
+        if not isinstance(other, GaussLaw):
             return NotImplemented
         if self.shape != other.shape:
             raise InvalidOperationError(f"Shape of two {type(self).__name__} are mismatched.")
-        return set(self.links.values()) == set(other.links.values())
+        return hash(self) == hash(other)
 
     def __str__(self) -> str:
         return "".join(map(str, self._lattice.links))
@@ -192,9 +207,7 @@ class GaugeInvariantSnapshot(Node, SquareLattice):
                 return False
         return True
 
-    def to_state(self) -> LatticeState:
-        return LatticeState(*self.shape, link_data=self.links)
-
-    @property
-    def gauss_law(self) -> GaussLaw:
-        return self._gauss_law
+    @staticmethod
+    def to_basis(nodes: List[GaussLaw]) -> ComputationBasis:
+        link_data = [node._lattice.links for node in nodes]
+        return ComputationBasis(np.vstack(link_data))
