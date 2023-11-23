@@ -73,7 +73,6 @@ class DeepFirstSearch(Generic[AnyNode]):
     def frontier_is_empty(self) -> bool:
         return not bool(self.frontier)
 
-    def search(self, n_solution: int = 1) -> AnyNode | List[AnyNode]:  # type: ignore[return]
     def _reach_stop_criteria(self, n_step: int) -> bool:
         if self.frontier_is_empty or n_step == self.max_steps:
             if len(self.selected_nodes) == 0:
@@ -85,6 +84,32 @@ class DeepFirstSearch(Generic[AnyNode]):
                 f"{len(self.selected_nodes)} Solutions in {n_step} steps."
             )
             return True
+        return False
+
+    def _diagnose_node(self) -> bool:
+        """
+
+        Returns:
+
+        Notes:
+            We didn't check if the new node is in `checked_nodes` before adding it to 'frontier',
+            this is correct by assuming there is no loop in the tree.
+        """
+        selected_node = self._remove_from_frontier()
+
+        if selected_node.is_the_solution():
+            self.selected_nodes.append(selected_node)
+            logger.debug(f"A New solution is Found after {len(self.checked_nodes)} steps.")
+            logger.debug(
+                f"Totally, we have Found {len(self.selected_nodes)} Solutions "
+                f"[{len(self.checked_nodes)} checked | {len(self.frontier)} unchecked]."
+            )
+            logger.debug(f"New Solution: \n{selected_node}")
+            return True
+
+        new_nodes: List[AnyNode] = selected_node.extend_node()
+        nodes_to_add = set(new_nodes) - self.frontier  # warn: no loop assumption
+        self.frontier.update(nodes_to_add)
         return False
 
     def solve(self, n_solution: int = 1) -> List[AnyNode]:
@@ -108,27 +133,8 @@ class DeepFirstSearch(Generic[AnyNode]):
             if self._reach_stop_criteria(n_step):
                 return self.selected_nodes
 
-            selected_node = self.remove_from_frontier()
-
-            if selected_node.is_the_solution():
-                self.selected_nodes.append(selected_node)
-                logger.debug(f"A New solution is Found after {n_step} steps.")
-                logger.debug(
-                    f"Totally, we have Found {len(self.selected_nodes)} Solutions "
-                    f"[{len(self.checked_nodes)} checked | {len(self.frontier)} unchecked]."
-                )
-                logger.debug(f"New Solution: \n{selected_node}")
-                if n_solution == 1:
-                    logger.info(f"Found {n_solution} Solution as required in {n_step} steps.")
-                    return selected_node
-                elif len(self.selected_nodes) >= n_solution:
-                    logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
-                    return self.selected_nodes
-
-            new_nodes: List[AnyNode] = selected_node.extend_node()
-
-            if new_nodes:
-                for new_node in new_nodes:
-                    if new_node not in self.frontier and new_node not in self.checked_nodes:
-                        self.insert_to_frontier(new_node)
+            found_new = self._diagnose_node()
+            if found_new and len(self.selected_nodes) >= n_solution:
+                logger.info(f"Found {n_solution} Solution as required in {n_step} steps.")
+                return self.selected_nodes
         return self.selected_nodes
