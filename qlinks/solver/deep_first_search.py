@@ -62,14 +62,12 @@ class DeepFirstSearch(Generic[AnyNode]):
     def __post_init__(self):
         self.frontier.add(self.start_state)
 
-    def insert_to_frontier(self, node: AnyNode) -> None:
-        self.frontier.add(node)
-
-    def remove_from_frontier(self) -> AnyNode:
+    def _remove_from_frontier(self) -> AnyNode:
         first_node = self.frontier.pop()
         self.checked_nodes.add(first_node)
         return first_node
 
+    @property
     def frontier_is_empty(self) -> bool:
         return not bool(self.frontier)
 
