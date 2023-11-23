@@ -134,30 +134,61 @@ class GaugeInvariantSnapshot(Node, SquareLattice):
         return set(self.links.values()) == set(other.links.values())
 
     def __str__(self) -> str:
-        return ",\n".join(list(map(repr, list(self.links.values()))))
+        return "".join(map(str, self._lattice.links))
 
-    def find_first_empty_site(self) -> Site | None:
-        for site in self:
-            if np.isnan(self.charge(site)):
-                return site
-        return None
+    def _next_empty_site(self) -> Optional[Site]:
+        site_idx = self._lattice.empty_link_index().tolist()
+        if site_idx:
+            site_idx = site_idx[0] // 2
+            return Site(site_idx % self._lattice.length_x, site_idx // self._lattice.length_x)
+        return
+
+    def _valid_for_flux(self, site: Site) -> bool:
+        _ax_flux = self._lattice.axial_flux  # func alias
+        neighbors = [site + UnitVectors().leftward, site + UnitVectors().downward]
+        for axis, neighbor in enumerate(neighbors):
+            if np.isnan(_ax_flux(site[axis], axis)) or np.isnan(_ax_flux(neighbor[axis], axis)):
+                continue
+            elif (_ax_flux(site[axis], axis) != self.flux_sector[axis]) or (
+                _ax_flux(site[axis], axis) != _ax_flux(neighbor[axis], axis)
+            ):
+                return False
+        return True
+
+    def _fill_node(self, site: Site, config: npt.NDArray[int]) -> Optional[Self]:
+        try:
+            new_node = deepcopy(self)
+            new_node._lattice.set_vertex_links(site, config)
+            if self.flux_sector is None or new_node._valid_for_flux(site):
+                return new_node
+        except LinkOverridingError:
+            pass
+        return
+
+    def _preconditioned_configs(self, site: Site) -> List[npt.NDArray[int]]:
+        vertex_links = self._lattice.links[Vertex(self._lattice, site).link_index()]
+        been_set_links = vertex_links != self._lattice._empty_link_value
+        if np.any(been_set_links):
+            return [
+                config
+                for config in self.possible_configs(self[site])
+                if np.all(config[been_set_links] == vertex_links[been_set_links])
+            ]
+        return self.possible_configs(self[site])
 
     def extend_node(self) -> List[Self]:
-        site = self.find_first_empty_site()
-        new_nodes = []
+        site = self._next_empty_site()
         if site is not None:
-            for config in GaussLaw.possible_configs(charge=self.gauss_law[site]):
-                try:
-                    new_node = deepcopy(self)
-                    new_node.set_vertex_links(site, config)
-                    new_nodes.append(new_node)
-                except LinkOverridingError:
-                    continue
-        return new_nodes
+            return [
+                new_node
+                for config in self._preconditioned_configs(site)
+                if (new_node := self._fill_node(site, config)) is not None
+            ]
+        return []
 
     def is_the_solution(self) -> bool:
-        for site in self:
-            if np.isnan(self.charge(site)) or self.charge(site) != self.gauss_law[site]:
+        for site in reversed(self._lattice):
+            if np.isnan(self.charge(site)) or (self.charge(site) != self[site]):
                 return False
         return True
 
