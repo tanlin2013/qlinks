@@ -75,12 +75,13 @@ class GaussLaw(Node):
 
     @staticmethod
     def random_charge_distri(
-        length: int, width: int, seed: Optional[int] = None, max_iter: int = 1000
-    ) -> np.ndarray:
+        length_x: int, length_y: int, seed: Optional[int] = None, max_iter: int = 1000
+    ) -> npt.NDArray[int]:
         r"""Randomly sample static charges spread on 2d square lattice.
 
         Charges are uniformly sampled from the interval :math:`[-2, 2]`, with total charge being
-        zero (this is always true under periodic boundary conditions).
+        zero (this is always true under periodic boundary conditions). However, this does not
+        guarantee to provide a valid configuration of links.
 
         Internally, this function uses multinomial distribution to sample possible charge
         distributions. Iteration for the trial sampling will stop as soon as it produces a valid
@@ -88,8 +89,8 @@ class GaussLaw(Node):
         lattice size, :math:`\text{length} \times \text{width}`.
 
         Args:
-            length: The length of the lattice.
-            width: The width of the lattice.
+            length_x: The length of the lattice.
+            length_y: The width of the lattice.
             seed: If provided, used for random generator. Default `None`.
             max_iter: The maximum number of iterations for trial sampling. Default `1000`.
 
@@ -101,21 +102,21 @@ class GaussLaw(Node):
             StopIteration: If no valid distribution can be sampled within `max_iter` iterations.
         """
         sum_val, min_val, max_val = 0, -2, 2
-        size = length * width
+        size = length_x * length_y
         prob = np.full(shape=size, fill_value=1 / size, dtype=float)
         rng = np.random.default_rng(seed=seed)
         for _ in range(max_iter):
             samples = min_val + rng.multinomial(n=sum_val - size * min_val, pvals=prob).flatten()
             if not np.any(samples > max_val):
-                return samples.reshape((width, length))
+                return samples.reshape((length_y, length_x)).astype(int)
         raise StopIteration(f"Couldn't sample a valid distribution within {max_iter} steps.")
 
     @staticmethod
-    def staggered_charge_distri(length: int, width: int) -> np.ndarray:
-        if length % 2 != 0 or width % 2 != 0:
+    def staggered_charge_distri(length_x: int, length_y: int) -> npt.NDArray[int]:
+        if length_x % 2 != 0 or length_y % 2 != 0:
             raise InvalidArgumentError("Length and width must be even number.")
         stagger = np.array([[1, -1], [-1, 1]])
-        return np.tile(stagger, (width // 2, length // 2))
+        return np.tile(stagger, (length_y // 2, length_x // 2))
 
     @classmethod
     def from_random_charge_distri(cls, length_x: int, length_y: int) -> Self:
