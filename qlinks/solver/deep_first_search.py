@@ -32,7 +32,7 @@ class DeepFirstSearch(Generic[AnyNode]):
 
     Args:
         start_state: The initial state as the first :class:`Node`.
-        max_steps: The maximum number of steps for deep first search. Default 50000.
+        max_steps: The maximum number of steps for deep first search, default 50000.
 
     Attributes:
         frontier: A :class:`deque` of :class:`Node` to be determined.
@@ -44,7 +44,7 @@ class DeepFirstSearch(Generic[AnyNode]):
 
         >>> init_state: AnyNode = Node()  # replace with any derived child class from Node
         >>> dfs = DeepFirstSearch(init_state)
-        >>> selected_state: AnyNode = dfs.search()
+        >>> selected_states: List[AnyNode] = dfs.solve()
 
     Notes:
         For general purpose, users must implement all abstractive methods in :class:`Node`.
