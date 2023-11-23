@@ -74,6 +74,20 @@ class DeepFirstSearch(Generic[AnyNode]):
         return not bool(self.frontier)
 
     def search(self, n_solution: int = 1) -> AnyNode | List[AnyNode]:  # type: ignore[return]
+    def _reach_stop_criteria(self, n_step: int) -> bool:
+        if self.frontier_is_empty or n_step == self.max_steps:
+            if len(self.selected_nodes) == 0:
+                raise StopIteration(f"No Solution Found after {n_step} steps!")
+            elif n_step == self.max_steps:
+                logger.warning("Reach maximally allowed steps, search ends beforehand.")
+            logger.info(
+                f"No more new Solutions can be found, end up with "
+                f"{len(self.selected_nodes)} Solutions in {n_step} steps."
+            )
+            return True
+        return False
+
+    def solve(self, n_solution: int = 1) -> List[AnyNode]:
         """Search for the solutions.
 
         Args:
@@ -91,15 +105,7 @@ class DeepFirstSearch(Generic[AnyNode]):
              exceeds `max_steps`.
         """
         for n_step in count(start=1):
-            if self.frontier_is_empty() or n_step == self.max_steps:
-                if len(self.selected_nodes) == 0:
-                    raise StopIteration(f"No Solution Found after {n_step} steps!")
-                elif n_step == self.max_steps:
-                    logger.warning("Reach maximally allowed steps, search ends beforehand.")
-                logger.info(
-                    f"No more new Solutions can be found, end up with "
-                    f"{len(self.selected_nodes)} Solutions in {n_step} steps."
-                )
+            if self._reach_stop_criteria(n_step):
                 return self.selected_nodes
 
             selected_node = self.remove_from_frontier()
@@ -125,3 +131,4 @@ class DeepFirstSearch(Generic[AnyNode]):
                 for new_node in new_nodes:
                     if new_node not in self.frontier and new_node not in self.checked_nodes:
                         self.insert_to_frontier(new_node)
+        return self.selected_nodes
