@@ -57,33 +57,33 @@ class TestGaussLaw:
             flow = (config - (config == 0)) * np.array([-1, -1, 1, 1])  # turn 0 to -1
             assert np.sum(flow) / 2 == charge
 
-    @pytest.mark.parametrize("length, width", [(2, 2), (3, 3), (6, 8)])
-    def test_random_charge_distri(self, length, width):
+    @pytest.mark.parametrize("length_x, length_y", [(2, 2), (3, 3), (6, 8)])
+    def test_random_charge_distri(self, length_x: int, length_y: int):
         sampled_vals = set()
         for _ in range(100):
-            charges = GaussLaw.random_charge_distri(length, width)
+            charges = GaussLaw.random_charge_distri(length_x, length_y)
             sampled_vals.update(set(charges.flatten()))
             assert np.all(np.isin(charges, [-2, -1, 0, 1, 2])), f"got {charges}"
             assert np.sum(charges) == 0
-            assert charges.shape == (width, length)
+            assert charges.shape == (length_y, length_x)
         assert len(sampled_vals) == 5
         assert max(sampled_vals) == 2
         assert min(sampled_vals) == -2
 
     @pytest.mark.parametrize(
-        "length, width, expectation",
+        "length_x, length_y, expectation",
         [
             (2, 2, does_not_raise()),
             (6, 8, does_not_raise()),
             (3, 3, pytest.raises(InvalidArgumentError)),
         ],
     )
-    def test_staggered_charge_distri(self, length, width, expectation):
+    def test_staggered_charge_distri(self, length_x: int, length_y: int, expectation):
         with expectation:
-            charges = GaussLaw.staggered_charge_distri(length, width)
+            charges = GaussLaw.staggered_charge_distri(length_x, length_y)
             assert np.sum(charges) == 0
             assert np.all(np.unique(charges) == [-1, 1])
-            assert charges.shape == (width, length)
+            assert charges.shape == (length_y, length_x)
 
     def test_next_empty_site(self):
         """
