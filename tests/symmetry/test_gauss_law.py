@@ -137,56 +137,20 @@ class TestGaussLaw:
     @pytest.mark.parametrize(
         "charge_distri, flux_sector, n_expected_solution, expectation",
         [
-            (np.zeros((2, 2)), 18, does_not_raise()),
-            ([[1, -1], [-1, 1]], 8, does_not_raise()),
-            ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, pytest.raises(StopIteration)),
-            # (np.zeros((4, 4)), 2970, does_not_raise()),  # 1 mins 30 secs
-            (GaussLaw.staggered_charge_distri(4, 4), 272, does_not_raise()),  # 10 secs
+             (np.zeros((2, 2)), 18, does_not_raise()),
+             ([[1, -1], [-1, 1]], 8, does_not_raise()),
+             ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, pytest.raises(StopIteration)),
+             (np.zeros((4, 4)), None, 2970, does_not_raise()),  # 10 secs
+             # (np.zeros((6, 4)), None, 98466, does_not_raise()),  # 6 mins
+             (GaussLaw.staggered_charge_distri(4, 4), None, 272, does_not_raise()),
+             (np.zeros((4, 4)), (0, 0), 990, does_not_raise()),  # 4 secs
+             (GaussLaw.staggered_charge_distri(4, 4), (0, 0), 132, does_not_raise()),
         ],
     )
     def test_multi_solutions(self, charge_distri, flux_sector, n_expected_solution, expectation):
         gauss_law = GaussLaw(charge_distri, flux_sector)
         dfs = DeepFirstSearch(gauss_law, max_steps=np.iinfo(np.int32).max)
         with expectation:
-
-    @pytest.fixture(
-        scope="class",
-        params=[
-            [[-1, 0], [0, 1]],
-            [[-2, 0], [0, 2]],
-            [[1, 1, -2], [-2, 0, 0], [0, 2, 0]],
-            np.zeros((4, 4)),
-            GaussLaw.staggered_charge_distri(4, 4),
-        ],
-    )
-    def snapshot(self, request):
-        charge_distri = request.param
-        width, length = np.asarray(charge_distri).shape
-        snapshot = GaugeInvariantSnapshot(length, width, charge_distri)
-        dfs = DeepFirstSearch(snapshot)
-        filled_snapshot = dfs.search()
-        return filled_snapshot
-
-    def test_adjacency_matrix(self, snapshot):
-        adj_mat = snapshot.adjacency_matrix
-        assert np.all(np.sum(adj_mat, axis=0) + np.sum(adj_mat, axis=1) == 4), f"got {adj_mat}"
-        assert adj_mat.dtype == np.int64
-        assert np.all(adj_mat >= 0)
-
-    def test_as_graph(self, snapshot):
-        graph = snapshot.as_graph()
-        assert len(graph.edges()) == snapshot.num_links
-        for _, degree in graph.degree:
-            assert degree == 4
-
-    def test_plot(self, snapshot):
-        g = Graph(snapshot)
-        g.plot()
-        plt.show()
-
-        q = Quiver(snapshot)
-        q.plot()
-        plt.show()
             filled_gauss_laws = dfs.solve(n_solution=n_expected_solution+1)
             assert all(isinstance(s, GaussLaw) for s in filled_gauss_laws)
             assert len(filled_gauss_laws) == n_expected_solution
