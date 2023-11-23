@@ -1,33 +1,27 @@
 from __future__ import annotations
 
-import abc
 from dataclasses import dataclass, field
 from itertools import count
-from typing import Generic, List, Self, Set, TypeVar
+from typing import Generic, List, Self, Set, TypeVar, Protocol
 
 from qlinks import logger
 
 AnyNode = TypeVar("AnyNode", bound="Node")
 
 
-class Node(abc.ABC):
-    @abc.abstractmethod
+class Node(Protocol):
     def __hash__(self) -> int:
         ...
 
-    @abc.abstractmethod
     def __eq__(self, other: object) -> bool:
         ...
 
-    @abc.abstractmethod
     def __str__(self) -> str:
         ...
 
-    @abc.abstractmethod
     def extend_node(self) -> List[Self]:
         ...
 
-    @abc.abstractmethod
     def is_the_solution(self) -> bool:
         ...
 
