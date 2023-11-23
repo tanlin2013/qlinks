@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
 from functools import total_ordering
-from typing import Iterator, TypeAlias
+from typing import Iterator, TypeAlias, Self
 
 import numpy as np
 
@@ -86,17 +86,20 @@ class UnitVector:
 
 
 @dataclass(frozen=True)
-class __UnitVectorCollection:
+class UnitVectors:
     upward: UnitVector = field(default_factory=lambda: UnitVector(0, 1))
     downward: UnitVector = field(default_factory=lambda: -1 * UnitVector(0, 1))
     rightward: UnitVector = field(default_factory=lambda: UnitVector(1, 0))
     leftward: UnitVector = field(default_factory=lambda: -1 * UnitVector(1, 0))
+    _instance: Self = None
+
+    def __new__(cls, *args, **kwargs):  # singleton pattern
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __iter__(self) -> Iterator[UnitVector]:
         return iter(sorted((self.rightward, self.upward)))
 
     def iter_all_directions(self) -> Iterator[UnitVector]:
         return iter(sorted((self.downward, self.leftward, self.rightward, self.upward)))
-
-
-UnitVectors = __UnitVectorCollection()  # as singleton
