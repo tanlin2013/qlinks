@@ -51,9 +51,9 @@ class GaussLaw(AbstractSymmetry):
 
     @staticmethod
     @cache
-    def possible_flows(charge: int) -> List[Tuple[int, ...]]:
+    def possible_flows(charge: int) -> List[npt.NDArray[int]]:
         flows = product([flow.value for flow in Flow], repeat=4)
-        return [quartet for quartet in flows if sum(quartet) / 2 == charge]
+        return [np.asarray(quartet) for quartet in flows if sum(quartet) / 2 == charge]
 
     @staticmethod
     @cache
