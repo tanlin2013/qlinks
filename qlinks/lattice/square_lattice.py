@@ -60,22 +60,22 @@ class SquareLattice:
         """
         return int("".join(map(str, self.links)), 2)
 
-    def __getitem__(self, coord: Tuple[int, int] | Site) -> Site:
-        return Site(coord[0] % self.length_x, coord[1] % self.length_y)  # assume periodic b.c.
+    def __getitem__(self, pos: Tuple[int, int] | Site) -> Site:
+        return Site(pos[0] % self.length_x, pos[1] % self.length_y)  # assume periodic b.c.
 
     def site_index(self, site: Site) -> int:
         site = self[site]
         return 2 * (site.pos_x + self.length_x * site.pos_y)
 
     def __iter__(self) -> Iterator[Site]:
-        for coord_y, coord_x in product(range(self.length_y), range(self.length_x)):
-            yield Site(coord_x, coord_y)
+        for pos_y, pos_x in product(range(self.length_y), range(self.length_x)):
+            yield Site(pos_x, pos_y)
 
     def __reversed__(self) -> Iterator[Site]:
-        for coord_y, coord_x in product(
+        for pos_y, pos_x in product(
             reversed(range(self.length_y)), reversed(range(self.length_x))
         ):
-            yield Site(coord_x, coord_y)
+            yield Site(pos_x, pos_y)
 
     def iter_plaquettes(self) -> Iterator[Plaquette]:
         for corner_site in self:
