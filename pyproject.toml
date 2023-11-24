@@ -11,6 +11,7 @@ python = ">=3.8,<3.12"
 tqdm = "^4.63.0"
 numpy = "^1.22"
 scipy = "^1.10.0"
+pandas = "^2.0.0"
 networkx = "^3.0"
 llvmlite = { version = "0.40.0" }
 numba = { version = "0.57.0" }
