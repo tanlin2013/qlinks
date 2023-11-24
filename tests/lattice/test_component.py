@@ -79,12 +79,3 @@ class TestUnitVectorCollection:
         it = iter(UnitVectors)
         assert next(it) == UnitVectors.rightward
         assert next(it) == UnitVectors.upward
-
-    def test_iter_all_directions(self):
-        it = UnitVectors.iter_all_directions()
-        assert next(it) == UnitVectors.downward
-        assert next(it) == UnitVectors.leftward
-        assert next(it) == UnitVectors.rightward
-        assert next(it) == UnitVectors.upward
-        with pytest.raises(StopIteration):
-            _ = next(it)

@@ -100,6 +100,3 @@ class UnitVectors:
 
     def __iter__(self) -> Iterator[UnitVector]:
         return iter(sorted((self.rightward, self.upward)))
-
-    def iter_all_directions(self) -> Iterator[UnitVector]:
-        return iter(sorted((self.downward, self.leftward, self.rightward, self.upward)))
