@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from functools import lru_cache
 from typing import Tuple
 
 import numpy as np
@@ -18,12 +17,16 @@ class ComputationBasis:
     """
 
     links: npt.NDArray[int]
+    _index: npt.NDArray[int] = field(init=False, repr=False)
     _df: pd.DataFrame = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         if self.links.ndim != 2:
             raise InvalidArgumentError("Computation basis should be a 2D array.")
-        self._df = pd.DataFrame(self.links, index=self.index)
+        self._index = np.apply_along_axis(
+            lambda row: int("".join(map(str, row)), 2), axis=1, arr=self.links
+        )
+        self._df = pd.DataFrame(self.links, index=self.index, dtype=int)
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -38,9 +41,8 @@ class ComputationBasis:
         return self.links.shape[1]
 
     @property
-    @lru_cache
     def index(self) -> npt.NDArray[int]:
-        return np.apply_along_axis(lambda row: int("".join(map(str, row)), 2), axis=1, arr=self.links)
+        return self._index
 
     @property
     def dataframe(self) -> pd.DataFrame:
@@ -48,9 +50,6 @@ class ComputationBasis:
 
     def __getitem__(self, item: int) -> npt.NDArray[int]:
         return self._df.loc[item].values
-
-    def __hash__(self) -> int:
-        return hash(self.links.tobytes())
 
     def sort(self) -> None:
         self.links = self.links[self.index.argsort(), :]
