@@ -95,7 +95,7 @@ class SquareLattice:
             raise LinkOverridingError("Some vertex links have been set.")
         self.links[vertex_link_idx] = states
 
-    def charge(self, site: Site) -> Real:
+    def charge(self, site: Site) -> int | float:
         vertex = Vertex(self, self[site])
         if np.any(self.links[vertex.link_index()] == self._empty_link_value):
             return np.nan
