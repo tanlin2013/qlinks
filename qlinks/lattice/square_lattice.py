@@ -133,23 +133,20 @@ class SquareLattice:
             return np.nan
         return np.sum(self.links[link_idx] - 0.5)
 
-    def as_adj_mat(self) -> npt.NDArray[int]:
+    def adjacency_matrix(self) -> npt.NDArray[int]:
         """
 
         Returns:
 
         """
         adj_mat = np.zeros((self.size, self.size), dtype=int)
-        hash_table = {site: idx for idx, site in enumerate(self)}
-        # for site, unit_vector in product(self, UnitVectors().iter_all_directions()):
-        #     inds = (hash_table[site], hash_table[self[site + unit_vector]])  # head to tail
-        #     link = self.get_link((site, unit_vector))
-        #     if unit_vector.sign * link.flux > 0:
-        #         adj_mat[*inds] += 1
-        #     else:
-        #         adj_mat[*inds[::-1]] += 1
-        # return (adj_mat / 2).astype(int)
-        ...
+        for site, (unit_vector, k) in product(self, zip(UnitVectors(), [0, 1])):
+            inds = (self.site_index(site) // 2, self.site_index(site + unit_vector) // 2)
+            link_val = self.links[2 * inds[0] + k]
+            assert np.isin(link_val, [0, 1])
+            adj_mat[*inds] += link_val  # head_node to tail_node
+            adj_mat[*inds[::-1]] += 1 - link_val  # tail_node to head_node
+        return adj_mat
 
     def as_graph(self) -> nx.MultiDiGraph:
         return nx.from_numpy_array(
