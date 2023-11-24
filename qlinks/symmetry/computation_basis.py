@@ -23,6 +23,7 @@ class ComputationBasis:
     def __post_init__(self) -> None:
         if self.links.ndim != 2:
             raise InvalidArgumentError("Computation basis should be a 2D array.")
+        self.sort()
         self._index = np.apply_along_axis(
             lambda row: int("".join(map(str, row)), 2), axis=1, arr=self.links
         )
