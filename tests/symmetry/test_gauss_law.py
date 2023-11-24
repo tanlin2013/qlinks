@@ -137,14 +137,14 @@ class TestGaussLaw:
     @pytest.mark.parametrize(
         "charge_distri, flux_sector, n_expected_solution, expectation",
         [
-             (np.zeros((2, 2)), 18, does_not_raise()),
-             ([[1, -1], [-1, 1]], 8, does_not_raise()),
-             ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, pytest.raises(StopIteration)),
-             (np.zeros((4, 4)), None, 2970, does_not_raise()),  # 10 secs
-             # (np.zeros((6, 4)), None, 98466, does_not_raise()),  # 6 mins
-             (GaussLaw.staggered_charge_distri(4, 4), None, 272, does_not_raise()),
-             (np.zeros((4, 4)), (0, 0), 990, does_not_raise()),  # 4 secs
-             (GaussLaw.staggered_charge_distri(4, 4), (0, 0), 132, does_not_raise()),
+            (np.zeros((2, 2)), None, 18, does_not_raise()),
+            ([[1, -1], [-1, 1]], None, 8, does_not_raise()),
+            ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, np.nan, pytest.raises(StopIteration)),
+            (np.zeros((4, 4)), None, 2970, does_not_raise()),  # 10 secs
+            # (np.zeros((6, 4)), None, 98466, does_not_raise()),  # 6 mins
+            (GaussLaw.staggered_charge_distri(4, 4), None, 272, does_not_raise()),
+            (np.zeros((4, 4)), (0, 0), 990, does_not_raise()),  # 4 secs
+            (GaussLaw.staggered_charge_distri(4, 4), (0, 0), 132, does_not_raise()),
         ],
     )
     def test_multi_solutions(self, charge_distri, flux_sector, n_expected_solution, expectation):
