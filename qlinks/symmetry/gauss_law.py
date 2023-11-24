@@ -16,8 +16,9 @@ from qlinks.exceptions import (
     LinkOverridingError,
 )
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.lattice.square_lattice import SquareLattice, Vertex, ComputationBasis
+from qlinks.lattice.square_lattice import SquareLattice, Vertex
 from qlinks.solver.deep_first_search import Node
+from qlinks.symmetry.computation_basis import ComputationBasis
 
 
 class Flow(IntEnum):

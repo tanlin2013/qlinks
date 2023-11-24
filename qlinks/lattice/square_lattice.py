@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Optional, Self, Tuple, Iterator, Protocol, TypeAlias
+from typing import Optional, Self, Tuple, Iterator, Protocol
 
 import networkx as nx
 import numpy as np
@@ -10,8 +10,7 @@ import numpy.typing as npt
 
 from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
-
-Real: TypeAlias = int | float | np.floating
+from qlinks.symmetry.computation_basis import ComputationBasis
 
 
 @dataclass(slots=True)
@@ -156,40 +155,6 @@ class SquareLattice:
         return nx.from_numpy_array(
             self.as_adj_mat(), parallel_edges=True, create_using=nx.MultiDiGraph
         )
-
-
-@dataclass(slots=True)
-class ComputationBasis:
-    """
-
-    Args:
-        links: The link data in shape (n_states, n_links).
-    """
-
-    links: npt.NDArray[int]
-
-    def __post_init__(self) -> None:
-        if self.links.ndim != 2:
-            raise InvalidArgumentError("Computation basis should be a 2D array.")
-
-    @property
-    def shape(self) -> Tuple[int, ...]:
-        return self.links.shape
-
-    @property
-    def n_states(self) -> int:
-        return self.links.shape[0]
-
-    @property
-    def n_links(self) -> int:
-        return self.links.shape[1]
-
-    @property
-    def index(self) -> npt.NDArray[int]:
-        return self.links @ 2 ** np.arange(self.n_links - 1, -1, -1)
-
-    def sort(self) -> None:
-        self.links = self.links[self.index.argsort(), :]
 
 
 @dataclass(slots=True)
