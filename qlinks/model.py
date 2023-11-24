@@ -28,19 +28,19 @@ class QuantumLinkModel:
     shape: Tuple[int, ...]
     basis: ComputationBasis = field(repr=False)
     _lattice: SquareLattice = field(init=False, repr=False)
-    _hamiltonian: npt.NDArray[float] = field(init=False, repr=False)
+    _hamiltonian: npt.NDArray[float] | sp.spmatrix[float] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._lattice = SquareLattice(*self.shape)
-        self._hamiltonian = np.zeros((self.basis.n_states, self.basis.n_states), dtype=float)
+        self._hamiltonian = sp.csr_array((self.basis.n_states, self.basis.n_states), dtype=float)
         for plaquette in self._lattice.iter_plaquettes():
             self._hamiltonian += (
                 -self.coup_j * plaquette[self.basis] + self.coup_rk * (plaquette**2)[self.basis]
             )
 
     @property
-    def hamiltonian(self) -> npt.NDArray[float]:
-        return self._hamiltonian
+    def hamiltonian(self) -> npt.NDArray[float] | sp.spmatrix[float]:
+        return self._hamiltonian.toarray()
 
     @classmethod
     def from_whole_basis(cls, coup_j: float, coup_rk: float, shape: Tuple[int, int]) -> Self:
