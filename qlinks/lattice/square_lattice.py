@@ -7,6 +7,7 @@ from typing import Optional, Self, Tuple, Iterator, Protocol
 from networkx import from_numpy_array as nx_from_numpy_array, MultiDiGraph as nx_MultiDiGraph
 import numpy as np
 import numpy.typing as npt
+import scipy.sparse as sp
 
 from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkOverridingError
 from qlinks.lattice.component import Site, UnitVectors
@@ -166,7 +167,7 @@ class LocalOperator(Protocol):
     def __matmul__(self, basis: ComputationBasis) -> npt.NDArray[int]:
         ...
 
-    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int]:
+    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int] | sp.spmatrix[int]:
         ...
 
 
@@ -235,11 +236,12 @@ class Plaquette(LocalOperator):
         flipped_states = self @ basis
         if set(basis.index) != set(flipped_states):
             raise InvalidOperationError("Basis is not closure under the plaquette operator.")
-        row_idx = np.arange(basis.n_states)
-        col_idx = np.searchsorted(basis.index, flipped_states)
-        mat = ((row_idx[:, None] == col_idx) | (col_idx[:, None] == row_idx)).astype(int)
-        mat[~(flippable[:, None] | flippable)] = 0
-        return mat
+        row_idx = np.arange(basis.n_states)[flippable]
+        col_idx = np.argsort(flipped_states)[flippable]
+        mat = sp.csr_array(
+            (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)), shape=(basis.n_states, basis.n_states)
+        )
+        return mat.toarray()
 
     def __pow__(self, power: int) -> Self:
         if power % 2 == 0:
