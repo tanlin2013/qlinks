@@ -1,55 +1,50 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, TypeAlias
+from itertools import product
+from typing import Tuple, Self
+from datetime import datetime
 
 import numpy as np
+import numpy.typing as npt
+import scipy.sparse as sp
 
-from qlinks.lattice.spin_object import SpinOperator
-from qlinks.lattice.square_lattice import LatticeMultiStates, SquareLattice
-
-Real: TypeAlias = int | float | np.floating
+from qlinks.lattice.square_lattice import SquareLattice
+from qlinks.symmetry.computation_basis import ComputationBasis
 
 
-@dataclass
-class QuantumLinkModel(SquareLattice):
+@dataclass(slots=True)
+class QuantumLinkModel:
+    """
+
+    Args:
+        coup_j: The coupling strength of the plaquette flipping kinetic term.
+        coup_rk: The Rokhsar-Kivelson coupling for counting the number of flippable plaquettes.
+        shape: The shape of the lattice.
+        basis: Computation basis that respects the gauss law and other lattice symmetries.
+    """
     coup_j: float
     coup_rk: float
-    basis: Optional[LatticeMultiStates] = field(default=None)
-    _hamiltonian: SpinOperator = field(init=False, repr=False)
+    shape: Tuple[int, ...]
+    basis: ComputationBasis = field(repr=False)
+    _lattice: SquareLattice = field(init=False, repr=False)
+    _hamiltonian: npt.NDArray[float] = field(init=False, repr=False)
 
-    def __post_init__(self):
-        super().__post_init__()
-        if self.basis is None:
-            assert self.num_links <= 14
-            self._build_full_hamiltonian()
-        else:
-            self._build_symmetry_sector_hamiltonian()
-
-    def _build_full_hamiltonian(self) -> None:
-        self._hamiltonian = SpinOperator(np.zeros(self.hilbert_dims), dtype=float)
-        for plaquette in self.iter_plaquettes():
-            flipper = plaquette + plaquette.conj()
-            self._hamiltonian += (  # type: ignore[misc]
-                -self.coup_j * flipper + self.coup_rk * flipper**2
-            )
-
-    def _build_symmetry_sector_hamiltonian(self) -> None:
-        self._hamiltonian = SpinOperator(np.zeros(self.basis.hilbert_dims), dtype=float)
-        for plaquette in self.iter_plaquettes():
-            self._hamiltonian += -self.coup_j * (  # type: ignore[misc, operator]
-                self.basis.T @ plaquette @ self.basis
-            )
-            self._hamiltonian += -self.coup_j * (  # type: ignore[misc, operator]
-                self.basis.T @ plaquette.conj() @ self.basis
-            )
-            self._hamiltonian += self.coup_rk * (  # type: ignore[misc, operator]
-                self.basis.T @ (plaquette.conj() * plaquette) @ self.basis
-            )
-            self._hamiltonian += self.coup_rk * (  # type: ignore[misc, operator]
-                self.basis.T @ (plaquette * plaquette.conj()) @ self.basis
+    def __post_init__(self) -> None:
+        self._lattice = SquareLattice(*self.shape)
+        self._hamiltonian = np.zeros((self.basis.n_states, self.basis.n_states), dtype=float)
+        for plaquette in self._lattice.iter_plaquettes():
+            self._hamiltonian += (
+                -self.coup_j * plaquette[self.basis] + self.coup_rk * (plaquette**2)[self.basis]
             )
 
     @property
-    def hamiltonian(self) -> SpinOperator:
+    def hamiltonian(self) -> npt.NDArray[float]:
         return self._hamiltonian
+
+    @classmethod
+    def from_whole_basis(cls, coup_j: float, coup_rk: float, shape: Tuple[int, int]) -> Self:
+        if 2 * np.prod(shape) > 14:
+            raise RuntimeError("The system size is too large for whole basis.")
+        basis = ComputationBasis(np.asarray(list(product([0, 1], repeat=2 * np.prod(shape)))))
+        return cls(coup_j, coup_rk, shape, basis)
