@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Tuple
 
 import numpy as np
@@ -37,6 +38,7 @@ class ComputationBasis:
         return self.links.shape[1]
 
     @property
+    @lru_cache
     def index(self) -> npt.NDArray[int]:
         return np.apply_along_axis(lambda row: int("".join(map(str, row)), 2), axis=1, arr=self.links)
 
@@ -46,6 +48,9 @@ class ComputationBasis:
 
     def __getitem__(self, item: int) -> npt.NDArray[int]:
         return self._df.loc[item].values
+
+    def __hash__(self) -> int:
+        return hash(self.links.tobytes())
 
     def sort(self) -> None:
         self.links = self.links[self.index.argsort(), :]
