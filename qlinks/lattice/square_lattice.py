@@ -189,7 +189,7 @@ class Plaquette(LocalOperator):
 
     def __post_init__(self) -> None:
         if self._mask is None:
-            self._mask = np.sum(2 ** (self.lattice.n_links - 1 - self.link_index()))
+            self._mask = int(np.sum(2. ** (self.lattice.n_links - 1 - self.link_index())))
 
     def link_index(self) -> npt.NDArray[int]:
         return np.array(
