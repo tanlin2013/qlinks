@@ -233,7 +233,7 @@ class Plaquette(LocalOperator):
             return NotImplemented
         flippable = self.flippable(basis)
         flipped_states = self @ basis
-        if not np.array_equal(basis.index, np.sort(flipped_states)):
+        if set(basis.index) != set(flipped_states):
             raise InvalidOperationError("Basis is not closure under the plaquette operator.")
         row_idx = np.arange(basis.n_states)
         col_idx = np.searchsorted(basis.index, flipped_states)
