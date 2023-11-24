@@ -221,7 +221,7 @@ class Plaquette(LocalOperator):
         flipped_states[self.flippable(basis)] ^= self._mask
         return flipped_states
 
-    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int]:
+    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int] | sp.spmatrix[int]:
         """
 
         Args:
@@ -238,10 +238,9 @@ class Plaquette(LocalOperator):
             raise InvalidOperationError("Basis is not closure under the plaquette operator.")
         row_idx = np.arange(basis.n_states)[flippable]
         col_idx = np.argsort(flipped_states)[flippable]
-        mat = sp.csr_array(
+        return sp.csr_array(
             (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)), shape=(basis.n_states, basis.n_states)
         )
-        return mat.toarray()
 
     def __pow__(self, power: int) -> Self:
         if power % 2 == 0:
@@ -272,5 +271,5 @@ class Vertex:  # reserved as LocalOperator for future use
     def __matmul__(self, basis: ComputationBasis) -> ComputationBasis:
         ...
 
-    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int]:
+    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int] | sp.spmatrix[int]:
         ...
