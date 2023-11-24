@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from itertools import product
 from typing import Optional, Self, Tuple, Iterator, Protocol
 
-import networkx as nx
+from networkx import from_numpy_array as nx_from_numpy_array, MultiDiGraph as nx_MultiDiGraph
 import numpy as np
 import numpy.typing as npt
 
@@ -148,9 +148,9 @@ class SquareLattice:
             adj_mat[*inds[::-1]] += 1 - link_val  # tail_node to head_node
         return adj_mat
 
-    def as_graph(self) -> nx.MultiDiGraph:
-        return nx.from_numpy_array(
-            self.as_adj_mat(), parallel_edges=True, create_using=nx.MultiDiGraph
+    def as_graph(self) -> nx_MultiDiGraph:
+        return nx_from_numpy_array(
+            self.adjacency_matrix(), parallel_edges=True, create_using=nx_MultiDiGraph
         )
 
 
