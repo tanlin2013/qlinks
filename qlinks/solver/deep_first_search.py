@@ -35,9 +35,9 @@ class DeepFirstSearch(Generic[AnyNode]):
         max_steps: The maximum number of steps for deep first search, default 50000.
 
     Attributes:
-        frontier: A :class:`deque` of :class:`Node` to be determined.
+        frontier: A :class:`set` of :class:`Node` to be determined.
         checked_nodes: A :class:`set` of checked :class:`Node`.
-        selected_nodes: A :class:`deque` of :class:`Node` representing candidate solutions.
+        selected_nodes: A :class:`list` of :class:`Node` representing candidate solutions.
 
     Examples:
         If :class:`Node` has been implemented, the algorithm can be launched through
