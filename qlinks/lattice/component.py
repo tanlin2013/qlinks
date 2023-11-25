@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
 from functools import total_ordering
-from typing import Iterator, TypeAlias, Self
+from typing import Iterator, Self, TypeAlias
 
 import numpy as np
 
