@@ -41,8 +41,8 @@ class ComputationBasis:
         return self.links.shape[1]
 
     @property
-        return self._index
     def index(self) -> npt.NDArray[np.int64]:
+        return self._df.index.values
 
     @property
     def dataframe(self) -> pd.DataFrame:

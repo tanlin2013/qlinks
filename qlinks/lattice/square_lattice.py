@@ -2,14 +2,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Optional, Self, Tuple, Iterator, Protocol
+from typing import Iterator, Optional, Protocol, Self, Tuple
 
 from networkx import from_numpy_array as nx_from_numpy_array, MultiDiGraph as nx_MultiDiGraph
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
-from qlinks.exceptions import InvalidArgumentError, InvalidOperationError, LinkOverridingError
+from qlinks.exceptions import (
+    InvalidArgumentError,
+    InvalidOperationError,
+    LinkOverridingError,
+)
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.symmetry.computation_basis import ComputationBasis
 
