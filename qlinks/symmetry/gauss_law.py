@@ -140,7 +140,7 @@ class GaussLaw(Node):
         return new_inst
 
     def __hash__(self) -> int:
-        return hash(str(self._lattice.links))
+        return hash(self._lattice.links.tobytes())
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, GaussLaw):
