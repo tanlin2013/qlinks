@@ -16,8 +16,7 @@ class ComputationBasis:
         links: The link data in shape (n_states, n_links).
     """
 
-    links: npt.NDArray[int]
-    _index: npt.NDArray[int] = field(init=False, repr=False)
+    links: npt.NDArray[np.int64]
     _df: pd.DataFrame = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -42,14 +41,14 @@ class ComputationBasis:
         return self.links.shape[1]
 
     @property
-    def index(self) -> npt.NDArray[int]:
         return self._index
+    def index(self) -> npt.NDArray[np.int64]:
 
     @property
     def dataframe(self) -> pd.DataFrame:
         return self._df
 
-    def __getitem__(self, item: int) -> npt.NDArray[int]:
+    def __getitem__(self, item: int) -> npt.NDArray[np.int64]:
         return self._df.loc[item].values
 
     def sort(self) -> None:

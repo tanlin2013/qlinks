@@ -26,7 +26,7 @@ class SquareLattice:
 
     length_x: int
     length_y: int
-    links: Optional[npt.NDArray[int]] = field(default=None, repr=False)
+    links: Optional[npt.NDArray[np.int64]] = field(default=None, repr=False)
     _empty_link_value: int = field(default=-1, repr=False)
 
     def __post_init__(self) -> None:
@@ -43,11 +43,11 @@ class SquareLattice:
 
     @property
     def size(self) -> int:
-        return np.prod(self.shape)
+        return np.prod(self.shape).item()
 
     @property
     def n_links(self) -> int:
-        return 2 * np.prod(self.shape)
+        return 2 * np.prod(self.shape).item()
 
     @property
     def index(self) -> int:
@@ -81,10 +81,10 @@ class SquareLattice:
         for corner_site in self:
             yield Plaquette(self, corner_site)
 
-    def empty_link_index(self) -> npt.NDArray[int]:
+    def empty_link_index(self) -> npt.NDArray[np.int64]:
         return np.where(self.links == self._empty_link_value)[0]
 
-    def set_vertex_links(self, site: Site, states: npt.NDArray[int]) -> None:
+    def set_vertex_links(self, site: Site, states: npt.NDArray[np.int64]) -> None:
         vertex_link_idx = Vertex(self, self[site]).link_index()
         if len(states) != 4:
             raise InvalidArgumentError(f"Expected 4 Spins in states, got {len(states)}.")
@@ -134,7 +134,7 @@ class SquareLattice:
             return np.nan
         return np.sum(self.links[link_idx] - 0.5)
 
-    def adjacency_matrix(self) -> npt.NDArray[int]:
+    def adjacency_matrix(self) -> npt.NDArray[np.int64]:
         """
 
         Returns:
@@ -161,13 +161,13 @@ class LocalOperator(Protocol):
     site: Site
     _mask: int = field(default=None, repr=False)
 
-    def link_index(self) -> npt.NDArray[int]:
+    def link_index(self) -> npt.NDArray[np.int64]:
         ...
 
-    def __matmul__(self, basis: ComputationBasis) -> npt.NDArray[int]:
+    def __matmul__(self, basis: ComputationBasis) -> npt.NDArray[np.int64]:
         ...
 
-    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int] | sp.spmatrix[int]:
+    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[np.int64] | sp.spmatrix[np.int64]:
         ...
 
 
@@ -192,7 +192,7 @@ class Plaquette(LocalOperator):
         if self._mask is None:
             self._mask = int(np.sum(2. ** (self.lattice.n_links - 1 - self.link_index())))
 
-    def link_index(self) -> npt.NDArray[int]:
+    def link_index(self) -> npt.NDArray[np.int64]:
         return np.array(
             [
                 self.lattice.site_index(self.site),
@@ -202,11 +202,11 @@ class Plaquette(LocalOperator):
             ]
         )
 
-    def flippable(self, basis: ComputationBasis) -> npt.NDArray[bool]:
+    def flippable(self, basis: ComputationBasis) -> npt.NDArray[np.bool_]:
         b1, b2, b3, b4 = (basis.links[:, idx] for idx in self.link_index())
         return ((b1 & ~b2 & b3 & ~b4) | (~b1 & b2 & ~b3 & b4)).astype(bool)
 
-    def __matmul__(self, basis: ComputationBasis) -> npt.NDArray[int]:
+    def __matmul__(self, basis: ComputationBasis) -> npt.NDArray[np.int64]:
         """
 
         Args:
@@ -221,7 +221,7 @@ class Plaquette(LocalOperator):
         flipped_states[self.flippable(basis)] ^= self._mask
         return flipped_states
 
-    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int] | sp.spmatrix[int]:
+    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[np.int64] | sp.spmatrix[np.int64]:
         """
 
         Args:
@@ -242,7 +242,7 @@ class Plaquette(LocalOperator):
             (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)), shape=(basis.n_states, basis.n_states)
         )
 
-    def __pow__(self, power: int) -> Self:
+    def __pow__(self, power: int) -> Self | Plaquette:
         if power % 2 == 0:
             return Plaquette(self.lattice, self.site, _mask=0)
         return self
@@ -255,10 +255,10 @@ class Vertex:  # reserved as LocalOperator for future use
     _mask: int = field(default=None, repr=False)
 
     @staticmethod
-    def order() -> npt.NDArray[int]:
+    def order() -> npt.NDArray[np.int64]:
         return np.array([-1, -1, 1, 1])
 
-    def link_index(self) -> npt.NDArray[int]:
+    def link_index(self) -> npt.NDArray[np.int64]:
         return np.array(
             [
                 self.lattice.site_index(self.site + UnitVectors().downward) + 1,
@@ -271,5 +271,5 @@ class Vertex:  # reserved as LocalOperator for future use
     def __matmul__(self, basis: ComputationBasis) -> ComputationBasis:
         ...
 
-    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[int] | sp.spmatrix[int]:
+    def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[np.int64] | sp.spmatrix[np.int64]:
         ...
