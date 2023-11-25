@@ -211,4 +211,6 @@ class GaussLaw(Node):
     @staticmethod
     def to_basis(nodes: List[GaussLaw]) -> ComputationBasis:
         link_data = [node._lattice.links for node in nodes]
-        return ComputationBasis(np.vstack(link_data))
+        basis = ComputationBasis(np.vstack(link_data))
+        basis.sort()
+        return basis

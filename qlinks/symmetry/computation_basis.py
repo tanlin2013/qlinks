@@ -23,11 +23,11 @@ class ComputationBasis:
     def __post_init__(self) -> None:
         if self.links.ndim != 2:
             raise InvalidArgumentError("Computation basis should be a 2D array.")
-        self.sort()
-        self._index = np.apply_along_axis(
-            lambda row: int("".join(map(str, row)), 2), axis=1, arr=self.links
+        self._df = pd.DataFrame(
+            self.links,
+            index=np.apply_along_axis(lambda row: int("".join(map(str, row)), 2), axis=1, arr=self.links),
+            dtype=int,
         )
-        self._df = pd.DataFrame(self.links, index=self.index, dtype=int)
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -53,5 +53,5 @@ class ComputationBasis:
         return self._df.loc[item].values
 
     def sort(self) -> None:
-        self.links = self.links[self.index.argsort(), :]
-
+        self._df.sort_index(inplace=True)
+        self.links = self._df.to_numpy()
