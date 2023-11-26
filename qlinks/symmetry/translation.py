@@ -1,37 +1,53 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from itertools import product
+from typing import Tuple, Self
 from copy import deepcopy
-from dataclasses import dataclass
-from typing import Tuple, TypeAlias
 
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
 
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import UnitVector
-from qlinks.lattice.square_lattice import LatticeState
-from qlinks.symmetry.abstract import AbstractSymmetry
-
-Real: TypeAlias = int | float | np.floating
+from qlinks.lattice.square_lattice import SquareLattice
+from qlinks.symmetry.computation_basis import ComputationBasis
 
 
 @dataclass(slots=True)
-class Translation(AbstractSymmetry):
-    shift: UnitVector
+class Translation:
+    lattice: SquareLattice
+    basis: ComputationBasis = field(repr=False)
+    _df: pd.DataFrame = field(default=None, repr=False)
 
-    def __post__init(self):
-        if bool(self.shift[0]) ^ bool(self.shift[0]) != 1:  # TODO: should allow more than one shift
-            raise InvalidArgumentError("Translation can only be performed on x or y directions.")
-
-    @property
-    def quantum_numbers(self) -> Tuple[Real, ...]:
-        return self.shift.pos_x, self.shift.pos_y
-
-    def __matmul__(self, other: LatticeState) -> LatticeState:
-        if not isinstance(other, LatticeState):
-            return NotImplemented
-        new_link_data = deepcopy(other.links)
-        for link in new_link_data.values():
-            link.site = other[link.site + self.shift]
-        return LatticeState(
-            *other.shape, link_data={link.index: link for link in new_link_data.values()}
+    def __post_init__(self):
+        self._df = pd.DataFrame.from_dict(
+            {
+                shift: (self >> UnitVector(*shift)).index
+                for shift in product(range(self.lattice.length_x), range(self.lattice.length_y))
+            },
+            orient="index",
+            columns=self.basis.index,
         )
+
+    def __rshift__(self, shift: UnitVector) -> ComputationBasis:
+        shift_idx = np.array(
+            [[index := self.lattice.site_index(site + shift), index + 1] for site in self.lattice]
+        ).flatten()
+        return ComputationBasis(deepcopy(self.basis.links)[:, shift_idx])
+
+    def __lshift__(self, shift: UnitVector) -> ComputationBasis:
+        return self.__rshift__(-1 * shift)
+
+    def __matmul__(self, basis: ComputationBasis) -> ComputationBasis:
+        ...
+
+    def periodicity(self) -> pd.Series:
+        return self._df.nunique()
+
+    def representative_basis(self) -> pd.Series:
+        return self._df.min()
+
+    def momentum(self) -> pd.Series:
+        ...
