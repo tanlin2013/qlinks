@@ -19,7 +19,7 @@ class Node(Protocol):
     def __str__(self) -> str:
         ...
 
-    def extend_node(self) -> List[Self]:
+    def extend_node(self) -> Set[Self]:
         ...
 
     def is_the_solution(self) -> bool:
@@ -105,9 +105,8 @@ class DeepFirstSearch(Generic[AnyNode]):
             logger.debug(f"New Solution: \n{selected_node}")
             return True
 
-        new_nodes: List[AnyNode] = selected_node.extend_node()
-        nodes_to_add = set(new_nodes) - self.frontier  # warn: no loop assumption
-        self.frontier.update(nodes_to_add)
+        new_nodes: Set[AnyNode] = selected_node.extend_node()
+        self.frontier.update(new_nodes)  # warn: no loop assumption
         return False
 
     def solve(self, n_solution: int = 1) -> List[AnyNode]:

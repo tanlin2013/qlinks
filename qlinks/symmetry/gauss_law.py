@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import cache
 from itertools import product
-from typing import Dict, List, Optional, Self, Tuple
+from typing import Dict, List, Optional, Self, Set, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -192,15 +192,15 @@ class GaussLaw(Node):
             ]
         return self.possible_configs(self[site])
 
-    def extend_node(self) -> List[Self]:
+    def extend_node(self) -> Set[Self]:
         site = self._next_empty_site()
         if site is not None:
-            return [
+            return {
                 new_node
                 for config in self._preconditioned_configs(site)
                 if (new_node := self._fill_node(site, config)) is not None
-            ]
-        return []
+            }
+        return set()
 
     def is_the_solution(self) -> bool:
         for site in reversed(self._lattice):
