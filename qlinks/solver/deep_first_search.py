@@ -89,7 +89,7 @@ class DeepFirstSearch(Generic[AnyNode]):
 
         Returns:
 
-        Notes:
+        Warnings:
             We didn't check if the new node is in `checked_nodes` before adding it to 'frontier',
             this is correct by assuming there is no loop in the tree.
         """
