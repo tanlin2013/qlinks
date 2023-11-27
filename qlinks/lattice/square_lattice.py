@@ -101,10 +101,10 @@ class SquareLattice:
         self.links[vertex_link_idx] = states
 
     def charge(self, site: Site) -> int | float:
-        vertex = Vertex(self, self[site])
-        if np.any(self.links[vertex.link_index()] == self._empty_link_value):
+        vertex_link_idx = Vertex(self, self[site]).link_index()
+        if np.any(self.links[vertex_link_idx] == self._empty_link_value):
             return np.nan
-        return np.sum((self.links[vertex.link_index()] - 0.5) * vertex.order()).astype(int)
+        return np.sum((self.links[vertex_link_idx] - 0.5) * Vertex.order()).astype(int)
 
     def axial_flux(self, idx: int, axis: Optional[int] = 0) -> float:
         """Compute the electric flux along the axis.
