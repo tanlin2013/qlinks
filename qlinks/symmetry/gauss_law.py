@@ -203,9 +203,12 @@ class GaussLaw(Node):
         return set()
 
     def is_the_solution(self) -> bool:
-        for site in reversed(self._lattice):
-            if np.isnan(self.charge(site)) or (self.charge(site) != self[site]):
-                return False
+        if np.isnan(self.charge(next(reversed(self._lattice)))):  # not fully filled
+            return False
+        if not np.all(
+            self.charge_distri.flatten() == np.array([self.charge(site) for site in self._lattice])
+        ):
+            return False
         return True
 
     @staticmethod
