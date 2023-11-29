@@ -38,6 +38,14 @@ class QuantumLinkModel:
             )
 
     @property
+    def kinetic_term(self) -> npt.NDArray[float] | sp.spmatrix[float]:
+        return self.hamiltonian - self.potential_term
+
+    @property
+    def potential_term(self) -> npt.NDArray[float] | sp.spmatrix[float]:
+        return np.diagflat(self._hamiltonian.diagonal())
+
+    @property
     def hamiltonian(self) -> npt.NDArray[float] | sp.spmatrix[float]:
         return self._hamiltonian.toarray()
 
