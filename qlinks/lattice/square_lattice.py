@@ -168,6 +168,9 @@ class LocalOperator(Protocol):
     def link_index(self) -> npt.NDArray[np.int64]:
         ...
 
+    def flippable(self, basis: ComputationBasis) -> npt.NDArray[np.bool_]:
+        ...
+
     def __matmul__(self, basis: ComputationBasis) -> npt.NDArray[np.int64]:
         ...
 
@@ -253,7 +256,7 @@ class Plaquette(LocalOperator):
 
 
 @dataclass(slots=True)
-class Vertex:  # reserved as LocalOperator for future use
+class Vertex(LocalOperator):
     lattice: SquareLattice
     site: Site
     _mask: int = field(default=None, repr=False)
@@ -272,7 +275,10 @@ class Vertex:  # reserved as LocalOperator for future use
             ]
         )
 
-    def __matmul__(self, basis: ComputationBasis) -> ComputationBasis:
+    def flippable(self, basis: ComputationBasis) -> npt.NDArray[np.bool_]:
+        ...
+
+    def __matmul__(self, basis: ComputationBasis) -> npt.NDArray[np.int64]:
         ...
 
     def __getitem__(self, basis: ComputationBasis) -> npt.NDArray[np.int64] | sp.spmatrix[np.int64]:
