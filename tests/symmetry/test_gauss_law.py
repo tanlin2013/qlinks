@@ -1,6 +1,5 @@
 from contextlib import nullcontext as does_not_raise
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from scipy.special import binom
@@ -9,8 +8,6 @@ from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import Site
 from qlinks.solver.deep_first_search import DeepFirstSearch
 from qlinks.symmetry.gauss_law import GaussLaw
-from qlinks.visualizer.graph import Graph
-from qlinks.visualizer.quiver import Quiver
 
 
 class TestGaussLaw:
