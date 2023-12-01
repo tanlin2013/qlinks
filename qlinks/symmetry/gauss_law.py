@@ -115,30 +115,32 @@ class GaussLaw(Node):
     @staticmethod
     def staggered_charge_distri(length_x: int, length_y: int) -> npt.NDArray[int]:
         """Generate a staggered charge distribution with +1 and -1 charges.
-        The shape of the lattice must be even number, and the upper left corner is always +1.
+        The shape of the lattice must be even number, and the bottom-left corner is always +1.
+        To make the bottom-left corner -1, simply multiply the output by -1.
 
         Args:
-            length_x:
-            length_y:
+            length_x: The length of the lattice.
+            length_y: The width of the lattice.
 
         Returns:
+            The staggered charge distribution.
 
         Raises:
             InvalidArgumentError: If the shape of the lattice is not even number.
 
         Examples:
             >>> GaussLaw.staggered_charge_distri(2, 2)
-            array([[ 1, -1],
-                   [-1,  1]])
+            array([[-1,  1],
+                   [ 1, -1]])
             >>> GaussLaw.staggered_charge_distri(4, 4)
-            array([[ 1, -1,  1, -1],
-                   [-1,  1, -1,  1],
+            array([[-1,  1, -1,  1],
                    [ 1, -1,  1, -1],
-                   [-1,  1, -1,  1]])
+                   [-1,  1, -1,  1],
+                   [ 1, -1,  1, -1]])
         """
         if length_x % 2 != 0 or length_y % 2 != 0:
             raise InvalidArgumentError("Length and width must be even number.")
-        stagger = np.array([[1, -1], [-1, 1]])
+        stagger = np.array([[-1, 1], [1, -1]])
         return np.tile(stagger, (length_y // 2, length_x // 2))
 
     @classmethod
