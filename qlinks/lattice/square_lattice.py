@@ -146,9 +146,9 @@ class SquareLattice:
 
         """
         adj_mat = np.zeros((self.size, self.size), dtype=int)
-        for site, (unit_vector, k) in product(self, zip(UnitVectors(), [0, 1])):
+        for site, (unit_vector, direction) in product(self, zip(UnitVectors(), [0, 1])):
             inds = (self.site_index(site) // 2, self.site_index(site + unit_vector) // 2)
-            link_val = self.links[2 * inds[0] + k]
+            link_val = self.links[2 * inds[0] + direction]
             adj_mat[*inds] += link_val  # head_node to tail_node
             adj_mat[*inds[::-1]] += 1 - link_val  # tail_node to head_node
         return adj_mat

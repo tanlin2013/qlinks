@@ -48,8 +48,8 @@ class ComputationBasis:
     def dataframe(self) -> pd.DataFrame:
         return self._df
 
-    def __getitem__(self, item: int) -> npt.NDArray[np.int64]:
-        return self._df.loc[item].values
+    def __getitem__(self, index: int) -> npt.NDArray[np.int64]:
+        return self._df.loc[index].values
 
     def sort(self) -> None:
         self._df.sort_index(inplace=True)
