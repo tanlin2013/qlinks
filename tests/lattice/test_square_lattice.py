@@ -149,37 +149,6 @@ class TestSquareLattice:
             assert degree == 4
 
 
-class TestComputationBasis:
-    @pytest.mark.parametrize(
-        "basis, expect",
-        [
-            (
-                np.array([[0, 0, 0, 1], [0, 1, 1, 0], [1, 0, 0, 1], [0, 0, 1, 1]]),
-                np.array([1, 6, 9, 3]),
-            ),
-            (np.array([[1] * 63]), np.array([np.iinfo(np.int64).max])),
-            (np.array([[1] * 64]), np.array([int("1" * 64, 2)])),
-        ],
-    )
-    def test_index(self, basis, expect):
-        basis = ComputationBasis(basis)
-        np.testing.assert_array_equal(basis.index, expect)
-
-    @pytest.mark.parametrize(
-        "basis, expect",
-        [
-            (
-                np.array([[0, 0, 0, 1], [0, 1, 1, 0], [1, 0, 0, 1], [0, 0, 1, 1]]),
-                np.array([1, 3, 6, 9]),
-            )
-        ],
-    )
-    def test_sort(self, basis, expect):
-        basis = ComputationBasis(basis)
-        basis.sort()
-        np.testing.assert_array_equal(basis.index, expect)
-
-
 class TestPlaquette:
     @pytest.fixture(scope="function")
     def lattice(self, request):
