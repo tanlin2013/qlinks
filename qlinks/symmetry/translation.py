@@ -1,18 +1,18 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from itertools import product
 from typing import Tuple
-from copy import deepcopy
 
 import numpy as np
 import numpy.typing as npt
-import scipy.sparse as sp
 import pandas as pd
+import scipy.sparse as sp
 
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import UnitVector
-from qlinks.lattice.square_lattice import SquareLattice, LocalOperator
+from qlinks.lattice.square_lattice import LocalOperator, SquareLattice
 from qlinks.symmetry.computation_basis import ComputationBasis
 
 

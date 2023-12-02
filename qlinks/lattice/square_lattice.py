@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from copy import deepcopy
+from dataclasses import dataclass, field
 from itertools import product
 from typing import Iterator, Optional, Protocol, Self, Tuple
 

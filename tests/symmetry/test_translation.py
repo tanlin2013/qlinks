@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from qlinks.lattice.square_lattice import SquareLattice
 from qlinks.symmetry.computation_basis import ComputationBasis

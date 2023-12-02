@@ -1,4 +1,4 @@
-from dataclasses import dataclass, astuple, field
+from dataclasses import astuple, dataclass, field
 from itertools import product
 from typing import Dict
 
