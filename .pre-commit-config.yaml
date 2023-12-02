@@ -30,7 +30,7 @@ repos:
     hooks:
     -   id: poetry-check
     -   id: poetry-lock
-        args: ['--no-update', '-vvv']
+        args: ['--no-update', '--no-cache', '-vvv']
         stages: [push]
 
 -   repo: https://github.com/commitizen-tools/commitizen
