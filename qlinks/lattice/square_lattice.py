@@ -77,9 +77,7 @@ class SquareLattice:
             yield Site(pos_x, pos_y)
 
     def __reversed__(self) -> Iterator[Site]:
-        for pos_y, pos_x in product(
-            reversed(range(self.length_y)), reversed(range(self.length_x))
-        ):
+        for pos_y, pos_x in product(reversed(range(self.length_y)), reversed(range(self.length_x))):
             yield Site(pos_x, pos_y)
 
     def iter_plaquettes(self) -> Iterator[Plaquette]:
@@ -197,7 +195,7 @@ class Plaquette(LocalOperator):
 
     def __post_init__(self) -> None:
         if self._mask is None:
-            self._mask = int(np.sum(2. ** (self.lattice.n_links - 1 - self.link_index())))
+            self._mask = int(np.sum(2.0 ** (self.lattice.n_links - 1 - self.link_index())))
 
     def link_index(self) -> npt.NDArray[np.int64]:
         return np.array(
@@ -246,7 +244,8 @@ class Plaquette(LocalOperator):
         row_idx = np.arange(basis.n_states)[flippable]
         col_idx = np.argsort(flipped_states)[flippable]
         return sp.csr_array(
-            (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)), shape=(basis.n_states, basis.n_states)
+            (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)),
+            shape=(basis.n_states, basis.n_states),
         )
 
     def __pow__(self, power: int) -> Self | Plaquette:

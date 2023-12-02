@@ -138,7 +138,7 @@ class TestSquareLattice:
                     [0, 0, 0, 0],
                     [0, 0, 2, 0],
                 ]
-            )
+            ),
         )  # parallel edges coz of periodic b.c.
 
     def test_as_graph(self, preset_lattice):
@@ -181,7 +181,7 @@ class TestPlaquette:
             ((2, 2), Site(1, 0), int("01110010", 2)),
             ((2, 2), Site(0, 1), int("10001101", 2)),
             ((2, 2), Site(1, 1), int("00100111", 2)),
-            ((4, 8), Site(0, 0), int("110100001".ljust(2*4*8, "0"), 2)),
+            ((4, 8), Site(0, 0), int("110100001".ljust(2 * 4 * 8, "0"), 2)),
         ],
         indirect=["lattice"],
     )

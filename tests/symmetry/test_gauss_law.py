@@ -126,7 +126,7 @@ class TestGaussLaw:
         gauss_law = GaussLaw(charge_distri)
         dfs = DeepFirstSearch(gauss_law)
         with expectation:
-            filled_gauss_law, = dfs.solve(n_solution=1)
+            (filled_gauss_law,) = dfs.solve(n_solution=1)
             assert isinstance(filled_gauss_law, GaussLaw)
             for site in filled_gauss_law._lattice:
                 assert filled_gauss_law.charge(site) == filled_gauss_law[site]
@@ -149,7 +149,7 @@ class TestGaussLaw:
         gauss_law = GaussLaw(charge_distri, flux_sector)
         dfs = DeepFirstSearch(gauss_law, max_steps=np.iinfo(np.int32).max)
         with expectation:
-            filled_gauss_laws = dfs.solve(n_solution=n_expected_solution+1)
+            filled_gauss_laws = dfs.solve(n_solution=n_expected_solution + 1)
             assert all(isinstance(s, GaussLaw) for s in filled_gauss_laws)
             assert len(filled_gauss_laws) == n_expected_solution
             assert dfs.frontier_is_empty

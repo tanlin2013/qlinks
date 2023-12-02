@@ -22,6 +22,7 @@ class QuantumLinkModel:
         shape: The shape of the lattice.
         basis: Computation basis that respects the gauss law and other lattice symmetries.
     """
+
     coup_j: float
     coup_rk: float
     shape: Tuple[int, ...]
