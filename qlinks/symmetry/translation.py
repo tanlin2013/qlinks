@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Tuple, Self
+from typing import Tuple
 from copy import deepcopy
 
 import numpy as np
 import numpy.typing as npt
+import scipy.sparse as sp
 import pandas as pd
 
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import UnitVector
-from qlinks.lattice.square_lattice import SquareLattice
+from qlinks.lattice.square_lattice import SquareLattice, LocalOperator
 from qlinks.symmetry.computation_basis import ComputationBasis
 
 
@@ -40,14 +41,52 @@ class Translation:
     def __lshift__(self, shift: UnitVector) -> ComputationBasis:
         return self.__rshift__(-1 * shift)
 
-    def __matmul__(self, basis: ComputationBasis) -> ComputationBasis:
-        ...
+    def __getitem__(
+        self, item: Tuple[LocalOperator, Tuple[int, int]]
+    ) -> npt.NDArray[np.float64 | np.complex128]:
+        flipper, (kx, ky) = item
+        basis = self.representative_basis
+        flipped_states = flipper @ basis
+        flippable = flipper.flippable(basis)
+        if basis.shape != flipped_states.shape:
+            raise InvalidArgumentError("The two bases should have the same shape.")
+        row_idx = np.arange(basis.n_states)[flippable]
+        col_idx = np.argsort(flipped_states)[flippable]
+        return (
+            sp.csr_array(
+                (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)),
+                shape=(basis.n_states, basis.n_states),
+            )
+            * self.normalization_factor()
+            * self.phase_factor(kx, ky)
+        ).toarray()
 
+    @property
     def periodicity(self) -> pd.Series:
         return self._df.nunique()
 
-    def representative_basis(self) -> pd.Series:
+    @property
+    def representatives(self) -> pd.Series:
         return self._df.min()
 
-    def momentum(self) -> pd.Series:
-        ...
+    @property
+    def representative_basis(self) -> ComputationBasis:
+        basis_idx = np.sort(self.representatives.unique())
+        return ComputationBasis(self.basis.dataframe.loc[basis_idx].to_numpy())
+
+    def phase_factor(self, kx: int, ky: int) -> npt.NDArray[np.float64 | np.complex128]:
+        if (-self.lattice.length_x // 2 + 1 <= kx <= self.lattice.length_x // 2) or (
+            -self.lattice.length_y // 2 + 1 <= ky <= self.lattice.length_y // 2
+        ):
+            raise InvalidArgumentError("The momentum should be in the first Brillouin zone.")
+        momentum = 2 * np.array([kx / self.lattice.length_x, ky / self.lattice.length_y])
+        shift = ...
+        phase = momentum @ shift
+        if phase % 2 == 0:
+            return np.ones(shift.shape)
+        else:
+            return np.exp(1j * momentum @ shift)
+
+    def normalization_factor(self) -> npt.NDArray[np.float64]:
+        period = self.periodicity[self.representatives.unique()].to_numpy()
+        return np.sqrt(np.outer(period, 1 / period))
