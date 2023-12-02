@@ -33,4 +33,4 @@ class TestTranslation:
 
     def test(self, lattice, basis):
         translation = Translation(lattice, basis)
-        df = translation._df
+        df = translation._df  # noqa: F841
