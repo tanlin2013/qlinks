@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import count
-from typing import Generic, List, Self, Set, TypeVar, Protocol
+from typing import Generic, List, Protocol, Self, Set, TypeVar
 
 from qlinks import logger
 
@@ -126,7 +126,7 @@ class DeepFirstSearch(Generic[AnyNode]):
             StopIteration: if no solution can be found or the number of iteration
              exceeds `max_steps`.
         """
-        logger.info(f"Deep First Search starts.")
+        logger.info("Deep First Search starts.")
         for n_step in count(start=1):
             if self._reach_stop_criteria(n_step):
                 return self.selected_nodes
