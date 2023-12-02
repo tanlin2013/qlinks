@@ -24,7 +24,9 @@ class ComputationBasis:
             raise InvalidArgumentError("Computation basis should be a 2D array.")
         self._df = pd.DataFrame(
             self.links,
-            index=np.apply_along_axis(lambda row: int("".join(map(str, row)), 2), axis=1, arr=self.links),
+            index=np.asarray(
+                [int("".join(map(str, self.links[i, :])), 2) for i in range(self.links.shape[0])]
+            ),
             dtype=int,
         )
 
@@ -41,14 +43,14 @@ class ComputationBasis:
         return self.links.shape[1]
 
     @property
-    def index(self) -> npt.NDArray[np.int64]:
+    def index(self) -> npt.NDArray[np.int64 | np.float64]:
         return self._df.index.values
 
     @property
     def dataframe(self) -> pd.DataFrame:
         return self._df
 
-    def __getitem__(self, index: int) -> npt.NDArray[np.int64]:
+    def __getitem__(self, index: int | float) -> npt.NDArray[np.int64]:
         return self._df.loc[index].values
 
     def sort(self) -> None:
