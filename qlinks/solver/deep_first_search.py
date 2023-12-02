@@ -126,12 +126,13 @@ class DeepFirstSearch(Generic[AnyNode]):
             StopIteration: if no solution can be found or the number of iteration
              exceeds `max_steps`.
         """
+        logger.info(f"Deep First Search starts.")
         for n_step in count(start=1):
             if self._reach_stop_criteria(n_step):
                 return self.selected_nodes
 
             found_new = self._diagnose_node()
             if found_new and len(self.selected_nodes) >= n_solution:
-                logger.info(f"Found {n_solution} Solution as required in {n_step} steps.")
+                logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
                 return self.selected_nodes
         return self.selected_nodes
