@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from qlinks.symmetry.computation_basis import ComputationBasis
+from qlinks.computation_basis import ComputationBasis
 
 
 class TestComputationBasis:

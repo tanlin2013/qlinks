@@ -4,7 +4,7 @@ from scipy.linalg import eigh, ishermitian
 
 from qlinks.model import QuantumLinkModel
 from qlinks.solver.deep_first_search import DeepFirstSearch
-from qlinks.symmetry.computation_basis import ComputationBasis
+from qlinks.computation_basis import ComputationBasis
 from qlinks.symmetry.gauss_law import GaussLaw
 
 

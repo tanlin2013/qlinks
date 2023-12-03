@@ -9,7 +9,7 @@ import numpy.typing as npt
 import scipy.sparse as sp
 
 from qlinks.lattice.square_lattice import SquareLattice
-from qlinks.symmetry.computation_basis import ComputationBasis
+from qlinks.computation_basis import ComputationBasis
 
 
 @dataclass(slots=True)

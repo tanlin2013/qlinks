@@ -56,3 +56,6 @@ class ComputationBasis:
     def sort(self) -> None:
         self._df.sort_index(inplace=True)
         self.links = self._df.to_numpy()
+
+    def entropy(self) -> npt.NDArray[np.float64]:
+        ...

@@ -16,7 +16,7 @@ from qlinks.exceptions import (
     LinkOverridingError,
 )
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.symmetry.computation_basis import ComputationBasis
+from qlinks.computation_basis import ComputationBasis
 
 
 @dataclass(slots=True)

@@ -6,7 +6,7 @@ import pytest
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import Site
 from qlinks.lattice.square_lattice import Plaquette, SquareLattice
-from qlinks.symmetry.computation_basis import ComputationBasis
+from qlinks.computation_basis import ComputationBasis
 
 
 class TestSquareLattice:
