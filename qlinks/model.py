@@ -50,6 +50,10 @@ class QuantumLinkModel:
     def hamiltonian(self) -> npt.NDArray[float] | sp.spmatrix[float]:
         return self._hamiltonian.toarray()
 
+    @property
+    def sparsity(self) -> float:
+        return 1 - self._hamiltonian.count_nonzero() / self._hamiltonian.size
+
     @classmethod
     def from_whole_basis(cls, coup_j: float, coup_rk: float, shape: Tuple[int, int]) -> Self:
         if 2 * np.prod(shape) > 14:
