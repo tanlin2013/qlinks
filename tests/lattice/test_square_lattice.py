@@ -129,8 +129,9 @@ class TestSquareLattice:
         assert np.isnan(empty_lattice.axial_flux(0, axis=0))
 
     def test_adjacency_matrix(self, preset_lattice):
+        adj_mat = preset_lattice.adjacency_matrix()
         np.testing.assert_array_equal(
-            preset_lattice.adjacency_matrix(),
+            adj_mat,
             np.array(
                 [
                     [0, 0, 2, 0],
@@ -140,6 +141,9 @@ class TestSquareLattice:
                 ]
             ),
         )  # parallel edges coz of periodic b.c.
+        assert np.all(np.sum(adj_mat, axis=0) + np.sum(adj_mat, axis=1) == 4), f"got {adj_mat}"
+        assert adj_mat.dtype == np.int64
+        assert np.all(adj_mat >= 0)
 
     def test_as_graph(self, preset_lattice):
         graph = preset_lattice.as_graph()
