@@ -100,6 +100,12 @@ class TestGaussLaw:
         gauss_law._lattice.links = np.array([0, 1, 1, 1, -1, 0, -1, 0])
         assert gauss_law._next_empty_site() == Site(0, 1)
 
+    def test_valid_for_flux(self):
+        ...
+
+    def test_preconditioned_configs(self):
+        ...
+
     @pytest.mark.parametrize("length_x, length_y", [(2, 2)])
     def test_extend_node(self, length_x: int, length_y: int):
         base_node = GaussLaw.from_zero_charge_distri(length_x, length_y)

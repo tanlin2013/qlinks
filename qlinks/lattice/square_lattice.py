@@ -156,6 +156,9 @@ class SquareLattice:
             self.adjacency_matrix(), parallel_edges=True, create_using=nx.MultiDiGraph
         )
 
+    def bipartite_index(self, idx: int, axis: Optional[int] = 0) -> float:
+        ...
+
 
 @dataclass(slots=True)
 class LocalOperator(Protocol):

@@ -60,3 +60,11 @@ class QuantumLinkModel:
             raise RuntimeError("The system size is too large for whole basis.")
         basis = ComputationBasis(np.asarray(list(product([0, 1], repeat=2 * np.prod(shape)))))
         return cls(coup_j, coup_rk, shape, basis)
+
+    @classmethod
+    def from_gauge_invariant_basis(cls):
+        ...
+
+    @classmethod
+    def from_momentum_basis(cls):
+        ...
