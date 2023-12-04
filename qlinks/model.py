@@ -44,7 +44,7 @@ class QuantumLinkModel:
 
     @property
     def potential_term(self) -> npt.NDArray[float] | sp.spmatrix[float]:
-        return np.diagflat(self._hamiltonian.diagonal())
+        return sp.diags(self._hamiltonian.diagonal()).toarray()
 
     @property
     def hamiltonian(self) -> npt.NDArray[float] | sp.spmatrix[float]:
