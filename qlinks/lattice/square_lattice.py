@@ -39,6 +39,8 @@ class SquareLattice:
             raise InvalidArgumentError("Lattice size should be least 2 by 2.")
         if self.links is None:
             self.links = np.full(self.n_links, fill_value=self._empty_link_value, dtype=int)
+        elif len(self.links) != self.n_links:
+            raise InvalidArgumentError(f"Expected {self.n_links} links, got {len(self.links)}.")
         elif not np.all(np.isin(self.links, [0, 1])):
             raise InvalidArgumentError("Link values should be either 0 or 1.")
 

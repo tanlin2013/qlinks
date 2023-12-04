@@ -25,8 +25,10 @@ class TestSquareLattice:
             _ = SquareLattice(1, 2)
         with pytest.raises(InvalidArgumentError):
             _ = SquareLattice(2, 2, np.array([1, 2, -1]))
-        with does_not_raise():
+        with pytest.raises(InvalidArgumentError):
             _ = SquareLattice(2, 2, np.array([0, 1, 1, 0]))
+        with does_not_raise():
+            _ = SquareLattice(2, 2, np.array([0, 1, 1, 0, 0, 1, 1, 0]))
 
     @pytest.mark.parametrize("length_x, length_y", [(2, 2), (3, 3), (6, 8)])
     def test_links(self, length_x: int, length_y: int):
