@@ -11,26 +11,9 @@ from qlinks.symmetry.gauss_law import GaussLaw
 class TestQuantumLinkModel:
     @pytest.mark.parametrize("coup_j, coup_rk", [(1, 1), (1, 0.1)])
     @pytest.mark.parametrize("length_x, length_y", [(2, 2)])
-    @pytest.mark.parametrize(
-        "basis",
-        [
-            ComputationBasis(
-                np.array(
-                    [
-                        [0, 0, 0, 1, 1, 0, 1, 1],
-                        [0, 1, 0, 0, 1, 1, 1, 0],
-                        [0, 1, 1, 0, 1, 0, 0, 1],
-                        [1, 0, 0, 1, 0, 1, 1, 0],
-                        [1, 0, 1, 1, 0, 0, 0, 1],
-                        [1, 1, 1, 0, 0, 1, 0, 0],
-                    ]
-                )
-            )
-        ],
-    )
-    def test_hamiltonian(self, coup_j, coup_rk, length_x, length_y, basis):
-        assert basis.n_links == 2 * length_x * length_y
-        model = QuantumLinkModel(coup_j, coup_rk, (length_x, length_y), basis)
+    def test_hamiltonian(self, coup_j, coup_rk, length_x, length_y, lattice_2x2_basis):
+        assert lattice_2x2_basis.n_links == 2 * length_x * length_y
+        model = QuantumLinkModel(coup_j, coup_rk, (length_x, length_y), lattice_2x2_basis)
         ham = model.hamiltonian
         assert ishermitian(ham)
         evals, evecs = eigh(ham)

@@ -10,6 +10,15 @@ from qlinks.lattice.square_lattice import Plaquette, SquareLattice
 
 
 class TestSquareLattice:
+    @pytest.fixture(scope="function")
+    def lattice(self, request):
+        return SquareLattice(*request.param)
+
+    @pytest.fixture(scope="function")
+    def preset_lattice(self, request) -> SquareLattice:
+        fixture = f"preset_{'x'.join(map(str, request.param))}_lattice"
+        return request.getfixturevalue(fixture)
+
     def test_constructor(self):
         assert SquareLattice(2, 2).shape == (2, 2)
         with pytest.raises(InvalidArgumentError):
@@ -26,19 +35,18 @@ class TestSquareLattice:
         assert lattice.links.size == 2 * length_x * length_y == lattice.n_links
         assert np.all(lattice.links == -1)  # default value
 
-    @pytest.mark.parametrize("length_x, length_y", [(2, 2), (3, 3), (4, 6)])
-    def test_index(self, length_x: int, length_y: int):
-        lattice = SquareLattice(length_x, length_y)
+    @pytest.mark.parametrize("lattice", [(2, 2), (3, 3), (4, 6)], indirect=True)
+    def test_index(self, lattice: SquareLattice):
         with pytest.raises(ValueError):
             _ = lattice.index  # links are not set yet
         (bin_num,) = np.random.randint(
-            2**lattice.n_links, size=1, dtype=int
-        )  # int64 bound to 2**64
+            2 ** lattice.n_links, size=1, dtype=int
+        )  # warn: randint is bound by int64 limit, use with caution
         lattice.links = np.array(list(bin(bin_num).lstrip("0b").zfill(lattice.n_links)), dtype=int)
         assert lattice.index == bin_num
 
-    def test_get_item(self):
-        lattice = SquareLattice(4, 4)
+    @pytest.mark.parametrize("lattice", [(4, 4)], indirect=True)
+    def test_get_item(self, lattice: SquareLattice):
         assert lattice[0, 0] == Site(0, 0)
         assert lattice[0, 4] == Site(0, 0)  # assume periodic b.c.
         assert lattice[0, 5] == Site(0, 1)
@@ -46,8 +54,8 @@ class TestSquareLattice:
         assert lattice[Site(5, 0)] == Site(1, 0)
         assert lattice[-1, 0] == Site(3, 0)
 
-    def test_site_index(self):
-        lattice = SquareLattice(4, 4)
+    @pytest.mark.parametrize("lattice", [(4, 4)], indirect=True)
+    def test_site_index(self, lattice: SquareLattice):
         assert lattice.site_index(Site(0, 0)) // 2 == 0  # each site associated with two links
         assert lattice.site_index(Site(1, 0)) // 2 == 1
         assert lattice.site_index(Site(3, 0)) // 2 == 3
@@ -57,8 +65,8 @@ class TestSquareLattice:
         assert lattice.site_index(Site(0, 4)) // 2 == 0
         assert lattice.site_index(Site(4, 4)) // 2 == 0
 
-    def test_iter(self):
-        lattice = SquareLattice(2, 2)
+    @pytest.mark.parametrize("lattice", [(2, 2)], indirect=True)
+    def test_iter(self, lattice: SquareLattice):
         it = iter(lattice)
         assert next(it) == Site(0, 0)
         assert next(it) == Site(1, 0)
@@ -67,8 +75,8 @@ class TestSquareLattice:
         with pytest.raises(StopIteration):
             _ = next(it)
 
-    def test_iter_plaquettes(self):
-        lattice = SquareLattice(2, 2)
+    @pytest.mark.parametrize("lattice", [(2, 2)], indirect=True)
+    def test_iter_plaquettes(self, lattice: SquareLattice):
         it = lattice.iter_plaquettes()
         assert next(it) == Plaquette(lattice, Site(0, 0))
         assert next(it) == Plaquette(lattice, Site(1, 0))
@@ -87,22 +95,7 @@ class TestSquareLattice:
         """
         ...
 
-    @pytest.fixture(scope="function")
-    def preset_lattice(self):
-        """
-           │      │
-           ▼      ▼
-        ──►o◄─────o──►
-           ▲      ▲
-           │      │
-        ──►o◄─────o──►
-           │      │
-           ▼      ▼
-        """
-        lattice = SquareLattice(2, 2)
-        lattice.links = np.array([0, 1, 1, 1, 0, 0, 1, 0])
-        return lattice
-
+    @pytest.mark.parametrize("preset_lattice", [(2, 2)], indirect=True)
     def test_charge(self, preset_lattice: SquareLattice):
         assert preset_lattice.charge(Site(0, 0)) == 0
         assert preset_lattice.charge(Site(1, 0)) == 2
@@ -118,7 +111,8 @@ class TestSquareLattice:
         assert np.isnan(empty_lattice.charge(Site(0, 1)))
         assert np.isnan(empty_lattice.charge(Site(1, 1)))
 
-    def test_axial_flux(self, preset_lattice):
+    @pytest.mark.parametrize("preset_lattice", [(2, 2)], indirect=True)
+    def test_axial_flux(self, preset_lattice: SquareLattice):
         assert preset_lattice.axial_flux(0, axis=0) == 0.5 * -2
         assert preset_lattice.axial_flux(1, axis=0) == 0.5 * 2
         assert preset_lattice.axial_flux(0, axis=1) == 0.5 * 2
@@ -128,7 +122,8 @@ class TestSquareLattice:
         empty_lattice = SquareLattice(2, 2)
         assert np.isnan(empty_lattice.axial_flux(0, axis=0))
 
-    def test_adjacency_matrix(self, preset_lattice):
+    @pytest.mark.parametrize("preset_lattice", [(2, 2)], indirect=True)
+    def test_adjacency_matrix(self, preset_lattice: SquareLattice):
         adj_mat = preset_lattice.adjacency_matrix()
         np.testing.assert_array_equal(
             adj_mat,
@@ -145,7 +140,8 @@ class TestSquareLattice:
         assert adj_mat.dtype == np.int64
         assert np.all(adj_mat >= 0)
 
-    def test_as_graph(self, preset_lattice):
+    @pytest.mark.parametrize("preset_lattice", [(2, 2)], indirect=True)
+    def test_as_graph(self, preset_lattice: SquareLattice):
         graph = preset_lattice.as_graph()
         assert graph.number_of_nodes() == preset_lattice.size
         assert graph.number_of_edges() == preset_lattice.n_links
@@ -157,26 +153,6 @@ class TestPlaquette:
     @pytest.fixture(scope="function")
     def lattice(self, request):
         return SquareLattice(*request.param)
-
-    @pytest.fixture(
-        scope="function",
-        params=[
-            np.array(
-                [
-                    [0, 0, 0, 1, 1, 0, 1, 1],
-                    [0, 1, 0, 0, 1, 1, 1, 0],
-                    [0, 1, 1, 0, 1, 0, 0, 1],
-                    [1, 0, 0, 1, 0, 1, 1, 0],
-                    [1, 0, 1, 1, 0, 0, 0, 1],
-                    [1, 1, 1, 0, 0, 1, 0, 0],
-                ]
-            )
-        ],
-    )
-    def basis(self, request):
-        basis = ComputationBasis(request.param)
-        basis.sort()
-        return basis
 
     @pytest.mark.parametrize(
         "lattice, site, expect",
@@ -217,9 +193,11 @@ class TestPlaquette:
             (Site(1, 1), np.array([False, True, True, True, True, False])),
         ],
     )
-    def test_flippable(self, basis: ComputationBasis, lattice: SquareLattice, site: Site, expect):
+    def test_flippable(
+        self, lattice_2x2_basis: ComputationBasis, lattice: SquareLattice, site: Site, expect
+    ):
         plaquette = Plaquette(lattice, site)
-        np.testing.assert_array_equal(plaquette.flippable(basis), expect)
+        np.testing.assert_array_equal(plaquette.flippable(lattice_2x2_basis), expect)
 
     @pytest.mark.parametrize(
         "lattice, site, expect",
@@ -232,10 +210,10 @@ class TestPlaquette:
         indirect=["lattice"],
     )
     def test_matrix_multiplication(
-        self, basis: ComputationBasis, lattice: SquareLattice, site: Site, expect
+        self, lattice_2x2_basis: ComputationBasis, lattice: SquareLattice, site: Site, expect
     ):
         plaquette = Plaquette(lattice, site)
-        np.testing.assert_array_equal(plaquette @ basis, expect)
+        np.testing.assert_array_equal(plaquette @ lattice_2x2_basis, expect)
 
     @pytest.mark.parametrize("lattice", [(2, 2)], indirect=True)
     @pytest.mark.parametrize(
@@ -248,10 +226,11 @@ class TestPlaquette:
         ],
     )
     def test_matrix_element(
-        self, basis: ComputationBasis, lattice: SquareLattice, site: Site, expect_basis_idx
+            self, lattice_2x2_basis: ComputationBasis, lattice: SquareLattice, site: Site,
+            expect_basis_idx
     ):
         plaquette = Plaquette(lattice, site)
-        mat = plaquette[basis].toarray()
+        mat = plaquette[lattice_2x2_basis].toarray()
         assert np.all(mat[expect_basis_idx] == 1)
         mask = np.zeros_like(mat, dtype=bool)
         mask[expect_basis_idx] = True
@@ -259,11 +238,11 @@ class TestPlaquette:
 
     @pytest.mark.parametrize("lattice", [(2, 2)], indirect=True)
     @pytest.mark.parametrize("site", [Site(0, 0), Site(1, 0), Site(0, 1), Site(1, 1)])
-    def test_power(self, basis, lattice, site):
+    def test_power(self, lattice_2x2_basis, lattice, site):
         plaquette = Plaquette(lattice, site)
         for power in range(5):
             plaquette_power = plaquette**power
-            mat = plaquette_power[basis].toarray()
+            mat = plaquette_power[lattice_2x2_basis].toarray()
             if power % 2 == 0:
                 assert plaquette_power._mask == 0
                 assert np.count_nonzero(mat - np.diag(np.diagonal(mat))) == 0  # diagonal matrix
