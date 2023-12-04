@@ -153,3 +153,27 @@ class TestGaussLaw:
             assert all(isinstance(s, GaussLaw) for s in filled_gauss_laws)
             assert len(filled_gauss_laws) == n_expected_solution
             assert dfs.frontier_is_empty
+
+    @pytest.mark.parametrize(
+        "charge_distri, flux_sector, links, n_expected_solution, expectation",
+        [
+            (
+                -1 * GaussLaw.staggered_charge_distri(4, 4),
+                (0, 0),
+                np.array([1, 0, 1, 1, 0, 1, 1, 0, 0, -1, 0, -1, 1, -1, 0, -1] + [-1] * 16),
+                7,
+                does_not_raise(),
+            ),
+        ],
+    )
+    def test_from_partial_preset(
+        self, charge_distri, flux_sector, links, n_expected_solution, expectation
+    ):
+        gauss_law = GaussLaw(charge_distri, flux_sector)
+        gauss_law._lattice.links = links
+        dfs = DeepFirstSearch(gauss_law, max_steps=np.iinfo(np.int32).max)
+        filled_gauss_laws = dfs.solve(n_solution=n_expected_solution + 1)
+        with expectation:
+            assert all(isinstance(s, GaussLaw) for s in filled_gauss_laws)
+            assert len(filled_gauss_laws) == n_expected_solution
+            assert dfs.frontier_is_empty
