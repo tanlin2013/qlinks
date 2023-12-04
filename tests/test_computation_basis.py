@@ -28,12 +28,13 @@ class TestComputationBasis:
                 np.array([1, 3, 6, 9]),
             ),
             (
-                np.array([[0] + [1] * 63, [1] * 64]),
+                np.array([[1] * 64, [0] + [1] * 63]),
                 np.array([np.iinfo(np.int64).max, int("1" * 64, 2)]),
             ),
         ],
     )
     def test_sort(self, basis, expect):
         basis = ComputationBasis(basis)
+        assert not np.array_equal(basis.index, expect)  # not sorted
         basis.sort()
         np.testing.assert_array_equal(basis.index, expect)
