@@ -5,12 +5,7 @@ from qlinks.lattice.square_lattice import SquareLattice
 
 
 @pytest.fixture(scope="function")
-def empty_2x2_lattice():
-    return SquareLattice(2, 2)
-
-
-@pytest.fixture(scope="function")
-def preset_2x2_lattice():
+def preset_2x2_lattice() -> SquareLattice:
     """
     o◄──────o──────►o
     │       │       │
