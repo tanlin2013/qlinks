@@ -1,6 +1,5 @@
-import pytest
-
 import numpy as np
+import pytest
 
 from qlinks.computation_basis import ComputationBasis
 
@@ -35,5 +34,3 @@ def lattice_6x4_basis():
 
     """
     return ComputationBasis(...)
-
-

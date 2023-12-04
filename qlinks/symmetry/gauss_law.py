@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Self, Set, Tuple
 import numpy as np
 import numpy.typing as npt
 
+from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import (
     InvalidArgumentError,
     InvalidOperationError,
@@ -18,7 +19,6 @@ from qlinks.exceptions import (
 from qlinks.lattice.component import Site, UnitVectors
 from qlinks.lattice.square_lattice import SquareLattice, Vertex
 from qlinks.solver.deep_first_search import Node
-from qlinks.computation_basis import ComputationBasis
 
 
 class Flow(IntEnum):

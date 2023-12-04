@@ -10,10 +10,10 @@ import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
 
+from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import UnitVector
 from qlinks.lattice.square_lattice import LocalOperator, SquareLattice
-from qlinks.computation_basis import ComputationBasis
 
 
 @dataclass(slots=True)

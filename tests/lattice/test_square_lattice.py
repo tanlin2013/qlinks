@@ -3,10 +3,10 @@ from contextlib import nullcontext as does_not_raise
 import numpy as np
 import pytest
 
+from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.component import Site
 from qlinks.lattice.square_lattice import Plaquette, SquareLattice
-from qlinks.computation_basis import ComputationBasis
 
 
 class TestSquareLattice:

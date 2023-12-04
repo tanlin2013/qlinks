@@ -8,8 +8,8 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
-from qlinks.lattice.square_lattice import SquareLattice
 from qlinks.computation_basis import ComputationBasis
+from qlinks.lattice.square_lattice import SquareLattice
 
 
 @dataclass(slots=True)

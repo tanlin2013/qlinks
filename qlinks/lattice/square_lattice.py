@@ -10,13 +10,13 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
+from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import (
     InvalidArgumentError,
     InvalidOperationError,
     LinkOverridingError,
 )
 from qlinks.lattice.component import Site, UnitVectors
-from qlinks.computation_basis import ComputationBasis
 
 
 @dataclass(slots=True)

@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 from scipy.linalg import eigh, ishermitian
 
+from qlinks.computation_basis import ComputationBasis
 from qlinks.model import QuantumLinkModel
 from qlinks.solver.deep_first_search import DeepFirstSearch
-from qlinks.computation_basis import ComputationBasis
 from qlinks.symmetry.gauss_law import GaussLaw
 
 
