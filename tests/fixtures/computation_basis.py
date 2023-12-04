@@ -10,7 +10,7 @@ def four_link_basis():
 
 
 @pytest.fixture(scope="function")
-def lattice_2x2_basis():
+def lattice_2x2_basis() -> ComputationBasis:
     """
     o◄──────o◄──────o    o◄──────o◄──────o   o◄──────o──────►o
     │       ▲       │    ▲       │       ▲   │       ▲       │
@@ -53,8 +53,6 @@ def lattice_2x2_basis():
 
 
 @pytest.fixture(scope="function")
-def lattice_6x4_basis():
-    """
-
-    """
+def lattice_6x4_basis() -> ComputationBasis:
+    """ """
     return ComputationBasis(...)
