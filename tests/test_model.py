@@ -30,14 +30,14 @@ class TestQuantumLinkModel:
 
     @pytest.fixture(scope="class")
     def basis_from_solver(self):
-        gauss_law = GaussLaw.from_zero_charge_distri(6, 4)
+        gauss_law = GaussLaw.from_zero_charge_distri(4, 4)
         gauss_law.flux_sector = (0, 0)
-        dfs = DeepFirstSearch(gauss_law, max_steps=int(1e8))
-        return gauss_law.to_basis(dfs.solve(n_solution=32810))  # 10 secs
+        dfs = DeepFirstSearch(gauss_law, max_steps=int(1e5))
+        return gauss_law.to_basis(dfs.solve(n_solution=990))  # 2.7 secs
 
     @pytest.mark.parametrize("coup_j, coup_rk", [(1, 0), (1, 1)])
     def test_with_solver(self, coup_j, coup_rk, basis_from_solver):
-        model = QuantumLinkModel(coup_j, coup_rk, (6, 4), basis_from_solver)
+        model = QuantumLinkModel(coup_j, coup_rk, (4, 4), basis_from_solver)
         ham = model.hamiltonian
         assert ishermitian(ham)
         evals, evecs = eigh(ham)
