@@ -36,7 +36,7 @@ def lattice_2x2_basis():
 
            150                  177                 228
     """
-    return ComputationBasis(
+    basis = ComputationBasis(
         np.array(
             [
                 [0, 0, 0, 1, 1, 0, 1, 1],  # 27
@@ -48,6 +48,8 @@ def lattice_2x2_basis():
             ]
         )
     )
+    basis.sort()
+    return basis
 
 
 @pytest.fixture(scope="function")
