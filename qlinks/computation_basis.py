@@ -20,15 +20,7 @@ class ComputationBasis:
     _df: pd.DataFrame = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        if self.links.ndim != 2:
-            raise InvalidArgumentError("Computation basis should be a 2D array.")
-        self._df = pd.DataFrame(
-            self.links,
-            index=np.asarray(
-                [int("".join(map(str, self.links[i, :])), 2) for i in range(self.links.shape[0])]
-            ),
-            dtype=int,
-        )
+        self._df = pd.DataFrame(self.links, index=self.as_index(self.links), dtype=int)
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -53,9 +45,12 @@ class ComputationBasis:
     def __getitem__(self, index: int | float) -> npt.NDArray[np.int64]:
         return self._df.loc[index].values
 
+    @staticmethod
+    def as_index(links: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
+        if links.ndim != 2:
+            raise InvalidArgumentError("links should be a 2D array.")
+        return np.asarray([int("".join(map(str, links[i, :])), 2) for i in range(links.shape[0])])
+
     def sort(self) -> None:
         self._df.sort_index(inplace=True)
         self.links = self._df.to_numpy()
-
-    def entropy(self) -> npt.NDArray[np.float64]:
-        ...
