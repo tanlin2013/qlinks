@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import astuple, dataclass, field
 from itertools import product
 from typing import Iterator, Optional, Protocol, Self, Tuple
 
@@ -139,6 +139,43 @@ class SquareLattice:
             return np.nan
         return np.sum(self.links[link_idx] - 0.5)
 
+    def bipartite_index(
+        self, idx: int, axis: Optional[int] = 0
+    ) -> Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]:
+        """
+                  |
+           │      |│       ▲
+           │      |│       │
+         ──o──────|o──
+        ----------|----  axis=1
+           │      |│
+           │      |│
+         ──o──────|o──
+           │      |│
+           │      |│
+                  |
+
+               axis=0 ──►
+
+        Args:
+            idx:
+            axis:
+
+        Returns:
+
+        """
+        positions = np.array([astuple(site) for site in self for _ in range(2)])
+        cut = positions[:, axis] <= idx
+        first_partition_idx = np.where(
+            cut, [self.site_index(site) + direction for site in self for direction in [0, 1]], -1
+        )
+        second_partition_idx = np.where(
+            cut, -1, [self.site_index(site) + direction for site in self for direction in [0, 1]]
+        )
+        first_partition_idx = first_partition_idx[first_partition_idx != -1]  # rm -1 entries
+        second_partition_idx = second_partition_idx[second_partition_idx != -1]
+        return first_partition_idx, second_partition_idx
+
     def adjacency_matrix(self) -> npt.NDArray[np.int64]:
         """
 
@@ -157,9 +194,6 @@ class SquareLattice:
         return nx.from_numpy_array(
             self.adjacency_matrix(), parallel_edges=True, create_using=nx.MultiDiGraph
         )
-
-    def bipartite_index(self, idx: int, axis: Optional[int] = 0) -> float:
-        ...
 
 
 @dataclass(slots=True)
