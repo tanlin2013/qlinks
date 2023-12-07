@@ -30,6 +30,13 @@ class GraphVisualizer:
         self._labels = {idx: str(astuple(self.lattice[site])) for idx, site in self._pos.items()}
 
     def _boundary_flattened_adjacency_matrix(self) -> npt.NDArray[np.int64]:
+        """
+        Flatten the periodic boundaries of the lattice by appending a copy of boundary sites
+        to the right and the top, and return the corresponding adjacency matrix.
+
+        Returns:
+            The adjacency matrix with lattice boundary flattened.
+        """
         adj_mat = np.zeros((self._enlarged_lattice.size, self._enlarged_lattice.size), dtype=int)
         for site, (unit_vector, direction) in product(self.lattice, zip(UnitVectors(), [0, 1])):
             orig_inds = (
@@ -44,7 +51,7 @@ class GraphVisualizer:
             adj_mat[enlarged_inds] += link_val  # head_node to tail_node
             adj_mat[enlarged_inds[::-1]] += 1 - link_val  # tail_node to head_node
 
-        for y in range(self.lattice.length_y):  # copy the left and right boundaries
+        for y in range(self.lattice.length_y):  # copy the left boundaries to the right
             left_inds = (
                 self._enlarged_lattice.site_index(Site(0, y)) // 2,
                 self._enlarged_lattice.site_index(Site(0, y + 1)) // 2,
@@ -56,7 +63,7 @@ class GraphVisualizer:
             adj_mat[right_inds] = adj_mat[left_inds]
             adj_mat[right_inds[::-1]] = adj_mat[left_inds[::-1]]
 
-        for x in range(self.lattice.length_x):  # copy the top and bottom boundaries
+        for x in range(self.lattice.length_x):  # copy the bottom boundaries to the top
             bottom_inds = (
                 self._enlarged_lattice.site_index(Site(x, 0)) // 2,
                 self._enlarged_lattice.site_index(Site(x + 1, 0)) // 2,
@@ -70,6 +77,11 @@ class GraphVisualizer:
         return adj_mat
 
     def _plot_plaquette_variable(self, **kwargs) -> None:
+        """Plot the plaquette variables on the lattice.
+
+        Args:
+            **kwargs: keyword arguments for :meth:`matplotlib.pyplot.text`.
+        """
         fontsize = kwargs.pop("fontsize", 24)
         plaquette_var = {
             "1111": {"s": "◩", "color": "silver"},
