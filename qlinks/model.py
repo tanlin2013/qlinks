@@ -3,13 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import cache
 from itertools import product
-from typing import Self, Tuple
+from typing import Self, Tuple, TypeAlias, Optional
 
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
+from scipy.stats import rankdata
 
 from qlinks.computation_basis import ComputationBasis
+from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.square_lattice import SquareLattice
 
 
@@ -72,3 +74,31 @@ class QuantumLinkModel:
 
     def __hash__(self) -> int:
         return hash((self.coup_j.tobytes(), self.coup_rk.tobytes(), self.shape, self.basis))
+
+    @cache
+    def _bipartite_sorting_index(self, idx: int, axis: Optional[int] = 0) -> Tuple[npt.NDArray, ...]:
+        if idx > self._lattice.shape[axis] - 2:
+            raise InvalidArgumentError("The index is out of range.")
+        first_partition, second_partition = (
+            self.basis.as_index(self.basis.links[:, partition_idx])
+            for partition_idx in self._lattice.bipartite_index(idx, axis)
+        )
+        sorting_idx = np.lexsort((first_partition, second_partition))
+        row_idx, col_idx = (
+            rankdata(partition, method="dense") - 1
+            for partition in (first_partition[sorting_idx], second_partition[sorting_idx])
+        )
+        return sorting_idx, row_idx, col_idx
+
+    def entropy(self, evec: npt.NDArray[np.float64], idx: int, axis: Optional[int] = 0) -> np.float64:
+        sorting_idx, row_idx, col_idx = self._bipartite_sorting_index(idx, axis)
+        reshaped_evec = sp.csr_array(
+            (evec[sorting_idx], (row_idx, col_idx)),
+            (len(np.unique(row_idx)), len(np.unique(col_idx))),
+        )
+        s = sp.linalg.svds(
+            reshaped_evec,
+            k=min(*reshaped_evec.shape) - 1,
+            return_singular_vectors=False,
+        )
+        return -np.sum((ss := s[s > 1e-12] ** 2) * np.log(ss))
