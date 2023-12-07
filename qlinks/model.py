@@ -14,6 +14,8 @@ from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.square_lattice import SquareLattice
 
+Real: TypeAlias = int | float | np.int64 | np.float64
+
 
 @dataclass(slots=True)
 class QuantumLinkModel:
@@ -26,8 +28,8 @@ class QuantumLinkModel:
         basis: Computation basis that respects the gauss law and other lattice symmetries.
     """
 
-    coup_j: float
-    coup_rk: float
+    coup_j: Real | npt.ArrayLike[Real]
+    coup_rk: Real | npt.ArrayLike[Real]
     shape: Tuple[int, ...]
     basis: ComputationBasis = field(repr=False)
     _lattice: SquareLattice = field(init=False, repr=False)
@@ -35,10 +37,14 @@ class QuantumLinkModel:
 
     def __post_init__(self) -> None:
         self._lattice = SquareLattice(*self.shape)
+        if isinstance(self.coup_j, (int, float)):
+            self.coup_j = np.asarray([self.coup_j] * self._lattice.size)
+        if isinstance(self.coup_rk, (int, float)):
+            self.coup_rk = np.asarray([self.coup_rk] * self._lattice.size)
         self._hamiltonian = sp.csr_array((self.basis.n_states, self.basis.n_states), dtype=float)
-        for plaquette in self._lattice.iter_plaquettes():
+        for i, plaquette in enumerate(self._lattice.iter_plaquettes()):
             self._hamiltonian += (
-                -self.coup_j * plaquette[self.basis] + self.coup_rk * (plaquette**2)[self.basis]
+                -self.coup_j[i] * plaquette[self.basis] + self.coup_rk[i] * (plaquette**2)[self.basis]
             )
 
     @property
