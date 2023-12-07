@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Tuple
+from typing import Tuple, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -54,3 +54,10 @@ class ComputationBasis:
     def sort(self) -> None:
         self._df.sort_index(inplace=True)
         self.links = self._df.to_numpy()
+
+    def to_csv(self, *args, **kwargs) -> None:
+        self._df.to_csv(*args, **kwargs)
+
+    @classmethod
+    def from_csv(cls, *args, **kwargs) -> Self:
+        return cls(pd.read_csv(*args, **kwargs).to_numpy())
