@@ -19,6 +19,7 @@ class TestComputationBasis:
     def test_index(self, basis, expect):
         basis = ComputationBasis(basis)
         np.testing.assert_array_equal(basis.index, expect)
+        assert isinstance(basis.index.dtype, (np.int64, object))
 
     @pytest.mark.parametrize(
         "basis, expect",

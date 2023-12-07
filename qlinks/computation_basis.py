@@ -52,7 +52,9 @@ class ComputationBasis:
     def as_index(links: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
         if links.ndim != 2:
             raise InvalidArgumentError("links should be a 2D array.")
-        return np.asarray([int("".join(map(str, links[i, :])), 2) for i in range(links.shape[0])])
+        return np.asarray(
+            [int("".join(map(str, links[i, :])), 2) for i in range(links.shape[0])], dtype=object
+        )
 
     def sort(self) -> None:
         self._df.sort_index(inplace=True)
