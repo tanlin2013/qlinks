@@ -58,9 +58,9 @@ class ComputationBasis:
         self._df.sort_index(inplace=True)
         self.links = self._df.to_numpy()
 
-    def to_csv(self, *args, **kwargs) -> None:
-        self._df.to_csv(*args, **kwargs)
+    def to_parquet(self, *args, **kwargs) -> None:
+        self._df.to_parquet(*args, **kwargs)
 
     @classmethod
-    def from_csv(cls, *args, **kwargs) -> Self:
-        return cls(pd.read_csv(*args, **kwargs).to_numpy())
+    def from_parquet(cls, *args, **kwargs) -> Self:
+        return cls(pd.read_parquet(*args, **kwargs).to_numpy())
