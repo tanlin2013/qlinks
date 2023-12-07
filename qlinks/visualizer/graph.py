@@ -82,6 +82,7 @@ class GraphVisualizer:
         Args:
             **kwargs: keyword arguments for :meth:`matplotlib.pyplot.text`.
         """
+        ax = kwargs.get("ax", None)
         fontsize = kwargs.pop("fontsize", 24)
         plaquette_var = {
             "1111": {"s": "◩", "color": "silver"},
@@ -101,10 +102,11 @@ class GraphVisualizer:
             "0100": {"s": "↑", "color": "salmon"},
             "0000": {"s": "◪", "color": "silver"},
         }
+        ax = ax if ax is not None else plt.gca()
         for plaquette in self.lattice.iter_plaquettes():
             center = (plaquette.site[0] + 0.5, plaquette.site[1] + 0.5)
             key = "".join(map(str, self.lattice.links[plaquette.link_index()]))
-            plt.text(
+            ax.text(
                 center[0],
                 center[1],
                 plaquette_var[key]["s"],
@@ -115,6 +117,13 @@ class GraphVisualizer:
             )
 
     def plot(self, show: bool = True, **kwargs) -> None:
+        """Plot the lattice graph.
+
+        Args:
+            show: Whether to show the plot.
+            **kwargs: keyword arguments for :meth:`networkx.draw` and :meth:`matplotlib.pyplot.text`.
+        """
+        ax = kwargs.get("ax", None)
         with_labels = kwargs.pop("with_labels", True)
         node_color = kwargs.pop("node_color", "tab:orange")
         node_size = kwargs.pop("node_size", 1600)
@@ -127,6 +136,7 @@ class GraphVisualizer:
         nx.draw(
             self._graph,
             self._pos,
+            ax=ax,
             labels=self._labels,
             with_labels=with_labels,
             node_color=node_color,
