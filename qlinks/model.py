@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import cache
 from itertools import product
 from typing import Self, Tuple
 
@@ -68,3 +69,6 @@ class QuantumLinkModel:
     @classmethod
     def from_momentum_basis(cls):
         ...
+
+    def __hash__(self) -> int:
+        return hash((self.coup_j.tobytes(), self.coup_rk.tobytes(), self.shape, self.basis))

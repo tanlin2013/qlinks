@@ -45,6 +45,9 @@ class ComputationBasis:
     def __getitem__(self, index: int | float) -> npt.NDArray[np.int64]:
         return self._df.loc[index].values
 
+    def __hash__(self) -> int:
+        return hash(self.links.tobytes())
+
     @staticmethod
     def as_index(links: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
         if links.ndim != 2:
