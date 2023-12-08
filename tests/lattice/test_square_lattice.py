@@ -124,6 +124,22 @@ class TestSquareLattice:
         empty_lattice = SquareLattice(2, 2)
         assert np.isnan(empty_lattice.axial_flux(0, axis=0))
 
+    @pytest.mark.parametrize("lattice", [(2, 2), (4, 2), (4, 4)], indirect=True)
+    @pytest.mark.parametrize("axis", [0, 1])
+    def test_bipartite_index(self, lattice: SquareLattice, axis: int):
+        for idx in range(lattice.shape[axis]):
+            first_partition_idx, second_partition_idx = lattice.bipartite_index(idx, axis)
+            first_partition_idx[1::2] -= 1
+            second_partition_idx[1::2] -= 1
+            first_partition_idx //= 2
+            second_partition_idx //= 2
+            if axis == 0:
+                assert np.all(first_partition_idx % lattice.length_x <= idx)
+                assert np.all(second_partition_idx % lattice.length_x > idx)
+            elif axis == 1:
+                assert np.all(first_partition_idx // lattice.length_x <= idx)
+                assert np.all(second_partition_idx // lattice.length_x > idx)
+
     @pytest.mark.parametrize("preset_lattice", [(2, 2)], indirect=True)
     def test_adjacency_matrix(self, preset_lattice: SquareLattice):
         adj_mat = preset_lattice.adjacency_matrix()
