@@ -14,6 +14,10 @@ class TestComputationBasis:
             ),
             (np.array([[1] * 63]), np.array([np.iinfo(np.int64).max])),
             (np.array([[1] * 64]), np.array([int("1" * 64, 2)])),
+            (
+                np.array([[0] * (100 - 70) + [1] * 70, [0] * (100 - 90) + [1] * 90]),
+                np.array([int("1" * 70, 2), int("1" * 90, 2)])
+            ),
         ],
     )
     def test_index(self, basis, expect):
