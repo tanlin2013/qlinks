@@ -121,7 +121,8 @@ class GraphVisualizer:
 
         Args:
             show: Whether to show the plot.
-            **kwargs: keyword arguments for :meth:`networkx.draw` and :meth:`matplotlib.pyplot.text`.
+            **kwargs:
+                keyword arguments for :meth:`networkx.draw` and :meth:`matplotlib.pyplot.text`.
         """
         ax = kwargs.get("ax", None)
         with_labels = kwargs.pop("with_labels", True)
