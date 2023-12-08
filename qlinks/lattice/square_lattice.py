@@ -142,7 +142,8 @@ class SquareLattice:
     def bipartite_index(
         self, idx: int, axis: Optional[int] = 0
     ) -> Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]:
-        """
+        """Bi-partition the lattice links along the axis at the `idx`-th row or column.
+
                   |
            │      |│       ▲
            │      |│       │
@@ -158,11 +159,12 @@ class SquareLattice:
                axis=0 ──►
 
         Args:
-            idx:
-            axis:
+            idx: The `idx`-th row or column in lattice.
+            axis: 0 for x-axis and 1 for y-axis, default 0.
 
-        Returns:
-
+        Returns: A tuple of two arrays:
+            - first_partition_idx: The indices of links in the first partition.
+            - second_partition_idx: The indices of links in the second partition.
         """
         positions = np.array([astuple(site) for site in self for _ in range(2)])
         cut = positions[:, axis] <= idx
