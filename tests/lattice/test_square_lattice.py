@@ -42,7 +42,7 @@ class TestSquareLattice:
         with pytest.raises(ValueError):
             _ = lattice.index  # links are not set yet
         (bin_num,) = np.random.randint(
-            2 ** lattice.n_links, size=1, dtype=int
+            2**lattice.n_links, size=1, dtype=int
         )  # warn: randint is bound by int64 limit, use with caution
         lattice.links = np.array(list(bin(bin_num).lstrip("0b").zfill(lattice.n_links)), dtype=int)
         assert lattice.index == bin_num
@@ -228,8 +228,11 @@ class TestPlaquette:
         ],
     )
     def test_matrix_element(
-            self, lattice_2x2_basis: ComputationBasis, lattice: SquareLattice, site: Site,
-            expect_basis_idx
+        self,
+        lattice_2x2_basis: ComputationBasis,
+        lattice: SquareLattice,
+        site: Site,
+        expect_basis_idx,
     ):
         plaquette = Plaquette(lattice, site)
         mat = plaquette[lattice_2x2_basis].toarray()

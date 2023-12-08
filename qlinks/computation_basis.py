@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Tuple, Self
+from typing import Self, Tuple
 
 import numpy as np
 import numpy.typing as npt

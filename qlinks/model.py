@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import cache
 from itertools import product
-from typing import Self, Tuple, TypeAlias, Optional
+from typing import Optional, Self, Tuple, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -44,7 +44,8 @@ class QuantumLinkModel:
         self._hamiltonian = sp.csr_array((self.basis.n_states, self.basis.n_states), dtype=float)
         for i, plaquette in enumerate(self._lattice.iter_plaquettes()):
             self._hamiltonian += (
-                -self.coup_j[i] * plaquette[self.basis] + self.coup_rk[i] * (plaquette**2)[self.basis]
+                -self.coup_j[i] * plaquette[self.basis]
+                + self.coup_rk[i] * (plaquette**2)[self.basis]
             )
 
     @property
@@ -82,7 +83,9 @@ class QuantumLinkModel:
         return hash((self.coup_j.tobytes(), self.coup_rk.tobytes(), self.shape, self.basis))
 
     @cache
-    def _bipartite_sorting_index(self, idx: int, axis: Optional[int] = 0) -> Tuple[npt.NDArray, ...]:
+    def _bipartite_sorting_index(
+        self, idx: int, axis: Optional[int] = 0
+    ) -> Tuple[npt.NDArray, ...]:
         if idx > self._lattice.shape[axis] - 2:
             raise InvalidArgumentError("The index is out of range.")
         first_partition, second_partition = (
@@ -96,7 +99,9 @@ class QuantumLinkModel:
         )
         return sorting_idx, row_idx, col_idx
 
-    def entropy(self, evec: npt.NDArray[np.float64], idx: int, axis: Optional[int] = 0) -> np.float64:
+    def entropy(
+        self, evec: npt.NDArray[np.float64], idx: int, axis: Optional[int] = 0
+    ) -> np.float64:
         sorting_idx, row_idx, col_idx = self._bipartite_sorting_index(idx, axis)
         reshaped_evec = sp.csr_array(
             (evec[sorting_idx], (row_idx, col_idx)),
