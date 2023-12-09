@@ -47,3 +47,14 @@ class TestQuantumLinkModel:
             assert is_spectral_reflection_symmetric(evals)
         else:
             assert not is_spectral_reflection_symmetric(evals)
+
+    def test__bipartite_sorting_index(self):
+        ...
+
+    @pytest.mark.parametrize("coup_j, coup_rk", [(1, 1)])
+    def test_entropy(self, coup_j, coup_rk, lattice_4x2_basis):
+        model = QuantumLinkModel(coup_j, coup_rk, (4, 2), lattice_4x2_basis)
+        evecs = np.array([0, 1, 1, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0], dtype=float)
+        evecs /= np.linalg.norm(evecs)
+        _ = model.entropy(evecs, 1, 0)
+        ...
