@@ -1,5 +1,5 @@
-from pathlib import Path
 from glob import glob
+from pathlib import Path
 
 
 def refactor(string: str) -> str:
