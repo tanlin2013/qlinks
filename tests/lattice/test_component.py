@@ -76,6 +76,6 @@ class TestUnitVectorCollection:
         assert id(ins1) == id(ins2)
 
     def test_iter(self):
-        it = iter(UnitVectors)
-        assert next(it) == UnitVectors.rightward
-        assert next(it) == UnitVectors.upward
+        it = iter(UnitVectors())
+        assert next(it) == UnitVectors().rightward
+        assert next(it) == UnitVectors().upward
