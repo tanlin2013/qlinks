@@ -226,6 +226,21 @@ title="Edit this page"
    Lattice 4x4
   </a>
  </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Lattice-6x2">
+   Lattice 6x2
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Lattice-6x4">
+   Lattice 6x4
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Lattice-8x4">
+   Lattice 8x4
+  </a>
+ </li>
 </ul>
 
     </nav>
@@ -253,6 +268,21 @@ title="Edit this page"
  <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#Lattice-4x4">
    Lattice 4x4
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Lattice-6x2">
+   Lattice 6x2
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Lattice-6x4">
+   Lattice 6x4
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Lattice-8x4">
+   Lattice 8x4
   </a>
  </li>
 </ul>
@@ -523,11 +553,13 @@ div.rendered_html tbody tr:hover {
 }
 </style>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">expm</span><span class="p">,</span> <span class="n">null_space</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse.linalg</span> <span class="kn">import</span> <span class="n">expm_multiply</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 
@@ -541,7 +573,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">format_custom_index</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
@@ -549,37 +581,29 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">setup_model</span><span class="p">(</span><span class="n">lattice_shape</span><span class="p">,</span> <span class="n">n_solution</span><span class="p">,</span> <span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">):</span>
+    <span class="n">gauss_law</span> <span class="o">=</span> <span class="n">GaussLaw</span><span class="o">.</span><span class="n">from_staggered_charge_distri</span><span class="p">(</span><span class="o">*</span><span class="n">lattice_shape</span><span class="p">)</span>
+    <span class="n">gauss_law</span><span class="o">.</span><span class="n">flux_sector</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">dfs</span> <span class="o">=</span> <span class="n">DeepFirstSearch</span><span class="p">(</span><span class="n">gauss_law</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">1e+8</span><span class="p">))</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">gauss_law</span><span class="o">.</span><span class="n">to_basis</span><span class="p">(</span><span class="n">dfs</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">n_solution</span><span class="p">))</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">lattice_shape</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">basis</span><span class="p">,</span> <span class="n">model</span>
+</pre></div>
+</div>
+</div>
 <section id="Lattice-4x2">
 <h1>Lattice 4x2<a class="headerlink" href="#Lattice-4x2" title="Permalink to this headline">#</a></h1>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">scar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># 5037</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 9678</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 12762</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 21228</span>
-    <span class="c1"># [0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0],  # 4509</span>
-    <span class="c1"># [0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1]  # 13209</span>
-<span class="p">])</span>
-</pre></div>
-</div>
-</div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[64]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[72]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">lattice_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">gauss_law</span> <span class="o">=</span> <span class="n">GaussLaw</span><span class="o">.</span><span class="n">from_staggered_charge_distri</span><span class="p">(</span><span class="o">*</span><span class="n">lattice_shape</span><span class="p">)</span>
-<span class="n">gauss_law</span><span class="o">.</span><span class="n">flux_sector</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="n">dfs</span> <span class="o">=</span> <span class="n">DeepFirstSearch</span><span class="p">(</span><span class="n">gauss_law</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">1e+4</span><span class="p">))</span>
-<span class="n">basis</span> <span class="o">=</span> <span class="n">gauss_law</span><span class="o">.</span><span class="n">to_basis</span><span class="p">(</span><span class="n">dfs</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">n_solution</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
-
-<span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">lattice_shape</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
-<span class="n">ham</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span>
-<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">ham</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">basis</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">setup_model</span><span class="p">(</span><span class="n">lattice_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">n_solution</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">coup_j</span><span class="o">=</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="o">=</span><span class="n">coup_rk</span><span class="p">)</span>
+<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -588,12 +612,12 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2023-12-04 00:58:32 [deep_first_search.py] INFO: Deep First Search starts.
-2023-12-04 00:58:33 [deep_first_search.py] INFO: Found 16 Solutions as required in 103 steps.
+2023-12-09 12:21:35 [deep_first_search.py] INFO: Deep First Search starts.
+2023-12-09 12:21:35 [deep_first_search.py] INFO: Found 16 Solutions as required in 103 steps.
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[73]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -603,7 +627,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[73]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -953,85 +977,217 @@ div.rendered_html tbody tr:hover {
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[80]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[74]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evecs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;eval&quot;</span><span class="p">:</span> <span class="n">evals</span><span class="p">,</span>
+        <span class="s2">&quot;kin&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">],</span>
+        <span class="s2">&quot;pot&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">potential_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">evecs_df</span><span class="p">[</span><span class="n">evecs_df</span><span class="p">[</span><span class="s2">&quot;kin&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[74]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>eval</th>
+      <th>kin</th>
+      <th>pot</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>7</th>
+      <td>3.0</td>
+      <td>3.451266e-31</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>3.0</td>
+      <td>0.000000e+00</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>3.0</td>
+      <td>1.577722e-30</td>
+      <td>3.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[75]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plt.matshow(model.kinetic_term)</span>
+<span class="c1"># plt.colorbar()</span>
+<span class="c1"># plt.show()</span>
 
 <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_bipartite</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite_layout</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">)</span>
-<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># pos = nx.bipartite_layout(g, left, align=&quot;horizontal&quot;)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spectral_layout</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pos</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3,rad=0.2&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">spy</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evecs</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_6_0.png" src="../_images/notebooks_scar_robustness_6_0.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_6_1.png" src="../_images/notebooks_scar_robustness_6_1.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_6_2.png" src="../_images/notebooks_scar_robustness_6_2.png" />
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_6_3.png" src="../_images/notebooks_scar_robustness_6_3.png" />
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[86]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ns = null_space(-model.kinetic_term)</span>
-<span class="c1"># plt.matshow(ns.T)</span>
+<span class="c1"># plt.imshow(np.abs(evecs), interpolation=&#39;none&#39;, cmap=&#39;binary&#39;)</span>
 <span class="c1"># plt.colorbar()</span>
-<span class="c1"># np.linalg.matrix_rank(model.kinetic_term)</span>
-
-<span class="n">nx</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span>
+<span class="c1"># plt.show()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_7_0.png" src="../_images/notebooks_scar_robustness_7_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_7_1.png" src="../_images/notebooks_scar_robustness_7_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">lap_mat</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">laplacian_matrix</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+<span class="n">lap_evals</span><span class="p">,</span> <span class="n">lap_evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">lap_mat</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">lap_evecs</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[78]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">entropy</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)])</span>
+<span class="n">entropy_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">entropies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;entropy&quot;</span><span class="p">)</span>
+<span class="n">entropy_df</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[86]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[78]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-EdgeView([(0, 1), (0, 2), (0, 4), (0, 8), (1, 5), (1, 9), (2, 6), (2, 10), (3, 7), (3, 11), (4, 5), (4, 6), (5, 7), (5, 13), (7, 15), (8, 9), (8, 10), (10, 11), (10, 14), (11, 15), (12, 13), (12, 14), (13, 15), (14, 15)])
+0     1.536650
+1     1.899841
+2     0.695771
+3     1.562885
+4     1.528069
+5     1.600664
+6     1.932517
+7     1.525501
+8     1.611432
+9     1.481633
+10    1.941802
+11    0.973698
+12    1.147446
+13    1.309708
+14    1.502661
+15    1.501048
+Name: entropy, dtype: float64
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[77]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[79]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">GraphVisualizer</span><span class="p">(</span><span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="n">lattice_shape</span><span class="p">,</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-<span class="n">g</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropy_df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[79]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;Axes: &gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_10_1.png" src="../_images/notebooks_scar_robustness_10_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[81]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[81]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([ 1,  2,  4,  7,  8, 11, 13, 14])
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_11_1.png" src="../_images/notebooks_scar_robustness_11_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">):</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">GraphVisualizer</span><span class="p">(</span><span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">800</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1039,100 +1195,39 @@ EdgeView([(0, 1), (0, 2), (0, 4), (0, 8), (1, 5), (1, 9), (2, 6), (2, 10), (3, 7
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_8_0.png" src="../_images/notebooks_scar_robustness_8_0.png" />
+<img alt="../_images/notebooks_scar_robustness_12_0.png" src="../_images/notebooks_scar_robustness_12_0.png" />
 </div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">:</span><span class="mi">9</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-array([[-5.00000000e-01, -1.65314690e-15,  8.38222196e-16,
-        -1.93670690e-16],
-       [ 1.10257314e-17, -3.23650112e-01, -5.08970574e-01,
-        -1.05827972e-01],
-       [ 1.56851409e-16,  3.23650112e-01,  5.08970574e-01,
-         1.05827972e-01],
-       [ 5.55111512e-17,  1.36002321e-15, -5.55111512e-17,
-         2.77555756e-17],
-       [-8.22766909e-16,  5.83589631e-01, -1.48603603e-01,
-         1.11086054e-01],
-       [ 5.00000000e-01,  2.77555756e-16, -7.21644966e-16,
-         1.94289029e-16],
-       [-9.71445147e-17, -1.66533454e-16,  1.35481903e-15,
-        -7.14706072e-16],
-       [ 2.77555756e-16, -2.77702724e-02,  3.65283830e-01,
-        -4.90710236e-01],
-       [ 9.07812946e-16, -5.83589631e-01,  1.48603603e-01,
-        -1.11086054e-01],
-       [-6.93889390e-17,  0.00000000e+00,  1.03909936e-15,
-        -5.89805982e-16],
-       [ 5.00000000e-01,  3.60822483e-16, -8.32667268e-16,
-         2.63677968e-16],
-       [-6.10622664e-16,  2.32169247e-01, -2.92290347e-01,
-        -4.85452154e-01],
-       [ 0.00000000e+00,  1.30451205e-15, -5.55111512e-17,
-        -6.93889390e-17],
-       [ 3.60822483e-16, -2.32169247e-01,  2.92290347e-01,
-         4.85452154e-01],
-       [-5.82867088e-16,  2.77702724e-02, -3.65283830e-01,
-         4.90710236e-01],
-       [-5.00000000e-01,  0.00000000e+00, -4.89192020e-16,
-         4.71844785e-16]])
-</pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">noise_strength</span> <span class="o">=</span> <span class="mf">0.1</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">coup_j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0125</span>
+<span class="n">energy_lump_model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
+<span class="n">energy_lump_ham</span> <span class="o">=</span> <span class="n">energy_lump_model</span><span class="o">.</span><span class="n">hamiltonian</span>
 
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-    <span class="n">noise</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">noise_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">noise</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="n">scar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scar</span><span class="p">,</span> <span class="p">[</span><span class="n">noise</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">scar_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">scar_state</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">]),</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">scar_state</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">scar_state</span><span class="p">)</span>
 
-    <span class="n">scar_basis</span> <span class="o">=</span> <span class="n">ComputationBasis</span><span class="p">(</span><span class="n">scar</span><span class="p">)</span>
-    <span class="n">scar_basis</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">scar_basis</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">scar_basis</span><span class="o">.</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="n">evol_states</span> <span class="o">=</span> <span class="n">expm_multiply</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">energy_lump_ham</span><span class="p">,</span> <span class="n">scar_state</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">8000</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">fidelity</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evol_state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">evol_state</span> <span class="ow">in</span> <span class="n">evol_states</span><span class="p">]</span>
 
-    <span class="n">scar_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">scar_state</span><span class="p">[</span><span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="n">noise_idx</span><span class="p">),</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">noise_strength</span>
-    <span class="n">scar_state</span><span class="p">[</span><span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="mi">5037</span><span class="p">),</span> <span class="p">:]</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">scar_state</span><span class="p">[</span><span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="mi">9678</span><span class="p">),</span> <span class="p">:]</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span>
-    <span class="n">scar_state</span><span class="p">[</span><span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="mi">12762</span><span class="p">),</span> <span class="p">:]</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span>
-    <span class="n">scar_state</span><span class="p">[</span><span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="mi">21228</span><span class="p">),</span> <span class="p">:]</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">scar_state</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">scar_state</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">fidelity</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
+<span class="c1"># plt.yscale(&#39;log&#39;)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;t&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Fidelity(t)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-    <span class="n">fidelity</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
-        <span class="n">evol</span> <span class="o">=</span> <span class="n">expm</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="n">ham</span><span class="p">)</span>
-        <span class="n">evol_state</span> <span class="o">=</span> <span class="n">evol</span> <span class="o">@</span> <span class="n">scar_state</span>
-        <span class="n">fidelity</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evol_state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">fidelity</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
-    <span class="c1"># plt.yscale(&#39;log&#39;)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;t&quot;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Fidelity(t)&quot;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;noise_idx = </span><span class="si">{</span><span class="n">noise_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;O_kin @ psi_scar = </span><span class="si">{</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_kin&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">scar_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_pot&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">scar_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">potential_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;H&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">scar_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">ham</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="c1"># np.testing.assert_allclose(evecs[:, 7], scar_state.T, atol=1e-12)</span>
+<span class="n">final_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">evol_states</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;final fidelity = </span><span class="si">{</span><span class="n">fidelity</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;O_kin @ psi_scar = </span><span class="si">{</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_kin&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_pot&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">potential_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;H&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1140,322 +1235,7 @@ array([[-5.00000000e-01, -1.65314690e-15,  8.38222196e-16,
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_0.png" src="../_images/notebooks_scar_robustness_10_0.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 4590
-O_kin @ psi_scar = [ 0.         -0.04993762 -0.04993762  0.         -0.04993762  0.
-  0.          0.         -0.04993762  0.          0.          0.
-  0.          0.          0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.3002493765586035
-&lt;H&gt; = -0.3002493765586035
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_2.png" src="../_images/notebooks_scar_robustness_10_2.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 5037
-O_kin @ psi_scar = [-0.04873702  0.          0.         -0.04873702  0.         -0.04873702
-  0.          0.          0.          0.          0.          0.
-  0.          0.          0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.29999999999999993
-&lt;H&gt; = -0.29999999999999993
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_4.png" src="../_images/notebooks_scar_robustness_10_4.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 9678
-O_kin @ psi_scar = [-0.05123155  0.          0.         -0.05123155  0.          0.
-  0.          0.          0.          0.         -0.05123155  0.
-  0.          0.          0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.3000000000000001
-&lt;H&gt; = -0.3000000000000001
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_6.png" src="../_images/notebooks_scar_robustness_10_6.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 10125
-O_kin @ psi_scar = [ 0.         -0.04993762 -0.04993762  0.          0.          0.
-  0.          0.          0.          0.          0.          0.
-  0.          0.          0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.2997506234413965
-&lt;H&gt; = -0.2997506234413965
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_8.png" src="../_images/notebooks_scar_robustness_10_8.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 12762
-O_kin @ psi_scar = [-0.05123155  0.          0.          0.          0.         -0.05123155
-  0.          0.          0.          0.          0.          0.
- -0.05123155  0.          0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.3000000000000001
-&lt;H&gt; = -0.3000000000000001
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_10.png" src="../_images/notebooks_scar_robustness_10_10.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 13209
-O_kin @ psi_scar = [ 0.         -0.04993762  0.          0.         -0.04993762  0.
-  0.         -0.04993762  0.          0.          0.          0.
-  0.         -0.04993762  0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.3002493765586035
-&lt;H&gt; = -0.3002493765586035
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_12.png" src="../_images/notebooks_scar_robustness_10_12.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 13980
-O_kin @ psi_scar = [ 0.          0.          0.          0.          0.          0.
-  0.         -0.04993762  0.          0.          0.          0.
-  0.          0.         -0.04993762  0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.2997506234413965
-&lt;H&gt; = -0.2997506234413965
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_14.png" src="../_images/notebooks_scar_robustness_10_14.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 15252
-O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         -0.04993762
- -0.04993762  0.          0.          0.          0.          0.
-  0.          0.          0.         -0.04993762]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.30000000000000004
-&lt;H&gt; = -0.30000000000000004
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_16.png" src="../_images/notebooks_scar_robustness_10_16.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 21228
-O_kin @ psi_scar = [-0.04873702  0.          0.          0.          0.          0.
-  0.          0.          0.          0.         -0.04873702  0.
- -0.04873702  0.          0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.29999999999999993
-&lt;H&gt; = -0.29999999999999993
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_18.png" src="../_images/notebooks_scar_robustness_10_18.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 25545
-O_kin @ psi_scar = [ 0.          0.          0.          0.          0.          0.
-  0.          0.          0.          0.          0.         -0.04993762
-  0.         -0.04993762  0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.2997506234413965
-&lt;H&gt; = -0.2997506234413965
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_20.png" src="../_images/notebooks_scar_robustness_10_20.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 26316
-O_kin @ psi_scar = [ 0.          0.         -0.04993762  0.          0.          0.
-  0.          0.         -0.04993762  0.          0.         -0.04993762
-  0.          0.         -0.04993762  0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.3002493765586035
-&lt;H&gt; = -0.3002493765586035
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_22.png" src="../_images/notebooks_scar_robustness_10_22.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 27588
-O_kin @ psi_scar = [ 0.          0.          0.          0.          0.          0.
-  0.          0.          0.         -0.04993762 -0.04993762  0.
-  0.          0.          0.         -0.04993762]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.30000000000000004
-&lt;H&gt; = -0.30000000000000004
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_24.png" src="../_images/notebooks_scar_robustness_10_24.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 29400
-O_kin @ psi_scar = [ 0.          0.          0.          0.         -0.04993762  0.
-  0.          0.         -0.04993762  0.          0.          0.
-  0.          0.          0.          0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.2997506234413965
-&lt;H&gt; = -0.2997506234413965
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_26.png" src="../_images/notebooks_scar_robustness_10_26.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 45897
-O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         -0.04993762
-  0.          0.          0.         -0.04993762  0.          0.
-  0.          0.          0.         -0.04993762]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.30000000000000004
-&lt;H&gt; = -0.30000000000000004
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_28.png" src="../_images/notebooks_scar_robustness_10_28.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-noise_idx = 46668
-O_kin @ psi_scar = [ 0.          0.          0.          0.          0.          0.
- -0.04993762  0.          0.          0.         -0.04993762  0.
-  0.          0.          0.         -0.04993762]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.30000000000000004
-&lt;H&gt; = -0.30000000000000004
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_10_30.png" src="../_images/notebooks_scar_robustness_10_30.png" />
+<img alt="../_images/notebooks_scar_robustness_13_0.png" src="../_images/notebooks_scar_robustness_13_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1463,32 +1243,28 @@ O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-noise_idx = 47940
-O_kin @ psi_scar = [ 0.          0.          0.          0.          0.          0.
-  0.         -0.04993762  0.          0.          0.         -0.04993762
-  0.         -0.04993762 -0.04993762  0.        ]
-&lt;O_kin&gt; = 0.0
-&lt;O_pot&gt; = -0.3002493765586035
-&lt;H&gt; = -0.3002493765586035
+final fidelity = 0.6918527791860878
+O_kin @ psi_scar = [-0.00809208-0.01542537j  0.0014847 -0.00168695j -0.00405283+0.00038009j
+ -0.00015538+0.00763505j -0.00148649-0.00084652j -0.0046398 +0.00156666j
+ -0.00208771-0.00776528j  0.00108227+0.00019704j -0.00108165-0.00046034j
+ -0.00600437-0.00766009j -0.00376304-0.00172192j -0.00148408+0.00142365j
+ -0.00015538+0.00763505j  0.00108227+0.00019704j -0.00148408+0.00142365j
+ -0.00031076+0.01527011j]
+&lt;O_kin&gt; = (3.376562969898886e-05-5.6669523138640625e-05j)
+&lt;O_pot&gt; = (-1.103455166699037+0.38140572068114603j)
+&lt;H&gt; = (-1.103421401069338+0.38134905115800743j)
 </pre></div></div>
 </div>
 </section>
 <section id="Lattice-4x4">
 <h1>Lattice 4x4<a class="headerlink" href="#Lattice-4x4" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[82]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">lattice_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-<span class="n">gauss_law</span> <span class="o">=</span> <span class="n">GaussLaw</span><span class="o">.</span><span class="n">from_staggered_charge_distri</span><span class="p">(</span><span class="o">*</span><span class="n">lattice_shape</span><span class="p">)</span>
-<span class="n">gauss_law</span><span class="o">.</span><span class="n">flux_sector</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="n">dfs</span> <span class="o">=</span> <span class="n">DeepFirstSearch</span><span class="p">(</span><span class="n">gauss_law</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">1e+5</span><span class="p">))</span>
-<span class="n">basis</span> <span class="o">=</span> <span class="n">gauss_law</span><span class="o">.</span><span class="n">to_basis</span><span class="p">(</span><span class="n">dfs</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">n_solution</span><span class="o">=</span><span class="mi">132</span><span class="p">))</span>
-
-<span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">lattice_shape</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
-<span class="n">ham</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span>
-<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">ham</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">basis</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">setup_model</span><span class="p">(</span><span class="n">lattice_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">n_solution</span><span class="o">=</span><span class="mi">132</span><span class="p">,</span> <span class="n">coup_j</span><span class="o">=</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="o">=</span><span class="n">coup_rk</span><span class="p">)</span>
+<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1497,12 +1273,12 @@ O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2023-12-03 21:40:23 [deep_first_search.py] INFO: Deep First Search starts.
-2023-12-03 21:40:24 [deep_first_search.py] INFO: Found 132 Solutions as required in 1626 steps.
+2023-12-09 12:28:04 [deep_first_search.py] INFO: Deep First Search starts.
+2023-12-09 12:28:04 [deep_first_search.py] INFO: Found 132 Solutions as required in 1626 steps.
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[83]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1512,7 +1288,7 @@ O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[83]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1828,22 +1604,125 @@ O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[84]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evecs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;eval&quot;</span><span class="p">:</span> <span class="n">evals</span><span class="p">,</span>
+        <span class="s2">&quot;kin&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">],</span>
+        <span class="s2">&quot;pot&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">potential_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">evecs_df</span><span class="p">[</span><span class="n">evecs_df</span><span class="p">[</span><span class="s2">&quot;kin&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[84]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>eval</th>
+      <th>kin</th>
+      <th>pot</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>47</th>
+      <td>4.0</td>
+      <td>-9.907176e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>48</th>
+      <td>4.0</td>
+      <td>-8.923989e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>49</th>
+      <td>4.0</td>
+      <td>-9.959369e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>50</th>
+      <td>4.0</td>
+      <td>-6.914859e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>51</th>
+      <td>4.0</td>
+      <td>-5.756219e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>52</th>
+      <td>4.0</td>
+      <td>3.056836e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>53</th>
+      <td>4.0</td>
+      <td>-2.465190e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>54</th>
+      <td>4.0</td>
+      <td>-1.015658e-29</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>55</th>
+      <td>4.0</td>
+      <td>-1.005798e-29</td>
+      <td>4.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plt.matshow(ham)</span>
 <span class="c1"># plt.colorbar()</span>
 <span class="c1"># plt.show()</span>
 
-<span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
 <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite_layout</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">)</span>
-<span class="c1"># pos = nx.spectral_layout(g)</span>
-<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span>
-<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+<span class="c1"># pos = nx.bipartite_layout(g, left, align=&#39;horizontal&#39;)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spectral_layout</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.08</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pos</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">82</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3,rad=0.15&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">spy</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">spy</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="c1"># plt.imshow(np.abs(evecs), interpolation=&#39;none&#39;, cmap=&#39;binary&#39;)</span>
@@ -1856,23 +1735,23 @@ O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_14_0.png" src="../_images/notebooks_scar_robustness_14_0.png" />
+<img alt="../_images/notebooks_scar_robustness_18_0.png" src="../_images/notebooks_scar_robustness_18_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_14_1.png" src="../_images/notebooks_scar_robustness_14_1.png" />
+<img alt="../_images/notebooks_scar_robustness_18_1.png" src="../_images/notebooks_scar_robustness_18_1.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[59]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">))</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">40</span><span class="p">:</span><span class="mi">60</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">46</span><span class="p">:</span><span class="mi">60</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1886,29 +1765,100 @@ O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[59]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.colorbar.Colorbar at 0x128995a10&gt;
+&lt;matplotlib.colorbar.Colorbar at 0x133d8ff90&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_15_2.png" src="../_images/notebooks_scar_robustness_15_2.png" />
+<img alt="../_images/notebooks_scar_robustness_19_2.png" src="../_images/notebooks_scar_robustness_19_2.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">entropy</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)])</span>
+<span class="n">entropy_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">entropies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;entropy&quot;</span><span class="p">)</span>
+<span class="n">entropy_df</span><span class="p">[</span><span class="n">entropy_df</span> <span class="o">&lt;</span> <span class="mf">1.75</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+51    1.239624
+53    1.603249
+55    1.675178
+Name: entropy, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropy_df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;Axes: &gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_21_1.png" src="../_images/notebooks_scar_robustness_21_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[56]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">51</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">51</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[56]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([ 34,  65,  86, 124])
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_22_1.png" src="../_images/notebooks_scar_robustness_22_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># {i: len(np.where(np.abs(evecs[:, i]) &gt; 1e-12)[0]) for i in range(300)}</span>
 
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">50</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">1e-12</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">10</span><span class="p">]:</span>
-    <span class="n">g</span> <span class="o">=</span> <span class="n">GraphVisualizer</span><span class="p">(</span><span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="n">lattice_shape</span><span class="p">,</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">51</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">GraphVisualizer</span><span class="p">(</span><span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
     <span class="c1"># plt.figure(figsize=(10, 4), facecolor=&#39;white&#39;)</span>
     <span class="n">g</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </pre></div>
@@ -1918,70 +1868,1359 @@ O_kin @ psi_scar = [ 0.          0.          0.          0.          0.         
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_0.png" src="../_images/notebooks_scar_robustness_16_0.png" />
+<img alt="../_images/notebooks_scar_robustness_23_0.png" src="../_images/notebooks_scar_robustness_23_0.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_1.png" src="../_images/notebooks_scar_robustness_16_1.png" />
+<img alt="../_images/notebooks_scar_robustness_23_1.png" src="../_images/notebooks_scar_robustness_23_1.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_2.png" src="../_images/notebooks_scar_robustness_16_2.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_3.png" src="../_images/notebooks_scar_robustness_16_3.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_4.png" src="../_images/notebooks_scar_robustness_16_4.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_5.png" src="../_images/notebooks_scar_robustness_16_5.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_6.png" src="../_images/notebooks_scar_robustness_16_6.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_7.png" src="../_images/notebooks_scar_robustness_16_7.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_8.png" src="../_images/notebooks_scar_robustness_16_8.png" />
+<img alt="../_images/notebooks_scar_robustness_23_2.png" src="../_images/notebooks_scar_robustness_23_2.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_scar_robustness_16_9.png" src="../_images/notebooks_scar_robustness_16_9.png" />
+<img alt="../_images/notebooks_scar_robustness_23_3.png" src="../_images/notebooks_scar_robustness_23_3.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[67]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">coup_j</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">energy_lump_model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
+<span class="n">energy_lump_ham</span> <span class="o">=</span> <span class="n">energy_lump_model</span><span class="o">.</span><span class="n">hamiltonian</span>
+
+<span class="n">scar_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">scar_state</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">34</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">124</span><span class="p">]),</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">scar_state</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">scar_state</span><span class="p">)</span>
+
+<span class="n">evol_states</span> <span class="o">=</span> <span class="n">expm_multiply</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">energy_lump_ham</span><span class="p">,</span> <span class="n">scar_state</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">fidelity</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evol_state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">evol_state</span> <span class="ow">in</span> <span class="n">evol_states</span><span class="p">]</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5000</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">fidelity</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
+<span class="c1"># plt.yscale(&#39;log&#39;)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;t&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Fidelity(t)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">final_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">evol_states</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;final fidelity = </span><span class="si">{</span><span class="n">fidelity</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;O_kin @ psi_scar = </span><span class="si">{</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_kin&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_pot&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">potential_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;H&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_24_0.png" src="../_images/notebooks_scar_robustness_24_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+final fidelity = 0.7053538500152975
+O_kin @ psi_scar = [-6.73272906e-16+1.11961322e-15j -1.69958714e-16+4.41404319e-16j
+  1.93284909e-15-3.30919022e-15j -1.31749589e-15+2.31674566e-15j
+  4.07117784e-15+6.89219069e-16j -4.06218019e-02+2.75167662e-02j
+  4.17306829e-15+7.88675160e-16j -4.06218019e-02+2.75167662e-02j
+ -6.90419943e-16+1.67097239e-15j  3.00391630e-02-7.41451850e-03j
+  3.00391630e-02-7.41451850e-03j -1.77927588e-02+3.37588170e-02j
+  7.37749175e-02-8.52832222e-02j -4.55435561e-02+8.05456847e-02j
+  8.00861747e-04+4.89493896e-03j  4.06218019e-02-2.75167662e-02j
+  3.24425797e-15+2.73107238e-16j -3.00391630e-02+7.41451850e-03j
+ -6.48786580e-16-1.47451495e-16j -4.14598911e-16+3.24436658e-15j
+  8.65720828e-03+1.91313497e-02j -3.92051014e-02+3.71702569e-02j
+  2.98898800e-02+1.56198578e-02j -6.99633867e-03-1.57350253e-02j
+  1.62911285e-15-1.66027434e-16j -3.85430028e-15+1.60258815e-15j
+  1.61777482e-15-7.21381034e-16j  1.99373525e-15-1.21295019e-15j
+  8.58790946e-16+6.81452811e-16j  2.23432384e-15+1.50227053e-15j
+  4.39356807e-02-4.47781112e-02j  3.67414432e-15+3.46250806e-15j
+ -4.06218019e-02+2.75167662e-02j  7.06749013e-16-1.16044719e-15j
+ -2.61677488e-02+7.43181156e-02j  1.51447048e-15+7.98143666e-17j
+ -9.41387788e-02-1.15481131e-01j  4.06218019e-02-2.75167662e-02j
+  2.65675963e-15-9.87771583e-16j -3.00391630e-02+7.41451850e-03j
+ -1.35655376e-15-1.73472348e-18j -1.25073563e-15+5.89805982e-17j
+  8.65720828e-03+1.91313497e-02j -3.92051014e-02+3.71702569e-02j
+  2.98898800e-02+1.56198578e-02j -6.99633867e-03-1.57350253e-02j
+  1.77927588e-02-3.37588170e-02j -8.65720828e-03-1.91313497e-02j
+ -8.65720828e-03-1.91313497e-02j  1.51961776e-15+2.40085729e-15j
+ -1.11024065e-01-6.20037681e-02j  8.61144425e-02+7.35339542e-02j
+ -5.95330202e-02-2.92537004e-03j -4.39356807e-02+4.47781112e-02j
+  9.36750677e-16-9.92261828e-16j  4.06218019e-02-2.75167662e-02j
+ -1.25247035e-15+8.56953397e-16j -7.37749175e-02+8.52832222e-02j
+  3.92051014e-02-3.71702569e-02j  3.92051014e-02-3.71702569e-02j
+  1.11024065e-01+6.20037681e-02j -3.10348852e-15-1.31686753e-15j
+  1.87980185e-02-1.80165377e-02j  2.90811745e-02-1.06629387e-01j
+  2.99760217e-15+6.66133815e-16j -2.61677488e-02+7.43181156e-02j
+  1.97526933e-15-9.31284041e-16j -3.44943902e-15+2.12288062e-15j
+  2.02263608e-15-2.01088571e-16j  9.82028029e-16-2.14569746e-15j
+ -5.73789164e-16+1.18271242e-15j  4.39356807e-02-4.47781112e-02j
+  7.74965658e-16+8.45492220e-16j  2.65065747e-15+3.46250806e-15j
+ -4.06218019e-02+2.75167662e-02j -4.39356807e-02+4.47781112e-02j
+ -1.03698782e-15-1.18383508e-15j  4.06218019e-02-2.75167662e-02j
+ -8.67361738e-16+1.26287869e-15j  1.61774893e-15-2.36627592e-15j
+ -1.92350135e-16+2.37323597e-15j  1.68616874e-15-4.80444700e-15j
+  3.61778615e-17-1.21405594e-15j  2.12852142e-15-2.32080110e-15j
+  4.01085662e-15+5.27114311e-17j  2.18378215e-15+4.85479203e-16j
+  2.61677488e-02-7.43181156e-02j  1.13838805e-15-3.52816328e-16j
+  9.41387788e-02+1.15481131e-01j  5.08138096e-15+2.06105287e-15j
+  2.45696967e-15+1.19595095e-15j  2.46721075e-15+1.49708218e-15j
+  1.86082156e-15-6.99237029e-16j  9.31720662e-16-1.28242247e-15j
+  4.26155069e-15+4.51869771e-16j  9.87722266e-16-1.01019850e-15j
+ -2.90468340e-02-1.89432835e-02j  5.48606299e-16-2.91433544e-15j
+  6.50769339e-02+3.25194975e-02j  4.55435561e-02-8.05456847e-02j
+ -2.98898800e-02-1.56198578e-02j -2.98898800e-02-1.56198578e-02j
+ -8.61144425e-02-7.35339542e-02j -1.87980185e-02+1.80165377e-02j
+  3.28209682e-15-1.77635684e-15j -1.28160094e-01+7.16624259e-02j
+ -1.13103971e-15+2.26901831e-15j -2.90468340e-02-1.89432835e-02j
+  2.90468340e-02+1.89432835e-02j  5.74846066e-16+1.87528497e-16j
+  5.88609695e-16-2.72040773e-15j -6.50769339e-02-3.25194975e-02j
+ -2.77338916e-15-2.01227923e-15j -2.20337657e-15-9.72051539e-16j
+  8.11752525e-16+3.36185612e-16j -1.17348376e-16-2.46999827e-16j
+  9.38600369e-16-2.63046716e-15j -8.00861747e-04-4.89493896e-03j
+  6.99633867e-03+1.57350253e-02j  6.99633867e-03+1.57350253e-02j
+  5.95330202e-02+2.92537004e-03j -2.90811745e-02+1.06629387e-01j
+  1.28160094e-01-7.16624259e-02j -5.86336535e-16+1.70696790e-15j
+  2.61677488e-02-7.43181156e-02j  3.66373598e-15+5.66213743e-15j
+  2.90468340e-02+1.89432835e-02j -1.24900090e-16+3.68108322e-15j
+  2.07093191e-15+1.23585797e-15j  7.02734498e-16+1.00646873e-16j
+  1.94530919e-15+1.35691385e-15j  5.48904034e-16+5.49705443e-16j]
+&lt;O_kin&gt; = (-0.04413905054095544-0.01077276616282958j)
+&lt;O_pot&gt; = (0.5539940111576089+2.8799866771375404j)
+&lt;H&gt; = (0.5098549606166529+2.869213910974711j)
+</pre></div></div>
+</div>
+</section>
+<section id="Lattice-6x2">
+<h1>Lattice 6x2<a class="headerlink" href="#Lattice-6x2" title="Permalink to this headline">#</a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[85]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">basis</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">setup_model</span><span class="p">(</span><span class="n">lattice_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">n_solution</span><span class="o">=</span><span class="mi">76</span><span class="p">,</span> <span class="n">coup_j</span><span class="o">=</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="o">=</span><span class="n">coup_rk</span><span class="p">)</span>
+<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-12-09 12:30:52 [deep_first_search.py] INFO: Deep First Search starts.
+2023-12-09 12:30:52 [deep_first_search.py] INFO: Found 76 Solutions as required in 693 steps.
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[86]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">format_custom_index</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[86]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>...</th>
+      <th>14</th>
+      <th>15</th>
+      <th>16</th>
+      <th>17</th>
+      <th>18</th>
+      <th>19</th>
+      <th>20</th>
+      <th>21</th>
+      <th>22</th>
+      <th>23</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>(0) 4475835</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(1) 4496307</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(2) 4508598</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(3) 4774695</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(4) 4803387</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>(71) 15524133</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(72) 15566130</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(73) 15573297</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(74) 15648018</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(75) 15655185</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+<p>76 rows × 24 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">19</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">):</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">GraphVisualizer</span><span class="p">(</span><span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">800</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_28_0.png" src="../_images/notebooks_scar_robustness_28_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
+<span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="c1"># pos = nx.bipartite_layout(g, left, align=&#39;horizontal&#39;)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spectral_layout</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pos</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">82</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3,rad=0.15&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">spy</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_29_0.png" src="../_images/notebooks_scar_robustness_29_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_29_1.png" src="../_images/notebooks_scar_robustness_29_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[121]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">entropy</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)])</span>
+<span class="n">entropy_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">entropies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;entropy&quot;</span><span class="p">)</span>
+<span class="n">entropy_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">entropy_df</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">entropy_df</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">entropy_df</span> <span class="o">&lt;</span> <span class="mf">1.75</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[121]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+20    1.058436
+21    1.059513
+22    1.061746
+23    1.054004
+24    1.074146
+25    1.075756
+26    1.012101
+27    1.045869
+28    1.041082
+29    1.036557
+30    0.997521
+31    1.003358
+32    1.054331
+33    1.045045
+34    1.032524
+35    1.043826
+36    1.053413
+37    1.049003
+38    1.061464
+39    1.071072
+40    1.050495
+41    1.034524
+42    1.093099
+43    1.087584
+44    0.949660
+45    1.050145
+46    1.028086
+47    1.045876
+48    1.041796
+49    1.025918
+50    1.020980
+Name: entropy, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[122]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropy_df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[122]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;Axes: &gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_31_1.png" src="../_images/notebooks_scar_robustness_31_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[120]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">44</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">44</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.15</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[120]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([15, 17, 23, 26, 29, 30, 44, 45, 49, 52, 60, 62])
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_32_1.png" src="../_images/notebooks_scar_robustness_32_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[119]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evecs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;eval&quot;</span><span class="p">:</span> <span class="n">evals</span><span class="p">,</span>
+        <span class="s2">&quot;kin&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">],</span>
+        <span class="s2">&quot;pot&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">potential_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">evecs_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">44</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[119]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+eval    4.678363
+kin     0.730499
+pot     3.947864
+Name: 44, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[130]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">coup_j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.05</span>
+<span class="n">energy_lump_model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
+<span class="n">energy_lump_ham</span> <span class="o">=</span> <span class="n">energy_lump_model</span><span class="o">.</span><span class="n">hamiltonian</span>
+
+<span class="c1"># scar_state = np.zeros((basis.n_states, 1))</span>
+<span class="c1"># scar_state[np.array([30, 45, 49, 26, 29, 44, 15, 52, 60, 17, 23, 62]), 0] = np.array([-1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1])  # based on 44</span>
+<span class="c1"># scar_state[np.array([3, 11, 16, 32, 36, 47, 58, 69]), 0] = np.array([1, -1, -1, 1, 1, -1, 1, -1])  # based on 24</span>
+<span class="c1"># scar_state /= np.linalg.norm(scar_state)</span>
+<span class="n">scar_state</span> <span class="o">=</span> <span class="n">evecs</span><span class="p">[:,</span> <span class="mi">44</span><span class="p">]</span>
+
+<span class="n">evol_states</span> <span class="o">=</span> <span class="n">expm_multiply</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">energy_lump_ham</span><span class="p">,</span> <span class="n">scar_state</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">fidelity</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evol_state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">evol_state</span> <span class="ow">in</span> <span class="n">evol_states</span><span class="p">]</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">fidelity</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
+<span class="c1"># plt.yscale(&#39;log&#39;)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;t&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Fidelity(t)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">final_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">evol_states</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;final fidelity = </span><span class="si">{</span><span class="n">fidelity</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;O_kin @ psi_scar = </span><span class="si">{</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_kin&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_pot&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">potential_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;H&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_34_0.png" src="../_images/notebooks_scar_robustness_34_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+final fidelity = 0.9684200052672003
+O_kin @ psi_scar = [ 4.74315894e-03-0.01351011j  1.03124779e-02+0.0318116j
+ -7.33306781e-03-0.03792991j  1.52997953e-02+0.18422271j
+  1.03124779e-02+0.0318116j   5.65523991e-03-0.00780859j
+ -2.38554269e-03+0.01385663j -3.13183015e-03+0.0050453j
+ -7.33306781e-03-0.03792991j -2.38554269e-03+0.01385663j
+ -8.56180912e-03-0.00084907j -1.06443298e-02-0.21186007j
+  3.77536184e-03+0.01009899j -6.65967834e-02-0.23316644j
+  4.68541366e-03+0.00990252j  4.80413953e-02+0.15468343j
+  8.00044595e-02+0.21580224j -5.40763198e-02-0.1522819j
+ -1.46383257e-02-0.00309953j  2.79780403e-03-0.00045922j
+  8.00265490e-03+0.03862601j -4.03437097e-03+0.01099935j
+ -8.74394704e-03+0.02450193j -6.58516552e-03-0.12468163j
+ -4.03437097e-03+0.01099935j -5.63272425e-04+0.00214595j
+  4.15657095e-02+0.13874161j -8.01670083e-03+0.00049375j
+ -8.74394704e-03+0.02450193j  4.15657095e-02+0.13874161j
+ -2.04103940e-02-0.15438129j -1.65784189e-02-0.00708621j
+  4.32299982e-02+0.22165957j -1.01782856e-02+0.00430125j
+ -5.06235089e-03+0.00535867j  3.50300113e-03-0.0122706j
+ -5.43469476e-02-0.20895467j -4.47406122e-03-0.03199298j
+ -1.39877506e-02-0.03288221j -4.09086539e-03-0.01194989j
+ -1.99571287e-03-0.01061221j -7.85315053e-03+0.0032013j
+  1.65833918e-02+0.01981576j -4.09086539e-03-0.01194989j
+  3.82538196e-02+0.14726209j -3.61579908e-02-0.15076817j
+  5.70365967e-02+0.21604356j -4.83700054e-02-0.2317743j
+ -1.99571287e-03-0.01061221j -3.61579908e-02-0.15076817j
+ -4.72334768e-03+0.00378277j  5.41275120e-05+0.00747382j
+  4.61661124e-03+0.1427896j   1.67261583e-02-0.01445576j
+  3.83624394e-03-0.00639957j  3.94113378e-03+0.03493185j
+  8.00044595e-02+0.21580224j -5.06235089e-03+0.00535867j
+ -6.65967834e-02-0.23316644j  4.68541366e-03+0.00990252j
+  4.80413953e-02+0.15468343j -1.01782856e-02+0.00430125j
+ -5.40763198e-02-0.1522819j   3.50300113e-03-0.0122706j
+  2.79780403e-03-0.00045922j -4.47406122e-03-0.03199298j
+ -1.46383257e-02-0.00309953j -5.43469476e-02-0.20895467j
+ -7.85315053e-03+0.0032013j   5.70365967e-02+0.21604356j
+  5.41275120e-05+0.00747382j  1.99522153e-02+0.04243186j
+  1.67261583e-02-0.01445576j -1.21787411e-02-0.03798336j
+  3.94113378e-03+0.03493185j -1.92233570e-03+0.01589628j]
+&lt;O_kin&gt; = (-0.6240604520813793+0.3289334174913119j)
+&lt;O_pot&gt; = (-3.4166034229539792+1.73700287895565j)
+&lt;H&gt; = (-4.040663875035359+2.065936296446962j)
+</pre></div></div>
+</div>
+</section>
+<section id="Lattice-6x4">
+<h1>Lattice 6x4<a class="headerlink" href="#Lattice-6x4" title="Permalink to this headline">#</a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[131]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">basis</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">setup_model</span><span class="p">(</span><span class="n">lattice_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">n_solution</span><span class="o">=</span><span class="mi">1456</span><span class="p">,</span> <span class="n">coup_j</span><span class="o">=</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="o">=</span><span class="n">coup_rk</span><span class="p">)</span>
+<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-12-09 12:47:54 [deep_first_search.py] INFO: Deep First Search starts.
+2023-12-09 12:48:04 [deep_first_search.py] INFO: Found 1456 Solutions as required in 27921 steps.
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[132]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">format_custom_index</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[132]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>...</th>
+      <th>38</th>
+      <th>39</th>
+      <th>40</th>
+      <th>41</th>
+      <th>42</th>
+      <th>43</th>
+      <th>44</th>
+      <th>45</th>
+      <th>46</th>
+      <th>47</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>(0) 75046264433595</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(1) 75046599846843</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(2) 75051631045563</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(3) 75051966458811</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(4) 75053308111803</th>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>(1451) 262694465618193</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(1452) 262694801031441</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(1453) 262694884884753</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(1454) 262696142684433</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(1455) 262696226537745</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+<p>1456 rows × 48 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[140]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evecs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;eval&quot;</span><span class="p">:</span> <span class="n">evals</span><span class="p">,</span>
+        <span class="s2">&quot;kin&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">],</span>
+        <span class="s2">&quot;pot&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">potential_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">evecs_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">254</span><span class="p">]</span>  <span class="c1">#[evecs_df[&quot;kin&quot;].abs() &lt; 1e-4]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[140]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+eval    4.000000
+kin    -0.071014
+pot     4.071014
+Name: 254, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[149]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
+<span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="c1"># pos = nx.bipartite_layout(g, left, align=&#39;horizontal&#39;)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spectral_layout</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.08</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pos</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">82</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3,rad=0.15&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">spy</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_39_0.png" src="../_images/notebooks_scar_robustness_39_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_39_1.png" src="../_images/notebooks_scar_robustness_39_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[136]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">entropy</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)])</span>
+<span class="n">entropy_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">entropies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;entropy&quot;</span><span class="p">)</span>
+<span class="n">entropy_df</span><span class="p">[</span><span class="n">entropy_df</span> <span class="o">&lt;</span> <span class="mf">1.6</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[136]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+254     0.768489
+1219    1.511229
+Name: entropy, dtype: float64
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[137]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropy_df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[137]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;Axes: &gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_41_1.png" src="../_images/notebooks_scar_robustness_41_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[139]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">254</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">254</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.15</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[139]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([ 367,  390,  655,  695, 1099, 1102, 1239, 1256])
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_42_1.png" src="../_images/notebooks_scar_robustness_42_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[143]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="mi">1099</span><span class="p">,</span> <span class="mi">1102</span><span class="p">,</span> <span class="mi">1239</span><span class="p">,</span> <span class="mi">1256</span><span class="p">]):</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">GraphVisualizer</span><span class="p">(</span><span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">val</span><span class="p">]))</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">800</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">val</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_43_0.png" src="../_images/notebooks_scar_robustness_43_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[148]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">coup_j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">energy_lump_model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
+<span class="n">energy_lump_ham</span> <span class="o">=</span> <span class="n">energy_lump_model</span><span class="o">.</span><span class="n">hamiltonian</span>
+
+<span class="n">scar_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">scar_state</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1099</span><span class="p">,</span> <span class="mi">1102</span><span class="p">,</span> <span class="mi">1239</span><span class="p">,</span> <span class="mi">1256</span><span class="p">]),</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">scar_state</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">scar_state</span><span class="p">)</span>
+
+<span class="n">evol_states</span> <span class="o">=</span> <span class="n">expm_multiply</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">energy_lump_ham</span><span class="p">,</span> <span class="n">scar_state</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">fidelity</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evol_state</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">scar_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">evol_state</span> <span class="ow">in</span> <span class="n">evol_states</span><span class="p">]</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">fidelity</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
+<span class="c1"># plt.yscale(&#39;log&#39;)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;t&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Fidelity(t)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">final_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">evol_states</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;final fidelity = </span><span class="si">{</span><span class="n">fidelity</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;O_kin @ psi_scar = </span><span class="si">{</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_kin&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;O_pot&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">potential_term</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;H&gt; = </span><span class="si">{</span><span class="p">(</span><span class="n">final_state</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">final_state</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_robustness_44_0.png" src="../_images/notebooks_scar_robustness_44_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+final fidelity = 0.11950576091471703
+O_kin @ psi_scar = [-0.05437598+0.02079592j  0.01736323+0.01409695j -0.04329677+0.01510783j
+ ... -0.04294009-0.0047656j  -0.03081282+0.03101212j
+ -0.05437598+0.02079592j]
+&lt;O_kin&gt; = (-0.20564003238744755-0.11039706866618174j)
+&lt;O_pot&gt; = (0.8861749223952038+0.21646382074602477j)
+&lt;H&gt; = (0.680534890007755+0.10606675207984309j)
+</pre></div></div>
+</div>
+</section>
+<section id="Lattice-8x4">
+<h1>Lattice 8x4<a class="headerlink" href="#Lattice-8x4" title="Permalink to this headline">#</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">gauss_law</span> <span class="o">=</span> <span class="n">GaussLaw</span><span class="o">.</span><span class="n">from_staggered_charge_distri</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">gauss_law</span><span class="o">.</span><span class="n">flux_sector</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">dfs</span> <span class="o">=</span> <span class="n">DeepFirstSearch</span><span class="p">(</span><span class="n">gauss_law</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">1e+8</span><span class="p">))</span>
+<span class="n">basis</span> <span class="o">=</span> <span class="n">gauss_law</span><span class="o">.</span><span class="n">to_basis</span><span class="p">(</span><span class="n">dfs</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">n_solution</span><span class="o">=</span><span class="mi">17412</span><span class="p">))</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">basis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">format_custom_index</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
+<span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="c1"># pos = nx.bipartite_layout(g, left, align=&#39;horizontal&#39;)</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spectral_layout</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="c1"># pos = {k: v + np.random.normal(0, 0.08, 2) for k, v in pos.items()}</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">82</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3,rad=0.15&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">spy</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
 </div>
 </div>
 <div class="nbinput nblast docutils container">
