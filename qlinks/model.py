@@ -86,6 +86,19 @@ class QuantumLinkModel:
     def _bipartite_sorting_index(
         self, idx: int, axis: Optional[int] = 0
     ) -> Tuple[npt.NDArray, ...]:
+        """Compute the index that sorts the eigenstate in the bipartite basis.
+
+        Args:
+            idx: The `idx`-th row or column in lattice.
+            axis: 0 for x-axis and 1 for y-axis, default 0.
+
+        Returns: A tuple of three arrays:
+            - sorting_idx: Index that sorts the eigenstate in the bipartite basis.
+            - row_idx: Row index to reshape the eigenstate into a matrix.
+            - col_idx: Column index to reshape the eigenstate into a matrix.
+
+        Raises: InvalidArgumentError if the index is out of range.
+        """
         if idx > self._lattice.shape[axis] - 2:
             raise InvalidArgumentError("The index is out of range.")
         first_partition, second_partition = (
