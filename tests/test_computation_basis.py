@@ -34,7 +34,7 @@ class TestComputationBasis:
             ),
             (
                 np.array([[1] * 64, [0] + [1] * 63]),
-                np.array([np.iinfo(np.int64).max, int("1" * 64, 2)]),
+                np.array([np.iinfo(np.int64).max, int("1" * 64, 2)], dtype=object),
             ),
         ],
     )
