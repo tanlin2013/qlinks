@@ -90,6 +90,6 @@ def lattice_4x4_basis() -> ComputationBasis:
         :width: 100px
         :align: center
     """
-    basis = ComputationBasis.from_csv("4x4_basis.csv")
+    basis = ComputationBasis.from_parquet("4x4_basis.parquet")
     basis.sort()
     return basis
