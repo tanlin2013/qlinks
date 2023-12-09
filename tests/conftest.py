@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def refactor(string: str) -> str:
-    return string.replace("/", ".").replace("\\", ".").replace(".py", "")
+    return string.replace("./", "").replace("/", ".").replace("\\", ".").replace(".py", "")
 
 
 dir_path = Path(__file__).relative_to(Path.cwd()).parent
