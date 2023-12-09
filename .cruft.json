@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/tanlin2013/cookiecutter-python/",
-  "commit": "9af79dcaae0f19bd36713effe52912f3a20ca20b",
+  "commit": "63a8d1e7233073aac13820a8867ef0189485f93e",
   "checkout": null,
   "context": {
     "cookiecutter": {
