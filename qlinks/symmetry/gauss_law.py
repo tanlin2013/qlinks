@@ -181,7 +181,7 @@ class GaussLaw(Node):
         if site_idx:
             site_idx = site_idx[0] // 2
             return Site(site_idx % self._lattice.length_x, site_idx // self._lattice.length_x)
-        return
+        return None
 
     def _valid_for_flux(self, site: Site) -> bool:
         _ax_flux = self._lattice.axial_flux  # func alias
@@ -203,7 +203,7 @@ class GaussLaw(Node):
                 return new_node
         except LinkOverridingError:
             pass
-        return
+        return None
 
     def _preconditioned_configs(self, site: Site) -> List[npt.NDArray[np.int64]]:
         vertex_links = self._lattice.links[Vertex(self._lattice, site).link_index()]
