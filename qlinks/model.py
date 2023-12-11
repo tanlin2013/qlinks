@@ -82,7 +82,7 @@ class QuantumLinkModel:
     def __hash__(self) -> int:
         return hash((self.coup_j.tobytes(), self.coup_rk.tobytes(), self.shape, self.basis))
 
-    @cache
+    @cache  # noqa: B019
     def _bipartite_sorting_index(
         self, idx: int, axis: Optional[int] = 0
     ) -> Tuple[npt.NDArray, ...]:
