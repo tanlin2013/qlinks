@@ -39,7 +39,7 @@ class GaussLaw(Node):
         flux_sector: The flux sector of the lattice, optional.
     """
 
-    charge_distri: npt.NDArray[int]
+    charge_distri: npt.NDArray[np.int64]
     flux_sector: Optional[Tuple[int, int]] = field(default=None)
     _lattice: SquareLattice = field(init=False, repr=False)
 
@@ -52,23 +52,23 @@ class GaussLaw(Node):
     def __getitem__(self, site: Site) -> int:
         return self.charge_distri[*site]
 
-    def charge(self, site: Site) -> int:
+    def charge(self, site: Site) -> int | float:
         return self._lattice.charge(site)
 
     @property
-    def shape(self) -> Tuple[int, ...]:
-        return self.charge_distri.shape
+    def shape(self) -> Tuple[int, int]:
+        return self.charge_distri.shape  # type: ignore[return-value]
 
     @staticmethod
     @cache
-    def possible_flows(charge: int) -> List[npt.NDArray[int]]:
+    def possible_flows(charge: int) -> List[npt.NDArray[np.int64]]:
         flows = product([flow.value for flow in Flow], repeat=4)
         return [np.asarray(quartet) for quartet in flows if sum(quartet) / 2 == charge]
 
     @staticmethod
     @cache
-    def possible_configs(charge: int) -> List[npt.NDArray[int]]:
-        def flow_to_spin(flow: npt.NDArray[int]):
+    def possible_configs(charge: int) -> List[npt.NDArray[np.int64]]:
+        def flow_to_spin(flow: npt.NDArray[np.int64]):
             flow *= Vertex.order()
             return flow * (flow == 1)  # turn -1 to 0
 
@@ -77,7 +77,7 @@ class GaussLaw(Node):
     @staticmethod
     def random_charge_distri(
         length_x: int, length_y: int, seed: Optional[int] = None, max_iter: int = 1000
-    ) -> npt.NDArray[int]:
+    ) -> npt.NDArray[np.int64]:
         r"""Randomly sample static charges spread on 2d square lattice.
 
         Charges are uniformly sampled from the interval :math:`[-2, 2]`, with total charge being
@@ -113,7 +113,7 @@ class GaussLaw(Node):
         raise StopIteration(f"Couldn't sample a valid distribution within {max_iter} steps.")
 
     @staticmethod
-    def staggered_charge_distri(length_x: int, length_y: int) -> npt.NDArray[int]:
+    def staggered_charge_distri(length_x: int, length_y: int) -> npt.NDArray[np.int64]:
         """Generate a staggered charge distribution with +1 and -1 charges.
         The shape of the lattice must be even number, and the bottom-left corner is always +1.
         To make the bottom-left corner -1, simply multiply the output by -1.
@@ -195,7 +195,7 @@ class GaussLaw(Node):
                 return False
         return True
 
-    def _fill_node(self, site: Site, config: npt.NDArray[int]) -> Optional[Self]:
+    def _fill_node(self, site: Site, config: npt.NDArray[np.int64]) -> Optional[Self]:
         try:
             new_node = deepcopy(self)
             new_node._lattice.set_vertex_links(site, config)
@@ -205,7 +205,7 @@ class GaussLaw(Node):
             pass
         return
 
-    def _preconditioned_configs(self, site: Site) -> List[npt.NDArray[int]]:
+    def _preconditioned_configs(self, site: Site) -> List[npt.NDArray[np.int64]]:
         vertex_links = self._lattice.links[Vertex(self._lattice, site).link_index()]
         been_set_links = vertex_links != self._lattice._empty_link_value
         if np.any(been_set_links):

@@ -30,10 +30,10 @@ class QuantumLinkModel:
 
     coup_j: Real | npt.ArrayLike[Real]
     coup_rk: Real | npt.ArrayLike[Real]
-    shape: Tuple[int, ...]
+    shape: Tuple[int, int]
     basis: ComputationBasis = field(repr=False)
     _lattice: SquareLattice = field(init=False, repr=False)
-    _hamiltonian: npt.NDArray[float] | sp.spmatrix[float] = field(init=False, repr=False)
+    _hamiltonian: sp.spmatrix[np.float64] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._lattice = SquareLattice(*self.shape)
@@ -49,15 +49,15 @@ class QuantumLinkModel:
             )
 
     @property
-    def kinetic_term(self) -> npt.NDArray[float] | sp.spmatrix[float]:
+    def kinetic_term(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
         return self.hamiltonian - self.potential_term
 
     @property
-    def potential_term(self) -> npt.NDArray[float] | sp.spmatrix[float]:
+    def potential_term(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
         return sp.diags(self._hamiltonian.diagonal()).toarray()
 
     @property
-    def hamiltonian(self) -> npt.NDArray[float] | sp.spmatrix[float]:
+    def hamiltonian(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
         return self._hamiltonian.toarray()
 
     @property
