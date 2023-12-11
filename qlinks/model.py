@@ -14,7 +14,7 @@ from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.square_lattice import SquareLattice
 
-Real: TypeAlias = int | float | np.int64 | np.float64
+Real: TypeAlias = np.int64 | np.float64
 
 
 @dataclass(slots=True)
@@ -28,8 +28,8 @@ class QuantumLinkModel:
         basis: Computation basis that respects the gauss law and other lattice symmetries.
     """
 
-    coup_j: Real | npt.ArrayLike[Real]
-    coup_rk: Real | npt.ArrayLike[Real]
+    coup_j: Real | npt.NDArray[Real]
+    coup_rk: Real | npt.NDArray[Real]
     shape: Tuple[int, int]
     basis: ComputationBasis = field(repr=False)
     _lattice: SquareLattice = field(init=False, repr=False)
@@ -44,8 +44,8 @@ class QuantumLinkModel:
         self._hamiltonian = sp.csr_array((self.basis.n_states, self.basis.n_states), dtype=float)
         for i, plaquette in enumerate(self._lattice.iter_plaquettes()):
             self._hamiltonian += (
-                -self.coup_j[i] * plaquette[self.basis]
-                + self.coup_rk[i] * (plaquette**2)[self.basis]
+                -self.coup_j[i] * plaquette[self.basis]  # type: ignore[index]
+                + self.coup_rk[i] * (plaquette**2)[self.basis]  # type: ignore[index]
             )
 
     @property
@@ -69,7 +69,7 @@ class QuantumLinkModel:
         if 2 * np.prod(shape) > 14:
             raise RuntimeError("The system size is too large for whole basis.")
         basis = ComputationBasis(np.asarray(list(product([0, 1], repeat=2 * np.prod(shape)))))
-        return cls(coup_j, coup_rk, shape, basis)
+        return cls(coup_j, coup_rk, shape, basis)  # type: ignore[arg-type]
 
     @classmethod
     def from_gauge_invariant_basis(cls):
