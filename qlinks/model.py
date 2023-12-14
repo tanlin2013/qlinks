@@ -8,6 +8,7 @@ from typing import Optional, Self, Tuple, TypeAlias
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
+from scipy.linalg import svd
 from scipy.stats import rankdata
 
 from qlinks.computation_basis import ComputationBasis
@@ -115,14 +116,28 @@ class QuantumLinkModel:
     def entropy(
         self, evec: npt.NDArray[np.float64], idx: int, axis: Optional[int] = 0
     ) -> np.float64:
+        """
+
+        Args:
+            evec:
+            idx:
+            axis:
+
+        Returns:
+
+        Notes: https://github.com/tanlin2013/qlinks/issues/25
+        """
         sorting_idx, row_idx, col_idx = self._bipartite_sorting_index(idx, axis)
         reshaped_evec = sp.csr_array(
             (evec[sorting_idx], (row_idx, col_idx)),
             (len(np.unique(row_idx)), len(np.unique(col_idx))),
         )
-        s = sp.linalg.svds(
-            reshaped_evec,
-            k=min(*reshaped_evec.shape) - 1,
-            return_singular_vectors=False,
-        )
+        try:
+            s = sp.linalg.svds(
+                reshaped_evec,
+                k=min(reshaped_evec.shape) - 1,
+                return_singular_vectors=False,
+            )
+        except TypeError:
+            s = svd(reshaped_evec.toarray(), compute_uv=False)
         return -np.sum((ss := s[s > 1e-12] ** 2) * np.log(ss))
