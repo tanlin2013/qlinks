@@ -68,7 +68,7 @@ class QuantumLinkModel:
     def from_whole_basis(cls, coup_j: float, coup_rk: float, shape: Tuple[int, int]) -> Self:
         if 2 * np.prod(shape) > 14:
             raise RuntimeError("The system size is too large for whole basis.")
-        basis = ComputationBasis(np.asarray(list(product([0, 1], repeat=2 * np.prod(shape)))))
+        basis = ComputationBasis(np.asarray(list(product([0, 1], repeat=int(2 * np.prod(shape))))))
         return cls(coup_j, coup_rk, shape, basis)  # type: ignore[arg-type]
 
     @classmethod
