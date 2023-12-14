@@ -275,6 +275,9 @@ class Plaquette(LocalOperator):
 
         Returns:
 
+        Examples:
+            >>> plaquette = Plaquette(SquareLattice(2, 2), Site(0, 0))
+            >>> plaquette_mat = plaquette[basis].toarray()
         """
         if not isinstance(basis, ComputationBasis):
             return NotImplemented
