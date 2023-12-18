@@ -1,15 +1,15 @@
 <html>
     <head>
         <meta charset="utf-8">
-        
+
             <script src="lib/bindings/utils.js"></script>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-            
+
                 <link href="lib/tom-select/tom-select.css" rel="stylesheet">
                 <script src="lib/tom-select/tom-select.complete.min.js"></script>
-            
-        
+
+
 <center>
 <h1></h1>
 </center>
@@ -43,7 +43,7 @@
                  float: left;
              }
 
-             
+
              #loadingBar {
                  position:absolute;
                  top:0px;
@@ -112,24 +112,24 @@
                  border-radius:72px;
                  box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
              }
-             
 
-             
+
+
              #config {
                  float: left;
                  width: 400px;
                  height: 600px;
              }
-             
 
-             
+
+
         </style>
     </head>
 
 
     <body>
         <div class="card" style="width: 100%">
-            
+
                 <div id="select-menu" class="card-header">
                     <div class="row no-gutters">
                         <div class="col-10 pb-2">
@@ -141,271 +141,271 @@
                             placeholder="Select node..."
                             >
                                 <option selected>Select a Node by ID</option>
-                                
+
                                     <option value="0">0</option>
-                                
+
                                     <option value="1">1</option>
-                                
+
                                     <option value="2">2</option>
-                                
+
                                     <option value="24">24</option>
-                                
+
                                     <option value="66">66</option>
-                                
+
                                     <option value="3">3</option>
-                                
+
                                     <option value="25">25</option>
-                                
+
                                     <option value="67">67</option>
-                                
+
                                     <option value="26">26</option>
-                                
+
                                     <option value="68">68</option>
-                                
+
                                     <option value="4">4</option>
-                                
+
                                     <option value="6">6</option>
-                                
+
                                     <option value="27">27</option>
-                                
+
                                     <option value="69">69</option>
-                                
+
                                     <option value="5">5</option>
-                                
+
                                     <option value="8">8</option>
-                                
+
                                     <option value="15">15</option>
-                                
+
                                     <option value="28">28</option>
-                                
+
                                     <option value="70">70</option>
-                                
+
                                     <option value="9">9</option>
-                                
+
                                     <option value="16">16</option>
-                                
+
                                     <option value="71">71</option>
-                                
+
                                     <option value="7">7</option>
-                                
+
                                     <option value="29">29</option>
-                                
+
                                     <option value="37">37</option>
-                                
+
                                     <option value="72">72</option>
-                                
+
                                     <option value="10">10</option>
-                                
+
                                     <option value="30">30</option>
-                                
+
                                     <option value="38">38</option>
-                                
+
                                     <option value="17">17</option>
-                                
+
                                     <option value="31">31</option>
-                                
+
                                     <option value="39">39</option>
-                                
+
                                     <option value="73">73</option>
-                                
+
                                     <option value="11">11</option>
-                                
+
                                     <option value="18">18</option>
-                                
+
                                     <option value="40">40</option>
-                                
+
                                     <option value="74">74</option>
-                                
+
                                     <option value="19">19</option>
-                                
+
                                     <option value="32">32</option>
-                                
+
                                     <option value="41">41</option>
-                                
+
                                     <option value="12">12</option>
-                                
+
                                     <option value="13">13</option>
-                                
+
                                     <option value="20">20</option>
-                                
+
                                     <option value="42">42</option>
-                                
+
                                     <option value="14">14</option>
-                                
+
                                     <option value="21">21</option>
-                                
+
                                     <option value="43">43</option>
-                                
+
                                     <option value="22">22</option>
-                                
+
                                     <option value="44">44</option>
-                                
+
                                     <option value="23">23</option>
-                                
+
                                     <option value="45">45</option>
-                                
+
                                     <option value="75">75</option>
-                                
+
                                     <option value="76">76</option>
-                                
+
                                     <option value="46">46</option>
-                                
+
                                     <option value="77">77</option>
-                                
+
                                     <option value="47">47</option>
-                                
+
                                     <option value="78">78</option>
-                                
+
                                     <option value="48">48</option>
-                                
+
                                     <option value="49">49</option>
-                                
+
                                     <option value="50">50</option>
-                                
+
                                     <option value="51">51</option>
-                                
+
                                     <option value="52">52</option>
-                                
+
                                     <option value="79">79</option>
-                                
+
                                     <option value="80">80</option>
-                                
+
                                     <option value="81">81</option>
-                                
+
                                     <option value="82">82</option>
-                                
+
                                     <option value="83">83</option>
-                                
+
                                     <option value="53">53</option>
-                                
+
                                     <option value="84">84</option>
-                                
+
                                     <option value="54">54</option>
-                                
+
                                     <option value="55">55</option>
-                                
+
                                     <option value="85">85</option>
-                                
+
                                     <option value="56">56</option>
-                                
+
                                     <option value="33">33</option>
-                                
+
                                     <option value="34">34</option>
-                                
+
                                     <option value="35">35</option>
-                                
+
                                     <option value="61">61</option>
-                                
+
                                     <option value="86">86</option>
-                                
+
                                     <option value="36">36</option>
-                                
+
                                     <option value="63">63</option>
-                                
+
                                     <option value="87">87</option>
-                                
+
                                     <option value="64">64</option>
-                                
+
                                     <option value="88">88</option>
-                                
+
                                     <option value="65">65</option>
-                                
+
                                     <option value="89">89</option>
-                                
+
                                     <option value="57">57</option>
-                                
+
                                     <option value="99">99</option>
-                                
+
                                     <option value="58">58</option>
-                                
+
                                     <option value="100">100</option>
-                                
+
                                     <option value="59">59</option>
-                                
+
                                     <option value="101">101</option>
-                                
+
                                     <option value="60">60</option>
-                                
+
                                     <option value="102">102</option>
-                                
+
                                     <option value="103">103</option>
-                                
+
                                     <option value="62">62</option>
-                                
+
                                     <option value="104">104</option>
-                                
+
                                     <option value="105">105</option>
-                                
+
                                     <option value="117">117</option>
-                                
+
                                     <option value="118">118</option>
-                                
+
                                     <option value="119">119</option>
-                                
+
                                     <option value="120">120</option>
-                                
+
                                     <option value="121">121</option>
-                                
+
                                     <option value="122">122</option>
-                                
+
                                     <option value="123">123</option>
-                                
+
                                     <option value="124">124</option>
-                                
+
                                     <option value="125">125</option>
-                                
+
                                     <option value="109">109</option>
-                                
+
                                     <option value="110">110</option>
-                                
+
                                     <option value="90">90</option>
-                                
+
                                     <option value="112">112</option>
-                                
+
                                     <option value="91">91</option>
-                                
+
                                     <option value="113">113</option>
-                                
+
                                     <option value="92">92</option>
-                                
+
                                     <option value="114">114</option>
-                                
+
                                     <option value="93">93</option>
-                                
+
                                     <option value="115">115</option>
-                                
+
                                     <option value="94">94</option>
-                                
+
                                     <option value="116">116</option>
-                                
+
                                     <option value="127">127</option>
-                                
+
                                     <option value="128">128</option>
-                                
+
                                     <option value="129">129</option>
-                                
+
                                     <option value="130">130</option>
-                                
+
                                     <option value="131">131</option>
-                                
+
                                     <option value="95">95</option>
-                                
+
                                     <option value="96">96</option>
-                                
+
                                     <option value="97">97</option>
-                                
+
                                     <option value="108">108</option>
-                                
+
                                     <option value="98">98</option>
-                                
+
                                     <option value="106">106</option>
-                                
+
                                     <option value="111">111</option>
-                                
+
                                     <option value="107">107</option>
-                                
+
                                     <option value="126">126</option>
-                                
+
                             </select>
                         </div>
                         <div class="col-2 pb-2">
@@ -413,8 +413,8 @@
                         </div>
                     </div>
                 </div>
-            
-            
+
+
               <div id="filter-menu" class="card-header">
                 <div class="row no-gutters">
                   <div class="col-3 pb-2">
@@ -456,11 +456,11 @@
                   </div>
                 </div>
               </div>
-            
+
             <div id="mynetwork" class="card-body"></div>
         </div>
 
-        
+
             <div id="loadingBar">
               <div class="outerBorder">
                 <div id="text">0%</div>
@@ -469,10 +469,10 @@
                 </div>
               </div>
             </div>
-        
-        
+
+
             <div id="config"></div>
-        
+
 
         <script type="text/javascript">
 
@@ -492,7 +492,7 @@
                   value : []
               };
 
-              
+
                   new TomSelect("#select-node",{
                       create: false,
                       sortField: {
@@ -500,9 +500,9 @@
                           direction: "asc"
                       }
                   });
-              
 
-              
+
+
                   // explicitly using onItemAdd and this function as we need to save multiple values
                   let updateValueFilter = function() {
                       return function () {
@@ -628,13 +628,13 @@
                       filter[key] = value
                   }
 
-              
+
 
               // This method is responsible for drawing the graph, returns the drawn network
               function drawGraph() {
                   var container = document.getElementById('mynetwork');
 
-                  
+
 
                   // parsing and collecting nodes and edges from the python
                   nodes = new vis.DataSet([{"color": "#97c2fc", "font": {"color": "black"}, "id": 0, "label": 0, "shape": "dot", "size": 10, "title": "0"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 1, "label": 1, "shape": "dot", "size": 10, "title": "1"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 2, "label": 2, "shape": "dot", "size": 10, "title": "2"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 24, "label": 24, "shape": "dot", "size": 10, "title": "24"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 66, "label": 66, "shape": "dot", "size": 10, "title": "66"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 3, "label": 3, "shape": "dot", "size": 10, "title": "3"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 25, "label": 25, "shape": "dot", "size": 10, "title": "25"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 67, "label": 67, "shape": "dot", "size": 10, "title": "67"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 26, "label": 26, "shape": "dot", "size": 10, "title": "26"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 68, "label": 68, "shape": "dot", "size": 10, "title": "68"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 4, "label": 4, "shape": "dot", "size": 10, "title": "4"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 6, "label": 6, "shape": "dot", "size": 10, "title": "6"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 27, "label": 27, "shape": "dot", "size": 10, "title": "27"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 69, "label": 69, "shape": "dot", "size": 10, "title": "69"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 5, "label": 5, "shape": "dot", "size": 10, "title": "5"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 8, "label": 8, "shape": "dot", "size": 10, "title": "8"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 15, "label": 15, "shape": "dot", "size": 10, "title": "15"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 28, "label": 28, "shape": "dot", "size": 10, "title": "28"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 70, "label": 70, "shape": "dot", "size": 10, "title": "70"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 9, "label": 9, "shape": "dot", "size": 10, "title": "9"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 16, "label": 16, "shape": "dot", "size": 10, "title": "16"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 71, "label": 71, "shape": "dot", "size": 10, "title": "71"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 7, "label": 7, "shape": "dot", "size": 10, "title": "7"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 29, "label": 29, "shape": "dot", "size": 10, "title": "29"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 37, "label": 37, "shape": "dot", "size": 10, "title": "37"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 72, "label": 72, "shape": "dot", "size": 10, "title": "72"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 10, "label": 10, "shape": "dot", "size": 10, "title": "10"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 30, "label": 30, "shape": "dot", "size": 10, "title": "30"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 38, "label": 38, "shape": "dot", "size": 10, "title": "38"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 17, "label": 17, "shape": "dot", "size": 10, "title": "17"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 31, "label": 31, "shape": "dot", "size": 10, "title": "31"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 39, "label": 39, "shape": "dot", "size": 10, "title": "39"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 73, "label": 73, "shape": "dot", "size": 10, "title": "73"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 11, "label": 11, "shape": "dot", "size": 10, "title": "11"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 18, "label": 18, "shape": "dot", "size": 10, "title": "18"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 40, "label": 40, "shape": "dot", "size": 10, "title": "40"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 74, "label": 74, "shape": "dot", "size": 10, "title": "74"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 19, "label": 19, "shape": "dot", "size": 10, "title": "19"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 32, "label": 32, "shape": "dot", "size": 10, "title": "32"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 41, "label": 41, "shape": "dot", "size": 10, "title": "41"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 12, "label": 12, "shape": "dot", "size": 10, "title": "12"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 13, "label": 13, "shape": "dot", "size": 10, "title": "13"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 20, "label": 20, "shape": "dot", "size": 10, "title": "20"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 42, "label": 42, "shape": "dot", "size": 10, "title": "42"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 14, "label": 14, "shape": "dot", "size": 10, "title": "14"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 21, "label": 21, "shape": "dot", "size": 10, "title": "21"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 43, "label": 43, "shape": "dot", "size": 10, "title": "43"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 22, "label": 22, "shape": "dot", "size": 10, "title": "22"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 44, "label": 44, "shape": "dot", "size": 10, "title": "44"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 23, "label": 23, "shape": "dot", "size": 10, "title": "23"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 45, "label": 45, "shape": "dot", "size": 10, "title": "45"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 75, "label": 75, "shape": "dot", "size": 10, "title": "75"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 76, "label": 76, "shape": "dot", "size": 10, "title": "76"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 46, "label": 46, "shape": "dot", "size": 10, "title": "46"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 77, "label": 77, "shape": "dot", "size": 10, "title": "77"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 47, "label": 47, "shape": "dot", "size": 10, "title": "47"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 78, "label": 78, "shape": "dot", "size": 10, "title": "78"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 48, "label": 48, "shape": "dot", "size": 10, "title": "48"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 49, "label": 49, "shape": "dot", "size": 10, "title": "49"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 50, "label": 50, "shape": "dot", "size": 10, "title": "50"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 51, "label": 51, "shape": "dot", "size": 10, "title": "51"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 52, "label": 52, "shape": "dot", "size": 10, "title": "52"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 79, "label": 79, "shape": "dot", "size": 10, "title": "79"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 80, "label": 80, "shape": "dot", "size": 10, "title": "80"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 81, "label": 81, "shape": "dot", "size": 10, "title": "81"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 82, "label": 82, "shape": "dot", "size": 10, "title": "82"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 83, "label": 83, "shape": "dot", "size": 10, "title": "83"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 53, "label": 53, "shape": "dot", "size": 10, "title": "53"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 84, "label": 84, "shape": "dot", "size": 10, "title": "84"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 54, "label": 54, "shape": "dot", "size": 10, "title": "54"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 55, "label": 55, "shape": "dot", "size": 10, "title": "55"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 85, "label": 85, "shape": "dot", "size": 10, "title": "85"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 56, "label": 56, "shape": "dot", "size": 10, "title": "56"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 33, "label": 33, "shape": "dot", "size": 10, "title": "33"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 34, "label": 34, "shape": "dot", "size": 10, "title": "34"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 35, "label": 35, "shape": "dot", "size": 10, "title": "35"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 61, "label": 61, "shape": "dot", "size": 10, "title": "61"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 86, "label": 86, "shape": "dot", "size": 10, "title": "86"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 36, "label": 36, "shape": "dot", "size": 10, "title": "36"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 63, "label": 63, "shape": "dot", "size": 10, "title": "63"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 87, "label": 87, "shape": "dot", "size": 10, "title": "87"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 64, "label": 64, "shape": "dot", "size": 10, "title": "64"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 88, "label": 88, "shape": "dot", "size": 10, "title": "88"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 65, "label": 65, "shape": "dot", "size": 10, "title": "65"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 89, "label": 89, "shape": "dot", "size": 10, "title": "89"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 57, "label": 57, "shape": "dot", "size": 10, "title": "57"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 99, "label": 99, "shape": "dot", "size": 10, "title": "99"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 58, "label": 58, "shape": "dot", "size": 10, "title": "58"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 100, "label": 100, "shape": "dot", "size": 10, "title": "100"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 59, "label": 59, "shape": "dot", "size": 10, "title": "59"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 101, "label": 101, "shape": "dot", "size": 10, "title": "101"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 60, "label": 60, "shape": "dot", "size": 10, "title": "60"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 102, "label": 102, "shape": "dot", "size": 10, "title": "102"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 103, "label": 103, "shape": "dot", "size": 10, "title": "103"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 62, "label": 62, "shape": "dot", "size": 10, "title": "62"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 104, "label": 104, "shape": "dot", "size": 10, "title": "104"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 105, "label": 105, "shape": "dot", "size": 10, "title": "105"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 117, "label": 117, "shape": "dot", "size": 10, "title": "117"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 118, "label": 118, "shape": "dot", "size": 10, "title": "118"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 119, "label": 119, "shape": "dot", "size": 10, "title": "119"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 120, "label": 120, "shape": "dot", "size": 10, "title": "120"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 121, "label": 121, "shape": "dot", "size": 10, "title": "121"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 122, "label": 122, "shape": "dot", "size": 10, "title": "122"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 123, "label": 123, "shape": "dot", "size": 10, "title": "123"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 124, "label": 124, "shape": "dot", "size": 10, "title": "124"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 125, "label": 125, "shape": "dot", "size": 10, "title": "125"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 109, "label": 109, "shape": "dot", "size": 10, "title": "109"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 110, "label": 110, "shape": "dot", "size": 10, "title": "110"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 90, "label": 90, "shape": "dot", "size": 10, "title": "90"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 112, "label": 112, "shape": "dot", "size": 10, "title": "112"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 91, "label": 91, "shape": "dot", "size": 10, "title": "91"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 113, "label": 113, "shape": "dot", "size": 10, "title": "113"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 92, "label": 92, "shape": "dot", "size": 10, "title": "92"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 114, "label": 114, "shape": "dot", "size": 10, "title": "114"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 93, "label": 93, "shape": "dot", "size": 10, "title": "93"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 115, "label": 115, "shape": "dot", "size": 10, "title": "115"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 94, "label": 94, "shape": "dot", "size": 10, "title": "94"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 116, "label": 116, "shape": "dot", "size": 10, "title": "116"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 127, "label": 127, "shape": "dot", "size": 10, "title": "127"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 128, "label": 128, "shape": "dot", "size": 10, "title": "128"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 129, "label": 129, "shape": "dot", "size": 10, "title": "129"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 130, "label": 130, "shape": "dot", "size": 10, "title": "130"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 131, "label": 131, "shape": "dot", "size": 10, "title": "131"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 95, "label": 95, "shape": "dot", "size": 10, "title": "95"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 96, "label": 96, "shape": "dot", "size": 10, "title": "96"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 97, "label": 97, "shape": "dot", "size": 10, "title": "97"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 108, "label": 108, "shape": "dot", "size": 10, "title": "108"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 98, "label": 98, "shape": "dot", "size": 10, "title": "98"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 106, "label": 106, "shape": "dot", "size": 10, "title": "106"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 111, "label": 111, "shape": "dot", "size": 10, "title": "111"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 107, "label": 107, "shape": "dot", "size": 10, "title": "107"}, {"color": "#97c2fc", "font": {"color": "black"}, "id": 126, "label": 126, "shape": "dot", "size": 10, "title": "126"}]);
@@ -684,27 +684,27 @@
     }
 };
 
-                  
 
 
-                  
+
+
                   // if this network requires displaying the configure window,
                   // put it in its div
                   options.configure["container"] = document.getElementById("config");
-                  
+
 
                   network = new vis.Network(container, data, options);
 
-                  
 
-                  
+
+
                     network.on("selectNode", neighbourhoodHighlight);
-                  
-
-                  
 
 
-                  
+
+
+
+
                       network.on("stabilizationProgress", function(params) {
                           document.getElementById('loadingBar').removeAttribute("style");
                           var maxWidth = 496;
@@ -721,7 +721,7 @@
                           // really clean the dom element
                           setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
                       });
-                  
+
 
                   return network;
 
