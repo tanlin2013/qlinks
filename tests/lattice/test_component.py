@@ -67,21 +67,15 @@ class TestUnitVector:
 
 class TestUnitVectorCollection:
     def test_instance(self):
-        assert UnitVectors.rightward == -1 * UnitVectors.leftward
-        assert UnitVectors.upward == -1 * UnitVectors.downward
+        assert UnitVectors().rightward == -1 * UnitVectors().leftward
+        assert UnitVectors().upward == -1 * UnitVectors().downward
         with pytest.raises(TypeError):
-            _ = UnitVectors.upward + UnitVectors.rightward
+            _ = UnitVectors().upward + UnitVectors().rightward
+        ins1 = UnitVectors()
+        ins2 = UnitVectors()
+        assert id(ins1) == id(ins2)
 
     def test_iter(self):
-        it = iter(UnitVectors)
-        assert next(it) == UnitVectors.rightward
-        assert next(it) == UnitVectors.upward
-
-    def test_iter_all_directions(self):
-        it = UnitVectors.iter_all_directions()
-        assert next(it) == UnitVectors.downward
-        assert next(it) == UnitVectors.leftward
-        assert next(it) == UnitVectors.rightward
-        assert next(it) == UnitVectors.upward
-        with pytest.raises(StopIteration):
-            _ = next(it)
+        it = iter(UnitVectors())
+        assert next(it) == UnitVectors().rightward
+        assert next(it) == UnitVectors().upward

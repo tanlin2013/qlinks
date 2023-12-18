@@ -23,7 +23,7 @@ jobs:
           poetry install --all-extras
 
       - name: Test
-        run: poetry run pytest tests/
+        run: poetry run pytest tests/ --trace-config
 
   in-os:
     runs-on: ${{ matrix.os }}
@@ -83,7 +83,7 @@ jobs:
       - name: Test
         shell: bash
         run: |
-          poetry run pytest tests/ -s --cov=${{ github.event.repository.name }}/ --cov-report=term-missing ${@-}
+          poetry run pytest tests/ -s --trace-config --cov=${{ github.event.repository.name }}/ --cov-report=term-missing ${@-}
           poetry run coverage xml
 
       - name: Report Coverage
