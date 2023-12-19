@@ -21,7 +21,7 @@ pyvis = { version = "^0.3.0", optional = true}
 plotly = { version = "^5.4.0", optional = true}
 
 [tool.poetry.extras]
-drawing = ["matplotlib"]
+drawing = ["matplotlib", "pyvis", "plotly"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
