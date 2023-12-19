@@ -3,28 +3,25 @@
 
 .. automodule:: qlinks.solver.deep_first_search
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
+
+
+
    .. rubric:: Classes
 
    .. autosummary::
-   
+
       DeepFirstSearch
       Node
-   
-   
 
-   
-   
-   
+
+
 
 
 

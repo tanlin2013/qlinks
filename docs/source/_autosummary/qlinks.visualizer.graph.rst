@@ -3,27 +3,24 @@
 
 .. automodule:: qlinks.visualizer.graph
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
+
+
+
    .. rubric:: Classes
 
    .. autosummary::
-   
-      GraphVisualizer
-   
-   
 
-   
-   
-   
+      GraphVisualizer
+
+
+
 
 
 
