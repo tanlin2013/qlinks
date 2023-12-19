@@ -21,9 +21,3 @@
       Plaquette
       SquareLattice
       Vertex
-
-
-
-
-
-

@@ -2,19 +2,3 @@
 ==============
 
 .. automodule:: qlinks.lattice
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
