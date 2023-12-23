@@ -27,7 +27,7 @@ drawing = ["matplotlib", "pyvis", "plotly", "pycairo", "igraph"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-commitizen = "^2.35.0"
+commitizen = "^3.0.0"
 vulture = "^2.4"
 bandit = "^1.7.4"
 safety = "^2.3.4"
