@@ -61,7 +61,7 @@ class ComputationBasis:
         self.links = self._df.to_numpy()
 
     def to_parquet(self, *args, **kwargs) -> None:
-        self._df.to_parquet(*args, **kwargs)
+        self._df.to_parquet(*args, **kwargs, index=False)
 
     @classmethod
     def from_parquet(cls, *args, **kwargs) -> Self:
