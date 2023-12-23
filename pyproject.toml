@@ -18,10 +18,12 @@ llvmlite = { version = "0.40.0" }
 numba = { version = "0.57.0" }
 matplotlib = { version = "^3.6.3", optional = true}
 pyvis = { version = "^0.3.0", optional = true}
+igraph = { version = "^0.11.2", optional = true}
+pycairo = { version = "^1.25.0", optional = true}  # for igraph plotting
 plotly = { version = "^5.4.0", optional = true}
 
 [tool.poetry.extras]
-drawing = ["matplotlib", "pyvis", "plotly"]
+drawing = ["matplotlib", "pyvis", "plotly", "pycairo", "igraph"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
