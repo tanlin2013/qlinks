@@ -34,6 +34,8 @@ class QuantumLinkModel:
     shape: Tuple[int, int]
     basis: ComputationBasis = field(repr=False)
     _lattice: SquareLattice = field(init=False, repr=False)
+    _kinetic_term: sp.spmatrix[np.float64] = field(init=False, repr=False)
+    _potential_term: sp.spmatrix[np.float64] = field(init=False, repr=False)
     _hamiltonian: sp.spmatrix[np.float64] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -42,20 +44,27 @@ class QuantumLinkModel:
             self.coup_j = np.asarray([self.coup_j] * self._lattice.size)
         if isinstance(self.coup_rk, (int, float)):
             self.coup_rk = np.asarray([self.coup_rk] * self._lattice.size)
+        self._build_hamiltonian()
+
+    def _build_hamiltonian(self) -> None:
+        self._kinetic_term = sp.csr_array((self.basis.n_states, self.basis.n_states), dtype=float)
+        self._potential_term = sp.csr_array((self.basis.n_states, self.basis.n_states), dtype=float)
         self._hamiltonian = sp.csr_array((self.basis.n_states, self.basis.n_states), dtype=float)
         for i, plaquette in enumerate(self._lattice.iter_plaquettes()):
+            flipper, flip_counter = plaquette[self.basis], (plaquette**2)[self.basis]
+            self._kinetic_term += flipper
+            self._potential_term += flip_counter
             self._hamiltonian += (
-                -self.coup_j[i] * plaquette[self.basis]  # type: ignore[index]
-                + self.coup_rk[i] * (plaquette**2)[self.basis]  # type: ignore[index]
+                -self.coup_j[i] * flipper + self.coup_rk[i] * flip_counter  # type: ignore[index]
             )
 
     @property
     def kinetic_term(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
-        return self.hamiltonian - self.potential_term
+        return self._kinetic_term.toarray()
 
     @property
     def potential_term(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
-        return sp.diags(self._hamiltonian.diagonal()).toarray()
+        return self._potential_term.toarray()
 
     @property
     def hamiltonian(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
