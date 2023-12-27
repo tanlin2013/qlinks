@@ -1,0 +1,550 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.symmetry.gauss_law &#8212; qlinks 0.1.0rc1 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../../index.html">
+      
+      
+      
+      <h1 class="site-logo" id="site-title">qlinks 0.1.0rc1 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Contents:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../../lattice.html">
+   1. Lattice
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../../_autosummary/qlinks.lattice.component.html">
+     1.1. qlinks.lattice.component
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../../_autosummary/qlinks.lattice.square_lattice.html">
+     1.2. qlinks.lattice.square_lattice
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../../symmetry.html">
+   2. Symmetry
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../../_autosummary/qlinks.symmetry.gauss_law.html">
+     2.1. qlinks.symmetry.gauss_law
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../../_autosummary/qlinks.symmetry.translation.html">
+     2.2. qlinks.symmetry.translation
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../../solver.html">
+   3. Solver
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../../_autosummary/qlinks.solver.deep_first_search.html">
+     3.1. qlinks.solver.deep_first_search
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../visualizer.html">
+   4. Visualizer
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/tanlin2013/qlinks"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/symmetry/gauss_law.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1></h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <h1>Source code for qlinks.symmetry.gauss_law</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">IntEnum</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">cache</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
+
+<span class="kn">from</span> <span class="nn">qlinks.computation_basis</span> <span class="kn">import</span> <span class="n">ComputationBasis</span>
+<span class="kn">from</span> <span class="nn">qlinks.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">InvalidArgumentError</span><span class="p">,</span>
+    <span class="n">InvalidOperationError</span><span class="p">,</span>
+    <span class="n">LinkOverridingError</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">qlinks.lattice.component</span> <span class="kn">import</span> <span class="n">Site</span><span class="p">,</span> <span class="n">UnitVectors</span>
+<span class="kn">from</span> <span class="nn">qlinks.lattice.square_lattice</span> <span class="kn">import</span> <span class="n">SquareLattice</span><span class="p">,</span> <span class="n">Vertex</span>
+<span class="kn">from</span> <span class="nn">qlinks.solver.deep_first_search</span> <span class="kn">import</span> <span class="n">Node</span>
+
+
+<div class="viewcode-block" id="Flow"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.Flow">[docs]</a><span class="k">class</span> <span class="nc">Flow</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">outward</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">inward</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="GaussLaw"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">GaussLaw</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="sd">    Args:</span>
+<span class="sd">        charge_distri: The charge distribution on the lattice.</span>
+<span class="sd">                       The (N, M)-shaped input array is repositioned in the first quadrant,</span>
+<span class="sd">                       aligning the element at (N - 1, 0) to (0, 0),</span>
+<span class="sd">                       and the element at (0, M - 1) to (M - 1, N - 1).</span>
+<span class="sd">        flux_sector: The flux sector of the lattice, optional.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">charge_distri</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">flux_sector</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_lattice</span><span class="p">:</span> <span class="n">SquareLattice</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charge_distri</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">charge_distri</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">charge_distri</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">charge_distri</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Charge ranges from -2 to +2.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span> <span class="o">=</span> <span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="n">Site</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_distri</span><span class="p">[</span><span class="o">*</span><span class="n">site</span><span class="p">]</span>
+
+<div class="viewcode-block" id="GaussLaw.charge"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.charge">[docs]</a>    <span class="k">def</span> <span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="n">Site</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">site</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_distri</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># type: ignore[return-value]</span>
+
+<div class="viewcode-block" id="GaussLaw.possible_flows"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.possible_flows">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@cache</span>
+    <span class="k">def</span> <span class="nf">possible_flows</span><span class="p">(</span><span class="n">charge</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
+        <span class="n">flows</span> <span class="o">=</span> <span class="n">product</span><span class="p">([</span><span class="n">flow</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">flow</span> <span class="ow">in</span> <span class="n">Flow</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">quartet</span><span class="p">)</span> <span class="k">for</span> <span class="n">quartet</span> <span class="ow">in</span> <span class="n">flows</span> <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">quartet</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">==</span> <span class="n">charge</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="GaussLaw.possible_configs"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.possible_configs">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@cache</span>
+    <span class="k">def</span> <span class="nf">possible_configs</span><span class="p">(</span><span class="n">charge</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
+        <span class="k">def</span> <span class="nf">flow_to_spin</span><span class="p">(</span><span class="n">flow</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]):</span>
+            <span class="n">flow</span> <span class="o">*=</span> <span class="n">Vertex</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">flow</span> <span class="o">*</span> <span class="p">(</span><span class="n">flow</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># turn -1 to 0</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">flow_to_spin</span><span class="p">(</span><span class="n">quartet</span><span class="p">)</span> <span class="k">for</span> <span class="n">quartet</span> <span class="ow">in</span> <span class="n">GaussLaw</span><span class="o">.</span><span class="n">possible_flows</span><span class="p">(</span><span class="n">charge</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="GaussLaw.random_charge_distri"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.random_charge_distri">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">random_charge_distri</span><span class="p">(</span>
+        <span class="n">length_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">length_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Randomly sample static charges spread on 2d square lattice.</span>
+
+<span class="sd">        Charges are uniformly sampled from the interval :math:`[-2, 2]`, with total charge being</span>
+<span class="sd">        zero (this is always true under periodic boundary conditions). However, this does not</span>
+<span class="sd">        guarantee to provide a valid configuration of links.</span>
+
+<span class="sd">        Internally, this function uses multinomial distribution to sample possible charge</span>
+<span class="sd">        distributions. Iteration for the trial sampling will stop as soon as it produces a valid</span>
+<span class="sd">        outcome with zero total charge. Normally this is at most :math:`\mathcal{O}(1)` of</span>
+<span class="sd">        lattice size, :math:`\text{length} \times \text{width}`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            length_x: The length of the lattice.</span>
+<span class="sd">            length_y: The width of the lattice.</span>
+<span class="sd">            seed: If provided, used for random generator. Default `None`.</span>
+<span class="sd">            max_iter: The maximum number of iterations for trial sampling. Default `1000`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The drawn samples of shape (`width` :math:`\times` `length`). Note that we have swapped</span>
+<span class="sd">            rows and columns to match with the lattice shape.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            StopIteration: If no valid distribution can be sampled within `max_iter` iterations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sum_val</span><span class="p">,</span> <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">length_x</span> <span class="o">*</span> <span class="n">length_y</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">min_val</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">sum_val</span> <span class="o">-</span> <span class="n">size</span> <span class="o">*</span> <span class="n">min_val</span><span class="p">,</span> <span class="n">pvals</span><span class="o">=</span><span class="n">prob</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">samples</span> <span class="o">&gt;</span> <span class="n">max_val</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">samples</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">length_y</span><span class="p">,</span> <span class="n">length_x</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Couldn&#39;t sample a valid distribution within </span><span class="si">{</span><span class="n">max_iter</span><span class="si">}</span><span class="s2"> steps.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GaussLaw.staggered_charge_distri"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.staggered_charge_distri">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">staggered_charge_distri</span><span class="p">(</span><span class="n">length_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">length_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a staggered charge distribution with +1 and -1 charges.</span>
+<span class="sd">        The shape of the lattice must be even number, and the bottom-left corner is always +1.</span>
+<span class="sd">        To make the bottom-left corner -1, simply multiply the output by -1.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            length_x: The length of the lattice.</span>
+<span class="sd">            length_y: The width of the lattice.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The staggered charge distribution.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError: If the shape of the lattice is not even number.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; GaussLaw.staggered_charge_distri(2, 2)</span>
+<span class="sd">            array([[-1,  1],</span>
+<span class="sd">                   [ 1, -1]])</span>
+<span class="sd">            &gt;&gt;&gt; GaussLaw.staggered_charge_distri(4, 4)</span>
+<span class="sd">            array([[-1,  1, -1,  1],</span>
+<span class="sd">                   [ 1, -1,  1, -1],</span>
+<span class="sd">                   [-1,  1, -1,  1],</span>
+<span class="sd">                   [ 1, -1,  1, -1]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">length_x</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">length_y</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Length and width must be even number.&quot;</span><span class="p">)</span>
+        <span class="n">stagger</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">stagger</span><span class="p">,</span> <span class="p">(</span><span class="n">length_y</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">length_x</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="GaussLaw.from_random_charge_distri"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.from_random_charge_distri">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_random_charge_distri</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">length_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">length_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">random_charge_distri</span><span class="p">(</span><span class="n">length_x</span><span class="p">,</span> <span class="n">length_y</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="GaussLaw.from_staggered_charge_distri"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.from_staggered_charge_distri">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_staggered_charge_distri</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">length_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">length_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">staggered_charge_distri</span><span class="p">(</span><span class="n">length_x</span><span class="p">,</span> <span class="n">length_y</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="GaussLaw.from_zero_charge_distri"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.from_zero_charge_distri">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_zero_charge_distri</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">length_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">length_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">length_y</span><span class="p">,</span> <span class="n">length_x</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="n">new_inst</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+        <span class="n">new_inst</span><span class="o">.</span><span class="n">charge_distri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_distri</span>
+        <span class="n">new_inst</span><span class="o">.</span><span class="n">flux_sector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_sector</span>
+        <span class="n">new_inst</span><span class="o">.</span><span class="n">_lattice</span> <span class="o">=</span> <span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">new_inst</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">links</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">links</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_inst</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">links</span><span class="o">.</span><span class="n">tobytes</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">GaussLaw</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidOperationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shape of two </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> are mismatched.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">hash</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">links</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_next_empty_site</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Site</span><span class="p">]:</span>
+        <span class="n">site_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">empty_link_index</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">site_idx</span><span class="p">:</span>
+            <span class="n">site_idx</span> <span class="o">=</span> <span class="n">site_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="k">return</span> <span class="n">Site</span><span class="p">(</span><span class="n">site_idx</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">length_x</span><span class="p">,</span> <span class="n">site_idx</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">length_x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_valid_for_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="n">Site</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">_ax_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">axial_flux</span>  <span class="c1"># func alias</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span><span class="n">site</span> <span class="o">+</span> <span class="n">UnitVectors</span><span class="p">()</span><span class="o">.</span><span class="n">leftward</span><span class="p">,</span> <span class="n">site</span> <span class="o">+</span> <span class="n">UnitVectors</span><span class="p">()</span><span class="o">.</span><span class="n">downward</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">neighbors</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_ax_flux</span><span class="p">(</span><span class="n">site</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">axis</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_ax_flux</span><span class="p">(</span><span class="n">neighbor</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">axis</span><span class="p">)):</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">_ax_flux</span><span class="p">(</span><span class="n">site</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">axis</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_sector</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="n">_ax_flux</span><span class="p">(</span><span class="n">site</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">axis</span><span class="p">)</span> <span class="o">!=</span> <span class="n">_ax_flux</span><span class="p">(</span><span class="n">neighbor</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">axis</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_fill_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="n">Site</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Self</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">new_node</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">new_node</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">set_vertex_links</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_sector</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">new_node</span><span class="o">.</span><span class="n">_valid_for_flux</span><span class="p">(</span><span class="n">site</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">new_node</span>
+        <span class="k">except</span> <span class="n">LinkOverridingError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_preconditioned_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="n">Site</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
+        <span class="n">vertex_links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="n">Vertex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="p">,</span> <span class="n">site</span><span class="p">)</span><span class="o">.</span><span class="n">link_index</span><span class="p">()]</span>
+        <span class="n">been_set_links</span> <span class="o">=</span> <span class="n">vertex_links</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">_empty_link_value</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">been_set_links</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">config</span>
+                <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">site</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">been_set_links</span><span class="p">]</span> <span class="o">==</span> <span class="n">vertex_links</span><span class="p">[</span><span class="n">been_set_links</span><span class="p">])</span>
+            <span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">site</span><span class="p">])</span>
+
+<div class="viewcode-block" id="GaussLaw.extend_node"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.extend_node">[docs]</a>    <span class="k">def</span> <span class="nf">extend_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Self</span><span class="p">]:</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_empty_site</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">new_node</span>
+                <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preconditioned_configs</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">new_node</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_node</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">config</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GaussLaw.is_the_solution"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.is_the_solution">[docs]</a>    <span class="k">def</span> <span class="nf">is_the_solution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="p">)))):</span>  <span class="c1"># not fully filled</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">site</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="p">[</span><span class="n">site</span><span class="p">]</span> <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lattice</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="GaussLaw.to_basis"><a class="viewcode-back" href="../../../_autosummary/qlinks.symmetry.gauss_law.html#qlinks.symmetry.gauss_law.GaussLaw.to_basis">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">to_basis</span><span class="p">(</span><span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GaussLaw</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ComputationBasis</span><span class="p">:</span>
+        <span class="n">link_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">_lattice</span><span class="o">.</span><span class="n">links</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">]</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">ComputationBasis</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">link_data</span><span class="p">))</span>
+        <span class="n">basis</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">basis</span></div></div>
+</pre></div>
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Tan Tao-Lin<br/>
+  
+      &copy; Copyright 2023, Tan Tao-Lin.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

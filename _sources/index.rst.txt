@@ -12,9 +12,14 @@ API references
 --------------
 
 .. toctree::
+   :numbered:
    :maxdepth: 2
    :caption: Contents:
 
+   lattice
+   symmetry
+   solver
+   visualizer
 
 Indices and tables
 ------------------
