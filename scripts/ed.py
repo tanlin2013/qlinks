@@ -1,15 +1,15 @@
 import numpy as np
 import pandas as pd
 
-from qlinks.symmetry.gauss_law import GaussLaw
-from qlinks.solver.deep_first_search import DeepFirstSearch
 from qlinks.model import QuantumLinkModel
+from qlinks.solver.deep_first_search import DeepFirstSearch
+from qlinks.symmetry.gauss_law import GaussLaw
 
 
 def setup_link_model(lattice_shape, n_solution, coup_j, coup_rk):
     gauss_law = GaussLaw.from_zero_charge_distri(*lattice_shape)
     gauss_law.flux_sector = (0, 0)
-    dfs = DeepFirstSearch(gauss_law, max_steps=int(1e+8))
+    dfs = DeepFirstSearch(gauss_law, max_steps=int(1e8))
     basis = gauss_law.to_basis(dfs.solve(n_solution))
     model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
     return basis, model
@@ -35,6 +35,4 @@ if __name__ == "__main__":
             "pot": [(evec.T @ model.potential_term @ evec).item() for evec in evecs.T],
         }
     )
-    evecs_df.to_parquet(
-        f"qlm_6x4_coup_j_{coup_j}_coup_rk_{coup_rk}_eigs.parquet"
-    )
+    evecs_df.to_parquet(f"qlm_6x4_coup_j_{coup_j}_coup_rk_{coup_rk}_eigs.parquet")
