@@ -6,6 +6,15 @@ from qlinks.solver.deep_first_search import DeepFirstSearch
 from qlinks.symmetry.gauss_law import GaussLaw
 
 
+def setup_dimer_model(lattice_shape, n_solution, coup_j, coup_rk):
+    gauss_law = GaussLaw.from_staggered_charge_distri(*lattice_shape)
+    gauss_law.flux_sector = (0, 0)
+    dfs = DeepFirstSearch(gauss_law, max_steps=int(1e8))
+    basis = gauss_law.to_basis(dfs.solve(n_solution))
+    model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
+    return basis, model
+
+
 def setup_link_model(lattice_shape, n_solution, coup_j, coup_rk):
     gauss_law = GaussLaw.from_zero_charge_distri(*lattice_shape)
     gauss_law.flux_sector = (0, 0)
