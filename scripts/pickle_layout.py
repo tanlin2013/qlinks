@@ -1,10 +1,8 @@
 import pickle
 
-import networkx as nx
 import igraph
-
+import networkx as nx
 from ed import *
-
 
 if __name__ == "__main__":
     coup_j, coup_rk = (1, -0.7)  # dfs 3 mins 33 secs
