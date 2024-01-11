@@ -2,7 +2,7 @@ import pickle
 
 import igraph
 import networkx as nx
-from ed import *
+from ed import setup_link_model
 
 if __name__ == "__main__":
     coup_j, coup_rk = (1, -0.7)  # dfs 3 mins 33 secs
