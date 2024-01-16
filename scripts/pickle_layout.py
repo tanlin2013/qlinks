@@ -15,5 +15,5 @@ if __name__ == "__main__":
     ig.vs["label"] = [str(i) for i in range(ig.vcount())]
     layout = ig.layout_kamada_kawai()
 
-    with open(f'qlm_6x4_coup_j_{coup_j}_coup_rk_{coup_rk}_kin.pickle', 'wb') as f:
+    with open(f"qlm_6x4_coup_j_{coup_j}_coup_rk_{coup_rk}_kin.pickle", "wb") as f:
         pickle.dump(layout, f)
