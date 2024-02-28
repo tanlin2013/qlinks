@@ -59,16 +59,16 @@ class QuantumLinkModel:
             )
 
     @property
-    def kinetic_term(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
-        return self._kinetic_term.toarray()
+    def kinetic_term(self) -> sp.spmatrix[np.float64]:
+        return self._kinetic_term
 
     @property
-    def potential_term(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
-        return self._potential_term.toarray()
+    def potential_term(self) -> sp.spmatrix[np.float64]:
+        return self._potential_term
 
     @property
-    def hamiltonian(self) -> npt.NDArray[np.float64] | sp.spmatrix[np.float64]:
-        return self._hamiltonian.toarray()
+    def hamiltonian(self) -> sp.spmatrix[np.float64]:
+        return self._hamiltonian
 
     @property
     def sparsity(self) -> float:

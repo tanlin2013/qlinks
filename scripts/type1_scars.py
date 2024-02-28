@@ -4,7 +4,6 @@ import concurrent.futures
 import numpy as np
 import pandas as pd
 import networkx as nx
-from scipy.sparse import csr_matrix
 from itertools import repeat
 from tqdm import tqdm
 
@@ -26,7 +25,7 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
         index=False
     )
 
-    two_steps_mat = csr_matrix(model.kinetic_term) ** 2
+    two_steps_mat = model.kinetic_term ** 2
     degree = np.unique(two_steps_mat.diagonal())
     g = nx.from_scipy_sparse_array(two_steps_mat)
     for d in degree:
