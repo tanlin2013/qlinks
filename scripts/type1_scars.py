@@ -1,31 +1,23 @@
-import os
-
 import concurrent.futures
+import os
+from itertools import repeat
+
+import networkx as nx
 import numpy as np
 import pandas as pd
-import networkx as nx
-from itertools import repeat
+from ed import setup_dimer_model, setup_link_model  # noqa: F401
 from tqdm import tqdm
-
-from ed import setup_link_model, setup_dimer_model
-
 
 csv_file = "qlm_type1_scars.csv"
 
 
 def task(lattice_shape, n_solution, coup_j, coup_rk):
-    basis, model = setup_link_model(
-        lattice_shape,
-        n_solution,
-        coup_j,
-        coup_rk
-    )
+    basis, model = setup_link_model(lattice_shape, n_solution, coup_j, coup_rk)
     basis.dataframe.to_parquet(
-        f"qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet",
-        index=False
+        f"qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
     )
 
-    two_steps_mat = model.kinetic_term ** 2
+    two_steps_mat = model.kinetic_term**2
     degree = np.unique(two_steps_mat.diagonal())
     g = nx.from_scipy_sparse_array(two_steps_mat)
     for d in degree:
@@ -52,9 +44,9 @@ if __name__ == "__main__":
 
     inputs = zip(
         [(4, 2), (6, 2), (8, 2), (4, 4), (6, 4), (8, 4), (6, 6), (8, 6)],  # lattice_shape
-        [38, 282, 2214, 990, 82810, 1159166, 5482716, int(1e+8)],  # n_solution
+        [38, 282, 2214, 990, 82810, 1159166, 5482716, int(1e8)],  # n_solution
         repeat(1.0),  # coup_j
-        repeat(1.0)  # coup_rk
+        repeat(1.0),  # coup_rk
     )
 
     if not os.path.exists(csv_file):
