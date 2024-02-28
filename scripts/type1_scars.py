@@ -42,6 +42,7 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
                     "coup_j": coup_j,
                     "coup_rk": coup_rk,
                     "degree": d,
+                    "subgraph_size": mat.shape[0],
                     "nullity": nullity,
                 }
             )
@@ -65,6 +66,7 @@ if __name__ == "__main__":
                 "coup_j",
                 "coup_rk",
                 "degree",
+                "subgraph_size",
                 "nullity",
             ]
         )
