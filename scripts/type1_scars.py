@@ -40,14 +40,18 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
             _df.to_csv(csv_file, mode="a", index=False, header=False)
 
 
+def task_wrapper(args):
+    return task(*args)
+
+
 if __name__ == "__main__":
 
-    inputs = zip(
+    inputs = list(zip(
         [(4, 2), (6, 2), (8, 2), (4, 4), (6, 4), (8, 4), (6, 6), (8, 6)],  # lattice_shape
         [38, 282, 2214, 990, 82810, 1159166, 5482716, int(1e8)],  # n_solution
         repeat(1.0),  # coup_j
         repeat(1.0),  # coup_rk
-    )
+    ))
 
     if not os.path.exists(csv_file):
         df = pd.DataFrame(
@@ -63,5 +67,9 @@ if __name__ == "__main__":
         )
         df.to_csv(csv_file, index=False)
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        _ = tqdm(executor.map(task, inputs), total=len(inputs))
+    with tqdm(total=len(inputs)) as pbar:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+            futures = [executor.submit(task_wrapper, args) for args in inputs]
+            for future in concurrent.futures.as_completed(futures):
+                pbar.update(1)
+                future.result()
