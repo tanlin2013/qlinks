@@ -23,22 +23,23 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
     for d in degree:
         nodes = np.where(two_steps_mat.diagonal() == d)[0]
         sub_g = nx.induced_subgraph(g, nodes)
-        mat = nx.to_numpy_array(sub_g)
-        nullity = mat.shape[0] - np.linalg.matrix_rank(mat)
-        if nullity > 0:
-            _df = pd.DataFrame(
-                {
-                    "lattice_length_x": lattice_shape[0],
-                    "lattice_length_y": lattice_shape[1],
-                    "n_solution": n_solution,
-                    "coup_j": coup_j,
-                    "coup_rk": coup_rk,
-                    "degree": d,
-                    "subgraph_size": mat.shape[0],
-                    "nullity": nullity,
-                }
-            )
-            _df.to_csv(csv_file, mode="a", index=False, header=False)
+        for c in nx.connected_components(sub_g):
+            mat = nx.to_numpy_array(sub_g.subgraph(c))
+            nullity = mat.shape[0] - np.linalg.matrix_rank(mat)
+            if nullity > 0:
+                _df = pd.DataFrame(
+                    {
+                        "lattice_length_x": [lattice_shape[0]],
+                        "lattice_length_y": [lattice_shape[1]],
+                        "n_solution": [n_solution],
+                        "coup_j": [coup_j],
+                        "coup_rk": [coup_rk],
+                        "degree": [d],
+                        "subgraph_size": [mat.shape[0]],
+                        "nullity": [nullity],
+                    }
+                )
+                _df.to_csv(csv_file, mode="a", index=False, header=False)
 
 
 def task_wrapper(args):
