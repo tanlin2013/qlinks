@@ -8,13 +8,13 @@ import pandas as pd
 from ed import setup_dimer_model, setup_link_model  # noqa: F401
 from tqdm import tqdm
 
-csv_file = "qlm_type1_scars.csv"
+csv_file = "data/qlm_type1_scars.csv"
 
 
 def task(lattice_shape, n_solution, coup_j, coup_rk):
     basis, model = setup_link_model(lattice_shape, n_solution, coup_j, coup_rk)
     basis.dataframe.to_parquet(
-        f"qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
+        f"data/qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
     )
 
     two_steps_mat = model.kinetic_term**2
