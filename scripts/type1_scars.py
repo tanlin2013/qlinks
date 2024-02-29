@@ -17,7 +17,7 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
         f"data/qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
     )
 
-    two_steps_mat = model.kinetic_term**2
+    two_steps_mat = model.kinetic_term @ model.kinetic_term
     degree = np.unique(two_steps_mat.diagonal()).astype(int)
     g = nx.from_scipy_sparse_array(two_steps_mat)
     for d in degree:
