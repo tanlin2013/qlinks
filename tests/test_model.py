@@ -18,7 +18,7 @@ class TestQuantumLinkModel:
     def test_hamiltonian(self, coup_j, coup_rk, length_x, length_y, lattice_2x2_basis):
         assert lattice_2x2_basis.n_links == 2 * length_x * length_y
         model = QuantumLinkModel(coup_j, coup_rk, (length_x, length_y), lattice_2x2_basis)
-        ham = model.hamiltonian
+        ham = model.hamiltonian.todense()
         assert ishermitian(ham)
         evals, evecs = eigh(ham)
         if np.isclose(coup_rk / coup_j, 1):
@@ -38,7 +38,7 @@ class TestQuantumLinkModel:
     @pytest.mark.parametrize("coup_j, coup_rk", [(1, 0), (1, 1)])
     def test_with_solver(self, coup_j, coup_rk, basis_from_solver):
         model = QuantumLinkModel(coup_j, coup_rk, (4, 4), basis_from_solver)
-        ham = model.hamiltonian
+        ham = model.hamiltonian.todense()
         assert ishermitian(ham)
         evals, evecs = eigh(ham)
         if np.isclose(coup_rk / coup_j, 1):
