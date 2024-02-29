@@ -28,7 +28,8 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
         if nullity > 0:
             _df = pd.DataFrame(
                 {
-                    "lattice_shape": lattice_shape,
+                    "lattice_length_x": lattice_shape[0],
+                    "lattice_length_y": lattice_shape[1],
                     "n_solution": n_solution,
                     "coup_j": coup_j,
                     "coup_rk": coup_rk,
@@ -56,7 +57,8 @@ if __name__ == "__main__":
     if not os.path.exists(csv_file):
         df = pd.DataFrame(
             columns=[
-                "lattice_shape",
+                "lattice_length_x",
+                "lattice_length_y",
                 "n_solution",
                 "coup_j",
                 "coup_rk",
