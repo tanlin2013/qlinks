@@ -47,12 +47,14 @@ def task_wrapper(args):
 
 if __name__ == "__main__":
 
-    inputs = list(zip(
-        [(4, 2), (6, 2), (8, 2), (4, 4), (6, 4), (8, 4), (6, 6), (8, 6)],  # lattice_shape
-        [38, 282, 2214, 990, 82810, 1159166, 5482716, int(1e8)],  # n_solution
-        repeat(1.0),  # coup_j
-        repeat(1.0),  # coup_rk
-    ))
+    inputs = list(
+        zip(
+            [(4, 2), (6, 2), (8, 2), (4, 4), (6, 4), (8, 4), (6, 6), (8, 6)],  # lattice_shape
+            [38, 282, 2214, 990, 82810, 1159166, 5482716, int(1e8)],  # n_solution
+            repeat(1.0),  # coup_j
+            repeat(1.0),  # coup_rk
+        )
+    )
 
     if not os.path.exists(csv_file):
         df = pd.DataFrame(
