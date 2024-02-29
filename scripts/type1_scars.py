@@ -18,7 +18,7 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
     )
 
     two_steps_mat = model.kinetic_term**2
-    degree = np.unique(two_steps_mat.diagonal())
+    degree = np.unique(two_steps_mat.diagonal()).astype(int)
     g = nx.from_scipy_sparse_array(two_steps_mat)
     for d in degree:
         nodes = two_steps_mat.indices[np.where(two_steps_mat.diagonal() == d)]
