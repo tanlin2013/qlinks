@@ -28,7 +28,7 @@ def matrix_nullity(mat):
 
 
 def task(lattice_shape, n_solution, coup_j, coup_rk):
-    basis, model = setup_link_model(lattice_shape, n_solution, coup_j, coup_rk)
+    basis, model = setup_link_model(lattice_shape, n_solution, coup_j, coup_rk, max_steps=int(1e8))
     basis.dataframe.to_parquet(
         f"data/qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
     )
