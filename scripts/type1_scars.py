@@ -9,6 +9,8 @@ import scipy.sparse as sp
 from ed import setup_dimer_model, setup_link_model  # noqa: F401
 from tqdm import tqdm
 
+from qlinks import logger
+
 csv_file = "data/qlm_type1_scars.csv"
 
 
@@ -33,6 +35,7 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
 
     two_steps_mat = model.kinetic_term @ model.kinetic_term
     degree = np.unique(two_steps_mat.diagonal()).astype(int)
+    logger.info(f"system size: {lattice_shape}, degree: {degree}")
     g = nx.from_scipy_sparse_array(two_steps_mat)
     for d in degree:
         nodes = np.where(two_steps_mat.diagonal() == d)[0]
@@ -54,6 +57,7 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
                     }
                 )
                 _df.to_csv(csv_file, mode="a", index=False, header=False)
+                logger.info("\n\t" + _df.to_string(index=False).replace("\n", "\n\t"))
 
 
 def task_wrapper(args):
