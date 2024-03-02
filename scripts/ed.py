@@ -30,7 +30,7 @@ if __name__ == "__main__":
         lattice_shape=(6, 4), n_solution=32810, coup_j=coup_j, coup_rk=coup_rk
     )
 
-    evals, evecs = np.linalg.eigh(model.hamiltonian)
+    evals, evecs = np.linalg.eigh(model.hamiltonian.todense())
     np.savez(
         f"qlm_6x4_coup_j_{coup_j}_coup_rk_{coup_rk}_eigs.npz",
         evals=evals,
