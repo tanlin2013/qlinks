@@ -36,7 +36,7 @@ class DeepFirstSearch(Generic[AnyNode]):
 
     Attributes:
         frontier: A :class:`set` of :class:`Node` to be determined.
-        checked_nodes: A :class:`set` of checked :class:`Node`.
+        n_checked_nodes: The number of checked nodes.
         selected_nodes: A :class:`list` of :class:`Node` representing candidate solutions.
 
     Examples:
@@ -55,16 +55,16 @@ class DeepFirstSearch(Generic[AnyNode]):
 
     start_state: AnyNode
     max_steps: int = 50000
-    frontier: Set[AnyNode] = field(default_factory=set)
-    checked_nodes: Set[AnyNode] = field(default_factory=set)
-    selected_nodes: List[AnyNode] = field(default_factory=list)
+    frontier: Set[AnyNode] = field(init=False, default_factory=set)
+    n_checked_nodes: int = field(init=False, default=0)
+    selected_nodes: List[AnyNode] = field(init=False, default_factory=list)
 
     def __post_init__(self):
         self.frontier.add(self.start_state)
 
     def _remove_from_frontier(self) -> AnyNode:
         first_node = self.frontier.pop()
-        self.checked_nodes.add(first_node)
+        self.n_checked_nodes += 1
         return first_node
 
     @property
@@ -97,10 +97,10 @@ class DeepFirstSearch(Generic[AnyNode]):
 
         if selected_node.is_the_solution():
             self.selected_nodes.append(selected_node)
-            logger.debug(f"A New solution is Found after {len(self.checked_nodes)} steps.")
+            logger.debug(f"A New solution is Found after {self.n_checked_nodes} steps.")
             logger.debug(
-                f"Totally, we have Found {len(self.selected_nodes)} Solutions "
-                f"[{len(self.checked_nodes)} checked | {len(self.frontier)} unchecked]."
+                f"Totally, we have Found {self.n_checked_nodes} Solutions "
+                f"[{self.n_checked_nodes} checked | {len(self.frontier)} unchecked]."
             )
             logger.debug(f"New Solution: \n{selected_node}")
             return True
