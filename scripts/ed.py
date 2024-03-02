@@ -1,6 +1,9 @@
+import sys
+
 import numpy as np
 import pandas as pd
 
+from qlinks import logger
 from qlinks.model import QuantumLinkModel
 from qlinks.solver.deep_first_search import DeepFirstSearch
 from qlinks.symmetry.gauss_law import GaussLaw
@@ -13,6 +16,7 @@ def setup_dimer_model(
     gauss_law.flux_sector = flux_sector
     dfs = DeepFirstSearch(gauss_law, max_steps=max_steps)
     basis = gauss_law.to_basis(dfs.solve(n_solution))
+    logger.info(f"basis memory usage: {sys.getsizeof(dfs.selected_nodes) / (1024**2):.3f} MB")
     model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
     return basis, model
 
@@ -24,6 +28,7 @@ def setup_link_model(
     gauss_law.flux_sector = flux_sector
     dfs = DeepFirstSearch(gauss_law, max_steps=max_steps)
     basis = gauss_law.to_basis(dfs.solve(n_solution))
+    logger.info(f"basis memory usage: {sys.getsizeof(dfs.selected_nodes) / (1024**2):.3f} MB")
     model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
     return basis, model
 
