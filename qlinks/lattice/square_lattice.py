@@ -32,7 +32,7 @@ class SquareLattice:
     length_x: int
     length_y: int
     links: Optional[npt.NDArray[np.int64]] = field(default=None, repr=False)
-    _empty_link_value: int = field(default=-1, repr=False)
+    _empty_link_value: int = field(init=False, default=-1, repr=False)
 
     def __post_init__(self) -> None:
         if any(axis < 2 for axis in self.shape):
