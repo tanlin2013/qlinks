@@ -5,10 +5,24 @@ from itertools import repeat
 import networkx as nx
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from ed import setup_dimer_model, setup_link_model  # noqa: F401
 from tqdm import tqdm
 
 csv_file = "data/qlm_type1_scars.csv"
+
+
+def matrix_nullity(mat):
+    if mat.shape[0] < 2**12:
+        return mat.shape[0] - np.linalg.matrix_rank(mat.toarray())
+    else:
+        s = sp.linalg.svds(
+            mat,
+            k=mat.shape[0] - 1,
+            return_singular_vectors=False,
+        )
+        nullity = np.count_nonzero(s < 1e-12)
+        return nullity + 1 if nullity > 0 else 0
 
 
 def task(lattice_shape, n_solution, coup_j, coup_rk):
@@ -24,8 +38,8 @@ def task(lattice_shape, n_solution, coup_j, coup_rk):
         nodes = np.where(two_steps_mat.diagonal() == d)[0]
         sub_g = nx.induced_subgraph(g, nodes)
         for c in nx.connected_components(sub_g):
-            mat = nx.to_numpy_array(sub_g.subgraph(c))
-            nullity = mat.shape[0] - np.linalg.matrix_rank(mat)
+            mat = nx.to_scipy_sparse_array(sub_g.subgraph(c), format="csr")
+            nullity = matrix_nullity(mat)
             if nullity > 0:
                 _df = pd.DataFrame(
                     {
