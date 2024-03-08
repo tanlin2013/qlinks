@@ -10,7 +10,7 @@ Real: TypeAlias = int | float | np.floating
 
 
 @total_ordering
-@dataclass
+@dataclass(slots=True)
 class Site:
     pos_x: int
     pos_y: int
@@ -42,7 +42,7 @@ class Site:
 
 
 @total_ordering
-@dataclass
+@dataclass(slots=True)
 class UnitVector:
     pos_x: Real
     pos_y: Real
