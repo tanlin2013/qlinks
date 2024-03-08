@@ -191,13 +191,10 @@ class GaussLaw(Node):
         return True
 
     def _fill_node(self, site: Site, config: npt.NDArray[np.int64]) -> Optional[Self]:
-        try:
-            new_node = deepcopy(self)
-            new_node._lattice.set_vertex_links(site, config)
-            if self.flux_sector is None or new_node._valid_for_flux(site):
-                return new_node
-        except LinkOverridingError:
-            pass
+        new_node = deepcopy(self)
+        new_node._lattice.set_vertex_links(site, config)
+        if self.flux_sector is None or new_node._valid_for_flux(site):
+            return new_node
         return None
 
     def _preconditioned_configs(self, site: Site) -> List[npt.NDArray[np.int64]]:
