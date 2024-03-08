@@ -160,7 +160,7 @@ class GaussLaw(Node):
         new_inst.charge_distri = self.charge_distri
         new_inst.flux_sector = self.flux_sector
         new_inst._lattice = SquareLattice(*self.shape)
-        new_inst._lattice.links = deepcopy(self._lattice.links)
+        new_inst._lattice.links = self._lattice.links.copy()
         return new_inst
 
     def __hash__(self) -> int:
