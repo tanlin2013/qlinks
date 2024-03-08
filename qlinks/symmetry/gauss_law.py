@@ -222,7 +222,7 @@ class GaussLaw(Node):
         return set()
 
     def is_the_solution(self) -> bool:
-        if np.isnan(self.charge(next(reversed(self._lattice)))):  # not fully filled
+        if self._lattice.empty_link_index().size > 0:  # not fully filled
             return False
         if not np.all([self.charge(site) == self[site] for site in self._lattice]):
             return False
