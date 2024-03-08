@@ -184,15 +184,10 @@ class GaussLaw(Node):
         return None
 
     def _valid_for_flux(self, site: Site) -> bool:
-        _ax_flux = self._lattice.axial_flux  # func alias
-        neighbors = [site + UnitVectors().leftward, site + UnitVectors().downward]
-        for axis, neighbor in enumerate(neighbors):
-            if np.isnan(_ax_flux(site[axis], axis)) or np.isnan(_ax_flux(neighbor[axis], axis)):
-                continue
-            elif (_ax_flux(site[axis], axis) != self.flux_sector[axis]) or (
-                _ax_flux(site[axis], axis) != _ax_flux(neighbor[axis], axis)
-            ):
-                return False
+        for axis in range(2):
+            if site[axis ^ 1] == (self._lattice.shape[axis ^ 1] - 1):  # have filled a line
+                if self._lattice.axial_flux(site[axis], axis) != self.flux_sector[axis]:
+                    return False
         return True
 
     def _fill_node(self, site: Site, config: npt.NDArray[np.int64]) -> Optional[Self]:
