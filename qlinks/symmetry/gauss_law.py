@@ -177,9 +177,9 @@ class GaussLaw(Node):
         return "".join(map(str, self._lattice.links))
 
     def _next_empty_site(self) -> Optional[Site]:
-        site_idx = self._lattice.empty_link_index().tolist()
-        if site_idx:
-            site_idx = site_idx[0] // 2
+        link_idx = self._lattice.empty_link_index()
+        if link_idx.size > 0:
+            site_idx = link_idx[0] // 2  # retrieve the first one
             return Site(site_idx % self._lattice.length_x, site_idx // self._lattice.length_x)
         return None
 
