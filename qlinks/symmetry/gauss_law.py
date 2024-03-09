@@ -11,10 +11,7 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.computation_basis import ComputationBasis
-from qlinks.exceptions import (
-    InvalidArgumentError,
-    InvalidOperationError,
-)
+from qlinks.exceptions import InvalidArgumentError, InvalidOperationError
 from qlinks.lattice.component import Site
 from qlinks.lattice.square_lattice import SquareLattice, Vertex
 from qlinks.solver.deep_first_search import Node
