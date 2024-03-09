@@ -31,9 +31,9 @@ repos:
     -   id: poetry-check
         args: ['--lock', '--no-cache']
         stages: [push]
-#    -   id: poetry-lock
-#        args: ['--no-update', '--no-cache']
-#        stages: [push]
+    -   id: poetry-lock
+        args: ['--no-update', '--no-cache']
+        stages: [push]
 
 -   repo: https://github.com/commitizen-tools/commitizen
     rev: v2.40.0
