@@ -129,10 +129,10 @@ class DeepFirstSearch(Generic[AnyNode]):
         logger.info("Deep First Search starts.")
         for n_step in count(start=1):
             if self._reach_stop_criteria(n_step):
-                return self.selected_nodes
+                break
 
             found_new = self._diagnose_node()
             if found_new and len(self.selected_nodes) >= n_solution:
                 logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
-                return self.selected_nodes
+                break
         return self.selected_nodes
