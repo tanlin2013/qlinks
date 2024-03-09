@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
 
       - name: pip cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: lint-pip-${{ hashFiles('**/pyproject.toml') }}
