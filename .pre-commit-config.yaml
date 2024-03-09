@@ -26,7 +26,7 @@ repos:
         additional_dependencies: [Flake8-pyproject]
 
 -   repo: https://github.com/python-poetry/poetry
-    rev: 1.3.2
+    rev: 1.8.2
     hooks:
     -   id: poetry-check
         args: ['--lock', '--no-cache']
