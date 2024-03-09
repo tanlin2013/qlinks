@@ -1,5 +1,7 @@
 # qlinks: Quantum link model
 
+<img src="docs/source/images/qdm_6x4_kinetic_graph.png" alt="alt text" width="400"/>
+
 _________________
 
 [![PyPI version](https://badge.fury.io/py/qlinks.svg)](http://badge.fury.io/py/qlinks)
