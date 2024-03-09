@@ -21,9 +21,49 @@ Quantum link model
 
 Installation
 ------------
+#### 1. Install the package from PyPI:
+```bash
+pip install qlinks
+```
+#### 2. Install the package from source:
+```bash
+poetry install --all-extras
+```
+#### 3. Docker
+```bash
+docker pull tanlin2013/qlinks:latest
+```
 
 Getting started
 ---------------
+
+#### 1. Enumeration of the Basis
+<img src="docs/source/images/qdm_basis_4x2.png" alt="alt text" width="500"/>
+
+We implement the depth-first search (backtracking) algorithm
+to enumerate all basis satisfying the Gauss law.
+
+```python
+from qlinks.solver.deep_first_search import DeepFirstSearch
+from qlinks.symmetry.gauss_law import GaussLaw
+
+lattice_shape = (4, 2)
+gauss_law = GaussLaw.from_staggered_charge_distri(*lattice_shape)
+gauss_law.flux_sector = (0, 0)
+dfs = DeepFirstSearch(gauss_law, max_steps=int(1e8))
+basis = gauss_law.to_basis(dfs.solve(n_solution=16))
+```
+
+#### 2. Easy construction of the Hamiltonian
+
+```python
+from qlinks.model import QuantumLinkModel
+
+coup_j, coup_rk = (1.0, 1.0)
+model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
+ham = model.hamiltonian.todense()
+```
+The Hamiltonian is a scipy sparse matrix, but we can convert it to a dense matrix for small systems.
 
 License
 -------
