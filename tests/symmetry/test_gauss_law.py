@@ -143,12 +143,13 @@ class TestGaussLaw:
             (np.zeros((2, 2)), None, 18, does_not_raise()),
             ([[1, -1], [-1, 1]], None, 8, does_not_raise()),
             ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, np.nan, pytest.raises(StopIteration)),
-            (np.zeros((4, 4)), None, 2970, does_not_raise()),  # 3.7 secs
-            # (np.zeros((6, 4)), None, 98466, does_not_raise()),  # 2 mins 20 secs
+            (np.zeros((4, 4)), None, 2970, does_not_raise()),  # 1.95 secs
+            # (np.zeros((6, 4)), None, 98466, does_not_raise()),  # 1 min 7 secs
             (GaussLaw.staggered_charge_distri(4, 4), None, 272, does_not_raise()),
-            (np.zeros((4, 4)), (0, 0), 990, does_not_raise()),  # 2.7 secs
+            (np.zeros((4, 4)), (0, 0), 990, does_not_raise()),  # 1.2 secs
+            # (np.zeros((6, 4)), (0, 0), 32810, does_not_raise()),  # 45 secs
             (GaussLaw.staggered_charge_distri(4, 4), (0, 0), 132, does_not_raise()),
-            # (GaussLaw.staggered_charge_distri(6, 4), (0, 0), 1456, does_not_raise()),  # 7.5 secs
+            # (GaussLaw.staggered_charge_distri(6, 4), (0, 0), 1456, does_not_raise()),  # 3 secs
         ],
     )
     def test_multi_solutions(self, charge_distri, flux_sector, n_expected_solution, expectation):
