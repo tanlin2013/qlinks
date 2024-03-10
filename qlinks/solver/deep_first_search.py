@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from itertools import count
 from typing import Generic, List, Protocol, Self, Set, TypeVar
+from tqdm import tqdm
 
 from qlinks import logger
 
@@ -71,8 +72,9 @@ class DeepFirstSearch(Generic[AnyNode]):
     def frontier_is_empty(self) -> bool:
         return not bool(self.frontier)
 
-    def _reach_stop_criteria(self, n_step: int) -> bool:
+    def _reach_stop_criteria(self, n_step: int, pbar: tqdm, n_solution: int) -> bool:
         if self.frontier_is_empty or n_step == self.max_steps:
+            pbar.close()
             if len(self.selected_nodes) == 0:
                 raise StopIteration(f"No Solution Found after {n_step} steps!")
             elif n_step == self.max_steps:
@@ -81,6 +83,10 @@ class DeepFirstSearch(Generic[AnyNode]):
                 f"No more new Solutions can be found, end up with "
                 f"{len(self.selected_nodes)} Solutions in {n_step} steps."
             )
+            return True
+        elif len(self.selected_nodes) >= n_solution:
+            pbar.close()
+            logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
             return True
         return False
 
@@ -109,7 +115,7 @@ class DeepFirstSearch(Generic[AnyNode]):
         self.frontier.update(new_nodes)  # warn: no loop assumption
         return False
 
-    def solve(self, n_solution: int = 1) -> List[AnyNode]:
+    def solve(self, n_solution: int = 1, progress: bool = True) -> List[AnyNode]:
         """Search for the solutions.
 
         Args:
@@ -118,6 +124,7 @@ class DeepFirstSearch(Generic[AnyNode]):
             just set as a large number (far larger than the configuration space), and the algorithm
             will automatically stop after it walked through the entire configuration space (or when
             it has exceeded `max_steps`).
+            progress: Whether to show the progress bar. Default True.
 
         Returns:
             A :class:`Node` or a list of :class:`Node` which fulfills :func:`~Node.is_the_solution`.
@@ -127,12 +134,14 @@ class DeepFirstSearch(Generic[AnyNode]):
              exceeds `max_steps`.
         """
         logger.info("Deep First Search starts.")
-        for n_step in count(start=1):
-            if self._reach_stop_criteria(n_step):
-                break
+        with tqdm(total=self.max_steps, disable=not progress) as pbar:
+            for n_step in count(start=1):
+                if self._reach_stop_criteria(n_step, pbar, n_solution):
+                    break
 
-            found_new = self._diagnose_node()
-            if found_new and len(self.selected_nodes) >= n_solution:
-                logger.info(f"Found {n_solution} Solutions as required in {n_step} steps.")
-                break
+                found_new = self._diagnose_node()
+                if found_new:
+                    pbar.reset(total=self.n_checked_nodes + len(self.frontier))
+                    pbar.update(self.n_checked_nodes)
+                    pbar.refresh()
         return self.selected_nodes
