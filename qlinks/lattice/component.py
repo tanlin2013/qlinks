@@ -87,10 +87,10 @@ class UnitVector:
 
 @dataclass(frozen=True)
 class UnitVectors:
-    upward: UnitVector = field(default_factory=lambda: UnitVector(0, 1))
-    downward: UnitVector = field(default_factory=lambda: -1 * UnitVector(0, 1))
-    rightward: UnitVector = field(default_factory=lambda: UnitVector(1, 0))
-    leftward: UnitVector = field(default_factory=lambda: -1 * UnitVector(1, 0))
+    upward: UnitVector = field(default=UnitVector(0, 1))
+    downward: UnitVector = field(default=-1 * UnitVector(0, 1))
+    rightward: UnitVector = field(default=UnitVector(1, 0))
+    leftward: UnitVector = field(default=-1 * UnitVector(1, 0))
     _instance: Self = None
 
     def __new__(cls, *args, **kwargs):  # singleton pattern
