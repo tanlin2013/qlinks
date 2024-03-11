@@ -104,7 +104,7 @@ class SquareLattice:
         vertex_link_idx = Vertex(self, self[site]).link_index()
         if np.any(self.links[vertex_link_idx] == self._empty_link_value):
             return np.nan
-        return np.sum((self.links[vertex_link_idx] - 0.5) * Vertex.order()).astype(int)
+        return np.sum(self.links[vertex_link_idx] * Vertex.order())
 
     def axial_flux(self, idx: int, axis: Optional[int] = 0) -> float:
         """Compute the electric flux along the axis.
@@ -137,7 +137,7 @@ class SquareLattice:
         }[axis]
         if np.any(self.links[link_idx] == self._empty_link_value):
             return np.nan
-        return np.sum(self.links[link_idx] - 0.5)
+        return np.sum(self.links[link_idx]) - 0.5 * len(link_idx)
 
     def bipartite_index(
         self, idx: int, axis: Optional[int] = 0
