@@ -65,6 +65,9 @@ exclude_patterns = []
 # Allowing docstring in both __init__ and right under class definition
 autoclass_content = "both"
 
+# Allow notebook errors
+nbsphinx_allow_errors = True
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
