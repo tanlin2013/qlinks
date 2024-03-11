@@ -90,7 +90,7 @@ class SquareLattice:
         return np.where(self.links == self._empty_link_value)[0]
 
     def set_vertex_links(self, site: Site, states: npt.NDArray[np.int64]) -> None:
-        vertex_link_idx = Vertex(self, self[site]).link_index()
+        vertex_link_idx = Vertex(self, site).link_index()
         if len(states) != 4:
             raise InvalidArgumentError(f"Expected 4 Spins in states, got {len(states)}.")
         if np.any(
@@ -101,7 +101,7 @@ class SquareLattice:
         self.links[vertex_link_idx] = states
 
     def charge(self, site: Site) -> int | float:
-        vertex_link_idx = Vertex(self, self[site]).link_index()
+        vertex_link_idx = Vertex(self, site).link_index()
         if np.any(self.links[vertex_link_idx] == self._empty_link_value):
             return np.nan
         return np.sum(self.links[vertex_link_idx] * Vertex.order())
