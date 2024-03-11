@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from dataclasses import astuple, dataclass, field
 from itertools import product
 from typing import Iterator, Optional, Protocol, Self, Tuple
@@ -263,7 +262,7 @@ class Plaquette(LocalOperator):
         """
         if not isinstance(basis, ComputationBasis):
             return NotImplemented
-        flipped_states = deepcopy(basis.index)
+        flipped_states = basis.index.copy()
         flipped_states[self.flippable(basis)] ^= self._mask
         return flipped_states
 
