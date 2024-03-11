@@ -11,11 +11,8 @@ from qlinks import logger
 def task(args):
     def task_wrapper(lattice_shape, n_solution, coup_j, coup_rk):
         t0 = time()
-        basis, model = setup_link_model(
+        _ = setup_link_model(
             lattice_shape, n_solution, coup_j, coup_rk, max_steps=int(1e14)
-        )
-        basis.dataframe.to_parquet(
-            f"data/qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
         )
         logger.info(f"lattice {lattice_shape}, time elapsed: {time() - t0:.3e}s")
 

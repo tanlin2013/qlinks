@@ -2,6 +2,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+from time import time
 
 from qlinks import logger
 from qlinks.model import QuantumLinkModel
@@ -12,11 +13,16 @@ from qlinks.symmetry.gauss_law import GaussLaw
 def setup_dimer_model(
     lattice_shape, n_solution, coup_j, coup_rk, flux_sector=(0, 0), max_steps=int(1e8)
 ):
+    t0 = time()
     gauss_law = GaussLaw.from_staggered_charge_distri(*lattice_shape)
     gauss_law.flux_sector = flux_sector
     dfs = DeepFirstSearch(gauss_law, max_steps=max_steps)
     basis = gauss_law.to_basis(dfs.solve(n_solution))
+    logger.info(f"lattice {lattice_shape}, DFS time elapsed: {time() - t0:.3e}s")
     logger.info(f"basis memory usage: {sys.getsizeof(dfs.selected_nodes) / (1024**2):.3f} MB")
+    basis.dataframe.to_parquet(
+        f"data/qdm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
+    )
     model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
     return basis, model
 
@@ -24,11 +30,16 @@ def setup_dimer_model(
 def setup_link_model(
     lattice_shape, n_solution, coup_j, coup_rk, flux_sector=(0, 0), max_steps=int(1e8)
 ):
+    t0 = time()
     gauss_law = GaussLaw.from_zero_charge_distri(*lattice_shape)
     gauss_law.flux_sector = flux_sector
     dfs = DeepFirstSearch(gauss_law, max_steps=max_steps)
     basis = gauss_law.to_basis(dfs.solve(n_solution))
+    logger.info(f"lattice {lattice_shape}, DFS time elapsed: {time() - t0:.3e}s")
     logger.info(f"basis memory usage: {sys.getsizeof(dfs.selected_nodes) / (1024**2):.3f} MB")
+    basis.dataframe.to_parquet(
+        f"data/qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
+    )
     model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
     return basis, model
 
