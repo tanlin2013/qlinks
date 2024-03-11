@@ -1,8 +1,8 @@
 import sys
+from time import time
 
 import numpy as np
 import pandas as pd
-from time import time
 
 from qlinks import logger
 from qlinks.model import QuantumLinkModel

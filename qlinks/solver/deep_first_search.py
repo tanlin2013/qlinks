@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from itertools import count
 from typing import Generic, List, Protocol, Self, Set, TypeVar
+
 from tqdm import tqdm
 
 from qlinks import logger

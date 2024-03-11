@@ -11,9 +11,7 @@ from qlinks import logger
 def task(args):
     def task_wrapper(lattice_shape, n_solution, coup_j, coup_rk):
         t0 = time()
-        _ = setup_link_model(
-            lattice_shape, n_solution, coup_j, coup_rk, max_steps=int(1e14)
-        )
+        _ = setup_link_model(lattice_shape, n_solution, coup_j, coup_rk, max_steps=int(1e14))
         logger.info(f"lattice {lattice_shape}, time elapsed: {time() - t0:.3e}s")
 
     return task_wrapper(*args)

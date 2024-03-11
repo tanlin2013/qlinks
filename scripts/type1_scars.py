@@ -3,11 +3,11 @@ import os
 from itertools import repeat
 from time import time
 
+import igraph
 import networkx as nx
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-import igraph
 from ed import setup_dimer_model, setup_link_model  # noqa: F401
 from tqdm import tqdm
 
@@ -67,16 +67,16 @@ if __name__ == "__main__":
         )
         df.to_csv(csv_file, index=False)
 
-    for lattice_shape, coup_j, coup_rk in tqdm(
-        inputs, desc=" outer", position=0, leave=True
-    ):
+    for lattice_shape, coup_j, coup_rk in tqdm(inputs, desc=" outer", position=0, leave=True):
         # basis, model = setup_link_model(
         #     lattice_shape, n_solution, coup_j, coup_rk, max_steps=int(1e8)
         # )
         # basis.dataframe.to_parquet(
         #     f"data/qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet", index=False
         # )
-        basis = ComputationBasis.from_parquet(f"data/qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet")
+        basis = ComputationBasis.from_parquet(
+            f"data/qlm_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet"
+        )
         model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
 
         two_steps_mat = model.kinetic_term @ model.kinetic_term
