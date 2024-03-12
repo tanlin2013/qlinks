@@ -116,7 +116,7 @@ class DeepFirstSearch(Generic[AnyNode]):
         self.frontier.update(new_nodes)  # warn: no loop assumption
         return False
 
-    def solve(self, n_solution: int = 1, progress: bool = True) -> List[AnyNode]:
+    def solve(self, n_solution: int = 1, progress: bool = False) -> List[AnyNode]:
         """Search for the solutions.
 
         Args:
