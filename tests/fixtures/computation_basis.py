@@ -52,7 +52,7 @@ def lattice_2x2_basis() -> ComputationBasis:
 def lattice_4x2_basis() -> ComputationBasis:
     """Staggered charge distribution, flux sector (0, 0).
 
-    .. image:: ./qdm_basis_4x2.png
+    .. image:: /docs/source/images/qdm_basis_4x2.png
         :width: 100px
         :align: center
     """
@@ -86,7 +86,7 @@ def lattice_4x2_basis() -> ComputationBasis:
 def lattice_4x4_basis() -> ComputationBasis:
     """Staggered charge distribution, flux sector (0, 0).
 
-    .. image:: ./qdm_basis_4x4.png
+    .. image:: /docs/source/images/qdm_basis_4x4.png
         :width: 100px
         :align: center
     """
