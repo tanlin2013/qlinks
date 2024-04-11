@@ -5,7 +5,7 @@ from qlinks.computation_basis import ComputationBasis
 
 
 @pytest.fixture(scope="function")
-def lattice_2x2_basis() -> ComputationBasis:
+def qlm_2x2_basis() -> ComputationBasis:
     """Zero charge distribution, flux sector (0, 0).
 
     o◄──────o◄──────o    o◄──────o◄──────o   o◄──────o──────►o
@@ -49,7 +49,7 @@ def lattice_2x2_basis() -> ComputationBasis:
 
 
 @pytest.fixture(scope="function")
-def lattice_4x2_basis() -> ComputationBasis:
+def qdm_4x2_basis() -> ComputationBasis:
     """Staggered charge distribution, flux sector (0, 0).
 
     .. image:: /docs/source/images/qdm_basis_4x2.png
@@ -83,13 +83,13 @@ def lattice_4x2_basis() -> ComputationBasis:
 
 
 @pytest.fixture(scope="function")
-def lattice_4x4_basis() -> ComputationBasis:
+def qdm_4x4_basis() -> ComputationBasis:
     """Staggered charge distribution, flux sector (0, 0).
 
     .. image:: /docs/source/images/qdm_basis_4x4.png
         :width: 100px
         :align: center
     """
-    basis = ComputationBasis.from_parquet("4x4_basis.parquet")
+    basis = ComputationBasis.from_parquet("qdm_4x4_basis.parquet")
     basis.sort()
     return basis

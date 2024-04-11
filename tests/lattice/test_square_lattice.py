@@ -212,10 +212,10 @@ class TestPlaquette:
         ],
     )
     def test_flippable(
-        self, lattice_2x2_basis: ComputationBasis, lattice: SquareLattice, site: Site, expect
+        self, qlm_2x2_basis: ComputationBasis, lattice: SquareLattice, site: Site, expect
     ):
         plaquette = Plaquette(lattice, site)
-        np.testing.assert_array_equal(plaquette.flippable(lattice_2x2_basis), expect)
+        np.testing.assert_array_equal(plaquette.flippable(qlm_2x2_basis), expect)
 
     @pytest.mark.parametrize(
         "lattice, site, expect",
@@ -228,10 +228,10 @@ class TestPlaquette:
         indirect=["lattice"],
     )
     def test_matrix_multiplication(
-        self, lattice_2x2_basis: ComputationBasis, lattice: SquareLattice, site: Site, expect
+        self, qlm_2x2_basis: ComputationBasis, lattice: SquareLattice, site: Site, expect
     ):
         plaquette = Plaquette(lattice, site)
-        np.testing.assert_array_equal(plaquette @ lattice_2x2_basis, expect)
+        np.testing.assert_array_equal(plaquette @ qlm_2x2_basis, expect)
 
     @pytest.mark.parametrize("lattice", [(2, 2)], indirect=True)
     @pytest.mark.parametrize(
@@ -245,13 +245,13 @@ class TestPlaquette:
     )
     def test_matrix_element(
         self,
-        lattice_2x2_basis: ComputationBasis,
+        qlm_2x2_basis: ComputationBasis,
         lattice: SquareLattice,
         site: Site,
         expect_basis_idx,
     ):
         plaquette = Plaquette(lattice, site)
-        mat = plaquette[lattice_2x2_basis].toarray()
+        mat = plaquette[qlm_2x2_basis].toarray()
         assert np.all(mat[expect_basis_idx] == 1)
         mask = np.zeros_like(mat, dtype=bool)
         mask[expect_basis_idx] = True
@@ -259,11 +259,11 @@ class TestPlaquette:
 
     @pytest.mark.parametrize("lattice", [(2, 2)], indirect=True)
     @pytest.mark.parametrize("site", [Site(0, 0), Site(1, 0), Site(0, 1), Site(1, 1)])
-    def test_power(self, lattice_2x2_basis, lattice, site):
+    def test_power(self, qlm_2x2_basis, lattice, site):
         plaquette = Plaquette(lattice, site)
         for power in range(5):
             plaquette_power = plaquette**power
-            mat = plaquette_power[lattice_2x2_basis].toarray()
+            mat = plaquette_power[qlm_2x2_basis].toarray()
             if power % 2 == 0:
                 assert plaquette_power._mask == 0
                 assert np.count_nonzero(mat - np.diag(np.diagonal(mat))) == 0  # diagonal matrix
