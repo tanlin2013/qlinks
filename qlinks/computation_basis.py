@@ -66,3 +66,7 @@ class ComputationBasis:
     @classmethod
     def from_parquet(cls, *args, **kwargs) -> Self:
         return cls(pd.read_parquet(*args, **kwargs).to_numpy())
+
+    @classmethod
+    def from_index(cls, index: npt.NDArray[np.int64], n_links: int) -> Self:
+        return cls(np.array([list(f"{i:0{n_links}b}") for i in index], dtype=int))

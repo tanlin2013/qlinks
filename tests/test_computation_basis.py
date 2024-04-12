@@ -43,3 +43,9 @@ class TestComputationBasis:
         assert not np.array_equal(basis.index, expect)  # not sorted
         basis.sort()
         np.testing.assert_array_equal(basis.index, expect)
+
+    def test_from_index(self, qlm_2x2_basis):
+        np.testing.assert_equal(
+            ComputationBasis.from_index(np.array([27, 78, 105, 150, 177, 228]), 8).links,
+            qlm_2x2_basis.links
+        )
