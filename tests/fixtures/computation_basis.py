@@ -31,6 +31,10 @@ def qlm_2x2_basis() -> ComputationBasis:
     o──────►o◄──────o    o──────►o──────►o   o──────►o──────►o
 
            150                  177                 228
+
+    .. image:: /docs/source/images/qlm_basis_2x2.png
+        :width: 100px
+        :align: center
     """
     basis = ComputationBasis(
         np.array(
