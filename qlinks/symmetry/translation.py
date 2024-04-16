@@ -43,6 +43,10 @@ class Translation:
     def __lshift__(self, shift: UnitVector) -> ComputationBasis:
         return self.__rshift__(-1 * shift)
 
+    def __iter__(self) -> Iterator[Tuple[int, int]]:
+        for kx, ky in product(range(self.lattice.length_x), range(self.lattice.length_y)):
+            yield kx, ky
+
     @property
     def periodicity(self) -> pd.Series:
         return self._df.nunique()
