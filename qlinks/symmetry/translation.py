@@ -4,16 +4,15 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Tuple
+from typing import Tuple, Iterator
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
-from scipy.stats import rankdata
 
 from qlinks.computation_basis import ComputationBasis
-from qlinks.exceptions import InvalidArgumentError
+from qlinks.exceptions import InvalidArgumentError, InvalidOperationError
 from qlinks.lattice.component import UnitVector
 from qlinks.lattice.square_lattice import LocalOperator, SquareLattice
 
@@ -60,14 +59,41 @@ class Translation:
         basis_idx = np.sort(self.representatives.unique())
         return ComputationBasis.from_index(basis_idx, self.lattice.n_links)
 
-    def shift(self, target_basis: pd.Series) -> pd.Series:
-        return pd.Series(
-            {
-                col: idx[0]
-                for col, target_value in target_basis.items()
-                if (idx := self._df.index[self._df[col] == target_value].tolist())
-            }
+    def get_representatives(self, target_basis: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
+        return np.array(
+            [
+                self.representatives.iloc[np.min(idx)]
+                for val in target_basis
+                if (idx := np.where(self._df == val)[1]).size > 0
+            ]
         )
+
+    def sort_to_representative(self, target_basis: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
+        repr_idx = self.representative_basis.index
+        insert_pos = np.searchsorted(repr_idx, target_basis)
+        sorting_key = np.full_like(target_basis, -1)
+        mask = (insert_pos < len(repr_idx)) & (repr_idx[insert_pos] == target_basis)
+        sorting_key[mask] = insert_pos[mask]
+        return sorting_key
+
+    def shift(self, target_basis: npt.NDArray[np.int64]) -> pd.Series:
+        """
+        Find the shift that maps the target basis into the representative basis.
+
+        Args:
+            target_basis:
+
+        Returns:
+
+        """
+        res = {}
+        for val in target_basis:
+            if (idx := np.where(self._df == val))[1].size > 0:
+                matched_col = self._df.iloc[:, np.min(idx[1])]
+                res[val] = tuple(
+                    np.subtract(matched_col.index[matched_col == val][0], matched_col.idxmin())
+                )
+        return pd.Series(res)
 
     def phase_factor(
         self, kx: int, ky: int, shift: pd.Series
@@ -107,17 +133,14 @@ class Translation:
         flippable = flipper.flippable(basis)
         if len(flipped_states) != basis.n_states:
             raise InvalidArgumentError("The number of basis is not preserved.")
-        if not np.all(np.isin(flipped_states, self.basis.index)):
-            raise InvalidArgumentError("Basis is not closure under the applied operator.")
-        col_idx = rankdata(self.representatives.loc[flipped_states], method="dense") - 1
-        col_idx = col_idx[flippable[col_idx]]
-        row_idx = np.arange(basis.n_states)[flippable[col_idx]]
-        shift = self.shift(pd.Series(flipped_states, index=basis.index))
-        if shift.empty:
-            return np.zeros((basis.n_states, basis.n_states))
+        flipped_reprs = self.get_representatives(flipped_states)
+        if not np.isin(flipped_reprs, basis.index).all():
+            raise InvalidOperationError("Basis is not closure under the applied operator.")
+        row_idx = np.arange(basis.n_states)[flippable]
+        col_idx = self.sort_to_representative(flipped_reprs)[flippable]
         return (
             self.normalization_factor()
-            * self.phase_factor(kx, ky, shift)
+            * self.phase_factor(kx, ky, self.shift(flipped_states))
             * sp.csr_array(
                 (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)),
                 shape=(basis.n_states, basis.n_states),
