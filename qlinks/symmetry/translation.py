@@ -58,7 +58,7 @@ class Translation:
     @property
     def representative_basis(self) -> ComputationBasis:
         basis_idx = np.sort(self.representatives.unique())
-        return ComputationBasis(self.basis.dataframe.loc[basis_idx].to_numpy())
+        return ComputationBasis.from_index(basis_idx, self.lattice.n_links)
 
     def shift(self, target_basis: pd.Series) -> pd.Series:
         return pd.Series(
