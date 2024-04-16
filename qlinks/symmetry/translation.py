@@ -80,7 +80,7 @@ class Translation:
         return np.repeat(phase_fac[None, :], len(phase_fac), axis=0)
 
     def normalization_factor(self) -> npt.NDArray[np.float64]:
-        period = self.periodicity[self.representatives.unique()].to_numpy()
+        period = self.periodicity[self.representatives.drop_duplicates().index].to_numpy()
         return np.sqrt(np.outer(period, 1 / period))
 
     def __getitem__(
