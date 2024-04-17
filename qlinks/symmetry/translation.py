@@ -87,8 +87,8 @@ class Translation:
         """
         res = {}
         for val in target_basis:
-            if (idx := np.where(self._df == val))[1].size > 0:
-                matched_col = self._df.iloc[:, np.min(idx[1])]
+            if (idx := np.where(self._df == val)[1]).size > 0:
+                matched_col = self._df.iloc[:, np.min(idx)]
                 res[val] = tuple(
                     np.subtract(matched_col.index[matched_col == val][0], matched_col.idxmin())
                 )
