@@ -97,7 +97,7 @@ class Translation:
     def phase_factor(
         self, kx: int, ky: int, shift: pd.Series
     ) -> npt.NDArray[np.float64 | np.complex128]:
-        if not ((kx in range(self.lattice.length_x)) or (ky in range(self.lattice.length_y))):
+        if not ((kx in range(self.lattice.length_x)) and (ky in range(self.lattice.length_y))):
             raise InvalidArgumentError("The momentum should be in the first Brillouin zone.")
         momentum = np.array([kx / self.lattice.length_x, ky / self.lattice.length_y])
         phase = momentum @ np.array(shift.tolist()).T
