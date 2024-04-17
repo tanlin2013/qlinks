@@ -116,7 +116,7 @@ class Translation:
         Args:
             item: A tuple of a local operator and momentum:
                 - local operator: A local operator that acts on the representative basis.
-                - momentum: A tuple of momentum (kx, ky).
+                - momenta: A tuple of momenta (kx, ky).
 
         Returns:
 
