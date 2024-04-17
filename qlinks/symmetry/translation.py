@@ -98,9 +98,9 @@ class Translation:
         self, kx: int, ky: int, shift: pd.Series
     ) -> npt.NDArray[np.float64 | np.complex128]:
         if not ((kx in range(self.lattice.length_x)) and (ky in range(self.lattice.length_y))):
-            raise InvalidArgumentError("The momentum should be in the first Brillouin zone.")
-        momentum = np.array([kx / self.lattice.length_x, ky / self.lattice.length_y])
-        phase = momentum @ np.array(shift.tolist()).T
+            raise InvalidArgumentError("The momenta should be in the first Brillouin zone.")
+        momenta = np.array([kx / self.lattice.length_x, ky / self.lattice.length_y])
+        phase = momenta @ np.array(shift.tolist()).T
         phase_fac = np.real_if_close(np.exp(1j * 2 * np.pi * phase), tol=1e-12)
         return np.repeat(phase_fac[None, :], len(phase_fac), axis=0)
 
@@ -114,7 +114,7 @@ class Translation:
         """
 
         Args:
-            item: A tuple of a local operator and momentum:
+            item: A tuple of a local operator and momenta:
                 - local operator: A local operator that acts on the representative basis.
                 - momenta: A tuple of momenta (kx, ky).
 
