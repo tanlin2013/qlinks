@@ -58,6 +58,14 @@ class Translation:
         basis_idx = np.sort(self.representatives.unique())
         return ComputationBasis.from_index(basis_idx, self.lattice.n_links)
 
+    def sort_to_representative(self, target_basis: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
+        repr_idx = self.representative_basis.index
+        insert_pos = np.searchsorted(repr_idx, target_basis)
+        sorting_key = np.full_like(target_basis, -1)
+        mask = (insert_pos < len(repr_idx)) & (repr_idx[insert_pos] == target_basis)
+        sorting_key[mask] = insert_pos[mask]
+        return sorting_key
+
     def get_representatives(self, target_basis: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
         return np.array(
             [
@@ -66,14 +74,6 @@ class Translation:
                 if (idx := np.where(self._df == val)[1]).size > 0
             ]
         )
-
-    def sort_to_representative(self, target_basis: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
-        repr_idx = self.representative_basis.index
-        insert_pos = np.searchsorted(repr_idx, target_basis)
-        sorting_key = np.full_like(target_basis, -1)
-        mask = (insert_pos < len(repr_idx)) & (repr_idx[insert_pos] == target_basis)
-        sorting_key[mask] = insert_pos[mask]
-        return sorting_key
 
     def shift(self, target_basis: npt.NDArray[np.int64]) -> pd.Series:
         """
