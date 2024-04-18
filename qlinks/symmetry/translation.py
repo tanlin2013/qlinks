@@ -66,11 +66,13 @@ class Translation:
         basis_idx = np.sort(self.compatible_representatives(momenta).unique())
         return ComputationBasis.from_index(basis_idx, self.lattice.n_links)
 
-    def sort_to_representative(self, target_basis: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
-        repr_idx = self.representative_basis.index
-        insert_pos = np.searchsorted(repr_idx, target_basis)
-        sorting_key = np.full_like(target_basis, -1)
-        mask = (insert_pos < len(repr_idx)) & (repr_idx[insert_pos] == target_basis)
+    @staticmethod
+    def search_sorted(
+        repr_idx: npt.NDArray[np.int64], target_idx: npt.NDArray[np.int64]
+    ) -> npt.NDArray[np.int64]:
+        insert_pos = np.searchsorted(repr_idx, target_idx)
+        sorting_key = np.full_like(target_idx, -1)
+        mask = (insert_pos < len(repr_idx)) & (repr_idx[insert_pos] == target_idx)
         sorting_key[mask] = insert_pos[mask]
         return sorting_key
 
@@ -142,7 +144,7 @@ class Translation:
         if not np.isin(flipped_reprs, basis.index).all():
             raise InvalidOperationError("Basis is not closure under the applied operator.")
         row_idx = np.arange(basis.n_states)[flippable]
-        col_idx = self.sort_to_representative(flipped_reprs)[flippable]
+        col_idx = self.search_sorted(basis.index, flipped_reprs)[flippable]
         return (
             sp.csr_array(
                 (
