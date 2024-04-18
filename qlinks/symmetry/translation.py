@@ -53,9 +53,17 @@ class Translation:
     def representatives(self) -> pd.Series:
         return self._df.min()
 
-    @property
-    def representative_basis(self) -> ComputationBasis:
-        basis_idx = np.sort(self.representatives.unique())
+    def compatible_representatives(self, momenta: Tuple[int, int]) -> pd.Series:
+        momenta = 2 * np.pi * np.array(momenta) / np.array(self.lattice.shape)
+        mask = np.full(self.basis.n_states, False)
+        for i, col in enumerate(self._df.columns):
+            shift = self._df.index[self._df[col] == self._df[col].min()]
+            norm = np.sum(np.exp(1j * momenta @ np.array(shift.tolist()).T))
+            mask[i] = np.linalg.norm(norm) > 1e-12
+        return self.representatives[mask]
+
+    def representative_basis(self, momenta: Tuple[int, int]) -> ComputationBasis:
+        basis_idx = np.sort(self.compatible_representatives(momenta).unique())
         return ComputationBasis.from_index(basis_idx, self.lattice.n_links)
 
     def sort_to_representative(self, target_basis: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
@@ -124,8 +132,8 @@ class Translation:
             >>> operator = LocalOperator(lattice, Site(0, 0))
             >>> momentum_basis_mat = ts[operator, (0, 0)]
         """
-        flipper, (kx, ky) = item
-        basis = self.representative_basis
+        flipper, momenta = item
+        basis = self.representative_basis(momenta)
         flipped_states = flipper @ basis
         flippable = flipper.flippable(basis)
         if len(flipped_states) != basis.n_states:
