@@ -99,14 +99,12 @@ class Translation:
     ) -> npt.NDArray[np.float64 | np.complex128]:
         if not ((kx in range(self.lattice.length_x)) and (ky in range(self.lattice.length_y))):
             raise InvalidArgumentError("The momenta should be in the first Brillouin zone.")
-        momenta = np.array([kx / self.lattice.length_x, ky / self.lattice.length_y])
-        phase = momenta @ np.array(shift.tolist()).T
-        phase_fac = np.real_if_close(np.exp(1j * 2 * np.pi * phase), tol=1e-12)
-        return np.repeat(phase_fac[None, :], len(phase_fac), axis=0)
+        momenta = 2 * np.pi * np.array([kx / self.lattice.length_x, ky / self.lattice.length_y])
+        return np.real_if_close(np.exp(1j * momenta @ np.array(shift.tolist()).T), tol=1e-12)
 
-    def normalization_factor(self) -> npt.NDArray[np.float64]:
+    def normalization_factor(self, row_idx, col_idx) -> npt.NDArray[np.float64]:
         period = self.periodicity[self.representatives.drop_duplicates().index].to_numpy()
-        return np.sqrt(np.outer(period, 1 / period))
+        return np.sqrt(period[row_idx] / period[col_idx])
 
     def __getitem__(
         self, item: Tuple[LocalOperator, Tuple[int, int]]
@@ -138,10 +136,12 @@ class Translation:
         row_idx = np.arange(basis.n_states)[flippable]
         col_idx = self.sort_to_representative(flipped_reprs)[flippable]
         return (
-            self.normalization_factor()
-            * self.phase_factor(kx, ky, self.shift(flipped_states))
-            * sp.csr_array(
-                (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)),
+            sp.csr_array(
+                (
+                    self.normalization_factor(row_idx, col_idx)
+                    * self.phase_factor(*momenta, shift=self.shift(flipped_states))[flippable],
+                    (row_idx, col_idx),
+                ),
                 shape=(basis.n_states, basis.n_states),
             )
         ).toarray()
