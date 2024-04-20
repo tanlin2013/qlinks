@@ -72,7 +72,7 @@ class Translation:
     ) -> npt.NDArray[np.int64]:
         insert_pos = np.searchsorted(repr_idx, target_idx)
         sorting_key = np.full_like(target_idx, -1)
-        mask = (insert_pos < len(repr_idx)) & (repr_idx[insert_pos] == target_idx)
+        mask = (insert_pos < len(repr_idx)) & (repr_idx in target_idx)
         sorting_key[mask] = insert_pos[mask]
         return sorting_key
 
