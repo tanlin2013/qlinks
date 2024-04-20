@@ -138,19 +138,20 @@ class Translation:
         basis = self.representative_basis(momenta)
         flipped_states = flipper @ basis
         flippable = flipper.flippable(basis)
-        if len(flipped_states) != basis.n_states:
-            raise InvalidArgumentError("The number of basis is not preserved.")
         flipped_reprs = self.get_representatives(flipped_states)
-        if not np.isin(flipped_reprs, basis.index).all():
-            raise InvalidOperationError("Basis is not closure under the applied operator.")
+        if not np.isin(flipped_reprs, self.representatives):
+            raise InvalidOperationError("Basis is not closure under the plaquette operator.")
         row_idx = np.arange(basis.n_states)[flippable]
         col_idx = self.search_sorted(basis.index, flipped_reprs)[flippable]
+        data = (
+            self.normalization_factor(row_idx, col_idx)
+            * self.phase_factor(*momenta, shift=self.shift(flipped_states))[flippable]
+        )
         return (
             sp.csr_array(
                 (
-                    self.normalization_factor(row_idx, col_idx)
-                    * self.phase_factor(*momenta, shift=self.shift(flipped_states))[flippable],
-                    (row_idx, col_idx),
+                    data[col_idx > 0],
+                    (row_idx[col_idx > 0], col_idx[col_idx > 0]),
                 ),
                 shape=(basis.n_states, basis.n_states),
             )
