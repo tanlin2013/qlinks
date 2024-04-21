@@ -96,7 +96,6 @@ class TestTranslation:
         indirect=["translation"],
     )
     def test_df(self, translation, expected):
-        pd.options.display.max_columns = None
         pd.testing.assert_frame_equal(translation._df, expected)
 
     @pytest.mark.parametrize(
