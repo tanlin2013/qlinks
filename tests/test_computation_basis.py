@@ -47,5 +47,5 @@ class TestComputationBasis:
     def test_from_index(self, qlm_2x2_basis):
         np.testing.assert_equal(
             ComputationBasis.from_index(np.array([27, 78, 105, 150, 177, 228]), 8).links,
-            qlm_2x2_basis.links
+            qlm_2x2_basis.links,
         )
