@@ -139,7 +139,7 @@ class Translation:
         flipped_states = flipper @ basis
         flippable = flipper.flippable(basis)
         flipped_reprs = self.get_representatives(flipped_states)
-        if not np.isin(flipped_reprs, self.representatives):
+        if not np.isin(flipped_reprs, self.representatives).all():
             raise InvalidOperationError("Basis is not closure under the plaquette operator.")
         row_idx = np.arange(basis.n_states)[flippable]
         col_idx = self.search_sorted(basis.index, flipped_reprs)[flippable]
