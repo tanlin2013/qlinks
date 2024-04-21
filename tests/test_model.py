@@ -26,7 +26,7 @@ class TestQuantumLinkModel:
         model = QuantumLinkModel(coup_j, coup_rk, (length_x, length_y), qlm_2x2_basis)
         ham = model.hamiltonian.todense()
         assert ishermitian(ham)
-        evals, evecs = eigh(ham)
+        evals = eigh(ham, eigvals_only=True)
         if np.isclose(coup_rk / coup_j, 1):
             assert np.isclose(evals[0], 0)  # E0 = 0, when coup_rk / coup_j = 1
         if coup_rk == 0:
@@ -46,7 +46,7 @@ class TestQuantumLinkModel:
         model = QuantumLinkModel(coup_j, coup_rk, (4, 4), basis_from_solver)
         ham = model.hamiltonian.todense()
         assert ishermitian(ham)
-        evals, evecs = eigh(ham)
+        evals = eigh(ham, eigvals_only=True)
         if np.isclose(coup_rk / coup_j, 1):
             assert np.isclose(evals[0], 0)  # E0 = 0, when coup_rk / coup_j = 1
         if coup_rk == 0:
