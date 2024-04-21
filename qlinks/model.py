@@ -14,6 +14,7 @@ from scipy.stats import rankdata
 from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidArgumentError
 from qlinks.lattice.square_lattice import SquareLattice
+from qlinks.symmetry.translation import Translation
 
 Real: TypeAlias = np.int64 | np.float64
 
@@ -33,10 +34,11 @@ class QuantumLinkModel:
     coup_rk: Real | npt.NDArray[Real]
     shape: Tuple[int, int]
     basis: ComputationBasis = field(repr=False)
+    momenta: Optional[Tuple[int, int]] = None
     _lattice: SquareLattice = field(init=False, repr=False)
-    _kinetic_term: sp.sparray[np.float64] = field(init=False, repr=False)
-    _potential_term: sp.sparray[np.float64] = field(init=False, repr=False)
-    _hamiltonian: sp.sparray[np.float64] = field(init=False, repr=False)
+    _kinetic_term: sp.sparray[np.float64 | np.complex128] = field(init=False, repr=False)
+    _potential_term: sp.sparray[np.float64 | np.complex128] = field(init=False, repr=False)
+    _hamiltonian: sp.sparray[np.float64 | np.complex128] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._lattice = SquareLattice(*self.shape)
@@ -44,7 +46,10 @@ class QuantumLinkModel:
             self.coup_j = np.asarray([self.coup_j] * self._lattice.size)
         if isinstance(self.coup_rk, (int, float)):
             self.coup_rk = np.asarray([self.coup_rk] * self._lattice.size)
-        self._build_hamiltonian()
+        if self.momenta is None:
+            self._build_hamiltonian()
+        else:
+            self._build_momentum_hamiltonian()
 
     def _build_hamiltonian(self) -> None:
         self._kinetic_term = sp.csr_array((self.basis.n_states, self.basis.n_states), dtype=float)
@@ -58,16 +63,35 @@ class QuantumLinkModel:
                 -self.coup_j[i] * flipper + self.coup_rk[i] * flip_counter  # type: ignore[index]
             )
 
+    def _build_momentum_hamiltonian(self) -> None:
+        translation = Translation(self._lattice, self.basis)
+        dim = translation.compatible_representatives(self.momenta).unique().size
+        if not dim > 0:
+            raise InvalidArgumentError("The momentum is not compatible with the lattice.")
+        self._kinetic_term = sp.csr_array((dim, dim), dtype=complex)
+        self._potential_term = sp.csr_array((dim, dim), dtype=complex)
+        self._hamiltonian = sp.csr_array((dim, dim), dtype=complex)
+        for i, plaquette in enumerate(self._lattice.iter_plaquettes()):
+            flipper, flip_counter = (
+                translation[plaquette, self.momenta],
+                translation[plaquette**2, self.momenta],
+            )
+            self._kinetic_term += flipper
+            self._potential_term += flip_counter
+            self._hamiltonian += (
+                -self.coup_j[i] * flipper + self.coup_rk[i] * flip_counter  # type: ignore[index]
+            )
+
     @property
-    def kinetic_term(self) -> sp.sparray[np.float64]:
+    def kinetic_term(self) -> sp.sparray[np.float64 | np.complex128]:
         return self._kinetic_term
 
     @property
-    def potential_term(self) -> sp.sparray[np.float64]:
+    def potential_term(self) -> sp.sparray[np.float64 | np.complex128]:
         return self._potential_term
 
     @property
-    def hamiltonian(self) -> sp.sparray[np.float64]:
+    def hamiltonian(self) -> sp.sparray[np.float64 | np.complex128]:
         return self._hamiltonian
 
     @property

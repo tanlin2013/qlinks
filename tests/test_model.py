@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 import pytest
 from scipy.linalg import eigh, ishermitian
 
@@ -16,6 +17,13 @@ def is_spectral_reflection_symmetric(evals):
         return np.allclose(
             np.sort(evals[evals > 1e-12]), np.sort(-(evals[evals < -1e-12])), atol=1e-12
         )
+
+
+def isin_with_tolerance(a, b, tol=1e-12):
+    result = np.zeros_like(a, dtype=bool)
+    for i, val_a in enumerate(a):
+        result[i] = any(abs(val_a - val_b) < tol for val_b in b)
+    return np.array(result)
 
 
 class TestQuantumLinkModel:
@@ -53,6 +61,30 @@ class TestQuantumLinkModel:
             assert is_spectral_reflection_symmetric(evals)
         else:
             assert not is_spectral_reflection_symmetric(evals)
+
+    @pytest.mark.parametrize("coup_j, coup_rk", [(1, 0), (1, 1)])
+    @pytest.mark.parametrize("length_x, length_y", [(2, 2), (4, 2)])
+    @pytest.mark.parametrize("momenta", [(0, 0), (1, 0), (0, 1), (1, 1)])
+    def test_momentum_hamiltonian(self, coup_j, coup_rk, length_x, length_y, momenta):
+        gauss_law = GaussLaw.from_staggered_charge_distri(length_x, length_y)
+        gauss_law.flux_sector = (0, 0)
+        dfs = DeepFirstSearch(gauss_law, max_steps=int(1e5))
+        basis = gauss_law.to_basis(dfs.solve(n_solution=int(1e3)))
+        k_model = QuantumLinkModel(coup_j, coup_rk, (length_x, length_y), basis, momenta)
+        k_ham = k_model.hamiltonian.todense()
+        assert ishermitian(k_ham)
+        g = nx.from_numpy_array(k_ham)
+        k_evals = eigh(k_ham, eigvals_only=True)
+        if coup_rk == 0:
+            assert nx.is_bipartite(g)
+            assert is_spectral_reflection_symmetric(k_evals)
+        else:
+            assert not nx.is_bipartite(g)
+            assert not is_spectral_reflection_symmetric(k_evals)
+
+        model = QuantumLinkModel(coup_j, coup_rk, (length_x, length_y), basis)
+        evals = eigh(model.hamiltonian.todense(), eigvals_only=True)
+        assert isin_with_tolerance(k_evals, evals).all()
 
     def test__bipartite_sorting_index(self):
         ...
