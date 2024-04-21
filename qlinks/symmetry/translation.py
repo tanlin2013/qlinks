@@ -150,8 +150,8 @@ class Translation:
         return (
             sp.csr_array(
                 (
-                    data[col_idx > 0],
-                    (row_idx[col_idx > 0], col_idx[col_idx > 0]),
+                    data[col_idx >= 0],
+                    (row_idx[col_idx >= 0], col_idx[col_idx >= 0]),
                 ),
                 shape=(basis.n_states, basis.n_states),
             )
