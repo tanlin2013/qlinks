@@ -70,11 +70,11 @@ class Translation:
     def search_sorted(
         repr_idx: npt.NDArray[np.int64], target_idx: npt.NDArray[np.int64]
     ) -> npt.NDArray[np.int64]:
-        insert_pos = np.searchsorted(repr_idx, target_idx)
-        sorting_key = np.full_like(target_idx, -1)
-        mask = (insert_pos < len(repr_idx)) & (repr_idx in target_idx)
-        sorting_key[mask] = insert_pos[mask]
-        return sorting_key
+        return np.where(
+            np.isin(target_idx, repr_idx),
+            np.searchsorted(repr_idx, target_idx),
+            -1,
+        )
 
     def get_representatives(self, target_basis: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
         return np.array(
@@ -118,7 +118,7 @@ class Translation:
 
     def __getitem__(
         self, item: Tuple[LocalOperator, Tuple[int, int]]
-    ) -> npt.NDArray[np.float64 | np.complex128]:
+    ) -> sp.sparray[np.float64 | np.complex128]:
         """
 
         Args:
@@ -147,12 +147,10 @@ class Translation:
             self.normalization_factor(row_idx, col_idx)
             * self.phase_factor(*momenta, shift=self.shift(flipped_states))[flippable]
         )
-        return (
-            sp.csr_array(
-                (
-                    data[col_idx >= 0],
-                    (row_idx[col_idx >= 0], col_idx[col_idx >= 0]),
-                ),
-                shape=(basis.n_states, basis.n_states),
-            )
-        ).toarray()
+        return sp.csr_array(
+            (
+                data[col_idx >= 0],
+                (row_idx[col_idx >= 0], col_idx[col_idx >= 0]),
+            ),
+            shape=(basis.n_states, basis.n_states),
+        )
