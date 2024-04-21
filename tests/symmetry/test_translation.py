@@ -275,13 +275,24 @@ class TestTranslation:
         np.testing.assert_array_equal(ph, expected)
         assert ph.dtype == np.complex128 or np.float64
 
-    @pytest.mark.parametrize("translation", [("qlm", (2, 2))], indirect=["translation"])
-    def test_normalization_factor(self, translation):
+    @pytest.mark.parametrize(
+        "translation, row_col_indices, expected",
+        [
+            (("qlm", (2, 2)), ([0, 1], [0, 1]), np.array([1, 1])),
+            (("qlm", (2, 2)), ([0, 1], [1, 0]), np.array([np.sqrt(2), 1 / np.sqrt(2)])),
+            (("qdm", (4, 2)), ([0, 1, 1, 3], [0, 1, 2, 1]), np.array([1, 1, 1, 1])),
+            (
+                ("qdm", (4, 2)),
+                ([0, 0, 1, 2], [1, 2, 0, 0]),
+                np.array([1 / np.sqrt(2), 1 / np.sqrt(2), np.sqrt(2), np.sqrt(2)]),
+            ),
+        ],
+        indirect=["translation"],
+    )
+    def test_normalization_factor(self, translation, row_col_indices, expected):
+        repr_idx = translation.representatives.drop_duplicates().to_numpy()
         np.testing.assert_allclose(
-            translation.normalization_factor([0, 1], [0, 1]), np.array([1, 1])
-        )
-        np.testing.assert_allclose(
-            translation.normalization_factor([0, 1], [1, 0]), np.array([np.sqrt(2), 1 / np.sqrt(2)])
+            translation.normalization_factor(repr_idx, *row_col_indices), expected
         )
 
     @pytest.mark.parametrize(

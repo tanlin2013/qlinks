@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Tuple, Iterator
+from typing import Tuple, Iterator, List
 
 import numpy as np
 import numpy.typing as npt
@@ -112,8 +112,16 @@ class Translation:
         momenta = 2 * np.pi * np.array([kx / self.lattice.length_x, ky / self.lattice.length_y])
         return np.real_if_close(np.exp(1j * momenta @ np.array(shift.tolist()).T), tol=1e-12)
 
-    def normalization_factor(self, row_idx, col_idx) -> npt.NDArray[np.float64]:
-        period = self.periodicity[self.representatives.drop_duplicates().index].to_numpy()
+    def normalization_factor(
+        self, repr_idx: npt.NDArray[np.int64], row_idx: List[int], col_idx: List[int]
+    ) -> npt.NDArray[np.float64]:
+        period = np.array(
+            [
+                self.periodicity.iloc[np.min(idx)]
+                for val in repr_idx
+                if (idx := np.where(self._df == val)[1]).size > 0
+            ]
+        )
         return np.sqrt(period[row_idx] / period[col_idx])
 
     def __getitem__(
@@ -144,7 +152,7 @@ class Translation:
         row_idx = np.arange(basis.n_states)[flippable]
         col_idx = self.search_sorted(basis.index, flipped_reprs)[flippable]
         data = (
-            self.normalization_factor(row_idx, col_idx)
+            self.normalization_factor(basis.index, row_idx, col_idx)
             * self.phase_factor(*momenta, shift=self.shift(flipped_states))[flippable]
         )
         return sp.csr_array(
