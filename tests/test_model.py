@@ -8,8 +8,14 @@ from qlinks.symmetry.gauss_law import GaussLaw
 
 
 def is_spectral_reflection_symmetric(evals):
-    mid_point = len(evals) // 2 if len(evals) % 2 == 0 else len(evals) // 2 + 1
-    return np.allclose(evals[:mid_point], -np.flip(evals[mid_point:]), atol=1e-12)
+    positive_part = evals[evals > 1e-12]
+    negative_part = evals[evals < -1e-12]
+    if len(positive_part) != len(negative_part):
+        return False
+    else:
+        return np.allclose(
+            np.sort(evals[evals > 1e-12]), np.sort(-(evals[evals < -1e-12])), atol=1e-12
+        )
 
 
 class TestQuantumLinkModel:
