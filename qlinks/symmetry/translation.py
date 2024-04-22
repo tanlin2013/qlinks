@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 from copy import deepcopy
 from dataclasses import dataclass, field
+from functools import cache, cached_property
 from itertools import product
 from typing import Iterator, List, Tuple
 
@@ -16,7 +18,7 @@ from qlinks.lattice.component import UnitVector
 from qlinks.lattice.square_lattice import LocalOperator, SquareLattice
 
 
-@dataclass(slots=True)
+@dataclass
 class Translation:
     lattice: SquareLattice
     basis: ComputationBasis = field(repr=False)
@@ -45,14 +47,20 @@ class Translation:
         for kx, ky in product(range(self.lattice.length_x), range(self.lattice.length_y)):
             yield kx, ky
 
-    @property
+    def __hash__(self) -> int:
+        return int(
+            hashlib.sha256(pd.util.hash_pandas_object(self._df, index=True).values).hexdigest(), 16
+        )
+
+    @cached_property
     def periodicity(self) -> pd.Series:
         return self._df.nunique()
 
-    @property
+    @cached_property
     def representatives(self) -> pd.Series:
         return self._df.min()
 
+    @cache
     def compatible_representatives(self, momenta: Tuple[int, int]) -> pd.Series:
         momenta = 2 * np.pi * np.array(momenta) / np.array(self.lattice.shape)
         equal_to_min = self._df.eq(self.representatives)
@@ -63,6 +71,7 @@ class Translation:
         ]
         return self.representatives[mask]
 
+    @cache
     def representative_basis(self, momenta: Tuple[int, int]) -> ComputationBasis:
         basis_idx = np.sort(self.compatible_representatives(momenta).unique())
         return ComputationBasis.from_index(basis_idx, self.lattice.n_links)
