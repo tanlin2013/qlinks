@@ -36,12 +36,14 @@ class QuantumLinkModel:
     basis: ComputationBasis = field(repr=False)
     momenta: Optional[Tuple[int, int]] = None
     _lattice: SquareLattice = field(init=False, repr=False)
+    _translation: Translation = field(init=False, repr=False)
     _kinetic_term: sp.sparray[np.float64 | np.complex128] = field(init=False, repr=False)
     _potential_term: sp.sparray[np.float64 | np.complex128] = field(init=False, repr=False)
     _hamiltonian: sp.sparray[np.float64 | np.complex128] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._lattice = SquareLattice(*self.shape)
+        self._translation = Translation(self._lattice, self.basis)
         if isinstance(self.coup_j, (int, float)):
             self.coup_j = np.asarray([self.coup_j] * self._lattice.size)
         if isinstance(self.coup_rk, (int, float)):
@@ -64,8 +66,7 @@ class QuantumLinkModel:
             )
 
     def _build_momentum_hamiltonian(self) -> None:
-        translation = Translation(self._lattice, self.basis)
-        dim = translation.compatible_representatives(self.momenta).unique().size
+        dim = self.translation.compatible_representatives(self.momenta).unique().size
         if not dim > 0:
             raise InvalidArgumentError("The momentum is not compatible with the lattice.")
         self._kinetic_term = sp.csr_array((dim, dim), dtype=complex)
@@ -73,8 +74,8 @@ class QuantumLinkModel:
         self._hamiltonian = sp.csr_array((dim, dim), dtype=complex)
         for i, plaquette in enumerate(self._lattice.iter_plaquettes()):
             flipper, flip_counter = (
-                translation[plaquette, self.momenta],
-                translation[plaquette**2, self.momenta],
+                self.translation[plaquette, self.momenta],
+                self.translation[plaquette**2, self.momenta],
             )
             self._kinetic_term += flipper
             self._potential_term += flip_counter
@@ -97,6 +98,10 @@ class QuantumLinkModel:
     @property
     def sparsity(self) -> float:
         return 1 - self._hamiltonian.count_nonzero() / self._hamiltonian.size
+
+    @property
+    def translation(self) -> Translation:
+        return self._translation
 
     @classmethod
     def from_whole_basis(cls, coup_j: float, coup_rk: float, shape: Tuple[int, int]) -> Self:
