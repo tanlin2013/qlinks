@@ -55,11 +55,12 @@ class Translation:
 
     def compatible_representatives(self, momenta: Tuple[int, int]) -> pd.Series:
         momenta = 2 * np.pi * np.array(momenta) / np.array(self.lattice.shape)
-        mask = np.full(self.basis.n_states, False)
-        for i, col in enumerate(self._df.columns):
-            shift = self._df.index[self._df[col] == self._df[col].min()]
-            norm = np.sum(np.exp(1j * momenta @ np.array(shift.tolist()).T))
-            mask[i] = np.linalg.norm(norm) > 1e-12
+        equal_to_min = self._df.eq(self.representatives)
+        shift = equal_to_min.apply(lambda x: self._df.index[x].tolist(), result_type="reduce")
+        mask = [
+            np.linalg.norm(np.sum(np.exp(1j * momenta @ np.array(shift[idx]).T))) > 1e-12
+            for idx in shift.index
+        ]
         return self.representatives[mask]
 
     def representative_basis(self, momenta: Tuple[int, int]) -> ComputationBasis:
