@@ -142,19 +142,19 @@ class GaussLaw(Node):
 
     @classmethod
     def from_random_charge_distri(
-        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]]
+        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]] = None
     ) -> Self:
         return cls(cls.random_charge_distri(length_x, length_y), flux_sector=flux_sector)
 
     @classmethod
     def from_staggered_charge_distri(
-        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]]
+        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]] = None
     ) -> Self:
         return cls(cls.staggered_charge_distri(length_x, length_y), flux_sector=flux_sector)
 
     @classmethod
     def from_zero_charge_distri(
-        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]]
+        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]] = None
     ) -> Self:
         return cls(np.zeros((length_y, length_x), dtype=int), flux_sector=flux_sector)
 
