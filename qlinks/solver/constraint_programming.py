@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Tuple, Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
