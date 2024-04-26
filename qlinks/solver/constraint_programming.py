@@ -78,9 +78,11 @@ class CpModel:
         self._solver.parameters.enumerate_all_solutions = all_solutions
         self._solver.parameters.log_search_progress = log_search_progress
         status = self._solver.solve(self._model, self._callback)
+        logger.info(self._solver.ResponseStats())
         if status == cp_model.OPTIMAL:
             logger.info(f"Found {self._callback.n_solutions} optimal solutions.")
-            logger.info(self._solver.ResponseStats())
+        else:
+            raise RuntimeError(f"Failed to find optimal solutions. Status: {status}")
 
     def to_basis(self) -> ComputationBasis:
         basis = ComputationBasis(np.vstack(self._callback.solutions))
