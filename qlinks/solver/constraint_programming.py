@@ -26,7 +26,7 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
         return len(self.solutions)
 
 
-@dataclass
+@dataclass(slots=True)
 class CpModel:
     shape: Tuple[int, int]
     charge_distri: npt.NDArray[np.int64]
