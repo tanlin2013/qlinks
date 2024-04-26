@@ -37,9 +37,7 @@ def setup_link_model(lattice_shape, coup_j, coup_rk, flux_sector=(0, 0)):
 
 if __name__ == "__main__":
     coup_j, coup_rk = (1, -0.7)
-    basis, model = setup_link_model(
-        lattice_shape=(6, 4), coup_j=coup_j, coup_rk=coup_rk
-    )
+    basis, model = setup_link_model(lattice_shape=(6, 4), coup_j=coup_j, coup_rk=coup_rk)
 
     evals, evecs = np.linalg.eigh(model.hamiltonian.todense())
     np.savez(
