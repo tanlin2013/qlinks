@@ -74,8 +74,9 @@ class CpModel:
     def n_solutions(self) -> int:
         return self._callback.n_solutions
 
-    def solve(self, all_solutions: bool = True) -> None:
+    def solve(self, all_solutions: bool = True, log_search_progress: bool = False) -> None:
         self._solver.parameters.enumerate_all_solutions = all_solutions
+        self._solver.parameters.log_search_progress = log_search_progress
         status = self._solver.solve(self._model, self._callback)
         if status == cp_model.OPTIMAL:
             logger.info(f"Found {self._callback.n_solutions} optimal solutions.")
