@@ -14,7 +14,8 @@ from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidArgumentError, InvalidOperationError
 from qlinks.lattice.component import Site
 from qlinks.lattice.square_lattice import SquareLattice, Vertex
-from qlinks.solver.deep_first_search import Node
+from qlinks.solver.deep_first_search import Node, DeepFirstSearch
+from qlinks.solver.constraint_programming import CpModel
 
 
 class Flow(IntEnum):
@@ -220,6 +221,17 @@ class GaussLaw(Node):
         if not np.all([self.charge(site) == self[site] for site in self._lattice]):
             return False
         return True
+
+    def solve(self, method: str = "cp", **kwargs) -> ComputationBasis:
+        if method == "cp":
+            cp = CpModel(self.shape, self.charge_distri, self.flux_sector)
+            cp.solve(**kwargs)
+            return cp.to_basis()
+        elif method == "dfs":
+            dfs = DeepFirstSearch(self)
+            return self.to_basis(dfs.solve(**kwargs))
+        else:
+            raise NotImplementedError(f"Method {method} is not implemented yet.")
 
     @staticmethod
     def to_basis(nodes: List[GaussLaw]) -> ComputationBasis:
