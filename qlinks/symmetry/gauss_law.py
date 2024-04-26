@@ -141,16 +141,22 @@ class GaussLaw(Node):
         return np.tile(stagger, (length_y // 2, length_x // 2))
 
     @classmethod
-    def from_random_charge_distri(cls, length_x: int, length_y: int) -> Self:
-        return cls(cls.random_charge_distri(length_x, length_y))
+    def from_random_charge_distri(
+        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]]
+    ) -> Self:
+        return cls(cls.random_charge_distri(length_x, length_y), flux_sector=flux_sector)
 
     @classmethod
-    def from_staggered_charge_distri(cls, length_x: int, length_y: int) -> Self:
-        return cls(cls.staggered_charge_distri(length_x, length_y))
+    def from_staggered_charge_distri(
+        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]]
+    ) -> Self:
+        return cls(cls.staggered_charge_distri(length_x, length_y), flux_sector=flux_sector)
 
     @classmethod
-    def from_zero_charge_distri(cls, length_x: int, length_y: int) -> Self:
-        return cls(np.zeros((length_y, length_x), dtype=int))
+    def from_zero_charge_distri(
+        cls, length_x: int, length_y: int, flux_sector: Optional[Tuple[int, int]]
+    ) -> Self:
+        return cls(np.zeros((length_y, length_x), dtype=int), flux_sector=flux_sector)
 
     def __deepcopy__(self, memo: Dict) -> Self:
         new_inst = type(self).__new__(self.__class__)
