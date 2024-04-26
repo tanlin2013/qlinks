@@ -22,7 +22,7 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
         self.solutions.append([self.Value(v) for v in self.__variables.values()])
 
     @property
-    def solution_count(self) -> int:
+    def n_solutions(self) -> int:
         return len(self.solutions)
 
 
@@ -70,11 +70,15 @@ class CpModel:
                     == self.flux_sector[1]
                 )
 
+    @property
+    def n_solutions(self) -> int:
+        return self._callback.n_solutions
+
     def solve(self, all_solutions: bool = True) -> None:
         self._solver.parameters.enumerate_all_solutions = all_solutions
         status = self._solver.solve(self._model, self._callback)
         if status == cp_model.OPTIMAL:
-            logger.info(f"Found {self._callback.solution_count} optimal solutions.")
+            logger.info(f"Found {self._callback.n_solutions} optimal solutions.")
             logger.info(self._solver.ResponseStats())
 
     def to_basis(self) -> ComputationBasis:
