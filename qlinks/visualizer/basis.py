@@ -12,7 +12,7 @@ from qlinks.lattice.square_lattice import SquareLattice
 
 
 @dataclass(slots=True)
-class GraphVisualizer:
+class BasisVisualizer:
     lattice: SquareLattice
     _enlarged_lattice: SquareLattice = field(init=False, repr=False)
     _graph: nx.Graph = field(default=None, repr=False)
