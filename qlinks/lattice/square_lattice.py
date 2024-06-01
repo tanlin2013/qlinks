@@ -248,8 +248,8 @@ class Plaquette(LocalOperator):
         )
 
     def flippable(self, basis: ComputationBasis) -> npt.NDArray[np.bool_]:
-        b1, b2, b3, b4 = (basis.links[:, idx] for idx in self.link_index())
-        return ((b1 & ~b2 & b3 & ~b4) | (~b1 & b2 & ~b3 & b4)).astype(bool)
+        b1, b2, b3, b4 = (basis.links[:, idx].astype(bool) for idx in self.link_index())
+        return (b1 & ~b2 & b3 & ~b4) | (~b1 & b2 & ~b3 & b4)
 
     def __matmul__(self, basis: ComputationBasis) -> npt.NDArray[np.int64]:
         """
