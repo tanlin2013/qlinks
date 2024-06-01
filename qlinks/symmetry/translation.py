@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from copy import deepcopy
 from dataclasses import dataclass, field
-from functools import cache, cached_property
+from functools import cached_property
 from itertools import product
 from typing import Iterator, List, Tuple
 
@@ -60,7 +60,7 @@ class Translation:
     def representatives(self) -> pd.Series:
         return self._df.min()
 
-    @cache
+    # @cache
     def compatible_representatives(self, momenta: Tuple[int, int]) -> pd.Series:
         momenta = 2 * np.pi * np.array(momenta) / np.array(self.lattice.shape)
         equal_to_min = self._df.eq(self.representatives)
@@ -71,7 +71,7 @@ class Translation:
         ]
         return self.representatives[mask]
 
-    @cache
+    # @cache
     def representative_basis(self, momenta: Tuple[int, int]) -> ComputationBasis:
         basis_idx = np.sort(self.compatible_representatives(momenta).unique())
         return ComputationBasis.from_index(basis_idx, self.lattice.n_links)
