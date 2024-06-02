@@ -3,8 +3,7 @@ import numpy as np
 import pytest
 from scipy.linalg import eigh, ishermitian
 
-from qlinks.model import QuantumLinkModel
-from qlinks.solver.deep_first_search import DeepFirstSearch
+from qlinks.model.quantum_link_model import QuantumLinkModel
 from qlinks.symmetry.gauss_law import GaussLaw
 
 
@@ -44,10 +43,8 @@ class TestQuantumLinkModel:
 
     @pytest.fixture(scope="class")
     def basis_from_solver(self):
-        gauss_law = GaussLaw.from_zero_charge_distri(4, 4)
-        gauss_law.flux_sector = (0, 0)
-        dfs = DeepFirstSearch(gauss_law, max_steps=int(1e5))
-        return gauss_law.to_basis(dfs.solve(n_solution=990))  # 2.7 secs
+        gauss_law = GaussLaw.from_zero_charge_distri(4, 4, (0, 0))
+        return gauss_law.solve()
 
     @pytest.mark.parametrize("coup_j, coup_rk", [(1, 0), (1, 1)])
     def test_with_solver(self, coup_j, coup_rk, basis_from_solver):
@@ -66,10 +63,8 @@ class TestQuantumLinkModel:
     @pytest.mark.parametrize("length_x, length_y", [(2, 2), (4, 2)])
     @pytest.mark.parametrize("momenta", [(0, 0), (1, 0), (0, 1), (1, 1)])
     def test_momentum_hamiltonian(self, coup_j, coup_rk, length_x, length_y, momenta):
-        gauss_law = GaussLaw.from_staggered_charge_distri(length_x, length_y)
-        gauss_law.flux_sector = (0, 0)
-        dfs = DeepFirstSearch(gauss_law, max_steps=int(1e5))
-        basis = gauss_law.to_basis(dfs.solve(n_solution=int(1e3)))
+        gauss_law = GaussLaw.from_zero_charge_distri(length_x, length_y, (0, 0))
+        basis = gauss_law.solve()
         k_model = QuantumLinkModel(coup_j, coup_rk, (length_x, length_y), basis, momenta)
         k_ham = k_model.hamiltonian.todense()
         assert ishermitian(k_ham)
