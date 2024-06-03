@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Dict, Tuple, Self
+from typing import Dict, Self, Tuple
 
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
+from ortools.sat.python import cp_model
 from scipy.linalg import svd
 from scipy.stats import rankdata
-from ortools.sat.python import cp_model
 
 from qlinks import logger
 from qlinks.computation_basis import ComputationBasis
@@ -86,7 +86,7 @@ class PauliX:
 
     def __post_init__(self):
         if self._mask is None:
-            self._mask = int(2 ** self.site)
+            self._mask = int(2**self.site)
 
     def flippable(self, basis: ComputationBasis) -> npt.NDArray[np.bool_]:
         if self.periodic:
