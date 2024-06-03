@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Dict
+from functools import cache
 
 import numpy as np
 import numpy.typing as npt
@@ -13,6 +14,7 @@ from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidOperationError
 
 
+@cache
 def fibonacci(n: int) -> int:
     return n if n < 2 else fibonacci(n - 1) + fibonacci(n - 2)
 
