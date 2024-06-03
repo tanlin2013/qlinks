@@ -140,7 +140,7 @@ class QuantumLinkModel:
 
         Reference: https://github.com/tanlin2013/qlinks/issues/40
         """
-        if idx > self._lattice.shape[axis] - 2:
+        if not 0 <= idx < self._lattice.shape[axis] - 1:
             raise InvalidArgumentError("The index is out of range.")
         first_partition, second_partition = (
             self.basis.as_index(self.basis.links[:, partition_idx])
