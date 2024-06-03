@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict
 from functools import cache
+from typing import Dict, Tuple, Self
 
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
+from scipy.linalg import svd
+from scipy.stats import rankdata
 from ortools.sat.python import cp_model
 
 from qlinks import logger
 from qlinks.computation_basis import ComputationBasis
-from qlinks.exceptions import InvalidOperationError
+from qlinks.exceptions import InvalidArgumentError, InvalidOperationError
 
 
 @cache
@@ -146,11 +148,53 @@ class PXPModel1D:
     def hamiltonian(self) -> sp.sparray[np.float64]:
         return self._hamiltonian
 
-    def z2_state(self):
-        ...
+    def z2_state(self, start_with: int = 0) -> Tuple[int, npt.NDArray[np.int64]]:
+        state = {
+            0: np.zeros(self.n, dtype=int),
+            1: np.ones(self.n, dtype=int),
+        }[start_with]
+        state[1::2] ^= 1
+        z2_index = ComputationBasis.as_index(state[None, :])
+        if z2_index not in self.basis.index:
+            raise ValueError(f"The Z2 state {state} is not in the basis.")
+        return z2_index, state
 
-    def z2_overlap(self):
-        ...
+    def z2_overlap(self, evecs, start_with: int = 0) -> npt.NDArray[np.float64]:
+        z2_index, z2_state = self.z2_state(start_with)
+        basis_idx = np.where(self.basis.index == z2_index)[0]
+        z2_basis = np.zeros(self.basis.n_states, dtype=int)
+        z2_basis[basis_idx] = 1
+        return np.log(np.abs(z2_basis[None, :] @ evecs) ** 2)
 
-    def entropy(self, evec: npt.NDArray[np.float64], idx: int):
-        ...
+    def _bipartite_sorting_index(self, idx: int) -> Tuple[npt.NDArray, ...]:
+        """
+        Reference: https://github.com/tanlin2013/qlinks/issues/40
+        """
+        if not 0 <= idx < self.n - 1:
+            raise InvalidArgumentError("The index is out of range.")
+        first_partition, second_partition = (
+            self.basis.as_index(self.basis.links[:, partition_idx])
+            for partition_idx in [np.arange(idx + 1), np.arange(idx + 1, self.n)]
+        )
+        sorting_idx = np.lexsort((first_partition, second_partition))
+        row_idx, col_idx = (
+            rankdata(partition, method="dense") - 1
+            for partition in (first_partition[sorting_idx], second_partition[sorting_idx])
+        )
+        return sorting_idx, row_idx, col_idx
+
+    def entropy(self, evec: npt.NDArray[np.float64], site: int) -> float:
+        sorting_idx, row_idx, col_idx = self._bipartite_sorting_index(site)
+        reshaped_evec = sp.csr_array(
+            (evec[sorting_idx], (row_idx, col_idx)),
+            (len(np.unique(row_idx)), len(np.unique(col_idx))),
+        )
+        try:
+            s = sp.linalg.svds(
+                reshaped_evec,
+                k=min(reshaped_evec.shape) - 1,
+                return_singular_vectors=False,
+            )
+        except TypeError:
+            s = svd(reshaped_evec.toarray(), compute_uv=False)
+        return -np.sum((ss := s[s > 1e-12] ** 2) * np.log(ss))
