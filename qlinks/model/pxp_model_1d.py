@@ -85,7 +85,8 @@ class PauliX:
     _mask: int = field(default=None, repr=False)
 
     def __post_init__(self):
-        self._mask = int(2 ** self.site)
+        if self._mask is None:
+            self._mask = int(2 ** self.site)
 
     def flippable(self, basis: ComputationBasis) -> npt.NDArray[np.bool_]:
         if self.periodic:
@@ -124,6 +125,11 @@ class PauliX:
             (np.ones(len(row_idx), dtype=int), (row_idx, col_idx)),
             shape=(basis.n_states, basis.n_states),
         )
+
+    def __pow__(self, power: int) -> Self | PauliX:
+        if power % 2 == 0:
+            return PauliX(self.n, self.site, self.periodic, _mask=0)
+        return self
 
 
 @dataclass(slots=True)
