@@ -137,6 +137,8 @@ class QuantumLinkModel:
             - col_idx: Column index to reshape the eigenstate into a matrix.
 
         Raises: InvalidArgumentError if the index is out of range.
+
+        Reference: https://github.com/tanlin2013/qlinks/issues/40
         """
         if idx > self._lattice.shape[axis] - 2:
             raise InvalidArgumentError("The index is out of range.")
