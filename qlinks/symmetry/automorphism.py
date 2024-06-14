@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, List
 
 import networkx as nx
 import numpy as np
@@ -33,13 +33,13 @@ class Automorphism:
         )
 
     @staticmethod
-    def group_indices_by_value(dictionary) -> Dict:
+    def group_indices_by_value(dictionary: Dict) -> Dict:
         index_groups = defaultdict(list)
         for index, value in dictionary.items():
             index_groups[value].append(index)
         return dict(index_groups)
 
-    def characteristic_matrix(self, partition, normalized: bool = True):
+    def characteristic_matrix(self, partition, normalized: bool = True) -> npt.NDArray:
         char_mat = np.zeros((self.n_nodes, len(partition)), dtype=int)
         for j, block in enumerate(partition):
             for i in block:
@@ -48,7 +48,7 @@ class Automorphism:
             char_mat = char_mat @ np.sqrt(np.diagflat([1 / len(b) for b in partition]))
         return char_mat
 
-    def quotient_matrix(self, partition):
+    def quotient_matrix(self, partition) -> npt.NDArray:
         s = self.characteristic_matrix(partition, normalized=True)
         quotient = s.T @ self.adj_mat @ s
         if not np.allclose(self.adj_mat @ s, s @ quotient, atol=1e-12):
