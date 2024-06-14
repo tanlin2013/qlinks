@@ -1,12 +1,12 @@
 import os
 from threading import Lock
-from typing import Callable, Sequence, List
+from typing import Callable, List, Sequence
 
 import pandas as pd
-from ed import setup_dimer_model, setup_link_model  # noqa: F401
 import ray
-from tqdm import tqdm
+from ed import setup_dimer_model, setup_link_model  # noqa: F401
 from ray.remote_function import RemoteFunction
+from tqdm import tqdm
 
 from qlinks import logger
 from qlinks.computation_basis import ComputationBasis
@@ -99,13 +99,13 @@ def task_wrapper(args):
 if __name__ == "__main__":
     coup_j, coup_rk = (1, 1)
     inputs = [
-        ["qdm", (6, 4)],
-        ["qlm", (6, 4)],
-        ["qdm", (8, 4)],
-        ["qlm", (8, 4)],
-        ["qdm", (6, 6)],
-        ["qlm", (6, 6)],
-        ["qdm", (8, 6)],
+        ["qdm", (6, 4)],  # 1456
+        ["qdm", (8, 4)],  # 17412
+        ["qlm", (6, 4)],  # 32810
+        ["qdm", (6, 6)],  # 44176
+        ["qlm", (8, 4)],  # 1159166
+        ["qdm", (8, 6)],  # 1504896
+        ["qlm", (6, 6)],  # 5482716
         # ["qlm", (8, 6)],
     ]  # model, lattice_shape
 
@@ -119,7 +119,4 @@ if __name__ == "__main__":
         aut = Automorphism(-model.kinetic_term)
 
         ray.init(num_cpus=28)
-        map_on_ray(
-            task_wrapper,
-            [(model, aut, label, model_name) for label in aut.joint_partition]
-        )
+        map_on_ray(task_wrapper, [(model, aut, label, model_name) for label in aut.joint_partition])
