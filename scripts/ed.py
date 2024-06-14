@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from qlinks import logger
-from qlinks.model import QuantumLinkModel
+from qlinks.model.quantum_link_model import QuantumLinkModel
 from qlinks.symmetry.gauss_law import GaussLaw
 
 
