@@ -95,26 +95,37 @@ class Automorphism:
         return PermutationGroup([Permutation(perm) for perm in pynauty.autgrp(ntg)[0]])
 
     @staticmethod
-    def connected_null_space(mat):
-        n_components, labels = connected_components(mat, directed=False, return_labels=True)
+    def connected_null_space(mat, fill_zeros: bool = False) -> List[npt.NDArray]:
+        n_components, labels = connected_components(
+            mat, directed=False, connection="weak", return_labels=True
+        )
         null_spaces = []
         for i in range(n_components):
             mask = (labels == i)  # fmt: skip
             if np.count_nonzero(mask) > 1:
-                null_spaces.append(null_space(mat[mask, :][:, mask].toarray()))
-        return np.hstack(null_spaces) if null_spaces else np.array([])
+                sub_mat = mat[np.ix_(mask, mask)]
+                null_vecs = null_space(sub_mat.toarray())
+                if fill_zeros:
+                    new_null_vecs = np.zeros((mat.shape[0], null_vecs.shape[1]))
+                    new_null_vecs[mask, :] = null_vecs
+                    null_vecs = new_null_vecs
+                null_spaces.append(null_vecs)
+        return null_spaces
 
     @staticmethod
     def connected_eigh(mat):
         ...
 
-    def type_1_scars(self, target_label: int, fill_zeros: bool = False):
+    def type_1_scars(self, target_label: int, fill_zeros: bool = False) -> List[npt.NDArray]:
         parti_idx = self.joint_partition[target_label]
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
         incidence_mat = self.adj_mat[mask, :][:, ~mask]
-        scars = self.connected_null_space(incidence_mat @ incidence_mat.T)
+        scars = self.connected_null_space(incidence_mat @ incidence_mat.T, fill_zeros)
         if fill_zeros:
-            scars = np.insert(scars, np.where(~mask)[0], 0, axis=0)
+            for i, scar in enumerate(scars):
+                new_scar = np.zeros((self.n_nodes, scar.shape[1]))
+                new_scar[mask, :] = scar
+                scars[i] = new_scar
         return scars
 
     def type_3a_scars(self, target_degree: int, fill_zeros: bool = False):
