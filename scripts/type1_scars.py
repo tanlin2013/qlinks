@@ -2,9 +2,9 @@ import concurrent.futures
 import os
 
 import pandas as pd
+from ed import setup_dimer_model, setup_link_model  # noqa: F401
 from tqdm import tqdm
 
-from ed import setup_dimer_model, setup_link_model  # noqa: F401
 from qlinks import logger
 from qlinks.computation_basis import ComputationBasis
 from qlinks.model.quantum_link_model import QuantumLinkModel

@@ -7,9 +7,9 @@ from typing import Dict
 import networkx as nx
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 import pynauty
 import scipy.sparse as sp
-import pandas as pd
 from scipy.linalg import null_space
 from scipy.sparse.csgraph import connected_components
 from sympy.combinatorics import Permutation, PermutationGroup
@@ -45,7 +45,7 @@ class Automorphism:
             for i in block:
                 char_mat[i][j] = 1
         if normalized:
-            char_mat = char_mat @ np.sqrt(np.diagflat([1/len(b) for b in partition]))
+            char_mat = char_mat @ np.sqrt(np.diagflat([1 / len(b) for b in partition]))
         return char_mat
 
     def quotient_matrix(self, partition):
@@ -99,7 +99,7 @@ class Automorphism:
         n_components, labels = connected_components(mat, directed=False, return_labels=True)
         null_spaces = []
         for i in range(n_components):
-            mask = (labels == i)
+            mask = (labels == i)  # fmt: skip
             if np.count_nonzero(mask) > 1:
                 null_spaces.append(null_space(mat[mask, :][:, mask].toarray()))
         return np.hstack(null_spaces) if null_spaces else np.array([])
