@@ -2,6 +2,7 @@ import os
 from threading import Lock
 from typing import Callable, List, Sequence
 
+import numpy as np
 import pandas as pd
 import ray
 from ed import setup_dimer_model, setup_link_model  # noqa: F401
@@ -70,25 +71,26 @@ def count_sets_with_elements(sets, array):
 
 def task(model, aut, label, model_name):
     csv_file = f"data/{model_name}_type1_scars.csv"
-    scars = aut.type_1_scars(label, fill_zeros=False)
-    if scars.size > 0:
-        orbits = aut.automorphism_group().orbits()
-        vertex_id = aut.joint_partition[label]
-        n_orbits = count_sets_with_elements(orbits, vertex_id)
-        _df = pd.DataFrame(
-            {
-                "length_x": [model.shape[0]],
-                "length_y": [model.shape[1]],
-                "n_solution": [model.basis.n_states],
-                "label": [label],
-                "subgraph_size": [scars.shape[0]],
-                "n_orbits": [n_orbits],
-                "degeneracy": [scars.shape[1]],
-            }
-        )
-        with Lock():
-            _df.to_csv(csv_file, mode="a", index=False, header=False)
-        logger.info("\n\t" + _df.to_string(index=False).replace("\n", "\n\t"))
+    scars = aut.type_1_scars(label, fill_zeros=True)
+    orbits = aut.automorphism_group().orbits()
+    for scar in scars:
+        if scar.size > 0:
+            vertex_id = np.where(np.any(np.abs(scar) > 1e-12, axis=1))[0]
+            n_orbits = count_sets_with_elements(orbits, vertex_id)
+            _df = pd.DataFrame(
+                {
+                    "length_x": [model.shape[0]],
+                    "length_y": [model.shape[1]],
+                    "n_solution": [model.basis.n_states],
+                    "label": [label],
+                    "subgraph_size": [len(vertex_id)],
+                    "n_orbits": [n_orbits],
+                    "degeneracy": [scar.shape[1]],
+                }
+            )
+            with Lock():
+                _df.to_csv(csv_file, mode="a", index=False, header=False)
+            logger.info("\n\t" + _df.to_string(index=False).replace("\n", "\n\t"))
 
 
 @ray.remote(num_cpus=1)
@@ -118,5 +120,5 @@ if __name__ == "__main__":
         model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
         aut = Automorphism(-model.kinetic_term)
 
-        ray.init(num_cpus=28)
+        ray.init(num_cpus=28, log_to_driver=True)
         map_on_ray(task_wrapper, [(model, aut, label, model_name) for label in aut.joint_partition])
