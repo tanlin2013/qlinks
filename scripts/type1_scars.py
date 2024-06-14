@@ -1,14 +1,46 @@
-import concurrent.futures
 import os
+from threading import Lock
+from typing import Callable, Sequence, List
 
 import pandas as pd
 from ed import setup_dimer_model, setup_link_model  # noqa: F401
+import ray
 from tqdm import tqdm
+from ray.remote_function import RemoteFunction
 
 from qlinks import logger
 from qlinks.computation_basis import ComputationBasis
 from qlinks.model.quantum_link_model import QuantumLinkModel
 from qlinks.symmetry.automorphism import Automorphism
+
+
+def map_on_ray(func: Callable, params: Sequence) -> List:
+    """
+
+    Args:
+        func:
+        params:
+
+    Returns:
+
+    Warnings:
+        The results are not order-preserving as the order in input `params`.
+    """
+
+    def watch(obj_ids: List[ray.ObjectRef]):
+        while obj_ids:
+            done, obj_ids = ray.wait(obj_ids)
+            yield ray.get(done[0])
+
+    if not ray.is_initialized:
+        ray.init()
+    func = ray.remote(func) if not isinstance(func, RemoteFunction) else func
+    jobs = [func.remote(i) for i in params]
+    results = []
+    for done_job in tqdm(watch(jobs), desc="Completed jobs", total=len(jobs)):
+        results.append(done_job)
+    ray.shutdown()
+    return results
 
 
 def setup_storage(model_name):
@@ -54,10 +86,12 @@ def task(model, aut, label, model_name):
                 "degeneracy": [scars.shape[1]],
             }
         )
-        _df.to_csv(csv_file, mode="a", index=False, header=False)
+        with Lock():
+            _df.to_csv(csv_file, mode="a", index=False, header=False)
         logger.info("\n\t" + _df.to_string(index=False).replace("\n", "\n\t"))
 
 
+@ray.remote(num_cpus=1)
 def task_wrapper(args):
     return task(*args)
 
@@ -65,33 +99,27 @@ def task_wrapper(args):
 if __name__ == "__main__":
     coup_j, coup_rk = (1, 1)
     inputs = [
-        ["qlm", (6, 4)],
-        ["qlm", (8, 4)],
-        ["qlm", (6, 6)],
-        # ["qlm", (8, 6)],
         ["qdm", (6, 4)],
+        ["qlm", (6, 4)],
         ["qdm", (8, 4)],
+        ["qlm", (8, 4)],
         ["qdm", (6, 6)],
+        ["qlm", (6, 6)],
         ["qdm", (8, 6)],
+        # ["qlm", (8, 6)],
     ]  # model, lattice_shape
 
-    futures = []
-    with concurrent.futures.ProcessPoolExecutor(max_workers=28) as executor:
+    for model_name, lattice_shape in inputs:
+        setup_storage(model_name)
+        basis = ComputationBasis.from_parquet(
+            f"data/{model_name}_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet"
+        )
 
-        for model_name, lattice_shape in inputs:
-            setup_storage(model_name)
-            basis = ComputationBasis.from_parquet(
-                f"data/{model_name}_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet"
-            )
+        model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
+        aut = Automorphism(-model.kinetic_term)
 
-            model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
-            aut = Automorphism(-model.kinetic_term)
-            futures += [
-                executor.submit(task_wrapper, (model, aut, label, model_name))
-                for label in aut.joint_partition
-            ]
-
-        with tqdm(total=len(futures), leave=True) as pbar:
-            for future in concurrent.futures.as_completed(futures):
-                future.result()
-                pbar.update(1)
+        ray.init(num_cpus=28)
+        map_on_ray(
+            task_wrapper,
+            [(model, aut, label, model_name) for label in aut.joint_partition]
+        )
