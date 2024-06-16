@@ -119,7 +119,7 @@ class Automorphism:
     def type_1_scars(self, target_label: int, fill_zeros: bool = False) -> List[npt.NDArray]:
         parti_idx = self.joint_partition[target_label]
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
-        incidence_mat = self.adj_mat[mask, :][:, ~mask]
+        incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
         scars = self.connected_null_space(incidence_mat @ incidence_mat.T, fill_zeros)
         if fill_zeros:
             for i, scar in enumerate(scars):
@@ -131,8 +131,6 @@ class Automorphism:
     def type_3a_scars(self, target_degree: int, fill_zeros: bool = False):
         parti_idx = self.degree_partition[target_degree]
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
-        sub_mat = self.adj_mat[mask, :][:, mask]  # TODO: separate the connected components
-        incidence_mat = self.adj_mat[mask, :][:, ~mask]
         evals, evecs = np.linalg.eigh(sub_mat.toarray())
         evals = evals.round(12)
         scars = []
@@ -142,6 +140,8 @@ class Automorphism:
                 logger.info(f"eval: {eval}, num of scars: {scar.shape[1]}")
                 scars.append(scar)
         scars = np.hstack(scars)
+        sub_mat = self.adj_mat[np.ix_(mask, mask)]
+        incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
         if fill_zeros:
             scars = np.insert(scars, np.where(~mask)[0], 0, axis=0)
         return scars
