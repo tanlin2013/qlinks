@@ -1,49 +1,18 @@
 import os
 from threading import Lock
-from typing import Callable, List, Sequence
 
 import numpy as np
 import pandas as pd
 import ray
 from ed import setup_dimer_model, setup_link_model  # noqa: F401
-from ray.remote_function import RemoteFunction
-from tqdm import tqdm
 
 from qlinks import logger
 from qlinks.computation_basis import ComputationBasis
+from qlinks.distributed import map_on_ray
 from qlinks.exceptions import InvalidOperationError
 from qlinks.model.quantum_link_model import QuantumLinkModel
 from qlinks.symmetry.automorphism import Automorphism
 from qlinks.symmetry.gauss_law import GaussLaw
-
-
-def map_on_ray(func: Callable, params: Sequence) -> List:
-    """
-
-    Args:
-        func:
-        params:
-
-    Returns:
-
-    Warnings:
-        The results are not order-preserving as the order in input `params`.
-    """
-
-    def watch(obj_ids: List[ray.ObjectRef]):
-        while obj_ids:
-            done, obj_ids = ray.wait(obj_ids)
-            yield ray.get(done[0])
-
-    if not ray.is_initialized:
-        ray.init()
-    func = ray.remote(func) if not isinstance(func, RemoteFunction) else func
-    jobs = [func.remote(i) for i in params]
-    results = []
-    for done_job in tqdm(watch(jobs), desc="Completed jobs", total=len(jobs)):
-        results.append(done_job)
-    ray.shutdown()
-    return results
 
 
 def setup_storage(model_name):
