@@ -64,7 +64,7 @@ class Automorphism:
         return dict(self._graph.degree)
 
     @property
-    def degree_partition(self):
+    def degree_partition(self) -> Dict:
         return self.group_indices_by_value(self.degree_series)
 
     @property
@@ -83,7 +83,7 @@ class Automorphism:
     def joint_partition(self) -> Dict:
         return self._df.groupby(["degree", "bipartition"]).groups
 
-    def joint_partition_indices(self):
+    def joint_partition_indices(self) -> List[List[int]]:
         return [list(block) for block in self.joint_partition.values()]
 
     def automorphism_group(self, partition=None) -> PermutationGroup:
@@ -146,7 +146,7 @@ class Automorphism:
             scars = [self.insert_zeros(scar, mask) for scar in scars]
         return scars
 
-    def type_3a_scars(self, target_degree: int, fill_zeros: bool = False):
+    def type_3a_scars(self, target_degree: int, fill_zeros: bool = False) -> List[npt.NDArray]:
         parti_idx = self.degree_partition[target_degree]
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
         sub_mat = self.adj_mat[np.ix_(mask, mask)]
