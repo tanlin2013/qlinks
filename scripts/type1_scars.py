@@ -95,12 +95,10 @@ if __name__ == "__main__":
             )
             model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
         except (FileNotFoundError, InvalidOperationError):
-            if model_name == "qdm":
-                gauss_law = GaussLaw.from_staggered_charge_distri(
-                    *lattice_shape, flux_sector=(0, 0)
-                )
-            else:
-                gauss_law = GaussLaw.from_zero_charge_distri(*lattice_shape)
+            gauss_law = {
+                "qlm": GaussLaw.from_zero_charge_distri,
+                "qdm": GaussLaw.from_staggered_charge_distri,
+            }[model_name](*lattice_shape, flux_sector=(0, 0))
             basis = gauss_law.solve()
             basis.to_parquet(
                 f"data/{model_name}_{lattice_shape[0]}x{lattice_shape[1]}_lattice.parquet"
