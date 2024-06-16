@@ -180,12 +180,21 @@ class TestPlaquette:
             ((2, 2), Site(0, 1), int("10001101", 2)),
             ((2, 2), Site(1, 1), int("00100111", 2)),
             ((4, 8), Site(0, 0), int("110100001".ljust(2 * 4 * 8, "0"), 2)),
-            ((4, 8), Site(3, 7),
-             int("".join("1" if i in [6, 57, 62, 63] else "0" for i in range(2 * 4 * 8)), 2)),
-            ((6, 8), Site(0, 7),
-             int("".join("1" if i in [0, 84, 85, 87] else "0" for i in range(2 * 6 * 8)), 2)),
-            ((6, 8), Site(5, 7),
-             int("".join("1" if i in [10, 85, 94, 95] else "0" for i in range(2 * 6 * 8)), 2)),
+            (
+                (4, 8),
+                Site(3, 7),
+                int("".join("1" if i in [6, 57, 62, 63] else "0" for i in range(2 * 4 * 8)), 2),
+            ),
+            (
+                (6, 8),
+                Site(0, 7),
+                int("".join("1" if i in [0, 84, 85, 87] else "0" for i in range(2 * 6 * 8)), 2),
+            ),
+            (
+                (6, 8),
+                Site(5, 7),
+                int("".join("1" if i in [10, 85, 94, 95] else "0" for i in range(2 * 6 * 8)), 2),
+            ),
         ],
         indirect=["lattice"],
     )
