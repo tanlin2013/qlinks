@@ -114,4 +114,7 @@ if __name__ == "__main__":
         aut = Automorphism(-model.kinetic_term)
 
         ray.init(num_cpus=20, log_to_driver=True)
-        map_on_ray(task_wrapper, [(model, aut, label, model_name) for label in aut.joint_partition])
+        map_on_ray(
+            task_wrapper,
+            [(model, aut, label, model_name) for label in aut.degree_partition.keys()]
+        )
