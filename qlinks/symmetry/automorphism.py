@@ -95,6 +95,12 @@ class Automorphism:
         return PermutationGroup([Permutation(perm) for perm in pynauty.autgrp(ntg)[0]])
 
     @staticmethod
+    def insert_zeros(arr, mask) -> npt.NDArray:
+        new_arr = np.zeros((mask.size, arr.shape[1]))
+        new_arr[mask, :] = arr
+        return new_arr
+
+    @staticmethod
     def connected_null_space(mat, fill_zeros: bool = False) -> List[npt.NDArray]:
         n_components, labels = connected_components(
             mat, directed=False, connection="weak", return_labels=True
@@ -106,9 +112,7 @@ class Automorphism:
                 sub_mat = mat[np.ix_(mask, mask)]
                 null_vecs = null_space(sub_mat.toarray())
                 if fill_zeros:
-                    new_null_vecs = np.zeros((mat.shape[0], null_vecs.shape[1]))
-                    new_null_vecs[mask, :] = null_vecs
-                    null_vecs = new_null_vecs
+                    null_vecs = Automorphism.insert_zeros(null_vecs, mask)
                 null_spaces.append(null_vecs)
         return null_spaces
 
@@ -129,9 +133,7 @@ class Automorphism:
                 if np.allclose(sub_incidence_mat.T @ scar, 0, atol=1e-12):
                     logger.info(f"eval: {eval}, num of scars: {scar.shape[1]}")
                     if fill_zeros:
-                        new_scar = np.zeros((mat.shape[0], scar.shape[1]))
-                        new_scar[mask, :] = scar
-                        scar = new_scar
+                        scar = Automorphism.insert_zeros(scar, mask)
                     scars.append(scar)
         return scars
 
@@ -141,10 +143,7 @@ class Automorphism:
         incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
         scars = self.connected_null_space(incidence_mat @ incidence_mat.T, fill_zeros)
         if fill_zeros:
-            for i, scar in enumerate(scars):
-                new_scar = np.zeros((self.n_nodes, scar.shape[1]))
-                new_scar[mask, :] = scar
-                scars[i] = new_scar
+            scars = [self.insert_zeros(scar, mask) for scar in scars]
         return scars
 
     def type_3a_scars(self, target_degree: int, fill_zeros: bool = False):
@@ -154,8 +153,5 @@ class Automorphism:
         incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
         scars = self.connected_eigh(sub_mat, incidence_mat, fill_zeros)
         if fill_zeros:
-            for i, scar in enumerate(scars):
-                new_scar = np.zeros((self.n_nodes, scar.shape[1]))
-                new_scar[mask, :] = scar
-                scars[i] = new_scar
+            scars = [self.insert_zeros(scar, mask) for scar in scars]
         return scars
