@@ -113,8 +113,27 @@ class Automorphism:
         return null_spaces
 
     @staticmethod
-    def connected_eigh(mat):
-        ...
+    def connected_eigh(mat, incidence_mat, fill_zeros: bool = False) -> List[npt.NDArray]:
+        n_components, labels = connected_components(
+            mat, directed=False, connection="weak", return_labels=True
+        )
+        scars = []
+        for i in range(n_components):
+            mask = (labels == i)  # fmt: skip
+            compo_mat = mat[np.ix_(mask, mask)]
+            sub_incidence_mat = incidence_mat[mask, :]
+            evals, evecs = np.linalg.eigh(compo_mat.toarray())
+            evals = evals.round(12)
+            for eval in np.unique(evals):
+                scar = evecs[:, np.where(evals == eval)[0]]
+                if np.allclose(sub_incidence_mat.T @ scar, 0, atol=1e-12):
+                    logger.info(f"eval: {eval}, num of scars: {scar.shape[1]}")
+                    if fill_zeros:
+                        new_scar = np.zeros((mat.shape[0], scar.shape[1]))
+                        new_scar[mask, :] = scar
+                        scar = new_scar
+                    scars.append(scar)
+        return scars
 
     def type_1_scars(self, target_label: int, fill_zeros: bool = False) -> List[npt.NDArray]:
         parti_idx = self.joint_partition[target_label]
@@ -131,17 +150,12 @@ class Automorphism:
     def type_3a_scars(self, target_degree: int, fill_zeros: bool = False):
         parti_idx = self.degree_partition[target_degree]
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
-        evals, evecs = np.linalg.eigh(sub_mat.toarray())
-        evals = evals.round(12)
-        scars = []
-        for eval in np.unique(evals):
-            scar = evecs[:, np.where(evals == eval)[0]]
-            if np.allclose(incidence_mat.T @ scar, 0, atol=1e-12):
-                logger.info(f"eval: {eval}, num of scars: {scar.shape[1]}")
-                scars.append(scar)
-        scars = np.hstack(scars)
         sub_mat = self.adj_mat[np.ix_(mask, mask)]
         incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
+        scars = self.connected_eigh(sub_mat, incidence_mat, fill_zeros)
         if fill_zeros:
-            scars = np.insert(scars, np.where(~mask)[0], 0, axis=0)
+            for i, scar in enumerate(scars):
+                new_scar = np.zeros((self.n_nodes, scar.shape[1]))
+                new_scar[mask, :] = scar
+                scars[i] = new_scar
         return scars
