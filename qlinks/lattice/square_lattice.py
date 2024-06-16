@@ -235,7 +235,7 @@ class Plaquette(LocalOperator):
 
     def __post_init__(self) -> None:
         if self._mask is None:
-            self._mask = int(np.sum(2.0 ** (self.lattice.n_links - 1 - self.link_index())))
+            self._mask = int(np.sum(2 ** (self.lattice.n_links - 1 - self.link_index())))
 
     def link_index(self) -> npt.NDArray[np.int64]:
         return np.array(
@@ -244,7 +244,8 @@ class Plaquette(LocalOperator):
                 self.lattice.site_index(self.site) + 1,
                 self.lattice.site_index(self.site + UnitVectors().rightward) + 1,
                 self.lattice.site_index(self.site + UnitVectors().upward),
-            ]
+            ],
+            dtype=object,
         )
 
     def flippable(self, basis: ComputationBasis) -> npt.NDArray[np.bool_]:
