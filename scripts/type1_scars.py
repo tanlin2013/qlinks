@@ -77,13 +77,19 @@ def task_wrapper(args):
 if __name__ == "__main__":
     coup_j, coup_rk = (1, 1)
     inputs = [
-        # ["qdm", (6, 4)],  # 1456
+        ["qlm", (4, 2)],  # 38
+        ["qlm", (6, 2)],  # 282
+        ["qlm", (4, 4)],  # 990
+        ["qdm", (4, 2)],  # 16
+        ["qdm", (6, 2)],  # 76
+        ["qdm", (4, 4)],  # 132
+        ["qdm", (6, 4)],  # 1456
         ["qdm", (8, 4)],  # 17412
         ["qlm", (6, 4)],  # 32810
         ["qdm", (6, 6)],  # 44176
         ["qlm", (8, 4)],  # 1159166
-        ["qdm", (8, 6)],  # 1504896
-        ["qlm", (6, 6)],  # 5482716
+        # ["qdm", (8, 6)],  # 1504896
+        # ["qlm", (6, 6)],  # 5482716
         # ["qlm", (8, 6)],
     ]  # model, lattice_shape
 
@@ -107,5 +113,5 @@ if __name__ == "__main__":
 
         aut = Automorphism(-model.kinetic_term)
 
-        ray.init(num_cpus=28, log_to_driver=True)
+        ray.init(num_cpus=20, log_to_driver=True)
         map_on_ray(task_wrapper, [(model, aut, label, model_name) for label in aut.joint_partition])
