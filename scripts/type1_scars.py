@@ -66,6 +66,7 @@ def task(model, aut, label, model_name):
     except Exception as e:
         logger.error(f"{model_name}, {model.shape}, {label}")
         logger.error(f"Error: {e}")
+        pass
 
 
 @ray.remote(num_cpus=1)
