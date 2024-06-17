@@ -69,7 +69,7 @@ def task(model, aut, label, model_name):
         pass
 
 
-@ray.remote(num_cpus=1, memory=1 * 1024 ** 3)
+@ray.remote(num_cpus=1, memory=1 * 1024**3)
 def task_wrapper(args):
     return task(*args)
 
