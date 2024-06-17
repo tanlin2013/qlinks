@@ -10,11 +10,11 @@ import numpy.typing as npt
 import pandas as pd
 import pynauty
 import scipy.sparse as sp
-from scipy.linalg import null_space
 from scipy.sparse.csgraph import connected_components
 from sympy.combinatorics import Permutation, PermutationGroup
 
 from qlinks import logger
+from qlinks.solver.linalg import null_space
 
 
 @dataclass(slots=True)
@@ -110,7 +110,7 @@ class Automorphism:
             mask = (labels == i)  # fmt: skip
             if np.count_nonzero(mask) > 1:
                 sub_mat = mat[np.ix_(mask, mask)]
-                null_vecs = null_space(sub_mat.toarray())
+                null_vecs = null_space(sub_mat)
                 if fill_zeros:
                     null_vecs = Automorphism.insert_zeros(null_vecs, mask)
                 null_spaces.append(null_vecs)
