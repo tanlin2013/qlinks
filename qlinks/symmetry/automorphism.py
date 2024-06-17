@@ -124,13 +124,30 @@ class Automorphism:
         scars = []
         for i in range(n_components):
             mask = (labels == i)  # fmt: skip
+            if np.count_nonzero(mask) <= 1:
+                continue
+
             compo_mat = mat[np.ix_(mask, mask)]
             sub_incidence_mat = incidence_mat[mask, :]
             evals, evecs = np.linalg.eigh(compo_mat.toarray())
             evals = evals.round(12)
+
             for eval in np.unique(evals):
-                scar = evecs[:, np.where(evals == eval)[0]]
-                if np.allclose(sub_incidence_mat.T @ scar, 0, atol=1e-12):
+                if np.isclose(eval, 0, atol=1e-12):
+                    continue
+
+                unitary_mat = evecs[:, evals == eval]
+                outer_boundary = sub_incidence_mat.T @ unitary_mat
+
+                if np.allclose(outer_boundary, 0, atol=1e-12):
+                    scar = unitary_mat
+                else:
+                    coef_mat = null_space(sp.csr_array(outer_boundary))
+                    scar = unitary_mat @ coef_mat
+                    non_zero_cols = ~np.all(np.abs(scar) < 1e-12, axis=0)
+                    scar = scar[:, non_zero_cols]
+
+                if scar.size > 0:
                     logger.info(f"eval: {eval}, num of scars: {scar.shape[1]}")
                     if fill_zeros:
                         scar = Automorphism.insert_zeros(scar, mask)
