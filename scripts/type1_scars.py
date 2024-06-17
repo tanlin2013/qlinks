@@ -65,11 +65,11 @@ def task(model, aut, label, model_name):
                 logger.info("\n\t" + _df.to_string(index=False).replace("\n", "\n\t"))
     except Exception as e:
         logger.error(f"{model_name}, {model.shape}, {label}")
-        logger.error(f"Error: {e}")
+        logger.exception(f"{e}")
         pass
 
 
-@ray.remote(num_cpus=1)
+@ray.remote(num_cpus=1, memory=1 * 1024 ** 3)
 def task_wrapper(args):
     return task(*args)
 
