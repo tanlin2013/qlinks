@@ -26,6 +26,8 @@ def setup_storage(model_name):
                 "label",
                 "subgraph_size",
                 "n_orbits",
+                "reduced_subgraph_size",
+                "reduced_n_orbits",
                 "degeneracy",
             ]
         )
@@ -46,23 +48,27 @@ def task(model, aut, label, model_name):
         scars = aut.type_1_scars(label, fill_zeros=True)
         orbits = aut.automorphism_group().orbits()
         for scar in scars:
-            if scar.size > 0:
-                vertex_id = np.where(np.any(np.abs(scar) > 1e-12, axis=1))[0]
-                n_orbits = count_sets_with_elements(orbits, vertex_id)
-                _df = pd.DataFrame(
-                    {
-                        "length_x": [model.shape[0]],
-                        "length_y": [model.shape[1]],
-                        "n_solution": [model.basis.n_states],
-                        "label": [label],
-                        "subgraph_size": [len(vertex_id)],
-                        "n_orbits": [n_orbits],
-                        "degeneracy": [scar.shape[1]],
-                    }
-                )
-                with Lock():
-                    _df.to_csv(csv_file, mode="a", index=False, header=False)
-                logger.info("\n\t" + _df.to_string(index=False).replace("\n", "\n\t"))
+            n_orbits = count_sets_with_elements(orbits, scar.node_idx)
+            node_idx = np.where(np.any(np.abs(scar.evec) > 1e-12, axis=1))[0]
+            reduced_n_orbits = count_sets_with_elements(orbits, node_idx)
+            _df = pd.DataFrame(
+                {
+                    "length_x": [model.shape[0]],
+                    "length_y": [model.shape[1]],
+                    "n_solution": [model.basis.n_states],
+                    "label": [label],
+                    "subgraph_size": [scar.shape[0]],
+                    "n_orbits": [n_orbits],
+                    "reduced_subgraph_size": [len(node_idx)],
+                    "reduced_n_orbits": [reduced_n_orbits],
+                    "degeneracy": [scar.shape[1]],
+                }
+            )
+            with Lock():
+                _df.to_csv(csv_file, mode="a", index=False, header=False)
+            logger.info("\n\t" + _df.to_string(index=False).replace("\n", "\n\t"))
+        scar_storable = [scar.evec for scar in scars]
+        np.savez(f"data/{model_name}_{model.shape}_type1_scars_{label}.npz", *scar_storable)
     except Exception as e:
         logger.error(f"{model_name}, {model.shape}, {label}")
         logger.exception(f"{e}")
