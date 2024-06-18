@@ -1,3 +1,4 @@
+import time
 from typing import Callable, List, Sequence
 
 import ray
@@ -30,5 +31,6 @@ def map_on_ray(func: Callable, params: Sequence) -> List:
     results = []
     for done_job in tqdm(watch(jobs), desc="Completed jobs", total=len(jobs)):
         results.append(done_job)
+    time.sleep(1)  # wait for stdout to flush
     ray.shutdown()
     return results
