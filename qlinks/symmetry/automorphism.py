@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import networkx as nx
 import numpy as np
@@ -15,6 +15,18 @@ from sympy.combinatorics import Permutation, PermutationGroup
 
 from qlinks import logger
 from qlinks.solver.linalg import null_space
+
+
+@dataclass(slots=True)
+class ScarDataHolder:
+    evec: npt.NDArray[np.float64] = field(repr=False)
+    eval: float = field(default=None)
+    shape: Tuple[int, ...] = field(init=False)
+    node_idx: npt.NDArray[np.int64] = field(default=None)
+    mask: npt.NDArray[np.bool_] = field(default=None, repr=False)
+
+    def __post_init__(self):
+        self.shape = self.evec.shape
 
 
 @dataclass(slots=True)
@@ -101,7 +113,7 @@ class Automorphism:
         return new_arr
 
     @staticmethod
-    def connected_null_space(mat, fill_zeros: bool = False) -> List[npt.NDArray]:
+    def connected_null_space(mat, fill_zeros: bool = False) -> List[ScarDataHolder]:
         n_components, labels = connected_components(
             mat, directed=False, connection="weak", return_labels=True
         )
@@ -111,13 +123,15 @@ class Automorphism:
             if np.count_nonzero(mask) > 1:
                 sub_mat = mat[np.ix_(mask, mask)]
                 null_vecs = null_space(sub_mat)
-                if fill_zeros:
-                    null_vecs = Automorphism.insert_zeros(null_vecs, mask)
-                null_spaces.append(null_vecs)
+                if null_vecs.size > 0:
+                    payload = ScarDataHolder(evec=null_vecs, eval=0, mask=mask)
+                    if fill_zeros:
+                        payload.evec = Automorphism.insert_zeros(null_vecs, mask)
+                    null_spaces.append(payload)
         return null_spaces
 
     @staticmethod
-    def connected_eigh(mat, incidence_mat, fill_zeros: bool = False) -> List[npt.NDArray]:
+    def connected_eigh(mat, incidence_mat, fill_zeros: bool = False) -> List[ScarDataHolder]:
         n_components, labels = connected_components(
             mat, directed=False, connection="weak", return_labels=True
         )
@@ -149,26 +163,31 @@ class Automorphism:
 
                 if scar.size > 0:
                     logger.info(f"eval: {eval}, num of scars: {scar.shape[1]}")
+                    payload = ScarDataHolder(evec=scar, eval=eval, mask=mask)
                     if fill_zeros:
-                        scar = Automorphism.insert_zeros(scar, mask)
-                    scars.append(scar)
+                        payload.evec = Automorphism.insert_zeros(scar, mask)
+                    scars.append(payload)
         return scars
 
-    def type_1_scars(self, target_label: int, fill_zeros: bool = False) -> List[npt.NDArray]:
-        parti_idx = self.joint_partition[target_label]
+    def type_1_scars(self, target_label: int, fill_zeros: bool = False) -> List[ScarDataHolder]:
+        parti_idx = np.asarray(self.joint_partition[target_label])
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
         incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
         scars = self.connected_null_space(incidence_mat @ incidence_mat.T, fill_zeros)
-        if fill_zeros:
-            scars = [self.insert_zeros(scar, mask) for scar in scars]
+        for payload in scars:
+            payload.node_idx = parti_idx[payload.mask]
+            if fill_zeros:
+                payload.evec = self.insert_zeros(payload.evec, mask)
         return scars
 
-    def type_3a_scars(self, target_degree: int, fill_zeros: bool = False) -> List[npt.NDArray]:
-        parti_idx = self.degree_partition[target_degree]
+    def type_3a_scars(self, target_degree: int, fill_zeros: bool = False) -> List[ScarDataHolder]:
+        parti_idx = np.asarray(self.degree_partition[target_degree])
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
         sub_mat = self.adj_mat[np.ix_(mask, mask)]
         incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
         scars = self.connected_eigh(sub_mat, incidence_mat, fill_zeros)
-        if fill_zeros:
-            scars = [self.insert_zeros(scar, mask) for scar in scars]
+        for payload in scars:
+            payload.node_idx = parti_idx[payload.mask]
+            if fill_zeros:
+                payload.evec = self.insert_zeros(payload.evec, mask)
         return scars
