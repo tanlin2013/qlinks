@@ -67,8 +67,9 @@ def task(model, aut, label, model_name):
             with Lock():
                 _df.to_csv(csv_file, mode="a", index=False, header=False)
             logger.info("\n\t" + _df.to_string(index=False).replace("\n", "\n\t"))
-        scar_storable = [scar.evec for scar in scars]
-        np.savez(f"data/{model_name}_{model.shape}_type1_scars_{label}.npz", *scar_storable)
+        if scars:
+            scar_storable = [scar.evec for scar in scars]
+            np.savez(f"data/{model_name}_{model.shape}_type1_scars_{label}.npz", *scar_storable)
     except Exception as e:
         logger.error(f"{model_name}, {model.shape}, {label}")
         logger.exception(f"{e}")
