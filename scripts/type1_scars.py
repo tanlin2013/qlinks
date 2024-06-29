@@ -127,4 +127,6 @@ if __name__ == "__main__":
             ((14, "A"), 12),
             ((14, "B"), 12),
         ]
-        map_on_ray(task_wrapper, [(model, aut, label, model_name, k) for label, k in aut.joint_partition])
+        map_on_ray(
+            task_wrapper, [(model, aut, label, model_name, k) for label, k in aut.joint_partition]
+        )

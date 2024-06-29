@@ -124,5 +124,8 @@ if __name__ == "__main__":
         cheat_sheet = [(16, 24, 2), (16, 24, -2)]  # k=24 is a random guess
         map_on_ray(
             task_wrapper,
-            [(model, aut, label, model_name, k, sigma) for label, k, sigma in aut.degree_partition.keys()],
+            [
+                (model, aut, label, model_name, k, sigma)
+                for label, k, sigma in aut.degree_partition.keys()
+            ],
         )

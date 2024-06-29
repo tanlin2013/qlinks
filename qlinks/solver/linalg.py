@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Optional, Tuple
 
 import numpy as np
-import scipy as sp
 import numpy.typing as npt
+import scipy as sp
 
 
 def null_space(mat: sp.sparse.sparray, k: Optional[int] = None) -> npt.NDArray[np.float64]:
