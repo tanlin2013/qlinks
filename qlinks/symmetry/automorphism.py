@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
@@ -14,7 +14,7 @@ from scipy.sparse.csgraph import connected_components
 from sympy.combinatorics import Permutation, PermutationGroup
 
 from qlinks import logger
-from qlinks.solver.linalg import null_space
+from qlinks.solver.linalg import eigh, null_space
 
 
 @dataclass(slots=True)
@@ -113,7 +113,9 @@ class Automorphism:
         return new_arr
 
     @staticmethod
-    def connected_null_space(mat, fill_zeros: bool = False) -> List[ScarDataHolder]:
+    def connected_null_space(
+        mat, fill_zeros: bool = False, k: Optional[int] = None
+    ) -> List[ScarDataHolder]:
         n_components, labels = connected_components(
             mat, directed=False, connection="weak", return_labels=True
         )
@@ -122,7 +124,7 @@ class Automorphism:
             mask = (labels == i)  # fmt: skip
             if np.count_nonzero(mask) > 1:
                 sub_mat = mat[np.ix_(mask, mask)]
-                null_vecs = null_space(sub_mat)
+                null_vecs = null_space(sub_mat, k)
                 if null_vecs.size > 0:
                     payload = ScarDataHolder(evec=null_vecs, eval=0, mask=mask)
                     if fill_zeros:
@@ -131,7 +133,14 @@ class Automorphism:
         return null_spaces
 
     @staticmethod
-    def connected_eigh(mat, incidence_mat, fill_zeros: bool = False) -> List[ScarDataHolder]:
+    def connected_eigh(
+        mat,
+        incidence_mat,
+        fill_zeros: bool = False,
+        k: Optional[int] = None,
+        sigma: Optional[float] = None,
+        **kwargs,
+    ) -> List[ScarDataHolder]:
         n_components, labels = connected_components(
             mat, directed=False, connection="weak", return_labels=True
         )
@@ -143,7 +152,7 @@ class Automorphism:
 
             compo_mat = mat[np.ix_(mask, mask)]
             sub_incidence_mat = incidence_mat[mask, :]
-            evals, evecs = np.linalg.eigh(compo_mat.toarray())
+            evals, evecs = eigh(compo_mat, k, sigma, **kwargs)
             evals = evals.round(12)
 
             for eval in np.unique(evals):
@@ -169,23 +178,32 @@ class Automorphism:
                     scars.append(payload)
         return scars
 
-    def type_1_scars(self, target_label: int, fill_zeros: bool = False) -> List[ScarDataHolder]:
+    def type_1_scars(
+        self, target_label: int, fill_zeros: bool = False, k: Optional[int] = None
+    ) -> List[ScarDataHolder]:
         parti_idx = np.asarray(self.joint_partition[target_label])
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
         incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
-        scars = self.connected_null_space(incidence_mat @ incidence_mat.T, fill_zeros)
+        scars = self.connected_null_space(incidence_mat @ incidence_mat.T, fill_zeros, k)
         for payload in scars:
             payload.node_idx = parti_idx[payload.mask]
             if fill_zeros:
                 payload.evec = self.insert_zeros(payload.evec, mask)
         return scars
 
-    def type_3a_scars(self, target_degree: int, fill_zeros: bool = False) -> List[ScarDataHolder]:
+    def type_3a_scars(
+        self,
+        target_degree: int,
+        fill_zeros: bool = False,
+        k: Optional[int] = None,
+        sigma: Optional[float] = None,
+        **kwargs,
+    ) -> List[ScarDataHolder]:
         parti_idx = np.asarray(self.degree_partition[target_degree])
         mask = np.isin(np.arange(self.n_nodes), parti_idx)
         sub_mat = self.adj_mat[np.ix_(mask, mask)]
         incidence_mat = self.adj_mat[np.ix_(mask, ~mask)]
-        scars = self.connected_eigh(sub_mat, incidence_mat, fill_zeros)
+        scars = self.connected_eigh(sub_mat, incidence_mat, fill_zeros, k, sigma, **kwargs)
         for payload in scars:
             payload.node_idx = parti_idx[payload.mask]
             if fill_zeros:

@@ -42,10 +42,10 @@ def count_sets_with_elements(sets, array):
     return count
 
 
-def task(model, aut, label, model_name):
+def task(model, aut, label, model_name, k):
     csv_file = f"data/{model_name}_type1_scars.csv"
     try:
-        scars = aut.type_1_scars(label, fill_zeros=True)
+        scars = aut.type_1_scars(label, fill_zeros=True, k=k)
         orbits = aut.automorphism_group().orbits()
         for scar in scars:
             n_orbits = count_sets_with_elements(orbits, scar.node_idx)
@@ -76,7 +76,7 @@ def task(model, aut, label, model_name):
         pass
 
 
-@ray.remote(num_cpus=1, memory=1 * 1024**3)
+@ray.remote(num_cpus=1, memory=110 * 1024**3)
 def task_wrapper(args):
     return task(*args)
 
@@ -84,16 +84,16 @@ def task_wrapper(args):
 if __name__ == "__main__":
     coup_j, coup_rk = (1, 1)
     inputs = [
-        ["qlm", (4, 2)],  # 38
-        ["qlm", (6, 2)],  # 282
-        ["qlm", (4, 4)],  # 990
-        ["qdm", (4, 2)],  # 16
-        ["qdm", (6, 2)],  # 76
-        ["qdm", (4, 4)],  # 132
-        ["qdm", (6, 4)],  # 1456
-        ["qdm", (8, 4)],  # 17412
-        ["qlm", (6, 4)],  # 32810
-        ["qdm", (6, 6)],  # 44176
+        # ["qlm", (4, 2)],  # 38
+        # ["qlm", (6, 2)],  # 282
+        # ["qlm", (4, 4)],  # 990
+        # ["qdm", (4, 2)],  # 16
+        # ["qdm", (6, 2)],  # 76
+        # ["qdm", (4, 4)],  # 132
+        # ["qdm", (6, 4)],  # 1456
+        # ["qdm", (8, 4)],  # 17412
+        # ["qlm", (6, 4)],  # 32810
+        # ["qdm", (6, 6)],  # 44176
         ["qlm", (8, 4)],  # 1159166
         # ["qdm", (8, 6)],  # 1504896
         # ["qlm", (6, 6)],  # 5482716
@@ -120,5 +120,11 @@ if __name__ == "__main__":
 
         aut = Automorphism(-model.kinetic_term)
 
-        ray.init(num_cpus=20, log_to_driver=True)
-        map_on_ray(task_wrapper, [(model, aut, label, model_name) for label in aut.joint_partition])
+        ray.init(num_cpus=4, log_to_driver=True)
+        cheat_sheet = [
+            ((16, "A"), 106),
+            ((16, "B"), 106),
+            ((14, "A"), 12),
+            ((14, "B"), 12),
+        ]
+        map_on_ray(task_wrapper, [(model, aut, label, model_name, k) for label, k in aut.joint_partition])
