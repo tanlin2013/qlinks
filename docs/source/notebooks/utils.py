@@ -1,5 +1,4 @@
 import zipfile
-from collections import defaultdict
 from typing import List
 
 import igraph
@@ -11,13 +10,6 @@ from qlinks.symmetry.gauss_law import GaussLaw
 
 def format_custom_index(index):
     return [f"({i}) {idx}" for i, idx in enumerate(index)]
-
-
-def group_indices_by_value(dictionary):
-    index_groups = defaultdict(set)
-    for index, value in dictionary.items():
-        index_groups[value].add(index)
-    return list(index_groups.values())
 
 
 def setup_model(model_name, lattice_shape, coup_j, coup_rk, momenta=None):
