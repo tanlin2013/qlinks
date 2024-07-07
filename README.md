@@ -33,7 +33,7 @@ poetry install --all-extras
 ```
 #### 3. Docker
 ```bash
-docker pull tanlin2013/qlinks:latest
+docker pull tanlin2013/qlinks:main
 ```
 
 Getting started
@@ -46,20 +46,17 @@ We implement the depth-first search (backtracking) algorithm
 to enumerate all basis satisfying the Gauss law.
 
 ```python
-from qlinks.solver.deep_first_search import DeepFirstSearch
 from qlinks.symmetry.gauss_law import GaussLaw
 
 lattice_shape = (4, 2)
-gauss_law = GaussLaw.from_staggered_charge_distri(*lattice_shape)
-gauss_law.flux_sector = (0, 0)
-dfs = DeepFirstSearch(gauss_law, max_steps=int(1e8))
-basis = gauss_law.to_basis(dfs.solve(n_solution=16))
+gauss_law = GaussLaw.from_staggered_charge_distri(*lattice_shape, flux_sector=(0, 0))
+basis = gauss_law.solve()
 ```
 
 #### 2. Easy construction of the Hamiltonian
 
 ```python
-from qlinks.model import QuantumLinkModel
+from qlinks.model.quantum_link_model import QuantumLinkModel
 
 coup_j, coup_rk = (1.0, 1.0)
 model = QuantumLinkModel(coup_j, coup_rk, lattice_shape, basis)
