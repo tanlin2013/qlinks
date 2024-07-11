@@ -42,7 +42,7 @@ def count_sets_with_elements(sets, array):
     return count
 
 
-def task(model, aut, label, model_name, k, sigma):
+def task(model, aut, label, model_name, k=None, sigma=None):
     csv_file = f"data/{model_name}_type3a_scars.csv"
     try:
         scars = aut.type_3a_scars(label, fill_zeros=True, k=k, sigma=sigma)
@@ -120,12 +120,12 @@ if __name__ == "__main__":
 
         aut = Automorphism(-model.kinetic_term)
 
+        # cheat_sheet = [(16, 24, 2), (16, 24, -2)]  # k=24 is a random guess
         ray.init(num_cpus=2, log_to_driver=True)
-        cheat_sheet = [(16, 24, 2), (16, 24, -2)]  # k=24 is a random guess
         map_on_ray(
             task_wrapper,
             [
-                (model, aut, label, model_name, k, sigma)
-                for label, k, sigma in aut.degree_partition.keys()
+                (model, aut, label, model_name)
+                for label in aut.degree_partition.keys()
             ],
         )
