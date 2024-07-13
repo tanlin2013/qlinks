@@ -8,7 +8,7 @@ import scipy as sp
 
 
 def null_space(mat: sp.sparse.sparray, k: Optional[int] = None) -> npt.NDArray[np.float64]:
-    if np.prod(mat.shape) > 2**24:
+    if np.prod(mat.shape) > 2**19:
         k = min(mat.shape) - 1 if k is None else min(k, min(mat.shape) - 1)
         u, s, vh = sp.sparse.linalg.svds(mat, k=k, which="SM")
         tol = np.finfo(mat.dtype).eps * mat.nnz
@@ -21,8 +21,8 @@ def null_space(mat: sp.sparse.sparray, k: Optional[int] = None) -> npt.NDArray[n
 def eigh(
     mat: sp.sparse.sparray, k: Optional[int] = None, sigma: Optional[float] = None, **kwargs
 ) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
-    if np.prod(mat.shape) > 2**24 or k is not None:
         k = 6 if k is None else k
         return sp.sparse.linalg.eigsh(mat, k, sigma=sigma, **kwargs)
+    if mat.shape[0] > 2**10 or k is not None:
     else:
         return sp.linalg.eigh(mat.toarray())
