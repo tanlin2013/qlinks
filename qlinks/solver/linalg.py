@@ -21,8 +21,10 @@ def null_space(mat: sp.sparse.sparray, k: Optional[int] = None) -> npt.NDArray[n
 def eigh(
     mat: sp.sparse.sparray, k: Optional[int] = None, sigma: Optional[float] = None, **kwargs
 ) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
-        k = 6 if k is None else k
-        return sp.sparse.linalg.eigsh(mat, k, sigma=sigma, **kwargs)
     if mat.shape[0] > 2**10 or k is not None:
+        # k = 6 if k is None else min(k, mat.shape[0] - 1)
+        evecs = null_space(mat - sigma * sp.sparse.eye(mat.shape[0]), k)
+        return sigma * np.ones(evecs.shape[1]), evecs
+        # return sp.sparse.linalg.eigsh(mat, k, sigma=sigma, **kwargs)
     else:
         return sp.linalg.eigh(mat.toarray())
