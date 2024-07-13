@@ -164,11 +164,13 @@ class Automorphism:
 
                 if np.allclose(outer_boundary, 0, atol=1e-12):
                     scar = unitary_mat
-                else:
+                elif unitary_mat.shape[1] > 1:
                     coef_mat = null_space(sp.csr_array(outer_boundary))
                     scar = unitary_mat @ coef_mat
                     non_zero_cols = ~np.all(np.abs(scar) < 1e-12, axis=0)
                     scar = scar[:, non_zero_cols]
+                else:
+                    continue
 
                 if scar.size > 0:
                     logger.info(f"eval: {eval}, num of scars: {scar.shape[1]}")
