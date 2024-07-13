@@ -124,8 +124,5 @@ if __name__ == "__main__":
         ray.init(num_cpus=2, log_to_driver=True)
         map_on_ray(
             task_wrapper,
-            [
-                (model, aut, label, model_name)
-                for label in aut.degree_partition.keys()
-            ],
+            [(model, aut, label, model_name) for label in aut.degree_partition.keys()],
         )

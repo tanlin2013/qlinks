@@ -127,6 +127,4 @@ if __name__ == "__main__":
         #     ((14, "B"), 12),
         # ]
         ray.init(num_cpus=4, log_to_driver=True)
-        map_on_ray(
-            task_wrapper, [(model, aut, label, model_name) for label in aut.joint_partition]
-        )
+        map_on_ray(task_wrapper, [(model, aut, label, model_name) for label in aut.joint_partition])
