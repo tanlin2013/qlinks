@@ -1003,13 +1003,13 @@ files = [
 
 [[package]]
 name = "docutils"
-version = "0.21.2"
+version = "0.20.1"
 description = "Docutils -- Python Documentation Utilities"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.7"
 files = [
-    {file = "docutils-0.21.2-py3-none-any.whl", hash = "sha256:dafca5b9e384f0e419294eb4d2ff9fa826435bf15f15b7bd45723e8ad76811b2"},
-    {file = "docutils-0.21.2.tar.gz", hash = "sha256:3a6b18732edf182daa3cd12775bbb338cf5691468f91eeeb109deff6ebfa986f"},
+    {file = "docutils-0.20.1-py3-none-any.whl", hash = "sha256:96f387a2c5562db4476f09f13bbab2192e764cac08ebbf3a34a95d9b1e4a59d6"},
+    {file = "docutils-0.20.1.tar.gz", hash = "sha256:f08a4e276c3a1583a86dce3e34aba3fe04d02bba2dd51ed16106244e8a923e3b"},
 ]
 
 [[package]]
@@ -4613,13 +4613,13 @@ files = [
 
 [[package]]
 name = "sphinx"
-version = "7.4.1"
+version = "7.4.3"
 description = "Python documentation generator"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "sphinx-7.4.1-py3-none-any.whl", hash = "sha256:ae21f3f4337ccc0a1054459bf232a25e495bdf647ccbcd50d3b5e355293ceff3"},
-    {file = "sphinx-7.4.1.tar.gz", hash = "sha256:09539a16d74d1850b123cdd0752b9d24f3adc025ff887d611d1010348cd3648c"},
+    {file = "sphinx-7.4.3-py3-none-any.whl", hash = "sha256:a3c295d0e8be6277e0a5ba5c6909a308bd208876b0f4f68c7cc591f566129412"},
+    {file = "sphinx-7.4.3.tar.gz", hash = "sha256:bd846bcb09fd2b6e94ce3e1ad50f4618bccf03cc7c17d0f3fa87393c0bd9178b"},
 ]
 
 [package.dependencies]
@@ -5292,4 +5292,4 @@ drawing = ["igraph", "matplotlib", "plotly", "pycairo", "pyvis"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "f961a49ebbb6a455fef5449c59a45467554024fdb4c18af58ecb7fec1b6d8ec0"
+content-hash = "34557809d358718b014601b7646dd482f3021a01a237955de777cbaa98ebdd3a"
