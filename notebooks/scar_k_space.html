@@ -1,0 +1,1733 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>QLM / QDM in Momemtum Space &#8212; qlinks 0.1.0rc1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=370c4a40"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/scar_k_space';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks 0.1.0rc1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../lattice.html">1. Lattice</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.lattice.component.html">1.1. qlinks.lattice.component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.lattice.square_lattice.html">1.2. qlinks.lattice.square_lattice</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../symmetry.html">2. Symmetry</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.symmetry.gauss_law.html">2.1. qlinks.symmetry.gauss_law</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.symmetry.translation.html">2.2. qlinks.symmetry.translation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../solver.html">3. Solver</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.solver.deep_first_search.html">3.1. qlinks.solver.deep_first_search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualizer.html">4. Visualizer</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/notebooks/scar_k_space.ipynb" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2Fnotebooks/scar_k_space.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>QLM / QDM in Momemtum Space</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">igraph</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">pynauty</span>
+<span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Permutation</span><span class="p">,</span> <span class="n">PermutationGroup</span>
+
+<span class="kn">from</span> <span class="nn">qlinks.lattice.square_lattice</span> <span class="kn">import</span> <span class="n">SquareLattice</span>
+<span class="kn">from</span> <span class="nn">qlinks.visualizer.basis</span> <span class="kn">import</span> <span class="n">BasisVisualizer</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">format_custom_index</span><span class="p">,</span> <span class="n">setup_model</span><span class="p">,</span> <span class="n">setup_igraph</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">&quot;display.max_rows&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<section id="QLM-/-QDM-in-Momemtum-Space">
+<h1>QLM / QDM in Momemtum Space<a class="headerlink" href="#QLM-/-QDM-in-Momemtum-Space" title="Link to this heading">#</a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">momenta</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">basis</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">setup_model</span><span class="p">(</span>
+    <span class="s2">&quot;qdm&quot;</span><span class="p">,</span> <span class="n">lattice_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">coup_j</span><span class="o">=</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="o">=</span><span class="n">coup_rk</span><span class="p">,</span> <span class="n">momenta</span><span class="o">=</span><span class="n">momenta</span>
+<span class="p">)</span>
+<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-06-30 17:58:43 [constraint_programming.py] INFO: CpSolverResponse summary:
+status: OPTIMAL
+objective: 0
+best_bound: 0
+integers: 32
+booleans: 32
+conflicts: 37
+branches: 2049
+propagations: 9234
+integer_propagations: 10892
+restarts: 575
+lp_iterations: 790
+walltime: 0.055646
+usertime: 0.055646
+deterministic_time: 0.00471525
+gap_integral: 0
+solution_fingerprint: 0x932947a4f9f63e5f
+
+2024-06-30 17:58:43 [constraint_programming.py] INFO: Found 132 optimal solutions.
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">translation</span><span class="o">.</span><span class="n">_df</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>1142025915</th>
+      <th>1143328443</th>
+      <th>1146285243</th>
+      <th>1147587771</th>
+      <th>1147913403</th>
+      <th>1147914675</th>
+      <th>1152797883</th>
+      <th>1152818235</th>
+      <th>1153123515</th>
+      <th>1153124787</th>
+      <th>...</th>
+      <th>3994147377</th>
+      <th>3994152465</th>
+      <th>3995438355</th>
+      <th>3995454993</th>
+      <th>3998406705</th>
+      <th>3998411793</th>
+      <th>3999714321</th>
+      <th>4000039953</th>
+      <th>4004924433</th>
+      <th>4005250065</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>(0, 0)</th>
+      <td>1142025915</td>
+      <td>1143328443</td>
+      <td>1146285243</td>
+      <td>1147587771</td>
+      <td>1147913403</td>
+      <td>1147914675</td>
+      <td>1152797883</td>
+      <td>1152818235</td>
+      <td>1153123515</td>
+      <td>1153124787</td>
+      <td>...</td>
+      <td>3994147377</td>
+      <td>3994152465</td>
+      <td>3995438355</td>
+      <td>3995454993</td>
+      <td>3998406705</td>
+      <td>3998411793</td>
+      <td>3999714321</td>
+      <td>4000039953</td>
+      <td>4004924433</td>
+      <td>4005250065</td>
+    </tr>
+    <tr>
+      <th>(0, 1)</th>
+      <td>300858180</td>
+      <td>634305348</td>
+      <td>1391246148</td>
+      <td>1724693316</td>
+      <td>1808055108</td>
+      <td>1808380740</td>
+      <td>3058481988</td>
+      <td>3063692100</td>
+      <td>3141843780</td>
+      <td>3142169412</td>
+      <td>...</td>
+      <td>299512302</td>
+      <td>300814830</td>
+      <td>630002670</td>
+      <td>634261998</td>
+      <td>1389900270</td>
+      <td>1391202798</td>
+      <td>1724649966</td>
+      <td>1808011758</td>
+      <td>3058438638</td>
+      <td>3141800430</td>
+    </tr>
+    <tr>
+      <th>(0, 2)</th>
+      <td>4005250065</td>
+      <td>3468379173</td>
+      <td>3971695698</td>
+      <td>3434824806</td>
+      <td>3300607083</td>
+      <td>3383968875</td>
+      <td>1287341238</td>
+      <td>2621129910</td>
+      <td>1153123515</td>
+      <td>1236485307</td>
+      <td>...</td>
+      <td>3660705297</td>
+      <td>3994152465</td>
+      <td>2366893605</td>
+      <td>3457281573</td>
+      <td>3627150930</td>
+      <td>3960598098</td>
+      <td>3423727206</td>
+      <td>3289509483</td>
+      <td>1276243638</td>
+      <td>1142025915</td>
+    </tr>
+    <tr>
+      <th>(0, 3)</th>
+      <td>3141800430</td>
+      <td>3141805518</td>
+      <td>3141817068</td>
+      <td>3141822156</td>
+      <td>3141823428</td>
+      <td>3007605705</td>
+      <td>3141842508</td>
+      <td>994358940</td>
+      <td>3141843780</td>
+      <td>3007626057</td>
+      <td>...</td>
+      <td>837685722</td>
+      <td>300814830</td>
+      <td>334374285</td>
+      <td>300819918</td>
+      <td>837702360</td>
+      <td>300831468</td>
+      <td>300836556</td>
+      <td>300837828</td>
+      <td>300856908</td>
+      <td>300858180</td>
+    </tr>
+    <tr>
+      <th>(1, 0)</th>
+      <td>289717230</td>
+      <td>294927342</td>
+      <td>290042862</td>
+      <td>295252974</td>
+      <td>296555502</td>
+      <td>296560590</td>
+      <td>299512302</td>
+      <td>299528940</td>
+      <td>300814830</td>
+      <td>300819918</td>
+      <td>...</td>
+      <td>3141823428</td>
+      <td>3141843780</td>
+      <td>3147052620</td>
+      <td>3147053892</td>
+      <td>3142149060</td>
+      <td>3142169412</td>
+      <td>3147379524</td>
+      <td>3148682052</td>
+      <td>3151638852</td>
+      <td>3152941380</td>
+    </tr>
+    <tr>
+      <th>(1, 1)</th>
+      <td>1153166865</td>
+      <td>2486955537</td>
+      <td>1236528657</td>
+      <td>2570317329</td>
+      <td>2903764497</td>
+      <td>2905067025</td>
+      <td>3660705297</td>
+      <td>3664964625</td>
+      <td>3994152465</td>
+      <td>3995454993</td>
+      <td>...</td>
+      <td>1147913403</td>
+      <td>1153123515</td>
+      <td>2486586555</td>
+      <td>2486912187</td>
+      <td>1231275195</td>
+      <td>1236485307</td>
+      <td>2570273979</td>
+      <td>2903721147</td>
+      <td>3660661947</td>
+      <td>3994109115</td>
+    </tr>
+    <tr>
+      <th>(1, 2)</th>
+      <td>3152941380</td>
+      <td>1005457812</td>
+      <td>3018723657</td>
+      <td>871240089</td>
+      <td>334369197</td>
+      <td>667816365</td>
+      <td>837685722</td>
+      <td>1928073690</td>
+      <td>300814830</td>
+      <td>634261998</td>
+      <td>...</td>
+      <td>1808055108</td>
+      <td>3141843780</td>
+      <td>910998420</td>
+      <td>994360212</td>
+      <td>1673837385</td>
+      <td>3007626057</td>
+      <td>860142489</td>
+      <td>323271597</td>
+      <td>826588122</td>
+      <td>289717230</td>
+    </tr>
+    <tr>
+      <th>(1, 3)</th>
+      <td>3994109115</td>
+      <td>3994129467</td>
+      <td>3994110387</td>
+      <td>3994130739</td>
+      <td>3994135827</td>
+      <td>3457264935</td>
+      <td>3994147377</td>
+      <td>3960593010</td>
+      <td>3994152465</td>
+      <td>3457281573</td>
+      <td>...</td>
+      <td>3300607083</td>
+      <td>1153123515</td>
+      <td>1287361590</td>
+      <td>1153143867</td>
+      <td>3300608355</td>
+      <td>1153124787</td>
+      <td>1153145139</td>
+      <td>1153150227</td>
+      <td>1153161777</td>
+      <td>1153166865</td>
+    </tr>
+    <tr>
+      <th>(2, 0)</th>
+      <td>1142025915</td>
+      <td>1146285243</td>
+      <td>1143328443</td>
+      <td>1147587771</td>
+      <td>1152797883</td>
+      <td>1152818235</td>
+      <td>1147913403</td>
+      <td>1147914675</td>
+      <td>1153123515</td>
+      <td>1153143867</td>
+      <td>...</td>
+      <td>3994135827</td>
+      <td>3994152465</td>
+      <td>3998406705</td>
+      <td>3998411793</td>
+      <td>3995438355</td>
+      <td>3995454993</td>
+      <td>3999714321</td>
+      <td>4004924433</td>
+      <td>4000039953</td>
+      <td>4005250065</td>
+    </tr>
+    <tr>
+      <th>(2, 1)</th>
+      <td>300858180</td>
+      <td>1391246148</td>
+      <td>634305348</td>
+      <td>1724693316</td>
+      <td>3058481988</td>
+      <td>3063692100</td>
+      <td>1808055108</td>
+      <td>1808380740</td>
+      <td>3141843780</td>
+      <td>3147053892</td>
+      <td>...</td>
+      <td>296555502</td>
+      <td>300814830</td>
+      <td>1389900270</td>
+      <td>1391202798</td>
+      <td>630002670</td>
+      <td>634261998</td>
+      <td>1724649966</td>
+      <td>3058438638</td>
+      <td>1808011758</td>
+      <td>3141800430</td>
+    </tr>
+    <tr>
+      <th>(2, 2)</th>
+      <td>4005250065</td>
+      <td>3971695698</td>
+      <td>3468379173</td>
+      <td>3434824806</td>
+      <td>1287341238</td>
+      <td>2621129910</td>
+      <td>3300607083</td>
+      <td>3383968875</td>
+      <td>1153123515</td>
+      <td>2486912187</td>
+      <td>...</td>
+      <td>2903764497</td>
+      <td>3994152465</td>
+      <td>3627150930</td>
+      <td>3960598098</td>
+      <td>2366893605</td>
+      <td>3457281573</td>
+      <td>3423727206</td>
+      <td>1276243638</td>
+      <td>3289509483</td>
+      <td>1142025915</td>
+    </tr>
+    <tr>
+      <th>(2, 3)</th>
+      <td>3141800430</td>
+      <td>3141817068</td>
+      <td>3141805518</td>
+      <td>3141822156</td>
+      <td>3141842508</td>
+      <td>994358940</td>
+      <td>3141823428</td>
+      <td>3007605705</td>
+      <td>3141843780</td>
+      <td>994360212</td>
+      <td>...</td>
+      <td>334369197</td>
+      <td>300814830</td>
+      <td>837702360</td>
+      <td>300831468</td>
+      <td>334374285</td>
+      <td>300819918</td>
+      <td>300836556</td>
+      <td>300856908</td>
+      <td>300837828</td>
+      <td>300858180</td>
+    </tr>
+    <tr>
+      <th>(3, 0)</th>
+      <td>289717230</td>
+      <td>290042862</td>
+      <td>294927342</td>
+      <td>295252974</td>
+      <td>299512302</td>
+      <td>299528940</td>
+      <td>296555502</td>
+      <td>296560590</td>
+      <td>300814830</td>
+      <td>300831468</td>
+      <td>...</td>
+      <td>3141842508</td>
+      <td>3141843780</td>
+      <td>3142149060</td>
+      <td>3142169412</td>
+      <td>3147052620</td>
+      <td>3147053892</td>
+      <td>3147379524</td>
+      <td>3151638852</td>
+      <td>3148682052</td>
+      <td>3152941380</td>
+    </tr>
+    <tr>
+      <th>(3, 1)</th>
+      <td>1153166865</td>
+      <td>1236528657</td>
+      <td>2486955537</td>
+      <td>2570317329</td>
+      <td>3660705297</td>
+      <td>3664964625</td>
+      <td>2903764497</td>
+      <td>2905067025</td>
+      <td>3994152465</td>
+      <td>3998411793</td>
+      <td>...</td>
+      <td>1152797883</td>
+      <td>1153123515</td>
+      <td>1231275195</td>
+      <td>1236485307</td>
+      <td>2486586555</td>
+      <td>2486912187</td>
+      <td>2570273979</td>
+      <td>3660661947</td>
+      <td>2903721147</td>
+      <td>3994109115</td>
+    </tr>
+    <tr>
+      <th>(3, 2)</th>
+      <td>3152941380</td>
+      <td>3018723657</td>
+      <td>1005457812</td>
+      <td>871240089</td>
+      <td>837685722</td>
+      <td>1928073690</td>
+      <td>334369197</td>
+      <td>667816365</td>
+      <td>300814830</td>
+      <td>1391202798</td>
+      <td>...</td>
+      <td>3058481988</td>
+      <td>3141843780</td>
+      <td>1673837385</td>
+      <td>3007626057</td>
+      <td>910998420</td>
+      <td>994360212</td>
+      <td>860142489</td>
+      <td>826588122</td>
+      <td>323271597</td>
+      <td>289717230</td>
+    </tr>
+    <tr>
+      <th>(3, 3)</th>
+      <td>3994109115</td>
+      <td>3994110387</td>
+      <td>3994129467</td>
+      <td>3994130739</td>
+      <td>3994147377</td>
+      <td>3960593010</td>
+      <td>3994135827</td>
+      <td>3457264935</td>
+      <td>3994152465</td>
+      <td>3960598098</td>
+      <td>...</td>
+      <td>1287341238</td>
+      <td>1153123515</td>
+      <td>3300608355</td>
+      <td>1153124787</td>
+      <td>1287361590</td>
+      <td>1153143867</td>
+      <td>1153145139</td>
+      <td>1153161777</td>
+      <td>1153150227</td>
+      <td>1153166865</td>
+    </tr>
+  </tbody>
+</table>
+<p>16 rows × 132 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">translation</span><span class="o">.</span><span class="n">representatives</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([289717230, 290042862, 295252974, 296555502, 296560590, 300814830,
+       300819918, 300836556, 300837828, 334374285, 630007758, 634267086,
+       634278636, 634283724, 323597229, 328481709, 328807341, 333066669,
+       330109869, 330114957, 663562125, 865678233])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">translation</span><span class="o">.</span><span class="n">representative_basis</span><span class="p">(</span><span class="n">momenta</span><span class="p">)</span><span class="o">.</span><span class="n">dataframe</span>
+<span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">format_custom_index</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>...</th>
+      <th>22</th>
+      <th>23</th>
+      <th>24</th>
+      <th>25</th>
+      <th>26</th>
+      <th>27</th>
+      <th>28</th>
+      <th>29</th>
+      <th>30</th>
+      <th>31</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>(0) 289717230</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(1) 290042862</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(2) 295252974</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(3) 296555502</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(4) 296560590</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(5) 300814830</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(6) 300819918</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(7) 300836556</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(8) 300837828</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(9) 323597229</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(10) 328481709</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(11) 328807341</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(12) 330109869</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(13) 330114957</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(14) 333066669</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(15) 334374285</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(16) 630007758</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(17) 634267086</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(18) 634278636</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(19) 634283724</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>(20) 663562125</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>(21) 865678233</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+<p>22 rows × 32 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evecs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;eval&quot;</span><span class="p">:</span> <span class="n">evals</span><span class="p">,</span>
+        <span class="s2">&quot;kin&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">([(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">]),</span>
+        <span class="s2">&quot;pot&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span>
+            <span class="p">[(</span><span class="n">evec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">potential_term</span> <span class="o">@</span> <span class="n">evec</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">evec</span> <span class="ow">in</span> <span class="n">evecs</span><span class="o">.</span><span class="n">T</span><span class="p">]</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">evecs_df</span><span class="p">[</span><span class="n">evecs_df</span><span class="p">[</span><span class="s2">&quot;kin&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>eval</th>
+      <th>kin</th>
+      <th>pot</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>7</th>
+      <td>-4.2</td>
+      <td>-1.241701e-29</td>
+      <td>6.0</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>-2.8</td>
+      <td>-1.878816e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>-2.8</td>
+      <td>-2.726223e-30</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>-2.8</td>
+      <td>-1.586966e-31</td>
+      <td>4.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_scipy_sparse_array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
+<span class="n">ig</span> <span class="o">=</span> <span class="n">igraph</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="n">from_networkx</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+<span class="n">ntg</span> <span class="o">=</span> <span class="n">pynauty</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span>
+    <span class="n">ig</span><span class="o">.</span><span class="n">vcount</span><span class="p">(),</span>
+    <span class="n">adjacency_dict</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">to_dict_of_lists</span><span class="p">(</span><span class="n">g</span><span class="p">),</span>
+    <span class="c1"># vertex_coloring=[{1, 2, 4, 7, 8, 11, 13, 14}, {3, 6, 9, 12}, {0, 5, 10, 15}]</span>
+<span class="p">)</span>
+<span class="n">aut_gp</span> <span class="o">=</span> <span class="n">pynauty</span><span class="o">.</span><span class="n">autgrp</span><span class="p">(</span><span class="n">ntg</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">perm_gp</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">Permutation</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">aut_gp</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">perm_gp</span><span class="o">.</span><span class="n">orbits</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{0, 3, 4}, {1, 2}]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_scipy_sparse_array</span><span class="p">(</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
+
+<span class="n">highlight</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># np.where(np.abs(np.real_if_close(evecs[:, 1])) &gt; 0.2)[0],</span>
+    <span class="c1"># np.where(np.abs(np.real_if_close(evecs[:, 2])) &gt; 0.2)[0],</span>
+<span class="p">]</span>
+<span class="c1"># highlight = list(aut.degree_partition.values())</span>
+<span class="n">highlight</span> <span class="o">=</span> <span class="n">perm_gp</span><span class="o">.</span><span class="n">orbits</span><span class="p">()</span>
+<span class="c1"># highlight = list(aut.bipartition.values())</span>
+
+<span class="c1"># highlight_color = list(mcolors.TABLEAU_COLORS.values())</span>
+<span class="c1"># highlight_color = list(mcolors.CSS4_COLORS.values())</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Set3&#39;</span><span class="p">)</span>
+<span class="n">highlight_color</span> <span class="o">=</span> <span class="p">[</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)]</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Set2&#39;</span><span class="p">)</span>
+<span class="n">highlight_color</span> <span class="o">+=</span> <span class="p">[</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)]</span>
+
+<span class="n">ig</span> <span class="o">=</span> <span class="n">setup_igraph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">highlight</span><span class="p">,</span> <span class="n">highlight_color</span><span class="p">)</span>
+
+<span class="c1"># sub_ig = ig.induced_subgraph(np.where(np.diag(two_steps_mat) == 4)[0])</span>
+<span class="c1"># fig, ax = plt.subplots(figsize=(6, 6), facecolor=&quot;white&quot;)</span>
+<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ig</span><span class="p">,</span>
+    <span class="n">layout</span><span class="o">=</span><span class="n">ig</span><span class="o">.</span><span class="n">layout_kamada_kawai</span><span class="p">(),</span>
+    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="c1"># vertex_color=&quot;whitesmoke&quot;,</span>
+    <span class="c1"># target=ax</span>
+    <span class="c1"># inline=True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_k_space_9_0.svg" class="no-scaled-link" src="../_images/notebooks_scar_k_space_9_0.svg" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">i</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]),</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mf">0.2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([1, 2])
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_k_space_10_1.png" src="../_images/notebooks_scar_k_space_10_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">BasisVisualizer</span><span class="p">(</span><span class="n">SquareLattice</span><span class="p">(</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]))</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">800</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_scar_k_space_11_0.png" src="../_images/notebooks_scar_k_space_11_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

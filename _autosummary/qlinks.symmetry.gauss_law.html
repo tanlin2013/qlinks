@@ -1,372 +1,435 @@
 
 <!DOCTYPE html>
 
-<html>
+
+<html lang="en" data-content_root="../" >
+
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>2.1. qlinks.symmetry.gauss_law &#8212; qlinks 0.1.0rc1 documentation</title>
-    
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
-    
-  <link rel="stylesheet"
-    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+  
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script src="../_static/documentation_options.js?v=370c4a40"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_autosummary/qlinks.symmetry.gauss_law';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="2.2. qlinks.symmetry.translation" href="qlinks.symmetry.translation.html" />
     <link rel="prev" title="2. Symmetry" href="../symmetry.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay overlay-navbar" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<!-- Checkboxes to toggle the in-page toc -->
-<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
-<label class="overlay overlay-pagetoc" for="__page-toc">
-    <div class="visually-hidden">Toggle in-page Table of Contents</div>
-</label>
-<!-- Headers at the top -->
-<div class="announcement header-item noprint"></div>
-<div class="header header-item noprint"></div>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
     
-    <div class="container-fluid" id="banner"></div>
-
     
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
 
-    <div class="container-xl">
-      <div class="row">
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks 0.1.0rc1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
           
-<!-- Sidebar -->
-<div class="bd-sidebar noprint" id="site-navigation">
-    <div class="bd-sidebar__content">
-        <div class="bd-sidebar__top"><div class="navbar-brand-box">
-    <a class="navbar-brand text-wrap" href="../index.html">
-      
-      
-      
-      <h1 class="site-logo" id="site-title">qlinks 0.1.0rc1 documentation</h1>
-      
-    </a>
-</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
-    <div class="bd-toc-item active">
-        <p aria-level="2" class="caption" role="heading">
- <span class="caption-text">
-  Contents:
- </span>
-</p>
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current nav bd-sidenav">
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="../lattice.html">
-   1. Lattice
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
-  <label for="toctree-checkbox-1">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="qlinks.lattice.component.html">
-     1.1. qlinks.lattice.component
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="qlinks.lattice.square_lattice.html">
-     1.2. qlinks.lattice.square_lattice
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 current active has-children">
-  <a class="reference internal" href="../symmetry.html">
-   2. Symmetry
-  </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
-  <label for="toctree-checkbox-2">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul class="current">
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
-     2.1. qlinks.symmetry.gauss_law
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="qlinks.symmetry.translation.html">
-     2.2. qlinks.symmetry.translation
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="../solver.html">
-   3. Solver
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
-  <label for="toctree-checkbox-3">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="qlinks.solver.deep_first_search.html">
-     3.1. qlinks.solver.deep_first_search
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../visualizer.html">
-   4. Visualizer
-  </a>
- </li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../lattice.html">1. Lattice</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.component.html">1.1. qlinks.lattice.component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.square_lattice.html">1.2. qlinks.lattice.square_lattice</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../symmetry.html">2. Symmetry</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">2.1. qlinks.symmetry.gauss_law</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.symmetry.translation.html">2.2. qlinks.symmetry.translation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../solver.html">3. Solver</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.solver.deep_first_search.html">3.1. qlinks.solver.deep_first_search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualizer.html">4. Visualizer</a></li>
 </ul>
 
     </div>
 </nav></div>
-        <div class="bd-sidebar__bottom">
-             <!-- To handle the deprecated key -->
-            
-            <div class="navbar_extra_footer">
-            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
-            </div>
-            
-        </div>
     </div>
-    <div id="rtd-footer-container"></div>
-</div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
 
 
-          
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
 
-
-          
-<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<!-- Main content -->
-<div class="col py-0 content-container">
-    
-    <div class="header-article row sticky-top noprint">
-        
 
-
-
-<div class="col py-1 d-flex header-article-main">
-    <div class="header-article__left">
-        
-        <label for="__navigation"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="right"
-title="Toggle navigation"
->
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
   
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-bars"></i>
-  </span>
-
-</label>
-
-        
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
     </div>
-    <div class="header-article__right">
-<div class="menu-dropdown menu-dropdown-repository-buttons">
-  <button class="headerbtn menu-dropdown__trigger"
-      aria-label="Source repositories">
-      <i class="fab fa-github"></i>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
   </button>
-  <div class="menu-dropdown__content">
-    <ul>
-      <li>
-        <a href="https://github.com/tanlin2013/qlinks"
-   class="headerbtn"
-   data-toggle="tooltip"
-data-placement="left"
-title="Source repository"
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
 >
   
 
-<span class="headerbtn__icon-container">
+<span class="btn__icon-container">
   <i class="fab fa-github"></i>
   </span>
-<span class="headerbtn__text-container">repository</span>
+<span class="btn__text-container">Repository</span>
 </a>
-
-      </li>
+</li>
       
-      <li>
-        <a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_autosummary/qlinks.symmetry.gauss_law.html&body=Your%20issue%20content%20here."
-   class="headerbtn"
-   data-toggle="tooltip"
-data-placement="left"
-title="Open an issue"
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/_autosummary/qlinks.symmetry.gauss_law.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
 >
   
 
-<span class="headerbtn__icon-container">
-  <i class="fas fa-lightbulb"></i>
-  </span>
-<span class="headerbtn__text-container">open issue</span>
-</a>
-
-      </li>
-      
-      <li>
-        <a href="https://github.com/tanlin2013/qlinks/edit/master/docs/_autosummary/qlinks.symmetry.gauss_law.rst"
-   class="headerbtn"
-   data-toggle="tooltip"
-data-placement="left"
-title="Edit this page"
->
-  
-
-<span class="headerbtn__icon-container">
+<span class="btn__icon-container">
   <i class="fas fa-pencil-alt"></i>
   </span>
-<span class="headerbtn__text-container">suggest edit</span>
+<span class="btn__text-container">Suggest edit</span>
 </a>
-
-      </li>
+</li>
       
-    </ul>
-  </div>
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_autosummary/qlinks.symmetry.gauss_law.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
 </div>
 
-    </div>
-</div>
 
-<!-- Table of contents -->
-<div class="col-md-3 bd-toc show noprint">
-</div>
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
     </div>
-    <div class="article row">
-        <div class="col pl-md-3 pl-lg-5 content-container">
-            <!-- Table of contents that is only displayed when printing the page -->
-            <div id="jb-print-docs-body" class="onlyprint">
-                <h1>qlinks.symmetry.gauss_law</h1>
-                <!-- Table of contents -->
-                <div id="print-main-content">
-                    <div id="jb-print-toc">
-                        
-                    </div>
-                </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>qlinks.symmetry.gauss_law</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
             </div>
-            <main id="main-content" role="main">
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.Flow"><code class="docutils literal notranslate"><span class="pre">Flow</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.Flow.outward"><code class="docutils literal notranslate"><span class="pre">Flow.outward</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.Flow.inward"><code class="docutils literal notranslate"><span class="pre">Flow.inward</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw"><code class="docutils literal notranslate"><span class="pre">GaussLaw</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.charge_distri</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.flux_sector"><code class="docutils literal notranslate"><span class="pre">GaussLaw.flux_sector</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.charge"><code class="docutils literal notranslate"><span class="pre">GaussLaw.charge()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.shape"><code class="docutils literal notranslate"><span class="pre">GaussLaw.shape</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.possible_flows"><code class="docutils literal notranslate"><span class="pre">GaussLaw.possible_flows()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.possible_configs"><code class="docutils literal notranslate"><span class="pre">GaussLaw.possible_configs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.random_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.random_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.staggered_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.staggered_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.from_random_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.from_random_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.from_staggered_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.from_staggered_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.from_zero_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.from_zero_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.extend_node"><code class="docutils literal notranslate"><span class="pre">GaussLaw.extend_node()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.is_the_solution"><code class="docutils literal notranslate"><span class="pre">GaussLaw.is_the_solution()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.solve"><code class="docutils literal notranslate"><span class="pre">GaussLaw.solve()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.to_basis"><code class="docutils literal notranslate"><span class="pre">GaussLaw.to_basis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.__init__"><code class="docutils literal notranslate"><span class="pre">GaussLaw.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
                 
-              <div>
-                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
   <section id="module-qlinks.symmetry.gauss_law">
-<span id="qlinks-symmetry-gauss-law"></span><h1><span class="section-number">2.1. </span>qlinks.symmetry.gauss_law<a class="headerlink" href="#module-qlinks.symmetry.gauss_law" title="Permalink to this headline">#</a></h1>
+<span id="qlinks-symmetry-gauss-law"></span><h1><span class="section-number">2.1. </span>qlinks.symmetry.gauss_law<a class="headerlink" href="#module-qlinks.symmetry.gauss_law" title="Link to this heading">#</a></h1>
 <p class="rubric">Classes</p>
-<table class="autosummary longtable table autosummary">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qlinks.symmetry.gauss_law.Flow" title="qlinks.symmetry.gauss_law.Flow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Flow</span></code></a>(value[, names, module, qualname, type, ...])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qlinks.symmetry.gauss_law.GaussLaw" title="qlinks.symmetry.gauss_law.GaussLaw"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GaussLaw</span></code></a>(charge_distri[, flux_sector])</p></td>
-<td><p><dl class="field-list simple">
-<dt class="field-odd">param charge_distri</dt>
-<dd class="field-odd"><p>The charge distribution on the lattice.</p>
-</dd>
-</dl>
-</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
+</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.Flow">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.symmetry.gauss_law.</span></span><span class="sig-name descname"><span class="pre">Flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#Flow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.Flow" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.symmetry.gauss_law.</span></span><span class="sig-name descname"><span class="pre">Flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#Flow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.Flow" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.Flow.outward">
-<span class="sig-name descname"><span class="pre">outward</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.Flow.outward" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">outward</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.Flow.outward" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.Flow.inward">
-<span class="sig-name descname"><span class="pre">inward</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1</span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.Flow.inward" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">inward</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1</span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.Flow.inward" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.symmetry.gauss_law.</span></span><span class="sig-name descname"><span class="pre">GaussLaw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge_distri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="qlinks.solver.deep_first_search.html#qlinks.solver.deep_first_search.Node" title="qlinks.solver.deep_first_search.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">qlinks.solver.deep_first_search.Node</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.symmetry.gauss_law.</span></span><span class="sig-name descname"><span class="pre">GaussLaw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge_distri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="qlinks.solver.deep_first_search.html#qlinks.solver.deep_first_search.Node" title="qlinks.solver.deep_first_search.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>charge_distri</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>[</em><em>Any</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.26)"><em>numpy.dtype</em></a><em>[</em><em>numpy.int64</em><em>]</em><em>]</em>) – The charge distribution on the lattice.
+<li><p><strong>charge_distri</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>ndarray</em></a><em>[</em><em>Any</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.0)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>) – The charge distribution on the lattice.
 The (N, M)-shaped input array is repositioned in the first quadrant,
 aligning the element at (N - 1, 0) to (0, 0),
 and the element at (0, M - 1) to (M - 1, N - 1).</p></li>
-<li><p><strong>flux_sector</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em>) – The flux sector of the lattice, optional.</p></li>
+<li><p><strong>flux_sector</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>] </em><em>| </em><em>None</em>) – The flux sector of the lattice, optional.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.charge_distri">
-<span class="sig-name descname"><span class="pre">charge_distri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.26)"><span class="pre">numpy.dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">numpy.int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.charge_distri" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">charge_distri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.0)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.charge_distri" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.flux_sector">
-<span class="sig-name descname"><span class="pre">flux_sector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.flux_sector" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">flux_sector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.flux_sector" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.charge">
-<span class="sig-name descname"><span class="pre">charge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.charge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.charge" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">charge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.charge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.charge" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>site</strong> (<a class="reference internal" href="qlinks.lattice.component.html#qlinks.lattice.component.Site" title="qlinks.lattice.component.Site"><em>qlinks.lattice.component.Site</em></a>) – </p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>site</strong> (<a class="reference internal" href="qlinks.lattice.component.html#qlinks.lattice.component.Site" title="qlinks.lattice.component.Site"><em>Site</em></a>)</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int | float</p>
 </dd>
 </dl>
@@ -374,38 +437,38 @@ and the element at (0, M - 1) to (M - 1, N - 1).</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.shape">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.shape" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.shape" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.possible_flows">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">possible_flows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.possible_flows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.possible_flows" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">possible_flows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.possible_flows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.possible_flows" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>charge</strong> (<em>int</em>) – </p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>charge</strong> (<em>int</em>)</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><em>List</em>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a>[<em>Any</em>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.26)">numpy.dtype</a>[numpy.int64]]]</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>ndarray</em></a>[<em>Any</em>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.0)"><em>dtype</em></a>[<em>int64</em>]]]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.possible_configs">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">possible_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.possible_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.possible_configs" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">possible_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.possible_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.possible_configs" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>charge</strong> (<em>int</em>) – </p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>charge</strong> (<em>int</em>)</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><em>List</em>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a>[<em>Any</em>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.26)">numpy.dtype</a>[numpy.int64]]]</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>ndarray</em></a>[<em>Any</em>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.0)"><em>dtype</em></a>[<em>int64</em>]]]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.random_charge_distri">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.random_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.random_charge_distri" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.random_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.random_charge_distri" title="Link to this definition">#</a></dt>
 <dd><p>Randomly sample static charges spread on 2d square lattice.</p>
 <p>Charges are uniformly sampled from the interval <span class="math notranslate nohighlight">\([-2, 2]\)</span>, with total charge being
 zero (this is always true under periodic boundary conditions). However, this does not
@@ -415,48 +478,48 @@ distributions. Iteration for the trial sampling will stop as soon as it produces
 outcome with zero total charge. Normally this is at most <span class="math notranslate nohighlight">\(\mathcal{O}(1)\)</span> of
 lattice size, <span class="math notranslate nohighlight">\(\text{length} \times \text{width}\)</span>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>length_x</strong> (<em>int</em>) – The length of the lattice.</p></li>
 <li><p><strong>length_y</strong> (<em>int</em>) – The width of the lattice.</p></li>
-<li><p><strong>seed</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – If provided, used for random generator. Default <cite>None</cite>.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em> | </em><em>None</em>) – If provided, used for random generator. Default <cite>None</cite>.</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – The maximum number of iterations for trial sampling. Default <cite>1000</cite>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The drawn samples of shape (<cite>width</cite> <span class="math notranslate nohighlight">\(\times\)</span> <cite>length</cite>). Note that we have swapped
 rows and columns to match with the lattice shape.</p>
 </dd>
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>StopIteration</strong> – If no valid distribution can be sampled within <cite>max_iter</cite> iterations.</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a>[<em>Any</em>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.26)">numpy.dtype</a>[numpy.int64]]</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>ndarray</em></a>[<em>Any</em>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.0)"><em>dtype</em></a>[<em>int64</em>]]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.staggered_charge_distri">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">staggered_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.staggered_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.staggered_charge_distri" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">staggered_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.staggered_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.staggered_charge_distri" title="Link to this definition">#</a></dt>
 <dd><p>Generate a staggered charge distribution with +1 and -1 charges.
 The shape of the lattice must be even number, and the bottom-left corner is always +1.
 To make the bottom-left corner -1, simply multiply the output by -1.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>length_x</strong> (<em>int</em>) – The length of the lattice.</p></li>
 <li><p><strong>length_y</strong> (<em>int</em>) – The width of the lattice.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The staggered charge distribution.</p>
 </dd>
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>InvalidArgumentError</strong> – If the shape of the lattice is not even number.</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a>[<em>Any</em>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.26)">numpy.dtype</a>[numpy.int64]]</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>ndarray</em></a>[<em>Any</em>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.0)"><em>dtype</em></a>[<em>int64</em>]]</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -474,15 +537,16 @@ To make the bottom-left corner -1, simply multiply the output by -1.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.from_random_charge_distri">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_random_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.from_random_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.from_random_charge_distri" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_random_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.from_random_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.from_random_charge_distri" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>length_x</strong> (<em>int</em>) – </p></li>
-<li><p><strong>length_y</strong> (<em>int</em>) – </p></li>
+<li><p><strong>length_x</strong> (<em>int</em>)</p></li>
+<li><p><strong>length_y</strong> (<em>int</em>)</p></li>
+<li><p><strong>flux_sector</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Self</em></p>
 </dd>
 </dl>
@@ -490,15 +554,16 @@ To make the bottom-left corner -1, simply multiply the output by -1.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.from_staggered_charge_distri">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_staggered_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.from_staggered_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.from_staggered_charge_distri" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_staggered_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.from_staggered_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.from_staggered_charge_distri" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>length_x</strong> (<em>int</em>) – </p></li>
-<li><p><strong>length_y</strong> (<em>int</em>) – </p></li>
+<li><p><strong>length_x</strong> (<em>int</em>)</p></li>
+<li><p><strong>length_y</strong> (<em>int</em>)</p></li>
+<li><p><strong>flux_sector</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Self</em></p>
 </dd>
 </dl>
@@ -506,15 +571,16 @@ To make the bottom-left corner -1, simply multiply the output by -1.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.from_zero_charge_distri">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_zero_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.from_zero_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.from_zero_charge_distri" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_zero_charge_distri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.from_zero_charge_distri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.from_zero_charge_distri" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>length_x</strong> (<em>int</em>) – </p></li>
-<li><p><strong>length_y</strong> (<em>int</em>) – </p></li>
+<li><p><strong>length_x</strong> (<em>int</em>)</p></li>
+<li><p><strong>length_y</strong> (<em>int</em>)</p></li>
+<li><p><strong>flux_sector</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Self</em></p>
 </dd>
 </dl>
@@ -522,9 +588,9 @@ To make the bottom-left corner -1, simply multiply the output by -1.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.extend_node">
-<span class="sig-name descname"><span class="pre">extend_node</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.extend_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.extend_node" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">extend_node</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.extend_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.extend_node" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Set</em>[<em>Self</em>]</p>
 </dd>
 </dl>
@@ -532,38 +598,51 @@ To make the bottom-left corner -1, simply multiply the output by -1.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.is_the_solution">
-<span class="sig-name descname"><span class="pre">is_the_solution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.is_the_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.is_the_solution" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_the_solution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.is_the_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.is_the_solution" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.to_basis">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.to_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.to_basis" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cp'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>nodes</strong> (<em>List</em><em>[</em><a class="reference internal" href="#qlinks.symmetry.gauss_law.GaussLaw" title="qlinks.symmetry.gauss_law.GaussLaw"><em>qlinks.symmetry.gauss_law.GaussLaw</em></a><em>]</em>) – </p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>method</strong> (<em>str</em>)</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>qlinks.computation_basis.ComputationBasis</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ComputationBasis</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.to_basis">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/symmetry/gauss_law.html#GaussLaw.to_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.to_basis" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nodes</strong> (<em>List</em><em>[</em><a class="reference internal" href="#qlinks.symmetry.gauss_law.GaussLaw" title="qlinks.symmetry.gauss_law.GaussLaw"><em>GaussLaw</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ComputationBasis</em></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.symmetry.gauss_law.GaussLaw.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge_distri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge_distri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.symmetry.gauss_law.GaussLaw.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>charge_distri</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>[</em><em>Any</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.26)"><em>numpy.dtype</em></a><em>[</em><em>numpy.int64</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>flux_sector</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>charge_distri</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>ndarray</em></a><em>[</em><em>Any</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.0)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>flux_sector</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
@@ -574,50 +653,126 @@ To make the bottom-left corner -1, simply multiply the output by -1.</p>
 </section>
 
 
-              </div>
+                </article>
               
-            </main>
-            <footer class="footer-article noprint">
-                
-    <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="../symmetry.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title"><span class="section-number">2. </span>Symmetry</p>
-        </div>
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../symmetry.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><span class="section-number">2. </span>Symmetry</p>
+      </div>
     </a>
-    <a class='right-next' id="next-link" href="qlinks.symmetry.translation.html" title="next page">
-    <div class="prev-next-info">
+    <a class="right-next"
+       href="qlinks.symmetry.translation.html"
+       title="next page">
+      <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
         <p class="prev-next-title"><span class="section-number">2.2. </span>qlinks.symmetry.translation</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
-            </footer>
-        </div>
-    </div>
-    <div class="footer-content row">
-        <footer class="col footer"><p>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.Flow"><code class="docutils literal notranslate"><span class="pre">Flow</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.Flow.outward"><code class="docutils literal notranslate"><span class="pre">Flow.outward</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.Flow.inward"><code class="docutils literal notranslate"><span class="pre">Flow.inward</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw"><code class="docutils literal notranslate"><span class="pre">GaussLaw</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.charge_distri</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.flux_sector"><code class="docutils literal notranslate"><span class="pre">GaussLaw.flux_sector</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.charge"><code class="docutils literal notranslate"><span class="pre">GaussLaw.charge()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.shape"><code class="docutils literal notranslate"><span class="pre">GaussLaw.shape</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.possible_flows"><code class="docutils literal notranslate"><span class="pre">GaussLaw.possible_flows()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.possible_configs"><code class="docutils literal notranslate"><span class="pre">GaussLaw.possible_configs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.random_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.random_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.staggered_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.staggered_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.from_random_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.from_random_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.from_staggered_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.from_staggered_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.from_zero_charge_distri"><code class="docutils literal notranslate"><span class="pre">GaussLaw.from_zero_charge_distri()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.extend_node"><code class="docutils literal notranslate"><span class="pre">GaussLaw.extend_node()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.is_the_solution"><code class="docutils literal notranslate"><span class="pre">GaussLaw.is_the_solution()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.solve"><code class="docutils literal notranslate"><span class="pre">GaussLaw.solve()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.to_basis"><code class="docutils literal notranslate"><span class="pre">GaussLaw.to_basis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.symmetry.gauss_law.GaussLaw.__init__"><code class="docutils literal notranslate"><span class="pre">GaussLaw.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
   
-    By Tan Tao-Lin<br/>
-  
-      &copy; Copyright 2023, Tan Tao-Lin.<br/>
-</p>
-        </footer>
-    </div>
+  <div class="footer-item">
     
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
 </div>
+          </footer>
+        
 
-
-      </div>
+      </main>
     </div>
+  </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-
+  <footer class="bd-footer">
+  </footer>
   </body>
 </html>
