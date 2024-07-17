@@ -93,10 +93,8 @@ class Automorphism:
 
     @property
     def joint_partition(self) -> Dict:
-        return self._df.groupby(["degree", "bipartition"]).groups
-
-    def joint_partition_indices(self) -> List[List[int]]:
-        return [list(block) for block in self.joint_partition.values()]
+        groups = self._df.groupby(["degree", "bipartition"]).groups
+        return {k: list(v) for k, v in groups.items()}
 
     def automorphism_group(self, partition=None) -> PermutationGroup:
         ntg = pynauty.Graph(
