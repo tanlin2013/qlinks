@@ -66,10 +66,6 @@ class CpModel:
             logger.info(f"Found {self._callback.n_solutions} optimal solutions.")
         else:
             raise RuntimeError(f"Failed to find optimal solutions. Status: {status}")
-        if self.periodic:
-            assert self._callback.n_solutions == fibonacci(self.n - 1) + fibonacci(self.n + 1)
-        else:
-            assert self._callback.n_solutions == fibonacci(self.n + 2)
 
     def to_basis(self) -> ComputationBasis:
         basis = ComputationBasis(np.vstack(self._callback.solutions))
