@@ -26,11 +26,11 @@ class TestCpModel:
 
 class TestPauliX:
     def test_mask(self):
-        opt = PauliX(4, 2)
+        _ = PauliX(4, 2)
         ...
 
 
 class TestPXPModel1D:
     def test_hamiltonian(self):
-        model = PXPModel1D(4, periodic=True)
+        _ = PXPModel1D(4, periodic=True)
         ...
