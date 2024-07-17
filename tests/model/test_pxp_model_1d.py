@@ -1,7 +1,8 @@
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
-from qlinks.model.pxp_model_1d import CpModel, fibonacci, PauliX, PXPModel1D
+from qlinks.model.pxp_model_1d import CpModel, PauliX, PXPModel1D, fibonacci
 
 
 @given(st.integers(min_value=2, max_value=20))

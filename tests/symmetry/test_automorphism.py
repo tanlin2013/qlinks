@@ -94,8 +94,11 @@ class TestAutomorphism:
             (nx.cycle_graph(4), {(2, "A"): [0, 2], (2, "B"): [1, 3]}),
             (nx.cycle_graph(6), {(2, "A"): [0, 2, 4], (2, "B"): [1, 3, 5]}),
             (nx.cycle_graph(8), {(2, "A"): [0, 2, 4, 6], (2, "B"): [1, 3, 5, 7]}),
-            (nx.grid_graph((3, 3)), {(2, "A"): [0, 2, 6, 8], (3, "B"): [1, 3, 5, 7], (4, "A"): [4]}),
-        ]
+            (
+                nx.grid_graph((3, 3)),
+                {(2, "A"): [0, 2, 6, 8], (3, "B"): [1, 3, 5, 7], (4, "A"): [4]},
+            ),
+        ],
     )
     def test_joint_partition(self, graph, expected):
         assert nx.is_bipartite(graph)
