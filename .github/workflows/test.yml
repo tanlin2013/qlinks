@@ -87,5 +87,5 @@ jobs:
           poetry run coverage xml
 
       - name: Report Coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        if: github.ref_name == 'main' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         uses: codecov/codecov-action@v3
