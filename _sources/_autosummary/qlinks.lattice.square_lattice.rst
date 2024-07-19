@@ -4,15 +4,6 @@
 .. automodule:: qlinks.lattice.square_lattice
 
    
-   
-   
-
-   
-   
-   
-
-   
-   
    .. rubric:: Classes
 
    .. autosummary::
@@ -22,11 +13,3 @@
       SquareLattice
       Vertex
    
-   
-
-   
-   
-   
-
-
-

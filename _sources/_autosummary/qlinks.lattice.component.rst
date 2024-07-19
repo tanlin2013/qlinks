@@ -4,15 +4,6 @@
 .. automodule:: qlinks.lattice.component
 
    
-   
-   
-
-   
-   
-   
-
-   
-   
    .. rubric:: Classes
 
    .. autosummary::
@@ -21,11 +12,3 @@
       UnitVector
       UnitVectors
    
-   
-
-   
-   
-   
-
-
-
