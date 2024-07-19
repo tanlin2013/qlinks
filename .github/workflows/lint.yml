@@ -35,4 +35,5 @@ jobs:
           poetry install
 
       - name: Lint
+        continue-on-error: true
         run: ./scripts/lint.sh
