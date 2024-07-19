@@ -88,4 +88,4 @@ jobs:
 
       - name: Report Coverage
         if: github.ref_name == 'main' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
