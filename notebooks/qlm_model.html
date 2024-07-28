@@ -339,10 +339,7 @@ document.write(`
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">zipfile</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
-
-<span class="kn">import</span> <span class="nn">igraph</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">igraph</span>
 <span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
@@ -356,72 +353,12 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qlinks.lattice.square_lattice</span> <span class="kn">import</span> <span class="n">SquareLattice</span>
 <span class="kn">from</span> <span class="nn">qlinks.model.quantum_link_model</span> <span class="kn">import</span> <span class="n">QuantumLinkModel</span>
 <span class="kn">from</span> <span class="nn">qlinks.symmetry.automorphism</span> <span class="kn">import</span> <span class="n">Automorphism</span>
-<span class="kn">from</span> <span class="nn">qlinks.symmetry.gauss_law</span> <span class="kn">import</span> <span class="n">GaussLaw</span>
 <span class="kn">from</span> <span class="nn">qlinks.visualizer.basis</span> <span class="kn">import</span> <span class="n">BasisVisualizer</span>
+
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">format_custom_index</span><span class="p">,</span> <span class="n">setup_model</span><span class="p">,</span> <span class="n">setup_igraph</span><span class="p">,</span> <span class="n">load_from_npz</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
 <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">&quot;display.max_rows&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">format_custom_index</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">) </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span>
-
-
-<span class="k">def</span> <span class="nf">setup_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">lattice_shape</span><span class="p">,</span> <span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">):</span>
-    <span class="n">gauss_law</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;qlm&quot;</span><span class="p">:</span> <span class="n">GaussLaw</span><span class="o">.</span><span class="n">from_zero_charge_distri</span><span class="p">,</span>
-        <span class="s2">&quot;qdm&quot;</span><span class="p">:</span> <span class="n">GaussLaw</span><span class="o">.</span><span class="n">from_staggered_charge_distri</span><span class="p">,</span>
-    <span class="p">}[</span><span class="n">model_name</span><span class="p">](</span><span class="o">*</span><span class="n">lattice_shape</span><span class="p">,</span> <span class="n">flux_sector</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-    <span class="n">basis</span> <span class="o">=</span> <span class="n">gauss_law</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">QuantumLinkModel</span><span class="p">(</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">lattice_shape</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">basis</span><span class="p">,</span> <span class="n">model</span>
-
-
-<span class="k">def</span> <span class="nf">setup_igraph</span><span class="p">(</span><span class="n">nx_g</span><span class="p">,</span> <span class="n">highlight</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">highlight_color</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="n">ig</span> <span class="o">=</span> <span class="n">igraph</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="n">from_networkx</span><span class="p">(</span><span class="n">nx_g</span><span class="p">)</span>
-    <span class="n">ig</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ig</span><span class="o">.</span><span class="n">vcount</span><span class="p">())]</span>
-    <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;whitesmoke&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ig</span><span class="o">.</span><span class="n">vcount</span><span class="p">())]</span>
-    <span class="k">if</span> <span class="n">highlight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">highlight</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
-                <span class="n">color</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">highlight_color</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">ig</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">color</span>
-    <span class="k">return</span> <span class="n">ig</span>
-
-
-<span class="k">def</span> <span class="nf">load_from_npz</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Arg mmap_mode of np.load not work with npz file, use workaround</span>
-<span class="sd">    Ref: https://github.com/numpy/numpy/issues/5976</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># figure out offset of .npy in .npz</span>
-    <span class="n">zf</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="n">info</span> <span class="o">=</span> <span class="n">zf</span><span class="o">.</span><span class="n">NameToInfo</span><span class="p">[</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.npy&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="n">info</span><span class="o">.</span><span class="n">compress_type</span> <span class="o">==</span> <span class="mi">0</span>
-    <span class="n">offset</span> <span class="o">=</span> <span class="n">zf</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.npy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">_orig_compress_start</span>
-
-    <span class="n">fp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
-    <span class="n">fp</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
-    <span class="n">version</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">read_magic</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">version</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
-    <span class="k">if</span> <span class="n">version</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="n">shape</span><span class="p">,</span> <span class="n">fortran_order</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">read_array_header_1_0</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">version</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="n">shape</span><span class="p">,</span> <span class="n">fortran_order</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">read_array_header_2_0</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-    <span class="n">data_offset</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>  <span class="c1"># file position will be left at beginning of data</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">memmap</span><span class="p">(</span>
-        <span class="n">path</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
-        <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
-        <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span> <span class="k">if</span> <span class="n">fortran_order</span> <span class="k">else</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span>
-        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
-        <span class="n">offset</span><span class="o">=</span><span class="n">data_offset</span><span class="p">,</span>
-    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -436,7 +373,7 @@ document.write(`
 <section id="Quantum-Link/Dimer-Model">
 <h1>Quantum Link/Dimer Model<a class="headerlink" href="#Quantum-Link/Dimer-Model" title="Link to this heading">#</a></h1>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7</span><span class="p">)</span>
@@ -452,7 +389,7 @@ document.write(`
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2024-06-25 17:58:42 [constraint_programming.py] INFO: CpSolverResponse summary:
+2024-07-22 14:36:32 [constraint_programming.py] INFO: CpSolverResponse summary:
 status: OPTIMAL
 objective: 0
 best_bound: 0
@@ -464,13 +401,13 @@ propagations: 88345
 integer_propagations: 108550
 restarts: 3014
 lp_iterations: 5436
-walltime: 0.291249
-usertime: 0.291249
+walltime: 0.231036
+usertime: 0.231036
 deterministic_time: 0.121793
 gap_integral: 0
 solution_fingerprint: 0x1cb2e4843e05e07a
 
-2024-06-25 17:58:42 [constraint_programming.py] INFO: Found 990 optimal solutions.
+2024-07-22 14:36:32 [constraint_programming.py] INFO: Found 990 optimal solutions.
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -26004,35 +25941,56 @@ dict_keys([(2, &#39;A&#39;), (4, &#39;A&#39;), (5, &#39;A&#39;), (6, &#39;B&#39;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">aut</span><span class="o">.</span><span class="n">type_1_scars</span><span class="p">((</span><span class="mi">8</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">))</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">aut</span><span class="o">.</span><span class="n">type_1_scars</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[ScarDataHolder(eval=0, shape=(204, 20), node_idx=array([ 10,  28,  30,  31,  35,  36,  39,  56,  69,  72,  74,  79,  82,
-         90,  91,  98, 100, 105, 112, 114, 115, 118, 129, 131, 132, 136,
-        137, 140, 158, 176, 178, 179, 183, 184, 187, 197, 200, 202, 213,
-        216, 218, 219, 226, 228, 233, 240, 242, 243, 246, 257, 260, 261,
-        265, 266, 268, 286, 299, 302, 307, 313, 316, 317, 320, 331, 333,
-        334, 338, 339, 342, 353, 356, 358, 363, 366, 374, 375, 378, 386,
-        391, 399, 404, 412, 420, 422, 423, 427, 428, 431, 442, 445, 446,
-        449, 455, 460, 463, 469, 470, 472, 475, 486, 488, 491, 498, 501,
-        503, 514, 517, 519, 520, 526, 529, 534, 540, 543, 544, 547, 558,
-        561, 562, 566, 567, 569, 577, 585, 590, 598, 603, 611, 614, 615,
-        623, 626, 631, 633, 636, 647, 650, 651, 655, 656, 658, 669, 672,
-        673, 676, 682, 687, 690, 703, 721, 723, 724, 728, 729, 732, 743,
-        746, 747, 749, 756, 761, 763, 770, 771, 773, 776, 787, 789, 792,
-        802, 805, 806, 810, 811, 813, 831, 849, 852, 853, 857, 858, 860,
-        871, 874, 875, 877, 884, 889, 891, 898, 899, 907, 910, 915, 917,
-        920, 933, 950, 953, 954, 958, 959, 961, 979]))]
+[ScarDataHolder(eval=0, shape=(224, 12), node_idx=array([  1,   4,   7,   9,  11,  12,  15,  18,  21,  23,  43,  44,  47,
+         50,  53,  55,  57,  58,  61,  64,  67,  68,  70,  71,  73,  83,
+         88,  95, 104, 109, 116, 117, 119, 120, 123, 125, 144, 146, 149,
+        152, 155, 157, 159, 160, 163, 166, 169, 171, 191, 192, 195, 196,
+        198, 199, 201, 207, 212, 223, 232, 237, 244, 245, 247, 248, 251,
+        253, 272, 274, 277, 280, 283, 285, 287, 288, 291, 294, 297, 306,
+        311, 318, 319, 321, 322, 325, 327, 346, 348, 351, 352, 354, 355,
+        357, 367, 372, 414, 416, 435, 437, 440, 441, 443, 444, 451, 456,
+        465, 476, 481, 487, 489, 490, 492, 493, 496, 497, 499, 500, 502,
+        508, 513, 524, 533, 538, 545, 546, 548, 549, 552, 554, 573, 575,
+        617, 622, 632, 634, 635, 637, 638, 641, 643, 662, 664, 667, 668,
+        670, 671, 678, 683, 692, 695, 698, 701, 702, 704, 706, 709, 712,
+        715, 717, 736, 738, 741, 742, 744, 745, 752, 757, 766, 777, 782,
+        788, 790, 791, 793, 794, 797, 798, 818, 820, 823, 826, 829, 830,
+        832, 834, 837, 840, 843, 845, 864, 866, 869, 870, 872, 873, 880,
+        885, 894, 901, 906, 916, 918, 919, 921, 922, 925, 928, 931, 932,
+        934, 936, 939, 942, 945, 946, 966, 968, 971, 974, 977, 978, 980,
+        982, 985, 988]))]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">aut</span><span class="o">.</span><span class="n">type_1_scars</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">evec</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([-1.73472348e-17,  1.73472348e-16, -1.79023463e-15, -5.41233725e-16,
+        1.05818132e-16, -2.63677968e-16, -1.11022302e-16,  2.28983499e-16,
+       -2.52835947e-16, -5.06539255e-16, -4.01588485e-16,  1.31838984e-16])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -26119,7 +26077,7 @@ dict_keys([(2, &#39;A&#39;), (4, &#39;A&#39;), (5, &#39;A&#39;), (6, &#39;B&#39;
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_scipy_sparse_array</span><span class="p">(</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
@@ -26137,7 +26095,7 @@ dict_keys([(2, &#39;A&#39;), (4, &#39;A&#39;), (5, &#39;A&#39;), (6, &#39;B&#39;
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_scipy_sparse_array</span><span class="p">(</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span><span class="p">)</span>
@@ -26151,10 +26109,10 @@ dict_keys([(2, &#39;A&#39;), (4, &#39;A&#39;), (5, &#39;A&#39;), (6, &#39;B&#39;
 
 <span class="n">highlight_color</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mcolors</span><span class="o">.</span><span class="n">TABLEAU_COLORS</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 <span class="c1"># highlight_color = list(mcolors.CSS4_COLORS.values())</span>
-<span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Set3&#39;</span><span class="p">)</span>
-<span class="n">highlight_color</span> <span class="o">=</span> <span class="p">[</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)]</span>
-<span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Set2&#39;</span><span class="p">)</span>
-<span class="n">highlight_color</span> <span class="o">+=</span> <span class="p">[</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)]</span>
+<span class="c1"># cmap = plt.get_cmap(&#39;Set3&#39;)</span>
+<span class="c1"># highlight_color = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]</span>
+<span class="c1"># cmap = plt.get_cmap(&#39;Set2&#39;)</span>
+<span class="c1"># highlight_color += [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]</span>
 <span class="c1"># highlight_color *= 2000</span>
 <span class="c1"># highlight_color = [</span>
 <span class="c1">#     &quot;dimgray&quot;,</span>
@@ -26178,16 +26136,17 @@ dict_keys([(2, &#39;A&#39;), (4, &#39;A&#39;), (5, &#39;A&#39;), (6, &#39;B&#39;
 <span class="c1"># outer_boundary = list(nx.node_boundary(g, nodes))</span>
 <span class="c1"># sub_ig = ig.induced_subgraph(np.append(nodes, outer_boundary))</span>
 
-<span class="n">sub_ig</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">induced_subgraph</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">degree</span> <span class="o">==</span> <span class="mi">8</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+<span class="c1"># sub_ig = ig.induced_subgraph(np.where(degree == 8)[0])</span>
 <span class="c1"># sub_ig = ig.induced_subgraph([34, 65, 86, 124, 88, 33, 36, 64, 121, 87, 63, 125, 96, 108, 107, 126])</span>
 <span class="c1"># fig, ax = plt.subplots(figsize=(6, 6), facecolor=&quot;white&quot;)</span>
 <span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">sub_ig</span><span class="p">,</span>
-    <span class="c1"># layout=ig.layout_kamada_kawai(),</span>
+    <span class="n">ig</span><span class="p">,</span>
+    <span class="n">layout</span><span class="o">=</span><span class="n">ig</span><span class="o">.</span><span class="n">layout_kamada_kawai</span><span class="p">(),</span>
     <span class="c1"># layout=ig.layout_reingold_tilford(root=[0, 25, 50, 75]),</span>
     <span class="c1"># layout=ig.layout_bipartite(types=types),</span>
-    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="c1"># vertex_label_dist=1.5,</span>
     <span class="n">edge_width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
     <span class="c1"># target=&quot;qdm_subgraph_4x4.svg&quot;</span>
@@ -26196,7 +26155,7 @@ dict_keys([(2, &#39;A&#39;), (4, &#39;A&#39;), (5, &#39;A&#39;), (6, &#39;B&#39;
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
