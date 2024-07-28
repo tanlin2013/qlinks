@@ -27,14 +27,14 @@ class Spin1XYModel:
         s_z = sp.csr_array(np.array([[1, 0, 0], [0, 0, 0], [0, 0, -1]]))
         local_hopping = sp.kron(s_up, s_down) + sp.kron(s_down, s_up)
 
-        self._kinetic_term = sp.csr_array((3 ** self.n, 3 ** self.n), dtype=float)
-        self._potential_term = sp.csr_array((3 ** self.n, 3 ** self.n), dtype=float)
-        self._potential_term2 = sp.csr_array((3 ** self.n, 3 ** self.n), dtype=float)
-        self._hamiltonian = sp.csr_array((3 ** self.n, 3 ** self.n), dtype=float)
+        self._kinetic_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
+        self._potential_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
+        self._potential_term2 = sp.csr_array((3**self.n, 3**self.n), dtype=float)
+        self._hamiltonian = sp.csr_array((3**self.n, 3**self.n), dtype=float)
 
         for site in range(self.n - 1):
             self._kinetic_term += 0.5 * reduce(
-                sp.kron, [sp.eye(3 ** site), local_hopping, sp.eye(3 ** (self.n - 2 - site))]
+                sp.kron, [sp.eye(3**site), local_hopping, sp.eye(3 ** (self.n - 2 - site))]
             )
         if self.periodic:
             self._kinetic_term += 0.5 * reduce(sp.kron, [s_down, sp.eye(3 ** (self.n - 2)), s_up])
@@ -42,16 +42,16 @@ class Spin1XYModel:
 
         for site in range(self.n):
             self._potential_term += reduce(
-                sp.kron, [sp.eye(3 ** site), s_z, sp.eye(3 ** (self.n - 1 - site))]
+                sp.kron, [sp.eye(3**site), s_z, sp.eye(3 ** (self.n - 1 - site))]
             )
             self._potential_term2 += reduce(
-                sp.kron, [sp.eye(3 ** site), s_z ** 2, sp.eye(3 ** (self.n - 1 - site))]
+                sp.kron, [sp.eye(3**site), s_z**2, sp.eye(3 ** (self.n - 1 - site))]
             )
 
         self._hamiltonian += (
-                self.coup_j * self._kinetic_term
-                + self.coup_h * self._potential_term
-                + self.coup_d * self._potential_term2
+            self.coup_j * self._kinetic_term
+            + self.coup_h * self._potential_term
+            + self.coup_d * self._potential_term2
         )
 
     @property
