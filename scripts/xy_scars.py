@@ -10,8 +10,7 @@ from qlinks import logger
 from qlinks.distributed import map_on_ray
 from qlinks.model.spin1_xy_model_1d import Spin1XYModel
 
-
-csv_file = f"spin1_xy_scars.csv"
+csv_file = "spin1_xy_scars.csv"
 
 
 def setup_storage():
@@ -45,7 +44,7 @@ def task(n, coup_j, coup_h, coup_d, periodic):
         mask = (labels == i)  # fmt: skip
         if np.count_nonzero(mask) > 1:
             sub_mat = mat[np.ix_(mask, mask)]
-            sz, = np.unique(np.diag(sub_mat)) / coup_h
+            (sz,) = np.unique(np.diag(sub_mat)) / coup_h
             sub_mat -= coup_h * sz * np.eye(sub_mat.shape[0])
             sub_mat /= coup_j
             if n % 2 == 1 and periodic:
@@ -61,7 +60,7 @@ def bipartite_graph(n, coup_j, coup_h, coup_d, periodic, sz, two_step_mat):
         two_step_mat, directed=False, connection="weak", return_labels=True
     )
     for i in range(n_components):
-        mask = (labels == i)
+        mask = (labels == i)  # fmt: skip
         if np.count_nonzero(mask) > 1:
             sub_sub_mat = two_step_mat[np.ix_(mask, mask)]
             _df = pd.DataFrame.from_dict(
@@ -101,11 +100,13 @@ def non_bipartite_graph(n, coup_j, coup_h, coup_d, periodic, sz, sub_mat):
 
 if __name__ == "__main__":
     coup_j, coup_h, coup_d = (1, 1, 0)
+    # fmt: off
     inputs = [
         (n, coup_j, coup_h, coup_d, periodic)
         for n in range(3, 4)
         for periodic in [True, False]
     ]
+    # fmt: on
 
     setup_storage()
     ray.init(num_cpus=2, log_to_driver=True)
