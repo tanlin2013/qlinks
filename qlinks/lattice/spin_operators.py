@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
+import numpy.typing as npt
 
 
 @dataclass(slots=True, frozen=True)
@@ -23,12 +24,12 @@ class SpinOperators:
         idty: Identity operator (matrix)
     """
     s: float
-    s_plus: np.ndarray = field(init=False, repr=False)
-    s_minus: np.ndarray = field(init=False, repr=False)
-    s_x: np.ndarray = field(init=False, repr=False)
-    s_y: np.ndarray = field(init=False, repr=False)
-    s_z: np.ndarray = field(init=False, repr=False)
-    idty: np.ndarray = field(init=False, repr=False)
+    s_plus: npt.NDArray = field(init=False, repr=False)
+    s_minus: npt.NDArray = field(init=False, repr=False)
+    s_x: npt.NDArray = field(init=False, repr=False)
+    s_y: npt.NDArray = field(init=False, repr=False)
+    s_z: npt.NDArray = field(init=False, repr=False)
+    idty: npt.NDArray = field(init=False, repr=False)
 
     def __post_init__(self):
         dim = int(2 * self.s + 1)
