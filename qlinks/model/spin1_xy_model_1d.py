@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 
+from qlinks.lattice.spin_operators import SpinOperators
 
 @dataclass(slots=True)
 class Spin1XYModel:
@@ -22,10 +23,9 @@ class Spin1XYModel:
     _hamiltonian: sp.sparray = field(init=False, repr=False)
 
     def __post_init__(self):
-        s_up = np.sqrt(2) * sp.csr_array(np.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]]))
-        s_down = np.sqrt(2) * sp.csr_array(np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]]))
-        s_z = sp.csr_array(np.array([[1, 0, 0], [0, 0, 0], [0, 0, -1]]))
         local_hopping = sp.kron(s_up, s_down) + sp.kron(s_down, s_up)
+        sop = SpinOperators(1)
+        s_plus, s_minus, s_z = sop.s_plus, sop.s_minus, sop.s_z
 
         self._kinetic_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._potential_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
