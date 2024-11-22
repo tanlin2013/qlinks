@@ -9,6 +9,8 @@ import pandas as pd
 import scipy.sparse as sp
 
 from qlinks.lattice.spin_operators import SpinOperators
+from qlinks.model.utils import kron
+
 
 @dataclass(slots=True)
 class Spin1XYModel:
@@ -23,7 +25,6 @@ class Spin1XYModel:
     _hamiltonian: sp.sparray = field(init=False, repr=False)
 
     def __post_init__(self):
-        local_hopping = sp.kron(s_up, s_down) + sp.kron(s_down, s_up)
         sop = SpinOperators(1)
         s_plus, s_minus, s_z = sop.s_plus, sop.s_minus, sop.s_z
 
@@ -32,13 +33,11 @@ class Spin1XYModel:
         self._potential_term2 = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._hamiltonian = sp.csr_array((3**self.n, 3**self.n), dtype=float)
 
-        for site in range(self.n - 1):
-            self._kinetic_term += 0.5 * reduce(
-                sp.kron, [sp.eye(3**site), local_hopping, sp.eye(3 ** (self.n - 2 - site))]
-            )
-        if self.periodic:
-            self._kinetic_term += 0.5 * reduce(sp.kron, [s_down, sp.eye(3 ** (self.n - 2)), s_up])
-            self._kinetic_term += 0.5 * reduce(sp.kron, [s_up, sp.eye(3 ** (self.n - 2)), s_down])
+        for site in range(self.n):
+            self._kinetic_term += 0.5 * kron([s_plus, s_minus, *[np.eye(3)] * (self.n - 2)], shift=site)
+            self._kinetic_term += 0.5 * kron([s_minus, s_plus, *[np.eye(3)] * (self.n - 2)], shift=site)
+            if not self.periodic and site == self.n - 2:
+                break
 
         for site in range(self.n):
             self._potential_term += reduce(
