@@ -29,8 +29,8 @@ class SpinOneChain:
     _sm_projector: npt.NDArray = field(init=False, repr=False)
 
     def __post_init__(self):
-        self._hamiltonian = sp.csr_array((3 ** self.n, 3 ** self.n), dtype=float)
-        self._sm_projector = np.eye(3 ** self.n, dtype=int)
+        self._hamiltonian = sp.csr_array((3**self.n, 3**self.n), dtype=float)
+        self._sm_projector = np.eye(3**self.n, dtype=int)
         self._build_php_term()
         self._build_h0_term()
         self._potential_term = sp.diags(self._hamiltonian.diagonal())
@@ -52,7 +52,7 @@ class SpinOneChain:
                 self._hamiltonian += -self.coup_h1s[i] * kron(
                     [idty, proj, op, *[idty] * (self.n - 3)], shift=site
                 )
-        self._hamiltonian += self.n * self.coup_d * sp.eye(3 ** self.n)
+        self._hamiltonian += self.n * self.coup_d * sp.eye(3**self.n)
 
     def _build_h0_term(self):
         sop = SpinOperators(0.5)
@@ -60,7 +60,7 @@ class SpinOneChain:
             self._insert_zeros(sop.s_x),
             self._insert_zeros(sop.s_y),
             self._insert_zeros(sop.s_z),
-            self._insert_zeros(sop.idty)
+            self._insert_zeros(sop.idty),
         )
         for site in range(self.n):
             for i, op in enumerate([p_x, p_y, p_z]):

@@ -23,6 +23,7 @@ class SpinOperators:
         s_z: Z-component operator (matrix)
         idty: Identity operator (matrix)
     """
+
     s: float
     s_plus: npt.NDArray = field(init=False, repr=False)
     s_minus: npt.NDArray = field(init=False, repr=False)

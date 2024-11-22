@@ -37,8 +37,12 @@ class Spin1XYModel:
         self._parity = np.eye(3**self.n, dtype=int)
 
         for site in range(self.n):
-            self._kinetic_term += 0.5 * kron([s_plus, s_minus, *[np.eye(3)] * (self.n - 2)], shift=site)
-            self._kinetic_term += 0.5 * kron([s_minus, s_plus, *[np.eye(3)] * (self.n - 2)], shift=site)
+            self._kinetic_term += 0.5 * kron(
+                [s_plus, s_minus, *[np.eye(3)] * (self.n - 2)], shift=site
+            )
+            self._kinetic_term += 0.5 * kron(
+                [s_minus, s_plus, *[np.eye(3)] * (self.n - 2)], shift=site
+            )
             if not self.periodic and site == self.n - 2:
                 break
 
@@ -52,7 +56,8 @@ class Spin1XYModel:
 
         for site in range(0, self.n, 2):
             self._parity @= reduce(
-                np.kron, [np.eye(3**site, dtype=int), sz_str, np.eye(3 ** (self.n - 1 - site), dtype=int)]
+                np.kron,
+                [np.eye(3**site, dtype=int), sz_str, np.eye(3 ** (self.n - 1 - site), dtype=int)],
             )
 
         self._hamiltonian = (
