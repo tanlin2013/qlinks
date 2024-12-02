@@ -148,6 +148,12 @@ class SpinOneChain:
         op = np.insert(op, 1, 0, axis=1)
         return op
 
+    def sm_projector(self, site: int):
+        sop = SpinOperators(1)
+        s_z, idty = sop.s_z, sop.idty
+        proj = kron([idty - s_z @ s_z, *[idty] * (self.n - 1)], shift=site)
+        return proj
+
     @property
     def hamiltonian(self):
         return sparse_real_if_close(self._hamiltonian)
