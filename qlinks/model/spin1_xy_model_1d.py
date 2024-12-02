@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import reduce
 from itertools import product
 
 import numpy as np
@@ -27,44 +26,47 @@ class Spin1XYModel:
     _parity: npt.NDArray = field(init=False, repr=False)
 
     def __post_init__(self):
-        sop = SpinOperators(1)
-        s_plus, s_minus, s_z = sop.s_plus, sop.s_minus, sop.s_z
-        sz_str = np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]], dtype=int)
-
         self._kinetic_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._potential_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._potential_term2 = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._parity = np.eye(3**self.n, dtype=int)
 
-        for site in range(self.n):
-            self._kinetic_term += 0.5 * kron(
-                [s_plus, s_minus, *[np.eye(3)] * (self.n - 2)], shift=site
-            )
-            self._kinetic_term += 0.5 * kron(
-                [s_minus, s_plus, *[np.eye(3)] * (self.n - 2)], shift=site
-            )
-            if not self.periodic and site == self.n - 2:
-                break
-
-        for site in range(self.n):
-            self._potential_term += reduce(
-                sp.kron, [sp.eye(3**site), s_z, sp.eye(3 ** (self.n - 1 - site))]
-            )
-            self._potential_term2 += reduce(
-                sp.kron, [sp.eye(3**site), s_z**2, sp.eye(3 ** (self.n - 1 - site))]
-            )
-
-        for site in range(0, self.n, 2):
-            self._parity @= reduce(
-                np.kron,
-                [np.eye(3**site, dtype=int), sz_str, np.eye(3 ** (self.n - 1 - site), dtype=int)],
-            )
-
+        self._build_kinetic_term()
+        self._build_potential_term()
+        self._build_parity_operator()
         self._hamiltonian = (
             self.coup_j * self._kinetic_term
             + self.coup_h * self._potential_term
             + self.coup_d * self._potential_term2
+            + self.coup_j3 * self._h3_term
         )
+
+    def _build_kinetic_term(self):
+        sop = SpinOperators(1)
+        s_plus, s_minus, idty = sop.s_plus, sop.s_minus, sop.idty
+        for site in range(self.n):
+            self._kinetic_term += 0.5 * kron([s_plus, s_minus, *[idty] * (self.n - 2)], shift=site)
+            self._kinetic_term += 0.5 * kron([s_minus, s_plus, *[idty] * (self.n - 2)], shift=site)
+            if not self.periodic and site == self.n - 2:
+                break
+
+    def _build_potential_term(self):
+        sop = SpinOperators(1)
+        s_z, idty = sop.s_z, sop.idty
+        for site in range(self.n):
+            self._potential_term += kron([s_z, *[idty] * (self.n - 1)], shift=site)
+            self._potential_term2 += kron([s_z**2, *[idty] * (self.n - 1)], shift=site)
+
+            )
+
+    def _build_parity_operator(self):
+        sop = SpinOperators(1)
+        s_z, idty = sop.s_z, sop.idty
+        sz_str = np.real_if_close(expm(1j * np.pi * s_z), tol=1e-14)
+        for site in range(0, self.n, 2):
+            self._parity @= kron(
+                [sz_str, *[idty] * (self.n - 1)], shift=site
+            )
 
     @property
     def kinetic_term(self) -> sp.sparray:
