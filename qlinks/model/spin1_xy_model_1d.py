@@ -76,9 +76,7 @@ class Spin1XYModel:
         s_z, idty = sop.s_z, sop.idty
         sz_str = np.real_if_close(expm(1j * np.pi * s_z), tol=1e-14)
         for site in range(0, self.n, 2):
-            self._parity @= kron(
-                [sz_str, *[idty] * (self.n - 1)], shift=site
-            )
+            self._parity @= kron([sz_str, *[idty] * (self.n - 1)], shift=site)
 
     @property
     def kinetic_term(self) -> sp.sparray:

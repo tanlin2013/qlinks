@@ -23,7 +23,7 @@ class SpinHalfChain:
     def __post_init__(self):
         if self.n < 5:
             raise ValueError("n should be greater than or equal to 5.")
-        self._hamiltonian = sp.csr_array((2 ** self.n, 2 ** self.n), dtype=float)
+        self._hamiltonian = sp.csr_array((2**self.n, 2**self.n), dtype=float)
         self._build_php_term()
         self._potential_term = sp.diags(self._hamiltonian.diagonal()).tocsr()
         self._kinetic_term = self._hamiltonian - self._potential_term
@@ -31,11 +31,11 @@ class SpinHalfChain:
     def sm_projector(self, site: int) -> sp.sparray:
         sop = SpinOperators(0.5)
         s_x, s_y, s_z, idty = sop.s_x, sop.s_y, sop.s_z, sop.idty
-        proj = 0.5 * sp.eye(2 ** self.n, dtype=float)
+        proj = 0.5 * sp.eye(2**self.n, dtype=float)
         for op in [s_x, s_y, s_z]:
-            proj += 2 / 3 * (kron([op, op, idty, *[idty] * (self.n - 3)], shift=site+1))
-            proj += 2 / 3 * (kron([idty, op, op, *[idty] * (self.n - 3)], shift=site+1))
-            proj += 2 / 3 * (kron([op, idty, op, *[idty] * (self.n - 3)], shift=site+1))
+            proj += 2 / 3 * (kron([op, op, idty, *[idty] * (self.n - 3)], shift=site + 1))
+            proj += 2 / 3 * (kron([idty, op, op, *[idty] * (self.n - 3)], shift=site + 1))
+            proj += 2 / 3 * (kron([op, idty, op, *[idty] * (self.n - 3)], shift=site + 1))
         return sparse_real_if_close(proj)
 
     def _build_php_term(self):
@@ -92,7 +92,7 @@ class SpinOneChain:
         if self.n < 3:
             raise ValueError("n should be greater than or equal to 3.")
         self._hamiltonian = sp.csr_array((3**self.n, 3**self.n), dtype=float)
-        self._q_operator = np.eye(3 ** self.n, dtype=int)
+        self._q_operator = np.eye(3**self.n, dtype=int)
         self._build_php_term()
         self._build_h0_term()
         self._potential_term = sp.diags(self._hamiltonian.diagonal()).tocsr()
