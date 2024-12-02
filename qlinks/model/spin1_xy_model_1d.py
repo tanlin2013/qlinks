@@ -10,7 +10,7 @@ import scipy.sparse as sp
 from scipy.linalg import expm
 
 from qlinks.lattice.spin_operators import SpinOperators
-from qlinks.model.utils import kron, sparse_real_if_close
+from qlinks.model.utils import kron
 
 
 @dataclass(slots=True)
@@ -33,7 +33,6 @@ class Spin1XYModel:
         self._build_xy_term()
         self._build_sz_term()
         self._build_h3_term()
-        self._hamiltonian = sparse_real_if_close(self._hamiltonian)
         self._potential_term = sp.diags(self._hamiltonian.diagonal()).tocsr()
         self._kinetic_term = self._hamiltonian - self._potential_term
         self._build_parity_operator()
@@ -60,13 +59,13 @@ class Spin1XYModel:
 
     def _build_h3_term(self):
         sop = SpinOperators(1)
-        s_x, s_y, idty = sop.s_x, sop.s_y, sop.idty
+        s_plus, s_minus, idty = sop.s_plus, sop.s_minus, sop.idty
         for site in range(self.n):
-            self._hamiltonian += self.coup_j3 * kron(
-                [s_x, idty, idty, s_x, *[idty] * (self.n - 4)], shift=site
+            self._hamiltonian += self.coup_j3 * 0.5 * kron(
+                [s_plus, idty, idty, s_minus, *[idty] * (self.n - 4)], shift=site
             )
-            self._hamiltonian += self.coup_j3 * kron(
-                [s_y, idty, idty, s_y, *[idty] * (self.n - 4)], shift=site
+            self._hamiltonian += self.coup_j3 * 0.5 * kron(
+                [s_minus, idty, idty, s_plus, *[idty] * (self.n - 4)], shift=site
             )
             if not self.periodic and site == self.n - 4:
                 break
