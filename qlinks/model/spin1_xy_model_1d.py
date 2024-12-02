@@ -27,6 +27,10 @@ class Spin1XYModel:
     _parity: npt.NDArray = field(init=False, repr=False)
 
     def __post_init__(self):
+        if self.coup_j3 == 0 and self.n < 2:
+            raise ValueError("n should be greater than or equal to 2.")
+        elif self.coup_j3 != 0 and self.n < 4:
+            raise ValueError("n should be greater than or equal to 4.")
         self._hamiltonian = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._parity = np.eye(3**self.n, dtype=int)
 
