@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
+from scipy.linalg import expm
 
 from qlinks.lattice.spin_operators import SpinOperators
 from qlinks.model.utils import kron
@@ -18,10 +19,12 @@ class Spin1XYModel:
     coup_j: float
     coup_h: float
     coup_d: float
+    coup_j3: float
     periodic: bool = False
     _kinetic_term: sp.sparray = field(init=False, repr=False)
     _potential_term: sp.sparray = field(init=False, repr=False)
     _potential_term2: sp.sparray = field(init=False, repr=False)
+    _h3_term: sp.sparray = field(init=False, repr=False)
     _hamiltonian: sp.sparray = field(init=False, repr=False)
     _parity: npt.NDArray = field(init=False, repr=False)
 
@@ -29,10 +32,12 @@ class Spin1XYModel:
         self._kinetic_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._potential_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._potential_term2 = sp.csr_array((3**self.n, 3**self.n), dtype=float)
+        self._h3_term = sp.csr_array((3**self.n, 3**self.n), dtype=float)
         self._parity = np.eye(3**self.n, dtype=int)
 
         self._build_kinetic_term()
         self._build_potential_term()
+        self._build_h3_term()
         self._build_parity_operator()
         self._hamiltonian = (
             self.coup_j * self._kinetic_term
@@ -57,7 +62,18 @@ class Spin1XYModel:
             self._potential_term += kron([s_z, *[idty] * (self.n - 1)], shift=site)
             self._potential_term2 += kron([s_z**2, *[idty] * (self.n - 1)], shift=site)
 
+    def _build_h3_term(self):
+        sop = SpinOperators(1)
+        s_x, s_y, idty = sop.s_x, sop.s_y, sop.idty
+        for site in range(self.n):
+            self._h3_term += kron(
+                [s_x, idty, idty, s_x, *[idty] * (self.n - 4)], shift=site
             )
+            self._h3_term += kron(
+                [s_y, idty, idty, s_y, *[idty] * (self.n - 4)], shift=site
+            )
+            if not self.periodic and site == self.n - 4:
+                break
 
     def _build_parity_operator(self):
         sop = SpinOperators(1)
@@ -79,6 +95,10 @@ class Spin1XYModel:
     @property
     def potential_term2(self) -> sp.sparray:
         return self._potential_term2
+
+    @property
+    def h3_term(self) -> sp.sparray:
+        return self._h3_term
 
     @property
     def hamiltonian(self) -> sp.sparray:
