@@ -86,16 +86,18 @@ class SpinOneChain:
     _kinetic_term: sp.sparray = field(init=False, repr=False)
     _potential_term: sp.sparray = field(init=False, repr=False)
     _hamiltonian: sp.sparray = field(init=False, repr=False)
-    _sm_projector: npt.NDArray = field(init=False, repr=False)
+    _q_operator: npt.NDArray = field(init=False, repr=False)
 
     def __post_init__(self):
+        if self.n < 3:
+            raise ValueError("n should be greater than or equal to 3.")
         self._hamiltonian = sp.csr_array((3**self.n, 3**self.n), dtype=float)
-        self._sm_projector = np.eye(3**self.n, dtype=int)
+        self._q_operator = np.eye(3 ** self.n, dtype=int)
         self._build_php_term()
         self._build_h0_term()
-        self._potential_term = sp.diags(self._hamiltonian.diagonal())
+        self._potential_term = sp.diags(self._hamiltonian.diagonal()).tocsr()
         self._kinetic_term = self._hamiltonian - self._potential_term
-        self._build_sm_projector()
+        self._build_q_operator()
 
     def _build_php_term(self):
         sop = SpinOperators(1)
@@ -134,12 +136,11 @@ class SpinOneChain:
                     [idty, op, *[idty] * (self.n - 2)], shift=site
                 )
 
-    def _build_sm_projector(self):
+    def _build_q_operator(self):
         sop = SpinOperators(1)
         s_z, idty = sop.s_z, sop.idty
-        proj = idty - s_z @ s_z
         for site in range(self.n):
-            self._sm_projector @= kron([proj, *[idty] * (self.n - 1)], shift=site)
+            self._q_operator @= kron([s_z @ s_z, *[idty] * (self.n - 1)], shift=site)
 
     @staticmethod
     def _insert_zeros(op):
@@ -160,5 +161,5 @@ class SpinOneChain:
         return sparse_real_if_close(self._potential_term)
 
     @property
-    def sm_projector(self):
-        return self._sm_projector
+    def q_operator(self):
+        return self._q_operator
