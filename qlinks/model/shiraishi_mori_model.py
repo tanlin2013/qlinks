@@ -12,7 +12,67 @@ from qlinks.model.utils import kron, sparse_real_if_close
 
 @dataclass(slots=True)
 class SpinHalfChain:
-    ...
+    n: int
+    coup_j1s: npt.NDArray
+    coup_j2s: npt.NDArray
+    coup_hs: npt.NDArray
+    _kinetic_term: sp.sparray = field(init=False, repr=False)
+    _potential_term: sp.sparray = field(init=False, repr=False)
+    _hamiltonian: sp.sparray = field(init=False, repr=False)
+
+    def __post_init__(self):
+        if self.n < 5:
+            raise ValueError("n should be greater than or equal to 5.")
+        self._hamiltonian = sp.csr_array((2 ** self.n, 2 ** self.n), dtype=float)
+        self._build_php_term()
+        self._potential_term = sp.diags(self._hamiltonian.diagonal()).tocsr()
+        self._kinetic_term = self._hamiltonian - self._potential_term
+
+    def sm_projector(self, site: int) -> sp.sparray:
+        sop = SpinOperators(0.5)
+        s_x, s_y, s_z, idty = sop.s_x, sop.s_y, sop.s_z, sop.idty
+        proj = 0.5 * sp.eye(2 ** self.n, dtype=float)
+        for op in [s_x, s_y, s_z]:
+            proj += 2 / 3 * (kron([op, op, idty, *[idty] * (self.n - 3)], shift=site+1))
+            proj += 2 / 3 * (kron([idty, op, op, *[idty] * (self.n - 3)], shift=site+1))
+            proj += 2 / 3 * (kron([op, idty, op, *[idty] * (self.n - 3)], shift=site+1))
+        return sparse_real_if_close(proj)
+
+    def _build_php_term(self):
+        sop = SpinOperators(0.5)
+        s_x, s_y, s_z, idty = sop.s_x, sop.s_y, sop.s_z, sop.idty
+        for site in range(self.n):
+            h = sp.csr_array((2**self.n, 2**self.n), dtype=complex)
+            for i, op in enumerate([s_x, s_y, s_z]):
+                h += self.coup_j1s[i] * kron(
+                    [idty, op, op, idty, idty, *[idty] * (self.n - 5)], shift=site
+                )
+                h += self.coup_j1s[i] * kron(
+                    [idty, idty, op, op, idty, *[idty] * (self.n - 5)], shift=site
+                )
+                h += self.coup_j2s[i] * kron(
+                    [op, idty, op, idty, idty, *[idty] * (self.n - 5)], shift=site
+                )
+                h += self.coup_j2s[i] * kron(
+                    [idty, idty, op, idty, op, *[idty] * (self.n - 5)], shift=site
+                )
+                h += -self.coup_hs[i] * kron(
+                    [idty, idty, op, idty, idty, *[idty] * (self.n - 5)], shift=site
+                )
+            proj = self.sm_projector(site)
+            self._hamiltonian += proj @ h @ proj
+
+    @property
+    def hamiltonian(self):
+        return sparse_real_if_close(self._hamiltonian)
+
+    @property
+    def kinetic_term(self):
+        return sparse_real_if_close(self._kinetic_term)
+
+    @property
+    def potential_term(self):
+        return sparse_real_if_close(self._potential_term)
 
 
 @dataclass(slots=True)
