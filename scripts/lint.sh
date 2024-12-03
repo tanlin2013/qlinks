@@ -2,7 +2,7 @@
 set -euxo pipefail
 
 poetry run cruft check
-poetry run safety check -i 39462 -i 40291
+poetry run safety scan
 poetry run bandit -c pyproject.toml -r qlinks/
 poetry run isort --check --diff qlinks/ tests/
 poetry run black --check qlinks/ tests/
