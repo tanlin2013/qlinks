@@ -301,6 +301,8 @@ class TestTranslation:
             (("qlm", (2, 2)), (0, 1)),
             (("qlm", (2, 2)), (1, 0)),
             (("qlm", (2, 2)), (1, 1)),
+            (("qlm", (4, 2)), (0, 0)),
+            (("qlm", (4, 2)), (2, 1)),
         ],
         indirect=["translation"],
     )
