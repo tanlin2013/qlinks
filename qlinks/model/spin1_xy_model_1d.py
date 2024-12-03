@@ -36,7 +36,8 @@ class Spin1XYModel:
 
         self._build_xy_term()
         self._build_sz_term()
-        self._build_h3_term()
+        if self.coup_j3 != 0:
+            self._build_h3_term()
         self._potential_term = sp.diags(self._hamiltonian.diagonal()).tocsr()
         self._kinetic_term = self._hamiltonian - self._potential_term
         self._build_parity_operator()
