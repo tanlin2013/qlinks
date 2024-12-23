@@ -47,10 +47,10 @@ class Spin1XYModel:
         s_plus, s_minus, idty = sop.s_plus, sop.s_minus, sop.idty
         for site in range(self.n):
             self._hamiltonian += (
-                self.coup_j * 0.5 * kron([s_plus, s_minus, *[idty] * (self.n - 2)], shift=site)
+                0.5 * self.coup_j * kron([s_plus, s_minus, *[idty] * (self.n - 2)], shift=site)
             )
             self._hamiltonian += (
-                self.coup_j * 0.5 * kron([s_minus, s_plus, *[idty] * (self.n - 2)], shift=site)
+                0.5 * self.coup_j * kron([s_minus, s_plus, *[idty] * (self.n - 2)], shift=site)
             )
             if not self.periodic and site == self.n - 2:
                 break
@@ -66,10 +66,10 @@ class Spin1XYModel:
         sop = SpinOperators(1)
         s_plus, s_minus, idty = sop.s_plus, sop.s_minus, sop.idty
         for site in range(self.n):
-            self._hamiltonian += self.coup_j3 * 0.5 * kron(
+            self._hamiltonian += 0.5 * self.coup_j3 * kron(
                 [s_plus, idty, idty, s_minus, *[idty] * (self.n - 4)], shift=site
             )
-            self._hamiltonian += self.coup_j3 * 0.5 * kron(
+            self._hamiltonian += 0.5 * self.coup_j3 * kron(
                 [s_minus, idty, idty, s_plus, *[idty] * (self.n - 4)], shift=site
             )
             if not self.periodic and site == self.n - 4:
