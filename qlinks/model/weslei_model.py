@@ -47,12 +47,8 @@ class WesleiModel:
         sop = SpinOperators(0.5)
         s_x, s_z, idty = 2 * sop.s_x, 2 * sop.s_z, sop.idty
         for site in range(self.n):
-            self._hamiltonian += self.coup_h1 * kron(
-                [s_x, *[idty] * (self.n - 1)], shift=site
-            )
-            self._hamiltonian += self.coup_h2 * kron(
-                [s_z, *[idty] * (self.n - 1)], shift=site
-            )
+            self._hamiltonian += self.coup_h1 * kron([s_x, *[idty] * (self.n - 1)], shift=site)
+            self._hamiltonian += self.coup_h2 * kron([s_z, *[idty] * (self.n - 1)], shift=site)
 
     @property
     def hamiltonian(self):
