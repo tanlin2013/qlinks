@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
-# from scipy.sparse.linalg import expm
 
 from qlinks.lattice.spin_operators import SpinOperators
 from qlinks.model.utils import kron
