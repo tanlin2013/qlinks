@@ -68,10 +68,10 @@ class Spin1XYModel:
         for site in range(self.n):
             self._hamiltonian += 0.5 * self.coup_j3 * kron(
                 [s_plus, idty, idty, s_minus, *[idty] * (self.n - 4)], shift=site
-            )
+            )  # fmt: skip
             self._hamiltonian += 0.5 * self.coup_j3 * kron(
                 [s_minus, idty, idty, s_plus, *[idty] * (self.n - 4)], shift=site
-            )
+            )  # fmt: skip
             if not self.periodic and site == self.n - 4:
                 break
 
