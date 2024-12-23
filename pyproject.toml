@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
 tqdm = "^4.63.0"
-numpy = "^1.22"
+numpy = "^2.1.0"
 scipy = "^1.10.0"
 pandas = "^2.0.0"
 pyarrow = "^15.0.0"  # for parquet IO
