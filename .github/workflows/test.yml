@@ -40,7 +40,7 @@ jobs:
           fetch-depth: 0
 
       - name: Ubuntu cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
           path: ~/.cache/pip
@@ -50,7 +50,7 @@ jobs:
             ${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: macOS cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: startsWith(matrix.os, 'macOS')
         with:
           path: ~/Library/Caches/pip
@@ -60,7 +60,7 @@ jobs:
             ${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Windows cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: startsWith(matrix.os, 'windows')
         with:
           path: c:\users\runneradmin\appdata\local\pip\cache
