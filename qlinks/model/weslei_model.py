@@ -15,6 +15,7 @@ class WesleiModel:
     """
     References: https://link.aps.org/doi/10.1103/PhysRevResearch.1.033144
     """
+
     n: int
     coup_alphas: npt.NDArray
     coup_beta: float
