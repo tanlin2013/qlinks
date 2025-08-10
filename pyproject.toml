@@ -34,7 +34,7 @@ vulture = "^2.4"
 bandit = "^1.7.4"
 safety = "^3.0.0"
 isort = "^5.11.0"
-flake8-bugbear = "^23.1.14"
+flake8-bugbear = "^24.0.0"
 Flake8-pyproject = "^1.2.2"
 black = { version = "^24.0.0", extras = ["d", "jupyter"] }
 mypy = "^1.0.0"
