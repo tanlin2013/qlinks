@@ -1,6 +1,8 @@
 ### Custom field
 docs/source/notebooks/data/
 sciagraph-result/
+*.svg
+*.pdf
 
 ### VisualStudioCode template
 .vscode/*
