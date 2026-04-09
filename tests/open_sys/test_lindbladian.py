@@ -1,8 +1,6 @@
-import numpy as np
-import scipy.sparse as sp
 import pytest
 
-from qlinks.lindbladian import *
+from qlinks.open_sys.lindbladian import *
 
 
 @pytest.fixture
