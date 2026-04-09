@@ -288,7 +288,7 @@ def fidelity_pure(psi: np.ndarray, rho: np.ndarray) -> float:
     """
     F = <psi|rho|psi> for normalized pure state psi
     """
-    return (psi.conj().T @ rho @ psi)[0, 0].real
+    return np.real(psi.conj().T @ rho @ psi).item()
 
 
 def dark_state_residual(psi: np.ndarray, jumps) -> list[float]:
