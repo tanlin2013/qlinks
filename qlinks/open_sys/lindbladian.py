@@ -34,7 +34,7 @@ def build_liouvillian(
     fmt: str = "csc",
     dtype=np.complex128,
 ) -> sp.spmatrix:
-    """
+    r"""
     Build the sparse Lindbladian superoperator L such that
 
         d/dt vec(rho) = L @ vec(rho)
@@ -63,10 +63,10 @@ def build_liouvillian(
     """
     H = H.asformat(fmt).astype(dtype)
     d = H.shape[0]
-    I = sp.identity(d, format=fmt, dtype=dtype)
+    idty = sp.identity(d, format=fmt, dtype=dtype)
 
     # Coherent part: -i(I ⊗ H - H^T ⊗ I)
-    Lio = -1j * (sp.kron(I, H, format=fmt) - sp.kron(H.T, I, format=fmt))
+    Lio = -1j * (sp.kron(idty, H, format=fmt) - sp.kron(H.T, idty, format=fmt))
 
     for J in jumps:
         J = J.asformat(fmt).astype(dtype)
@@ -76,8 +76,8 @@ def build_liouvillian(
         jump_term = sp.kron(J.conj(), J, format=fmt)
 
         # Anti-commutator terms
-        left_loss = sp.kron(I, JdagJ, format=fmt)
-        right_loss = sp.kron(JdagJ.T, I, format=fmt)
+        left_loss = sp.kron(idty, JdagJ, format=fmt)
+        right_loss = sp.kron(JdagJ.T, idty, format=fmt)
 
         Lio += jump_term - 0.5 * left_loss - 0.5 * right_loss
 
