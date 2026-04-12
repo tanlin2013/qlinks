@@ -3,6 +3,7 @@ docs/source/notebooks/data/
 sciagraph-result/
 *.svg
 *.pdf
+*.gexf
 
 ### VisualStudioCode template
 .vscode/*
