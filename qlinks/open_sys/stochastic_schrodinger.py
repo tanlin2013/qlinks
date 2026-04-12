@@ -1,8 +1,8 @@
-import numpy as np
-from numpy.typing import NDArray
 from dataclasses import dataclass
 from typing import Callable, Iterable
 
+import numpy as np
+from numpy.typing import NDArray
 
 ArrayC = NDArray[np.complex128]
 ArrayF = NDArray[np.float64]
@@ -125,8 +125,7 @@ def run_quantum_jump_trajectory(
 
         if p_jump > 1.0:
             raise RuntimeError(
-                f"Time step too large: total jump probability = {p_jump:.6f} > 1. "
-                "Reduce dt."
+                f"Time step too large: total jump probability = {p_jump:.6f} > 1. " "Reduce dt."
             )
 
         r = rng.random()

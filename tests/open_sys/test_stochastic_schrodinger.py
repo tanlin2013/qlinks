@@ -3,31 +3,28 @@ import pytest
 
 from qlinks.open_sys.stochastic_schrodinger import (
     ArrayC,
-    TrajectoryResult,
     EnsembleResult,
+    TrajectoryResult,
     _as_complex_array,
-    normalize_state,
-    projector,
-    expectation,
-    effective_hamiltonian,
-    jump_probabilities,
     choose_jump,
+    effective_hamiltonian,
     evolve_no_jump_first_order,
+    expectation,
+    jump_probabilities,
+    normalize_state,
+    observable_vs_time,
+    projector,
     run_quantum_jump_trajectory,
     sample_lindblad_mcwf,
-    observable_vs_time,
 )
 
 
 @pytest.fixture
 def qubit_ops():
-    sigma_minus = np.array([[0, 1],
-                            [0, 0]], dtype=np.complex128)
+    sigma_minus = np.array([[0, 1], [0, 0]], dtype=np.complex128)
     sigma_plus = sigma_minus.conj().T
-    sigma_x = np.array([[0, 1],
-                        [1, 0]], dtype=np.complex128)
-    sigma_z = np.array([[1, 0],
-                        [0, -1]], dtype=np.complex128)
+    sigma_x = np.array([[0, 1], [1, 0]], dtype=np.complex128)
+    sigma_z = np.array([[1, 0], [0, -1]], dtype=np.complex128)
     ident = np.eye(2, dtype=np.complex128)
 
     ket0 = np.array([1.0, 0.0], dtype=np.complex128)
@@ -70,8 +67,7 @@ def test_projector_properties(qubit_ops):
     psi = qubit_ops["ket1"]
     rho = projector(psi)
 
-    expected = np.array([[0, 0],
-                         [0, 1]], dtype=np.complex128)
+    expected = np.array([[0, 0], [0, 1]], dtype=np.complex128)
 
     assert rho.shape == (2, 2)
     assert np.allclose(rho, expected)
@@ -105,8 +101,7 @@ def test_effective_hamiltonian_with_decay(qubit_ops):
     assert np.allclose(H_eff, expected)
 
     # For sigma_- , L^\dagger L = gamma |1><1|
-    expected_diag = np.array([[0.0, 0.0],
-                              [0.0, -1.0j]], dtype=np.complex128)
+    expected_diag = np.array([[0.0, 0.0], [0.0, -1.0j]], dtype=np.complex128)
     assert np.allclose(H_eff, expected_diag)
 
 
@@ -174,8 +169,7 @@ def test_evolve_no_jump_first_order_identity_when_dt_zero(qubit_ops):
 
 
 def test_evolve_no_jump_first_order_matches_manual_formula(qubit_ops):
-    H_eff = np.array([[1.0, 0.0],
-                      [0.0, 2.0]], dtype=np.complex128)
+    H_eff = np.array([[1.0, 0.0], [0.0, 2.0]], dtype=np.complex128)
     psi = np.array([1.0, 1.0j], dtype=np.complex128)
     dt = 0.05
 
@@ -406,8 +400,7 @@ def test_sample_lindblad_mcwf_mixed_initial_sampler_average(qubit_ops):
         store_trajectories=False,
     )
 
-    expected = np.array([[p0, 0.0],
-                         [0.0, p1]], dtype=np.complex128)
+    expected = np.array([[p0, 0.0], [0.0, p1]], dtype=np.complex128)
 
     for rho in result.rho_t:
         assert np.allclose(rho, expected, atol=0.03)
@@ -556,8 +549,7 @@ def _test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
     )
 
     # Excited-state projector |1><1|
-    P_excited = np.array([[0, 0],
-                          [0, 1]], dtype=np.complex128)
+    P_excited = np.array([[0, 0], [0, 1]], dtype=np.complex128)
 
     excited_population = observable_vs_time(result.rho_t, P_excited)
 
