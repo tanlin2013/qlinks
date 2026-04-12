@@ -11,8 +11,8 @@ python = ">=3.11,<3.12"
 tqdm = "^4.63.0"
 numpy = "^2.1.0"
 scipy = "^1.10.0"
-pandas = "^2.0.0"
-pyarrow = "^18.0.0"  # for parquet IO
+pandas = "^3.0.0"
+pyarrow = "^23.0.0"  # for parquet IO
 networkx = "^3.0"
 ortools = "^9.11.0"
 pynauty = "^2.8.6"
@@ -20,33 +20,33 @@ sympy = "^1.9"
 ray = "2.49.2"
 matplotlib = { version = "^3.6.3", optional = true}
 pyvis = { version = "^0.3.0", optional = true}
-igraph = { version = "^0.11.2", optional = true}
+igraph = { version = "^1.0.0", optional = true}
 pycairo = { version = "^1.25.0", optional = true}  # for igraph plotting
-plotly = { version = "^5.4.0", optional = true}
+plotly = { version = "^6.0.0", optional = true}
 
 [tool.poetry.extras]
 drawing = ["matplotlib", "pyvis", "plotly", "pycairo", "igraph"]
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.0.0"
-commitizen = "^3.0.0"
+pre-commit = "^4.0.0"
+commitizen = "^4.0.0"
 vulture = "^2.4"
 bandit = "^1.7.4"
 safety = "^3.0.0"
-isort = "^5.11.0"
-flake8-bugbear = "^23.1.14"
+isort = "^8.0.0"
+flake8-bugbear = "^25.0.0"
 Flake8-pyproject = "^1.2.2"
-black = { version = "^24.0.0", extras = ["d", "jupyter"] }
+black = { version = "^26.0.0", extras = ["d", "jupyter"] }
 mypy = "^1.0.0"
 jupyter = "^1.0.0"
-pytest = "^7.1.2"
-pytest-cov = "^4.0.0"
+pytest = "^9.0.0"
+pytest-cov = "^7.0.0"
 pytest-mock = "^3.9.0"
 hypothesis = { version = "^6.68.2", extras = ["numpy"] }
 pep8-naming = "^0.14.0"
 cruft = "^2.12.0"
-pandas-stubs = "~=2.3.2"
-scipy-stubs = "~=1.16.2"
+pandas-stubs = "^3.0.0"
+scipy-stubs = "^1.16.0"
 
 
 [tool.poetry.group.docs]
