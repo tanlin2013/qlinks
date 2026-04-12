@@ -16,32 +16,35 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-  
-  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
-    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=370c4a40"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -50,6 +53,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.0rc1" />
   </head>
   
   
@@ -65,19 +69,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -85,7 +78,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -93,8 +85,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -112,7 +104,8 @@
       
         
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -157,15 +150,11 @@
 </ul></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
@@ -193,9 +182,14 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -292,25 +286,17 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
-<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
 </div></div>
@@ -353,26 +339,26 @@ document.write(`
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>from functools import reduce
+from itertools import product
 
-<span class="kn">import</span> <span class="nn">igraph</span>
-<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">pynauty</span>
-<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">ishermitian</span>
-<span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Permutation</span><span class="p">,</span> <span class="n">PermutationGroup</span>
+import igraph
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+import pandas as pd
+import pynauty
+import scipy.sparse as sp
+from scipy.linalg import ishermitian
+from sympy.combinatorics import Permutation, PermutationGroup
 
-<span class="kn">from</span> <span class="nn">qlinks.model.pxp_model_1d</span> <span class="kn">import</span> <span class="n">fibonacci</span><span class="p">,</span> <span class="n">PXPModel1D</span>
+from qlinks.model.pxp_model_1d import fibonacci, PXPModel1D
 
-<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">format_custom_index</span><span class="p">,</span> <span class="n">setup_igraph</span>
+from utils import format_custom_index, setup_igraph
 
-<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
-<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">&quot;display.max_rows&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+np.set_printoptions(threshold=np.inf)
+pd.set_option(&quot;display.max_rows&quot;, None)
 </pre></div>
 </div>
 </div>
@@ -390,37 +376,37 @@ document.write(`
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[174]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sz</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]))</span>
-<span class="n">sx</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]))</span>
-<span class="n">idty</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>sz = sp.csr_array(np.array([[1, 0], [0, -1]]))
+sx = sp.csr_array(np.array([[0, 1], [1, 0]]))
+idty = sp.eye(2)
 
 
-<span class="k">def</span> <span class="nf">pxp_model</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">periodic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
-    <span class="n">mat</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-    <span class="n">proj</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">idty</span> <span class="o">-</span> <span class="n">sz</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">):</span>
-        <span class="n">mat</span> <span class="o">+=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">site</span><span class="p">),</span> <span class="n">proj</span><span class="p">,</span> <span class="n">sx</span><span class="p">,</span> <span class="n">proj</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">-</span> <span class="n">site</span><span class="p">))])</span>
-    <span class="k">if</span> <span class="n">periodic</span><span class="p">:</span>
-        <span class="n">mat</span> <span class="o">+=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">sx</span><span class="p">,</span> <span class="n">proj</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">proj</span><span class="p">])</span>
-        <span class="n">mat</span> <span class="o">+=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">proj</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">proj</span><span class="p">,</span> <span class="n">sx</span><span class="p">])</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">mat</span> <span class="o">+=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">sx</span><span class="p">,</span> <span class="n">proj</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))])</span>
-        <span class="n">mat</span> <span class="o">+=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">proj</span><span class="p">,</span> <span class="n">sx</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">mat</span>
+def pxp_model(n: int, periodic: bool = False) -&gt; sp.csr_array:
+    mat = sp.csr_array((2 ** n, 2 ** n), dtype=float)
+    proj = 0.5 * (idty - sz)
+    for site in range(n - 2):
+        mat += reduce(sp.kron, [sp.eye(2 ** site), proj, sx, proj, sp.eye(2 ** (n - 3 - site))])
+    if periodic:
+        mat += reduce(sp.kron, [sx, proj, sp.eye(2 ** (n - 3)), proj])
+        mat += reduce(sp.kron, [proj, sp.eye(2 ** (n - 3)), proj, sx])
+    else:
+        mat += reduce(sp.kron, [sx, proj, sp.eye(2 ** (n - 2))])
+        mat += reduce(sp.kron, [sp.eye(2 ** (n - 2)), proj, sx])
+    return mat
 
 
-<span class="k">def</span> <span class="nf">ising_model</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>
-    <span class="n">mat</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">mat</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">reduce</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">site</span><span class="p">),</span> <span class="n">sz</span><span class="p">,</span> <span class="n">sz</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">site</span><span class="p">))])</span>
-        <span class="n">mat</span> <span class="o">+=</span> <span class="n">h</span> <span class="o">*</span> <span class="n">reduce</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">site</span><span class="p">),</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">site</span><span class="p">))])</span>
-    <span class="n">mat</span> <span class="o">+=</span> <span class="n">h</span> <span class="o">*</span> <span class="n">reduce</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">sx</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">mat</span>
+def ising_model(n, h):
+    mat = sp.csr_array((2 ** n, 2 ** n), dtype=float)
+    for site in range(n - 1):
+        mat += -1 * reduce(sp.kron, [sp.eye(2 ** site), sz, sz, sp.eye(2 ** (n - 2 - site))])
+        mat += h * reduce(sp.kron, [sp.eye(2 ** site), sx, sp.eye(2 ** (n - 1 - site))])
+    mat += h * reduce(sp.kron, [sp.eye(2 ** (n - 1)), sx])
+    return mat
 
 
-<span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="n">pxp_model</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
-<span class="n">ig</span> <span class="o">=</span> <span class="n">setup_igraph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ig</span><span class="p">)</span>
+g = nx.from_numpy_array(pxp_model(6).toarray())
+ig = setup_igraph(g)
+igraph.plot(ig)
 </pre></div>
 </div>
 </div>
@@ -436,7 +422,7 @@ document.write(`
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[168]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">j</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">product</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span><span class="p">))}</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>{i: j for i, j in enumerate(product([1, 0], repeat=3))}
 </pre></div>
 </div>
 </div>
@@ -552,13 +538,13 @@ document.write(`
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">PXPModel1D</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">mat</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
-<span class="k">assert</span> <span class="n">ishermitian</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
-<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>model = PXPModel1D(4, periodic=False)
+mat = model.hamiltonian.toarray()
+assert ishermitian(mat)
+evals, evecs = np.linalg.eigh(mat)
 
-<span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+plt.matshow(mat)
+plt.colorbar()
 </pre></div>
 </div>
 </div>
@@ -608,11 +594,11 @@ solution_fingerprint: 0x74d5541f5e724cde
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[173]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">periodic</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evals</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evals</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>if not model.periodic:
+    if model.n % 2 == 0:
+        assert np.count_nonzero(np.where(np.abs(evals) &lt; 1e-10)[0]) == fibonacci(model.n // 2 + 1)
+    else:
+        assert np.count_nonzero(np.where(np.abs(evals) &lt; 1e-10)[0]) == fibonacci(model.n // 2 - 1)
 </pre></div>
 </div>
 </div>
@@ -620,9 +606,9 @@ solution_fingerprint: 0x74d5541f5e724cde
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[220]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">format_custom_index</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-<span class="n">df</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>df = model.basis.dataframe.copy(deep=True)
+df.index = format_custom_index(df.index)
+df
 </pre></div>
 </div>
 </div>
@@ -855,10 +841,10 @@ solution_fingerprint: 0x74d5541f5e724cde
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>plt.plot(evals, linestyle=&quot;--&quot;, marker=&quot;.&quot;)
+plt.grid()
 
-<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">evals</span><span class="p">)</span>
+pd.DataFrame(evals)
 </pre></div>
 </div>
 </div>
@@ -988,8 +974,8 @@ solution_fingerprint: 0x74d5541f5e724cde
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">evecs</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>plt.matshow(evecs)
+plt.colorbar()
 </pre></div>
 </div>
 </div>
@@ -1029,8 +1015,8 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[206]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">z2_overlap</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">start_with</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>plt.scatter(evals, model.z2_overlap(evecs, start_with=0), marker=&quot;.&quot;)
+plt.grid()
 </pre></div>
 </div>
 </div>
@@ -1045,11 +1031,11 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[205]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">zero_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span>
-<span class="n">zero_state</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">overlap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">zero_state</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">@</span> <span class="n">evecs</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>zero_state = np.zeros(model.basis.n_states)
+zero_state[0] = 1
+overlap = np.log(np.abs(zero_state[None, :] @ evecs) ** 2)
+plt.scatter(evals, overlap, marker=&quot;.&quot;)
+plt.grid()
 </pre></div>
 </div>
 </div>
@@ -1073,9 +1059,9 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[207]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">entropies</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">entropy</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">evecs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="n">entropies</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>entropies = [model.entropy(evecs[:, i], model.n // 2 - 1) for i in range(evecs.shape[1])]
+plt.scatter(evals, entropies, marker=&quot;.&quot;)
+plt.grid()
 </pre></div>
 </div>
 </div>
@@ -1090,18 +1076,18 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
-<span class="n">ig</span> <span class="o">=</span> <span class="n">igraph</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="n">from_networkx</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>g = nx.from_numpy_array(mat)
+ig = igraph.Graph.from_networkx(g)
 
-<span class="n">ntg</span> <span class="o">=</span> <span class="n">pynauty</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span>
-    <span class="n">g</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">(),</span>
-    <span class="n">adjacency_dict</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">to_dict_of_lists</span><span class="p">(</span><span class="n">g</span><span class="p">),</span>
-    <span class="c1"># vertex_coloring=group_indices_by_value(dict(g.degree)),</span>
-<span class="p">)</span>
-<span class="n">aut_gp</span> <span class="o">=</span> <span class="n">pynauty</span><span class="o">.</span><span class="n">autgrp</span><span class="p">(</span><span class="n">ntg</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+ntg = pynauty.Graph(
+    g.number_of_nodes(),
+    adjacency_dict=nx.to_dict_of_lists(g),
+    # vertex_coloring=group_indices_by_value(dict(g.degree)),
+)
+aut_gp = pynauty.autgrp(ntg)[0]
 
-<span class="n">perm_gp</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">Permutation</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">aut_gp</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">perm_gp</span><span class="o">.</span><span class="n">orbits</span><span class="p">())</span>
+perm_gp = PermutationGroup([Permutation(p) for p in aut_gp])
+print(perm_gp.orbits())
 </pre></div>
 </div>
 </div>
@@ -1118,41 +1104,41 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_bipartite</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>g = nx.from_numpy_array(mat)
+assert nx.is_bipartite(g)
 
-<span class="n">highlight</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="c1"># np.where(evecs[:, 10] &gt; 1e-5)[0],</span>
-    <span class="c1"># np.where(evecs[:, 10] &lt;- 1e-5)[0],</span>
-    <span class="c1"># np.where(np.abs(state) &gt; 1e-5)[0],</span>
-    <span class="c1"># [1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 18, 20]</span>
-<span class="p">]</span>
-<span class="n">highlight</span> <span class="o">=</span> <span class="n">perm_gp</span><span class="o">.</span><span class="n">orbits</span><span class="p">()</span>
-<span class="c1"># highlight = list(nx.bipartite.sets(g))</span>
-<span class="c1"># highlight_color = [&quot;whitesmoke&quot;, &quot;dimgray&quot;]</span>
-<span class="c1"># highlight_color = [&quot;tomato&quot;, &quot;royalblue&quot;]</span>
-<span class="n">highlight_color</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mcolors</span><span class="o">.</span><span class="n">TABLEAU_COLORS</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-<span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Set2&#39;</span><span class="p">)</span>
-<span class="n">highlight_color</span> <span class="o">+=</span> <span class="p">[</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)]</span>
-<span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Set3&#39;</span><span class="p">)</span>
-<span class="n">highlight_color</span> <span class="o">+=</span> <span class="p">[</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)]</span>
-<span class="n">highlight_color</span> <span class="o">*=</span> <span class="mi">3</span>
+highlight = [
+    # np.where(evecs[:, 10] &gt; 1e-5)[0],
+    # np.where(evecs[:, 10] &lt;- 1e-5)[0],
+    # np.where(np.abs(state) &gt; 1e-5)[0],
+    # [1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 18, 20]
+]
+highlight = perm_gp.orbits()
+# highlight = list(nx.bipartite.sets(g))
+# highlight_color = [&quot;whitesmoke&quot;, &quot;dimgray&quot;]
+# highlight_color = [&quot;tomato&quot;, &quot;royalblue&quot;]
+highlight_color = list(mcolors.TABLEAU_COLORS.values())
+cmap = plt.get_cmap(&#39;Set2&#39;)
+highlight_color += [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]
+cmap = plt.get_cmap(&#39;Set3&#39;)
+highlight_color += [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]
+highlight_color *= 3
 
-<span class="n">ig</span> <span class="o">=</span> <span class="n">setup_igraph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">highlight</span><span class="p">,</span> <span class="n">highlight_color</span><span class="p">)</span>
+ig = setup_igraph(g, highlight, highlight_color)
 
-<span class="c1"># rm = np.array([6, 9, 15, 16, 17, 19])</span>
-<span class="c1"># mask = ~np.isin(np.arange(ig.vcount()), rm)</span>
-<span class="c1"># sub_ig = ig.induced_subgraph(np.where(np.abs(evecs[:, 13]) &gt; 1e-5)[0])</span>
+# rm = np.array([6, 9, 15, 16, 17, 19])
+# mask = ~np.isin(np.arange(ig.vcount()), rm)
+# sub_ig = ig.induced_subgraph(np.where(np.abs(evecs[:, 13]) &gt; 1e-5)[0])
 
-<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">ig</span><span class="p">,</span>
-    <span class="c1"># layout=ig.layout_kamada_kawai(),</span>
-    <span class="c1"># layout=ig.layout_mds(),</span>
-    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-    <span class="c1"># edge_width=0.4,</span>
-    <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
-    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-<span class="p">)</span>
+igraph.plot(
+    ig,
+    # layout=ig.layout_kamada_kawai(),
+    # layout=ig.layout_mds(),
+    vertex_size=16,
+    # edge_width=0.4,
+    # edge_color=&quot;darkgray&quot;,
+    vertex_label_size=10,
+)
 </pre></div>
 </div>
 </div>
@@ -1168,15 +1154,15 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">ig</span> <span class="o">=</span> <span class="n">setup_igraph</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
-<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">ig</span><span class="p">,</span>
-    <span class="c1"># layout=ig.layout_kamada_kawai(),</span>
-    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-    <span class="n">edge_width</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
-    <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
-    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">10</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>ig = setup_igraph(nx.from_numpy_array(b))
+igraph.plot(
+    ig,
+    # layout=ig.layout_kamada_kawai(),
+    vertex_size=16,
+    edge_width=0.4,
+    # edge_color=&quot;darkgray&quot;,
+    vertex_label_size=10
+)
 </pre></div>
 </div>
 </div>
@@ -1192,11 +1178,11 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sub_components</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>sub_components = list(g.subgraph(c) for c in nx.connected_components(g))
 
-<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sub_components</span><span class="p">:</span>
-    <span class="n">cmat</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">cmat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">cmat</span><span class="p">))</span>
+for c in sub_components:
+    cmat = nx.to_numpy_array(c)
+    print(cmat.shape[0] - np.linalg.matrix_rank(cmat))
 <br/></pre></div>
 </div>
 </div>
@@ -1212,11 +1198,11 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[127]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">two_steps_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">sort_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">two_steps_mat</span><span class="p">))</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>two_steps_mat = np.linalg.matrix_power(mat, 2)
+sort_idx = np.argsort(np.diag(two_steps_mat))
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">two_steps_mat</span><span class="p">[</span><span class="n">sort_idx</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">sort_idx</span><span class="p">]),</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+plt.plot(np.diag(two_steps_mat[sort_idx, :][:, sort_idx]), linestyle=&quot;--&quot;, marker=&quot;o&quot;)
+plt.show()
 </pre></div>
 </div>
 </div>
@@ -1231,25 +1217,25 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[128]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="n">two_steps_mat</span><span class="p">)</span>
-<span class="c1"># highlight = [</span>
-<span class="c1"># ]</span>
-<span class="c1"># highlight_color = [</span>
-    <span class="c1"># &quot;aqua&quot;,</span>
-    <span class="c1"># &quot;deepskyblue&quot;,</span>
-    <span class="c1"># &quot;yellowgreen&quot;,</span>
-    <span class="c1"># &quot;tomato&quot;,</span>
-    <span class="c1"># &quot;royalblue&quot;</span>
-<span class="c1"># ]</span>
-<span class="n">ig</span> <span class="o">=</span> <span class="n">setup_igraph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">highlight</span><span class="p">,</span> <span class="n">highlight_color</span><span class="p">)</span>
-<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">ig</span><span class="p">,</span>
-    <span class="n">layout</span><span class="o">=</span><span class="n">ig</span><span class="o">.</span><span class="n">layout_kamada_kawai</span><span class="p">(),</span>
-    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-    <span class="n">edge_width</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
-    <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
-    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">8</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>g = nx.from_numpy_array(two_steps_mat)
+# highlight = [
+# ]
+# highlight_color = [
+    # &quot;aqua&quot;,
+    # &quot;deepskyblue&quot;,
+    # &quot;yellowgreen&quot;,
+    # &quot;tomato&quot;,
+    # &quot;royalblue&quot;
+# ]
+ig = setup_igraph(g, highlight, highlight_color)
+igraph.plot(
+    ig,
+    layout=ig.layout_kamada_kawai(),
+    vertex_size=12,
+    edge_width=0.4,
+    # edge_color=&quot;darkgray&quot;,
+    vertex_label_size=8
+)
 </pre></div>
 </div>
 </div>
@@ -1265,12 +1251,12 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[129]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sub_components</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>sub_components = list(g.subgraph(c) for c in nx.connected_components(g))
 
-<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sub_components</span><span class="p">:</span>
-    <span class="c1"># print(nx.is_bipartite(c))</span>
-    <span class="n">cmat</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">cmat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">cmat</span><span class="p">))</span>
+for c in sub_components:
+    # print(nx.is_bipartite(c))
+    cmat = nx.to_numpy_array(c)
+    print(cmat.shape[0], cmat.shape[0] - np.linalg.matrix_rank(cmat))
 <br/></pre></div>
 </div>
 </div>
@@ -1287,15 +1273,15 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[120]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sub_ig</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">sub_components</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
-<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">sub_ig</span><span class="p">,</span>
-    <span class="n">layout</span><span class="o">=</span><span class="n">sub_ig</span><span class="o">.</span><span class="n">layout_kamada_kawai</span><span class="p">(),</span>
-    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-    <span class="n">edge_width</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
-    <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
-    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">8</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>sub_ig = ig.subgraph(sub_components[1].nodes)
+igraph.plot(
+    sub_ig,
+    layout=sub_ig.layout_kamada_kawai(),
+    vertex_size=12,
+    edge_width=0.4,
+    # edge_color=&quot;darkgray&quot;,
+    vertex_label_size=8
+)
 </pre></div>
 </div>
 </div>
@@ -1311,9 +1297,9 @@ array([[ 5.21608974e-01, -4.59081550e-17, -2.47502346e-01,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[65]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">sub_components</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>evals, evecs = np.linalg.eigh(nx.to_numpy_array(sub_components[0]))
 
-<span class="n">evals</span>
+evals
 </pre></div>
 </div>
 </div>
@@ -1330,7 +1316,7 @@ array([7.21610238e-16, 8.37722340e-01, 2.00000000e+00, 7.16227766e+00])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[67]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evecs</span><span class="o">.</span><span class="n">T</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>evecs.T
 </pre></div>
 </div>
 </div>
@@ -1354,10 +1340,10 @@ array([[-5.77350269e-01,  5.77350269e-01, -5.55111512e-17,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[68]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span>
-<span class="n">state</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sub_components</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">)]</span> <span class="o">=</span> <span class="n">evecs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>state = np.zeros(model.basis.n_states)
+state[np.array(sub_components[1].nodes)] = evecs[:, 0]
 
-<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">state</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
+pd.DataFrame(state[:, None])
 </pre></div>
 </div>
 </div>
@@ -1480,7 +1466,7 @@ array([[-5.77350269e-01,  5.77350269e-01, -5.55111512e-17,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">z2_overlap</span><span class="p">(</span><span class="n">state</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">start_with</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>model.z2_overlap(state[:, None], start_with=0)
 </pre></div>
 </div>
 </div>
@@ -1506,7 +1492,7 @@ array([[-inf]])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">entropy</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>model.entropy(state, 2)
 </pre></div>
 </div>
 </div>
@@ -1523,7 +1509,7 @@ array([[-inf]])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[69]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sub_components</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>sub_components[1].nodes
 </pre></div>
 </div>
 </div>
@@ -1540,27 +1526,27 @@ NodeView((1, 2, 3, 5, 8, 12, 13, 17, 19, 20))
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[64]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">highlight</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">1e-12</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="p">]</span>
-<span class="n">highlight_color</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;aqua&quot;</span><span class="p">,</span>
-    <span class="c1"># &quot;deepskyblue&quot;,</span>
-    <span class="c1"># &quot;yellowgreen&quot;,</span>
-    <span class="c1"># &quot;tomato&quot;,</span>
-    <span class="c1"># &quot;royalblue&quot;</span>
-<span class="p">]</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">sub_components</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-<span class="n">ig</span> <span class="o">=</span> <span class="n">setup_igraph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">highlight</span><span class="p">,</span> <span class="n">highlight_color</span><span class="p">)</span>
-<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">ig</span><span class="p">,</span>
-    <span class="n">layout</span><span class="o">=</span><span class="n">ig</span><span class="o">.</span><span class="n">layout_kamada_kawai</span><span class="p">(),</span>
-    <span class="c1"># layout=ig.layout_mds(),</span>
-    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-    <span class="n">edge_width</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
-    <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
-    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">8</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>highlight = [
+    np.where(np.abs(evecs[:, 0]) &gt; 1e-12)[0]
+]
+highlight_color = [
+    &quot;aqua&quot;,
+    # &quot;deepskyblue&quot;,
+    # &quot;yellowgreen&quot;,
+    # &quot;tomato&quot;,
+    # &quot;royalblue&quot;
+]
+g = nx.from_numpy_array(nx.to_numpy_array(sub_components[1]))
+ig = setup_igraph(g, highlight, highlight_color)
+igraph.plot(
+    ig,
+    layout=ig.layout_kamada_kawai(),
+    # layout=ig.layout_mds(),
+    vertex_size=12,
+    edge_width=0.4,
+    # edge_color=&quot;darkgray&quot;,
+    vertex_label_size=8
+)
 </pre></div>
 </div>
 </div>
@@ -1587,11 +1573,11 @@ NodeView((1, 2, 3, 5, 8, 12, 13, 17, 19, 20))
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[71]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">mat</span> <span class="o">=</span> <span class="n">ising_model</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
-<span class="k">assert</span> <span class="n">ishermitian</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>mat = ising_model(8, 1).toarray()
+assert ishermitian(mat)
 
-<span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+plt.matshow(mat)
+plt.colorbar()
 </pre></div>
 </div>
 </div>
@@ -1615,18 +1601,18 @@ NodeView((1, 2, 3, 5, 8, 12, 13, 17, 19, 20))
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[77]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
-<span class="n">ig</span> <span class="o">=</span> <span class="n">igraph</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="n">from_networkx</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="n">ig</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ig</span><span class="o">.</span><span class="n">vcount</span><span class="p">())]</span>
-<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">ig</span><span class="p">,</span>
-    <span class="n">layout</span><span class="o">=</span><span class="n">ig</span><span class="o">.</span><span class="n">layout_kamada_kawai</span><span class="p">(),</span>
-    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-    <span class="n">vertex_color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span>
-    <span class="c1"># edge_width=0.4,</span>
-    <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
-    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>g = nx.from_numpy_array(mat)
+ig = igraph.Graph.from_networkx(g)
+ig.vs[&quot;label&quot;] = [str(i) for i in range(ig.vcount())]
+igraph.plot(
+    ig,
+    layout=ig.layout_kamada_kawai(),
+    vertex_size=14,
+    vertex_color=&quot;orange&quot;,
+    # edge_width=0.4,
+    # edge_color=&quot;darkgray&quot;,
+    vertex_label_size=8,
+)
 </pre></div>
 </div>
 </div>
@@ -1650,14 +1636,14 @@ NodeView((1, 2, 3, 5, 8, 12, 13, 17, 19, 20))
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">eig</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+from scipy.linalg import eig
 
-<span class="n">n</span> <span class="o">=</span> <span class="mi">6</span>
-<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
-<span class="n">A</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span> <span class="o">+</span> <span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-<span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
-<span class="n">B</span> <span class="o">=</span> <span class="p">(</span><span class="n">B</span> <span class="o">+</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+n = 6
+A = np.random.random((n, n))
+A = (A + A.T) / 2
+B = np.random.random((n, n))
+B = (B + B.T) / 2
 </pre></div>
 </div>
 </div>
@@ -1665,8 +1651,8 @@ NodeView((1, 2, 3, 5, 8, 12, 13, 17, 19, 20))
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evals</span><span class="p">,</span> <span class="n">left_evecs</span><span class="p">,</span> <span class="n">right_evecs</span> <span class="o">=</span> <span class="n">eig</span><span class="p">((</span><span class="n">B</span> <span class="o">@</span> <span class="n">B</span> <span class="o">@</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span><span class="p">),</span> <span class="n">b</span><span class="o">=</span><span class="n">B</span> <span class="o">@</span> <span class="n">B</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">evals</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>evals, left_evecs, right_evecs = eig((B @ B @ A + B), b=B @ B, left=True, right=True)
+np.real_if_close(evals)
 </pre></div>
 </div>
 </div>
@@ -1684,7 +1670,7 @@ array([ 14.26246953, -10.8217393 ,  -2.56972014,   0.94314784,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">B</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">left_evecs</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>B.T @ B.T @ left_evecs
 </pre></div>
 </div>
 </div>
@@ -1712,7 +1698,7 @@ array([[-7.32781367e-04,  1.64044896e-03, -3.20913629e-02,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">right_evecs</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>right_evecs
 </pre></div>
 </div>
 </div>
@@ -1740,7 +1726,7 @@ array([[-0.15441446,  0.20614906, -0.22247128,  0.50833447,  0.79008179,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">left_evecs</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">B</span> <span class="o">@</span> <span class="n">B</span> <span class="o">@</span> <span class="n">right_evecs</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>np.real_if_close(left_evecs.T @ B @ B @ right_evecs)
 </pre></div>
 </div>
 </div>
@@ -1768,8 +1754,8 @@ array([[ 4.74554898e-03, -9.76309034e-18,  6.98786880e-17,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">evals</span><span class="p">,</span> <span class="n">left_evecs</span><span class="p">,</span> <span class="n">right_evecs</span> <span class="o">=</span> <span class="n">eig</span><span class="p">(</span><span class="n">A</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">left</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">evals</span><span class="p">)</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>evals, left_evecs, right_evecs = eig(A + np.linalg.pinv(B), left=True, right=True)
+np.real_if_close(evals)
 </pre></div>
 </div>
 </div>
@@ -1787,7 +1773,7 @@ array([ 14.26246953, -10.8217393 ,  -2.56972014,   0.94314784,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">right_evecs</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>right_evecs
 </pre></div>
 </div>
 </div>
@@ -1815,7 +1801,7 @@ array([[ 0.15441446,  0.20614906, -0.22247128, -0.50833447, -0.79008179,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">left_evecs</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>left_evecs
 </pre></div>
 </div>
 </div>
@@ -1854,45 +1840,45 @@ array([[ 0.15441446,  0.20614906, -0.22247128, -0.50833447, -0.79008179,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">quimb.tensor</span> <span class="k">as</span> <span class="nn">qtn</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>import quimb.tensor as qtn
 
 
-<span class="n">b_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-    <span class="p">[</span>
-        <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)]]</span>
-    <span class="p">]</span>
-<span class="p">)</span>
+b_mat = np.array(
+    [
+        [[1, 0], [0, 0], [0, 0]],
+        [[0, np.sqrt(2)], [1, 0], [0, np.sqrt(2)]]
+    ]
+)
 
-<span class="n">c_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-    <span class="p">[</span>
-        <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
-    <span class="p">]</span>
-<span class="p">)</span>
+c_mat = np.array(
+    [
+        [[0, np.sqrt(2)], [-1, 0]],
+        [[1, 0], [0, 0]],
+        [[0, -np.sqrt(2)], [0, 0]]
+    ]
+)
 
-<span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+vec1 = np.array([1, 1])
+vec2 = np.array([1, -1])
 
-<span class="k">def</span> <span class="nf">obc_mps</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">idx_a</span><span class="p">,</span> <span class="n">idx_b</span><span class="p">):</span>
-    <span class="n">mps</span> <span class="o">=</span> <span class="p">[</span><span class="n">b_mat</span><span class="p">,</span> <span class="n">c_mat</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="n">left_vec</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="mi">0</span><span class="p">:</span> <span class="n">vec1</span><span class="p">,</span>
-        <span class="mi">1</span><span class="p">:</span> <span class="n">vec2</span>
-    <span class="p">}[</span><span class="n">idx_a</span><span class="p">]</span>
-    <span class="n">right_vec</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="mi">0</span><span class="p">:</span> <span class="n">vec1</span><span class="p">,</span>
-        <span class="mi">1</span><span class="p">:</span> <span class="n">vec2</span>
-    <span class="p">}[</span><span class="n">idx_b</span><span class="p">]</span>
-    <span class="n">mps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;i,ijk-&gt;jk&quot;</span><span class="p">,</span> <span class="n">left_vec</span><span class="p">,</span> <span class="n">mps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">mps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ijk,j-&gt;ik&quot;</span><span class="p">,</span> <span class="n">mps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">right_vec</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">qtn</span><span class="o">.</span><span class="n">MatrixProductState</span><span class="p">(</span><span class="n">mps</span><span class="p">)</span>
+def obc_mps(n, idx_a, idx_b):
+    mps = [b_mat, c_mat] * (n // 2)
+    left_vec = {
+        0: vec1,
+        1: vec2
+    }[idx_a]
+    right_vec = {
+        0: vec1,
+        1: vec2
+    }[idx_b]
+    mps[0] = np.einsum(&quot;i,ijk-&gt;jk&quot;, left_vec, mps[0])
+    mps[-1] = np.einsum(&quot;ijk,j-&gt;ik&quot;, mps[-1], right_vec)
+    return qtn.MatrixProductState(mps)
 
-<span class="n">mps</span> <span class="o">=</span> <span class="n">obc_mps</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_dense</span><span class="p">()</span>
-<span class="c1"># mps /= np.linalg.norm(mps)</span>
-<span class="n">idx</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-<span class="n">mps</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span>
+mps = obc_mps(6, 0, 1).to_dense()
+# mps /= np.linalg.norm(mps)
+idx = model.basis.index.astype(int)
+mps.T[:, idx]
 </pre></div>
 </div>
 </div>
@@ -1900,7 +1886,7 @@ array([[ 0.15441446,  0.20614906, -0.22247128, -0.50833447, -0.79008179,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[77]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">j</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">product</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">4</span><span class="p">))}</span>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>{i: j for i, j in enumerate(product([0, 1], repeat=4))}
 </pre></div>
 </div>
 </div>
@@ -1956,14 +1942,16 @@ array([[ 0.15441446,  0.20614906, -0.22247128, -0.50833447, -0.79008179,
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> Contents
   </div>
-  <nav class="bd-toc-nav page-toc">
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">archive this part</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#PXP-model">PXP model</a></li>
@@ -2018,8 +2006,8 @@ By Tan Tao-Lin
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>

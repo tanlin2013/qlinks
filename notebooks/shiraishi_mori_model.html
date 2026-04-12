@@ -1,0 +1,914 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>&lt;no title&gt; &#8212; qlinks 0.1.0rc1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=370c4a40"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/shiraishi_mori_model';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.0rc1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks 0.1.0rc1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../lattice.html">1. Lattice</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.lattice.component.html">1.1. qlinks.lattice.component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.lattice.square_lattice.html">1.2. qlinks.lattice.square_lattice</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../symmetry.html">2. Symmetry</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.symmetry.gauss_law.html">2.1. qlinks.symmetry.gauss_law</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.symmetry.translation.html">2.2. qlinks.symmetry.translation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../solver.html">3. Solver</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/qlinks.solver.deep_first_search.html">3.1. qlinks.solver.deep_first_search</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualizer.html">4. Visualizer</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/notebooks/shiraishi_mori_model.ipynb" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2Fnotebooks/shiraishi_mori_model.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1><no title></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="simple visible nav section-nav flex-column">
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <dl>
+<dt>{</dt><dd><dl>
+<dt>“cells”: [</dt><dd><dl>
+<dt>{</dt><dd><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“from itertools import productn”,
+“n”,
+“import igraphn”,
+“import matplotlib.colors as mcolorsn”,
+“import matplotlib.pyplot as pltn”,
+“import networkx as nxn”,
+“import numpy as npn”,
+“import pandas as pdn”,
+“import pynautyn”,
+“from scipy.linalg import ishermitiann”,
+“from scipy.sparse.csgraph import connected_componentsn”,
+“from sympy.combinatorics import Permutation, PermutationGroupn”,
+“n”,
+“from qlinks.model.shiraishi_mori_model import SpinHalfChain, SpinOneChainn”,
+“from utils import setup_igraphn”,
+“n”,
+“np.set_printoptions(threshold=np.inf)n”,
+“pd.set_option(&quot;display.max_rows&quot;, None)”</p>
+</div></blockquote>
+<p>],
+“id”: “53273157cea1854a”</p>
+</dd>
+</dl>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: “”,
+“id”: “c081e8b87add7043”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “markdown”,
+“source”: “## Spin-1/2 chain”,
+“id”: “f786210f79dfbfbc”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“model = SpinHalfChain(n”,
+“    n=6,n”,
+“    coup_j1s=np.array([1, 1, -0.6]),n”,
+“    coup_j2s=np.array([-0.8, 0, 0]),n”,
+“    coup_hs=np.array([0.3, 0, 0.1]),n”,
+“)n”,
+“mat = model.hamiltonian.toarray()n”,
+“assert ishermitian(mat, atol=1e-12)  # somewhat has rounding errorn”,
+“evals, evecs = np.linalg.eigh(mat)n”,
+“n”,
+“plt.matshow(mat)n”,
+“plt.colorbar()”</p>
+</div></blockquote>
+<p>],
+“id”: “c6bf94aee4521fce”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“plt.plot(evals, linestyle=&quot;–&quot;, marker=&quot;o&quot;)n”,
+“plt.grid()n”,
+“np.where(np.abs(evals) &lt; 1e-12)[0]”</p>
+</div></blockquote>
+<p>],
+“id”: “7282cdc11d390c6”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“i = 20n”,
+“plt.plot(evecs[:, i].T, linestyle=&quot;–&quot;, marker=&quot;o&quot;)n”,
+“plt.grid()n”,
+“np.where(np.abs(evecs[:, i]) &gt; 1e-6)[0]”</p>
+</div></blockquote>
+<p>],
+“id”: “c305fe9fbd215b3e”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“mask = np.array([11, 13, 19, 21, 22, 25, 26, 37, 38, 41, 42, 44, 50, 52])n”,
+“plt.plot(model.potential_term.data[mask], linestyle=&quot;–&quot;, marker=&quot;o&quot;)n”,
+“plt.grid()”</p>
+</div></blockquote>
+<p>],
+“id”: “eb1b91e5b6a240b2”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“mat = np.zeros((2 ** model.n, 2 ** model.n))n”,
+“for site in range(model.n):n”,
+“    mat += model.sm_projector(site).toarray()n”,
+“n”,
+“# mat = model.sm_projector(1)n”,
+“g = nx.from_numpy_array(mat)n”,
+“ig = setup_igraph(g)n”,
+“igraph.plot(n”,
+“    ig,n”,
+“)”</p>
+</div></blockquote>
+<p>],
+“id”: “f6da8c743d8a2f37”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“evals, evecs = np.linalg.eigh(mat)n”,
+“plt.plot(evals, linestyle=&quot;–&quot;, marker=&quot;o&quot;)n”,
+“plt.grid()n”,
+“np.where(np.abs(evals) &lt; 1e-12)[0]”</p>
+</div></blockquote>
+<p>],
+“id”: “a17065d53a26638e”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“i = 0n”,
+“plt.plot(evecs[:, i].ravel(), linestyle=&quot;–&quot;, marker=&quot;o&quot;)n”,
+“plt.grid()n”,
+“np.where(np.abs(evecs[:, i]) &gt; 1e-6)[0]”</p>
+</div></blockquote>
+<p>],
+“id”: “3e47664bbd33770b”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“g = nx.from_scipy_sparse_array(model.kinetic_term)n”,
+“ig = igraph.Graph.from_networkx(g)n”,
+“n”,
+“ntg = pynauty.Graph(n”,
+“    ig.vcount(),n”,
+“    directed=True,n”,
+“    adjacency_dict=nx.to_dict_of_lists(g),n”,
+“)n”,
+“aut_gp = pynauty.autgrp(ntg)[0]n”,
+“n”,
+“perm_gp = PermutationGroup([Permutation(p) for p in aut_gp])”</p>
+</div></blockquote>
+<p>],
+“id”: “1f68d11215dd64e4”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“g = nx.from_scipy_sparse_array(model.kinetic_term)n”,
+“n”,
+“highlight = [n”,
+“    # np.where(np.abs(evecs[:, 231]) &gt; 1e-6)[0],n”,
+“]n”,
+“# highlight = list(aut.degree_partition.values())n”,
+“highlight = perm_gp.orbits()n”,
+“# highlight = list(nx.bipartite.sets(g))n”,
+“n”,
+“# highlight_color = list(mcolors.TABLEAU_COLORS.values())n”,
+“# highlight_color = list(mcolors.CSS4_COLORS.values())n”,
+“cmap = plt.get_cmap(‘Set3’)n”,
+“highlight_color = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]n”,
+“cmap = plt.get_cmap(‘Set2’)n”,
+“highlight_color += [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]n”,
+“highlight_color <a href="#id1"><span class="problematic" id="id2">*</span></a>= 2000n”,
+“# highlight_color = [n”,
+“#     &quot;dimgray&quot;,n”,
+“#     &quot;whitesmoke&quot;,n”,
+“#     &quot;deepskyblue&quot;,n”,
+“#     &quot;yellowgreen&quot;,n”,
+“#     &quot;aqua&quot;,n”,
+“#     &quot;pink&quot;,n”,
+“#     &quot;tomato&quot;,n”,
+“#     &quot;royalblue&quot;,n”,
+“#     &quot;blueviolet&quot;,n”,
+“#     &quot;cornflowerblue&quot;,n”,
+“#     &quot;limegreen&quot;,n”,
+“# ]n”,
+“n”,
+“ig = setup_igraph(g, highlight, highlight_color)n”,
+“n”,
+“degree = np.array(list(dict(g.degree).values()))n”,
+“# (bipartite, types) = ig.is_bipartite(return_types=True)n”,
+“# nodes = [int(n) for n in list(sub_sub_ig.vs[&quot;label&quot;])]n”,
+“# outer_boundary = list(nx.node_boundary(g, nodes))n”,
+“# sub_ig = ig.induced_subgraph(np.append(nodes, outer_boundary))n”,
+“n”,
+“# sub_ig = ig.induced_subgraph(np.where(degree == 8)[0])n”,
+“# fig, ax = plt.subplots(figsize=(6, 6), facecolor=&quot;white&quot;)n”,
+“igraph.plot(n”,
+“    ig,n”,
+“    # layout=ig.layout_kamada_kawai(),n”,
+“    # layout=ig.layout_reingold_tilford(root=[0, 25, 50, 75]),n”,
+“    # layout=ig.layout_bipartite(types=types),n”,
+“    vertex_size=16,n”,
+“    vertex_label_size=8,n”,
+“    # vertex_label_dist=1.5,n”,
+“    edge_width=0.2,n”,
+“    # edge_color=&quot;darkgray&quot;,n”,
+“    # target=&quot;xy_graph_pbc_4.svg&quot;n”,
+“)”</p>
+</div></blockquote>
+<p>],
+“id”: “d547a88e5edb677b”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: “nx.is_bipartite(g)”,
+“id”: “3674715f55764651”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: “”,
+“id”: “3425c13472155d51”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “markdown”,
+“source”: “## Spin-1 chain”,
+“id”: “fbbaa74809a809e7”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“model = SpinOneChain(n”,
+“    n=6,n”,
+“    coup_j1s=np.array([-0.8, 0.2, 0.4]),n”,
+“    coup_h1s=np.array([1, 0, 0.3]),n”,
+“    coup_j2s=np.array([-0.6, 0.4, 0.8]),n”,
+“    coup_h2s=np.array([0, 0, -0.2]),n”,
+“    coup_d=-0.4n”,
+“)n”,
+“mat = model.hamiltonian.toarray()n”,
+“assert ishermitian(mat)n”,
+“evals, evecs = np.linalg.eigh(mat)n”,
+“n”,
+“plt.matshow(mat)n”,
+“plt.colorbar()”</p>
+</div></blockquote>
+<p>],
+“id”: “8956fccea800ea85”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“pd.DataFrame.from_dict(n”,
+“    {i: j for i, j in enumerate(product([1, 0, -1], repeat=model.n))}, orient=&quot;index&quot;n”,
+“)”</p>
+</div></blockquote>
+<p>],
+“id”: “af0bb44abe4322e0”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: “pd.DataFrame((evecs.T &#64; model.q_operator &#64; evecs).diagonal())”,
+“id”: “2b0d5be56891933b”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“i = 19n”,
+“plt.plot(evecs[:, i].T, linestyle=&quot;–&quot;, marker=&quot;o&quot;)n”,
+“plt.grid()n”,
+“np.where(np.abs(evecs[:, i]) &gt; 1e-6)[0]”</p>
+</div></blockquote>
+<p>],
+“id”: “b5bf306ee4cea0d2”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“g = nx.from_scipy_sparse_array(model.kinetic_term)n”,
+“ig = igraph.Graph.from_networkx(g)n”,
+“n”,
+“ntg = pynauty.Graph(n”,
+“    ig.vcount(),n”,
+“    directed=True,n”,
+“    adjacency_dict=nx.to_dict_of_lists(g),n”,
+“)n”,
+“aut_gp = pynauty.autgrp(ntg)[0]n”,
+“n”,
+“perm_gp = PermutationGroup([Permutation(p) for p in aut_gp])”</p>
+</div></blockquote>
+<p>],
+“id”: “de3330fb8f93f3b1”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“g = nx.from_scipy_sparse_array(model.kinetic_term)n”,
+“n”,
+“highlight = [n”,
+“    # np.where(np.abs(evecs[:, 231]) &gt; 1e-6)[0],n”,
+“]n”,
+“# highlight = list(aut.degree_partition.values())n”,
+“highlight = perm_gp.orbits()n”,
+“# highlight = list(nx.bipartite.sets(g))n”,
+“n”,
+“# highlight_color = list(mcolors.TABLEAU_COLORS.values())n”,
+“# highlight_color = list(mcolors.CSS4_COLORS.values())n”,
+“cmap = plt.get_cmap(‘Set3’)n”,
+“highlight_color = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]n”,
+“cmap = plt.get_cmap(‘Set2’)n”,
+“highlight_color += [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]n”,
+“highlight_color <a href="#id3"><span class="problematic" id="id4">*</span></a>= 2000n”,
+“# highlight_color = [n”,
+“#     &quot;dimgray&quot;,n”,
+“#     &quot;whitesmoke&quot;,n”,
+“#     &quot;deepskyblue&quot;,n”,
+“#     &quot;yellowgreen&quot;,n”,
+“#     &quot;aqua&quot;,n”,
+“#     &quot;pink&quot;,n”,
+“#     &quot;tomato&quot;,n”,
+“#     &quot;royalblue&quot;,n”,
+“#     &quot;blueviolet&quot;,n”,
+“#     &quot;cornflowerblue&quot;,n”,
+“#     &quot;limegreen&quot;,n”,
+“# ]n”,
+“n”,
+“ig = setup_igraph(g, highlight, highlight_color)n”,
+“n”,
+“degree = np.array(list(dict(g.degree).values()))n”,
+“# (bipartite, types) = ig.is_bipartite(return_types=True)n”,
+“# nodes = [int(n) for n in list(sub_sub_ig.vs[&quot;label&quot;])]n”,
+“# outer_boundary = list(nx.node_boundary(g, nodes))n”,
+“# sub_ig = ig.induced_subgraph(np.append(nodes, outer_boundary))n”,
+“n”,
+“# sub_ig = ig.induced_subgraph(np.where(degree == 8)[0])n”,
+“# fig, ax = plt.subplots(figsize=(6, 6), facecolor=&quot;white&quot;)n”,
+“igraph.plot(n”,
+“    ig,n”,
+“    # layout=ig.layout_kamada_kawai(),n”,
+“    # layout=ig.layout_reingold_tilford(root=[0, 25, 50, 75]),n”,
+“    # layout=ig.layout_bipartite(types=types),n”,
+“    vertex_size=16,n”,
+“    vertex_label_size=8,n”,
+“    # vertex_label_dist=1.5,n”,
+“    edge_width=0.2,n”,
+“    # edge_color=&quot;darkgray&quot;,n”,
+“    # target=&quot;xy_graph_pbc_4.svg&quot;n”,
+“)”</p>
+</div></blockquote>
+<p>],
+“id”: “edfe7657181f157c”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: [</p>
+<blockquote>
+<div><p>“sub_components = ig.connected_components(mode=&quot;weak&quot;)n”,
+“n”,
+“for i, c in enumerate(sub_components):n”,
+“    mat = nx.to_numpy_array(ig.subgraph(c).to_networkx())n”,
+“    # print(repr(mat))n”,
+“    print(i, mat.shape[0], mat.shape[0] - np.linalg.matrix_rank(mat), nx.is_bipartite(ig.subgraph(c).to_networkx()))”</p>
+</div></blockquote>
+<p>],
+“id”: “2a89774c46263147”</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“metadata”: {},
+“cell_type”: “code”,
+“outputs”: [],
+“execution_count”: null,
+“source”: “”,
+“id”: “2fd0e871f515610f”</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>],
+“metadata”: {},
+“nbformat”: 5,
+“nbformat_minor”: 9</p>
+</dd>
+</dl>
+<p>}</p>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="simple visible nav section-nav flex-column">
+</ul>
+
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
