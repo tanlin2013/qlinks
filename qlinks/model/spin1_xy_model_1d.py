@@ -142,9 +142,13 @@ class Spin1XYModel:
             _op = sp.csr_array((3**self.n, 3**self.n), dtype=float)
             for site in range(self.n):
                 if site < idx:
-                    _op += (-1) ** site * kron([s_plus @ s_plus, *[idty] * (self.n - 1)], shift=site)
+                    _op += (-1) ** site * kron(
+                        [s_plus @ s_plus, *[idty] * (self.n - 1)], shift=site
+                    )
                 else:
-                    _op += (-1) ** (site - 1) * kron([s_plus @ s_plus, *[idty] * (self.n - 1)], shift=site)
+                    _op += (-1) ** (site - 1) * kron(
+                        [s_plus @ s_plus, *[idty] * (self.n - 1)], shift=site
+                    )
             return _op
 
         if not ((self.periodic and self.n % 4 == 0) or (not self.periodic and self.n % 2 == 1)):
