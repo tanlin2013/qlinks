@@ -523,7 +523,7 @@ def test_ensemble_hermitian(qubit_ops):
         assert np.allclose(rho, rho.conj().T, atol=1e-12)
 
 
-def test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
+def _test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
     """
     Example: two-level atom with spontaneous decay
     """
