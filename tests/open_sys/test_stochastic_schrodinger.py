@@ -450,9 +450,9 @@ def test_observable_vs_time_returns_correct_values(qubit_ops):
 
 def test_observable_vs_time_shape(qubit_ops):
     rho_t = [projector(qubit_ops["ket0"]) for _ in range(7)]
-    O = qubit_ops["I"]
+    opt = qubit_ops["I"]
 
-    vals = observable_vs_time(rho_t, O)
+    vals = observable_vs_time(rho_t, opt)
     assert vals.shape == (7,)
     assert np.allclose(vals, 1.0)
 

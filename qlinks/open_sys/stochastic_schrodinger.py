@@ -214,7 +214,7 @@ def sample_lindblad_mcwf(
     return EnsembleResult(times=times, rho_t=rho_t, trajectories=stored)
 
 
-def observable_vs_time(rho_t: Iterable[ArrayC], O: ArrayC) -> ArrayF:
-    O = _as_complex_array(O)
-    vals = [np.real_if_close(np.trace(rho @ O)) for rho in rho_t]
+def observable_vs_time(rho_t: Iterable[ArrayC], opt: ArrayC) -> ArrayF:
+    opt = _as_complex_array(opt)
+    vals = [np.real_if_close(np.trace(rho @ opt)) for rho in rho_t]
     return np.asarray(vals, dtype=np.float64)
