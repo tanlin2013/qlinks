@@ -17,7 +17,7 @@ networkx = "^3.0"
 ortools = "^9.11.0"
 pynauty = "^2.8.6"
 sympy = "^1.9"
-ray = "2.49.2"
+ray = "2.55.0"
 matplotlib = { version = "^3.6.3", optional = true}
 pyvis = { version = "^0.3.0", optional = true}
 igraph = { version = "^1.0.0", optional = true}
