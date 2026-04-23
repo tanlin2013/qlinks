@@ -143,20 +143,26 @@ class TestGaussLaw:
             (np.zeros((2, 2)), None, 18, does_not_raise()),
             ([[1, -1], [-1, 1]], None, 8, does_not_raise()),
             ([[1, 1, 1], [-2, 0, 0], [0, 2, 0]], None, np.nan, pytest.raises(StopIteration)),
-            (np.zeros((4, 4)), None, 2970, does_not_raise()),  # 1.95 secs
-            # (np.zeros((6, 4)), None, 98466, does_not_raise()),  # 1 min 7 secs
+            (np.zeros((4, 4)), None, 2970, does_not_raise()),  # 3.4 secs
+            # (np.zeros((6, 4)), None, 98466, does_not_raise()),  # 2 min 8 secs
             (GaussLaw.staggered_charge_distri(4, 4), None, 272, does_not_raise()),
-            (np.zeros((4, 4)), (0, 0), 990, does_not_raise()),  # 1.2 secs
-            # (np.zeros((6, 4)), (0, 0), 32810, does_not_raise()),  # 45 secs
+            (np.zeros((4, 4)), (0, 0), 990, does_not_raise()),  # 1.64 secs
+            # (np.zeros((6, 4)), (0, 0), 32810, does_not_raise()),  # 1 min 8 secs
             (GaussLaw.staggered_charge_distri(4, 4), (0, 0), 132, does_not_raise()),
-            # (GaussLaw.staggered_charge_distri(6, 4), (0, 0), 1456, does_not_raise()),  # 3 secs
+            # (GaussLaw.staggered_charge_distri(6, 4), (0, 0), 1456, does_not_raise()),  # 3.8 secs
+            # (GaussLaw.random_charge_distri(4, 4), (0, 0), 1000, does_not_raise()),
         ],
     )
     def test_multi_solutions(self, charge_distri, flux_sector, n_expected_solution, expectation):
         gauss_law = GaussLaw(charge_distri, flux_sector)
         dfs = DeepFirstSearch(gauss_law, max_steps=np.iinfo(np.int32).max)
         with expectation:
+            # from cProfile import Profile
+            # from pstats import SortKey, Stats
+            #
+            # with Profile() as profile:
             filled_gauss_laws = dfs.solve(n_solution=n_expected_solution + 1, progress=False)
+            #     Stats(profile).strip_dirs().sort_stats(SortKey.TIME).print_stats()
             assert all(isinstance(s, GaussLaw) for s in filled_gauss_laws)
             assert len(filled_gauss_laws) == n_expected_solution
             assert dfs.frontier_is_empty
