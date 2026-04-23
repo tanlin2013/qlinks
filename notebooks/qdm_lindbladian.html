@@ -331,177 +331,27 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <div class="nbinput nblast docutils container">
+  <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>import igraph
-import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
-import networkx as nx
-import numpy as np
-import pandas as pd
-import pynauty
-import scipy.sparse as sp
-from itertools import product
-from scipy.sparse.linalg import expm_multiply
-from sympy.combinatorics import Permutation, PermutationGroup
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">igraph</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pynauty</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">astuple</span>
 
-from qlinks.symmetry.gauss_law import GaussLaw
-from qlinks.lattice.component import Site
-from qlinks.lattice.square_lattice import SquareLattice, Plaquette
-from qlinks.symmetry.automorphism import Automorphism
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.symmetry.gauss_law</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussLaw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">Site</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice.square_lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareLattice</span><span class="p">,</span> <span class="n">Plaquette</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.symmetry.automorphism</span><span class="w"> </span><span class="kn">import</span> <span class="n">Automorphism</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_sys.lindbladian</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 
-from utils import setup_igraph, setup_model
+<span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_igraph</span><span class="p">,</span> <span class="n">setup_model</span>
 
-np.set_printoptions(threshold=np.inf)
-pd.set_option(&quot;display.max_rows&quot;, None)
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>def ham0(coup_rk):
-    _lattice = SquareLattice(4, 4)
-    _gauss_law = GaussLaw.from_staggered_charge_distri(4, 4, flux_sector=(0, 0))
-    _basis = _gauss_law.solve()
-
-    _kinetic_term = sp.csr_array((_basis.n_states, _basis.n_states), dtype=float)
-    _potential_term = sp.csr_array((_basis.n_states, _basis.n_states), dtype=float)
-    _hamiltonian = sp.csr_array((_basis.n_states, _basis.n_states), dtype=float)
-
-
-    # for i, corner_site in enumerate([(0, 1), (0, 3), (2, 0), (2, 2)]):
-    #     plaquette = Plaquette(_lattice, Site(*corner_site))
-    #     flipper, flip_counter = plaquette[_basis], (plaquette**2)[_basis]
-    #     _kinetic_term += flipper
-    #     _potential_term += flip_counter
-    #     _hamiltonian += (
-    #         -1 * flipper + coup_rk * (flip_counter - 4 * sp.identity(_basis.n_states))  # type: ignore[index]
-    #     )
-
-    plaquette_ops = {}
-    plaquette_sq_ops = {}
-
-    for corner_site in [(0, 1), (0, 3), (2, 0), (2, 2)]:
-        plaquette = Plaquette(_lattice, Site(*corner_site))
-        plaquette_ops[corner_site] = plaquette[_basis]           # P_(x,y)
-        plaquette_sq_ops[corner_site] = (plaquette**2)[_basis]   # P_(x,y)^2
-
-    # potential term stays the same: sum of P^2
-    _potential_term = sum(plaquette_sq_ops.values())
-
-    # kinetic term becomes:
-    # P^2_(0,1) @ P_(0,3) + P_(0,1) @ P^2_(0,3)
-    # + P^2_(2,0) @ P_(2,2) + P_(2,0) @ P^2_(2,2)
-    _kinetic_term = (
-        plaquette_sq_ops[(0, 1)] @ plaquette_ops[(0, 3)]
-        + plaquette_ops[(0, 1)] @ plaquette_sq_ops[(0, 3)]
-        + plaquette_sq_ops[(2, 0)] @ plaquette_ops[(2, 2)]
-        + plaquette_ops[(2, 0)] @ plaquette_sq_ops[(2, 2)]
-    )
-
-    _hamiltonian = (
-        -1 * _kinetic_term
-        + coup_rk * (_potential_term - 4 * sp.identity(_basis.n_states))
-    )
-
-    return _basis, _hamiltonian, _kinetic_term, _potential_term
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>coup_rk = -0.7
-basis, hamiltonian, kinetic_term, potential_term = ham0(coup_rk)
-
-evals, evecs = np.linalg.eigh(hamiltonian.toarray())
-
-plt.matshow(evecs)
-plt.colorbar()
-</pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-2026-03-31 14:23:22 [constraint_programming.py] INFO: CpSolverResponse summary:
-status: OPTIMAL
-objective: 0
-best_bound: 0
-integers: 32
-booleans: 32
-conflicts: 53
-branches: 2052
-propagations: 9779
-integer_propagations: 11237
-restarts: 672
-lp_iterations: 746
-walltime: 0.021322
-usertime: 0.021322
-deterministic_time: 0.00518449
-gap_integral: 0
-solution_fingerprint: 0x932947a4f9f63e5f
-
-2026-03-31 14:23:22 [constraint_programming.py] INFO: Found 132 optimal solutions.
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;matplotlib.colorbar.Colorbar at 0x1221a1b50&gt;
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_qdm_lindbladian_2_2.png" src="../_images/notebooks_qdm_lindbladian_2_2.png" />
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>plt.plot(evals, linestyle=&quot;--&quot;, marker=&quot;o&quot;)
-plt.grid()
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_qdm_lindbladian_3_0.png" src="../_images/notebooks_qdm_lindbladian_3_0.png" />
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>aut = Automorphism(-kinetic_term)
-aut.joint_partition.keys()
-
-g = nx.from_scipy_sparse_array(-kinetic_term)
-ig = igraph.Graph.from_networkx(g)
-
-ntg = pynauty.Graph(
-    ig.vcount(),
-    directed=False,
-    adjacency_dict=nx.to_dict_of_lists(g),
-)
-aut_gp = pynauty.autgrp(ntg)[0]
-
-# perm_gp = PermutationGroup([Permutation(p) for p in aut_gp])
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">&quot;display.max_rows&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -511,248 +361,79 @@ aut_gp = pynauty.autgrp(ntg)[0]
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AmbiguousSolution</span>                         Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[32]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> aut = <span class="ansi-yellow-bg">Automorphism</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">-</span><span class="ansi-yellow-bg">kinetic_term</span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-fg">      2</span> aut.joint_partition.keys()
-<span class="ansi-green-fg">      4</span> g = nx.from_scipy_sparse_array(-kinetic_term)
+<span class="ansi-red-fg">ModuleNotFoundError</span>                       Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[1]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">igraph</span>
+<span class="ansi-green-fg">      2</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">matplotlib</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">pyplot</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">as</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">plt</span>
+<span class="ansi-green-fg">      3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">networkx</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">as</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">nx</span>
 
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">&lt;string&gt;:4</span>, in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, adj_mat)</span>
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">~/projects/qlinks/qlinks/symmetry/automorphism.py:43</span>, in <span class="ansi-cyan-fg">Automorphism.__post_init__</span><span class="ansi-blue-fg">(self)</span>
-<span class="ansi-green-fg">     38</span> <span class="ansi-bold" style="color: rgb(0,135,0)">def</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-fg">__post_init__</span>(<span style="color: rgb(0,135,0)">self</span>):
-<span class="ansi-green-fg">     39</span>     <span style="color: rgb(0,135,0)">self</span>._graph = nx.from_numpy_array(<span style="color: rgb(0,135,0)">self</span>.adj_mat)
-<span class="ansi-green-fg">     40</span>     <span style="color: rgb(0,135,0)">self</span>._df = pd.DataFrame(
-<span class="ansi-green-fg">     41</span>         {
-<span class="ansi-green-fg">     42</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">degree</span><span class="ansi-yellow-fg">&#34;</span>: <span style="color: rgb(0,135,0)">list</span>(<span style="color: rgb(0,135,0)">self</span>.degree_series.values()),
-<span class="ansi-green-fg">---&gt; </span><span class="ansi-green-fg">43</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">bipartition</span><span class="ansi-yellow-fg">&#34;</span>: <span style="color: rgb(0,135,0)">list</span>(<span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">bipartition_series</span>.values()),
-<span class="ansi-green-fg">     44</span>         }
-<span class="ansi-green-fg">     45</span>     )
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">~/projects/qlinks/qlinks/symmetry/automorphism.py:84</span>, in <span class="ansi-cyan-fg">Automorphism.bipartition_series</span><span class="ansi-blue-fg">(self)</span>
-<span class="ansi-green-fg">     82</span> <span style="color: rgb(175,0,255)">@property</span>
-<span class="ansi-green-fg">     83</span> <span class="ansi-bold" style="color: rgb(0,135,0)">def</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-fg">bipartition_series</span>(<span style="color: rgb(0,135,0)">self</span>) -&gt; Dict:
-<span class="ansi-green-fg">---&gt; </span><span class="ansi-green-fg">84</span>     top_nodes, bottom_nodes = <span class="ansi-yellow-bg">nx</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">bipartite</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">sets</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">_graph</span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-fg">     85</span>     bipartition_dict = {node: <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">A</span><span class="ansi-yellow-fg">&#34;</span> <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> node <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> top_nodes}
-<span class="ansi-green-fg">     86</span>     bipartition_dict.update({node: <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">B</span><span class="ansi-yellow-fg">&#34;</span> <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> node <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> bottom_nodes})
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">&lt;class &#39;networkx.utils.decorators.argmap&#39;&gt; compilation 20:3</span>, in <span class="ansi-cyan-fg">argmap_sets_17</span><span class="ansi-blue-fg">(G, top_nodes, backend, **backend_kwargs)</span>
-<span class="ansi-green-fg">      1</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">bz2</span>
-<span class="ansi-green-fg">      2</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">collections</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">gzip</span>
-<span class="ansi-green-fg">      4</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">inspect</span>
-<span class="ansi-green-fg">      5</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">itertools</span>
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">~/projects/qlinks/.venv/lib/python3.11/site-packages/networkx/utils/backends.py:551</span>, in <span class="ansi-cyan-fg">_dispatchable._call_if_no_backends_installed</span><span class="ansi-blue-fg">(self, backend, *args, **kwargs)</span>
-<span class="ansi-green-fg">    545</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">networkx</span><span class="ansi-yellow-fg">&#34;</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> <span style="color: rgb(0,135,0)">self</span>.backends:
-<span class="ansi-green-fg">    546</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">NotImplementedError</span>(
-<span class="ansi-green-fg">    547</span>         <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span><span style="color: rgb(0,135,0)">self</span>.name<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg"> is not implemented by </span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">networkx</span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg"> backend. </span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    548</span>         <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">This function is included in NetworkX as an API to dispatch to </span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    549</span>         <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">other backends.</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    550</span>     )
-<span class="ansi-green-fg">--&gt; </span><span class="ansi-green-fg">551</span> <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> <span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">orig_func</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">*</span><span class="ansi-yellow-bg">args</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">*</span><span class="ansi-yellow-bg">*</span><span class="ansi-yellow-bg">kwargs</span><span class="ansi-yellow-bg">)</span>
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">~/projects/qlinks/.venv/lib/python3.11/site-packages/networkx/algorithms/bipartite/basic.py:218</span>, in <span class="ansi-cyan-fg">sets</span><span class="ansi-blue-fg">(G, top_nodes)</span>
-<span class="ansi-green-fg">    216</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> is_connected(G):
-<span class="ansi-green-fg">    217</span>     msg = <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">Disconnected graph: Ambiguous solution for bipartite sets.</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">--&gt; </span><span class="ansi-green-fg">218</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> nx.AmbiguousSolution(msg)
-<span class="ansi-green-fg">    219</span> c = color(G)
-<span class="ansi-green-fg">    220</span> X = {n <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> n, is_top <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> c.items() <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> is_top}
-
-<span class="ansi-red-fg">AmbiguousSolution</span>: Disconnected graph: Ambiguous solution for bipartite sets.
+<span class="ansi-red-fg">ModuleNotFoundError</span>: No module named &#39;igraph&#39;
 </pre></div></div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>g = nx.from_scipy_sparse_array(-kinetic_term)
-
-# highlight = list(aut.degree_partition.values())
-# highlight = perm_gp.orbits()
-# highlight = list(nx.bipartite.sets(g))
-highlight = []
-
-# highlight_color = list(mcolors.TABLEAU_COLORS.values())
-# highlight_color = list(mcolors.CSS4_COLORS.values())
-# cmap = plt.get_cmap(&#39;Set3&#39;)
-# highlight_color = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]
-# cmap = plt.get_cmap(&#39;Set2&#39;)
-# highlight_color += [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]
-# highlight_color *= 2000
-highlight_color = [
-#     &quot;dimgray&quot;,
-#     &quot;whitesmoke&quot;,
-    # &quot;deepskyblue&quot;,
-    # &quot;yellowgreen&quot;,
-    # &quot;aqua&quot;,
-    # &quot;pink&quot;,
-    # &quot;tomato&quot;,
-    # &quot;royalblue&quot;,
-    # &quot;blueviolet&quot;,
-    # &quot;cornflowerblue&quot;,
-    # &quot;limegreen&quot;,
-]
-
-ig = setup_igraph(g, highlight, highlight_color)
-
-# degree = np.array(list(dict(g.degree).values()))
-# (bipartite, types) = ig.is_bipartite(return_types=True)
-# nodes = [int(n) for n in list(sub_sub_ig.vs[&quot;label&quot;])]
-# outer_boundary = list(nx.node_boundary(g, nodes))
-# sub_ig = ig.induced_subgraph(np.append(nodes, outer_boundary))
-
-# sub_ig = ig.induced_subgraph(np.where(degree == 12)[0])
-# sub_ig = ig.induced_subgraph(aut.type_1_scars((8, &#39;B&#39;))[0].node_idx)
-# fig, ax = plt.subplots(figsize=(6, 6), facecolor=&quot;white&quot;)
-igraph.plot(
-    ig,
-    # layout=ig.layout_kamada_kawai(),
-    # layout=ig.layout_reingold_tilford(root=[0, 25, 50, 75]),
-    # layout=ig.layout_bipartite(types=types),
-    vertex_size=18,
-    vertex_label_size=10,
-    # vertex_label_dist=1.5,
-    edge_width=0.6,
-    # edge_color=&quot;darkgray&quot;,
-)
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_qdm_lindbladian_5_0.svg" class="no-scaled-link" src="../_images/notebooks_qdm_lindbladian_5_0.svg" />
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>sub_components = ig.connected_components(mode=&quot;weak&quot;)
-
-for i, c in enumerate(sub_components):
-    mat = nx.to_numpy_array(ig.subgraph(c).to_networkx())
-    if mat.shape[0] &gt; 1:
-        print(i, mat.shape[0], mat.shape[0] - np.linalg.matrix_rank(mat))
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-3 4 2
-4 16 6
-6 4 2
-16 4 2
-17 4 2
-26 4 2
-27 4 2
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>sub_ig = ig.subgraph(sub_components[4])
-igraph.plot(
-    sub_ig,
-    layout=sub_ig.layout_kamada_kawai(),
-    vertex_size=24,
-    vertex_label_size=12,
-    edge_width=0.4,
-    # edge_color=&quot;darkgray&quot;,
-    # target=&quot;qlm_subgraph_4x4_d=8_by_orbits.svg&quot;
-)
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_qdm_lindbladian_7_0.svg" class="no-scaled-link" src="../_images/notebooks_qdm_lindbladian_7_0.svg" />
-</div>
-</div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>evals, evecs = np.linalg.eigh(nx.to_numpy_array(sub_ig.to_networkx()))
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>evals
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>plt.matshow(evecs)
-plt.colorbar()
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span># import numpy as np
-# import scipy.sparse as sp
-from qlinks.lindbladian import *
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">ham0</span><span class="p">(</span><span class="n">coup_rk</span><span class="p">):</span>
+    <span class="n">_lattice</span> <span class="o">=</span> <span class="n">SquareLattice</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">_gauss_law</span> <span class="o">=</span> <span class="n">GaussLaw</span><span class="o">.</span><span class="n">from_staggered_charge_distri</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">flux_sector</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">_basis</span> <span class="o">=</span> <span class="n">_gauss_law</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
 
-# Example: two-level amplitude damping
+    <span class="n">_kinetic_term</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">_basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="n">_basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">_potential_term</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">_basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="n">_basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">_hamiltonian</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">_basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="n">_basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
-d = 2
 
-# Hamiltonian
-H = sp.csc_matrix(np.array([[0.0, 0.0], [0.0, 1.0]], dtype=np.complex128))
+    <span class="c1"># for i, corner_site in enumerate([(0, 1), (0, 3), (2, 0), (2, 2)]):</span>
+    <span class="c1">#     plaquette = Plaquette(_lattice, Site(*corner_site))</span>
+    <span class="c1">#     flipper, flip_counter = plaquette[_basis], (plaquette**2)[_basis]</span>
+    <span class="c1">#     _kinetic_term += flipper</span>
+    <span class="c1">#     _potential_term += flip_counter</span>
+    <span class="c1">#     _hamiltonian += (</span>
+    <span class="c1">#         -1 * flipper + coup_rk * (flip_counter - 4 * sp.identity(_basis.n_states))  # type: ignore[index]</span>
+    <span class="c1">#     )</span>
 
-gamma = 0.3
+    <span class="n">plaquette_ops</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">plaquette_sq_ops</span> <span class="o">=</span> <span class="p">{}</span>
 
-# Jump operator: sqrt(gamma) |0&gt;&lt;1|
-J = sp.csc_matrix(np.sqrt(gamma) * np.array([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128))
-jumps = [J]
+    <span class="k">for</span> <span class="n">corner_site</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]:</span>
+        <span class="n">plaquette</span> <span class="o">=</span> <span class="n">Plaquette</span><span class="p">(</span><span class="n">_lattice</span><span class="p">,</span> <span class="n">Site</span><span class="p">(</span><span class="o">*</span><span class="n">corner_site</span><span class="p">))</span>
+        <span class="n">plaquette_ops</span><span class="p">[</span><span class="n">corner_site</span><span class="p">]</span> <span class="o">=</span> <span class="n">plaquette</span><span class="p">[</span><span class="n">_basis</span><span class="p">]</span>           <span class="c1"># P_(x,y)</span>
+        <span class="n">plaquette_sq_ops</span><span class="p">[</span><span class="n">corner_site</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">plaquette</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="n">_basis</span><span class="p">]</span>   <span class="c1"># P_(x,y)^2</span>
 
-# Initial excited state density matrix
-rho0 = np.array([[0.0, 0.0], [0.0, 1.0]], dtype=np.complex128)
+    <span class="c1"># potential term stays the same: sum of P^2</span>
+    <span class="n">_potential_term</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">plaquette_sq_ops</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
-times = np.linspace(0.0, 60.0, 201)
+    <span class="c1"># kinetic term becomes:</span>
+    <span class="c1"># P^2_(0,1) @ P_(0,3) + P_(0,1) @ P^2_(0,3)</span>
+    <span class="c1"># + P^2_(2,0) @ P_(2,2) + P_(2,0) @ P^2_(2,2)</span>
+    <span class="n">_kinetic_term</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">plaquette_sq_ops</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">@</span> <span class="n">plaquette_ops</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+        <span class="o">+</span> <span class="n">plaquette_ops</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">@</span> <span class="n">plaquette_sq_ops</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+        <span class="o">+</span> <span class="n">plaquette_sq_ops</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">@</span> <span class="n">plaquette_ops</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="o">+</span> <span class="n">plaquette_ops</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">@</span> <span class="n">plaquette_sq_ops</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="p">)</span>
 
-# Build Liouvillian
-Lio = build_liouvillian(H, jumps, fmt=&quot;csc&quot;)
+    <span class="n">_hamiltonian</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">_kinetic_term</span>
+        <span class="o">+</span> <span class="n">coup_rk</span> <span class="o">*</span> <span class="p">(</span><span class="n">_potential_term</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">_basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">))</span>
+    <span class="p">)</span>
 
-# Krylov evolution
-rhos_krylov = evolve_liouvillian_krylov(rho0, Lio, times)
+    <span class="k">return</span> <span class="n">_basis</span><span class="p">,</span> <span class="n">_hamiltonian</span><span class="p">,</span> <span class="n">_kinetic_term</span><span class="p">,</span> <span class="n">_potential_term</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">coup_rk</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.7</span>
+<span class="n">basis</span><span class="p">,</span> <span class="n">hamiltonian</span><span class="p">,</span> <span class="n">kinetic_term</span><span class="p">,</span> <span class="n">potential_term</span> <span class="o">=</span> <span class="n">ham0</span><span class="p">(</span><span class="n">coup_rk</span><span class="p">)</span>
 
-# RK4 in Liouville space
-rhos_rk4 = evolve_liouvillian_rk4(
-    rho0, Lio, times, renormalize_trace=False, enforce_hermiticity=False
-)
+<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
 
-# Example observable: population of |1&gt;
-proj1 = np.array([[0.0, 0.0], [0.0, 1.0]], dtype=np.complex128)
-
-pop1_krylov = [float(np.real(np.trace(rho @ proj1))) for rho in rhos_krylov]
-pop1_rk4 = [float(np.real(np.trace(rho @ proj1))) for rho in rhos_rk4]
-
-print(&quot;Final trace (Krylov):&quot;, trace_of_rho(rhos_krylov[-1]))
-print(&quot;Final trace (RK4):   &quot;, trace_of_rho(rhos_rk4[-1]))
-print(&quot;Final pop |1&gt; Krylov:&quot;, pop1_krylov[-1])
-print(&quot;Final pop |1&gt; RK4:   &quot;, pop1_rk4[-1])
-print(&quot;Final fidelity to ground truth (Krylov):   &quot;, fidelity_pure(np.array([[1], [0]]), rhos_krylov[-1]))
-print(&quot;Final fidelity to ground truth (RK4):   &quot;, fidelity_pure(np.array([[1], [0]]), rhos_rk4[-1]))
+<span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">evecs</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -761,439 +442,688 @@ print(&quot;Final fidelity to ground truth (RK4):   &quot;, fidelity_pure(np.arr
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Final trace (Krylov): (0.9999999999999996+0j)
-Final trace (RK4):    (0.9999999999999993+0j)
-Final pop |1&gt; Krylov: 1.5229979744712722e-08
-Final pop |1&gt; RK4:    1.523014131806121e-08
-Final fidelity to ground truth (Krylov):    0.9999999847700198
-Final fidelity to ground truth (RK4):    0.999999984769858
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[3]</span><span class="ansi-green-fg">, line 2</span>
+<span class="ansi-green-fg">      1</span> coup_rk = -<span class="ansi-green-fg">0.7</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span> basis, hamiltonian, kinetic_term, potential_term = <span class="ansi-yellow-bg">ham0</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">coup_rk</span><span class="ansi-yellow-bg">)</span>
+<span class="ansi-green-fg">      4</span> evals, evecs = np.linalg.eigh(hamiltonian.toarray())
+<span class="ansi-green-fg">      6</span> plt.matshow(evecs)
+
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[2]</span><span class="ansi-green-fg">, line 2</span>, in <span class="ansi-cyan-fg">ham0</span><span class="ansi-blue-fg">(coup_rk)</span>
+<span class="ansi-green-fg">      1</span> <span class="ansi-bold" style="color: rgb(0,135,0)">def</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-fg">ham0</span>(coup_rk):
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span>     _lattice = <span class="ansi-yellow-bg">SquareLattice</span>(<span class="ansi-green-fg">4</span>, <span class="ansi-green-fg">4</span>)
+<span class="ansi-green-fg">      3</span>     _gauss_law = GaussLaw.from_staggered_charge_distri(<span class="ansi-green-fg">4</span>, <span class="ansi-green-fg">4</span>, flux_sector=(<span class="ansi-green-fg">0</span>, <span class="ansi-green-fg">0</span>))
+<span class="ansi-green-fg">      4</span>     _basis = _gauss_law.solve()
+
+<span class="ansi-red-fg">NameError</span>: name &#39;SquareLattice&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[4]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> <span class="ansi-yellow-bg">plt</span>.plot(evals, linestyle=<span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">--</span><span class="ansi-yellow-fg">&#34;</span>, marker=<span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">o</span><span class="ansi-yellow-fg">&#34;</span>)
+<span class="ansi-green-fg">      2</span> plt.grid()
+
+<span class="ansi-red-fg">NameError</span>: name &#39;plt&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">aut</span> <span class="o">=</span> <span class="n">Automorphism</span><span class="p">(</span><span class="o">-</span><span class="n">kinetic_term</span><span class="p">)</span>
+<span class="n">aut</span><span class="o">.</span><span class="n">joint_partition</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_scipy_sparse_array</span><span class="p">(</span><span class="o">-</span><span class="n">kinetic_term</span><span class="p">)</span>
+<span class="n">ig</span> <span class="o">=</span> <span class="n">igraph</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="n">from_networkx</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+<span class="n">ntg</span> <span class="o">=</span> <span class="n">pynauty</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span>
+    <span class="n">ig</span><span class="o">.</span><span class="n">vcount</span><span class="p">(),</span>
+    <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">adjacency_dict</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">to_dict_of_lists</span><span class="p">(</span><span class="n">g</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">aut_gp</span> <span class="o">=</span> <span class="n">pynauty</span><span class="o">.</span><span class="n">autgrp</span><span class="p">(</span><span class="n">ntg</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># perm_gp = PermutationGroup([Permutation(p) for p in aut_gp])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[5]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> aut = <span class="ansi-yellow-bg">Automorphism</span>(-kinetic_term)
+<span class="ansi-green-fg">      2</span> aut.joint_partition.keys()
+<span class="ansi-green-fg">      4</span> g = nx.from_scipy_sparse_array(-kinetic_term)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;Automorphism&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_scipy_sparse_array</span><span class="p">(</span><span class="o">-</span><span class="n">kinetic_term</span><span class="p">)</span>
+
+<span class="c1"># highlight = list(aut.degree_partition.values())</span>
+<span class="c1"># highlight = perm_gp.orbits()</span>
+<span class="c1"># highlight = list(nx.bipartite.sets(g))</span>
+<span class="n">highlight</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># highlight_color = list(mcolors.TABLEAU_COLORS.values())</span>
+<span class="c1"># highlight_color = list(mcolors.CSS4_COLORS.values())</span>
+<span class="c1"># cmap = plt.get_cmap(&#39;Set3&#39;)</span>
+<span class="c1"># highlight_color = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]</span>
+<span class="c1"># cmap = plt.get_cmap(&#39;Set2&#39;)</span>
+<span class="c1"># highlight_color += [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]</span>
+<span class="c1"># highlight_color *= 2000</span>
+<span class="n">highlight_color</span> <span class="o">=</span> <span class="p">[</span>
+<span class="c1">#     &quot;dimgray&quot;,</span>
+<span class="c1">#     &quot;whitesmoke&quot;,</span>
+    <span class="c1"># &quot;deepskyblue&quot;,</span>
+    <span class="c1"># &quot;yellowgreen&quot;,</span>
+    <span class="c1"># &quot;aqua&quot;,</span>
+    <span class="c1"># &quot;pink&quot;,</span>
+    <span class="c1"># &quot;tomato&quot;,</span>
+    <span class="c1"># &quot;royalblue&quot;,</span>
+    <span class="c1"># &quot;blueviolet&quot;,</span>
+    <span class="c1"># &quot;cornflowerblue&quot;,</span>
+    <span class="c1"># &quot;limegreen&quot;,</span>
+<span class="p">]</span>
+
+<span class="n">ig</span> <span class="o">=</span> <span class="n">setup_igraph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">highlight</span><span class="p">,</span> <span class="n">highlight_color</span><span class="p">)</span>
+
+<span class="c1"># degree = np.array(list(dict(g.degree).values()))</span>
+<span class="c1"># (bipartite, types) = ig.is_bipartite(return_types=True)</span>
+<span class="c1"># nodes = [int(n) for n in list(sub_sub_ig.vs[&quot;label&quot;])]</span>
+<span class="c1"># outer_boundary = list(nx.node_boundary(g, nodes))</span>
+<span class="c1"># sub_ig = ig.induced_subgraph(np.append(nodes, outer_boundary))</span>
+
+<span class="c1"># sub_ig = ig.induced_subgraph(np.where(degree == 12)[0])</span>
+<span class="c1"># sub_ig = ig.induced_subgraph(aut.type_1_scars((8, &#39;B&#39;))[0].node_idx)</span>
+<span class="c1"># fig, ax = plt.subplots(figsize=(6, 6), facecolor=&quot;white&quot;)</span>
+<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ig</span><span class="p">,</span>
+    <span class="c1"># layout=ig.layout_kamada_kawai(),</span>
+    <span class="c1"># layout=ig.layout_reingold_tilford(root=[0, 25, 50, 75]),</span>
+    <span class="c1"># layout=ig.layout_bipartite(types=types),</span>
+    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="c1"># vertex_label_dist=1.5,</span>
+    <span class="n">edge_width</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+    <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[6]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> g = <span class="ansi-yellow-bg">nx</span>.from_scipy_sparse_array(-kinetic_term)
+<span class="ansi-green-fg">      3</span> <span style="color: rgb(95,135,135)"># highlight = list(aut.degree_partition.values())</span>
+<span class="ansi-green-fg">      4</span> <span style="color: rgb(95,135,135)"># highlight = perm_gp.orbits()</span>
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(95,135,135)"># highlight = list(nx.bipartite.sets(g))</span>
+<span class="ansi-green-fg">      6</span> highlight = []
+
+<span class="ansi-red-fg">NameError</span>: name &#39;nx&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sub_components</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;weak&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sub_components</span><span class="p">):</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">ig</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">to_networkx</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">mat</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[7]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> sub_components = <span class="ansi-yellow-bg">ig</span>.connected_components(mode=<span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">weak</span><span class="ansi-yellow-fg">&#34;</span>)
+<span class="ansi-green-fg">      3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> i, c <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> <span style="color: rgb(0,135,0)">enumerate</span>(sub_components):
+<span class="ansi-green-fg">      4</span>     mat = nx.to_numpy_array(ig.subgraph(c).to_networkx())
+
+<span class="ansi-red-fg">NameError</span>: name &#39;ig&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sub_ig</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">sub_components</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+<span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">sub_ig</span><span class="p">,</span>
+    <span class="n">layout</span><span class="o">=</span><span class="n">sub_ig</span><span class="o">.</span><span class="n">layout_kamada_kawai</span><span class="p">(),</span>
+    <span class="n">vertex_size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+    <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">edge_width</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+    <span class="c1"># edge_color=&quot;darkgray&quot;,</span>
+    <span class="c1"># target=&quot;qlm_subgraph_4x4_d=8_by_orbits.svg&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[8]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> sub_ig = <span class="ansi-yellow-bg">ig</span>.subgraph(sub_components[<span class="ansi-green-fg">4</span>])
+<span class="ansi-green-fg">      2</span> igraph.plot(
+<span class="ansi-green-fg">      3</span>     sub_ig,
+<span class="ansi-green-fg">      4</span>     layout=sub_ig.layout_kamada_kawai(),
+<span class="ansi-green-fg">   (...)</span><span class="ansi-green-fg">      9</span>     <span style="color: rgb(95,135,135)"># target=&#34;qlm_subgraph_4x4_d=8_by_orbits.svg&#34;</span>
+<span class="ansi-green-fg">     10</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;ig&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">sub_ig</span><span class="o">.</span><span class="n">to_networkx</span><span class="p">()))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[9]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> evals, evecs = <span class="ansi-yellow-bg">np</span>.linalg.eigh(nx.to_numpy_array(sub_ig.to_networkx()))
+
+<span class="ansi-red-fg">NameError</span>: name &#39;np&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">evals</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[10]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> <span class="ansi-yellow-bg">evals</span>
+
+<span class="ansi-red-fg">NameError</span>: name &#39;evals&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">evecs</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[11]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> <span class="ansi-yellow-bg">plt</span>.matshow(evecs)
+<span class="ansi-green-fg">      2</span> plt.colorbar()
+
+<span class="ansi-red-fg">NameError</span>: name &#39;plt&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example: two-level amplitude damping</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># Hamiltonian</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">))</span>
+
+<span class="n">gamma</span> <span class="o">=</span> <span class="mf">0.3</span>
+
+<span class="c1"># Jump operator: sqrt(gamma) |0&gt;&lt;1|</span>
+<span class="n">J</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">))</span>
+<span class="n">jumps</span> <span class="o">=</span> <span class="p">[</span><span class="n">J</span><span class="p">]</span>
+
+<span class="c1"># Initial excited state density matrix</span>
+<span class="n">rho0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+<span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">,</span> <span class="mi">201</span><span class="p">)</span>
+
+<span class="c1"># Build Liouvillian</span>
+<span class="n">Lio</span> <span class="o">=</span> <span class="n">build_liouvillian</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">jumps</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">)</span>
+
+<span class="c1"># Krylov evolution</span>
+<span class="n">rhos_krylov</span> <span class="o">=</span> <span class="n">evolve_liouvillian_krylov</span><span class="p">(</span><span class="n">rho0</span><span class="p">,</span> <span class="n">Lio</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+
+<span class="c1"># RK4 in Liouville space</span>
+<span class="n">rhos_rk4</span> <span class="o">=</span> <span class="n">evolve_liouvillian_rk4</span><span class="p">(</span>
+    <span class="n">rho0</span><span class="p">,</span> <span class="n">Lio</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">renormalize_trace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enforce_hermiticity</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="c1"># Example observable: population of |1&gt;</span>
+<span class="n">proj1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+<span class="n">pop1_krylov</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">rho</span> <span class="o">@</span> <span class="n">proj1</span><span class="p">)))</span> <span class="k">for</span> <span class="n">rho</span> <span class="ow">in</span> <span class="n">rhos_krylov</span><span class="p">]</span>
+<span class="n">pop1_rk4</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">rho</span> <span class="o">@</span> <span class="n">proj1</span><span class="p">)))</span> <span class="k">for</span> <span class="n">rho</span> <span class="ow">in</span> <span class="n">rhos_rk4</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final trace (Krylov):&quot;</span><span class="p">,</span> <span class="n">trace_of_rho</span><span class="p">(</span><span class="n">rhos_krylov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final trace (RK4):   &quot;</span><span class="p">,</span> <span class="n">trace_of_rho</span><span class="p">(</span><span class="n">rhos_rk4</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final pop |1&gt; Krylov:&quot;</span><span class="p">,</span> <span class="n">pop1_krylov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final pop |1&gt; RK4:   &quot;</span><span class="p">,</span> <span class="n">pop1_rk4</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final fidelity to ground truth (Krylov):   &quot;</span><span class="p">,</span> <span class="n">fidelity_pure</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]),</span> <span class="n">rhos_krylov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final fidelity to ground truth (RK4):   &quot;</span><span class="p">,</span> <span class="n">fidelity_pure</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]),</span> <span class="n">rhos_rk4</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[12]</span><span class="ansi-green-fg">, line 6</span>
+<span class="ansi-green-fg">      3</span> d = <span class="ansi-green-fg">2</span>
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(95,135,135)"># Hamiltonian</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">6</span> H = <span class="ansi-yellow-bg">sp</span>.csc_matrix(np.array([[<span class="ansi-green-fg">0.0</span>, <span class="ansi-green-fg">0.0</span>], [<span class="ansi-green-fg">0.0</span>, <span class="ansi-green-fg">1.0</span>]], dtype=np.complex128))
+<span class="ansi-green-fg">      8</span> gamma = <span class="ansi-green-fg">0.3</span>
+<span class="ansi-green-fg">     10</span> <span style="color: rgb(95,135,135)"># Jump operator: sqrt(gamma) |0&gt;&lt;1|</span>
+
+<span class="ansi-red-fg">NameError</span>: name &#39;sp&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">prepare_ticqmbs_state</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">one_based</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepare the sparse state vector</span>
+
+<span class="sd">        |psi_tICQMBS&gt; = 1/2 (|5&gt; - |15&gt; - |74&gt; + |77&gt;)</span>
+
+<span class="sd">    and its density matrix rho = |psi&gt;&lt;psi|.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Total Hilbert-space dimension.</span>
+<span class="sd">    one_based : bool, optional</span>
+<span class="sd">        If True, interpret |5&gt;, |15&gt;, |74&gt;, |77&gt; as physics-style basis labels</span>
+<span class="sd">        and convert them to Python&#39;s 0-based indices.</span>
+<span class="sd">        If False, use them directly as 0-based indices.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    psi : scipy.sparse.csr_matrix</span>
+<span class="sd">        Sparse column vector of shape (n, 1).</span>
+<span class="sd">    rho : scipy.sparse.csr_matrix</span>
+<span class="sd">        Sparse density matrix of shape (n, n).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">74</span><span class="p">,</span> <span class="mi">77</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">one_based</span> <span class="k">else</span> <span class="n">labels</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">indices</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">indices</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;State labels </span><span class="si">{</span><span class="n">labels</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}</span><span class="s2"> do not fit in Hilbert space dimension n=</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Sparse column vector |psi&gt;</span>
+    <span class="n">psi</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Sparse density matrix rho = |psi&gt;&lt;psi|</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">psi</span> <span class="o">@</span> <span class="n">psi</span><span class="o">.</span><span class="n">getH</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">psi</span><span class="p">,</span> <span class="n">rho</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">random_mixed_density</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">data_rvs</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="c1"># real and imaginary parts in [-1, 1]</span>
+        <span class="k">return</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">random</span><span class="p">(</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span>
+        <span class="n">density</span><span class="o">=</span><span class="n">density</span><span class="p">,</span>
+        <span class="n">data_rvs</span><span class="o">=</span><span class="n">data_rvs</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">A</span> <span class="o">@</span> <span class="n">A</span><span class="o">.</span><span class="n">getH</span><span class="p">()</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">/</span> <span class="n">rho</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">rho</span>
+
+
+<span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="n">basis</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">setup_model</span><span class="p">(</span>
+    <span class="s2">&quot;qdm&quot;</span><span class="p">,</span> <span class="n">lattice_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">coup_j</span><span class="o">=</span><span class="n">coup_j</span><span class="p">,</span> <span class="n">coup_rk</span><span class="o">=</span><span class="n">coup_rk</span>
+<span class="p">)</span>
+
+<span class="n">plaquette_ops</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">plaquette_sq_ops</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">corner_site</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="p">:</span>
+    <span class="n">plaquette</span> <span class="o">=</span> <span class="n">Plaquette</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="n">Site</span><span class="p">(</span><span class="o">*</span><span class="n">corner_site</span><span class="p">))</span>
+    <span class="n">plaquette_ops</span><span class="p">[</span><span class="n">astuple</span><span class="p">(</span><span class="n">corner_site</span><span class="p">)]</span> <span class="o">=</span> <span class="n">plaquette</span><span class="p">[</span><span class="n">basis</span><span class="p">]</span>           <span class="c1"># P_(x,y)</span>
+    <span class="n">plaquette_sq_ops</span><span class="p">[</span><span class="n">astuple</span><span class="p">(</span><span class="n">corner_site</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">plaquette</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="n">basis</span><span class="p">]</span>   <span class="c1"># P_(x,y)^2</span>
+
+
+<span class="n">jumps</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">jumps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span> <span class="o">@</span> <span class="p">(</span>
+        <span class="o">-</span><span class="n">plaquette_ops</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="o">+</span> <span class="n">coup_rk</span> <span class="o">*</span> <span class="p">(</span><span class="n">plaquette_sq_ops</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">))</span>
+        <span class="o">-</span> <span class="n">plaquette_ops</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+        <span class="o">+</span> <span class="n">coup_rk</span> <span class="o">*</span> <span class="p">(</span><span class="n">plaquette_sq_ops</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">))</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># jumps.append(</span>
+<span class="c1">#     np.sqrt(gamma) * (plaquette_ops[(0, 3)]) @ model.kinetic_term @ (</span>
+<span class="c1">#         -plaquette_ops[(0, 1)]</span>
+<span class="c1">#         + coup_rk * (plaquette_sq_ops[(0, 1)] - sp.identity(basis.n_states))</span>
+<span class="c1">#         - plaquette_ops[(0, 3)]</span>
+<span class="c1">#         + coup_rk * (plaquette_sq_ops[(0, 3)] - sp.identity(basis.n_states))</span>
+<span class="c1">#     )</span>
+<span class="c1"># )</span>
+<span class="c1"># jumps.append(</span>
+<span class="c1">#     np.sqrt(gamma) * (plaquette_ops[(2, 0)]) @ model.kinetic_term @ (</span>
+<span class="c1">#         -plaquette_ops[(2, 0)]</span>
+<span class="c1">#         + coup_rk * (plaquette_sq_ops[(2, 0)] - sp.identity(basis.n_states))</span>
+<span class="c1">#         - plaquette_ops[(2, 2)]</span>
+<span class="c1">#         + coup_rk * (plaquette_sq_ops[(2, 2)] - sp.identity(basis.n_states))</span>
+<span class="c1">#     )</span>
+<span class="c1"># )</span>
+<span class="n">jumps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">kinetic_term</span> <span class="o">@</span> <span class="p">(</span>
+        <span class="o">-</span><span class="n">plaquette_ops</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="o">+</span> <span class="n">coup_rk</span> <span class="o">*</span> <span class="p">(</span><span class="n">plaquette_sq_ops</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">))</span>
+        <span class="o">-</span> <span class="n">plaquette_ops</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="o">+</span> <span class="n">coup_rk</span> <span class="o">*</span> <span class="p">(</span><span class="n">plaquette_sq_ops</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">))</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># for site_pair in [[(0, 1), (0, 3), (2, 0), (2, 2)]]:</span>
+<span class="c1">#     J = sp.csr_array((basis.n_states, basis.n_states), dtype=np.complex128)</span>
+<span class="c1">#     for i, corner_site in enumerate(site_pair):</span>
+<span class="c1">#         plaquette = Plaquette(model.lattice, Site(*corner_site))</span>
+<span class="c1">#         flipper, flip_counter = plaquette[basis], (plaquette**2)[basis]</span>
+<span class="c1">#         J += -flipper + coup_rk * (flip_counter - sp.identity(basis.n_states))</span>
+<span class="c1">#     # J += coup_rk * (model.potential_term - 4 * sp.identity(basis.n_states))</span>
+<span class="c1">#     jumps.append(np.sqrt(gamma) * J)</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">corner_site</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+    <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+<span class="p">):</span>
+    <span class="n">plaquette</span> <span class="o">=</span> <span class="n">Plaquette</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="n">Site</span><span class="p">(</span><span class="o">*</span><span class="n">corner_site</span><span class="p">))</span>
+    <span class="n">flipper</span><span class="p">,</span> <span class="n">flip_counter</span> <span class="o">=</span> <span class="n">plaquette</span><span class="p">[</span><span class="n">basis</span><span class="p">],</span> <span class="p">(</span><span class="n">plaquette</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="n">basis</span><span class="p">]</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="o">-</span><span class="n">flipper</span> <span class="o">+</span> <span class="n">coup_rk</span> <span class="o">*</span> <span class="n">flip_counter</span>
+    <span class="n">jumps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">J</span><span class="p">)</span>
+
+<span class="c1"># for i, corner_site in enumerate(</span>
+<span class="c1">#     [(0, 1), (0, 3), (2, 0), (2, 2)]</span>
+<span class="c1"># ):</span>
+<span class="c1">#     plaquette = Plaquette(model.lattice, Site(*corner_site))</span>
+<span class="c1">#     flipper, flip_counter = plaquette[basis], (plaquette**2)[basis]</span>
+<span class="c1">#     J = 0.1 * (-flipper + coup_rk * flip_counter)</span>
+<span class="c1">#     jumps.append(np.sqrt(gamma) * J)</span>
+
+
+
+<span class="n">_</span><span class="p">,</span> <span class="n">rho0</span> <span class="o">=</span> <span class="n">prepare_ticqmbs_state</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
+<span class="n">eta</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">rho0</span> <span class="o">=</span> <span class="n">eta</span> <span class="o">*</span> <span class="n">rho0</span><span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eta</span><span class="p">)</span> <span class="o">*</span> <span class="n">random_mixed_density</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mi">201</span><span class="p">)</span>
+
+<span class="c1"># Build Liouvillian</span>
+<span class="n">Lio</span> <span class="o">=</span> <span class="n">build_liouvillian</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">,</span> <span class="n">jumps</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">)</span>
+
+<span class="c1"># Krylov evolution</span>
+<span class="n">rhos_krylov</span> <span class="o">=</span> <span class="n">evolve_liouvillian_krylov</span><span class="p">(</span><span class="n">rho0</span><span class="o">.</span><span class="n">toarray</span><span class="p">(),</span> <span class="n">Lio</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+
+<span class="c1"># RK4 in Liouville space</span>
+<span class="c1"># rhos_rk4 = evolve_liouvillian_rk4(</span>
+<span class="c1">#     rho0.toarray(), Lio, times, renormalize_trace=False, enforce_hermiticity=False</span>
+<span class="c1"># )</span>
+<span class="c1"># rhos_rk4 = evolve_matrix_rk4(rho0, model.hamiltonian, jumps, times)</span>
+
+
+<span class="n">psi0</span><span class="p">,</span> <span class="n">ground_truth_rho0</span> <span class="o">=</span> <span class="n">prepare_ticqmbs_state</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span>
+<span class="n">proj1</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span> <span class="o">-</span> <span class="n">ground_truth_rho0</span>
+<span class="n">pop1_krylov</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">rho</span> <span class="o">@</span> <span class="n">proj1</span><span class="p">)))</span> <span class="k">for</span> <span class="n">rho</span> <span class="ow">in</span> <span class="n">rhos_krylov</span><span class="p">]</span>
+<span class="c1"># pop1_rk4 = [float(np.real(np.trace(rho @ proj1))) for rho in rhos_rk4]</span>
+
+<span class="c1"># they should be nullifier</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Jump_opt @ |ground_truth_QMBS&gt;:  &quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jump</span> <span class="o">@</span> <span class="n">ground_truth_rho0</span><span class="p">)</span> <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;|| Lio @ |final_rho&gt; ||:  &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">Lio</span> <span class="o">@</span> <span class="n">vec</span><span class="p">(</span><span class="n">rhos_krylov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final trace (Krylov):&quot;</span><span class="p">,</span> <span class="n">trace_of_rho</span><span class="p">(</span><span class="n">rhos_krylov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="c1"># print(&quot;Final trace (RK4):   &quot;, trace_of_rho(rhos_rk4[-1]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final pop on other |v_j&gt; (Krylov):   &quot;</span><span class="p">,</span> <span class="n">pop1_krylov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="c1"># print(&quot;Final pop on other |v_j&gt; (RK4):   &quot;, pop1_rk4[-1])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final fidelity to ground truth (Krylov):   &quot;</span><span class="p">,</span> <span class="n">fidelity_pure</span><span class="p">(</span><span class="n">psi0</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">rhos_krylov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[13]</span><span class="ansi-green-fg">, line 67</span>
+<span class="ansi-green-fg">     63</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> rho
+<span class="ansi-green-fg">     66</span> coup_j, coup_rk, gamma = (<span class="ansi-green-fg">1</span>, -<span class="ansi-green-fg">0.7</span>, <span class="ansi-green-fg">1.0</span>)
+<span class="ansi-green-fg">---&gt; </span><span class="ansi-green-fg">67</span> basis, model = <span class="ansi-yellow-bg">setup_model</span>(
+<span class="ansi-green-fg">     68</span>     <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">qdm</span><span class="ansi-yellow-fg">&#34;</span>, lattice_shape=(<span class="ansi-green-fg">4</span>, <span class="ansi-green-fg">4</span>), coup_j=coup_j, coup_rk=coup_rk
+<span class="ansi-green-fg">     69</span> )
+<span class="ansi-green-fg">     71</span> plaquette_ops = {}
+<span class="ansi-green-fg">     72</span> plaquette_sq_ops = {}
+
+<span class="ansi-red-fg">NameError</span>: name &#39;setup_model&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">trace_preservation_residual</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">I_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">I_vec</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span> <span class="o">@</span> <span class="n">L</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+
+<span class="n">trace_preservation_residual</span><span class="p">(</span><span class="n">Lio</span><span class="p">,</span> <span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[14]</span><span class="ansi-green-fg">, line 6</span>
+<span class="ansi-green-fg">      3</span>     v = I_vec.conj() @ L
+<span class="ansi-green-fg">      4</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> np.max(np.abs(v))
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">6</span> trace_preservation_residual(<span class="ansi-yellow-bg">Lio</span>, basis.n_states)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;Lio&#39; is not defined
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>def prepare_ticqmbs_state(n: int, one_based: bool = False):
-    &quot;&quot;&quot;
-    Prepare the sparse state vector
-
-        |psi_tICQMBS&gt; = 1/2 (|5&gt; - |15&gt; - |74&gt; + |77&gt;)
-
-    and its density matrix rho = |psi&gt;&lt;psi|.
-
-    Parameters
-    ----------
-    n : int
-        Total Hilbert-space dimension.
-    one_based : bool, optional
-        If True, interpret |5&gt;, |15&gt;, |74&gt;, |77&gt; as physics-style basis labels
-        and convert them to Python&#39;s 0-based indices.
-        If False, use them directly as 0-based indices.
-
-    Returns
-    -------
-    psi : scipy.sparse.csr_matrix
-        Sparse column vector of shape (n, 1).
-    rho : scipy.sparse.csr_matrix
-        Sparse density matrix of shape (n, n).
-    &quot;&quot;&quot;
-    labels = np.array([5, 15, 74, 77], dtype=int)
-    coeffs = np.array([1, -1, -1, 1], dtype=np.complex128) / 2.0
-
-    indices = labels - 1 if one_based else labels
-
-    if np.any(indices &lt; 0) or np.any(indices &gt;= n):
-        raise ValueError(f&quot;State labels {labels.tolist()} do not fit in Hilbert space dimension n={n}.&quot;)
-
-    # Sparse column vector |psi&gt;
-    psi = sp.csr_matrix(
-        (coeffs, (indices, np.zeros(len(indices), dtype=int))),
-        shape=(n, 1),
-        dtype=np.complex128,
-    )
-
-    # Sparse density matrix rho = |psi&gt;&lt;psi|
-    rho = psi @ psi.getH()
-
-    return psi, rho
-
-def random_mixed_density(n, density=0.25, rng=None):
-    if rng is None:
-        rng = np.random.default_rng()
-
-    A = sp.random(n, n, density=density, rng=rng,
-                  dtype=np.complex128, format=&quot;csr&quot;)
-
-    rho = A @ A.getH()
-    rho = rho / rho.diagonal().sum()
-    return rho
-
-
-coup_j, coup_rk, gamma = (1, -0.7, 4)
-basis, model = setup_model(
-    &quot;qdm&quot;, lattice_shape=(4, 4), coup_j=coup_j, coup_rk=coup_rk
-)
-
-
-jumps = []
-for site_pair in [[(0, 1), (0, 3), (2, 0), (2, 2)]]:
-    J = sp.csr_array((basis.n_states, basis.n_states), dtype=np.complex128)
-    for i, corner_site in enumerate(site_pair):
-        plaquette = Plaquette(model.lattice, Site(*corner_site))
-        flipper, flip_counter = plaquette[basis], (plaquette**2)[basis]
-        J += -flipper + coup_rk * (flip_counter - sp.identity(basis.n_states))
-    # J += coup_rk * (model.potential_term - 4 * sp.identity(basis.n_states))
-    jumps.append(np.sqrt(gamma) * J)
-
-# for i, corner_site in enumerate(
-#     [(0, 0), (0, 2), (2, 1), (2, 3), (1, 0), (1, 1), (1, 2), (1, 3), (3, 0), (3, 1), (3, 2), (3, 3)]
-# ):
-#     plaquette = Plaquette(model.lattice, Site(*corner_site))
-#     flipper, flip_counter = plaquette[basis], (plaquette**2)[basis]
-#     J = -flipper + coup_rk * flip_counter
-#     jumps.append(np.sqrt(gamma) * J)
-
-
-
-_, rho0 = prepare_ticqmbs_state(basis.n_states)
-rng = np.random.default_rng()
-eta = 0.99
-rho0 = eta * rho0+ (1 - eta) * random_mixed_density(basis.n_states, density=0.25)
-times = np.linspace(0.0, 40.0, 201)
-
-# Build Liouvillian
-Lio = build_liouvillian(model.hamiltonian, jumps, fmt=&quot;csr&quot;)
-
-# Krylov evolution
-rhos_krylov = evolve_liouvillian_krylov(rho0.toarray(), Lio, times)
-
-# RK4 in Liouville space
-# rhos_rk4 = evolve_liouvillian_rk4(
-#     rho0.toarray(), Lio, times, renormalize_trace=False, enforce_hermiticity=False
-# )
-# rhos_rk4 = evolve_matrix_rk4(rho0, model.hamiltonian, jumps, times)
-
-
-psi0, ground_truth_rho0 = prepare_ticqmbs_state(basis.n_states)
-proj1 = sp.identity(basis.n_states) - ground_truth_rho0
-pop1_krylov = [float(np.real(np.trace(rho @ proj1))) for rho in rhos_krylov]
-# pop1_rk4 = [float(np.real(np.trace(rho @ proj1))) for rho in rhos_rk4]
-
-# they should be nullifier
-print(&quot;Jump_opt @ |ground_truth_QMBS&gt;:  &quot;, [sp.linalg.norm(jump @ ground_truth_rho0) for jump in jumps])
-print(&quot;|| Lio @ |final_rho&gt; ||:  &quot;, np.linalg.norm(Lio @ vec(rhos_krylov[-1])))
-
-print(&quot;Final trace (Krylov):&quot;, trace_of_rho(rhos_krylov[-1]))
-# print(&quot;Final trace (RK4):   &quot;, trace_of_rho(rhos_rk4[-1]))
-print(&quot;Final pop |v_j&gt; Krylov:   &quot;, pop1_krylov[-1])
-# print(&quot;Final pop |v_j&gt; RK4:   &quot;, pop1_rk4[-1])
-
-print(&quot;Final fidelity to ground truth (Krylov):   &quot;, fidelity_pure(psi0.reshape((-1, 1)), rhos_krylov[-1]))
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rho0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">random</span><span class="p">(</span>
+    <span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span>
+<span class="p">)</span>
+<span class="n">unvec</span><span class="p">(</span><span class="n">Lio</span> <span class="o">@</span> <span class="n">vec</span><span class="p">(</span><span class="n">rho0</span><span class="o">.</span><span class="n">toarray</span><span class="p">()),</span> <span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-2026-03-31 16:10:50 [constraint_programming.py] INFO: CpSolverResponse summary:
-status: OPTIMAL
-objective: 0
-best_bound: 0
-integers: 32
-booleans: 32
-conflicts: 53
-branches: 2052
-propagations: 9779
-integer_propagations: 11237
-restarts: 672
-lp_iterations: 746
-walltime: 0.02414
-usertime: 0.02414
-deterministic_time: 0.00518449
-gap_integral: 0
-solution_fingerprint: 0x932947a4f9f63e5f
-
-2026-03-31 16:10:50 [constraint_programming.py] INFO: Found 132 optimal solutions.
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Jump_opt @ |ground_truth_QMBS&gt;:   [np.float64(0.0)]
-|| Lio @ |final_rho&gt; ||:   5.074483369187065e-05
-Final trace (Krylov): (0.9999999999999512-5.526187549786361e-21j)
-Final pop |v_j&gt; Krylov:    0.009925031415874443
-Final fidelity to ground truth (Krylov):    0.9900749685840767
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>def trace_preservation_residual(L, n):
-    I_vec = np.eye(n, dtype=np.complex128).reshape(-1, order=&quot;F&quot;)
-    v = I_vec.conj() @ L
-    return np.max(np.abs(v))
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[15]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> rho0 = <span class="ansi-yellow-bg">sp</span>.random(
+<span class="ansi-green-fg">      2</span>     basis.n_states, basis.n_states, density=<span class="ansi-green-fg">0.6</span>, rng=rng, dtype=np.complex128, <span style="color: rgb(0,135,0)">format</span>=<span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">csr</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">      3</span> )
+<span class="ansi-green-fg">      4</span> unvec(Lio @ vec(rho0.toarray()), basis.n_states).trace()
 
-trace_preservation_residual(Lio, basis.n_states)
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-np.float64(4.440892098500626e-16)
+<span class="ansi-red-fg">NameError</span>: name &#39;sp&#39; is not defined
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>rho0 = sp.random(
-    basis.n_states, basis.n_states, density=0.6, rng=rng, dtype=np.complex128, format=&quot;csr&quot;
-)
-unvec(Lio @ vec(rho0.toarray()), basis.n_states).trace()
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rho</span> <span class="o">-</span> <span class="n">rho</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="k">for</span> <span class="n">rho</span> <span class="ow">in</span> <span class="n">rhos_krylov</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-np.complex128(5.329070518200751e-15+5.329070518200751e-15j)
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[16]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> [np.linalg.norm(rho - rho.conj().T) <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> rho <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> <span class="ansi-yellow-bg">rhos_krylov</span>]
+
+<span class="ansi-red-fg">NameError</span>: name &#39;rhos_krylov&#39; is not defined
 </pre></div></div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>[np.linalg.norm(rho - rho.conj().T) for rho in rhos_krylov]
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># # L_sparse: scipy sparse matrix</span>
+<span class="c1"># evals = np.linalg.eigvals(Lio.toarray())</span>
+<span class="c1">#</span>
+<span class="c1"># plt.figure(figsize=(6, 6))</span>
+<span class="c1"># plt.scatter(evals.real, evals.imag, s=20)</span>
+<span class="c1"># plt.axhline(0, color=&#39;k&#39;, linewidth=0.8)</span>
+<span class="c1"># plt.axvline(0, color=&#39;k&#39;, linewidth=0.8)</span>
+<span class="c1"># plt.xlabel(r&#39;Re$(\lambda)$&#39;)</span>
+<span class="c1"># plt.ylabel(r&#39;Im$(\lambda)$&#39;)</span>
+<span class="c1"># plt.title(&#39;Liouvillian spectrum&#39;)</span>
+<span class="c1"># plt.tight_layout()</span>
+<span class="c1"># plt.show()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># k = number of eigenvalues you want</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">50</span>
+
+<span class="c1"># which=&#39;LR&#39; means largest real part</span>
+<span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">spla</span><span class="o">.</span><span class="n">eigs</span><span class="p">(</span><span class="n">Lio</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;LR&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">evals</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">evals</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Re$(\lambda)$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Im$(\lambda)$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Partial Liouvillian spectrum (k=</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[np.float64(0.0),
- np.float64(1.8700662346129429e-16),
- np.float64(9.464082451269759e-17),
- np.float64(5.381527918017715e-17),
- np.float64(3.517184105725127e-17),
- np.float64(2.6003262220127886e-17),
- np.float64(2.0709519358909957e-17),
- np.float64(1.7159290592193052e-17),
- np.float64(1.4932428056867877e-17),
- np.float64(1.3703951083878569e-17),
- np.float64(1.2677412881098804e-17),
- np.float64(1.24042532656253e-17),
- np.float64(1.2313937335914738e-17),
- np.float64(1.2152216795321912e-17),
- np.float64(1.1388249197138611e-17),
- np.float64(1.0878406828898714e-17),
- np.float64(1.0270661152149688e-17),
- np.float64(1.0256176232423648e-17),
- np.float64(9.152350407153171e-18),
- np.float64(9.232184344983692e-18),
- np.float64(9.079509696461292e-18),
- np.float64(8.827026768544696e-18),
- np.float64(8.139197869242419e-18),
- np.float64(8.10878013016519e-18),
- np.float64(8.182089542794748e-18),
- np.float64(7.956279700195979e-18),
- np.float64(7.465127208343118e-18),
- np.float64(7.105757297185086e-18),
- np.float64(6.7342565376569195e-18),
- np.float64(7.041402127732305e-18),
- np.float64(6.618515154338618e-18),
- np.float64(7.211584429918776e-18),
- np.float64(6.9027326236932526e-18),
- np.float64(6.680330183648214e-18),
- np.float64(6.779058164929556e-18),
- np.float64(6.439642726899515e-18),
- np.float64(6.296314018054128e-18),
- np.float64(6.771502323061541e-18),
- np.float64(7.1321769601354e-18),
- np.float64(6.7176676649422254e-18),
- np.float64(6.970495567647808e-18),
- np.float64(6.696209013613951e-18),
- np.float64(6.5208803779749915e-18),
- np.float64(6.286291158325978e-18),
- np.float64(6.705194881455592e-18),
- np.float64(6.6618822329283e-18),
- np.float64(6.754508962550138e-18),
- np.float64(6.642868179659604e-18),
- np.float64(6.761370326102275e-18),
- np.float64(6.950912571432017e-18),
- np.float64(6.6820862554159425e-18),
- np.float64(6.763469742399543e-18),
- np.float64(7.455087474036716e-18),
- np.float64(7.12359788989981e-18),
- np.float64(7.143431736766218e-18),
- np.float64(6.865614429398233e-18),
- np.float64(6.6463273624518054e-18),
- np.float64(6.00806729532527e-18),
- np.float64(6.694428661643734e-18),
- np.float64(6.291173931929593e-18),
- np.float64(6.2596459641187935e-18),
- np.float64(6.221700665858754e-18),
- np.float64(6.405358034971366e-18),
- np.float64(6.2702022805420365e-18),
- np.float64(6.538026100118608e-18),
- np.float64(6.520606284227249e-18),
- np.float64(6.703823793800273e-18),
- np.float64(6.5731054826030915e-18),
- np.float64(6.372680739792064e-18),
- np.float64(6.6310376432068665e-18),
- np.float64(6.75027238056373e-18),
- np.float64(6.881966711548364e-18),
- np.float64(7.41330515207684e-18),
- np.float64(7.221835914231362e-18),
- np.float64(6.890162725652348e-18),
- np.float64(6.77261906295634e-18),
- np.float64(6.602095571863522e-18),
- np.float64(7.235265021833233e-18),
- np.float64(7.185086134683764e-18),
- np.float64(6.920756470484733e-18),
- np.float64(6.4991983062869256e-18),
- np.float64(6.8733284682607695e-18),
- np.float64(7.004044909858304e-18),
- np.float64(6.81029679395728e-18),
- np.float64(7.282448936761175e-18),
- np.float64(6.93758711556502e-18),
- np.float64(6.960372316140897e-18),
- np.float64(6.821131530069473e-18),
- np.float64(6.299204907688933e-18),
- np.float64(6.2736670261665485e-18),
- np.float64(6.547527173048213e-18),
- np.float64(6.113082912815575e-18),
- np.float64(6.358652115321696e-18),
- np.float64(6.6374798622937965e-18),
- np.float64(6.651458291715928e-18),
- np.float64(6.542187107002702e-18),
- np.float64(6.8333684658709715e-18),
- np.float64(6.639865383097778e-18),
- np.float64(6.5705024106575244e-18),
- np.float64(6.596534132743763e-18),
- np.float64(6.2986725983571265e-18),
- np.float64(6.7882694352574434e-18),
- np.float64(7.019624841199603e-18),
- np.float64(6.897095012469385e-18),
- np.float64(7.026955035813464e-18),
- np.float64(6.915816939894022e-18),
- np.float64(7.459381142772572e-18),
- np.float64(7.041702318637714e-18),
- np.float64(6.9918624648647e-18),
- np.float64(7.163776183838837e-18),
- np.float64(7.148431390794482e-18),
- np.float64(6.926435543809429e-18),
- np.float64(6.862901342809202e-18),
- np.float64(6.963072307101747e-18),
- np.float64(6.707030118732473e-18),
- np.float64(6.79511826796951e-18),
- np.float64(6.520618316204441e-18),
- np.float64(6.380824365195788e-18),
- np.float64(6.1867422726005916e-18),
- np.float64(6.58841103724439e-18),
- np.float64(6.960654295242322e-18),
- np.float64(6.39347796649968e-18),
- np.float64(6.585619334940595e-18),
- np.float64(6.7844033015740846e-18),
- np.float64(6.965024673785117e-18),
- np.float64(6.577748639472739e-18),
- np.float64(6.964544485010539e-18),
- np.float64(6.773982950062909e-18),
- np.float64(6.7184059337744704e-18),
- np.float64(6.445418084003313e-18),
- np.float64(7.065350330070384e-18),
- np.float64(6.976510685312606e-18),
- np.float64(6.48213426991216e-18),
- np.float64(6.3895463379838684e-18),
- np.float64(6.228819819752663e-18),
- np.float64(6.6386268032455326e-18),
- np.float64(6.5993775114766365e-18),
- np.float64(6.691536451580623e-18),
- np.float64(6.837102290443253e-18),
- np.float64(6.491388920837814e-18),
- np.float64(6.8717238946606084e-18),
- np.float64(6.571277720543568e-18),
- np.float64(6.526006185211172e-18),
- np.float64(6.7306534323179826e-18),
- np.float64(6.809590507426122e-18),
- np.float64(6.991228713084747e-18),
- np.float64(7.148299678563248e-18),
- np.float64(6.938185460219853e-18),
- np.float64(6.512341214728988e-18),
- np.float64(6.765333412967267e-18),
- np.float64(6.568021831345071e-18),
- np.float64(6.712988014773928e-18),
- np.float64(6.56047047252257e-18),
- np.float64(7.000649332733683e-18),
- np.float64(7.025264020104695e-18),
- np.float64(7.185687287406939e-18),
- np.float64(7.073628042191981e-18),
- np.float64(6.766933321913059e-18),
- np.float64(6.557558284893718e-18),
- np.float64(6.580294948197903e-18),
- np.float64(6.171721401444183e-18),
- np.float64(6.215848324946621e-18),
- np.float64(6.4959391777046774e-18),
- np.float64(6.649797975026788e-18),
- np.float64(6.84421962228399e-18),
- np.float64(6.754940283889151e-18),
- np.float64(6.4553258251609345e-18),
- np.float64(6.511356277780914e-18),
- np.float64(6.302701953924319e-18),
- np.float64(6.361965726553046e-18),
- np.float64(6.6702406970262005e-18),
- np.float64(6.267983548670999e-18),
- np.float64(6.279251630577892e-18),
- np.float64(6.289088371271013e-18),
- np.float64(6.498940571496117e-18),
- np.float64(6.1985045783605095e-18),
- np.float64(6.654620266941832e-18),
- np.float64(6.73081183622431e-18),
- np.float64(6.754991157075769e-18),
- np.float64(6.82126293743472e-18),
- np.float64(6.342934056577646e-18),
- np.float64(6.299917626233969e-18),
- np.float64(6.203822113479744e-18),
- np.float64(6.339712853689966e-18),
- np.float64(6.570565663287732e-18),
- np.float64(6.7455533902210635e-18),
- np.float64(6.941194411536214e-18),
- np.float64(6.51312460269547e-18),
- np.float64(6.4995020518329106e-18),
- np.float64(6.6770457517227e-18),
- np.float64(6.237247522091118e-18),
- np.float64(6.68127052797928e-18),
- np.float64(6.68047934462245e-18),
- np.float64(6.579385510644833e-18),
- np.float64(6.401005073575591e-18),
- np.float64(6.942461585579857e-18),
- np.float64(6.790712718767564e-18),
- np.float64(6.462272103902034e-18),
- np.float64(6.5685348733389854e-18),
- np.float64(6.096787679948461e-18),
- np.float64(6.6010775955509525e-18)]
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[18]</span><span class="ansi-green-fg">, line 5</span>
+<span class="ansi-green-fg">      2</span> k = <span class="ansi-green-fg">50</span>
+<span class="ansi-green-fg">      4</span> <span style="color: rgb(95,135,135)"># which=&#39;LR&#39; means largest real part</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">5</span> evals, evecs = <span class="ansi-yellow-bg">spla</span>.eigs(Lio, k=k, which=<span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">LR</span><span class="ansi-yellow-fg">&#39;</span>)
+<span class="ansi-green-fg">      7</span> plt.figure(figsize=(<span class="ansi-green-fg">6</span>, <span class="ansi-green-fg">6</span>))
+<span class="ansi-green-fg">      8</span> plt.scatter(evals.real, evals.imag, s=<span class="ansi-green-fg">20</span>)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;spla&#39; is not defined
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
