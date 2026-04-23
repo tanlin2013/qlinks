@@ -18,6 +18,22 @@ def null_space(mat: sp.sparse.sparray, k: Optional[int] = None) -> npt.NDArray[n
     return null_vecs
 
 
+def sketched_null_space(
+    mat: sp.sparse.sparray, s: Optional[int] = None, k: Optional[int] = None
+) -> npt.NDArray[np.float64]:
+    n, m = mat.shape
+    s = min(n, 2 * m) if s is None else s
+    p, q = np.meshgrid(np.arange(n), np.arange(n), indexing="ij")
+    fft_mat = n ** (-1 / 2) * np.exp(-2j * np.pi * p * q / n)
+    sketch_mat = (
+        np.sqrt(n / s)
+        * sp.sparse.diags(np.random.choice([1, -1], n))
+        @ fft_mat
+        @ np.random.rand(n, s)
+    )
+    return np.real_if_close(sp.linalg.null_space(sketch_mat @ mat), tol=1e-12)
+
+
 def eigh(
     mat: sp.sparse.sparray, k: Optional[int] = None, sigma: Optional[float] = None, **kwargs
 ) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
