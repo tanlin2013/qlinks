@@ -116,11 +116,11 @@ class QuantumLinkModel:
 
     @classmethod
     def from_gauge_invariant_basis(cls):
-        ...
+        ...  # fmt: skip
 
     @classmethod
     def from_momentum_basis(cls):
-        ...
+        ...  # fmt: skip
 
     def __hash__(self) -> int:
         return hash((self.coup_j.tobytes(), self.coup_rk.tobytes(), self.shape, self.basis))

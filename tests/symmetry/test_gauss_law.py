@@ -101,10 +101,10 @@ class TestGaussLaw:
         assert gauss_law._next_empty_site() == Site(0, 1)
 
     def test_valid_for_flux(self):
-        ...
+        ...  # fmt: skip
 
     def test_preconditioned_configs(self):
-        ...
+        ...  # fmt: skip
 
     @pytest.mark.parametrize("length_x, length_y", [(2, 2)])
     def test_extend_node(self, length_x: int, length_y: int):
