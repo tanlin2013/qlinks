@@ -4320,14 +4320,14 @@ re2 = ["google-re2 (>=1.1)"]
 
 [[package]]
 name = "pep8-naming"
-version = "0.14.1"
+version = "0.15.1"
 description = "Check PEP-8 naming conventions, plugin for flake8"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pep8-naming-0.14.1.tar.gz", hash = "sha256:1ef228ae80875557eb6c1549deafed4dabbf3261cfcafa12f773fe0db9be8a36"},
-    {file = "pep8_naming-0.14.1-py3-none-any.whl", hash = "sha256:63f514fc777d715f935faf185dedd679ab99526a7f2f503abb61587877f7b1c5"},
+    {file = "pep8_naming-0.15.1-py3-none-any.whl", hash = "sha256:eb63925e7fd9e028c7f7ee7b1e413ec03d1ee5de0e627012102ee0222c273c86"},
+    {file = "pep8_naming-0.15.1.tar.gz", hash = "sha256:f6f4a499aba2deeda93c1f26ccc02f3da32b035c8b2db9696b730ef2c9639d29"},
 ]
 
 [package.dependencies]
@@ -7229,4 +7229,4 @@ drawing = ["igraph", "matplotlib", "plotly", "pycairo", "pyvis"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "10cbcd55a8738996091251c2bb44eebac35cdf067dccf57b71b904857468befd"
+content-hash = "a466a80d9b49a45bf57c0c772f8b626cbf00ba961e3b1c3f686809d012cf6886"
