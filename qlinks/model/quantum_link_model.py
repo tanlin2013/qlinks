@@ -13,7 +13,7 @@ from scipy.stats import rankdata
 
 from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidArgumentError
-from qlinks.lattice.square_lattice import SquareLattice
+from qlinks.lattice.square_lattice import SquareLattice, Plaquette
 from qlinks.symmetry.translation import Translation
 
 Real: TypeAlias = np.int64 | np.float64
@@ -30,8 +30,8 @@ class QuantumLinkModel:
         basis: Computation basis that respects the gauss law and other lattice symmetries.
     """
 
-    coup_j: Real | npt.NDArray[Real]
-    coup_rk: Real | npt.NDArray[Real]
+    coup_j: Real | npt.NDArray[Real | np.complex128]
+    coup_rk: Real | npt.NDArray[Real | np.complex128]
     shape: Tuple[int, int]
     basis: ComputationBasis = field(repr=False)
     momenta: Optional[Tuple[int, int]] = None
@@ -102,6 +102,10 @@ class QuantumLinkModel:
     @property
     def translation(self) -> Translation:
         return self._translation
+
+    @property
+    def lattice(self) -> SquareLattice:
+        return self._lattice
 
     @classmethod
     def from_whole_basis(cls, coup_j: float, coup_rk: float, shape: Tuple[int, int]) -> Self:
@@ -181,3 +185,7 @@ class QuantumLinkModel:
         except TypeError:
             s = svd(reshaped_evec.toarray(), compute_uv=False)
         return -np.sum((ss := s[s > 1e-12] ** 2) * np.log(ss))
+
+    def plaquette_corr_opt(self, site1, site2) -> sp.sparray[np.float64 | np.complex128]:
+        p1, p2 = Plaquette(self._lattice, site1), Plaquette(self._lattice, site2)
+        return p1[self.basis] @ p2[self.basis]
