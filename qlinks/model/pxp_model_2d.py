@@ -18,4 +18,3 @@ class CpModel:
 class PXPModel2D:
     shape: Tuple[int, int]
     periodic: bool = False
-
