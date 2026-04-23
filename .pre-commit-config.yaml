@@ -32,7 +32,7 @@ repos:
         args: ['--lock', '--no-cache']
         stages: [pre-push]
     -   id: poetry-lock
-        args: ['--no-update', '--no-cache']
+        args: ['--no-cache']
         stages: [pre-push]
 
 -   repo: https://github.com/commitizen-tools/commitizen
