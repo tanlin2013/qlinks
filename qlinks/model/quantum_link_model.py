@@ -13,7 +13,7 @@ from scipy.stats import rankdata
 
 from qlinks.computation_basis import ComputationBasis
 from qlinks.exceptions import InvalidArgumentError
-from qlinks.lattice.square_lattice import SquareLattice, Plaquette
+from qlinks.lattice.square_lattice import Plaquette, SquareLattice
 from qlinks.symmetry.translation import Translation
 
 Real: TypeAlias = np.int64 | np.float64
