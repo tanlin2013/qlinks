@@ -48,7 +48,7 @@ pytest = "^9.0.0"
 pytest-cov = "^7.0.0"
 pytest-mock = "^3.9.0"
 hypothesis = { version = "^6.68.2", extras = ["numpy"] }
-pep8-naming = "^0.14.0"
+pep8-naming = "^0.15.0"
 cruft = "^2.12.0"
 pandas-stubs = "^3.0.0"
 scipy-stubs = "^1.16.0"
