@@ -1,4 +1,4 @@
-FROM python:3.11 as python
+FROM python:3.14 as python
 LABEL maintainer="TaoLin tanlin2013@gmail.com"
 
 ARG WORKDIR=/home
@@ -13,9 +13,9 @@ COPY . $WORKDIR
 
 RUN apt update && \
     apt-get install -y --no-install-recommends  \
-    gfortran libblas-dev liblapack-dev
+    gfortran libblas-dev liblapack-dev pipx
 
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2 &&  \
+RUN pipx install poetry==2.3.4 &&  \
     poetry config virtualenvs.create false --local &&  \
     poetry install -vvv --without dev --all-extras
 
