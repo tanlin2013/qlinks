@@ -319,7 +319,8 @@ class UpdateMultiNegationFlipOperator(BaseLocalUpdateOperator):
             for value in values:
                 if -value not in values:
                     raise ValueError(
-                        "UpdateMultiNegationFlipOperator requires local spaces closed under v -> -v."
+                        "UpdateMultiNegationFlipOperator requires local spaces closed "
+                        "under v -> -v."
                     )
 
         object.__setattr__(self, "variable_indices", variable_indices)

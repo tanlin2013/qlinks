@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import igraph as ig
-import numpy as np
 
 from qlinks.models import SquareQDMModel
 

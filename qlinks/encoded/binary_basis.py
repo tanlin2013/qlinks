@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.basis import Basis
-from qlinks.variables import LocalSpace, VariableLayout
+from qlinks.variables import VariableLayout
 
 
 def _require_binary_layout(layout: VariableLayout) -> None:

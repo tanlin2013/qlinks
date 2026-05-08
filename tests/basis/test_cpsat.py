@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from qlinks.basis import BruteForceBasisSolver, CPSATBasisSolver
 from qlinks.constraints import (

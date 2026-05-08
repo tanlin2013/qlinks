@@ -1,15 +1,14 @@
 from pathlib import Path
 
 import matplotlib
-
-matplotlib.use("Agg")
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import BasisConfigurationVisualizer, plot_basis_config
+
+matplotlib.use("Agg")
 
 
 def test_square_qdm_dimer_plot_runs() -> None:
