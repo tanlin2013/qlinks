@@ -10,7 +10,6 @@ from qlinks.backends import SparseBackend, SparseBackendName, get_sparse_backend
 from qlinks.basis import Basis
 from qlinks.operators import LocalUpdateAction, LocalUpdateOperator
 
-
 MissingActionPolicy = Literal["skip", "raise"]
 
 

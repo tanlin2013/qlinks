@@ -46,9 +46,7 @@ class SetVariablesOperator(BaseLocalOperator):
         if final_values.ndim != 1:
             raise ValueError("final_values must be one-dimensional.")
 
-        if not (
-            variable_indices.size == initial_values.size == final_values.size
-        ):
+        if not (variable_indices.size == initial_values.size == final_values.size):
             raise ValueError(
                 "variable_indices, initial_values, and final_values must have the same length."
             )
@@ -229,4 +227,3 @@ class MultiNegationFlipOperator(BaseLocalOperator):
         new[self.variable_indices] = -new[self.variable_indices]
 
         return (OperatorAction(self.coefficient, new),)
-    

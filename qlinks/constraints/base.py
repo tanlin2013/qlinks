@@ -33,21 +33,17 @@ class Constraint(Protocol):
 
     name: str
 
-    def affected_variables(self) -> npt.NDArray[np.int64]:
-        ...
+    def affected_variables(self) -> npt.NDArray[np.int64]: ...
 
-    def check(self, config: npt.ArrayLike) -> ConstraintResult:
-        ...
+    def check(self, config: npt.ArrayLike) -> ConstraintResult: ...
 
-    def is_satisfied(self, config: npt.ArrayLike) -> bool:
-        ...
+    def is_satisfied(self, config: npt.ArrayLike) -> bool: ...
 
     def partial_check(
-            self,
-            config: npt.ArrayLike,
-            assigned_mask: npt.ArrayLike,
-    ) -> bool:
-        ...
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> bool: ...
 
 
 class SectorCondition(Protocol):
@@ -57,14 +53,11 @@ class SectorCondition(Protocol):
 
     name: str
 
-    def value(self, config: npt.ArrayLike) -> object:
-        ...
+    def value(self, config: npt.ArrayLike) -> object: ...
 
-    def check(self, config: npt.ArrayLike) -> ConstraintResult:
-        ...
+    def check(self, config: npt.ArrayLike) -> ConstraintResult: ...
 
-    def is_satisfied(self, config: npt.ArrayLike) -> bool:
-        ...
+    def is_satisfied(self, config: npt.ArrayLike) -> bool: ...
 
 
 class BaseConstraint:
@@ -104,9 +97,9 @@ class BaseConstraint:
         return self.check(config).satisfied
 
     def partial_check(
-            self,
-            config: npt.ArrayLike,
-            assigned_mask: npt.ArrayLike,
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
     ) -> bool:
         """
         Default partial check.
@@ -169,9 +162,9 @@ class BaseSectorCondition:
         return self.check(config).satisfied
 
     def partial_check(
-            self,
-            config: npt.ArrayLike,
-            assigned_mask: npt.ArrayLike,
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
     ) -> bool:
         affected = self.affected_variables()
         assigned = np.asarray(assigned_mask, dtype=bool)

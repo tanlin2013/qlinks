@@ -135,11 +135,7 @@ class LatticeGraph:
     def incident_links(self, site_id: int) -> npt.NDArray[np.int64]:
         self._validate_site_id(site_id)
 
-        out = [
-            link.id
-            for link in self.links
-            if link.source == site_id or link.target == site_id
-        ]
+        out = [link.id for link in self.links if link.source == site_id or link.target == site_id]
         return np.asarray(out, dtype=np.int64)
 
     def incoming_links(self, site_id: int) -> npt.NDArray[np.int64]:
@@ -188,7 +184,9 @@ class LatticeGraph:
         self._validate_site_id(site_id)
 
         if len(displacement) != self.ndim:
-            raise ValueError(f"Expected displacement dimension {self.ndim}, got {len(displacement)}.")
+            raise ValueError(
+                f"Expected displacement dimension {self.ndim}, got {len(displacement)}."
+            )
 
         return self.translations.get((site_id, tuple(displacement)))
 
@@ -283,8 +281,7 @@ class LatticeGraph:
 
         if ids != expected:
             raise ValueError(
-                "Plaquette ids must be consecutive and ordered as "
-                "0, 1, ..., num_plaquettes - 1."
+                "Plaquette ids must be consecutive and ordered as " "0, 1, ..., num_plaquettes - 1."
             )
 
         for plaq in self.plaquettes:
@@ -318,4 +315,3 @@ class LatticeGraph:
             raise IndexError(
                 f"plaquette_id {plaquette_id} outside valid range [0, {self.num_plaquettes})."
             )
-        

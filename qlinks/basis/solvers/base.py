@@ -14,8 +14,7 @@ class BasisSolver(Protocol):
         layout: VariableLayout,
         constraints: Sequence[Constraint] = (),
         sectors: Sequence[SectorCondition] = (),
-    ) -> Basis:
-        ...
+    ) -> Basis: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,4 +47,3 @@ class SolverInput:
             constraints=collection.constraints,
             sectors=collection.sectors,
         )
-    

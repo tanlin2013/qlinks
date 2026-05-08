@@ -101,4 +101,3 @@ def test_iter_states_copy() -> None:
     states[0][0] = 1
 
     np.testing.assert_array_equal(basis.state(0), np.array([0, 0]))
-    

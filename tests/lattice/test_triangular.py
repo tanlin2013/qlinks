@@ -27,4 +27,3 @@ def test_triangular_rhombi_are_length_four() -> None:
 
     for pid in lattice.qdm_plaquette_ids():
         assert lattice.plaquette_links(pid).size == 4
-        

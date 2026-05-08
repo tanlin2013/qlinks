@@ -175,9 +175,7 @@ def test_reject_unordered_link_ids() -> None:
                 Site(id=0, cell=(0,)),
                 Site(id=1, cell=(1,)),
             ),
-            links=(
-                Link(id=1, source=0, target=1),
-            ),
+            links=(Link(id=1, source=0, target=1),),
         )
 
 
@@ -201,9 +199,7 @@ def test_reject_bad_plaquette_link_id() -> None:
                 Link(id=0, source=0, target=1),
                 Link(id=1, source=1, target=2),
             ),
-            plaquettes=(
-                Plaquette(id=0, links=(0, 1, 2), orientations=(1, 1, 1), sites=(0, 1, 2)),
-            ),
+            plaquettes=(Plaquette(id=0, links=(0, 1, 2), orientations=(1, 1, 1), sites=(0, 1, 2)),),
         )
 
 
@@ -218,4 +214,3 @@ def test_invalid_query_ids_raise() -> None:
 
     with pytest.raises(KeyError, match="No link"):
         graph.oriented_link_between(0, 0)
-        

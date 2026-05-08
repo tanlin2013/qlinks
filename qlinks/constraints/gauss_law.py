@@ -63,11 +63,11 @@ class GaussLawConstraint(BaseConstraint):
 
     @classmethod
     def from_lattice_site(
-            cls,
-            lattice: LatticeGraph,
-            layout: VariableLayout,
-            site_id: int,
-            charge: int = 0,
+        cls,
+        lattice: LatticeGraph,
+        layout: VariableLayout,
+        site_id: int,
+        charge: int = 0,
     ) -> GaussLawConstraint:
         incidence = lattice.incidence_matrix().tocsr()
 
@@ -137,8 +137,7 @@ class GaussLawConstraint(BaseConstraint):
             name=self.name,
             residual=actual,
             message=(
-                f"{self.name}(site={self.site_id}): "
-                f"divergence={actual}, charge={self.charge}"
+                f"{self.name}(site={self.site_id}): " f"divergence={actual}, charge={self.charge}"
             ),
         )
 

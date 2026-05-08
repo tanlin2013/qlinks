@@ -113,9 +113,9 @@ class DimerCoveringConstraint(BaseConstraint):
         )
 
     def partial_check(
-            self,
-            config: npt.ArrayLike,
-            assigned_mask: npt.ArrayLike,
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
     ) -> bool:
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)

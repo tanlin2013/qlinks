@@ -97,4 +97,3 @@ class ConfigView:
         if copy:
             return self.array.copy()
         return self.array
-    

@@ -1,6 +1,10 @@
 import numpy as np
 
-from qlinks.constraints import ConstraintCollection, FixedValueConstraint, TotalValueSector
+from qlinks.constraints import (
+    ConstraintCollection,
+    FixedValueConstraint,
+    TotalValueSector,
+)
 from qlinks.variables import LocalSpace, VariableLayout
 
 

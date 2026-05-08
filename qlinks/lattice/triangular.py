@@ -260,9 +260,7 @@ class TriangularLattice(LatticeGraph):
 
     def qdm_plaquette_ids(self):
         return [
-            plaquette.id
-            for plaquette in self.plaquettes
-            if plaquette.kind.startswith("rhombus_")
+            plaquette.id for plaquette in self.plaquettes if plaquette.kind.startswith("rhombus_")
         ]
 
     def qlm_plaquette_ids(self, *, use_triangles: bool = False):
@@ -274,4 +272,3 @@ class TriangularLattice(LatticeGraph):
             ]
 
         return self.qdm_plaquette_ids()
-    

@@ -69,4 +69,3 @@ def test_parity_sector_rejects_bad_target() -> None:
 
     with pytest.raises(ValueError, match="0 or 1"):
         ParitySector(layout=layout, target=2)
-        

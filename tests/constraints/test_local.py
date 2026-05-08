@@ -1,6 +1,10 @@
 import numpy as np
 
-from qlinks.constraints import ConstraintCollection, FixedValueConstraint, TotalValueSector
+from qlinks.constraints import (
+    ConstraintCollection,
+    FixedValueConstraint,
+    TotalValueSector,
+)
 from qlinks.variables import LocalSpace, VariableLayout
 
 
@@ -41,4 +45,3 @@ def test_constraint_collection_first_failure() -> None:
     failure = collection.first_failure(config)
     assert failure is not None
     assert failure.name == "fixed_value"
-    

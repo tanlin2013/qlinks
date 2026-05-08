@@ -100,9 +100,7 @@ class Basis:
 
     def state(self, basis_index: int, *, copy: bool = True) -> npt.NDArray[np.int64]:
         if basis_index < 0 or basis_index >= self.n_states:
-            raise IndexError(
-                f"basis_index {basis_index} outside valid range [0, {self.n_states})."
-            )
+            raise IndexError(f"basis_index {basis_index} outside valid range [0, {self.n_states}).")
 
         if copy:
             return self.states[basis_index].copy()

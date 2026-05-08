@@ -9,8 +9,8 @@ from qlinks.constraints import (
     TotalValueSector,
 )
 from qlinks.lattice import ChainLattice
-from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.models import PXPModel, SquareQDMModel
+from qlinks.variables import LocalSpace, VariableLayout
 
 
 def assert_same_basis(basis_a, basis_b) -> None:
@@ -112,6 +112,7 @@ def test_dfs_custom_variable_order() -> None:
     ).solve(layout)
 
     assert basis.n_states == 8
+
 
 def test_dfs_does_not_validate_uninitialized_memory() -> None:
     layout = VariableLayout.from_sites(4, LocalSpace.binary())

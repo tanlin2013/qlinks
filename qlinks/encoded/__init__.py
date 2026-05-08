@@ -12,19 +12,19 @@ from qlinks.encoded.bitmask_builder import (
 )
 from qlinks.encoded.bitmask_operators import (
     BitmaskAction,
+    BitmaskAlternatingPlaquetteFlipOperator,
     BitmaskBinaryFlipOperator,
     BitmaskConstantDiagonalOperator,
     BitmaskOperator,
     BitmaskOperatorSum,
+    BitmaskPatternDiagonalOperator,
     BitmaskPatternFlipOperator,
     BitmaskPXPSpinFlipOperator,
     BitmaskQDMFlipOperator,
-    BitmaskPatternDiagonalOperator,
-    bitmask_qdm_flippability_projectors,
     BitmaskQLMFluxFlipOperator,
-    bitmask_qlm_flippability_projectors,
     bitmask_alternating_flippability_projectors,
-    BitmaskAlternatingPlaquetteFlipOperator,
+    bitmask_qdm_flippability_projectors,
+    bitmask_qlm_flippability_projectors,
 )
 from qlinks.encoded.flux import (
     binary_config_to_flux,

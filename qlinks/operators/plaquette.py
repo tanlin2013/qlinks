@@ -134,11 +134,11 @@ class PlaquettePatternOperator(BaseLocalOperator):
 
     @classmethod
     def alternating_binary_flip(
-            cls,
-            layout: VariableLayout,
-            lattice: LatticeGraph,
-            plaquette_id: int,
-            coefficient: complex = 1.0,
+        cls,
+        layout: VariableLayout,
+        lattice: LatticeGraph,
+        plaquette_id: int,
+        coefficient: complex = 1.0,
     ) -> PlaquettePatternOperator:
         link_ids = lattice.plaquette_links(plaquette_id)
         p0, p1 = alternating_binary_patterns(len(link_ids))
@@ -158,11 +158,11 @@ class PlaquettePatternOperator(BaseLocalOperator):
 
     @classmethod
     def alternating_flux_flip(
-            cls,
-            layout: VariableLayout,
-            lattice: LatticeGraph,
-            plaquette_id: int,
-            coefficient: complex = 1.0,
+        cls,
+        layout: VariableLayout,
+        lattice: LatticeGraph,
+        plaquette_id: int,
+        coefficient: complex = 1.0,
     ) -> PlaquettePatternOperator:
         link_ids = lattice.plaquette_links(plaquette_id)
         p0, p1 = alternating_flux_patterns(len(link_ids))

@@ -10,7 +10,6 @@ from qlinks.backends import SparseBackend, SparseBackendName, get_sparse_backend
 from qlinks.encoded.binary_basis import BinaryEncodedBasis
 from qlinks.encoded.bitmask_operators import BitmaskOperator
 
-
 MissingActionPolicy = Literal["skip", "raise"]
 
 

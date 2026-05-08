@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import Sequence
 
 import numpy as np
@@ -140,4 +140,3 @@ class DFSBasisSolver:
         conditions: Sequence[Constraint | SectorCondition],
     ) -> bool:
         return all(condition.is_satisfied(config) for condition in conditions)
-    

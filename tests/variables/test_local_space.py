@@ -74,4 +74,3 @@ def test_value_code_conversion() -> None:
 
     with pytest.raises(ValueError, match="outside valid range"):
         space.code_to_value(3)
-    

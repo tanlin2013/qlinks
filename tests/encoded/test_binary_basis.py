@@ -116,4 +116,3 @@ def test_reject_duplicate_codes() -> None:
 
     with pytest.raises(ValueError, match="Duplicate"):
         BinaryEncodedBasis.from_codes(layout, [0, 0])
-        

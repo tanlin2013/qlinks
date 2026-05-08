@@ -62,11 +62,9 @@ class LocalUpdateOperator(Protocol):
     layout: VariableLayout
     name: str
 
-    def affected_variables(self) -> npt.NDArray[np.int64]:
-        ...
+    def affected_variables(self) -> npt.NDArray[np.int64]: ...
 
-    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
-        ...
+    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]: ...
 
 
 class BaseLocalUpdateOperator:
@@ -150,9 +148,7 @@ class UpdateSetVariablesOperator(BaseLocalUpdateOperator):
         if final_values.ndim != 1:
             raise ValueError("final_values must be one-dimensional.")
 
-        if not (
-            variable_indices.size == initial_values.size == final_values.size
-        ):
+        if not (variable_indices.size == initial_values.size == final_values.size):
             raise ValueError(
                 "variable_indices, initial_values, and final_values must have the same length."
             )
@@ -539,4 +535,3 @@ class UpdatePXPSpinFlipOperator(BaseLocalUpdateOperator):
                 new_values=np.asarray([new_value], dtype=np.int64),
             ),
         )
-    

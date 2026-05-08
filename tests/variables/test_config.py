@@ -124,4 +124,3 @@ def test_as_array_copy_behavior() -> None:
     view = cfg.as_array(copy=False)
     view[0] = 1
     assert cfg.site(0) == 1
-    

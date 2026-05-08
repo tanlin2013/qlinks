@@ -28,11 +28,9 @@ class BitmaskOperator(Protocol):
     layout: VariableLayout
     name: str
 
-    def affected_variables(self) -> npt.NDArray[np.int64]:
-        ...
+    def affected_variables(self) -> npt.NDArray[np.int64]: ...
 
-    def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
-        ...
+    def apply_code(self, code: int) -> tuple[BitmaskAction, ...]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,9 +211,7 @@ class BitmaskPatternFlipOperator:
         if final_values.ndim != 1:
             raise ValueError("final_values must be one-dimensional.")
 
-        if not (
-            variable_indices.size == initial_values.size == final_values.size
-        ):
+        if not (variable_indices.size == initial_values.size == final_values.size):
             raise ValueError(
                 "variable_indices, initial_values, and final_values must have the same length."
             )
@@ -349,10 +345,7 @@ class BitmaskQDMFlipOperator:
         return self._variable_indices.copy()
 
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
-        return (
-            self._op_1010_to_0101.apply_code(code)
-            + self._op_0101_to_1010.apply_code(code)
-        )
+        return self._op_1010_to_0101.apply_code(code) + self._op_0101_to_1010.apply_code(code)
 
 
 @dataclass(frozen=True, slots=True)

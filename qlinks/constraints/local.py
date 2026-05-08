@@ -42,7 +42,9 @@ class FixedValueConstraint(BaseConstraint):
         object.__setattr__(self, "values", values)
 
     @classmethod
-    def single(cls, layout: VariableLayout, variable_index: int, value: int) -> FixedValueConstraint:
+    def single(
+        cls, layout: VariableLayout, variable_index: int, value: int
+    ) -> FixedValueConstraint:
         return cls(
             layout=layout,
             variable_indices=np.asarray([variable_index], dtype=np.int64),

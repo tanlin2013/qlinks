@@ -103,4 +103,3 @@ def test_gauss_law_direct_constructor_rejects_bad_sign() -> None:
             signs=np.array([0]),
             charge=0,
         )
-        

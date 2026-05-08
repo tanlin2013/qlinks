@@ -14,11 +14,11 @@ from qlinks.operators.diagonal import (
 from qlinks.operators.plaquette import (
     PlaquettePatternOperator,
     PlaquettePatternTransition,
-    qdm_flippability_projectors,
     alternating_binary_flippability_projectors,
     alternating_binary_patterns,
     alternating_flux_flippability_projectors,
     alternating_flux_patterns,
+    qdm_flippability_projectors,
 )
 from qlinks.operators.pxp import PXPSpinFlipOperator
 from qlinks.operators.transitions import (
@@ -35,9 +35,9 @@ from qlinks.operators.updates import (
     UpdateMultiNegationFlipOperator,
     UpdateNegationFlipOperator,
     UpdateOperatorSum,
-    UpdatePXPSpinFlipOperator,
     UpdatePlaquettePatternOperator,
     UpdatePlaquettePatternTransition,
+    UpdatePXPSpinFlipOperator,
     UpdateSetVariablesOperator,
 )
 

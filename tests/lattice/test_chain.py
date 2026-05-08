@@ -130,4 +130,3 @@ def test_chain_length_one_periodic_has_no_self_link() -> None:
 def test_reject_bad_length() -> None:
     with pytest.raises(ValueError, match="positive"):
         ChainLattice(0)
-        

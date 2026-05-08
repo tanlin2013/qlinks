@@ -44,4 +44,3 @@ class ConstraintCollection:
             if not result.satisfied:
                 return result
         return None
-    

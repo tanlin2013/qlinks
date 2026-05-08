@@ -207,9 +207,7 @@ class BinaryEncodedBasis:
 
     def code(self, basis_index: int) -> int:
         if basis_index < 0 or basis_index >= self.n_states:
-            raise IndexError(
-                f"basis_index {basis_index} outside valid range [0, {self.n_states})."
-            )
+            raise IndexError(f"basis_index {basis_index} outside valid range [0, {self.n_states}).")
 
         return int(self.codes[basis_index])
 

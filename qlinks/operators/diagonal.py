@@ -151,4 +151,3 @@ class PatternDiagonalOperator(BaseLocalOperator):
             return (OperatorAction(self.coefficient, arr.copy()),)
 
         return ()
-    

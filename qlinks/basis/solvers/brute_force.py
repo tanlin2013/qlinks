@@ -31,10 +31,7 @@ class BruteForceBasisSolver:
         constraints: Sequence[Constraint] = (),
         sectors: Sequence[SectorCondition] = (),
     ) -> Basis:
-        domains = [
-            layout.local_space(i).values.tolist()
-            for i in range(layout.n_variables)
-        ]
+        domains = [layout.local_space(i).values.tolist() for i in range(layout.n_variables)]
 
         states: list[np.ndarray] = []
 
@@ -48,4 +45,3 @@ class BruteForceBasisSolver:
             return Basis.empty(layout)
 
         return Basis.from_states(layout, np.vstack(states), sort=self.sort)
-    

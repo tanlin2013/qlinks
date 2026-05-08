@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import TypeAlias
 
-
 SiteId: TypeAlias = int
 LinkId: TypeAlias = int
 PlaquetteId: TypeAlias = int

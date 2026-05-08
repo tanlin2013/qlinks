@@ -251,9 +251,8 @@ class QLMBase(HamiltonianModelBase):
         *,
         builder: HamiltonianBuilderName = "sparse",
     ) -> tuple[object, ...]:
-        return (
-            self.make_kinetic_operators(layout, builder=builder)
-            + self.make_potential_operators(layout, builder=builder)
+        return self.make_kinetic_operators(layout, builder=builder) + self.make_potential_operators(
+            layout, builder=builder
         )
 
     def make_terms(

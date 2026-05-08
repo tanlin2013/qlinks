@@ -7,7 +7,7 @@ import pytest
 
 from qlinks.basis import Basis
 from qlinks.builders import is_hermitian_sparse
-from qlinks.encoded import BinaryEncodedBasis
+from qlinks.encoded import BinaryEncodedBasis, BitmaskBinaryFlipOperator
 from qlinks.lattice import ChainLattice
 from qlinks.models.base import (
     GenericModelBuilder,
@@ -17,7 +17,6 @@ from qlinks.models.base import (
     validate_builder_name,
 )
 from qlinks.operators import BinaryFlipOperator, UpdateBinaryFlipOperator
-from qlinks.encoded import BitmaskBinaryFlipOperator
 from qlinks.variables import LocalSpace, VariableLayout
 
 

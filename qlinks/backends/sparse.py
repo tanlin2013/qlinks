@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Protocol, Any
+from typing import Any, Literal, Protocol
 
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as scipy_sparse
-
 
 SparseBackendName = Literal["scipy", "cupy", "auto"]
 
@@ -18,11 +17,9 @@ class SparseBackend(Protocol):
 
     name: str
 
-    def as_data_array(self, data: list[complex], dtype: npt.DTypeLike) -> Any:
-        ...
+    def as_data_array(self, data: list[complex], dtype: npt.DTypeLike) -> Any: ...
 
-    def as_index_array(self, indices: list[int] | npt.NDArray[np.integer]) -> Any:
-        ...
+    def as_index_array(self, indices: list[int] | npt.NDArray[np.integer]) -> Any: ...
 
     def coo_matrix(
         self,
@@ -31,21 +28,17 @@ class SparseBackend(Protocol):
         cols: Any,
         shape: tuple[int, int],
         dtype: npt.DTypeLike,
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
     def empty_csr(
         self,
         shape: tuple[int, int],
         dtype: npt.DTypeLike,
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
-    def to_cpu_array(self, array: Any) -> npt.NDArray:
-        ...
+    def to_cpu_array(self, array: Any) -> npt.NDArray: ...
 
-    def max_abs_data(self, sparse_matrix: Any) -> float:
-        ...
+    def max_abs_data(self, sparse_matrix: Any) -> float: ...
 
 
 @dataclass(frozen=True, slots=True)

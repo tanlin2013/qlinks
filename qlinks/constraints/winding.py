@@ -10,7 +10,6 @@ from qlinks.constraints.base import BaseSectorCondition
 from qlinks.lattice import BoundaryCondition, SquareLattice
 from qlinks.variables import VariableLayout
 
-
 Direction = Literal["x", "y"]
 
 
@@ -82,9 +81,9 @@ class SquareWindingSector(BaseSectorCondition):
         return int(np.sum(arr[self._variable_indices]))
 
     def partial_check(
-            self,
-            config: npt.ArrayLike,
-            assigned_mask: npt.ArrayLike,
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
     ) -> bool:
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)
@@ -203,9 +202,9 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         return int(np.sum(electric_flux))
 
     def partial_check(
-            self,
-            config: npt.ArrayLike,
-            assigned_mask: npt.ArrayLike,
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
     ) -> bool:
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)

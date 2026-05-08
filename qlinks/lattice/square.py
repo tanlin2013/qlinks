@@ -6,7 +6,7 @@ from qlinks.lattice.types import BoundaryCondition, Link, Plaquette, Site
 
 class SquareLattice(LatticeGraph):
     __slots__ = ("lx", "ly")
-    
+
     """
     Two-dimensional square lattice.
 

@@ -255,4 +255,3 @@ def test_optimized_empty_basis() -> None:
     assert result.matrix.nnz == 0
     assert result.stats.n_basis == 0
     assert result.stats.n_scratch_arrays == 0
-    

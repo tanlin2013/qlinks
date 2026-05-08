@@ -197,4 +197,3 @@ def test_square_metadata() -> None:
     assert metadata["num_links"] == 4
     assert metadata["num_plaquettes"] == 1
     assert metadata["boundary_condition"] == "open"
-    

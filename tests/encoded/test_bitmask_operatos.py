@@ -4,12 +4,12 @@ from qlinks.encoded import (
     BitmaskBinaryFlipOperator,
     BitmaskConstantDiagonalOperator,
     BitmaskOperatorSum,
+    BitmaskPatternDiagonalOperator,
     BitmaskPatternFlipOperator,
     BitmaskPXPSpinFlipOperator,
     BitmaskQDMFlipOperator,
-    encode_binary_config,
-    BitmaskPatternDiagonalOperator,
     bitmask_qdm_flippability_projectors,
+    encode_binary_config,
 )
 from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.variables import LocalSpace, VariableLayout

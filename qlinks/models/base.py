@@ -17,7 +17,6 @@ from qlinks.constraints import Constraint, SectorCondition
 from qlinks.encoded import BinaryEncodedBasis, BitmaskSparseHamiltonianBuilder
 from qlinks.variables import VariableLayout
 
-
 BasisSolverName = Literal["brute_force", "dfs", "cpsat"]
 HamiltonianBuilderName = Literal["sparse", "optimized", "bitmask"]
 TermKind = Literal["kinetic", "potential", "other"]

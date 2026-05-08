@@ -12,7 +12,10 @@ from qlinks.constraints.dimer import DimerCoveringConstraint
 from qlinks.constraints.gauss_law import GaussLawConstraint
 from qlinks.constraints.local import FixedValueConstraint, LocalSumConstraint
 from qlinks.constraints.sectors import ParitySector, TotalValueSector
-from qlinks.constraints.winding import SquareWindingSector, SquareQDMElectricWindingSector
+from qlinks.constraints.winding import (
+    SquareQDMElectricWindingSector,
+    SquareWindingSector,
+)
 
 __all__ = [
     "BaseConstraint",

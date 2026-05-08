@@ -43,11 +43,9 @@ class LocalOperator(Protocol):
     layout: VariableLayout
     name: str
 
-    def affected_variables(self) -> npt.NDArray[np.int64]:
-        ...
+    def affected_variables(self) -> npt.NDArray[np.int64]: ...
 
-    def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
-        ...
+    def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]: ...
 
 
 class BaseLocalOperator:

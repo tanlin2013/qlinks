@@ -42,10 +42,7 @@ def test_combine_duplicate_actions() -> None:
 
     assert len(combined) == 2
 
-    result = {
-        tuple(action.config.tolist()): action.coefficient
-        for action in combined
-    }
+    result = {tuple(action.config.tolist()): action.coefficient for action in combined}
 
     assert result[(0, 1)] == 3.0 + 0j
     assert result[(1, 0)] == 3.0 + 0j
@@ -60,4 +57,3 @@ def test_combine_duplicate_actions_drops_zero() -> None:
     combined = combine_duplicate_actions(actions, atol=0.0)
 
     assert len(combined) == 0
-    

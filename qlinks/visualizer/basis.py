@@ -10,7 +10,6 @@ import numpy.typing as npt
 from qlinks.lattice import BoundaryCondition, LatticeGraph, SquareLattice
 from qlinks.variables import VariableKind, VariableLayout
 
-
 LinkPlotMode = Literal["arrows", "dimers", "values"]
 PlaquetteSymbolMode = Literal["binary", "flux"]
 
@@ -495,10 +494,7 @@ class BasisConfigurationVisualizer:
             if len(plaquette.links) != 4:
                 continue
 
-            link_values = [
-                self.link_value(config, int(link_id))
-                for link_id in plaquette.links
-            ]
+            link_values = [self.link_value(config, int(link_id)) for link_id in plaquette.links]
 
             key = self._plaquette_key(link_values, mode=mode)
             symbol_info = _SQUARE_PLAQUETTE_SYMBOLS.get(key)

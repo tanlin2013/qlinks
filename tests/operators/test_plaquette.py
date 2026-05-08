@@ -142,4 +142,3 @@ def test_qdm_flippability_projectors() -> None:
 
     assert projectors[0].apply(config_other) == ()
     assert projectors[1].apply(config_other) == ()
-    

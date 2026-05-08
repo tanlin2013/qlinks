@@ -12,7 +12,6 @@ from qlinks.models.base import (
     solve_basis,
     validate_builder_name,
 )
-
 from qlinks.models.pxp import PXPModel
 from qlinks.models.qdm import (
     HoneycombQDMModel,

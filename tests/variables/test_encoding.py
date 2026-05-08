@@ -1,7 +1,12 @@
 import numpy as np
 import pytest
 
-from qlinks.variables import BitPackedBinaryEncoder, ConfigEncoder, LocalSpace, VariableLayout
+from qlinks.variables import (
+    BitPackedBinaryEncoder,
+    ConfigEncoder,
+    LocalSpace,
+    VariableLayout,
+)
 
 
 def test_config_encoder_roundtrip_binary() -> None:

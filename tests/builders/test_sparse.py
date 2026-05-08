@@ -15,8 +15,8 @@ from qlinks.operators import (
     LocalValueDiagonalOperator,
     OperatorAction,
     OperatorSum,
-    PXPSpinFlipOperator,
     PlaquettePatternOperator,
+    PXPSpinFlipOperator,
     qdm_flippability_projectors,
 )
 from qlinks.variables import LocalSpace, VariableLayout
@@ -357,6 +357,7 @@ def test_non_hermitian_detection() -> None:
 
     assert not is_hermitian_sparse(H)
 
+
 def test_sparse_builder_backend_scipy_explicit() -> None:
     layout = VariableLayout.from_sites(1, LocalSpace.binary())
     basis = BruteForceBasisSolver(sort=True).solve(layout)
@@ -378,6 +379,7 @@ def test_sparse_builder_backend_scipy_explicit() -> None:
     )
 
     np.testing.assert_allclose(H.toarray(), expected)
+
 
 def test_sparse_builder_backend_cupy() -> None:
     cp = pytest.importorskip("cupy")

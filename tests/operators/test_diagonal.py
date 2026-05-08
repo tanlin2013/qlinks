@@ -86,4 +86,3 @@ def test_pattern_diagonal_rejects_bad_value() -> None:
             variable_indices=np.array([0]),
             pattern=np.array([2]),
         )
-        

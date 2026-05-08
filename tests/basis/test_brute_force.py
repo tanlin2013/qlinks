@@ -57,4 +57,3 @@ def test_brute_force_pxp_chain_length_4() -> None:
 
     for state in basis.states:
         assert not any(state[i] == 1 and state[i + 1] == 1 for i in range(3))
-        

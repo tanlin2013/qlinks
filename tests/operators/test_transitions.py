@@ -104,4 +104,3 @@ def test_multi_negation_flip_operator() -> None:
 
     assert actions[0].coefficient == -1.0 + 0j
     np.testing.assert_array_equal(actions[0].config, np.array([1, 1, -1, 1]))
-    
