@@ -47,7 +47,10 @@ jobs:
             gfortran \
             libblas-dev \
             liblapack-dev \
-            pkg-config
+            pkg-config \
+            libxml2-dev \
+            libxslt1-dev \
+            zlib1g-dev
 
       - name: Install dev dependencies
         run: |
