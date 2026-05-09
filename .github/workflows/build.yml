@@ -3,41 +3,68 @@ name: Docker build
 on: [push, pull_request]
 
 jobs:
-  build:
+  versions:
     runs-on: ubuntu-latest
+    outputs:
+      default-python: ${{ steps.versions.outputs.default-python }}
+      poetry-version: ${{ steps.versions.outputs.poetry-version }}
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Read versions
+        id: versions
+        run: python scripts/ci_versions.py
+
+  build:
+    needs: versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ github.repository }}
           tags: |
-            type=schedule
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
             type=sha,format=long
-            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Taipei'}}
-            type=raw,value=latest
+            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Taipei'}},enable=${{ github.event_name == 'push' }}
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v4
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
         with:
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          push: true
+          push: ${{ github.event_name == 'push' }}
+          build-args: |
+            PYTHON_VERSION=${{ needs.versions.outputs.default-python }}
+            POETRY_VERSION=${{ needs.versions.outputs.poetry-version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Smoke test Docker image
+        if: github.event_name == 'pull_request'
+        run: |
+          docker build \
+            --build-arg PYTHON_VERSION=${{ needs.versions.outputs.default-python }} \
+            --build-arg POETRY_VERSION=${{ needs.versions.outputs.poetry-version }} \
+            -t qlinks:ci .
+          docker run --rm qlinks:ci python -c "import qlinks; print('qlinks import OK')"

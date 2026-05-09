@@ -3,37 +3,49 @@ name: Doc
 on: [push, pull_request]
 
 jobs:
-  build:
+  versions:
     runs-on: ubuntu-latest
+    outputs:
+      default-python: ${{ steps.versions.outputs.default-python }}
+      poetry-version: ${{ steps.versions.outputs.poetry-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read versions
+        id: versions
+        run: python scripts/ci_versions.py
+
+  build:
+    needs: versions
+    runs-on: ubuntu-latest
+
     permissions:
       contents: write
-    strategy:
-      matrix:
-        python-version: ["3.11"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
           fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Set up Python ${{ needs.versions.outputs.default-python }}
+        uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ needs.versions.outputs.default-python }}
+          cache: poetry
 
       - name: Install dependencies
         run: |
-          sudo apt-get install -y python3-sphinx pandoc
+          sudo apt-get update
+          sudo apt-get install -y pandoc
           python -m pip install --upgrade pip
-          python -m pip install --upgrade poetry>=1.2.0
+          python -m pip install "poetry==${{ needs.versions.outputs.poetry-version }}"
           poetry install -vvv --with docs
 
       - name: Build Sphinx doc
-        run: |
-          poetry run make -C docs html
+        run: poetry run make -C docs html
 
       - name: Deploy
+        if: github.event_name == 'push' && github.ref_name == 'main'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
