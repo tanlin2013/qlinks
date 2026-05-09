@@ -6,27 +6,28 @@ LABEL maintainer="TaoLin tanlin2013@gmail.com"
 ARG WORKDIR=/home
 ARG POETRY_VERSION=2.3.4
 
-ENV PYTHONPATH="${PYTHONPATH}:$WORKDIR" \
-    PATH="/root/.local/bin:$PATH" \
-    PYTHONUNBUFFERED=true
+ENV PYTHONPATH="${WORKDIR}" \
+    PYTHONUNBUFFERED=true \
+    POETRY_VIRTUALENVS_CREATE=false
 
-WORKDIR $WORKDIR
+WORKDIR ${WORKDIR}
 
 FROM python AS runtime
 
-RUN apt update && \
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        build-essential \
         gfortran \
         libblas-dev \
-        liblapack-dev \
-        pipx
+        liblapack-dev
+
+RUN python -m pip install --upgrade pip wheel setuptools && \
+    python -m pip install "poetry==${POETRY_VERSION}"
 
 COPY pyproject.toml poetry.lock ./
-RUN pipx install poetry==${POETRY_VERSION} && \
-    poetry config virtualenvs.create false --local && \
-    poetry install -vvv --without dev --all-extras --no-root
+RUN poetry install -vvv --without dev --all-extras --no-root
 
-COPY . $WORKDIR
+COPY . ${WORKDIR}
 RUN poetry install -vvv --without dev --all-extras
 
 RUN apt-get -y clean && \
