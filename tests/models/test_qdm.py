@@ -175,3 +175,17 @@ def test_qdmmodel_factory_methods() -> None:
 
     assert isinstance(tri, TriangularQDMModel)
     assert isinstance(honey, HoneycombQDMModel)
+
+
+def test_triangular_qdm_uses_only_rhombi():
+    model = TriangularQDMModel(...)
+    for pid in model.plaquette_ids():
+        assert len(model.lattice.plaquette_links(pid)) == 4
+        assert model.lattice.plaquettes[pid].kind.startswith("rhombus_")
+
+
+def test_honeycomb_qdm_uses_only_hexagons():
+    model = HoneycombQDMModel(...)
+    for pid in model.plaquette_ids():
+        assert len(model.lattice.plaquette_links(pid)) == 6
+        assert model.lattice.plaquettes[pid].kind == "hexagon"
