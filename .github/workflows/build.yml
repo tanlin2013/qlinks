@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install CI helper dependency
+        run: python -m pip install packaging
+
       - name: Read versions
         id: versions
         run: python scripts/ci_versions.py
@@ -54,17 +57,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: ${{ github.event_name == 'push' }}
+          load: ${{ github.event_name == 'pull_request' }}
           build-args: |
             PYTHON_VERSION=${{ needs.versions.outputs.default-python }}
             POETRY_VERSION=${{ needs.versions.outputs.poetry-version }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            qlinks:ci
+            ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Smoke test Docker image
         if: github.event_name == 'pull_request'
-        run: |
-          docker build \
-            --build-arg PYTHON_VERSION=${{ needs.versions.outputs.default-python }} \
-            --build-arg POETRY_VERSION=${{ needs.versions.outputs.poetry-version }} \
-            -t qlinks:ci .
-          docker run --rm qlinks:ci python -c "import qlinks; print('qlinks import OK')"
+        run: docker run --rm qlinks:ci python -c "import qlinks; print('qlinks import OK')"

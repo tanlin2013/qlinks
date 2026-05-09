@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install CI helper dependency
+        run: python -m pip install packaging
+
       - name: Read versions
         id: versions
         run: python scripts/ci_versions.py
