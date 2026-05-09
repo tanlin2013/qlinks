@@ -266,6 +266,7 @@ def test_qlmmodel_factory_methods() -> None:
     assert isinstance(tri, TriangularQLMModel)
     assert isinstance(honey, HoneycombQLMModel)
 
+
 def test_triangular_qlm_z2_sector_builds() -> None:
     model = TriangularQLMModel(
         lx=3,

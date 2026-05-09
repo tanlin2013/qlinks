@@ -190,6 +190,7 @@ def test_honeycomb_qdm_uses_only_hexagons():
         assert len(model.lattice.plaquette_links(pid)) == 6
         assert model.lattice.plaquettes[pid].kind == "hexagon"
 
+
 def test_triangular_qdm_z2_sector_builds() -> None:
     model = TriangularQDMModel(
         lx=3,

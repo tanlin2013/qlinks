@@ -446,8 +446,8 @@ class TriangularQDMModel(QDMBase):
         return list(self.lattice.qdm_plaquette_ids())
 
     def make_sectors(
-            self,
-            layout: VariableLayout | None = None,
+        self,
+        layout: VariableLayout | None = None,
     ):
         if layout is None:
             layout = self.layout

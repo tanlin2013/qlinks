@@ -10,7 +10,6 @@ from qlinks.constraints.base import BaseSectorCondition
 from qlinks.lattice import BoundaryCondition, TriangularLattice
 from qlinks.variables import VariableLayout
 
-
 TriangularCycleDirection = Literal["a", "b"]
 Z2ValueConvention = Literal["binary", "flux_pm"]
 

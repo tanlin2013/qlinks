@@ -7,7 +7,11 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.basis import Basis
-from qlinks.constraints import GaussLawConstraint, SquareWindingSector, TriangularZ2WindingSector
+from qlinks.constraints import (
+    GaussLawConstraint,
+    SquareWindingSector,
+    TriangularZ2WindingSector,
+)
 from qlinks.conventions import SublatticeSignConvention, square_qdm_staggered_charges
 from qlinks.encoded import (
     BinaryEncodedBasis,
@@ -569,8 +573,8 @@ class TriangularQLMModel(QLMBase):
         return list(self.lattice.qlm_plaquette_ids())
 
     def make_sectors(
-            self,
-            layout: VariableLayout | None = None,
+        self,
+        layout: VariableLayout | None = None,
     ):
         if layout is None:
             layout = self.layout

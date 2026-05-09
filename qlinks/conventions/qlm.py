@@ -7,7 +7,6 @@ import numpy.typing as npt
 
 from qlinks.lattice import LatticeGraph, SquareLattice
 
-
 SublatticeSignConvention = Literal["even_positive", "odd_positive"]
 
 
