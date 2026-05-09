@@ -9,8 +9,8 @@ import numpy.typing as npt
 from qlinks.basis import Basis
 from qlinks.constraints import (
     GaussLawConstraint,
-    SquareWindingSector,
     HoneycombElectricWindingSector,
+    SquareWindingSector,
     TriangularZ2WindingSector,
 )
 from qlinks.conventions import SublatticeSignConvention, square_qdm_staggered_charges

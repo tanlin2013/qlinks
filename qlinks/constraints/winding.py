@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.constraints.base import BaseSectorCondition
-from qlinks.lattice import BoundaryCondition, SquareLattice, HoneycombLattice
+from qlinks.lattice import BoundaryCondition, HoneycombLattice, SquareLattice
 from qlinks.variables import VariableLayout
 
 Direction = Literal["x", "y"]
@@ -263,9 +263,7 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
             raise ValueError("value_convention must be 'binary' or 'flux_pm'.")
 
         link_ids = [
-            int(link.id)
-            for link in self.lattice.links
-            if link.wrap and link.kind == self.direction
+            int(link.id) for link in self.lattice.links if link.wrap and link.kind == self.direction
         ]
 
         if len(link_ids) == 0:

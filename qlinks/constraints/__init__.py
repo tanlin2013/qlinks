@@ -13,9 +13,9 @@ from qlinks.constraints.gauss_law import GaussLawConstraint
 from qlinks.constraints.local import FixedValueConstraint, LocalSumConstraint
 from qlinks.constraints.sectors import ParitySector, TotalValueSector
 from qlinks.constraints.winding import (
+    HoneycombElectricWindingSector,
     SquareQDMElectricWindingSector,
     SquareWindingSector,
-    HoneycombElectricWindingSector,
 )
 from qlinks.constraints.z2_winding import TriangularZ2WindingSector
 

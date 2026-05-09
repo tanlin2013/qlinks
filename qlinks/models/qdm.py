@@ -5,9 +5,9 @@ from typing import Literal
 
 from qlinks.constraints import (
     DimerCoveringConstraint,
+    HoneycombElectricWindingSector,
     SquareQDMElectricWindingSector,
     SquareWindingSector,
-    HoneycombElectricWindingSector,
     TriangularZ2WindingSector,
 )
 from qlinks.encoded import (
