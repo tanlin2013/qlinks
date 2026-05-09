@@ -24,9 +24,9 @@ class HoneycombLattice(LatticeGraph):
         A(x,y)
         B(x,y)
         A(x+1,y)
-        B(x+1,y+1)
-        A(x+1,y+1)
-        B(x,y+1)
+        B(x+1,y-1)
+        A(x+1,y-1)
+        B(x,y-1)
 
     This representation is convenient for QDM/QLM hexagon ring exchange.
     """
