@@ -14,8 +14,6 @@ WORKDIR $WORKDIR
 
 FROM python AS runtime
 
-COPY . $WORKDIR
-
 RUN apt update && \
     apt-get install -y --no-install-recommends \
         gfortran \
@@ -23,10 +21,13 @@ RUN apt update && \
         liblapack-dev \
         pipx
 
+COPY pyproject.toml poetry.lock ./
 RUN pipx install poetry==${POETRY_VERSION} && \
     poetry config virtualenvs.create false --local && \
-    poetry run pip install --upgrade pip wheel setuptools && \
-    poetry install -vvv --without dev --all-extras
+    poetry install -vvv --without dev --all-extras --no-root
+
+COPY . $WORKDIR
+RUN poetry install -vvv --without dev --all-extras
 
 RUN apt-get -y clean && \
     rm -rf /var/lib/apt/lists/*
