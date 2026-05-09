@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from qlinks.constraints import SquareWindingSector
-from qlinks.lattice import SquareLattice
+from qlinks.constraints import SquareWindingSector, HoneycombElectricWindingSector
+from qlinks.lattice import SquareLattice, HoneycombLattice
 from qlinks.variables import LocalSpace, VariableLayout
 
 
@@ -71,4 +71,358 @@ def test_square_winding_requires_periodic_lattice() -> None:
             lattice=lattice,
             direction="x",
             target=0,
+        )
+
+
+def test_honeycomb_electric_winding_binary_value() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        value_convention="binary",
+    )
+
+    config = layout.default_config()
+
+    # Binary default config is usually all zeros.
+    # For binary QDM convention, E = 2n - 1, so each selected cut link
+    # contributes -1.
+    expected = -sector.affected_variables().size
+
+    assert sector.value(config) == expected
+    assert sector.is_satisfied(config) == (expected == 0)
+
+
+def test_honeycomb_electric_winding_binary_all_occupied() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="y",
+        target=0,
+        value_convention="binary",
+    )
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+
+    # For binary convention, E = 2n - 1. If n = 1, every selected cut link
+    # contributes +1.
+    expected = sector.affected_variables().size
+
+    assert sector.value(config) == expected
+    assert sector.is_satisfied(config) == (expected == 0)
+
+
+def test_honeycomb_electric_winding_flux_pm_value() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        value_convention="flux_pm",
+    )
+
+    config = np.full(layout.n_variables, -1, dtype=np.int64)
+
+    expected = -sector.affected_variables().size
+
+    assert sector.value(config) == expected
+
+
+def test_honeycomb_electric_winding_flux_pm_all_positive() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="y",
+        target=0,
+        value_convention="flux_pm",
+    )
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+
+    expected = sector.affected_variables().size
+
+    assert sector.value(config) == expected
+
+
+def test_honeycomb_electric_winding_affected_variables_are_nonempty() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    sector_x = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        value_convention="binary",
+    )
+
+    sector_y = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="y",
+        target=0,
+        value_convention="binary",
+    )
+
+    assert sector_x.affected_variables().size > 0
+    assert sector_y.affected_variables().size > 0
+
+    assert np.all(sector_x.affected_variables() >= 0)
+    assert np.all(sector_y.affected_variables() >= 0)
+
+    assert np.all(sector_x.affected_variables() < layout.n_variables)
+    assert np.all(sector_y.affected_variables() < layout.n_variables)
+
+
+def test_honeycomb_electric_winding_target_satisfaction() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    config = layout.default_config()
+
+    probe_sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        value_convention="binary",
+    )
+
+    actual_value = probe_sector.value(config)
+
+    matching_sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=actual_value,
+        value_convention="binary",
+    )
+
+    nonmatching_sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=actual_value + 2,
+        value_convention="binary",
+    )
+
+    assert matching_sector.is_satisfied(config)
+    assert not nonmatching_sector.is_satisfied(config)
+
+
+def test_honeycomb_electric_winding_partial_check_fully_assigned() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    config = layout.default_config()
+
+    probe_sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        value_convention="binary",
+    )
+
+    actual_value = probe_sector.value(config)
+
+    sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=actual_value,
+        value_convention="binary",
+    )
+
+    assigned_mask = np.ones(layout.n_variables, dtype=bool)
+
+    assert sector.partial_check(config, assigned_mask)
+
+
+def test_honeycomb_electric_winding_partial_check_fully_assigned_rejects() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    config = layout.default_config()
+
+    probe_sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        value_convention="binary",
+    )
+
+    actual_value = probe_sector.value(config)
+
+    sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=actual_value + 2,
+        value_convention="binary",
+    )
+
+    assigned_mask = np.ones(layout.n_variables, dtype=bool)
+
+    assert not sector.partial_check(config, assigned_mask)
+
+
+def test_honeycomb_electric_winding_partial_check_not_fully_assigned_can_still_pass() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    sector = HoneycombElectricWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        value_convention="binary",
+    )
+
+    config = layout.default_config()
+    assigned_mask = np.zeros(layout.n_variables, dtype=bool)
+
+    # With no cut variables assigned, target 0 should still be reachable
+    # as long as the cut has even length. For a 3x3 honeycomb, this mainly
+    # checks that the partial_check method does not over-prune.
+    assert sector.partial_check(config, assigned_mask)
+
+
+def test_honeycomb_electric_winding_requires_periodic_boundary() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="open",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    with pytest.raises(ValueError, match="PBC"):
+        HoneycombElectricWindingSector(
+            layout=layout,
+            lattice=lattice,
+            direction="x",
+            target=0,
+            value_convention="binary",
+        )
+
+
+def test_honeycomb_electric_winding_rejects_bad_direction() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    with pytest.raises(ValueError, match="direction"):
+        HoneycombElectricWindingSector(
+            layout=layout,
+            lattice=lattice,
+            direction="z",  # type: ignore[arg-type]
+            target=0,
+            value_convention="binary",
+        )
+
+
+def test_honeycomb_electric_winding_rejects_bad_value_convention() -> None:
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    with pytest.raises(ValueError, match="value_convention"):
+        HoneycombElectricWindingSector(
+            layout=layout,
+            lattice=lattice,
+            direction="x",
+            target=0,
+            value_convention="bad",  # type: ignore[arg-type]
         )

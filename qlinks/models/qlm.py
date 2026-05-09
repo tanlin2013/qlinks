@@ -10,6 +10,7 @@ from qlinks.basis import Basis
 from qlinks.constraints import (
     GaussLawConstraint,
     SquareWindingSector,
+    HoneycombElectricWindingSector,
     TriangularZ2WindingSector,
 )
 from qlinks.conventions import SublatticeSignConvention, square_qdm_staggered_charges
@@ -617,6 +618,8 @@ class HoneycombQLMModel(QLMBase):
     lx: int = 2
     ly: int = 2
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
+    winding_x: int | None = None
+    winding_y: int | None = None
 
     def _make_lattice(self) -> HoneycombLattice:
         return HoneycombLattice(
@@ -627,6 +630,36 @@ class HoneycombQLMModel(QLMBase):
 
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qlm_plaquette_ids())
+
+    def make_sectors(self, layout: VariableLayout | None = None):
+        if layout is None:
+            layout = self.layout
+
+        sectors = []
+
+        if self.winding_x is not None:
+            sectors.append(
+                HoneycombElectricWindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="x",
+                    target=self.winding_x,
+                    value_convention="flux_pm",
+                )
+            )
+
+        if self.winding_y is not None:
+            sectors.append(
+                HoneycombElectricWindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="y",
+                    target=self.winding_y,
+                    value_convention="flux_pm",
+                )
+            )
+
+        return tuple(sectors)
 
 
 @dataclass(frozen=True)

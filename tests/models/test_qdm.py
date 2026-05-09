@@ -203,3 +203,27 @@ def test_triangular_qdm_z2_sector_builds() -> None:
     basis = model.build_basis(solver="dfs", sort=True)
 
     assert basis.n_states >= 0
+
+
+def test_honeycomb_qdm_winding_sector_builds() -> None:
+    model = HoneycombQDMModel(
+        lx=3,
+        ly=3,
+        boundary_condition="periodic",
+        kinetic=-1.0,
+        potential=0.0,
+        required_count=1,
+        winding_x=0,
+        winding_y=0,
+    )
+
+    basis = model.build_basis(
+        solver="dfs",
+        sort=True,
+    )
+
+    assert basis.n_states >= 0
+
+    sectors = model.make_sectors(model.layout)
+    for state in basis.states:
+        assert all(sector.is_satisfied(state) for sector in sectors)

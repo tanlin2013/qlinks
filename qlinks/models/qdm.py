@@ -7,6 +7,7 @@ from qlinks.constraints import (
     DimerCoveringConstraint,
     SquareQDMElectricWindingSector,
     SquareWindingSector,
+    HoneycombElectricWindingSector,
     TriangularZ2WindingSector,
 )
 from qlinks.encoded import (
@@ -490,6 +491,8 @@ class HoneycombQDMModel(QDMBase):
     lx: int = 2
     ly: int = 2
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
+    winding_x: int | None = None
+    winding_y: int | None = None
 
     def _make_lattice(self) -> HoneycombLattice:
         return HoneycombLattice(
@@ -500,6 +503,36 @@ class HoneycombQDMModel(QDMBase):
 
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qdm_plaquette_ids())
+
+    def make_sectors(self, layout: VariableLayout | None = None):
+        if layout is None:
+            layout = self.layout
+
+        sectors = []
+
+        if self.winding_x is not None:
+            sectors.append(
+                HoneycombElectricWindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="x",
+                    target=self.winding_x,
+                    value_convention="binary",
+                )
+            )
+
+        if self.winding_y is not None:
+            sectors.append(
+                HoneycombElectricWindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="y",
+                    target=self.winding_y,
+                    value_convention="binary",
+                )
+            )
+
+        return tuple(sectors)
 
 
 @dataclass(frozen=True)

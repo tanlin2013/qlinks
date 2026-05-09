@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.constraints.base import BaseSectorCondition
-from qlinks.lattice import BoundaryCondition, SquareLattice
+from qlinks.lattice import BoundaryCondition, SquareLattice, HoneycombLattice
 from qlinks.variables import VariableLayout
 
 Direction = Literal["x", "y"]
@@ -238,6 +238,98 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
             return False
 
         if np.all(assigned_local):
+            return current == target
+
+        return True
+
+
+@dataclass(frozen=True, slots=True)
+class HoneycombElectricWindingSector(BaseSectorCondition):
+    layout: VariableLayout
+    lattice: HoneycombLattice
+    direction: Literal["x", "y"]
+    target: int
+    value_convention: Literal["binary", "flux_pm"] = "binary"
+    name: str = "honeycomb_electric_winding_sector"
+
+    def __post_init__(self) -> None:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            raise ValueError("HoneycombElectricWindingSector requires PBC.")
+
+        if self.direction not in ("x", "y"):
+            raise ValueError("direction must be 'x' or 'y'.")
+
+        if self.value_convention not in ("binary", "flux_pm"):
+            raise ValueError("value_convention must be 'binary' or 'flux_pm'.")
+
+        link_ids = [
+            int(link.id)
+            for link in self.lattice.links
+            if link.wrap and link.kind == self.direction
+        ]
+
+        if len(link_ids) == 0:
+            raise ValueError(f"No wrapping {self.direction}-links found.")
+
+        variable_indices = np.asarray(
+            [self.layout.link_variable_index(link_id) for link_id in link_ids],
+            dtype=np.int64,
+        )
+
+        object.__setattr__(self, "_link_ids", np.asarray(link_ids, dtype=np.int64))
+        object.__setattr__(self, "_variable_indices", variable_indices)
+        object.__setattr__(self, "target", int(self.target))
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return self._variable_indices.copy()
+
+    def _electric_values(self, values: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
+        if self.value_convention == "binary":
+            return 2 * values - 1
+
+        if self.value_convention == "flux_pm":
+            return values
+
+        raise ValueError(f"Unsupported value convention: {self.value_convention}")
+
+    def value(self, config: npt.ArrayLike) -> int:
+        arr = self._as_config(config)
+        values = arr[self._variable_indices]
+        electric = self._electric_values(values)
+        return int(np.sum(electric))
+
+    def is_satisfied(self, config: npt.ArrayLike) -> bool:
+        return self.value(config) == self.target
+
+    def partial_check(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> bool:
+        arr = np.asarray(config, dtype=np.int64)
+        assigned = np.asarray(assigned_mask, dtype=bool)
+
+        variable_indices = self._variable_indices
+        assigned_local = assigned[variable_indices]
+
+        assigned_values = arr[variable_indices[assigned_local]]
+        current = int(np.sum(self._electric_values(assigned_values)))
+
+        remaining = int(np.count_nonzero(~assigned_local))
+
+        # Each unassigned link contributes either -1 or +1.
+        min_possible = current - remaining
+        max_possible = current + remaining
+
+        target = int(self.target)
+
+        if target < min_possible:
+            return False
+
+        if target > max_possible:
+            return False
+
+        if remaining == 0:
             return current == target
 
         return True
