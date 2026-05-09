@@ -17,6 +17,7 @@ RUN apt update && \
 
 RUN pipx install poetry==2.3.4 &&  \
     poetry config virtualenvs.create false --local &&  \
+    poetry run pip install --upgrade pip wheel setuptools &&  \
     poetry install -vvv --without dev --all-extras
 
 RUN apt-get -y clean &&  \
