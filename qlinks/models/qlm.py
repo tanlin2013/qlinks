@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.basis import Basis
-from qlinks.constraints import GaussLawConstraint, SquareWindingSector
+from qlinks.constraints import GaussLawConstraint, SquareWindingSector, TriangularZ2WindingSector
 from qlinks.conventions import SublatticeSignConvention, square_qdm_staggered_charges
 from qlinks.encoded import (
     BinaryEncodedBasis,
@@ -553,6 +553,8 @@ class TriangularQLMModel(QLMBase):
     lx: int = 2
     ly: int = 2
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
+    winding_a: int | None = None
+    winding_b: int | None = None
 
     def _make_lattice(self) -> TriangularLattice:
         return TriangularLattice(
@@ -565,6 +567,39 @@ class TriangularQLMModel(QLMBase):
 
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qlm_plaquette_ids())
+
+    def make_sectors(
+            self,
+            layout: VariableLayout | None = None,
+    ):
+        if layout is None:
+            layout = self.layout
+
+        sectors = []
+
+        if self.winding_a is not None:
+            sectors.append(
+                TriangularZ2WindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="a",
+                    target=self.winding_a,
+                    value_convention="flux_pm",
+                )
+            )
+
+        if self.winding_b is not None:
+            sectors.append(
+                TriangularZ2WindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="b",
+                    target=self.winding_b,
+                    value_convention="flux_pm",
+                )
+            )
+
+        return tuple(sectors)
 
 
 @dataclass(frozen=True)

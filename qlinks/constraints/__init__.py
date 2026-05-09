@@ -16,6 +16,7 @@ from qlinks.constraints.winding import (
     SquareQDMElectricWindingSector,
     SquareWindingSector,
 )
+from qlinks.constraints.z2_winding import TriangularZ2WindingSector
 
 __all__ = [
     "BaseConstraint",
@@ -34,4 +35,5 @@ __all__ = [
     "SquareQDMElectricWindingSector",
     "TotalValueSector",
     "all_satisfied",
+    "TriangularZ2WindingSector",
 ]

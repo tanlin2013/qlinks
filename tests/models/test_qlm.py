@@ -265,3 +265,17 @@ def test_qlmmodel_factory_methods() -> None:
 
     assert isinstance(tri, TriangularQLMModel)
     assert isinstance(honey, HoneycombQLMModel)
+
+def test_triangular_qlm_z2_sector_builds() -> None:
+    model = TriangularQLMModel(
+        lx=3,
+        ly=3,
+        boundary_condition="periodic",
+        winding_a=0,
+        winding_b=1,
+        charges=0,
+    )
+
+    basis = model.build_basis(solver="dfs", sort=True)
+
+    assert basis.n_states >= 0

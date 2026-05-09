@@ -7,6 +7,7 @@ from qlinks.constraints import (
     DimerCoveringConstraint,
     SquareQDMElectricWindingSector,
     SquareWindingSector,
+    TriangularZ2WindingSector,
 )
 from qlinks.encoded import (
     BitmaskAlternatingPlaquetteFlipOperator,
@@ -429,6 +430,8 @@ class TriangularQDMModel(QDMBase):
     lx: int = 2
     ly: int = 2
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
+    winding_a: int | None = None
+    winding_b: int | None = None
 
     def _make_lattice(self) -> TriangularLattice:
         return TriangularLattice(
@@ -441,6 +444,39 @@ class TriangularQDMModel(QDMBase):
 
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qdm_plaquette_ids())
+
+    def make_sectors(
+            self,
+            layout: VariableLayout | None = None,
+    ):
+        if layout is None:
+            layout = self.layout
+
+        sectors = []
+
+        if self.winding_a is not None:
+            sectors.append(
+                TriangularZ2WindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="a",
+                    target=self.winding_a,
+                    value_convention="binary",
+                )
+            )
+
+        if self.winding_b is not None:
+            sectors.append(
+                TriangularZ2WindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="b",
+                    target=self.winding_b,
+                    value_convention="binary",
+                )
+            )
+
+        return tuple(sectors)
 
 
 @dataclass(frozen=True)
