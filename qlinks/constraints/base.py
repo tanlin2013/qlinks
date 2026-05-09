@@ -53,11 +53,19 @@ class SectorCondition(Protocol):
 
     name: str
 
+    def affected_variables(self) -> npt.NDArray[np.int64]: ...
+
     def value(self, config: npt.ArrayLike) -> object: ...
 
     def check(self, config: npt.ArrayLike) -> ConstraintResult: ...
 
     def is_satisfied(self, config: npt.ArrayLike) -> bool: ...
+
+    def partial_check(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> bool: ...
 
 
 class BaseConstraint:
@@ -143,6 +151,9 @@ class BaseSectorCondition:
             raise ValueError(f"Expected config shape {self.layout.shape}, got {arr.shape}.")
 
         return arr
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return np.arange(self.layout.n_variables, dtype=np.int64)
 
     def value(self, config: npt.ArrayLike) -> object:
         raise NotImplementedError

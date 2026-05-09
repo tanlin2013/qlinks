@@ -80,11 +80,7 @@ class SquareWindingSector(BaseSectorCondition):
         arr = self._as_config(config)
         return int(np.sum(arr[self._variable_indices]))
 
-    def partial_check(
-        self,
-        config: npt.ArrayLike,
-        assigned_mask: npt.ArrayLike,
-    ) -> bool:
+    def partial_check(self, config, assigned_mask) -> bool:
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)
 
@@ -92,16 +88,24 @@ class SquareWindingSector(BaseSectorCondition):
         assigned_local = assigned[variable_indices]
 
         current = int(np.sum(arr[variable_indices[assigned_local]]))
-        remaining = int(np.count_nonzero(~assigned_local))
+
+        min_remaining = 0
+        max_remaining = 0
+
+        for idx in variable_indices[~assigned_local]:
+            values = self.layout.local_space(int(idx)).values
+            min_remaining += int(np.min(values))
+            max_remaining += int(np.max(values))
+
         target = int(self.target)
 
-        if current > target:
+        if target < current + min_remaining:
             return False
 
-        if current + remaining < target:
+        if target > current + max_remaining:
             return False
 
-        if remaining == 0:
+        if np.all(assigned_local):
             return current == target
 
         return True
