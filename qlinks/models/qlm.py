@@ -8,6 +8,7 @@ import numpy.typing as npt
 
 from qlinks.basis import Basis
 from qlinks.constraints import GaussLawConstraint, SquareWindingSector
+from qlinks.conventions import SublatticeSignConvention, square_qdm_staggered_charges
 from qlinks.encoded import (
     BinaryEncodedBasis,
     BitmaskAlternatingPlaquetteFlipOperator,
@@ -500,6 +501,43 @@ class SquareQLMModel(QLMBase):
             )
 
         raise ValueError(f"Unsupported builder: {builder}")
+
+    @classmethod
+    def from_qdm_staggered_background(
+        cls,
+        lx: int,
+        ly: int,
+        *,
+        boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
+        kinetic: complex = -1.0,
+        potential: complex = 0.0,
+        charge_magnitude: int = 2,
+        charge_convention: SublatticeSignConvention = "even_positive",
+        winding_x: int | None = None,
+        winding_y: int | None = None,
+    ) -> SquareQLMModel:
+        lattice = SquareLattice(
+            lx,
+            ly,
+            boundary_condition=boundary_condition,
+        )
+
+        charges = square_qdm_staggered_charges(
+            lattice,
+            magnitude=charge_magnitude,
+            convention=charge_convention,
+        )
+
+        return cls(
+            lx=lx,
+            ly=ly,
+            boundary_condition=boundary_condition,
+            kinetic=kinetic,
+            potential=potential,
+            charges=charges,
+            winding_x=winding_x,
+            winding_y=winding_y,
+        )
 
 
 @dataclass(frozen=True)

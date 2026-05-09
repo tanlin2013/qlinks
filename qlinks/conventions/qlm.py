@@ -1,0 +1,112 @@
+from __future__ import annotations
+
+from typing import Literal
+
+import numpy as np
+import numpy.typing as npt
+
+from qlinks.lattice import LatticeGraph, SquareLattice
+
+
+SublatticeSignConvention = Literal["even_positive", "odd_positive"]
+
+
+def staggered_charges_from_sites(
+    lattice: LatticeGraph,
+    *,
+    magnitude: int = 1,
+    convention: SublatticeSignConvention = "even_positive",
+) -> npt.NDArray[np.int64]:
+    """
+    Generate staggered background charges on lattice sites.
+
+    The charge is assigned by the parity of the unit-cell coordinate:
+
+        eta(r) = (-1) ** sum(cell coordinates)
+
+    For a square lattice, this is simply:
+
+        eta(x, y) = (-1) ** (x + y)
+
+    Parameters
+    ----------
+    lattice:
+        Lattice whose sites carry the Gauss-law charges.
+
+    magnitude:
+        Absolute value of the staggered charge.
+
+    convention:
+        "even_positive":
+            even sublattice gets +magnitude,
+            odd sublattice gets -magnitude.
+
+        "odd_positive":
+            even sublattice gets -magnitude,
+            odd sublattice gets +magnitude.
+
+    Returns
+    -------
+    charges:
+        Integer array of shape (lattice.num_sites,), ordered by site id.
+    """
+    if magnitude < 0:
+        raise ValueError("magnitude must be non-negative.")
+
+    if convention not in ("even_positive", "odd_positive"):
+        raise ValueError("convention must be 'even_positive' or 'odd_positive'.")
+
+    charges = np.empty(lattice.num_sites, dtype=np.int64)
+
+    for site in lattice.sites:
+        parity = sum(int(c) for c in site.cell) % 2
+
+        if convention == "even_positive":
+            sign = 1 if parity == 0 else -1
+        else:
+            sign = -1 if parity == 0 else 1
+
+        charges[int(site.id)] = sign * int(magnitude)
+
+    return charges
+
+
+def square_qdm_staggered_charges(
+    lattice: SquareLattice,
+    *,
+    magnitude: int = 2,
+    convention: SublatticeSignConvention = "even_positive",
+) -> npt.NDArray[np.int64]:
+    """
+    Staggered charges for the square-lattice QDM-to-QLM mapping.
+
+    For the current spin-half flux convention E_l in {-1, +1}, the close-packed
+    QDM constraint
+
+        one dimer touching each site
+
+    maps naturally to a staggered Gauss law with charge magnitude 2 on the
+    square lattice.
+
+    Parameters
+    ----------
+    lattice:
+        SquareLattice instance.
+
+    magnitude:
+        Charge magnitude. The default is 2 for the current {-1,+1} flux
+        normalization.
+
+    convention:
+        Which sublattice receives the positive charge.
+
+    Returns
+    -------
+    charges:
+        Integer array ordered by site id.
+    """
+    return staggered_charges_from_sites(
+        lattice,
+        magnitude=magnitude,
+        convention=convention,
+    )
