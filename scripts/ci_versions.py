@@ -9,7 +9,6 @@ import tomllib
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
@@ -55,11 +54,7 @@ def matrix_from_requires_python(spec: str) -> list[str]:
     specifier = SpecifierSet(spec)
     candidates = python_minor_candidates()
 
-    matrix = [
-        version
-        for version in candidates
-        if Version(version) in specifier
-    ]
+    matrix = [version for version in candidates if Version(version) in specifier]
 
     if not matrix:
         raise SystemExit(f"No Python versions matched requires-python={spec!r}")
