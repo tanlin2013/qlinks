@@ -165,6 +165,42 @@ def test_square_qlm_potential_rejects_optimized() -> None:
         )
 
 
+def test_square_qlm_electric_winding_4x4_known_count() -> None:
+    model = SquareQLMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+    )
+
+    basis = model.build_basis(
+        solver="dfs",
+        sort=True,
+    )
+
+    assert basis.n_states == 990
+
+
+def test_square_qlm_total_4x4_known_count() -> None:
+    model = SquareQLMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+    )
+
+    # No sector restriction.
+    object.__setattr__(model, "winding_x", None)
+    object.__setattr__(model, "winding_y", None)
+
+    basis = model.build_basis(
+        solver="dfs",
+        sort=True,
+    )
+
+    assert basis.n_states == 2970
+
+
 def test_square_qlm_basis_smoke() -> None:
     charges = np.array([-2, 0, 0, 2], dtype=np.int64)
 
