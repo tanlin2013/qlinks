@@ -8,6 +8,8 @@ import numpy.typing as npt
 
 from qlinks.basis import Basis
 from qlinks.constraints import (
+    ChargeNormalization,
+    FluxNormalization,
     GaussLawConstraint,
     HoneycombElectricWindingSector,
     SquareWindingSector,
@@ -74,6 +76,7 @@ class QLMBase(HamiltonianModelBase):
     kinetic: complex = -1.0
     potential: complex = 0.0
     charges: int | Sequence[int] | npt.NDArray[np.int64] = 0
+    charge_normalization: ChargeNormalization = "spin_half"
 
     def _make_layout(self) -> VariableLayout:
         return VariableLayout.from_lattice_links(
@@ -92,6 +95,7 @@ class QLMBase(HamiltonianModelBase):
             lattice=self.lattice,
             layout=layout,
             charges=self.charges,
+            charge_normalization=self.charge_normalization,
         )
 
     def make_sectors(
@@ -341,6 +345,7 @@ class SquareQLMModel(QLMBase):
                     lattice=self.lattice,
                     direction="x",
                     target=self.winding_x,
+                    flux_normalization=self.charge_normalization,
                 )
             )
 
@@ -351,6 +356,7 @@ class SquareQLMModel(QLMBase):
                     lattice=self.lattice,
                     direction="y",
                     target=self.winding_y,
+                    flux_normalization=self.charge_normalization,
                 )
             )
 
@@ -620,6 +626,7 @@ class HoneycombQLMModel(QLMBase):
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
     winding_x: int | None = None
     winding_y: int | None = None
+    flux_normalization: FluxNormalization = "spin_half"
 
     def _make_lattice(self) -> HoneycombLattice:
         return HoneycombLattice(
@@ -645,6 +652,7 @@ class HoneycombQLMModel(QLMBase):
                     direction="x",
                     target=self.winding_x,
                     value_convention="flux_pm",
+                    flux_normalization=self.charge_normalization,
                 )
             )
 
@@ -656,6 +664,7 @@ class HoneycombQLMModel(QLMBase):
                     direction="y",
                     target=self.winding_y,
                     value_convention="flux_pm",
+                    flux_normalization=self.charge_normalization,
                 )
             )
 

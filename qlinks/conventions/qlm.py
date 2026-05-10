@@ -7,6 +7,7 @@ import numpy.typing as npt
 
 from qlinks.lattice import LatticeGraph, SquareLattice
 
+ChargeNormalization = Literal["integer_flux", "spin_half"]
 SublatticeSignConvention = Literal["even_positive", "odd_positive"]
 
 
@@ -73,7 +74,8 @@ def staggered_charges_from_sites(
 def square_qdm_staggered_charges(
     lattice: SquareLattice,
     *,
-    magnitude: int = 2,
+    magnitude: int | None = None,
+    charge_normalization: ChargeNormalization = "spin_half",
     convention: SublatticeSignConvention = "even_positive",
 ) -> npt.NDArray[np.int64]:
     """
@@ -104,6 +106,16 @@ def square_qdm_staggered_charges(
     charges:
         Integer array ordered by site id.
     """
+    if magnitude is None:
+        if charge_normalization == "spin_half":
+            magnitude = 1
+        elif charge_normalization == "integer_flux":
+            magnitude = 2
+        else:
+            raise ValueError(
+                "charge_normalization must be 'integer_flux' or 'spin_half'."
+            )
+
     return staggered_charges_from_sites(
         lattice,
         magnitude=magnitude,

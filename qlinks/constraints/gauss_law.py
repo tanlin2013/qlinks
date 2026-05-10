@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -9,6 +9,34 @@ import numpy.typing as npt
 from qlinks.constraints.base import BaseConstraint, ConstraintResult
 from qlinks.lattice import LatticeGraph
 from qlinks.variables import VariableLayout
+
+
+ChargeNormalization = Literal["integer_flux", "spin_half"]
+
+
+def internal_charge_value(
+    charge: int,
+    *,
+    charge_normalization: ChargeNormalization,
+) -> int:
+    """
+    Convert user-facing charge into the raw integer target used by configs.
+
+    integer_flux:
+        config values are interpreted as physical E_l = ±1.
+        charge target is used directly.
+
+    spin_half:
+        config values are stored as s_l = ±1, but physical E_l = s_l / 2.
+        user-facing charge q is converted to raw target 2q.
+    """
+    if charge_normalization == "integer_flux":
+        return int(charge)
+
+    if charge_normalization == "spin_half":
+        return 2 * int(charge)
+
+    raise ValueError("charge_normalization must be 'integer_flux' or 'spin_half'.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +63,7 @@ class GaussLawConstraint(BaseConstraint):
     signs: npt.NDArray[np.int64]
     charge: int
     name: str = "gauss_law"
+    charge_normalization: ChargeNormalization = "spin_half"
 
     def __post_init__(self) -> None:
         link_ids = np.asarray(self.link_ids, dtype=np.int64)
@@ -68,6 +97,7 @@ class GaussLawConstraint(BaseConstraint):
         layout: VariableLayout,
         site_id: int,
         charge: int = 0,
+        charge_normalization: ChargeNormalization = "spin_half",
     ) -> GaussLawConstraint:
         incidence = lattice.incidence_matrix().tocsr()
 
@@ -87,6 +117,7 @@ class GaussLawConstraint(BaseConstraint):
             link_ids=link_ids,
             signs=signs,
             charge=charge,
+            charge_normalization=charge_normalization,
         )
 
     @classmethod
@@ -95,6 +126,7 @@ class GaussLawConstraint(BaseConstraint):
         lattice: LatticeGraph,
         layout: VariableLayout,
         charges: int | Sequence[int] | npt.NDArray[np.int64] = 0,
+        charge_normalization: ChargeNormalization = "spin_half",
     ) -> tuple[GaussLawConstraint, ...]:
         if isinstance(charges, int):
             charge_array = np.full(lattice.num_sites, charges, dtype=np.int64)
@@ -116,6 +148,7 @@ class GaussLawConstraint(BaseConstraint):
                     layout=layout,
                     site_id=site_id,
                     charge=int(charge_array[site_id]),
+                    charge_normalization=charge_normalization,
                 )
             )
 
@@ -130,7 +163,11 @@ class GaussLawConstraint(BaseConstraint):
 
     def check(self, config: npt.ArrayLike) -> ConstraintResult:
         actual = self.value(config)
-        satisfied = actual == self.charge
+        target = internal_charge_value(
+            self.charge,
+            charge_normalization=self.charge_normalization,
+        )
+        satisfied = actual == target
 
         return ConstraintResult(
             satisfied=satisfied,
@@ -161,23 +198,15 @@ class GaussLawConstraint(BaseConstraint):
 
         remaining_orientations = orientations[~assigned_local]
 
-        min_remaining = 0
-        max_remaining = 0
-
         # For spin-half flux values {-1, +1}.
         # Each unassigned term is orientation * E, so it can contribute -1 or +1.
-        for orientation in remaining_orientations:
-            vals = np.array(
-                [
-                    int(orientation) * (-1),
-                    int(orientation) * (+1),
-                ],
-                dtype=np.int64,
-            )
-            min_remaining += int(np.min(vals))
-            max_remaining += int(np.max(vals))
+        min_remaining = -int(np.sum(np.abs(remaining_orientations)))
+        max_remaining = int(np.sum(np.abs(remaining_orientations)))
 
-        target = int(self.charge)
+        target = internal_charge_value(
+            self.charge,
+            charge_normalization=self.charge_normalization,
+        )
 
         if target < current + min_remaining:
             return False

@@ -6,11 +6,37 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.constraints.base import BaseSectorCondition
+from qlinks.constraints.base import BaseSectorCondition, ConstraintResult
 from qlinks.lattice import BoundaryCondition, HoneycombLattice, SquareLattice
 from qlinks.variables import VariableLayout
 
 Direction = Literal["x", "y"]
+FluxNormalization = Literal["integer_flux", "spin_half"]
+
+
+def internal_flux_winding_value(
+    winding: int,
+    *,
+    flux_normalization: FluxNormalization,
+) -> int:
+    """
+    Convert user-facing winding target into raw integer flux target.
+
+    integer_flux:
+        stored flux s_l ∈ {-1,+1} is physical E_l.
+        target = winding
+
+    spin_half:
+        stored flux s_l ∈ {-1,+1}, physical E_l = s_l / 2.
+        target = 2 * winding
+    """
+    if flux_normalization == "integer_flux":
+        return int(winding)
+
+    if flux_normalization == "spin_half":
+        return 2 * int(winding)
+
+    raise ValueError("flux_normalization must be 'integer_flux' or 'spin_half'.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +61,7 @@ class SquareWindingSector(BaseSectorCondition):
     direction: Direction
     target: int
     name: str = "square_winding_sector"
+    flux_normalization: FluxNormalization = "spin_half"
 
     def __post_init__(self) -> None:
         if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
@@ -80,6 +107,41 @@ class SquareWindingSector(BaseSectorCondition):
         arr = self._as_config(config)
         return int(np.sum(arr[self._variable_indices]))
 
+    def internal_target(self) -> int:
+        values_seen: set[int] = set()
+
+        for variable_index in self._variable_indices:
+            values_seen.update(
+                int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
+            )
+
+        # QLM flux sector: values {-1,+1}
+        if values_seen <= {-1, 1}:
+            return internal_flux_winding_value(
+                self.target,
+                flux_normalization=self.flux_normalization,
+            )
+
+        # QDM cut-count sector: values {0,1}; target is already a count.
+        return int(self.target)
+
+    def check(self, config: npt.ArrayLike) -> ConstraintResult:
+        actual = self.value(config)
+        target = self.internal_target()
+        residual = actual - target
+        satisfied = residual == 0
+
+        return ConstraintResult(
+            satisfied=satisfied,
+            name=self.name,
+            residual=residual,
+            message=(
+                f"{self.name}(direction={self.direction}): "
+                f"value={actual}, target={self.target}, "
+                f"internal_target={target}, residual={residual}"
+            ),
+        )
+
     def partial_check(self, config, assigned_mask) -> bool:
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)
@@ -97,7 +159,7 @@ class SquareWindingSector(BaseSectorCondition):
             min_remaining += int(np.min(values))
             max_remaining += int(np.max(values))
 
-        target = int(self.target)
+        target = self.internal_target()
 
         if target < current + min_remaining:
             return False
@@ -251,6 +313,7 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
     target: int
     value_convention: Literal["binary", "flux_pm"] = "binary"
     name: str = "honeycomb_electric_winding_sector"
+    flux_normalization: FluxNormalization = "spin_half"
 
     def __post_init__(self) -> None:
         if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
@@ -296,8 +359,19 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
         electric = self._electric_values(values)
         return int(np.sum(electric))
 
+    def internal_target(self) -> int:
+        if self.value_convention == "flux_pm":
+            return internal_flux_winding_value(
+                self.target,
+                flux_normalization=self.flux_normalization,
+            )
+
+        # QDM binary convention uses E = 2n - 1 internally.
+        # The target is already in the raw integer electric-winding convention.
+        return int(self.target)
+
     def is_satisfied(self, config: npt.ArrayLike) -> bool:
-        return self.value(config) == self.target
+        return self.value(config) == self.internal_target()
 
     def partial_check(
         self,
@@ -319,7 +393,7 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
         min_possible = current - remaining
         max_possible = current + remaining
 
-        target = int(self.target)
+        target = self.internal_target()
 
         if target < min_possible:
             return False

@@ -68,3 +68,29 @@ def test_staggered_charges_rejects_bad_convention() -> None:
             lattice,
             convention="bad",  # type: ignore[arg-type]
         )
+
+
+def test_square_qdm_staggered_charges_spin_half_default() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+
+    charges = square_qdm_staggered_charges(
+        lattice,
+        charge_normalization="spin_half",
+        convention="even_positive",
+    )
+
+    expected = np.array([1, -1, -1, 1], dtype=np.int64)
+    np.testing.assert_array_equal(charges, expected)
+
+
+def test_square_qdm_staggered_charges_integer_flux() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+
+    charges = square_qdm_staggered_charges(
+        lattice,
+        charge_normalization="integer_flux",
+        convention="even_positive",
+    )
+
+    expected = np.array([2, -2, -2, 2], dtype=np.int64)
+    np.testing.assert_array_equal(charges, expected)

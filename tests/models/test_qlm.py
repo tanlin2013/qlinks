@@ -1,7 +1,9 @@
 import numpy as np
+import pytest
 
 from qlinks.basis import Basis
 from qlinks.builders import is_hermitian_sparse
+from qlinks.conventions import square_qdm_staggered_charges
 from qlinks.encoded import binary_encoded_basis_from_flux_basis
 from qlinks.models import (
     HoneycombQLMModel,
@@ -165,13 +167,61 @@ def test_square_qlm_potential_rejects_optimized() -> None:
         )
 
 
-def test_square_qlm_electric_winding_4x4_known_count() -> None:
-    model = SquareQLMModel(
-        lx=4,
-        ly=4,
+@pytest.mark.parametrize(
+    (
+        "lx",
+        "ly",
+        "winding_x",
+        "winding_y",
+        "charge_pattern",
+        "charge_normalization",
+        "expected_n_states",
+    ),
+    [
+        # Zero-charge QLM, integer-flux convention.
+        (4, 4, None, None, "zero", "integer_flux", 2970),
+        (4, 4, 0, 0, "zero", "integer_flux", 990),
+
+        # Staggered-background QLM matching square QDM.
+        # Spin-half convention: user-facing charges are ±1.
+        (4, 4, None, None, "staggered", "spin_half", 272),
+        (4, 4, 0, 0, "staggered", "spin_half", 132),
+    ],
+)
+def test_square_qlm_known_basis_counts(
+    lx: int,
+    ly: int,
+    winding_x: int | None,
+    winding_y: int | None,
+    charge_pattern: str,
+    charge_normalization: str,
+    expected_n_states: int,
+) -> None:
+    model0 = SquareQLMModel(
+        lx=lx,
+        ly=ly,
         boundary_condition="periodic",
-        winding_x=0,
-        winding_y=0,
+    )
+
+    if charge_pattern == "zero":
+        charges = 0
+    elif charge_pattern == "staggered":
+        charges = square_qdm_staggered_charges(
+            model0.lattice,
+            charge_normalization=charge_normalization,
+            convention="even_positive",
+        )
+    else:
+        raise ValueError(f"Unknown charge pattern: {charge_pattern}")
+
+    model = SquareQLMModel(
+        lx=lx,
+        ly=ly,
+        boundary_condition="periodic",
+        winding_x=winding_x,
+        winding_y=winding_y,
+        charges=charges,
+        charge_normalization=charge_normalization,
     )
 
     basis = model.build_basis(
@@ -179,26 +229,7 @@ def test_square_qlm_electric_winding_4x4_known_count() -> None:
         sort=True,
     )
 
-    assert basis.n_states == 990
-
-
-def test_square_qlm_total_4x4_known_count() -> None:
-    model = SquareQLMModel(
-        lx=4,
-        ly=4,
-        boundary_condition="periodic",
-    )
-
-    # No sector restriction.
-    object.__setattr__(model, "winding_x", None)
-    object.__setattr__(model, "winding_y", None)
-
-    basis = model.build_basis(
-        solver="dfs",
-        sort=True,
-    )
-
-    assert basis.n_states == 2970
+    assert basis.n_states == expected_n_states
 
 
 def test_square_qlm_basis_smoke() -> None:
