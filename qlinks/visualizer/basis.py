@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Callable, Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -12,6 +13,30 @@ from qlinks.variables import VariableKind, VariableLayout
 
 LinkPlotMode = Literal["arrows", "dimers", "values"]
 PlaquetteSymbolMode = Literal["binary", "flux"]
+
+PlaquetteSymbolStyle = Literal["none", "square_qlm", "circulation"]
+BasisConfigLabelStyle = Literal["none", "compact", "array"]
+
+# This mapping is copied in spirit from the old square-lattice visualizer.
+# Keys are plaquette-link values converted to binary signs in plaquette order.
+_SQUARE_QLM_PLAQUETTE_SYMBOLS: dict[str, dict[str, str]] = {
+    "1111": {"s": "◩", "color": "silver"},
+    "1011": {"s": "↑", "color": "skyblue"},
+    "0111": {"s": "→", "color": "salmon"},
+    "0011": {"s": "♰", "color": "silver"},
+    "1101": {"s": "↓", "color": "salmon"},
+    "1001": {"s": "⬔", "color": "silver"},
+    "0101": {"s": "↻", "color": "red"},
+    "0001": {"s": "←", "color": "salmon"},
+    "1110": {"s": "←", "color": "skyblue"},
+    "1010": {"s": "↺", "color": "blue"},
+    "0110": {"s": "⬕", "color": "silver"},
+    "0010": {"s": "↓", "color": "skyblue"},
+    "1100": {"s": "♱", "color": "silver"},
+    "1000": {"s": "→", "color": "skyblue"},
+    "0100": {"s": "↑", "color": "salmon"},
+    "0000": {"s": "◪", "color": "silver"},
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,7 +149,7 @@ class BasisConfigurationVisualizer:
         with_site_values: bool = False,
         with_link_values: bool = False,
         with_plaquette_symbols: bool = True,
-        plaquette_symbol_mode: PlaquetteSymbolMode = "binary",
+        plaquette_symbol_style: PlaquetteSymbolStyle = "square_qlm",
         title: str | None = None,
     ):
         """
@@ -179,11 +204,11 @@ class BasisConfigurationVisualizer:
                 draw_links=draw_links,
             )
 
-        if with_plaquette_symbols:
+        if with_plaquette_symbols and plaquette_symbol_style != "none":
             self._draw_plaquette_symbols(
                 ax=ax,
                 config=arr,
-                mode=plaquette_symbol_mode,
+                style=plaquette_symbol_style,
             )
 
         self._finish_axes(ax, title=title)
@@ -485,25 +510,61 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
-        mode: PlaquetteSymbolMode,
+        style: PlaquetteSymbolStyle,
     ) -> None:
+        if style == "none":
+            return
+
         if self.lattice.num_plaquettes == 0:
+            return
+
+        if style == "square_qlm":
+            self._draw_square_qlm_plaquette_symbols(
+                ax=ax,
+                config=config,
+            )
+            return
+
+        if style == "circulation":
+            self._draw_circulation_plaquette_symbols(
+                ax=ax,
+                config=config,
+            )
+            return
+
+        raise ValueError("plaquette symbol style must be 'none', 'square_qlm', or 'circulation'.")
+
+    def _draw_square_qlm_plaquette_symbols(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+    ) -> None:
+        """
+        Draw the old 16-symbol square-QLM plaquette overlay.
+
+        This is intentionally square-lattice specific. It assumes four-link
+        square plaquettes and a QLM-style variable pattern.
+        """
+        if not isinstance(self.lattice, SquareLattice):
             return
 
         for plaquette in self.lattice.plaquettes:
             if len(plaquette.links) != 4:
                 continue
 
-            link_values = [self.link_value(config, int(link_id)) for link_id in plaquette.links]
+            link_values = [
+                self.link_value(config, int(link_id))
+                for link_id in plaquette.links
+            ]
 
-            key = self._plaquette_key(link_values, mode=mode)
-            symbol_info = _SQUARE_PLAQUETTE_SYMBOLS.get(key)
+            key = self._plaquette_key(link_values)
+            symbol_info = _SQUARE_QLM_PLAQUETTE_SYMBOLS.get(key)
 
             if symbol_info is None:
                 continue
 
-            positions = self.lattice.site_positions[list(plaquette.sites)]
-            center = np.mean(positions[:, :2], axis=0)
+            center = self._plaquette_center_2d(plaquette.sites)
 
             ax.text(
                 center[0],
@@ -515,6 +576,72 @@ class BasisConfigurationVisualizer:
                 va="center",
                 zorder=6,
             )
+
+    def _draw_circulation_plaquette_symbols(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+    ) -> None:
+        """
+        Generic QLM-like circulation marker.
+
+        Draws a circular arrow if all link variables align with the plaquette
+        orientation, or all oppose it.
+
+        This works for generic even/odd plaquettes as long as the lattice stores
+        plaquette.orientations.
+        """
+        for plaquette in self.lattice.plaquettes:
+            if len(plaquette.links) == 0:
+                continue
+
+            signs: list[int] = []
+
+            for link_id, orientation in zip(plaquette.links, plaquette.orientations, strict=True):
+                value = self.link_value(config, int(link_id))
+
+                if value == 0:
+                    signs.append(-1)
+                elif value > 0:
+                    signs.append(1)
+                else:
+                    signs.append(-1)
+
+                signs[-1] *= int(orientation)
+
+            if all(s > 0 for s in signs):
+                symbol = "↻"
+                color = "red"
+            elif all(s < 0 for s in signs):
+                symbol = "↺"
+                color = "blue"
+            else:
+                continue
+
+            center = self._plaquette_center_2d(plaquette.sites)
+
+            ax.text(
+                center[0],
+                center[1],
+                symbol,
+                fontsize=22,
+                color=color,
+                ha="center",
+                va="center",
+                zorder=6,
+            )
+
+    def _plaquette_center_2d(
+        self,
+        site_ids: Sequence[int],
+    ) -> tuple[float, float]:
+        positions = [
+            self._xy(tuple(self.lattice.site_positions[int(site_id)]))
+            for site_id in site_ids
+        ]
+        center = np.mean(np.asarray(positions, dtype=float), axis=0)
+        return float(center[0]), float(center[1])
 
     @staticmethod
     def _points_along_link(value: int) -> bool:
@@ -528,14 +655,8 @@ class BasisConfigurationVisualizer:
         return value > 0
 
     @staticmethod
-    def _plaquette_key(values: list[int], *, mode: PlaquetteSymbolMode) -> str:
-        if mode == "binary":
-            bits = [1 if value > 0 else 0 for value in values]
-        elif mode == "flux":
-            bits = [1 if value > 0 else 0 for value in values]
-        else:
-            raise ValueError("plaquette symbol mode must be 'binary' or 'flux'.")
-
+    def _plaquette_key(values: list[int]) -> str:
+        bits = [1 if value > 0 else 0 for value in values]
         return "".join(str(bit) for bit in bits)
 
     def _finish_axes(self, ax, *, title: str | None) -> None:
@@ -554,28 +675,6 @@ class BasisConfigurationVisualizer:
 
         ax.set_xlim(xlim[0] - padding, xlim[1] + padding)
         ax.set_ylim(ylim[0] - padding, ylim[1] + padding)
-
-
-# This mapping is copied in spirit from the old square-lattice visualizer.
-# Keys are plaquette-link values converted to binary signs in plaquette order.
-_SQUARE_PLAQUETTE_SYMBOLS: dict[str, dict[str, str]] = {
-    "1111": {"s": "◩", "color": "silver"},
-    "1011": {"s": "↑", "color": "skyblue"},
-    "0111": {"s": "→", "color": "salmon"},
-    "0011": {"s": "♰", "color": "silver"},
-    "1101": {"s": "↓", "color": "salmon"},
-    "1001": {"s": "⬔", "color": "silver"},
-    "0101": {"s": "↻", "color": "red"},
-    "0001": {"s": "←", "color": "salmon"},
-    "1110": {"s": "←", "color": "skyblue"},
-    "1010": {"s": "↺", "color": "blue"},
-    "0110": {"s": "⬕", "color": "silver"},
-    "0010": {"s": "↓", "color": "skyblue"},
-    "1100": {"s": "♱", "color": "silver"},
-    "1000": {"s": "→", "color": "skyblue"},
-    "0100": {"s": "↑", "color": "salmon"},
-    "0000": {"s": "◪", "color": "silver"},
-}
 
 
 def plot_basis_config(
@@ -611,4 +710,289 @@ def plot_basis_config(
         with_link_values=with_link_values,
         with_plaquette_symbols=with_plaquette_symbols,
         title=title,
+    )
+
+
+def format_basis_config(
+    config: npt.ArrayLike,
+    *,
+    style: BasisConfigLabelStyle = "compact",
+    max_length: int = 48,
+) -> str:
+    """
+    Format one basis configuration for subplot labels.
+
+    style="compact":
+        binary configs are printed like 010101.
+        other configs are printed like 1,-1,1,-1.
+
+    style="array":
+        use numpy array formatting.
+
+    style="none":
+        return an empty string.
+    """
+    arr = np.asarray(config, dtype=np.int64)
+
+    if style == "none":
+        return ""
+
+    if style == "array":
+        text = np.array2string(arr, separator=", ")
+
+    elif style == "compact":
+        values = set(arr.tolist())
+
+        if values <= {0, 1}:
+            text = "".join(str(int(x)) for x in arr)
+        else:
+            text = ",".join(str(int(x)) for x in arr)
+
+    else:
+        raise ValueError("style must be 'none', 'compact', or 'array'.")
+
+    if len(text) > max_length:
+        return text[: max_length - 3] + "..."
+
+    return text
+
+
+def automatic_grid_shape(n_items: int, *, ncols: int | None = None, nrows: int | None = None) -> tuple[int, int]:
+    """
+    Decide a reasonable grid shape.
+
+    If both nrows and ncols are given, they must fit n_items.
+    If only one is given, the other is inferred.
+    If neither is given, use a near-square grid.
+    """
+    if n_items < 0:
+        raise ValueError("n_items must be non-negative.")
+
+    if n_items == 0:
+        return 0, 0
+
+    if nrows is not None and nrows <= 0:
+        raise ValueError("nrows must be positive.")
+
+    if ncols is not None and ncols <= 0:
+        raise ValueError("ncols must be positive.")
+
+    if nrows is not None and ncols is not None:
+        if nrows * ncols < n_items:
+            raise ValueError("nrows * ncols is smaller than the number of states.")
+        return nrows, ncols
+
+    if ncols is not None:
+        return math.ceil(n_items / ncols), ncols
+
+    if nrows is not None:
+        return nrows, math.ceil(n_items / nrows)
+
+    ncols_auto = math.ceil(math.sqrt(n_items))
+    nrows_auto = math.ceil(n_items / ncols_auto)
+    return nrows_auto, ncols_auto
+
+
+@dataclass(frozen=True)
+class BasisGridVisualizer:
+    """
+    Plot many basis configurations as an n by m grid.
+
+    Parameters
+    ----------
+    lattice:
+        Geometry/topology object.
+
+    layout:
+        Variable layout used to interpret each config array.
+
+    single_visualizer:
+        Optional custom single-state visualizer. If omitted, this class creates
+        BasisConfigurationVisualizer(lattice, layout).
+    """
+
+    lattice: LatticeGraph
+    layout: VariableLayout | None = None
+
+    def plot(
+        self,
+        states: npt.ArrayLike,
+        *,
+        nrows: int | None = None,
+        ncols: int | None = None,
+        start_index: int = 0,
+        labels: Sequence[str] | None = None,
+        show_config_label: bool = False,
+        config_label_style: BasisConfigLabelStyle = "compact",
+        config_label_max_length: int = 48,
+        mode: str = "arrows",
+        plaquette_symbols: PlaquetteSymbolStyle = "none",
+        figsize: tuple[float, float] | None = None,
+        show: bool = True,
+        suptitle: str | None = None,
+        single_plot_kwargs: dict | None = None,
+    ):
+        """
+        Plot a batch of basis states.
+
+        Parameters
+        ----------
+        states:
+            Either a single config with shape (n_variables,) or a batch with
+            shape (n_states, n_variables). Slices like basis.states[:12] work.
+
+        nrows, ncols:
+            Optional grid shape. If not provided, a near-square shape is chosen.
+
+        start_index:
+            Index offset used in automatic labels. For example, if plotting
+            basis.states[20:30], pass start_index=20.
+
+        labels:
+            Optional explicit labels for each subplot.
+
+        show_config_label:
+            Whether to include the raw config/binary string below the state
+            index label.
+
+        mode:
+            Passed to BasisConfigurationVisualizer.plot.
+            Common values: "arrows", "dimers", "values".
+
+        plaquette_symbols:
+            "none":
+                draw no plaquette symbols.
+
+            "square_qlm":
+                use the old 16-symbol square-QLM dictionary. This is only
+                meaningful for SquareLattice four-link plaquettes.
+
+            "circulation":
+                generic QLM-like circulation marker. Draws circular arrows when
+                all link variables circulate consistently around a plaquette.
+        """
+        import matplotlib.pyplot as plt
+
+        arr = np.asarray(states, dtype=np.int64)
+
+        if arr.ndim == 1:
+            arr = arr.reshape(1, -1)
+
+        if arr.ndim != 2:
+            raise ValueError("states must have shape (n_variables,) or (n_states, n_variables).")
+
+        n_states = arr.shape[0]
+        rows, cols = automatic_grid_shape(n_states, nrows=nrows, ncols=ncols)
+
+        if labels is not None and len(labels) != n_states:
+            raise ValueError("labels must have the same length as states.")
+
+        if figsize is None:
+            figsize = (3.0 * cols, 3.0 * rows)
+
+        fig, axes = plt.subplots(rows, cols, figsize=figsize, squeeze=False)
+
+        single_visualizer = BasisConfigurationVisualizer(
+            lattice=self.lattice,
+            layout=self.layout,
+        )
+
+        if single_plot_kwargs is None:
+            single_plot_kwargs = {}
+
+        for k in range(rows * cols):
+            ax = axes.flat[k]
+
+            if k >= n_states:
+                ax.axis("off")
+                continue
+
+            config = arr[k]
+
+            if labels is None:
+                title = f"state {start_index + k}"
+            else:
+                title = labels[k]
+
+            if show_config_label:
+                config_text = format_basis_config(
+                    config,
+                    style=config_label_style,
+                    max_length=config_label_max_length,
+                )
+                if config_text:
+                    title = f"{title}\n{config_text}"
+
+            plot_kwargs = dict(single_plot_kwargs)
+            plot_kwargs.pop("with_plaquette_symbols", None)
+            plot_kwargs.pop("plaquette_symbol_style", None)
+            plot_kwargs.pop("title", None)
+            plot_kwargs.pop("show", None)
+            plot_kwargs.pop("ax", None)
+            plot_kwargs.pop("mode", None)
+
+            single_visualizer.plot(
+                config,
+                ax=ax,
+                show=False,
+                mode=mode,
+                with_plaquette_symbols=(plaquette_symbols != "none"),
+                plaquette_symbol_style=plaquette_symbols,
+                title=title,
+                **plot_kwargs,
+            )
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
+
+        fig.tight_layout()
+
+        if show:
+            plt.show()
+
+        return fig, axes
+
+
+def plot_basis_grid(
+    lattice: LatticeGraph,
+    states: npt.ArrayLike,
+    *,
+    layout: VariableLayout | None = None,
+    nrows: int | None = None,
+    ncols: int | None = None,
+    start_index: int = 0,
+    labels: Sequence[str] | None = None,
+    show_config_label: bool = False,
+    config_label_style: BasisConfigLabelStyle = "compact",
+    config_label_max_length: int = 48,
+    mode: str = "arrows",
+    plaquette_symbols: PlaquetteSymbolStyle = "none",
+    figsize: tuple[float, float] | None = None,
+    show: bool = True,
+    suptitle: str | None = None,
+    single_plot_kwargs: dict | None = None,
+):
+    """
+    Functional wrapper around BasisGridVisualizer.
+    """
+    visualizer = BasisGridVisualizer(
+        lattice=lattice,
+        layout=layout,
+    )
+
+    return visualizer.plot(
+        states,
+        nrows=nrows,
+        ncols=ncols,
+        start_index=start_index,
+        labels=labels,
+        show_config_label=show_config_label,
+        config_label_style=config_label_style,
+        config_label_max_length=config_label_max_length,
+        mode=mode,
+        plaquette_symbols=plaquette_symbols,
+        figsize=figsize,
+        show=show,
+        suptitle=suptitle,
+        single_plot_kwargs=single_plot_kwargs,
     )

@@ -1,15 +1,25 @@
 from qlinks.visualizer.basis import (
     BasisConfigurationVisualizer,
+    BasisConfigLabelStyle,
+    BasisGridVisualizer,
     LinkPlotMode,
     LinkVisualStyle,
-    PlaquetteSymbolMode,
+    PlaquetteSymbolStyle,
+    automatic_grid_shape,
+    format_basis_config,
     plot_basis_config,
+    plot_basis_grid,
 )
 
 __all__ = [
     "BasisConfigurationVisualizer",
+    "BasisConfigLabelStyle",
+    "BasisGridVisualizer",
     "LinkPlotMode",
     "LinkVisualStyle",
-    "PlaquetteSymbolMode",
+    "PlaquetteSymbolStyle",
+    "automatic_grid_shape",
+    "format_basis_config",
     "plot_basis_config",
+    "plot_basis_grid",
 ]
