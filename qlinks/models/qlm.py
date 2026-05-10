@@ -522,8 +522,9 @@ class SquareQLMModel(QLMBase):
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
         kinetic: complex = -1.0,
         potential: complex = 0.0,
-        charge_magnitude: int = 2,
+        charge_magnitude: int | None = None,
         charge_convention: SublatticeSignConvention = "even_positive",
+        charge_normalization: ChargeNormalization = "spin_half",
         winding_x: int | None = None,
         winding_y: int | None = None,
     ) -> SquareQLMModel:
@@ -536,6 +537,7 @@ class SquareQLMModel(QLMBase):
         charges = square_qdm_staggered_charges(
             lattice,
             magnitude=charge_magnitude,
+            charge_normalization=charge_normalization,
             convention=charge_convention,
         )
 
@@ -546,6 +548,7 @@ class SquareQLMModel(QLMBase):
             kinetic=kinetic,
             potential=potential,
             charges=charges,
+            charge_normalization=charge_normalization,
             winding_x=winding_x,
             winding_y=winding_y,
         )
@@ -626,7 +629,6 @@ class HoneycombQLMModel(QLMBase):
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
     winding_x: int | None = None
     winding_y: int | None = None
-    flux_normalization: FluxNormalization = "spin_half"
 
     def _make_lattice(self) -> HoneycombLattice:
         return HoneycombLattice(
