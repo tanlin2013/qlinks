@@ -86,7 +86,7 @@ def square_qdm_staggered_charges(
 
         one dimer touching each site
 
-    maps naturally to a staggered Gauss law with charge magnitude 2 on the
+    maps naturally to a staggered Gauss law with charge magnitude 1 on the
     square lattice.
 
     Parameters
@@ -94,9 +94,13 @@ def square_qdm_staggered_charges(
     lattice:
         SquareLattice instance.
 
-    magnitude:
-        Charge magnitude. The default is 2 for the current {-1,+1} flux
-        normalization.
+    charge_normalization:
+        "spin_half":
+            The user-facing charges are ±1, matching the spin-half flux convention.
+
+        "integer_flux":
+            The user-facing charges are ±2, matching the integer-flux convention
+            where E_l in {-2, 0, +2}.
 
     convention:
         Which sublattice receives the positive charge.
