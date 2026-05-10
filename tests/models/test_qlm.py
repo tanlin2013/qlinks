@@ -232,7 +232,7 @@ def test_square_qlm_known_basis_counts(
 
 
 def test_square_qlm_basis_smoke() -> None:
-    charges = np.array([-2, 0, 0, 2], dtype=np.int64)
+    charges = np.array([-1, 0, 0, 1], dtype=np.int64)
 
     model = SquareQLMModel(
         lx=2,
@@ -243,10 +243,7 @@ def test_square_qlm_basis_smoke() -> None:
         charges=charges,
     )
 
-    basis = model.build_basis(
-        solver="dfs",
-        sort=True,
-    )
+    basis = model.build_basis(solver="dfs", sort=True)
 
     assert basis.n_states >= 1
 
