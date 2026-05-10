@@ -373,6 +373,23 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
     def is_satisfied(self, config: npt.ArrayLike) -> bool:
         return self.value(config) == self.internal_target()
 
+    def check(self, config: npt.ArrayLike) -> ConstraintResult:
+        actual = self.value(config)
+        target = self.internal_target()
+        residual = actual - target
+        satisfied = residual == 0
+
+        return ConstraintResult(
+            satisfied=satisfied,
+            name=self.name,
+            residual=residual,
+            message=(
+                f"{self.name}(direction={self.direction}): "
+                f"value={actual}, target={self.target}, "
+                f"internal_target={target}, residual={residual}"
+            ),
+        )
+
     def partial_check(
         self,
         config: npt.ArrayLike,
