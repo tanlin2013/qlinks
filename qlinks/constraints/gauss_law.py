@@ -10,7 +10,6 @@ from qlinks.constraints.base import BaseConstraint, ConstraintResult
 from qlinks.lattice import LatticeGraph
 from qlinks.variables import VariableLayout
 
-
 ChargeNormalization = Literal["integer_flux", "spin_half"]
 
 

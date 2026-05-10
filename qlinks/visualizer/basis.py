@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Literal, Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -553,10 +553,7 @@ class BasisConfigurationVisualizer:
             if len(plaquette.links) != 4:
                 continue
 
-            link_values = [
-                self.link_value(config, int(link_id))
-                for link_id in plaquette.links
-            ]
+            link_values = [self.link_value(config, int(link_id)) for link_id in plaquette.links]
 
             key = self._plaquette_key(link_values)
             symbol_info = _SQUARE_QLM_PLAQUETTE_SYMBOLS.get(key)
@@ -637,8 +634,7 @@ class BasisConfigurationVisualizer:
         site_ids: Sequence[int],
     ) -> tuple[float, float]:
         positions = [
-            self._xy(tuple(self.lattice.site_positions[int(site_id)]))
-            for site_id in site_ids
+            self._xy(tuple(self.lattice.site_positions[int(site_id)])) for site_id in site_ids
         ]
         center = np.mean(np.asarray(positions, dtype=float), axis=0)
         return float(center[0]), float(center[1])
@@ -757,7 +753,9 @@ def format_basis_config(
     return text
 
 
-def automatic_grid_shape(n_items: int, *, ncols: int | None = None, nrows: int | None = None) -> tuple[int, int]:
+def automatic_grid_shape(
+    n_items: int, *, ncols: int | None = None, nrows: int | None = None
+) -> tuple[int, int]:
     """
     Decide a reasonable grid shape.
 

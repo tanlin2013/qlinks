@@ -9,7 +9,11 @@ from qlinks.constraints.base import (
 from qlinks.constraints.blockade import NearestNeighborBlockadeConstraint
 from qlinks.constraints.collection import ConstraintCollection
 from qlinks.constraints.dimer import DimerCoveringConstraint
-from qlinks.constraints.gauss_law import ChargeNormalization, GaussLawConstraint, internal_charge_value
+from qlinks.constraints.gauss_law import (
+    ChargeNormalization,
+    GaussLawConstraint,
+    internal_charge_value,
+)
 from qlinks.constraints.local import FixedValueConstraint, LocalSumConstraint
 from qlinks.constraints.sectors import ParitySector, TotalValueSector
 from qlinks.constraints.winding import (

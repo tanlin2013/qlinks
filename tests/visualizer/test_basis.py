@@ -9,10 +9,10 @@ from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
-    plot_basis_config,
     BasisGridVisualizer,
     automatic_grid_shape,
     format_basis_config,
+    plot_basis_config,
     plot_basis_grid,
 )
 
@@ -244,11 +244,7 @@ def test_basis_grid_visualizer_chain_site_values() -> None:
     assert axes.shape == (2, 2)
 
     # Three populated panels, one empty panel.
-    populated_titles = [
-        ax.get_title()
-        for ax in axes.flat
-        if ax.get_title()
-    ]
+    populated_titles = [ax.get_title() for ax in axes.flat if ax.get_title()]
     assert len(populated_titles) == 3
     assert "state 0" in populated_titles[0]
     assert "0000" in populated_titles[0]

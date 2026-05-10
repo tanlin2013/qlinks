@@ -181,7 +181,6 @@ def test_square_qlm_potential_rejects_optimized() -> None:
         # Zero-charge QLM, integer-flux convention.
         (4, 4, None, None, "zero", "integer_flux", 2970),
         (4, 4, 0, 0, "zero", "integer_flux", 990),
-
         # Staggered-background QLM matching square QDM.
         # Spin-half convention: user-facing charges are ±1.
         (4, 4, None, None, "staggered", "spin_half", 272),

@@ -112,9 +112,7 @@ def square_qdm_staggered_charges(
         elif charge_normalization == "integer_flux":
             magnitude = 2
         else:
-            raise ValueError(
-                "charge_normalization must be 'integer_flux' or 'spin_half'."
-            )
+            raise ValueError("charge_normalization must be 'integer_flux' or 'spin_half'.")
 
     return staggered_charges_from_sites(
         lattice,
