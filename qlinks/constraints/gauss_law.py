@@ -166,14 +166,19 @@ class GaussLawConstraint(BaseConstraint):
             self.charge,
             charge_normalization=self.charge_normalization,
         )
-        satisfied = actual == target
+
+        residual = actual - target
+        satisfied = residual == 0
 
         return ConstraintResult(
             satisfied=satisfied,
             name=self.name,
-            residual=actual,
+            residual=residual,
             message=(
-                f"{self.name}(site={self.site_id}): " f"divergence={actual}, charge={self.charge}"
+                f"{self.name}(site={self.site_id}): "
+                f"divergence={actual}, charge={self.charge}, "
+                f"charge_normalization={self.charge_normalization}, "
+                f"internal_charge={target}, residual={residual}"
             ),
         )
 
