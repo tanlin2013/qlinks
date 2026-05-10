@@ -248,6 +248,20 @@ def test_square_qlm_basis_smoke() -> None:
     assert basis.n_states >= 1
 
 
+def test_square_qlm_from_qdm_staggered_background_defaults_to_spin_half_pm1() -> None:
+    model = SquareQLMModel.from_qdm_staggered_background(
+        lx=2,
+        ly=2,
+        boundary_condition="open",
+    )
+
+    np.testing.assert_array_equal(
+        np.asarray(model.charges),
+        np.array([1, -1, -1, 1], dtype=np.int64),
+    )
+    assert model.charge_normalization == "spin_half"
+
+
 def test_triangular_qlm_smoke() -> None:
     model = TriangularQLMModel(
         lx=2,
