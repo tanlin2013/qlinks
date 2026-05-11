@@ -14,7 +14,7 @@ from qlinks.lattice import (
     SquareLattice,
     ChainLattice,
     TriangularLattice,
-    HoneycombLattice
+    HoneycombLattice,
 )
 from qlinks.variables import VariableKind, VariableLayout
 
@@ -53,17 +53,24 @@ class LinkVisualStyle:
     Basic visual style for link drawing.
     """
 
-    occupied_width: float = 3.0
-    empty_width: float = 0.8
-    arrow_width: float = 1.4
-    occupied_alpha: float = 0.9
-    empty_alpha: float = 0.25
-    arrow_alpha: float = 0.65
-    node_size: float = 700.0
+    node_size: float = 180.0
     node_color: str = "tab:orange"
     edge_color: str = "black"
     empty_edge_color: str = "lightgray"
-    arrow_mutation_scale: float = 18.0
+
+    arrow_linewidth: float = 1.1
+    arrow_alpha: float = 0.85
+    arrow_mutation_scale: float = 8.0
+    arrow_shrink_points: float = 0.0
+
+    occupied_width: float = 2.0
+    empty_width: float = 0.8
+    occupied_alpha: float = 0.9
+    empty_alpha: float = 0.5
+
+    site_label_fontsize: float = 8.0
+    link_label_fontsize: float = 7.0
+    plaquette_symbol_fontsize: float = 22.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,8 +97,6 @@ class _DrawPlaquette:
     plaquette_id: int
     image_shift: tuple[int, ...]
     visual_cell: tuple[int, ...]
-    # site_keys: tuple[tuple[int, tuple[int, ...]], ...]
-    # link_ids: tuple[int, ...]
     center: tuple[float, float]
 
 
@@ -128,6 +133,7 @@ class BasisConfigurationVisualizer:
     style: LinkVisualStyle = field(default_factory=LinkVisualStyle)
     periodic_image_mode: PeriodicImageMode = "positive_patch"
     collapse_duplicate_visual_links: bool = False
+    coordinate_scale: float = 1.0
 
     def _as_config(self, config: npt.ArrayLike) -> npt.NDArray[np.int64]:
         arr = np.asarray(config, dtype=np.int64)
@@ -377,7 +383,8 @@ class BasisConfigurationVisualizer:
             pos[node.key] = self._xy(node.position)
 
         edge_records: list[
-            tuple[tuple[int, tuple[int, ...]], tuple[int, tuple[int, ...]], int, int]] = []
+            tuple[tuple[int, tuple[int, ...]], tuple[int, tuple[int, ...]], int, int]
+        ] = []
 
         for link in draw_links:
             value = self.link_value(config, link.link_id)
@@ -545,9 +552,7 @@ class BasisConfigurationVisualizer:
         if self.periodic_image_mode == "positive_patch":
             return self._draw_primitives_positive_patch()
 
-        raise ValueError(
-            "periodic_image_mode must be 'none', or 'positive_patch'."
-        )
+        raise ValueError("periodic_image_mode must be 'none', or 'positive_patch'.")
 
     def _draw_primitives_open(self) -> tuple[list[_DrawNode], list[_DrawLink]]:
         zero_shift = tuple(0 for _ in range(self.lattice.ndim))
@@ -600,15 +605,16 @@ class BasisConfigurationVisualizer:
 
     def _draw_primitives_positive_patch(self) -> tuple[list[_DrawNode], list[_DrawLink]]:
         period_vectors = self._period_vectors_2d()
-        image_shifts = self._positive_patch_image_shifts()
+        node_image_shifts = self._positive_patch_node_image_shifts()
+        link_source_shifts = self._positive_patch_link_source_shifts()
 
         nodes: list[_DrawNode] = []
         node_by_key: dict[tuple[int, tuple[int, ...]], _DrawNode] = {}
 
         def add_node(
-                *,
-                site_id: int,
-                image_shift: tuple[int, ...],
+            *,
+            site_id: int,
+            image_shift: tuple[int, ...],
         ) -> _DrawNode:
             key = (int(site_id), tuple(int(x) for x in image_shift))
 
@@ -640,7 +646,7 @@ class BasisConfigurationVisualizer:
         #   2D: 0 <= cell_x <= Lx, 0 <= cell_y <= Ly
         #
         # This includes the upper-right corner image.
-        for image_shift in image_shifts:
+        for image_shift in node_image_shifts:
             for site in self.lattice.sites:
                 visual_cell = self._visual_cell(
                     site_id=int(site.id),
@@ -658,7 +664,7 @@ class BasisConfigurationVisualizer:
         links: list[_DrawLink] = []
 
         # Lift each physical link into the visual positive patch.
-        for source_shift in image_shifts:
+        for source_shift in link_source_shifts:
             for link in self.lattice.links:
                 source_visual_cell = self._visual_cell(
                     site_id=int(link.source),
@@ -688,6 +694,15 @@ class BasisConfigurationVisualizer:
 
                 source_key = (int(link.source), source_shift)
                 target_key = (int(link.target), target_shift)
+
+                if self._should_skip_positive_patch_visual_link(
+                    link=link,
+                    source_key=source_key,
+                    target_key=target_key,
+                    source_visual_cell=source_visual_cell,
+                    target_visual_cell=target_visual_cell,
+                ):
+                    continue
 
                 source_node = node_by_key.get(source_key)
                 if source_node is None:
@@ -741,20 +756,28 @@ class BasisConfigurationVisualizer:
             "positive_patch visualization currently supports 1D and 2D lattices."
         )
 
+    def _site_plot_position(self, site_id: int) -> tuple[float, ...]:
+        if hasattr(self.lattice, "site_embedded_position"):
+            return tuple(self.lattice.site_embedded_position(site_id))
+
+        return tuple(self.lattice.site_positions[site_id])
+
     def _visual_site_position(
-            self,
-            *,
-            site_id: int,
-            image_shift: tuple[int, ...],
-            period_vectors: npt.NDArray[np.float64],
+        self,
+        *,
+        site_id: int,
+        image_shift: tuple[int, ...],
+        period_vectors: npt.NDArray[np.float64],
     ) -> tuple[float, float]:
         xy = np.asarray(
-            self._xy(tuple(self.lattice.site_positions[site_id])),
+            self._xy(self._site_plot_position(site_id)),
             dtype=float,
         )
 
         for dim, shift in enumerate(image_shift):
             xy = xy + int(shift) * period_vectors[dim]
+
+        xy = self.coordinate_scale * xy
 
         return float(xy[0]), float(xy[1])
 
@@ -779,11 +802,20 @@ class BasisConfigurationVisualizer:
         spans = self._cell_spans()
         positions = self.lattice.site_positions
 
+        if hasattr(self.lattice, "primitive_vectors"):
+            primitive_vectors = self.lattice.primitive_vectors
+
+            vectors = []
+            for dim, vec in enumerate(primitive_vectors):
+                xy = np.asarray(self._xy(tuple(vec)), dtype=float)
+                vectors.append(float(spans[dim]) * xy)
+
+            return np.asarray(vectors, dtype=float)
+
         vectors = np.zeros((ndim, 2), dtype=float)
 
         site_by_key: dict[tuple[tuple[int, ...], int], int] = {
-            (tuple(site.cell), int(site.sublattice)): int(site.id)
-            for site in self.lattice.sites
+            (tuple(site.cell), int(site.sublattice)): int(site.id) for site in self.lattice.sites
         }
 
         for dim in range(ndim):
@@ -870,11 +902,12 @@ class BasisConfigurationVisualizer:
                 target,
                 arrowstyle="-|>",
                 mutation_scale=self.style.arrow_mutation_scale,
-                linewidth=self.style.arrow_width,
+                linewidth=self.style.arrow_linewidth,
                 color=self.style.edge_color,
                 alpha=self.style.arrow_alpha,
-                shrinkA=12,
-                shrinkB=12,
+                shrinkA=self.style.arrow_shrink_points,
+                shrinkB=self.style.arrow_shrink_points,
+                zorder=2,
             )
 
             ax.add_patch(arrow)
@@ -968,7 +1001,7 @@ class BasisConfigurationVisualizer:
                     "\n".join(pieces),
                     ha="center",
                     va="center",
-                    fontsize=9,
+                    fontsize=self.style.site_label_fontsize,
                     color="black",
                     zorder=4,
                 )
@@ -995,7 +1028,7 @@ class BasisConfigurationVisualizer:
                 str(value),
                 ha="center",
                 va="center",
-                fontsize=10,
+                fontsize=self.style.link_label_fontsize,
                 bbox={"boxstyle": "round,pad=0.15", "fc": "white", "ec": "none", "alpha": 0.8},
                 zorder=5,
             )
@@ -1104,11 +1137,7 @@ class BasisConfigurationVisualizer:
                     dtype=float,
                 )
 
-                center_arr = (
-                        lower_left_position
-                        + 0.5 * unit_vectors[0]
-                        + 0.5 * unit_vectors[1]
-                )
+                center_arr = lower_left_position + 0.5 * unit_vectors[0] + 0.5 * unit_vectors[1]
 
                 draw_plaquettes.append(
                     _DrawPlaquette(
@@ -1186,10 +1215,7 @@ class BasisConfigurationVisualizer:
                 continue
 
             cells = np.asarray(
-                [
-                    self.lattice.sites[int(site_id)].cell
-                    for site_id in plaquette.sites
-                ],
+                [self.lattice.sites[int(site_id)].cell for site_id in plaquette.sites],
                 dtype=np.int64,
             )
 
@@ -1229,10 +1255,10 @@ class BasisConfigurationVisualizer:
         return out
 
     def _collapse_duplicate_draw_plaquettes(
-            self,
-            draw_plaquettes: list[_DrawPlaquette],
-            *,
-            atol: float = 1e-9,
+        self,
+        draw_plaquettes: list[_DrawPlaquette],
+        *,
+        atol: float = 1e-9,
     ) -> list[_DrawPlaquette]:
         seen: set[tuple[int, int]] = set()
         out: list[_DrawPlaquette] = []
@@ -1258,8 +1284,8 @@ class BasisConfigurationVisualizer:
         period_vectors = self._period_vectors_2d()
 
         if (
-                self.lattice.boundary_condition != BoundaryCondition.PERIODIC
-                or self.periodic_image_mode == "none"
+            self.lattice.boundary_condition != BoundaryCondition.PERIODIC
+            or self.periodic_image_mode == "none"
         ):
             image_shifts = (tuple(0 for _ in range(self.lattice.ndim)),)
         elif self.periodic_image_mode == "positive_patch":
@@ -1278,9 +1304,9 @@ class BasisConfigurationVisualizer:
                 )
 
                 if (
-                        self.lattice.boundary_condition == BoundaryCondition.PERIODIC
-                        and self.periodic_image_mode == "positive_patch"
-                        and not self._is_plaquette_center_in_positive_patch(center)
+                    self.lattice.boundary_condition == BoundaryCondition.PERIODIC
+                    and self.periodic_image_mode == "positive_patch"
+                    and not self._is_plaquette_center_in_positive_patch(center)
                 ):
                     continue
 
@@ -1296,11 +1322,11 @@ class BasisConfigurationVisualizer:
         return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
 
     def _visual_plaquette_center(
-            self,
-            *,
-            plaquette_id: int,
-            image_shift: tuple[int, ...],
-            period_vectors: npt.NDArray[np.float64],
+        self,
+        *,
+        plaquette_id: int,
+        image_shift: tuple[int, ...],
+        period_vectors: npt.NDArray[np.float64],
     ) -> tuple[float, float]:
         plaquette = self.lattice.plaquettes[plaquette_id]
 
@@ -1309,14 +1335,16 @@ class BasisConfigurationVisualizer:
             dtype=float,
         )
 
+        base_center = self.coordinate_scale * base_center
+
         for dim, shift in enumerate(image_shift):
             base_center = base_center + int(shift) * period_vectors[dim]
 
         return float(base_center[0]), float(base_center[1])
 
     def _is_plaquette_center_in_positive_patch(
-            self,
-            center: tuple[float, float],
+        self,
+        center: tuple[float, float],
     ) -> bool:
         """
         Position-space clipping for plaquette symbols.
@@ -1338,16 +1366,13 @@ class BasisConfigurationVisualizer:
         eps = 1e-9
         x, y = center
 
-        return (
-                min_xy[0] - eps <= x <= max_xy[0] + eps
-                and min_xy[1] - eps <= y <= max_xy[1] + eps
-        )
+        return min_xy[0] - eps <= x <= max_xy[0] + eps and min_xy[1] - eps <= y <= max_xy[1] + eps
 
     def _collapse_duplicate_draw_plaquettes(
-            self,
-            draw_plaquettes: list[_DrawPlaquette],
-            *,
-            atol: float = 1e-9,
+        self,
+        draw_plaquettes: list[_DrawPlaquette],
+        *,
+        atol: float = 1e-9,
     ) -> list[_DrawPlaquette]:
         seen: set[tuple[int, int]] = set()
         out: list[_DrawPlaquette] = []
@@ -1421,10 +1446,7 @@ class BasisConfigurationVisualizer:
             if len(plaquette.links) != 4:
                 continue
 
-            link_values = [
-                self.link_value(config, int(link_id))
-                for link_id in plaquette.links
-            ]
+            link_values = [self.link_value(config, int(link_id)) for link_id in plaquette.links]
 
             key = self._plaquette_key(link_values)
             symbol_info = _SQUARE_QLM_PLAQUETTE_SYMBOLS.get(key)
@@ -1438,7 +1460,7 @@ class BasisConfigurationVisualizer:
                 center[0],
                 center[1],
                 symbol_info["s"],
-                fontsize=22,
+                fontsize=self.style.plaquette_symbol_fontsize,
                 color=symbol_info["color"],
                 ha="center",
                 va="center",
@@ -1461,9 +1483,9 @@ class BasisConfigurationVisualizer:
             signs: list[int] = []
 
             for link_id, orientation in zip(
-                    plaquette.links,
-                    plaquette.orientations,
-                    strict=True,
+                plaquette.links,
+                plaquette.orientations,
+                strict=True,
             ):
                 value = self.link_value(config, int(link_id))
 
@@ -1486,7 +1508,7 @@ class BasisConfigurationVisualizer:
                 center[0],
                 center[1],
                 symbol,
-                fontsize=22,
+                fontsize=self.style.plaquette_symbol_fontsize,
                 color=color,
                 ha="center",
                 va="center",
@@ -1620,6 +1642,172 @@ class BasisConfigurationVisualizer:
 
         return True
 
+    def _positive_patch_node_image_shifts(self) -> tuple[tuple[int, ...], ...]:
+        ndim = self.lattice.ndim
+
+        if ndim == 1:
+            return ((0,), (1,))
+
+        if ndim == 2:
+            return (
+                (0, 0),
+                (1, 0),
+                (0, 1),
+                (1, 1),
+            )
+
+        raise NotImplementedError(
+            "positive_patch node shifts currently support only 1D and 2D lattices."
+        )
+
+    def _positive_patch_link_source_shifts(self) -> tuple[tuple[int, ...], ...]:
+        ndim = self.lattice.ndim
+
+        if ndim == 1:
+            return ((0,),)
+
+        if ndim == 2:
+            # Honeycomb needs the corner source shift because the upper apex
+            # A-site at image_shift=(1,1) has outgoing A->B links that close
+            # the top boundary hexagon.
+            if isinstance(self.lattice, HoneycombLattice):
+                return (
+                    (0, 0),
+                    (1, 0),
+                    (0, 1),
+                    (1, 1),
+                )
+
+            # Square and triangular are fine without starting links from the
+            # corner image; this avoids overbuilding the outer shell.
+            return (
+                (0, 0),
+                (1, 0),
+                (0, 1),
+            )
+
+        raise NotImplementedError(
+            "positive_patch source shifts currently support only 1D and 2D lattices."
+        )
+
+    def _primitive_coordinates_from_position(
+        self,
+        position: tuple[float, float],
+    ) -> npt.NDArray[np.float64]:
+        """
+        Express a 2D embedded position in the lattice primitive-vector basis.
+
+        Returns coordinates (u, v) such that:
+
+            position = u * a1 + v * a2
+
+        approximately.
+        """
+        primitive_vectors = np.asarray(
+            [self._xy(tuple(vec)) for vec in self.lattice.primitive_vectors],
+            dtype=float,
+        )
+
+        if primitive_vectors.shape != (2, 2):
+            raise ValueError("Primitive-coordinate clipping only supports 2D embeddings.")
+
+        # Columns are primitive vectors.
+        matrix = primitive_vectors.T
+
+        pos = np.asarray(position, dtype=float)
+
+        return np.linalg.solve(matrix, pos)
+
+    def _is_position_in_positive_primitive_patch(
+        self,
+        position: tuple[float, float],
+        *,
+        atol: float = 1e-9,
+    ) -> bool:
+        if self.lattice.ndim != 2:
+            return True
+
+        spans = self._cell_spans()
+        uv = self._primitive_coordinates_from_position(position)
+
+        for dim in range(2):
+            if uv[dim] < -atol:
+                return False
+            if uv[dim] > float(spans[dim]) + atol:
+                return False
+
+        return True
+
+    def _is_honeycomb_origin_a_site(
+        self,
+        site_id: int,
+    ) -> bool:
+        if not isinstance(self.lattice, HoneycombLattice):
+            return False
+
+        site = self.lattice.sites[int(site_id)]
+
+        return tuple(int(c) for c in site.cell) == (0, 0) and int(site.sublattice) == 0
+
+    def _is_honeycomb_upper_apex_node(
+        self,
+        node: _DrawNode,
+    ) -> bool:
+        return (
+            isinstance(self.lattice, HoneycombLattice)
+            and self._is_honeycomb_origin_a_site(node.site_id)
+            and node.image_shift == (1, 1)
+        )
+
+    def _is_honeycomb_lower_apex_node(
+        self,
+        node: _DrawNode,
+    ) -> bool:
+        return (
+            isinstance(self.lattice, HoneycombLattice)
+            and self._is_honeycomb_origin_a_site(node.site_id)
+            and node.image_shift == (0, 0)
+        )
+
+    def _should_skip_positive_patch_visual_link(
+        self,
+        *,
+        link,
+        source_key: tuple[int, tuple[int, ...]],
+        target_key: tuple[int, tuple[int, ...]],
+        source_visual_cell: tuple[int, ...],
+        target_visual_cell: tuple[int, ...],
+    ) -> bool:
+        """
+        Filter visual links that are artifacts of the finite positive patch.
+
+        For honeycomb, the upper apex A-site image at visual cell (Lx, Ly)
+        is kept to close the top boundary hexagon. However, its z-link
+        A(Lx,Ly) -> B(Lx,Ly) points outside the desired patch and creates
+        an extra top node. We skip only that link.
+        """
+        if not isinstance(self.lattice, HoneycombLattice):
+            return False
+
+        kind = str(getattr(link, "kind", ""))
+
+        # Honeycomb convention:
+        #   z: A(x,y) -> B(x,y)
+        if kind != "z":
+            return False
+
+        spans = self._cell_spans()
+
+        source_cell = np.asarray(source_visual_cell, dtype=np.int64)
+        target_cell = np.asarray(target_visual_cell, dtype=np.int64)
+
+        # Skip z-link from upper apex:
+        #   A(Lx,Ly) -> B(Lx,Ly)
+        if np.array_equal(source_cell, spans) and np.array_equal(target_cell, spans):
+            return True
+
+        return False
+
     def _remove_unused_image_nodes(
         self,
         nodes: list[_DrawNode],
@@ -1637,35 +1825,47 @@ class BasisConfigurationVisualizer:
         filtered_nodes: list[_DrawNode] = []
 
         for node in nodes:
-            # Always keep the original physical lattice.
+            # Remove the lower honeycomb apex even though it is a base node.
+            if self._is_honeycomb_lower_apex_node(node):
+                continue
+
+            # Keep the upper honeycomb apex. It visually closes the top boundary.
+            if self._is_honeycomb_upper_apex_node(node):
+                filtered_nodes.append(node)
+                continue
+
+            # Keep base physical nodes.
             if node.image_shift == base_shift:
                 filtered_nodes.append(node)
                 continue
 
-            # Always keep image nodes that are touched by visual links.
+            # Keep image nodes touched by displayed links.
             if node.key in used_keys:
                 filtered_nodes.append(node)
                 continue
 
-            # Also keep positive-boundary image nodes for visual completeness.
-            #
-            # For square Lx x Ly, this keeps nodes on:
-            #   x = Lx
-            #   y = Ly
-            #   and the upper-right corner (Lx, Ly)
-            visual_cell = np.asarray(
-                self._visual_cell(
-                    site_id=node.site_id,
-                    image_shift=node.image_shift,
-                ),
-                dtype=np.int64,
-            )
+            # Square lattice keeps extra unused boundary image nodes to complete
+            # the rectangular positive patch.
+            if isinstance(self.lattice, SquareLattice):
+                visual_cell = np.asarray(
+                    self._visual_cell(
+                        site_id=node.site_id,
+                        image_shift=node.image_shift,
+                    ),
+                    dtype=np.int64,
+                )
 
-            if np.any(visual_cell == spans):
-                filtered_nodes.append(node)
-                continue
+                if np.any(visual_cell == spans):
+                    filtered_nodes.append(node)
+                    continue
 
-        return filtered_nodes, links
+        kept_keys = {node.key for node in filtered_nodes}
+
+        filtered_links = [
+            link for link in links if link.source_key in kept_keys and link.target_key in kept_keys
+        ]
+
+        return filtered_nodes, filtered_links
 
     def _collapse_duplicate_visual_links(
         self,
@@ -1695,10 +1895,10 @@ class BasisConfigurationVisualizer:
         return out
 
     def _collapse_duplicate_draw_plaquettes(
-            self,
-            draw_plaquettes: list[_DrawPlaquette],
-            *,
-            atol: float = 1e-9,
+        self,
+        draw_plaquettes: list[_DrawPlaquette],
+        *,
+        atol: float = 1e-9,
     ) -> list[_DrawPlaquette]:
         seen = set()
         out = []
@@ -1896,6 +2096,8 @@ class BasisGridVisualizer:
 
     lattice: LatticeGraph
     layout: VariableLayout | None = None
+    periodic_image_mode: PeriodicImageMode = "positive_patch"
+    collapse_duplicate_visual_links: bool = True
 
     def plot(
         self,
@@ -1979,6 +2181,8 @@ class BasisGridVisualizer:
         single_visualizer = BasisConfigurationVisualizer(
             lattice=self.lattice,
             layout=self.layout,
+            periodic_image_mode=self.periodic_image_mode,
+            collapse_duplicate_visual_links=self.collapse_duplicate_visual_links,
         )
 
         if single_plot_kwargs is None:
@@ -2015,6 +2219,8 @@ class BasisGridVisualizer:
             plot_kwargs.pop("backend", None)
             plot_kwargs.pop("ax", None)
             plot_kwargs.pop("mode", None)
+            plot_kwargs.pop("periodic_image_mode", None)
+            plot_kwargs.pop("collapse_duplicate_visual_links", None)
 
             single_visualizer.plot(
                 config,
@@ -2051,11 +2257,13 @@ def plot_basis_grid(
     show_config_label: bool = False,
     config_label_style: BasisConfigLabelStyle = "compact",
     config_label_max_length: int = 48,
-    mode: str = "arrows",
+    backend: VisualizerBackend = "matplotlib",
+    mode: LinkPlotMode = "arrows",
     plaquette_symbols: PlaquetteSymbolStyle = "none",
+    periodic_image_mode: PeriodicImageMode = "positive_patch",
+    collapse_duplicate_visual_links: bool = True,
     figsize: tuple[float, float] | None = None,
     show: bool = True,
-    backend: VisualizerBackend = "matplotlib",
     suptitle: str | None = None,
     single_plot_kwargs: dict | None = None,
 ):
