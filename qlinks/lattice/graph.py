@@ -93,17 +93,13 @@ class LatticeGraph:
     @property
     def primitive_vectors(self) -> tuple[npt.NDArray[np.float64], ...]:
         if self._primitive_vectors is None:
-            raise NotImplementedError(
-                f"{type(self).__name__} must define _primitive_vectors."
-            )
+            raise NotImplementedError(f"{type(self).__name__} must define _primitive_vectors.")
         return self._primitive_vectors
 
     @property
     def basis_offsets(self) -> tuple[npt.NDArray[np.float64], ...]:
         if self._basis_offsets is None:
-            raise NotImplementedError(
-                f"{type(self).__name__} must define _basis_offsets."
-            )
+            raise NotImplementedError(f"{type(self).__name__} must define _basis_offsets.")
         return self._basis_offsets
 
     def embedded_position(

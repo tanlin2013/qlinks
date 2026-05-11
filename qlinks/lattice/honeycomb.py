@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import ClassVar
+
 import numpy as np
 
 from qlinks.lattice.graph import LatticeGraph

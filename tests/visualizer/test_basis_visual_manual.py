@@ -3,9 +3,18 @@ import os
 import numpy as np
 import pytest
 
-from qlinks.lattice import ChainLattice, HoneycombLattice, SquareLattice, TriangularLattice
+from qlinks.lattice import (
+    ChainLattice,
+    HoneycombLattice,
+    SquareLattice,
+    TriangularLattice,
+)
 from qlinks.variables import LocalSpace, VariableLayout
-from qlinks.visualizer import BasisConfigurationVisualizer, LinkVisualStyle, plot_basis_grid
+from qlinks.visualizer import (
+    BasisConfigurationVisualizer,
+    LinkVisualStyle,
+    plot_basis_grid,
+)
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("QLINKS_SHOW_PLOTS") != "1",

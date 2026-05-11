@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import ClassVar
+
 import numpy as np
 
 from qlinks.lattice.graph import LatticeGraph
@@ -36,9 +37,7 @@ class SquareLattice(LatticeGraph):
         np.array([0.0, 1.0], dtype=float),
     )
 
-    _basis_offsets: ClassVar[tuple[np.ndarray, ...]] = (
-        np.array([0.0, 0.0], dtype=float),
-    )
+    _basis_offsets: ClassVar[tuple[np.ndarray, ...]] = (np.array([0.0, 0.0], dtype=float),)
 
     def __init__(
         self,

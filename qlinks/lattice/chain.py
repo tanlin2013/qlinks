@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import ClassVar
+
 import numpy as np
 
 from qlinks.lattice.graph import LatticeGraph
@@ -21,13 +22,9 @@ class ChainLattice(LatticeGraph):
         same as open, plus L - 1 -> 0
     """
 
-    _primitive_vectors: ClassVar[tuple[np.ndarray, ...]] = (
-        np.array([1.0], dtype=float),
-    )
+    _primitive_vectors: ClassVar[tuple[np.ndarray, ...]] = (np.array([1.0], dtype=float),)
 
-    _basis_offsets: ClassVar[tuple[np.ndarray, ...]] = (
-        np.array([0.0], dtype=float),
-    )
+    _basis_offsets: ClassVar[tuple[np.ndarray, ...]] = (np.array([0.0], dtype=float),)
 
     def __init__(
         self,

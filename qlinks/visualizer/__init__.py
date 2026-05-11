@@ -1,6 +1,6 @@
 from qlinks.visualizer.basis import (
-    BasisConfigurationVisualizer,
     BasisConfigLabelStyle,
+    BasisConfigurationVisualizer,
     BasisGridVisualizer,
     LinkPlotMode,
     LinkVisualStyle,
