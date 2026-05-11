@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import ClassVar
+import numpy as np
+
 from qlinks.lattice.graph import LatticeGraph
 from qlinks.lattice.types import BoundaryCondition, Link, Plaquette, Site
 
@@ -30,6 +33,15 @@ class TriangularLattice(LatticeGraph):
     """
 
     __slots__ = ("lx", "ly")
+
+    _primitive_vectors: ClassVar[tuple[np.ndarray, ...]] = (
+        np.array([1.0, 0.0], dtype=float),
+        np.array([0.5, np.sqrt(3.0) / 2.0], dtype=float),
+    )
+
+    _basis_offsets: ClassVar[tuple[np.ndarray, ...]] = (
+        np.array([0.0, 0.0], dtype=float),
+    )
 
     def __init__(
         self,

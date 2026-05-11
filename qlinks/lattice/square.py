@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from typing import ClassVar
+import numpy as np
+
 from qlinks.lattice.graph import LatticeGraph
 from qlinks.lattice.types import BoundaryCondition, Link, Plaquette, Site
 
 
 class SquareLattice(LatticeGraph):
-    __slots__ = ("lx", "ly")
-
     """
     Two-dimensional square lattice.
 
@@ -27,6 +28,17 @@ class SquareLattice(LatticeGraph):
             top edge: -x
             left edge: -y
     """
+
+    __slots__ = ("lx", "ly")
+
+    _primitive_vectors: ClassVar[tuple[np.ndarray, ...]] = (
+        np.array([1.0, 0.0], dtype=float),
+        np.array([0.0, 1.0], dtype=float),
+    )
+
+    _basis_offsets: ClassVar[tuple[np.ndarray, ...]] = (
+        np.array([0.0, 0.0], dtype=float),
+    )
 
     def __init__(
         self,

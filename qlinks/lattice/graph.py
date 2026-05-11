@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Mapping
+from typing import ClassVar, Mapping
 
 import numpy as np
 import numpy.typing as npt
@@ -31,6 +31,9 @@ class LatticeGraph:
     # Example:
     #     translations[(site, (1, 0))] gives T_x site
     translations: Mapping[tuple[int, tuple[int, ...]], int] = field(default_factory=dict)
+
+    _primitive_vectors: ClassVar[tuple[npt.NDArray[np.float64], ...] | None] = None
+    _basis_offsets: ClassVar[tuple[npt.NDArray[np.float64], ...] | None] = None
 
     def __post_init__(self) -> None:
         bc = BoundaryCondition(self.boundary_condition)
@@ -86,6 +89,55 @@ class LatticeGraph:
             return np.asarray([site.position for site in self.sites], dtype=np.float64)
 
         return self.site_cells.astype(np.float64)
+
+    @property
+    def primitive_vectors(self) -> tuple[npt.NDArray[np.float64], ...]:
+        if self._primitive_vectors is None:
+            raise NotImplementedError(
+                f"{type(self).__name__} must define _primitive_vectors."
+            )
+        return self._primitive_vectors
+
+    @property
+    def basis_offsets(self) -> tuple[npt.NDArray[np.float64], ...]:
+        if self._basis_offsets is None:
+            raise NotImplementedError(
+                f"{type(self).__name__} must define _basis_offsets."
+            )
+        return self._basis_offsets
+
+    def embedded_position(
+        self,
+        cell: tuple[int, ...],
+        sublattice: int = 0,
+    ) -> tuple[float, ...]:
+        if len(cell) != len(self.primitive_vectors):
+            raise ValueError(
+                f"cell has dimension {len(cell)}, but lattice has "
+                f"{len(self.primitive_vectors)} primitive vectors."
+            )
+
+        if sublattice < 0 or sublattice >= len(self.basis_offsets):
+            raise IndexError(f"Invalid sublattice index: {sublattice}")
+
+        pos = np.zeros_like(
+            np.asarray(self.primitive_vectors[0], dtype=float),
+            dtype=float,
+        )
+
+        for coordinate, vector in zip(cell, self.primitive_vectors, strict=True):
+            pos = pos + int(coordinate) * np.asarray(vector, dtype=float)
+
+        pos = pos + np.asarray(self.basis_offsets[int(sublattice)], dtype=float)
+
+        return tuple(float(x) for x in pos)
+
+    def site_embedded_position(self, site_id: int) -> tuple[float, ...]:
+        site = self.sites[int(site_id)]
+        return self.embedded_position(
+            tuple(int(c) for c in site.cell),
+            int(site.sublattice),
+        )
 
     def incidence_matrix(self) -> sp.csr_array:
         """

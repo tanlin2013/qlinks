@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import ClassVar
+import numpy as np
+
 from qlinks.lattice.graph import LatticeGraph
 from qlinks.lattice.types import BoundaryCondition, Link, Plaquette, Site
 
@@ -32,6 +35,18 @@ class HoneycombLattice(LatticeGraph):
     """
 
     __slots__ = ("lx", "ly")
+
+    _sqrt3: ClassVar[float] = float(np.sqrt(3.0))
+
+    _primitive_vectors: ClassVar[tuple[np.ndarray, ...]] = (
+        np.array([-_sqrt3 / 2.0, 1.5], dtype=float),
+        np.array([+_sqrt3 / 2.0, 1.5], dtype=float),
+    )
+
+    _basis_offsets: ClassVar[tuple[np.ndarray, ...]] = (
+        np.array([0.0, 0.0], dtype=float),  # A
+        np.array([0.0, 1.0], dtype=float),  # B
+    )
 
     def __init__(
         self,

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import ClassVar
+import numpy as np
+
 from qlinks.lattice.graph import LatticeGraph
 from qlinks.lattice.types import BoundaryCondition, Link, Site
 
@@ -17,6 +20,14 @@ class ChainLattice(LatticeGraph):
     Periodic boundary:
         same as open, plus L - 1 -> 0
     """
+
+    _primitive_vectors: ClassVar[tuple[np.ndarray, ...]] = (
+        np.array([1.0], dtype=float),
+    )
+
+    _basis_offsets: ClassVar[tuple[np.ndarray, ...]] = (
+        np.array([0.0], dtype=float),
+    )
 
     def __init__(
         self,
