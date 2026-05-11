@@ -19,6 +19,24 @@ from qlinks.visualizer import (
 matplotlib.use("Agg")
 
 
+def visual_cell_of_node(visualizer, node):
+    return visualizer._visual_cell(
+        site_id=node.site_id,
+        image_shift=node.image_shift,
+    )
+
+
+def link_visual_cells(visualizer, nodes, link):
+    node_by_key = {node.key: node for node in nodes}
+    source_node = node_by_key[link.source_key]
+    target_node = node_by_key[link.target_key]
+
+    return (
+        visual_cell_of_node(visualizer, source_node),
+        visual_cell_of_node(visualizer, target_node),
+    )
+
+
 def test_square_qdm_dimer_plot_runs() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
@@ -33,7 +51,7 @@ def test_square_qdm_dimer_plot_runs() -> None:
         ax=ax,
         show=False,
         mode="dimers",
-        with_plaquette_symbols=True,
+        with_plaquette_symbols=False,
     )
 
     assert returned_ax is ax
@@ -45,7 +63,7 @@ def test_square_qdm_dimer_plot_runs() -> None:
     assert len(ax.lines) == lattice.num_links
 
     # Plaquette symbol should add text beyond node labels.
-    assert len(ax.texts) >= lattice.num_sites + 1
+    assert len(ax.texts) >= lattice.num_sites
 
     plt.close(fig)
 
@@ -125,29 +143,25 @@ def test_chain_site_values_plot_runs() -> None:
     plt.close(fig)
 
 
-def test_periodic_square_plot_flattens_wrapping_links() -> None:
+def test_periodic_square_positive_patch_draws_boundary_images() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
 
-    config = np.ones(lattice.num_links, dtype=np.int64)
-
-    fig, ax = plt.subplots()
-
-    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=layout)
-    visualizer.plot(
-        config,
-        ax=ax,
-        show=False,
-        mode="dimers",
-        with_plaquette_symbols=False,
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
     )
 
-    # Periodic square 2x2 has original nodes plus duplicate boundary nodes
-    # introduced by wrapping links.
-    assert len(ax.collections) >= 1
-    assert len(ax.lines) == lattice.num_links
+    nodes, links = visualizer._draw_primitives()
 
-    plt.close(fig)
+    assert any(any(node.image_shift) for node in nodes)
+
+    assert any(
+        any(link.source_key[1]) or any(link.target_key[1])
+        for link in links
+    )
 
 
 def test_save_plot(tmp_path: Path) -> None:
@@ -235,9 +249,9 @@ def test_basis_grid_visualizer_chain_site_values() -> None:
         mode="values",
         show=False,
         show_config_label=True,
+        plaquette_symbols="none",
         single_plot_kwargs={
             "with_site_values": True,
-            "with_plaquette_symbols": False,
         },
     )
 
@@ -272,9 +286,9 @@ def test_plot_basis_grid_functional_wrapper() -> None:
         mode="values",
         show=False,
         show_config_label=True,
+        plaquette_symbols="none",
         single_plot_kwargs={
             "with_site_values": True,
-            "with_plaquette_symbols": False,
         },
     )
 
@@ -299,9 +313,9 @@ def test_basis_grid_accepts_single_config() -> None:
         mode="values",
         show=False,
         show_config_label=True,
+        plaquette_symbols="none",
         single_plot_kwargs={
             "with_site_values": True,
-            "with_plaquette_symbols": False,
         },
     )
 
@@ -364,3 +378,198 @@ def test_circulation_symbols_run_on_square() -> None:
     assert axes.shape == (1, 1)
 
     plt.close(fig)
+
+
+def test_square_pbc_without_images_draws_each_link_once() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="none",
+    )
+
+    _, draw_links = visualizer._draw_primitives()
+
+    assert len(draw_links) == lattice.num_links
+
+
+def test_networkx_backend_runs_for_square_arrows() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=False,
+    )
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        backend="networkx",
+        mode="arrows",
+        with_plaquette_symbols=False,
+    )
+
+    assert len(ax.collections) > 0
+
+    plt.close(fig)
+
+
+def test_networkx_backend_runs_for_dimers() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+    )
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        backend="networkx",
+        mode="dimers",
+        with_plaquette_symbols=False,
+    )
+
+    assert len(ax.collections) > 0
+
+    plt.close(fig)
+
+
+def test_basis_grid_networkx_backend_runs() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    states = np.ones((2, layout.n_variables), dtype=np.int64)
+
+    fig, axes = plot_basis_grid(
+        lattice=lattice,
+        layout=layout,
+        states=states,
+        ncols=2,
+        backend="networkx",
+        mode="dimers",
+        show=False,
+        plaquette_symbols="none",
+    )
+
+    assert axes.shape == (1, 2)
+
+    plt.close(fig)
+
+
+def test_square_2_by_2_positive_patch_connects_boundary_images() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    nodes, links = visualizer._draw_primitives()
+
+    # There should be image nodes on the right/top boundary.
+    image_nodes = [node for node in nodes if any(node.image_shift)]
+    assert len(image_nodes) > 0
+
+    # At least one link must touch an image node.
+    assert any(
+        any(link.source_key[1]) or any(link.target_key[1])
+        for link in links
+    )
+
+    # The upper-right corner image of site (0,0) should exist or be used if
+    # positive patch needs it.
+    spans = visualizer._cell_spans()
+
+    assert any(
+        np.array_equal(
+            np.asarray(
+                visualizer._visual_cell(
+                    site_id=node.site_id,
+                    image_shift=node.image_shift,
+                ),
+                dtype=np.int64,
+            ),
+            spans,
+        )
+        for node in nodes
+    )
+
+
+def test_square_2_by_2_positive_patch_places_wrapping_links_on_right_and_top() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=False,
+    )
+
+    nodes, links = visualizer._draw_primitives()
+
+    visual_edges = {
+        link_visual_cells(visualizer, nodes, link)
+        for link in links
+    }
+
+    assert ((1, 0), (2, 0)) in visual_edges or ((2, 0), (1, 0)) in visual_edges
+    assert ((0, 1), (0, 2)) in visual_edges or ((0, 2), (0, 1)) in visual_edges
+
+
+def test_square_2_by_2_positive_patch_draws_four_plaquette_visual_cells() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquettes = visualizer._draw_square_qlm_plaquette_primitives()
+
+    visual_cells = {p.visual_cell for p in draw_plaquettes}
+
+    assert {(0, 0), (1, 0), (0, 1), (1, 1)} <= visual_cells

@@ -8,12 +8,20 @@ from typing import Literal, Sequence
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.lattice import BoundaryCondition, LatticeGraph, SquareLattice
+from qlinks.lattice import (
+    BoundaryCondition,
+    LatticeGraph,
+    SquareLattice,
+    ChainLattice,
+    TriangularLattice,
+    HoneycombLattice
+)
 from qlinks.variables import VariableKind, VariableLayout
 
+VisualizerBackend = Literal["matplotlib", "networkx"]
+PeriodicImageMode = Literal["none", "positive_patch"]
 LinkPlotMode = Literal["arrows", "dimers", "values"]
 PlaquetteSymbolMode = Literal["binary", "flux"]
-
 PlaquetteSymbolStyle = Literal["none", "square_qlm", "circulation"]
 BasisConfigLabelStyle = Literal["none", "compact", "array"]
 
@@ -62,19 +70,32 @@ class LinkVisualStyle:
 class _DrawNode:
     key: tuple[int, tuple[int, ...]]
     site_id: int
-    position: tuple[float, ...]
+    image_shift: tuple[int, ...]
+    position: tuple[float, float]
 
 
 @dataclass(frozen=True, slots=True)
 class _DrawLink:
     link_id: int
+    source_key: tuple[int, tuple[int, ...]]
+    target_key: tuple[int, tuple[int, ...]]
     source_site: int
     target_site: int
-    source_position: tuple[float, ...]
-    target_position: tuple[float, ...]
+    source_position: tuple[float, float]
+    target_position: tuple[float, float]
 
 
 @dataclass(frozen=True, slots=True)
+class _DrawPlaquette:
+    plaquette_id: int
+    image_shift: tuple[int, ...]
+    visual_cell: tuple[int, ...]
+    # site_keys: tuple[tuple[int, tuple[int, ...]], ...]
+    # link_ids: tuple[int, ...]
+    center: tuple[float, float]
+
+
+@dataclass(frozen=True)
 class BasisConfigurationVisualizer:
     """
     Geometry-detached basis-configuration visualizer.
@@ -88,11 +109,25 @@ class BasisConfigurationVisualizer:
         VariableLayout mapping site/link ids to positions in the raw config
         array. If None, the visualizer assumes link variable index == link id
         for link plotting.
+
+    periodic_image_mode:
+        How to draw links that wrap periodic boundaries.
+
+        "none": Don't draw wrapped links.
+
+        "positive": Draw wrapped links with the target site shifted by +1 period
+        so they appear next to the source site. This is usually more intuitive
+        for small lattices.
+
+        "both": Draw both the original wrapped link and the complementary image
+        link. This is more complete but can be visually cluttered.
     """
 
     lattice: LatticeGraph
     layout: VariableLayout | None = None
     style: LinkVisualStyle = field(default_factory=LinkVisualStyle)
+    periodic_image_mode: PeriodicImageMode = "positive_patch"
+    collapse_duplicate_visual_links: bool = False
 
     def _as_config(self, config: npt.ArrayLike) -> npt.NDArray[np.int64]:
         arr = np.asarray(config, dtype=np.int64)
@@ -144,6 +179,7 @@ class BasisConfigurationVisualizer:
         *,
         ax=None,
         show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
         mode: LinkPlotMode = "arrows",
         with_site_labels: bool = True,
         with_site_values: bool = False,
@@ -182,36 +218,36 @@ class BasisConfigurationVisualizer:
 
         draw_nodes, draw_links = self._draw_primitives()
 
-        self._draw_links(
-            ax=ax,
-            config=arr,
-            draw_links=draw_links,
-            mode=mode,
-        )
-
-        self._draw_nodes(
-            ax=ax,
-            config=arr,
-            draw_nodes=draw_nodes,
-            with_site_labels=with_site_labels,
-            with_site_values=with_site_values,
-        )
-
-        if (with_link_values or mode == "values") and self.has_link_variables():
-            self._draw_link_values(
+        if backend == "matplotlib":
+            self._draw_matplotlib(
                 ax=ax,
                 config=arr,
+                draw_nodes=draw_nodes,
                 draw_links=draw_links,
+                mode=mode,
+                with_site_labels=with_site_labels,
+                with_site_values=with_site_values,
+                with_link_values=with_link_values,
+                with_plaquette_symbols=with_plaquette_symbols,
+                plaquette_symbol_style=plaquette_symbol_style,
+                title=title,
             )
-
-        if with_plaquette_symbols and plaquette_symbol_style != "none":
-            self._draw_plaquette_symbols(
+        elif backend == "networkx":
+            self._draw_networkx(
                 ax=ax,
                 config=arr,
-                style=plaquette_symbol_style,
+                draw_nodes=draw_nodes,
+                draw_links=draw_links,
+                mode=mode,
+                with_site_labels=with_site_labels,
+                with_site_values=with_site_values,
+                with_link_values=with_link_values,
+                with_plaquette_symbols=with_plaquette_symbols,
+                plaquette_symbol_style=plaquette_symbol_style,
+                title=title,
             )
-
-        self._finish_axes(ax, title=title)
+        else:
+            raise ValueError("backend must be 'matplotlib' or 'networkx'.")
 
         if show:
             plt.show()
@@ -257,78 +293,537 @@ class BasisConfigurationVisualizer:
 
         raise ValueError("Position cannot be empty.")
 
+    def _draw_matplotlib(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        draw_nodes: list[_DrawNode],
+        draw_links: list[_DrawLink],
+        mode: LinkPlotMode,
+        with_site_labels: bool,
+        with_site_values: bool,
+        with_link_values: bool,
+        with_plaquette_symbols: bool,
+        plaquette_symbol_style: PlaquetteSymbolStyle,
+        title: str | None,
+    ) -> None:
+        self._draw_links(
+            ax=ax,
+            config=config,
+            draw_links=draw_links,
+            mode=mode,
+        )
+
+        self._draw_nodes(
+            ax=ax,
+            config=config,
+            draw_nodes=draw_nodes,
+            with_site_labels=with_site_labels,
+            with_site_values=with_site_values,
+        )
+
+        if (with_link_values or mode == "values") and self.has_link_variables():
+            self._draw_link_values(
+                ax=ax,
+                config=config,
+                draw_links=draw_links,
+            )
+
+        if with_plaquette_symbols and plaquette_symbol_style != "none":
+            self._draw_plaquette_symbols(
+                ax=ax,
+                config=config,
+                style=plaquette_symbol_style,
+                draw_plaquettes=self._draw_plaquette_primitives(),
+            )
+
+        self._finish_axes(ax, title=title)
+
+    def _draw_networkx(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        draw_nodes: list[_DrawNode],
+        draw_links: list[_DrawLink],
+        mode: LinkPlotMode,
+        with_site_labels: bool,
+        with_site_values: bool,
+        with_link_values: bool,
+        with_plaquette_symbols: bool,
+        plaquette_symbol_style: PlaquetteSymbolStyle,
+        title: str | None,
+    ) -> None:
+        try:
+            import networkx as nx
+        except ImportError as exc:
+            raise ImportError(
+                "NetworkX backend requires networkx. Install it with `pip install networkx`."
+            ) from exc
+
+        if mode == "arrows":
+            graph = nx.MultiDiGraph()
+        else:
+            graph = nx.MultiGraph()
+
+        pos: dict[tuple[int, tuple[int, ...]], tuple[float, float]] = {}
+
+        for node in draw_nodes:
+            graph.add_node(
+                node.key,
+                site_id=node.site_id,
+            )
+            pos[node.key] = self._xy(node.position)
+
+        edge_records: list[
+            tuple[tuple[int, tuple[int, ...]], tuple[int, tuple[int, ...]], int, int]] = []
+
+        for link in draw_links:
+            value = self.link_value(config, link.link_id)
+
+            source_key = link.source_key
+            target_key = link.target_key
+
+            if mode == "arrows" and not self._points_along_link(value):
+                source_key, target_key = target_key, source_key
+
+            graph.add_edge(
+                source_key,
+                target_key,
+                link_id=link.link_id,
+                value=value,
+            )
+
+        node_colors = [self.style.node_color for _ in graph.nodes]
+
+        nx.draw_networkx_nodes(
+            graph,
+            pos,
+            ax=ax,
+            node_size=self.style.node_size,
+            node_color=node_colors,
+            linewidths=0.8,
+            edgecolors="black",
+        )
+
+        if mode == "dimers":
+            occupied_edges = []
+            empty_edges = []
+
+            for u, v, key, link_id in edge_records:
+                value = self.link_value(config, link_id)
+                if value != 0:
+                    occupied_edges.append((u, v, key))
+                else:
+                    empty_edges.append((u, v, key))
+
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                ax=ax,
+                edgelist=empty_edges,
+                width=self.style.empty_width,
+                edge_color=self.style.empty_edge_color,
+                alpha=self.style.empty_alpha,
+                arrows=False,
+                connectionstyle="arc3,rad=0.0",
+            )
+
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                ax=ax,
+                edgelist=occupied_edges,
+                width=self.style.occupied_width,
+                edge_color=self.style.edge_color,
+                alpha=self.style.occupied_alpha,
+                arrows=False,
+                connectionstyle="arc3,rad=0.0",
+            )
+
+        elif mode == "arrows":
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                ax=ax,
+                width=self.style.arrow_width,
+                edge_color=self.style.edge_color,
+                alpha=self.style.arrow_alpha,
+                arrows=True,
+                arrowstyle="-|>",
+                arrowsize=self.style.arrow_mutation_scale,
+                connectionstyle="arc3,rad=0.0",
+                min_source_margin=12,
+                min_target_margin=12,
+            )
+
+        elif mode == "values":
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                ax=ax,
+                width=self.style.empty_width,
+                edge_color=self.style.empty_edge_color,
+                alpha=0.7,
+                arrows=False,
+                connectionstyle="arc3,rad=0.0",
+            )
+
+        else:
+            raise ValueError("mode must be one of 'arrows', 'dimers', or 'values'.")
+
+        if with_site_labels or with_site_values:
+            labels: dict[tuple[int, tuple[int, ...]], str] = {}
+
+            for node in draw_nodes:
+                pieces: list[str] = []
+
+                if with_site_labels:
+                    site = self.lattice.sites[node.site_id]
+                    pieces.append(str(site.cell))
+
+                if with_site_values:
+                    value = self.site_value(config, node.site_id)
+                    if value is not None:
+                        pieces.append(f"{value}")
+
+                if pieces:
+                    labels[node.key] = "\n".join(pieces)
+
+            nx.draw_networkx_labels(
+                graph,
+                pos,
+                labels=labels,
+                ax=ax,
+                font_size=9,
+                font_color="black",
+            )
+
+        if (with_link_values or mode == "values") and self.has_link_variables():
+            edge_labels = {}
+
+            for u, v, key, link_id in edge_records:
+                value = self.link_value(config, link_id)
+                edge_labels[(u, v, key)] = str(value)
+
+            nx.draw_networkx_edge_labels(
+                graph,
+                pos,
+                edge_labels=edge_labels,
+                ax=ax,
+                font_size=9,
+                rotate=False,
+                bbox={
+                    "boxstyle": "round,pad=0.15",
+                    "fc": "white",
+                    "ec": "none",
+                    "alpha": 0.8,
+                },
+            )
+
+        # Plaquette symbols are still drawn with the existing matplotlib overlay.
+        # This keeps the old square-QLM symbols and generic circulation symbols
+        # available for both backends.
+        if with_plaquette_symbols and plaquette_symbol_style != "none":
+            self._draw_plaquette_symbols(
+                ax=ax,
+                config=config,
+                style=plaquette_symbol_style,
+                draw_plaquettes=self._draw_plaquette_primitives(),
+            )
+
+        self._finish_axes(ax, title=title)
+
     def _draw_primitives(self) -> tuple[list[_DrawNode], list[_DrawLink]]:
-        nodes: dict[tuple[int, tuple[int, ...]], _DrawNode] = {}
+        if (
+            self.lattice.boundary_condition != BoundaryCondition.PERIODIC
+            or self.periodic_image_mode == "none"
+        ):
+            return self._draw_primitives_open()
+
+        if self.periodic_image_mode == "positive_patch":
+            return self._draw_primitives_positive_patch()
+
+        raise ValueError(
+            "periodic_image_mode must be 'none', or 'positive_patch'."
+        )
+
+    def _draw_primitives_open(self) -> tuple[list[_DrawNode], list[_DrawLink]]:
+        zero_shift = tuple(0 for _ in range(self.lattice.ndim))
+        period_vectors = self._period_vectors_2d()
+
+        nodes: list[_DrawNode] = []
+        node_by_key: dict[tuple[int, tuple[int, ...]], _DrawNode] = {}
+
+        for site in self.lattice.sites:
+            key = (int(site.id), zero_shift)
+            position = self._visual_site_position(
+                site_id=int(site.id),
+                image_shift=zero_shift,
+                period_vectors=period_vectors,
+            )
+            node = _DrawNode(
+                key=key,
+                site_id=int(site.id),
+                image_shift=zero_shift,
+                position=position,
+            )
+            nodes.append(node)
+            node_by_key[key] = node
+
         links: list[_DrawLink] = []
 
-        base_positions = self.lattice.site_positions
-
-        def add_node(site_id: int, shift: tuple[int, ...] | None = None) -> tuple[float, ...]:
-            if shift is None:
-                shift = tuple(0 for _ in range(self.lattice.ndim))
-
-            pos = tuple(float(x) + float(dx) for x, dx in zip(base_positions[site_id], shift))
-            key = (site_id, shift)
-
-            if key not in nodes:
-                nodes[key] = _DrawNode(
-                    key=key,
-                    site_id=site_id,
-                    position=pos,
-                )
-
-            return pos
-
-        for site_id in range(self.lattice.num_sites):
-            add_node(site_id)
-
         for link in self.lattice.links:
-            source_shift = tuple(0 for _ in range(self.lattice.ndim))
-            target_shift = tuple(0 for _ in range(self.lattice.ndim))
+            source_key = (int(link.source), zero_shift)
+            target_key = (int(link.target), zero_shift)
 
-            if isinstance(self.lattice, SquareLattice):
-                target_shift = self._square_periodic_target_shift(link_id=link.id)
-
-            source_pos = add_node(link.source, source_shift)
-            target_pos = add_node(link.target, target_shift)
+            source_node = node_by_key[source_key]
+            target_node = node_by_key[target_key]
 
             links.append(
                 _DrawLink(
-                    link_id=link.id,
-                    source_site=link.source,
-                    target_site=link.target,
-                    source_position=source_pos,
-                    target_position=target_pos,
+                    link_id=int(link.id),
+                    source_key=source_key,
+                    target_key=target_key,
+                    source_site=int(link.source),
+                    target_site=int(link.target),
+                    source_position=source_node.position,
+                    target_position=target_node.position,
                 )
             )
 
-        return list(nodes.values()), links
+        if self.collapse_duplicate_visual_links:
+            links = self._collapse_duplicate_visual_links(links)
 
-    def _square_periodic_target_shift(self, link_id: int) -> tuple[int, int]:
+        return nodes, links
+
+    def _draw_primitives_positive_patch(self) -> tuple[list[_DrawNode], list[_DrawLink]]:
+        period_vectors = self._period_vectors_2d()
+        image_shifts = self._positive_patch_image_shifts()
+
+        nodes: list[_DrawNode] = []
+        node_by_key: dict[tuple[int, tuple[int, ...]], _DrawNode] = {}
+
+        def add_node(
+                *,
+                site_id: int,
+                image_shift: tuple[int, ...],
+        ) -> _DrawNode:
+            key = (int(site_id), tuple(int(x) for x in image_shift))
+
+            existing = node_by_key.get(key)
+            if existing is not None:
+                return existing
+
+            position = self._visual_site_position(
+                site_id=int(site_id),
+                image_shift=image_shift,
+                period_vectors=period_vectors,
+            )
+
+            node = _DrawNode(
+                key=key,
+                site_id=int(site_id),
+                image_shift=image_shift,
+                position=position,
+            )
+
+            node_by_key[key] = node
+            nodes.append(node)
+
+            return node
+
+        # Add all sites in the positive patch:
+        #
+        #   1D: 0 <= cell <= L
+        #   2D: 0 <= cell_x <= Lx, 0 <= cell_y <= Ly
+        #
+        # This includes the upper-right corner image.
+        for image_shift in image_shifts:
+            for site in self.lattice.sites:
+                visual_cell = self._visual_cell(
+                    site_id=int(site.id),
+                    image_shift=image_shift,
+                )
+
+                if not self._is_visual_cell_in_positive_patch(visual_cell):
+                    continue
+
+                add_node(
+                    site_id=int(site.id),
+                    image_shift=image_shift,
+                )
+
+        links: list[_DrawLink] = []
+
+        # Lift each physical link into the visual positive patch.
+        for source_shift in image_shifts:
+            for link in self.lattice.links:
+                source_visual_cell = self._visual_cell(
+                    site_id=int(link.source),
+                    image_shift=source_shift,
+                )
+
+                if not self._is_visual_cell_in_positive_patch(source_visual_cell):
+                    continue
+
+                displacement = self._link_cell_displacement(link)
+
+                target_visual_cell = tuple(
+                    int(source_visual_cell[d]) + int(displacement[d])
+                    for d in range(self.lattice.ndim)
+                )
+
+                if not self._is_visual_cell_in_positive_patch(target_visual_cell):
+                    continue
+
+                target_shift = self._image_shift_for_visual_cell(
+                    site_id=int(link.target),
+                    visual_cell=target_visual_cell,
+                )
+
+                if target_shift is None:
+                    continue
+
+                source_key = (int(link.source), source_shift)
+                target_key = (int(link.target), target_shift)
+
+                source_node = node_by_key.get(source_key)
+                if source_node is None:
+                    source_node = add_node(
+                        site_id=int(link.source),
+                        image_shift=source_shift,
+                    )
+
+                target_node = node_by_key.get(target_key)
+                if target_node is None:
+                    target_node = add_node(
+                        site_id=int(link.target),
+                        image_shift=target_shift,
+                    )
+
+                links.append(
+                    _DrawLink(
+                        link_id=int(link.id),
+                        source_key=source_key,
+                        target_key=target_key,
+                        source_site=int(link.source),
+                        target_site=int(link.target),
+                        source_position=source_node.position,
+                        target_position=target_node.position,
+                    )
+                )
+
+        # Keep only base nodes plus image nodes touched by links.
+        nodes, links = self._remove_unused_image_nodes(nodes, links)
+
+        if self.collapse_duplicate_visual_links:
+            links = self._collapse_duplicate_visual_links(links)
+
+        return nodes, links
+
+    def _positive_patch_image_shifts(self) -> tuple[tuple[int, ...], ...]:
+        ndim = self.lattice.ndim
+
+        if ndim == 1:
+            return ((0,), (1,))
+
+        if ndim == 2:
+            return (
+                (0, 0),
+                (1, 0),
+                (0, 1),
+                (1, 1),
+            )
+
+        raise NotImplementedError(
+            "positive_patch visualization currently supports 1D and 2D lattices."
+        )
+
+    def _visual_site_position(
+            self,
+            *,
+            site_id: int,
+            image_shift: tuple[int, ...],
+            period_vectors: npt.NDArray[np.float64],
+    ) -> tuple[float, float]:
+        xy = np.asarray(
+            self._xy(tuple(self.lattice.site_positions[site_id])),
+            dtype=float,
+        )
+
+        for dim, shift in enumerate(image_shift):
+            xy = xy + int(shift) * period_vectors[dim]
+
+        return float(xy[0]), float(xy[1])
+
+    def _cell_spans(self) -> npt.NDArray[np.int64]:
+        cells = self.lattice.site_cells
+        spans = np.max(cells, axis=0) - np.min(cells, axis=0) + 1
+        return spans.astype(np.int64)
+
+    def _period_vectors_2d(self) -> npt.NDArray[np.float64]:
         """
-        Flatten square-lattice periodic boundaries in the same spirit as the old
-        visualizer: wrapping +x links are drawn to x=Lx, and wrapping +y links
-        are drawn to y=Ly.
+        Estimate real-space period vectors for plotting periodic image links.
+
+        The vector for dimension d is:
+
+            average one-cell displacement in real-space embedding
+            multiplied by the number of cells in that direction.
+
+        This works for chain, square, triangular, and honeycomb lattices as long as
+        the lattice provides consistent site.position metadata.
         """
+        ndim = self.lattice.ndim
+        spans = self._cell_spans()
+        positions = self.lattice.site_positions
 
-        if not isinstance(self.lattice, SquareLattice):
-            return (0, 0)
+        vectors = np.zeros((ndim, 2), dtype=float)
 
-        link = self.lattice.links[link_id]
+        site_by_key: dict[tuple[tuple[int, ...], int], int] = {
+            (tuple(site.cell), int(site.sublattice)): int(site.id)
+            for site in self.lattice.sites
+        }
 
-        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
-            return (0, 0)
+        for dim in range(ndim):
+            unit = np.zeros(ndim, dtype=np.int64)
+            unit[dim] = 1
 
-        if not link.wrap:
-            return (0, 0)
+            displacements: list[npt.NDArray[np.float64]] = []
 
-        if link.kind == "x":
-            return (self.lattice.lx, 0)
+            for site in self.lattice.sites:
+                source_cell = np.asarray(site.cell, dtype=np.int64)
+                target_cell = tuple((source_cell + unit).tolist())
+                key = (target_cell, int(site.sublattice))
 
-        if link.kind == "y":
-            return (0, self.lattice.ly)
+                target_id = site_by_key.get(key)
+                if target_id is None:
+                    continue
 
-        return (0, 0)
+                source_xy = np.asarray(
+                    self._xy(tuple(positions[int(site.id)])),
+                    dtype=float,
+                )
+                target_xy = np.asarray(
+                    self._xy(tuple(positions[target_id])),
+                    dtype=float,
+                )
+
+                displacements.append(target_xy - source_xy)
+
+            if displacements:
+                step = np.mean(np.asarray(displacements, dtype=float), axis=0)
+                vectors[dim] = step * float(spans[dim])
+            else:
+                if dim == 0:
+                    vectors[dim] = np.asarray([float(spans[dim]), 0.0])
+                elif dim == 1:
+                    vectors[dim] = np.asarray([0.0, float(spans[dim])])
+                else:
+                    vectors[dim] = np.asarray([0.0, 0.0])
+
+        return vectors
 
     def _draw_links(
         self,
@@ -505,23 +1000,392 @@ class BasisConfigurationVisualizer:
                 zorder=5,
             )
 
+    def _draw_square_qlm_plaquette_primitives(self) -> list[_DrawPlaquette]:
+        """
+        Build visual plaquette centers for square-QLM plaquette symbols.
+
+        For PBC positive_patch, this draws one visual plaquette per cell in the
+        enlarged positive patch:
+
+            0 <= x < Lx
+            0 <= y < Ly
+
+        with centers at:
+
+            (x + 1/2, y + 1/2)
+
+        The physical plaquette value is taken from the plaquette associated with
+        the base cell (x mod Lx, y mod Ly).
+        """
+        if not isinstance(self.lattice, SquareLattice):
+            return []
+
+        if self.lattice.num_plaquettes == 0:
+            return []
+
+        if self.lattice.ndim != 2:
+            return []
+
+        spans = self._cell_spans()
+        lx = int(spans[0])
+        ly = int(spans[1])
+
+        period_vectors = self._period_vectors_2d()
+
+        unit_vectors = np.zeros_like(period_vectors)
+        unit_vectors[0] = period_vectors[0] / float(lx)
+        unit_vectors[1] = period_vectors[1] / float(ly)
+
+        plaquette_by_cell = self._square_plaquette_by_cell_fallback()
+
+        draw_plaquettes: list[_DrawPlaquette] = []
+
+        # Open boundary: use physical plaquette centers only.
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            for plaquette in self.lattice.plaquettes:
+                if len(plaquette.links) != 4:
+                    continue
+
+                center = self._plaquette_center_2d(plaquette.sites)
+
+                draw_plaquettes.append(
+                    _DrawPlaquette(
+                        plaquette_id=int(plaquette.id),
+                        image_shift=(0, 0),
+                        visual_cell=(-1, -1),
+                        center=center,
+                    )
+                )
+
+            return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
+
+        # PBC positive patch: draw one symbol per visual plaquette cell.
+        #
+        # For a 2x2 torus, this gives cells:
+        #   (0,0), (1,0), (0,1), (1,1)
+        #
+        # For a 4x4 torus, this gives 16 cells.
+        for x in range(lx):
+            for y in range(ly):
+                visual_cell = (x, y)
+                base_cell = (x % lx, y % ly)
+
+                plaquette_id = plaquette_by_cell.get(base_cell)
+
+                if plaquette_id is None:
+                    # Last-resort fallback:
+                    # if plaquettes are ordered by cell, use row-major order.
+                    flat_index = x * ly + y
+                    if flat_index < self.lattice.num_plaquettes:
+                        plaquette_id = int(self.lattice.plaquettes[flat_index].id)
+
+                if plaquette_id is None:
+                    continue
+
+                # For square coordinates, site at base_cell should exist.
+                lower_left_site_id = self._site_id_from_cell(base_cell)
+                if lower_left_site_id is None:
+                    continue
+
+                image_shift = self._image_shift_for_visual_cell(
+                    site_id=lower_left_site_id,
+                    visual_cell=visual_cell,
+                )
+
+                if image_shift is None:
+                    continue
+
+                lower_left_position = np.asarray(
+                    self._visual_site_position(
+                        site_id=lower_left_site_id,
+                        image_shift=image_shift,
+                        period_vectors=period_vectors,
+                    ),
+                    dtype=float,
+                )
+
+                center_arr = (
+                        lower_left_position
+                        + 0.5 * unit_vectors[0]
+                        + 0.5 * unit_vectors[1]
+                )
+
+                draw_plaquettes.append(
+                    _DrawPlaquette(
+                        plaquette_id=int(plaquette_id),
+                        image_shift=image_shift,
+                        visual_cell=visual_cell,
+                        center=(float(center_arr[0]), float(center_arr[1])),
+                    )
+                )
+
+        return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
+
+    def _site_id_from_cell(
+        self,
+        cell: tuple[int, ...],
+        *,
+        sublattice: int = 0,
+    ) -> int | None:
+        for site in self.lattice.sites:
+            if tuple(int(c) for c in site.cell) == tuple(int(c) for c in cell):
+                if int(site.sublattice) == int(sublattice):
+                    return int(site.id)
+
+        return None
+
+    def _square_plaquette_by_cell_fallback(self) -> dict[tuple[int, int], int]:
+        """
+        Map square plaquettes to base cells.
+
+        This tries several conventions, because different square-lattice builders
+        may store plaquette metadata differently.
+
+        Priority:
+            1. plaquette.cell or plaquette.anchor_cell if available
+            2. lower-left cell inferred from plaquette sites
+            3. row-major plaquette ordering fallback
+        """
+        if not isinstance(self.lattice, SquareLattice):
+            return {}
+
+        spans = self._cell_spans()
+        lx = int(spans[0])
+        ly = int(spans[1])
+
+        out: dict[tuple[int, int], int] = {}
+
+        # 1. Use explicit plaquette metadata if present.
+        for plaquette in self.lattice.plaquettes:
+            cell = None
+
+            if hasattr(plaquette, "cell"):
+                cell = getattr(plaquette, "cell")
+
+            elif hasattr(plaquette, "anchor_cell"):
+                cell = getattr(plaquette, "anchor_cell")
+
+            if cell is None:
+                continue
+
+            c = tuple(int(x) for x in cell)
+            if len(c) < 2:
+                continue
+
+            out[(c[0] % lx, c[1] % ly)] = int(plaquette.id)
+
+        if out:
+            return out
+
+        # 2. Try to infer from plaquette sites.
+        #
+        # For non-wrapping plaquettes this is simply min x, min y.
+        # For wrapping plaquettes this may be ambiguous, so this is only a best effort.
+        for plaquette in self.lattice.plaquettes:
+            if len(plaquette.sites) == 0:
+                continue
+
+            cells = np.asarray(
+                [
+                    self.lattice.sites[int(site_id)].cell
+                    for site_id in plaquette.sites
+                ],
+                dtype=np.int64,
+            )
+
+            if cells.shape[1] != 2:
+                continue
+
+            xs = cells[:, 0] % lx
+            ys = cells[:, 1] % ly
+
+            # If the plaquette spans the PBC seam, the lower-left cell is the
+            # largest coordinate before wrapping, not min. Detect this by spread.
+            if xs.max() - xs.min() > lx / 2:
+                x0 = int(xs.max())
+            else:
+                x0 = int(xs.min())
+
+            if ys.max() - ys.min() > ly / 2:
+                y0 = int(ys.max())
+            else:
+                y0 = int(ys.min())
+
+            out[(x0 % lx, y0 % ly)] = int(plaquette.id)
+
+        if out:
+            return out
+
+        # 3. Last-resort row-major fallback.
+        #
+        # This assumes plaquette id/order follows:
+        #   (0,0), (0,1), ..., (0,ly-1), (1,0), ...
+        for x in range(lx):
+            for y in range(ly):
+                flat_index = x * ly + y
+                if flat_index < self.lattice.num_plaquettes:
+                    out[(x, y)] = int(self.lattice.plaquettes[flat_index].id)
+
+        return out
+
+    def _collapse_duplicate_draw_plaquettes(
+            self,
+            draw_plaquettes: list[_DrawPlaquette],
+            *,
+            atol: float = 1e-9,
+    ) -> list[_DrawPlaquette]:
+        seen: set[tuple[int, int]] = set()
+        out: list[_DrawPlaquette] = []
+
+        def quantize(pos: tuple[float, float]) -> tuple[int, int]:
+            return tuple(int(round(float(x) / atol)) for x in pos)
+
+        for draw_plaquette in draw_plaquettes:
+            key = quantize(draw_plaquette.center)
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+            out.append(draw_plaquette)
+
+        return out
+
+    def _draw_plaquette_primitives(self) -> list[_DrawPlaquette]:
+        if self.lattice.num_plaquettes == 0:
+            return []
+
+        period_vectors = self._period_vectors_2d()
+
+        if (
+                self.lattice.boundary_condition != BoundaryCondition.PERIODIC
+                or self.periodic_image_mode == "none"
+        ):
+            image_shifts = (tuple(0 for _ in range(self.lattice.ndim)),)
+        elif self.periodic_image_mode == "positive_patch":
+            image_shifts = self._positive_patch_image_shifts()
+        else:
+            image_shifts = (tuple(0 for _ in range(self.lattice.ndim)),)
+
+        draw_plaquettes: list[_DrawPlaquette] = []
+
+        for image_shift in image_shifts:
+            for plaquette in self.lattice.plaquettes:
+                center = self._visual_plaquette_center(
+                    plaquette_id=int(plaquette.id),
+                    image_shift=image_shift,
+                    period_vectors=period_vectors,
+                )
+
+                if (
+                        self.lattice.boundary_condition == BoundaryCondition.PERIODIC
+                        and self.periodic_image_mode == "positive_patch"
+                        and not self._is_plaquette_center_in_positive_patch(center)
+                ):
+                    continue
+
+                draw_plaquettes.append(
+                    _DrawPlaquette(
+                        plaquette_id=int(plaquette.id),
+                        image_shift=image_shift,
+                        visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
+                        center=center,
+                    )
+                )
+
+        return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
+
+    def _visual_plaquette_center(
+            self,
+            *,
+            plaquette_id: int,
+            image_shift: tuple[int, ...],
+            period_vectors: npt.NDArray[np.float64],
+    ) -> tuple[float, float]:
+        plaquette = self.lattice.plaquettes[plaquette_id]
+
+        base_center = np.asarray(
+            self._plaquette_center_2d(plaquette.sites),
+            dtype=float,
+        )
+
+        for dim, shift in enumerate(image_shift):
+            base_center = base_center + int(shift) * period_vectors[dim]
+
+        return float(base_center[0]), float(base_center[1])
+
+    def _is_plaquette_center_in_positive_patch(
+            self,
+            center: tuple[float, float],
+    ) -> bool:
+        """
+        Position-space clipping for plaquette symbols.
+
+        We keep this deliberately permissive. The site/link positive patch is built
+        in cell space, while plaquette centers are visual overlays. For square PBC,
+        this keeps centers inside the enlarged first-quadrant patch.
+        """
+        nodes, _ = self._draw_primitives()
+
+        if not nodes:
+            return False
+
+        positions = np.asarray([node.position for node in nodes], dtype=float)
+
+        min_xy = np.min(positions, axis=0)
+        max_xy = np.max(positions, axis=0)
+
+        eps = 1e-9
+        x, y = center
+
+        return (
+                min_xy[0] - eps <= x <= max_xy[0] + eps
+                and min_xy[1] - eps <= y <= max_xy[1] + eps
+        )
+
+    def _collapse_duplicate_draw_plaquettes(
+            self,
+            draw_plaquettes: list[_DrawPlaquette],
+            *,
+            atol: float = 1e-9,
+    ) -> list[_DrawPlaquette]:
+        seen: set[tuple[int, int]] = set()
+        out: list[_DrawPlaquette] = []
+
+        def quantize(pos: tuple[float, float]) -> tuple[int, int]:
+            return tuple(int(round(float(x) / atol)) for x in pos)
+
+        for draw_plaquette in draw_plaquettes:
+            # Collapse by visual center, not by plaquette_id. This avoids duplicate
+            # symbols on tiny tori.
+            key = quantize(draw_plaquette.center)
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+            out.append(draw_plaquette)
+
+        return out
+
     def _draw_plaquette_symbols(
         self,
         *,
         ax,
         config: npt.NDArray[np.int64],
         style: PlaquetteSymbolStyle,
+        draw_plaquettes: list[_DrawPlaquette],
     ) -> None:
         if style == "none":
             return
 
-        if self.lattice.num_plaquettes == 0:
-            return
-
         if style == "square_qlm":
+            draw_plaquettes = self._draw_square_qlm_plaquette_primitives()
+
             self._draw_square_qlm_plaquette_symbols(
                 ax=ax,
                 config=config,
+                draw_plaquettes=draw_plaquettes,
             )
             return
 
@@ -529,6 +1393,7 @@ class BasisConfigurationVisualizer:
             self._draw_circulation_plaquette_symbols(
                 ax=ax,
                 config=config,
+                draw_plaquettes=draw_plaquettes,
             )
             return
 
@@ -539,21 +1404,27 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
+        draw_plaquettes: list[_DrawPlaquette],
     ) -> None:
         """
-        Draw the old 16-symbol square-QLM plaquette overlay.
+        Draw the square-QLM-specific 16-symbol plaquette overlay.
 
-        This is intentionally square-lattice specific. It assumes four-link
-        square plaquettes and a QLM-style variable pattern.
+        The centers come from visual plaquettes, so PBC positive_patch images are
+        repeated correctly.
         """
         if not isinstance(self.lattice, SquareLattice):
             return
 
-        for plaquette in self.lattice.plaquettes:
+        for draw_plaquette in draw_plaquettes:
+            plaquette = self.lattice.plaquettes[draw_plaquette.plaquette_id]
+
             if len(plaquette.links) != 4:
                 continue
 
-            link_values = [self.link_value(config, int(link_id)) for link_id in plaquette.links]
+            link_values = [
+                self.link_value(config, int(link_id))
+                for link_id in plaquette.links
+            ]
 
             key = self._plaquette_key(link_values)
             symbol_info = _SQUARE_QLM_PLAQUETTE_SYMBOLS.get(key)
@@ -561,7 +1432,7 @@ class BasisConfigurationVisualizer:
             if symbol_info is None:
                 continue
 
-            center = self._plaquette_center_2d(plaquette.sites)
+            center = draw_plaquette.center
 
             ax.text(
                 center[0],
@@ -579,33 +1450,26 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
+        draw_plaquettes: list[_DrawPlaquette],
     ) -> None:
-        """
-        Generic QLM-like circulation marker.
+        for draw_plaquette in draw_plaquettes:
+            plaquette = self.lattice.plaquettes[draw_plaquette.plaquette_id]
 
-        Draws a circular arrow if all link variables align with the plaquette
-        orientation, or all oppose it.
-
-        This works for generic even/odd plaquettes as long as the lattice stores
-        plaquette.orientations.
-        """
-        for plaquette in self.lattice.plaquettes:
             if len(plaquette.links) == 0:
                 continue
 
             signs: list[int] = []
 
-            for link_id, orientation in zip(plaquette.links, plaquette.orientations, strict=True):
+            for link_id, orientation in zip(
+                    plaquette.links,
+                    plaquette.orientations,
+                    strict=True,
+            ):
                 value = self.link_value(config, int(link_id))
 
-                if value == 0:
-                    signs.append(-1)
-                elif value > 0:
-                    signs.append(1)
-                else:
-                    signs.append(-1)
-
-                signs[-1] *= int(orientation)
+                sign = 1 if value > 0 else -1
+                sign *= int(orientation)
+                signs.append(sign)
 
             if all(s > 0 for s in signs):
                 symbol = "↻"
@@ -616,7 +1480,7 @@ class BasisConfigurationVisualizer:
             else:
                 continue
 
-            center = self._plaquette_center_2d(plaquette.sites)
+            center = draw_plaquette.center
 
             ax.text(
                 center[0],
@@ -672,6 +1536,225 @@ class BasisConfigurationVisualizer:
         ax.set_xlim(xlim[0] - padding, xlim[1] + padding)
         ax.set_ylim(ylim[0] - padding, ylim[1] + padding)
 
+    def _visual_cell(
+        self,
+        *,
+        site_id: int,
+        image_shift: tuple[int, ...],
+    ) -> tuple[int, ...]:
+        spans = self._cell_spans()
+        cell = np.asarray(self.lattice.sites[site_id].cell, dtype=np.int64)
+        shift = np.asarray(image_shift, dtype=np.int64)
+        visual_cell = cell + shift * spans
+        return tuple(int(x) for x in visual_cell)
+
+    def _image_shift_for_visual_cell(
+        self,
+        *,
+        site_id: int,
+        visual_cell: tuple[int, ...],
+    ) -> tuple[int, ...] | None:
+        """
+        Given a physical site and a desired visual cell, return the image shift
+        that places the physical site at that visual cell.
+
+        Returns None if the visual cell is not an image of this physical site.
+        """
+        spans = self._cell_spans()
+
+        base_cell = np.asarray(
+            self.lattice.sites[int(site_id)].cell,
+            dtype=np.int64,
+        )
+        visual = np.asarray(visual_cell, dtype=np.int64)
+
+        diff = visual - base_cell
+
+        image_shift = np.zeros(self.lattice.ndim, dtype=np.int64)
+
+        for dim in range(self.lattice.ndim):
+            span = int(spans[dim])
+            if span <= 0:
+                return None
+
+            if diff[dim] % span != 0:
+                return None
+
+            image_shift[dim] = diff[dim] // span
+
+        return tuple(int(x) for x in image_shift)
+
+    def _is_visual_site_in_positive_patch(
+        self,
+        *,
+        site_id: int,
+        image_shift: tuple[int, ...],
+    ) -> bool:
+        spans = self._cell_spans()
+        visual_cell = np.asarray(
+            self._visual_cell(site_id=site_id, image_shift=image_shift),
+            dtype=np.int64,
+        )
+
+        # Keep 0 <= cell[d] <= span[d].
+        # This gives base cell plus one copied positive boundary.
+        for dim in range(self.lattice.ndim):
+            if visual_cell[dim] < 0:
+                return False
+            if visual_cell[dim] > spans[dim]:
+                return False
+
+        return True
+
+    def _is_visual_cell_in_positive_patch(
+        self,
+        visual_cell: tuple[int, ...],
+    ) -> bool:
+        spans = self._cell_spans()
+
+        for dim, value in enumerate(visual_cell):
+            if int(value) < 0:
+                return False
+            if int(value) > int(spans[dim]):
+                return False
+
+        return True
+
+    def _remove_unused_image_nodes(
+        self,
+        nodes: list[_DrawNode],
+        links: list[_DrawLink],
+    ) -> tuple[list[_DrawNode], list[_DrawLink]]:
+        used_keys: set[tuple[int, tuple[int, ...]]] = set()
+
+        for link in links:
+            used_keys.add(link.source_key)
+            used_keys.add(link.target_key)
+
+        base_shift = tuple(0 for _ in range(self.lattice.ndim))
+        spans = self._cell_spans()
+
+        filtered_nodes: list[_DrawNode] = []
+
+        for node in nodes:
+            # Always keep the original physical lattice.
+            if node.image_shift == base_shift:
+                filtered_nodes.append(node)
+                continue
+
+            # Always keep image nodes that are touched by visual links.
+            if node.key in used_keys:
+                filtered_nodes.append(node)
+                continue
+
+            # Also keep positive-boundary image nodes for visual completeness.
+            #
+            # For square Lx x Ly, this keeps nodes on:
+            #   x = Lx
+            #   y = Ly
+            #   and the upper-right corner (Lx, Ly)
+            visual_cell = np.asarray(
+                self._visual_cell(
+                    site_id=node.site_id,
+                    image_shift=node.image_shift,
+                ),
+                dtype=np.int64,
+            )
+
+            if np.any(visual_cell == spans):
+                filtered_nodes.append(node)
+                continue
+
+        return filtered_nodes, links
+
+    def _collapse_duplicate_visual_links(
+        self,
+        draw_links: list[_DrawLink],
+        *,
+        atol: float = 1e-9,
+    ) -> list[_DrawLink]:
+        seen: set[tuple[tuple[int, int], tuple[int, int]]] = set()
+        out: list[_DrawLink] = []
+
+        def quantize(pos: tuple[float, float]) -> tuple[int, int]:
+            return tuple(int(round(float(x) / atol)) for x in pos)
+
+        for link in draw_links:
+            p0 = quantize(link.source_position)
+            p1 = quantize(link.target_position)
+
+            # Undirected key avoids visually doubled arrows on tiny tori.
+            key = tuple(sorted((p0, p1)))
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+            out.append(link)
+
+        return out
+
+    def _collapse_duplicate_draw_plaquettes(
+            self,
+            draw_plaquettes: list[_DrawPlaquette],
+            *,
+            atol: float = 1e-9,
+    ) -> list[_DrawPlaquette]:
+        seen = set()
+        out = []
+
+        def quantize(pos):
+            return tuple(int(round(float(x) / atol)) for x in pos)
+
+        for p in draw_plaquettes:
+            key = (p.plaquette_id, quantize(p.center))
+            # or just quantize(p.center) if you want to suppress visual duplicates
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(p)
+
+        return out
+
+    def _link_cell_displacement(self, link) -> tuple[int, ...]:
+        """
+        Return the intended displacement of a link on the infinite covering lattice.
+
+        This is different from the stored finite-torus target_cell - source_cell.
+        For example, on a square torus:
+
+            stored:  (Lx - 1, y) -> (0, y)
+            visual:  displacement should be (+1, 0)
+        """
+        kind = str(getattr(link, "kind", ""))
+
+        if isinstance(self.lattice, ChainLattice):
+            return (1,)
+
+        if isinstance(self.lattice, SquareLattice):
+            if kind in ("x", "a"):
+                return (1, 0)
+            if kind in ("y", "b"):
+                return (0, 1)
+
+        if isinstance(self.lattice, TriangularLattice):
+            if kind == "a":
+                return (1, 0)
+            if kind == "b":
+                return (0, 1)
+            if kind == "c":
+                return (-1, 1)
+
+        if isinstance(self.lattice, HoneycombLattice):
+            if kind == "z":
+                return (0, 0)
+            if kind == "x":
+                return (-1, 0)
+            if kind == "y":
+                return (0, -1)
+
+        return self._infer_link_cell_displacement(link)
+
 
 def plot_basis_config(
     lattice: LatticeGraph,
@@ -680,6 +1763,7 @@ def plot_basis_config(
     layout: VariableLayout | None = None,
     ax=None,
     show: bool = True,
+    backend: VisualizerBackend = "matplotlib",
     mode: LinkPlotMode = "arrows",
     with_site_labels: bool = True,
     with_site_values: bool = False,
@@ -700,6 +1784,7 @@ def plot_basis_config(
         config,
         ax=ax,
         show=show,
+        backend=backend,
         mode=mode,
         with_site_labels=with_site_labels,
         with_site_values=with_site_values,
@@ -827,6 +1912,7 @@ class BasisGridVisualizer:
         plaquette_symbols: PlaquetteSymbolStyle = "none",
         figsize: tuple[float, float] | None = None,
         show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
         suptitle: str | None = None,
         single_plot_kwargs: dict | None = None,
     ):
@@ -926,6 +2012,7 @@ class BasisGridVisualizer:
             plot_kwargs.pop("plaquette_symbol_style", None)
             plot_kwargs.pop("title", None)
             plot_kwargs.pop("show", None)
+            plot_kwargs.pop("backend", None)
             plot_kwargs.pop("ax", None)
             plot_kwargs.pop("mode", None)
 
@@ -933,6 +2020,7 @@ class BasisGridVisualizer:
                 config,
                 ax=ax,
                 show=False,
+                backend=backend,
                 mode=mode,
                 with_plaquette_symbols=(plaquette_symbols != "none"),
                 plaquette_symbol_style=plaquette_symbols,
@@ -967,6 +2055,7 @@ def plot_basis_grid(
     plaquette_symbols: PlaquetteSymbolStyle = "none",
     figsize: tuple[float, float] | None = None,
     show: bool = True,
+    backend: VisualizerBackend = "matplotlib",
     suptitle: str | None = None,
     single_plot_kwargs: dict | None = None,
 ):
@@ -991,6 +2080,7 @@ def plot_basis_grid(
         plaquette_symbols=plaquette_symbols,
         figsize=figsize,
         show=show,
+        backend=backend,
         suptitle=suptitle,
         single_plot_kwargs=single_plot_kwargs,
     )
