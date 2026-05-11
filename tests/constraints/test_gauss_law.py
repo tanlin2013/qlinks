@@ -149,3 +149,25 @@ def test_gauss_law_spin_half_two_links() -> None:
     config = np.array([1, -1], dtype=np.int64)
 
     assert constraint.is_satisfied(config)
+
+
+def test_gauss_law_spin_half_residual() -> None:
+    lattice = ChainLattice(3, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    constraint = GaussLawConstraint(
+        layout=layout,
+        site_id=1,
+        link_ids=np.array([0, 1]),
+        signs=np.array([1, -1]),
+        charge=1,
+        charge_normalization="spin_half",
+    )
+
+    result = constraint.check(np.array([1, -1], dtype=np.int64))
+
+    assert result.satisfied
+    assert result.residual == 0
