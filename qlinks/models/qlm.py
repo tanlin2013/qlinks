@@ -9,7 +9,6 @@ import numpy.typing as npt
 from qlinks.basis import Basis
 from qlinks.constraints import (
     ChargeNormalization,
-    FluxNormalization,
     GaussLawConstraint,
     HoneycombElectricWindingSector,
     SquareWindingSector,
