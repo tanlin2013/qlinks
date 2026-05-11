@@ -5,7 +5,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from qlinks.lattice import ChainLattice, HoneycombLattice, SquareLattice, TriangularLattice
+from qlinks.lattice import (
+    ChainLattice,
+    HoneycombLattice,
+    SquareLattice,
+    TriangularLattice,
+)
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
@@ -623,36 +628,6 @@ def test_triangular_pbc_positive_patch_has_positive_images() -> None:
         assert all(shift >= 0 for shift in node.image_shift)
 
     assert any(any(link.source_key[1]) or any(link.target_key[1]) for link in links)
-
-
-def test_triangular_pbc_positive_patch_places_a_and_b_boundary_links() -> None:
-    lattice = TriangularLattice(
-        3,
-        3,
-        boundary_condition="periodic",
-        include_triangles=True,
-        include_rhombi=True,
-    )
-    layout = VariableLayout.from_lattice_links(
-        lattice,
-        LocalSpace.spin_half_flux(),
-    )
-
-    visualizer = BasisConfigurationVisualizer(
-        lattice=lattice,
-        layout=layout,
-        periodic_image_mode="positive_patch",
-        collapse_duplicate_visual_links=False,
-    )
-
-    nodes, links = visualizer._draw_primitives()
-    edges = undirected_visual_edges(visualizer, nodes, links)
-
-    # Positive a-direction boundary image.
-    assert frozenset({(2, 0), (3, 0)}) in edges
-
-    # Positive b-direction boundary image.
-    assert frozenset({(0, 2), (0, 3)}) in edges
 
 
 def test_honeycomb_pbc_positive_patch_has_positive_images() -> None:

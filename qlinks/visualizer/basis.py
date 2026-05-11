@@ -10,11 +10,11 @@ import numpy.typing as npt
 
 from qlinks.lattice import (
     BoundaryCondition,
+    ChainLattice,
+    HoneycombLattice,
     LatticeGraph,
     SquareLattice,
-    ChainLattice,
     TriangularLattice,
-    HoneycombLattice,
 )
 from qlinks.variables import VariableKind, VariableLayout
 
@@ -1254,29 +1254,6 @@ class BasisConfigurationVisualizer:
 
         return out
 
-    def _collapse_duplicate_draw_plaquettes(
-        self,
-        draw_plaquettes: list[_DrawPlaquette],
-        *,
-        atol: float = 1e-9,
-    ) -> list[_DrawPlaquette]:
-        seen: set[tuple[int, int]] = set()
-        out: list[_DrawPlaquette] = []
-
-        def quantize(pos: tuple[float, float]) -> tuple[int, int]:
-            return tuple(int(round(float(x) / atol)) for x in pos)
-
-        for draw_plaquette in draw_plaquettes:
-            key = quantize(draw_plaquette.center)
-
-            if key in seen:
-                continue
-
-            seen.add(key)
-            out.append(draw_plaquette)
-
-        return out
-
     def _draw_plaquette_primitives(self) -> list[_DrawPlaquette]:
         if self.lattice.num_plaquettes == 0:
             return []
@@ -1891,28 +1868,6 @@ class BasisConfigurationVisualizer:
 
             seen.add(key)
             out.append(link)
-
-        return out
-
-    def _collapse_duplicate_draw_plaquettes(
-        self,
-        draw_plaquettes: list[_DrawPlaquette],
-        *,
-        atol: float = 1e-9,
-    ) -> list[_DrawPlaquette]:
-        seen = set()
-        out = []
-
-        def quantize(pos):
-            return tuple(int(round(float(x) / atol)) for x in pos)
-
-        for p in draw_plaquettes:
-            key = (p.plaquette_id, quantize(p.center))
-            # or just quantize(p.center) if you want to suppress visual duplicates
-            if key in seen:
-                continue
-            seen.add(key)
-            out.append(p)
 
         return out
 
