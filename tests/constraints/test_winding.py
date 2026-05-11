@@ -15,6 +15,7 @@ def test_square_winding_sector_x_2_by_2() -> None:
         lattice=lattice,
         direction="x",
         target=2,
+        flux_normalization="integer_flux",
     )
 
     # For 2x2 periodic square, there are two x-wrapping links.
@@ -35,6 +36,7 @@ def test_square_winding_sector_y_2_by_2() -> None:
         lattice=lattice,
         direction="y",
         target=-2,
+        flux_normalization="integer_flux",
     )
 
     assert sector.link_ids.size == 2
@@ -426,3 +428,24 @@ def test_honeycomb_electric_winding_rejects_bad_value_convention() -> None:
             target=0,
             value_convention="bad",  # type: ignore[arg-type]
         )
+
+
+def test_square_winding_sector_spin_half_target() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    sector = SquareWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=1,
+        flux_normalization="spin_half",
+    )
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+
+    # If the x cut has raw sum 2, physical spin-half winding is 1.
+    assert sector.is_satisfied(config)

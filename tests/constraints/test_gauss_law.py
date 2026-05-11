@@ -43,6 +43,7 @@ def test_gauss_law_boundary_site() -> None:
         layout=layout,
         site_id=0,
         charge=-1,
+        charge_normalization="integer_flux",
     )
 
     assert constraint.value(np.array([1, 1])) == -1
@@ -57,6 +58,7 @@ def test_gauss_law_all_sites() -> None:
         lattice=lattice,
         layout=layout,
         charges=np.array([-1, 0, 1]),
+        charge_normalization="integer_flux",
     )
 
     config = np.array([1, 1])
@@ -83,6 +85,7 @@ def test_gauss_law_square_lattice_site() -> None:
         layout=layout,
         site_id=0,
         charge=-2,
+        charge_normalization="integer_flux",
     )
 
     np.testing.assert_array_equal(constraint.link_ids, np.array([0, 1]))
@@ -103,3 +106,46 @@ def test_gauss_law_direct_constructor_rejects_bad_sign() -> None:
             signs=np.array([0]),
             charge=0,
         )
+
+
+def test_gauss_law_spin_half_boundary_site() -> None:
+    lattice = ChainLattice(2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    constraint = GaussLawConstraint(
+        layout=layout,
+        site_id=0,
+        link_ids=np.array([0]),
+        signs=np.array([-1]),
+        charge=-1,
+        charge_normalization="spin_half",
+    )
+
+    # raw divergence = -2 is needed for physical charge -1.
+    # With one link, raw divergence can only be ±1, so this should fail.
+    assert not constraint.is_satisfied(np.array([1], dtype=np.int64))
+
+
+def test_gauss_law_spin_half_two_links() -> None:
+    lattice = ChainLattice(3, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    constraint = GaussLawConstraint(
+        layout=layout,
+        site_id=1,
+        link_ids=np.array([0, 1]),
+        signs=np.array([1, -1]),
+        charge=1,
+        charge_normalization="spin_half",
+    )
+
+    # raw divergence = +2, physical divergence = +1
+    config = np.array([1, -1], dtype=np.int64)
+
+    assert constraint.is_satisfied(config)

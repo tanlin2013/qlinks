@@ -95,6 +95,7 @@ def test_dfs_gauss_law_chain_length_3() -> None:
         lattice=lattice,
         layout=layout,
         charges=np.array([-1, 0, 1]),
+        charge_normalization="integer_flux",
     )
 
     basis = DFSBasisSolver(sort=True).solve(layout, constraints=constraints)
