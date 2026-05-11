@@ -14,6 +14,7 @@ from qlinks.variables import VariableLayout
 @dataclass(frozen=True, slots=True)
 class DFSBasisSolver:
     sort: bool = True
+    variable_order: npt.ArrayLike | None = None
 
     def solve(
         self,
@@ -35,10 +36,19 @@ class DFSBasisSolver:
             conditions=all_conditions,
         )
 
-        variable_order = self._variable_order(
-            layout=layout,
-            conditions=all_conditions,
-        )
+        if self.variable_order is None:
+            variable_order = self._variable_order(
+                layout=layout,
+                conditions=all_conditions,
+            )
+        else:
+            variable_order = np.asarray(self.variable_order, dtype=np.int64)
+
+            if variable_order.shape != (n,):
+                raise ValueError("variable_order must have shape (layout.n_variables,).")
+
+            if set(variable_order.tolist()) != set(range(n)):
+                raise ValueError("variable_order must be a permutation of variable indices.")
 
         def dfs(depth: int) -> None:
             if depth == n:
