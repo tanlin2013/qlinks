@@ -600,9 +600,6 @@ class BasisConfigurationVisualizer:
                 )
             )
 
-        if self.collapse_duplicate_visual_links:
-            links = self._collapse_duplicate_visual_links(links)
-
         return nodes, links
 
     def _draw_primitives_positive_patch(self) -> tuple[list[_DrawNode], list[_DrawLink]]:
