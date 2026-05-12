@@ -133,7 +133,7 @@ class BasisConfigurationVisualizer:
     layout: VariableLayout | None = None
     style: LinkVisualStyle = field(default_factory=LinkVisualStyle)
     periodic_image_mode: PeriodicImageMode = "positive_patch"
-    collapse_duplicate_visual_links: bool = False
+    collapse_duplicate_visual_links: bool = True
     coordinate_scale: float = 1.0
     coordinate_transform: npt.NDArray[np.float64] | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
