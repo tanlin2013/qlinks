@@ -155,12 +155,16 @@ def test_show_honeycomb_pbc_positive_patch() -> None:
         layout=layout,
         periodic_image_mode="positive_patch",
         collapse_duplicate_visual_links=True,
+        site_label_style="sublattice_cell",
+        coordinate_transform=np.array(
+            [
+                [1.0, 0.0],
+                [0.0, 0.72],
+            ],
+            dtype=float,
+        ),
         style=LinkVisualStyle(
-            node_size=50.0,
-            arrow_linewidth=1.2,
-            arrow_mutation_scale=10.0,
-            arrow_shrink_points=2.0,
-            site_label_fontsize=5.0,
+            node_size=100.0,
         ),
     )
 
@@ -168,7 +172,7 @@ def test_show_honeycomb_pbc_positive_patch() -> None:
         config,
         show=True,
         mode="arrows",
-        with_site_labels=False,
+        with_site_labels=True,
         with_plaquette_symbols=False,
         title="Honeycomb 4x4 PBC, positive_patch",
     )
