@@ -27,6 +27,7 @@ from qlinks.models.qlm import (
     SquareQLMModel,
     TriangularQLMModel,
 )
+from qlinks.models.toric_code import ToricCodeModel
 
 __all__ = [
     "BasisSolverName",
@@ -54,6 +55,7 @@ __all__ += [
     "QLMBase",
     "QLMModel",
     "SquareQLMModel",
+    "ToricCodeModel",
     "TriangularQLMModel",
     "HoneycombQLMModel",
 ]

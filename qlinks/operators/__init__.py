@@ -21,6 +21,10 @@ from qlinks.operators.plaquette import (
     qdm_flippability_projectors,
 )
 from qlinks.operators.pxp import PXPSpinFlipOperator
+from qlinks.operators.toric_code import (
+    ToricCodePlaquetteFluxOperator,
+    ToricCodeStarFlipOperator,
+)
 from qlinks.operators.transitions import (
     BinaryFlipOperator,
     MultiNegationFlipOperator,
@@ -57,6 +61,8 @@ __all__ = [
     "PlaquettePatternOperator",
     "PlaquettePatternTransition",
     "SetVariablesOperator",
+    "ToricCodePlaquetteFluxOperator",
+    "ToricCodeStarFlipOperator",
     "combine_duplicate_actions",
     "qdm_flippability_projectors",
     "alternating_binary_flippability_projectors",
