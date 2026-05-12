@@ -60,6 +60,11 @@ class LocalSpace:
         """
         return cls.from_values([-1, 1])
 
+    @classmethod
+    def spin_one(cls) -> LocalSpace:
+        """Spin-1 local variable with S^z values {-1, 0, +1}."""
+        return cls.from_values([-1, 0, 1])
+
     @property
     def dim(self) -> int:
         return int(self.values.size)

@@ -27,6 +27,7 @@ from qlinks.models.qlm import (
     SquareQLMModel,
     TriangularQLMModel,
 )
+from qlinks.models.spin_one_xy import SpinOneXYChainModel
 from qlinks.models.toric_code import ToricCodeModel
 
 __all__ = [
@@ -54,6 +55,7 @@ __all__ += [
     "TriangularQDMModel",
     "QLMBase",
     "QLMModel",
+    "SpinOneXYChainModel",
     "SquareQLMModel",
     "ToricCodeModel",
     "TriangularQLMModel",
