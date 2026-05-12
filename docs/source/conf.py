@@ -14,8 +14,8 @@ import os
 import sys
 from importlib import metadata
 
+sys.path.insert(0, os.path.abspath("../../.."))
 sys.path.insert(0, os.path.abspath("../.."))
-sys.path.insert(0, os.path.abspath("../../qlinks"))
 
 # -- Project information -----------------------------------------------------
 
@@ -60,7 +60,7 @@ source_suffix = [".rst", ".md"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [".ipynb"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".ipynb"]
 
 # Allowing docstring in both __init__ and right under class definition
 autoclass_content = "both"
@@ -124,3 +124,8 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
 }
+
+# -- Options for todo extension ----------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/todo.html#configuration
+
+todo_include_todos = True
