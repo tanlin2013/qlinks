@@ -2153,8 +2153,11 @@ class BasisGridVisualizer:
 
     lattice: LatticeGraph
     layout: VariableLayout | None = None
+    style: LinkVisualStyle = field(default_factory=LinkVisualStyle)
     periodic_image_mode: PeriodicImageMode = "positive_patch"
     collapse_duplicate_visual_links: bool = True
+    coordinate_scale: float = 1.0
+    coordinate_transform: npt.ArrayLike | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
 
     def plot(
@@ -2239,8 +2242,11 @@ class BasisGridVisualizer:
         single_visualizer = BasisConfigurationVisualizer(
             lattice=self.lattice,
             layout=self.layout,
+            style=self.style,
             periodic_image_mode=self.periodic_image_mode,
             collapse_duplicate_visual_links=self.collapse_duplicate_visual_links,
+            coordinate_scale=self.coordinate_scale,
+            coordinate_transform=self.coordinate_transform,
             site_label_style=self.site_label_style,
         )
 
@@ -2278,8 +2284,14 @@ class BasisGridVisualizer:
             plot_kwargs.pop("backend", None)
             plot_kwargs.pop("ax", None)
             plot_kwargs.pop("mode", None)
+
+            # Constructor-only options; do not pass to BasisConfigurationVisualizer.plot().
+            plot_kwargs.pop("style", None)
             plot_kwargs.pop("periodic_image_mode", None)
             plot_kwargs.pop("collapse_duplicate_visual_links", None)
+            plot_kwargs.pop("coordinate_scale", None)
+            plot_kwargs.pop("coordinate_transform", None)
+            plot_kwargs.pop("site_label_style", None)
 
             single_visualizer.plot(
                 config,
