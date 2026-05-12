@@ -2015,15 +2015,28 @@ def plot_basis_config(
     with_site_values: bool = False,
     with_link_values: bool = False,
     with_plaquette_symbols: bool = True,
+    plaquette_symbol_style: PlaquetteSymbolStyle = "square_qlm",
     title: str | None = None,
+    periodic_image_mode: PeriodicImageMode = "positive_patch",
+    collapse_duplicate_visual_links: bool = True,
+    coordinate_scale: float = 1.0,
+    coordinate_transform: npt.ArrayLike | None = None,
+    site_label_style: SiteLabelStyle = "cell_sublattice",
+    style: LinkVisualStyle | None = None,
 ):
     """
-    Functional convenience wrapper.
+    Functional convenience wrapper around BasisConfigurationVisualizer.
     """
 
     visualizer = BasisConfigurationVisualizer(
         lattice=lattice,
         layout=layout,
+        style=style if style is not None else LinkVisualStyle(),
+        periodic_image_mode=periodic_image_mode,
+        collapse_duplicate_visual_links=collapse_duplicate_visual_links,
+        coordinate_scale=coordinate_scale,
+        coordinate_transform=coordinate_transform,
+        site_label_style=site_label_style,
     )
 
     return visualizer.plot(
@@ -2036,6 +2049,7 @@ def plot_basis_config(
         with_site_values=with_site_values,
         with_link_values=with_link_values,
         with_plaquette_symbols=with_plaquette_symbols,
+        plaquette_symbol_style=plaquette_symbol_style,
         title=title,
     )
 
@@ -2310,6 +2324,10 @@ def plot_basis_grid(
     plaquette_symbols: PlaquetteSymbolStyle = "none",
     periodic_image_mode: PeriodicImageMode = "positive_patch",
     collapse_duplicate_visual_links: bool = True,
+    coordinate_scale: float = 1.0,
+    coordinate_transform: npt.ArrayLike | None = None,
+    site_label_style: SiteLabelStyle = "cell_sublattice",
+    style: LinkVisualStyle | None = None,
     figsize: tuple[float, float] | None = None,
     show: bool = True,
     suptitle: str | None = None,
@@ -2318,9 +2336,16 @@ def plot_basis_grid(
     """
     Functional wrapper around BasisGridVisualizer.
     """
+
     visualizer = BasisGridVisualizer(
         lattice=lattice,
         layout=layout,
+        style=style if style is not None else LinkVisualStyle(),
+        periodic_image_mode=periodic_image_mode,
+        collapse_duplicate_visual_links=collapse_duplicate_visual_links,
+        coordinate_scale=coordinate_scale,
+        coordinate_transform=coordinate_transform,
+        site_label_style=site_label_style,
     )
 
     return visualizer.plot(
