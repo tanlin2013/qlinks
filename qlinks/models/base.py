@@ -15,6 +15,7 @@ from qlinks.builders import (
 )
 from qlinks.constraints import Constraint, SectorCondition
 from qlinks.encoded import BinaryEncodedBasis, BitmaskSparseHamiltonianBuilder
+from qlinks.operators import BasisOperator
 from qlinks.variables import VariableLayout
 
 BasisSolverName = Literal["brute_force", "dfs", "cpsat"]
@@ -130,6 +131,13 @@ class ModelBuildResult:
         for term in self.terms.values():
             operators.extend(term.operators)
         return tuple(operators)
+
+    def basis_operator(self, name: str) -> BasisOperator:
+        term = self.terms[name]
+        return BasisOperator(
+            basis=self.basis,
+            operators=term.operators,
+        )
 
 
 @dataclass(frozen=True, slots=True)

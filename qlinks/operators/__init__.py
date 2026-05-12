@@ -11,6 +11,11 @@ from qlinks.operators.diagonal import (
     LocalValueDiagonalOperator,
     PatternDiagonalOperator,
 )
+from qlinks.operators.linear import (
+    BasisOperator,
+    TransposedBasisOperator,
+    as_basis_operator,
+)
 from qlinks.operators.plaquette import (
     PlaquettePatternOperator,
     PlaquettePatternTransition,
@@ -52,6 +57,7 @@ from qlinks.operators.updates import (
 
 __all__ = [
     "BaseLocalOperator",
+    "BasisOperator",
     "BinaryFlipOperator",
     "ConstantDiagonalOperator",
     "LocalOperator",
@@ -67,12 +73,14 @@ __all__ = [
     "PlaquettePatternTransition",
     "SetVariablesOperator",
     "SpinOneXYBondOperator",
+    "TransposedBasisOperator",
     "spin_one_lower_amplitude",
     "spin_one_raise_amplitude",
     "ToricCodePlaquetteFluxOperator",
     "ToricCodeStarFlipOperator",
     "combine_duplicate_actions",
     "qdm_flippability_projectors",
+    "as_basis_operator",
     "alternating_binary_flippability_projectors",
     "alternating_binary_patterns",
     "alternating_flux_flippability_projectors",
