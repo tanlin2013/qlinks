@@ -454,7 +454,7 @@ class BasisConfigurationVisualizer:
                 graph,
                 pos,
                 ax=ax,
-                width=self.style.arrow_width,
+                width=self.style.arrow_linewidth,
                 edge_color=self.style.edge_color,
                 alpha=self.style.arrow_alpha,
                 arrows=True,
