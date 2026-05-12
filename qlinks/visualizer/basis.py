@@ -18,12 +18,13 @@ from qlinks.lattice import (
 )
 from qlinks.variables import VariableKind, VariableLayout
 
-VisualizerBackend = Literal["matplotlib", "networkx"]
-PeriodicImageMode = Literal["none", "positive_patch"]
+BasisConfigLabelStyle = Literal["none", "compact", "array"]
 LinkPlotMode = Literal["arrows", "dimers", "values"]
+PeriodicImageMode = Literal["none", "positive_patch"]
 PlaquetteSymbolMode = Literal["binary", "flux"]
 PlaquetteSymbolStyle = Literal["none", "square_qlm", "circulation"]
-BasisConfigLabelStyle = Literal["none", "compact", "array"]
+SiteLabelStyle = Literal["cell", "cell_sublattice", "sublattice_cell", "site_id"]
+VisualizerBackend = Literal["matplotlib", "networkx"]
 
 # This mapping is copied in spirit from the old square-lattice visualizer.
 # Keys are plaquette-link values converted to binary signs in plaquette order.
@@ -134,6 +135,7 @@ class BasisConfigurationVisualizer:
     periodic_image_mode: PeriodicImageMode = "positive_patch"
     collapse_duplicate_visual_links: bool = False
     coordinate_scale: float = 1.0
+    site_label_style: SiteLabelStyle = "cell_sublattice"
 
     def _as_config(self, config: npt.ArrayLike) -> npt.NDArray[np.int64]:
         arr = np.asarray(config, dtype=np.int64)
@@ -487,8 +489,7 @@ class BasisConfigurationVisualizer:
                 pieces: list[str] = []
 
                 if with_site_labels:
-                    site = self.lattice.sites[node.site_id]
-                    pieces.append(str(site.cell))
+                    pieces.append(self._format_site_label(node.site_id))
 
                 if with_site_values:
                     value = self.site_value(config, node.site_id)
@@ -986,8 +987,7 @@ class BasisConfigurationVisualizer:
             pieces: list[str] = []
 
             if with_site_labels:
-                site = self.lattice.sites[node.site_id]
-                pieces.append(str(site.cell))
+                pieces.append(self._format_site_label(node.site_id))
 
             if with_site_values:
                 value = self.site_value(config, node.site_id)
@@ -1959,6 +1959,41 @@ class BasisConfigurationVisualizer:
 
         return max(4.0, 0.85 * self._resolved_site_label_fontsize())
 
+    def _format_site_label(self, site_id: int) -> str:
+        site = self.lattice.sites[int(site_id)]
+        cell = tuple(int(c) for c in site.cell)
+        sublattice = int(site.sublattice)
+
+        if self.site_label_style == "cell":
+            return str(cell)
+
+        if self.site_label_style == "cell_sublattice":
+            if len(self.lattice.basis_offsets) == 1:
+                return str(cell)
+            return f"{cell}, {self._format_sublattice(sublattice)}"
+
+        if self.site_label_style == "sublattice_cell":
+            if len(self.lattice.basis_offsets) == 1:
+                return str(cell)
+            return f"{self._format_sublattice(sublattice)}{cell}"
+
+        if self.site_label_style == "site_id":
+            return str(int(site_id))
+
+        raise ValueError(
+            "site_label_style must be 'cell', 'cell_sublattice', "
+            "'sublattice_cell', or 'site_id'."
+        )
+
+    @staticmethod
+    def _format_sublattice(sublattice: int) -> str:
+        labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+        if 0 <= sublattice < len(labels):
+            return labels[sublattice]
+
+        return str(sublattice)
+
 
 def plot_basis_config(
     lattice: LatticeGraph,
@@ -2102,6 +2137,7 @@ class BasisGridVisualizer:
     layout: VariableLayout | None = None
     periodic_image_mode: PeriodicImageMode = "positive_patch"
     collapse_duplicate_visual_links: bool = True
+    site_label_style: SiteLabelStyle = "cell_sublattice"
 
     def plot(
         self,
@@ -2187,6 +2223,7 @@ class BasisGridVisualizer:
             layout=self.layout,
             periodic_image_mode=self.periodic_image_mode,
             collapse_duplicate_visual_links=self.collapse_duplicate_visual_links,
+            site_label_style=self.site_label_style,
         )
 
         if single_plot_kwargs is None:

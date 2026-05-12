@@ -950,3 +950,26 @@ def test_style_explicit_arrow_parameters_override_inference() -> None:
 
     assert visualizer._resolved_arrow_mutation_scale() == 9.0
     assert visualizer._resolved_arrow_shrink_points() == 0.0
+
+
+def test_honeycomb_site_label_includes_sublattice() -> None:
+    lattice = HoneycombLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        site_label_style="sublattice_cell",
+    )
+
+    labels = {
+        visualizer._format_site_label(site.id)
+        for site in lattice.sites
+        if tuple(site.cell) == (0, 0)
+    }
+
+    assert "A(0, 0)" in labels
+    assert "B(0, 0)" in labels
