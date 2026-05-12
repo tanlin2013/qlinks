@@ -68,8 +68,7 @@ class SpinOneXYBondOperator(BaseLocalOperator):
 
         for variable_index in (variable_i, variable_j):
             values = set(
-                int(v)
-                for v in self.layout.local_space(int(variable_index)).values.tolist()
+                int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
             )
             if values != {-1, 0, 1}:
                 raise ValueError(
@@ -77,7 +76,9 @@ class SpinOneXYBondOperator(BaseLocalOperator):
                 )
 
         object.__setattr__(self, "_site_ids", np.array([site_i, site_j], dtype=np.int64))
-        object.__setattr__(self, "_variable_indices", np.array([variable_i, variable_j], dtype=np.int64))
+        object.__setattr__(
+            self, "_variable_indices", np.array([variable_i, variable_j], dtype=np.int64)
+        )
 
     @property
     def site_ids(self) -> npt.NDArray[np.int64]:

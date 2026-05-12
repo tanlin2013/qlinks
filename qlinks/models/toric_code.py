@@ -42,9 +42,7 @@ class ToricCodeModel(HamiltonianModelBase):
         boundary_condition = BoundaryCondition(self.boundary_condition)
 
         if boundary_condition != BoundaryCondition.PERIODIC:
-            raise ValueError(
-                "ToricCodeModel currently supports only periodic boundary conditions."
-            )
+            raise ValueError("ToricCodeModel currently supports only periodic boundary conditions.")
 
         return SquareLattice(
             self.lx,
@@ -79,9 +77,7 @@ class ToricCodeModel(HamiltonianModelBase):
         validate_builder_name(builder)
 
         if builder != "sparse":
-            raise NotImplementedError(
-                "ToricCodeModel currently supports only builder='sparse'."
-            )
+            raise NotImplementedError("ToricCodeModel currently supports only builder='sparse'.")
 
         if layout is None:
             layout = self.layout
@@ -105,9 +101,7 @@ class ToricCodeModel(HamiltonianModelBase):
         validate_builder_name(builder)
 
         if builder != "sparse":
-            raise NotImplementedError(
-                "ToricCodeModel currently supports only builder='sparse'."
-            )
+            raise NotImplementedError("ToricCodeModel currently supports only builder='sparse'.")
 
         if layout is None:
             layout = self.layout

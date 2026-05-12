@@ -100,4 +100,3 @@ class SpinOneXYChainModel(HamiltonianModelBase):
                 kind="kinetic",
             ),
         )
-    

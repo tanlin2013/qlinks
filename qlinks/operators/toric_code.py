@@ -34,10 +34,7 @@ class ToricCodeStarFlipOperator(BaseLocalOperator):
             link_ids = link_ids.reshape(-1)
 
         variable_indices = np.asarray(
-            [
-                self.layout.link_variable_index(int(link_id))
-                for link_id in link_ids
-            ],
+            [self.layout.link_variable_index(int(link_id)) for link_id in link_ids],
             dtype=np.int64,
         )
 
@@ -46,13 +43,10 @@ class ToricCodeStarFlipOperator(BaseLocalOperator):
 
         for variable_index in variable_indices:
             values = set(
-                int(v)
-                for v in self.layout.local_space(int(variable_index)).values.tolist()
+                int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
             )
             if values != {-1, 1}:
-                raise ValueError(
-                    "ToricCodeStarFlipOperator requires link variables {-1, +1}."
-                )
+                raise ValueError("ToricCodeStarFlipOperator requires link variables {-1, +1}.")
 
         object.__setattr__(self, "_link_ids", link_ids)
         object.__setattr__(self, "_variable_indices", variable_indices)
@@ -105,13 +99,10 @@ class ToricCodePlaquetteFluxOperator(BaseLocalOperator):
 
         for variable_index in variable_indices:
             values = set(
-                int(v)
-                for v in self.layout.local_space(int(variable_index)).values.tolist()
+                int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
             )
             if values != {-1, 1}:
-                raise ValueError(
-                    "ToricCodePlaquetteFluxOperator requires link variables {-1, +1}."
-                )
+                raise ValueError("ToricCodePlaquetteFluxOperator requires link variables {-1, +1}.")
 
         object.__setattr__(self, "_variable_indices", variable_indices)
 
