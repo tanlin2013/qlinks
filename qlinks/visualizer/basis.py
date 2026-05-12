@@ -135,6 +135,7 @@ class BasisConfigurationVisualizer:
     periodic_image_mode: PeriodicImageMode = "positive_patch"
     collapse_duplicate_visual_links: bool = False
     coordinate_scale: float = 1.0
+    coordinate_transform: npt.NDArray[np.float64] | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
 
     def _as_config(self, config: npt.ArrayLike) -> npt.NDArray[np.int64]:
@@ -779,6 +780,12 @@ class BasisConfigurationVisualizer:
             xy = xy + int(shift) * period_vectors[dim]
 
         xy = self.coordinate_scale * xy
+
+        if self.coordinate_transform is not None:
+            transform = np.asarray(self.coordinate_transform, dtype=float)
+            if transform.shape != (2, 2):
+                raise ValueError("coordinate_transform must have shape (2, 2).")
+            xy = transform @ xy
 
         return float(xy[0]), float(xy[1])
 
