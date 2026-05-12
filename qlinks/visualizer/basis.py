@@ -60,16 +60,16 @@ class LinkVisualStyle:
 
     arrow_linewidth: float = 1.1
     arrow_alpha: float = 0.85
-    arrow_mutation_scale: float = 8.0
-    arrow_shrink_points: float = 0.0
+    arrow_mutation_scale: float | None = None
+    arrow_shrink_points: float | None = None
 
     occupied_width: float = 2.0
     empty_width: float = 0.8
     occupied_alpha: float = 0.9
     empty_alpha: float = 0.5
 
-    site_label_fontsize: float = 8.0
-    link_label_fontsize: float = 7.0
+    site_label_fontsize: float | None = None
+    link_label_fontsize: float | None = None
     plaquette_symbol_fontsize: float = 22.0
 
 
@@ -459,10 +459,10 @@ class BasisConfigurationVisualizer:
                 alpha=self.style.arrow_alpha,
                 arrows=True,
                 arrowstyle="-|>",
-                arrowsize=self.style.arrow_mutation_scale,
+                arrowsize=self._resolved_arrow_mutation_scale(),
                 connectionstyle="arc3,rad=0.0",
-                min_source_margin=12,
-                min_target_margin=12,
+                min_source_margin=self._resolved_arrow_shrink_points(),
+                min_target_margin=self._resolved_arrow_shrink_points(),
             )
 
         elif mode == "values":
@@ -503,7 +503,7 @@ class BasisConfigurationVisualizer:
                 pos,
                 labels=labels,
                 ax=ax,
-                font_size=9,
+                font_size=self._resolved_site_label_fontsize(),
                 font_color="black",
             )
 
@@ -519,7 +519,7 @@ class BasisConfigurationVisualizer:
                 pos,
                 edge_labels=edge_labels,
                 ax=ax,
-                font_size=9,
+                font_size=self._resolved_link_label_fontsize(),
                 rotate=False,
                 bbox={
                     "boxstyle": "round,pad=0.15",
@@ -901,12 +901,12 @@ class BasisConfigurationVisualizer:
                 source,
                 target,
                 arrowstyle="-|>",
-                mutation_scale=self.style.arrow_mutation_scale,
+                mutation_scale=self._resolved_arrow_mutation_scale(),
                 linewidth=self.style.arrow_linewidth,
                 color=self.style.edge_color,
                 alpha=self.style.arrow_alpha,
-                shrinkA=self.style.arrow_shrink_points,
-                shrinkB=self.style.arrow_shrink_points,
+                shrinkA=self._resolved_arrow_shrink_points(),
+                shrinkB=self._resolved_arrow_shrink_points(),
                 zorder=2,
             )
 
@@ -1001,7 +1001,7 @@ class BasisConfigurationVisualizer:
                     "\n".join(pieces),
                     ha="center",
                     va="center",
-                    fontsize=self.style.site_label_fontsize,
+                    fontsize=self._resolved_site_label_fontsize(),
                     color="black",
                     zorder=4,
                 )
@@ -1028,7 +1028,7 @@ class BasisConfigurationVisualizer:
                 str(value),
                 ha="center",
                 va="center",
-                fontsize=self.style.link_label_fontsize,
+                fontsize=self._resolved_link_label_fontsize(),
                 bbox={"boxstyle": "round,pad=0.15", "fc": "white", "ec": "none", "alpha": 0.8},
                 zorder=5,
             )
@@ -1909,6 +1909,55 @@ class BasisConfigurationVisualizer:
                 return (0, -1)
 
         return self._infer_link_cell_displacement(link)
+
+    def _node_radius_points(self) -> float:
+        """
+        Approximate scatter-marker radius in points.
+
+        Matplotlib scatter size is area in points^2.
+        """
+        return float(np.sqrt(float(self.style.node_size) / np.pi))
+
+    def _resolved_arrow_shrink_points(self) -> float:
+        """
+        Infer arrow shrink so links visually connect sites.
+
+        For lattice plots, links should look connected, so the default shrink is
+        intentionally much smaller than the full node radius.
+        """
+        if self.style.arrow_shrink_points is not None:
+            return float(self.style.arrow_shrink_points)
+
+        radius = self._node_radius_points()
+
+        # Small fraction of radius: avoids visible gaps but prevents arrowheads
+        # from being too deeply hidden by nodes.
+        return max(0.0, 0.8 * radius)
+
+    def _resolved_arrow_mutation_scale(self) -> float:
+        if self.style.arrow_mutation_scale is not None:
+            return float(self.style.arrow_mutation_scale)
+
+        radius = self._node_radius_points()
+
+        # Keep arrowhead size visually compatible with node size.
+        return max(4.0, min(14.0, 2.0 * radius))
+
+    def _resolved_site_label_fontsize(self) -> float:
+        if self.style.site_label_fontsize is not None:
+            return float(self.style.site_label_fontsize)
+
+        radius = self._node_radius_points()
+
+        # A label like "(3, 2)" is wider than a single character, so use a
+        # conservative fraction of the marker radius.
+        return max(4.0, min(10.0, 0.85 * radius))
+
+    def _resolved_link_label_fontsize(self) -> float:
+        if self.style.link_label_fontsize is not None:
+            return float(self.style.link_label_fontsize)
+
+        return max(4.0, 0.85 * self._resolved_site_label_fontsize())
 
 
 def plot_basis_config(
