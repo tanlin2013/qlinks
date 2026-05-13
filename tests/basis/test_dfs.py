@@ -209,11 +209,11 @@ def test_dfs_partial_bruteforce_agree_small_qdm() -> None:
     np.testing.assert_array_equal(dfs_basis.states, brute_basis.states)
 
 
-"""
-Test that DFSBasisSolver only calls partial_check for constraints that are affected by the
-currently assigned variable. This is important for performance,
-as partial_check can be expensive and should only be called when necessary.
-"""
+# ------------------------------------------------------------------
+# Test that DFSBasisSolver only calls partial_check for constraints that are affected by the
+# currently assigned variable. This is important for performance,
+# as partial_check can be expensive and should only be called when necessary.
+# ------------------------------------------------------------------
 
 
 @dataclass
@@ -317,12 +317,12 @@ def test_dfs_only_checks_conditions_affected_by_assigned_variable() -> None:
     assert c2.partial_calls == 4
 
 
-"""
-Test that invalid affected variables are rejected. The affected_variables method should return
-valid variable indices within the layout, and the solver should validate this before starting DFS.
-This is important to prevent out-of-bounds errors and ensure that constraints are properly
-integrated into the solving process.
-"""
+# ------------------------------------------------------------------
+# Test that invalid affected variables are rejected. The affected_variables method should return
+# valid variable indices within the layout, and the solver should validate this before starting DFS.
+# This is important to prevent out-of-bounds errors and ensure that constraints are properly
+# integrated into the solving process.
+# ------------------------------------------------------------------
 
 
 @dataclass
@@ -358,9 +358,9 @@ def test_dfs_rejects_out_of_range_affected_variables() -> None:
         solver.solve(layout, constraints=(constraint,))
 
 
-"""
-Duplicate affected variables are harmless.
-"""
+# ------------------------------------------------------------------
+# Duplicate affected variables are harmless.
+# ------------------------------------------------------------------
 
 
 def test_dfs_deduplicates_affected_variables() -> None:
@@ -385,10 +385,10 @@ def test_dfs_deduplicates_affected_variables() -> None:
     assert constraint.partial_calls == 2
 
 
-"""
-Test that DFSBasisSolver treats constraints with no affected variables as global constants,
-checking them once before starting DFS and not calling partial_check for them at all.
-"""
+# ------------------------------------------------------------------
+# Test that DFSBasisSolver treats constraints with no affected variables as global constants,
+# checking them once before starting DFS and not calling partial_check for them at all.
+# ------------------------------------------------------------------
 
 
 class AlwaysTrueGlobalConstraint(BaseConstraint):
@@ -421,11 +421,11 @@ def test_dfs_base_constraint_default_affects_all_variables() -> None:
     )
 
 
-"""
-Test variable ordering strategies in DFSBasisSolver. The variable order can affect the number of
-partial checks and thus the performance of the solver, but should not affect the final basis
-(up to sorting).
-"""
+# ------------------------------------------------------------------
+# Test variable ordering strategies in DFSBasisSolver. The variable order can affect the number of
+# partial checks and thus the performance of the solver, but should not affect the final basis
+# (up to sorting).
+# ------------------------------------------------------------------
 
 
 @dataclass
