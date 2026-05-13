@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -10,8 +10,8 @@ from qlinks.basis.basis import Basis
 from qlinks.constraints import Constraint, SectorCondition
 from qlinks.variables import VariableLayout
 
-
 ConditionLike = Constraint | SectorCondition
+VariableOrderStrategy = Literal["auto", "layout", "degree"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,7 +23,14 @@ class _ConditionInfo:
 @dataclass(frozen=True, slots=True)
 class DFSBasisSolver:
     sort: bool = True
+
+    # Explicit order. If provided, this overrides variable_order_strategy.
     variable_order: npt.ArrayLike | None = None
+
+    # "auto" currently aliases "degree".
+    # "layout" means [0, 1, 2, ...].
+    # "degree" means variables appearing in more constraints/sectors first.
+    variable_order_strategy: VariableOrderStrategy = "auto"
 
     def solve(
         self,
@@ -46,7 +53,7 @@ class DFSBasisSolver:
 
         condition_indices_by_variable = self._build_condition_lookup(
             n_variables=n,
-            condition_infos=condition_infos,
+            conditions=condition_infos,
         )
 
         # Conditions with no affected variables are global constants.
@@ -59,9 +66,10 @@ class DFSBasisSolver:
             return Basis.empty(layout)
 
         if self.variable_order is None:
-            variable_order = self._variable_order(
+            variable_order = self._choose_variable_order(
                 layout=layout,
-                condition_infos=condition_infos,
+                conditions=all_conditions,
+                strategy=self.variable_order_strategy,
             )
         else:
             variable_order = self._validate_variable_order(
@@ -122,6 +130,84 @@ class DFSBasisSolver:
 
         return order
 
+    @classmethod
+    def _choose_variable_order(
+        cls,
+        *,
+        layout: VariableLayout,
+        conditions: Sequence[Constraint | SectorCondition],
+        strategy: VariableOrderStrategy,
+    ) -> npt.NDArray[np.int64]:
+        if strategy == "auto":
+            strategy = "degree"
+
+        if strategy == "layout":
+            return np.arange(layout.n_variables, dtype=np.int64)
+
+        if strategy == "degree":
+            return cls._degree_variable_order(
+                layout=layout,
+                conditions=conditions,
+            )
+
+        raise ValueError("variable_order_strategy must be one of 'auto', 'layout', or 'degree'.")
+
+    @staticmethod
+    def _condition_affected_variables(
+        *,
+        condition: Constraint | SectorCondition,
+        n_variables: int,
+    ) -> npt.NDArray[np.int64]:
+        raw_affected = condition.affected_variables
+
+        if callable(raw_affected):
+            raw_affected = raw_affected()
+
+        affected = np.asarray(raw_affected, dtype=np.int64)
+
+        if affected.ndim != 1:
+            raise ValueError(f"{condition.name}.affected_variables() must return a 1D array.")
+
+        if affected.size == 0:
+            return affected
+
+        if np.any(affected < 0) or np.any(affected >= n_variables):
+            raise ValueError(
+                f"{condition.name}.affected_variables() contains indices outside "
+                f"[0, {n_variables})."
+            )
+
+        # Deduplicate while preserving deterministic order.
+        _, first_indices = np.unique(affected, return_index=True)
+        return affected[np.sort(first_indices)].astype(np.int64, copy=False)
+
+    @classmethod
+    def _degree_variable_order(
+        cls,
+        *,
+        layout: VariableLayout,
+        conditions: Sequence[Constraint | SectorCondition],
+    ) -> npt.NDArray[np.int64]:
+        """
+        Static degree heuristic.
+
+        Variables appearing in more constraints/sectors are assigned earlier,
+        because they are more likely to trigger early pruning.
+        """
+        scores = np.zeros(layout.n_variables, dtype=np.int64)
+
+        for condition in conditions:
+            affected = cls._condition_affected_variables(
+                condition=condition,
+                n_variables=layout.n_variables,
+            )
+
+            for variable_index in affected:
+                scores[int(variable_index)] += 1
+
+        # Descending score, deterministic tie-break by variable index.
+        return np.lexsort((np.arange(layout.n_variables), -scores)).astype(np.int64)
+
     @staticmethod
     def _normalize_affected_variables(
         *,
@@ -131,9 +217,7 @@ class DFSBasisSolver:
         affected = np.asarray(condition.affected_variables(), dtype=np.int64)
 
         if affected.ndim != 1:
-            raise ValueError(
-                f"{condition.name}.affected_variables() must return a 1D array."
-            )
+            raise ValueError(f"{condition.name}.affected_variables() must return a 1D array.")
 
         if affected.size == 0:
             return affected
@@ -168,16 +252,22 @@ class DFSBasisSolver:
             for condition in conditions
         )
 
-    @staticmethod
+    @classmethod
     def _build_condition_lookup(
+        cls,
         *,
         n_variables: int,
-        condition_infos: Sequence[_ConditionInfo],
+        conditions: Sequence[Constraint | SectorCondition],
     ) -> list[list[int]]:
         lookup: list[list[int]] = [[] for _ in range(n_variables)]
 
-        for condition_index, info in enumerate(condition_infos):
-            for variable_index in info.affected_variables:
+        for condition_index, condition in enumerate(conditions):
+            affected = cls._condition_affected_variables(
+                condition=condition,
+                n_variables=n_variables,
+            )
+
+            for variable_index in affected:
                 lookup[int(variable_index)].append(condition_index)
 
         return lookup
@@ -198,26 +288,6 @@ class DFSBasisSolver:
 
         return True
 
-    @staticmethod
-    def _variable_order(
-        *,
-        layout: VariableLayout,
-        condition_infos: Sequence[_ConditionInfo],
-    ) -> npt.NDArray[np.int64]:
-        """
-        Simple static heuristic: assign high-degree variables first.
-
-        A variable that appears in many local constraints/sectors is more useful
-        for early pruning.
-        """
-        scores = np.zeros(layout.n_variables, dtype=np.int64)
-
-        for info in condition_infos:
-            for variable_index in info.affected_variables:
-                scores[int(variable_index)] += 1
-
-        # Descending score, stable tie-break by variable index.
-        return np.lexsort((np.arange(layout.n_variables), -scores)).astype(np.int64)
 
     @staticmethod
     def _partial_check_after_assignment(
