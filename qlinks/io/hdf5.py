@@ -8,7 +8,6 @@ import h5py
 import numpy as np
 import numpy.typing as npt
 
-
 SCHEMA_VERSION = "0.1"
 
 
@@ -208,9 +207,7 @@ class EigenpairHDF5Writer:
         arr = np.asarray(vector)
 
         if arr.shape != dset.shape[1:]:
-            raise ValueError(
-                f"Expected vector shape {dset.shape[1:]}, got {arr.shape}."
-            )
+            raise ValueError(f"Expected vector shape {dset.shape[1:]}, got {arr.shape}.")
 
         dset[int(index), :] = arr
 

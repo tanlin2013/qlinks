@@ -94,10 +94,7 @@ def test_basis_operator_expectation_matches_sparse_matrix() -> None:
     )
 
     rng = np.random.default_rng(3)
-    v = (
-        rng.normal(size=result.basis.n_states)
-        + 1j * rng.normal(size=result.basis.n_states)
-    )
+    v = rng.normal(size=result.basis.n_states) + 1j * rng.normal(size=result.basis.n_states)
 
     actual = O.expectation(v)
     expected = v.conj() @ result.kinetic @ v

@@ -7,7 +7,11 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.basis import Basis
-from qlinks.operators.base import LocalOperator, OperatorAction, combine_duplicate_actions
+from qlinks.operators.base import (
+    LocalOperator,
+    OperatorAction,
+    combine_duplicate_actions,
+)
 
 
 @dataclass(frozen=True)
@@ -101,9 +105,7 @@ class BasisOperator:
             raise ValueError("matvec expects a one-dimensional vector.")
 
         if x.shape[0] != self.basis.n_states:
-            raise ValueError(
-                f"Expected vector length {self.basis.n_states}, got {x.shape[0]}."
-            )
+            raise ValueError(f"Expected vector length {self.basis.n_states}, got {x.shape[0]}.")
 
         y = np.zeros(self.basis.n_states, dtype=self.dtype)
 
@@ -135,9 +137,7 @@ class BasisOperator:
             raise ValueError("matmat expects a two-dimensional array.")
 
         if x.shape[0] != self.basis.n_states:
-            raise ValueError(
-                f"Expected matrix shape ({self.basis.n_states}, k), got {x.shape}."
-            )
+            raise ValueError(f"Expected matrix shape ({self.basis.n_states}, k), got {x.shape}.")
 
         y = np.zeros_like(x, dtype=self.dtype)
 
@@ -169,9 +169,7 @@ class BasisOperator:
             raise ValueError("rmatvec expects a one-dimensional vector.")
 
         if x.shape[0] != self.basis.n_states:
-            raise ValueError(
-                f"Expected vector length {self.basis.n_states}, got {x.shape[0]}."
-            )
+            raise ValueError(f"Expected vector length {self.basis.n_states}, got {x.shape[0]}.")
 
         y = np.zeros(self.basis.n_states, dtype=self.dtype)
 
@@ -200,9 +198,7 @@ class BasisOperator:
             raise ValueError("rmatmat expects a two-dimensional array.")
 
         if x.shape[1] != self.basis.n_states:
-            raise ValueError(
-                f"Expected matrix shape (k, {self.basis.n_states}), got {x.shape}."
-            )
+            raise ValueError(f"Expected matrix shape (k, {self.basis.n_states}), got {x.shape}.")
 
         y = np.zeros_like(x, dtype=self.dtype)
 
