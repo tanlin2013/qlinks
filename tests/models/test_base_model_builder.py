@@ -14,10 +14,11 @@ from qlinks.models.base import (
     HamiltonianModelBase,
     HamiltonianTermSpec,
     combine_hamiltonian_terms,
+    solve_basis,
     validate_builder_name,
 )
 from qlinks.operators import BinaryFlipOperator, UpdateBinaryFlipOperator
-from qlinks.variables import LocalSpace, VariableLayout
+from qlinks.variables import LocalSpace, VariableKind, VariableLayout, VariableSpec
 
 
 @dataclass(frozen=True)
@@ -301,3 +302,48 @@ def test_empty_hamiltonian_model_returns_zero_sparse_matrix() -> None:
     assert result.hamiltonian.shape == (4, 4)
     assert result.hamiltonian.nnz == 0
     assert result.kinetic is None
+
+
+def _binary_layout(n: int) -> VariableLayout:
+    return VariableLayout(
+        specs=tuple(
+            VariableSpec(
+                kind=VariableKind.SITE,
+                geometry_index=i,
+                local_space=LocalSpace.binary(),
+            )
+            for i in range(n)
+        )
+    )
+
+
+def test_solve_basis_unconstrained_uses_full_basis_for_any_solver() -> None:
+    layout = _binary_layout(3)
+
+    basis_dfs = solve_basis(
+        layout,
+        constraints=(),
+        sectors=(),
+        solver="dfs",
+        sort=True,
+    )
+
+    basis_brute_force = solve_basis(
+        layout,
+        constraints=(),
+        sectors=(),
+        solver="brute_force",
+        sort=True,
+    )
+
+    basis_cpsat = solve_basis(
+        layout,
+        constraints=(),
+        sectors=(),
+        solver="cpsat",
+        sort=True,
+    )
+
+    assert basis_dfs.n_states == 8
+    np.testing.assert_array_equal(basis_dfs.states, basis_brute_force.states)
+    np.testing.assert_array_equal(basis_dfs.states, basis_cpsat.states)

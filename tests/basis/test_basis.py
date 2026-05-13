@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from qlinks.basis import Basis
-from qlinks.variables import LocalSpace, VariableLayout
+from qlinks.basis import Basis, full_basis_from_layout
+from qlinks.variables import LocalSpace, VariableKind, VariableLayout, VariableSpec
 
 
 def test_basis_from_states() -> None:
@@ -101,3 +101,124 @@ def test_iter_states_copy() -> None:
     states[0][0] = 1
 
     np.testing.assert_array_equal(basis.state(0), np.array([0, 0]))
+
+
+def _site_layout(local_spaces: list[LocalSpace]) -> VariableLayout:
+    return VariableLayout(
+        specs=tuple(
+            VariableSpec(
+                kind=VariableKind.SITE,
+                geometry_index=i,
+                local_space=local_space,
+            )
+            for i, local_space in enumerate(local_spaces)
+        )
+    )
+
+
+def test_full_basis_from_layout_binary() -> None:
+    layout = _site_layout(
+        [
+            LocalSpace.binary(),
+            LocalSpace.binary(),
+            LocalSpace.binary(),
+        ]
+    )
+
+    basis = full_basis_from_layout(layout, sort=True)
+
+    assert basis.n_states == 2**3
+    assert basis.states.shape == (8, 3)
+
+    expected = np.array(
+        [
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 1, 0],
+            [0, 1, 1],
+            [1, 0, 0],
+            [1, 0, 1],
+            [1, 1, 0],
+            [1, 1, 1],
+        ],
+        dtype=np.int64,
+    )
+
+    np.testing.assert_array_equal(basis.states, expected)
+
+
+def test_full_basis_from_layout_spin_one() -> None:
+    layout = _site_layout(
+        [
+            LocalSpace.spin_one(),
+            LocalSpace.spin_one(),
+        ]
+    )
+
+    basis = full_basis_from_layout(layout, sort=True)
+
+    assert basis.n_states == 3**2
+    assert basis.states.shape == (9, 2)
+
+    expected = np.array(
+        [
+            [-1, -1],
+            [-1, 0],
+            [-1, 1],
+            [0, -1],
+            [0, 0],
+            [0, 1],
+            [1, -1],
+            [1, 0],
+            [1, 1],
+        ],
+        dtype=np.int64,
+    )
+
+    np.testing.assert_array_equal(basis.states, expected)
+
+
+def test_full_basis_from_layout_unsorted_generation_order_is_lexicographic() -> None:
+    layout = _site_layout(
+        [
+            LocalSpace.from_values([2, 0]),
+            LocalSpace.from_values([5, 4]),
+        ]
+    )
+
+    basis = full_basis_from_layout(layout, sort=False)
+
+    expected = np.array(
+        [
+            [2, 5],
+            [2, 4],
+            [0, 5],
+            [0, 4],
+        ],
+        dtype=np.int64,
+    )
+
+    np.testing.assert_array_equal(basis.states, expected)
+
+
+def test_full_basis_from_layout_sort_true_sorts_lexicographically() -> None:
+    layout = _site_layout(
+        [
+            LocalSpace.from_values([2, 0]),
+            LocalSpace.from_values([5, 4]),
+        ]
+    )
+
+    basis = full_basis_from_layout(layout, sort=True)
+
+    expected = np.array(
+        [
+            [0, 4],
+            [0, 5],
+            [2, 4],
+            [2, 5],
+        ],
+        dtype=np.int64,
+    )
+
+    np.testing.assert_array_equal(basis.states, expected)

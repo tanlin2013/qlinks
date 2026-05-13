@@ -9,6 +9,55 @@ import numpy.typing as npt
 from qlinks.variables import ConfigEncoder, VariableLayout
 
 
+def full_basis_from_layout(
+    layout: VariableLayout,
+    *,
+    sort: bool = True,
+) -> Basis:
+    """
+    Generate the full Cartesian-product basis for an unconstrained layout.
+
+    This is faster and simpler than DFS when there are no constraints/sectors.
+
+    The output states have shape:
+
+        (prod_i dim_i, layout.n_variables)
+
+    where dim_i is the local-space dimension of variable i.
+    """
+    spaces = [
+        np.asarray(layout.local_space(i).values, dtype=np.int64)
+        for i in range(layout.n_variables)
+    ]
+
+    if layout.n_variables == 0:
+        states = np.empty((1, 0), dtype=np.int64)
+        return Basis.from_states(layout, states, sort=sort)
+
+    n_states = int(np.prod([space.size for space in spaces], dtype=np.int64))
+    states = np.empty((n_states, layout.n_variables), dtype=np.int64)
+
+    # Vectorized Cartesian product.
+    # For variable i, values repeat in blocks of size repeat,
+    # and the whole pattern is tiled to fill n_states.
+    repeat = n_states
+
+    for variable_index, values in enumerate(spaces):
+        repeat //= int(values.size)
+        tile = n_states // (int(values.size) * repeat)
+
+        states[:, variable_index] = np.tile(
+            np.repeat(values, repeat),
+            tile,
+        )
+
+    return Basis.from_states(
+        layout,
+        states,
+        sort=sort,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class Basis:
     """

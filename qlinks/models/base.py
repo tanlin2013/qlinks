@@ -8,7 +8,13 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.backends import SparseBackend, SparseBackendName, get_sparse_backend
-from qlinks.basis import Basis, BruteForceBasisSolver, CPSATBasisSolver, DFSBasisSolver
+from qlinks.basis import (
+    Basis,
+    BruteForceBasisSolver,
+    CPSATBasisSolver,
+    DFSBasisSolver,
+    full_basis_from_layout,
+)
 from qlinks.builders import (
     OptimizedSparseHamiltonianBuilder,
     SparseHamiltonianBuilder,
@@ -164,7 +170,15 @@ def solve_basis(
 ) -> Basis:
     """
     Common array-basis solver dispatch.
+
+    If no constraints/sectors are present, use a direct Cartesian-product
+    construction instead of DFS/CP-SAT/brute force.
     """
+    if len(constraints) == 0 and len(sectors) == 0:
+        return full_basis_from_layout(
+            layout,
+            sort=sort,
+        )
 
     if solver == "brute_force":
         return BruteForceBasisSolver(sort=sort).solve(
