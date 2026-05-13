@@ -210,10 +210,11 @@ def test_dfs_partial_bruteforce_agree_small_qdm() -> None:
 
 
 """
-Test that DFSBasisSolver only calls partial_check for constraints that are affected by the 
+Test that DFSBasisSolver only calls partial_check for constraints that are affected by the
 currently assigned variable. This is important for performance,
 as partial_check can be expensive and should only be called when necessary.
 """
+
 
 @dataclass
 class CountingConstraint:
@@ -317,11 +318,12 @@ def test_dfs_only_checks_conditions_affected_by_assigned_variable() -> None:
 
 
 """
-Test that invalid affected variables are rejected. The affected_variables method should return 
-valid variable indices within the layout, and the solver should validate this before starting DFS. 
-This is important to prevent out-of-bounds errors and ensure that constraints are properly 
+Test that invalid affected variables are rejected. The affected_variables method should return
+valid variable indices within the layout, and the solver should validate this before starting DFS.
+This is important to prevent out-of-bounds errors and ensure that constraints are properly
 integrated into the solving process.
 """
+
 
 @dataclass
 class BadAffectedConstraint:
@@ -360,6 +362,7 @@ def test_dfs_rejects_out_of_range_affected_variables() -> None:
 Duplicate affected variables are harmless.
 """
 
+
 def test_dfs_deduplicates_affected_variables() -> None:
     layout = _binary_site_layout(2)
 
@@ -386,6 +389,7 @@ def test_dfs_deduplicates_affected_variables() -> None:
 Test that DFSBasisSolver treats constraints with no affected variables as global constants,
 checking them once before starting DFS and not calling partial_check for them at all.
 """
+
 
 class AlwaysTrueGlobalConstraint(BaseConstraint):
     layout: VariableLayout
@@ -418,10 +422,11 @@ def test_dfs_base_constraint_default_affects_all_variables() -> None:
 
 
 """
-Test variable ordering strategies in DFSBasisSolver. The variable order can affect the number of 
-partial checks and thus the performance of the solver, but should not affect the final basis 
+Test variable ordering strategies in DFSBasisSolver. The variable order can affect the number of
+partial checks and thus the performance of the solver, but should not affect the final basis
 (up to sorting).
 """
+
 
 @dataclass
 class SupportOnlyConstraint:
@@ -540,7 +545,7 @@ def test_dfs_invalid_variable_order_strategy_raises() -> None:
     ],
 )
 def test_dfs_invalid_explicit_variable_order_raises(
-        bad_order: np.ndarray,
+    bad_order: np.ndarray,
 ) -> None:
     layout = _binary_site_layout(3)
 

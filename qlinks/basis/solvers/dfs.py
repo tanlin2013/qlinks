@@ -288,7 +288,6 @@ class DFSBasisSolver:
 
         return True
 
-
     @staticmethod
     def _partial_check_after_assignment(
         *,

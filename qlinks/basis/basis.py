@@ -26,8 +26,7 @@ def full_basis_from_layout(
     where dim_i is the local-space dimension of variable i.
     """
     spaces = [
-        np.asarray(layout.local_space(i).values, dtype=np.int64)
-        for i in range(layout.n_variables)
+        np.asarray(layout.local_space(i).values, dtype=np.int64) for i in range(layout.n_variables)
     ]
 
     if layout.n_variables == 0:
