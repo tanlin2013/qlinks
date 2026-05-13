@@ -161,3 +161,26 @@ def test_spin_one_xy_bond_validates_config_values() -> None:
 
     with pytest.raises(ValueError):
         op.apply(bad_config)
+
+
+def test_operator_variable_indices_accessor_returns_copy() -> None:
+    lattice = ChainLattice(2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_sites(
+        lattice,
+        LocalSpace.spin_one(),
+    )
+
+    op = SpinOneXYBondOperator(
+        layout=layout,
+        lattice=lattice,
+        link_id=0,
+        coefficient=1.0,
+    )
+
+    indices = op.variable_indices
+    indices[0] = 999
+
+    np.testing.assert_array_equal(
+        op.variable_indices,
+        np.array([0, 1], dtype=np.int64),
+    )

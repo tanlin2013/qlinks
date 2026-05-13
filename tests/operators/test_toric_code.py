@@ -233,3 +233,26 @@ def test_toric_code_plaquette_flux_validates_config_values() -> None:
 
     with pytest.raises(ValueError):
         op.apply(bad_config)
+
+
+def test_toric_code_plaquette_flux_diagonal_value_matches_apply() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    op = ToricCodePlaquetteFluxOperator(
+        layout=layout,
+        lattice=lattice,
+        plaquette_id=0,
+        coefficient=-2.0,
+    )
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+    value = op.diagonal_value(config)
+    actions = op.apply(config)
+
+    assert len(actions) == 1
+    assert actions[0].coefficient == value
+    np.testing.assert_array_equal(actions[0].config, config)

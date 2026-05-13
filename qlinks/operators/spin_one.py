@@ -7,7 +7,7 @@ import numpy.typing as npt
 
 from qlinks.lattice import ChainLattice
 from qlinks.operators.base import BaseLocalOperator, OperatorAction
-from qlinks.variables import VariableKind, VariableLayout
+from qlinks.variables import VariableLayout
 
 
 def spin_one_raise_amplitude(m: int) -> float:
@@ -63,33 +63,41 @@ class SpinOneXYBondOperator(BaseLocalOperator):
         site_i = int(link.source)
         site_j = int(link.target)
 
-        variable_i = self.layout.variable_index(VariableKind.SITE, site_i)
-        variable_j = self.layout.variable_index(VariableKind.SITE, site_j)
+        variable_indices = np.asarray(
+            [
+                self._site_variable_index(site_i),
+                self._site_variable_index(site_j),
+            ],
+            dtype=np.int64,
+        )
 
-        for variable_index in (variable_i, variable_j):
-            values = set(
-                int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
-            )
-            if values != {-1, 0, 1}:
-                raise ValueError(
-                    "SpinOneXYBondOperator requires spin-1 site variables {-1, 0, +1}."
-                )
+        self._validate_local_spaces(
+            variable_indices,
+            {-1, 0, 1},
+            operator_name=type(self).__name__,
+        )
 
-        object.__setattr__(self, "_site_ids", np.array([site_i, site_j], dtype=np.int64))
         object.__setattr__(
-            self, "_variable_indices", np.array([variable_i, variable_j], dtype=np.int64)
+            self,
+            "_site_ids",
+            self._cached_array([site_i, site_j]),
+        )
+        object.__setattr__(
+            self,
+            "_variable_indices",
+            self._cached_array(variable_indices),
         )
 
     @property
     def site_ids(self) -> npt.NDArray[np.int64]:
-        return self._site_ids.copy()
+        return self._copy_indices(self._site_ids)
 
     @property
     def variable_indices(self) -> npt.NDArray[np.int64]:
-        return self._variable_indices.copy()
+        return self._copy_indices(self._variable_indices)
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
-        return self._variable_indices.copy()
+        return self._copy_indices(self._variable_indices)
 
     def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
         arr = self._as_config(config)

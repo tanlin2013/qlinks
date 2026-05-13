@@ -33,26 +33,33 @@ class PXPSpinFlipOperator(BaseLocalOperator):
     name: str = "pxp_spin_flip"
 
     def __post_init__(self) -> None:
-        site_variable = self.layout.site_variable_index(self.site_id)
-        neighbor_sites = self.lattice.neighbors(self.site_id)
+        site_variable = self._site_variable_index(self.site_id)
 
-        neighbor_variables = np.asarray(
-            [self.layout.site_variable_index(int(site)) for site in neighbor_sites],
+        neighbor_sites = np.asarray(
+            self.lattice.neighbors(self.site_id),
             dtype=np.int64,
         )
+        neighbor_variables = self._site_variable_indices(neighbor_sites)
 
-        values = set(self.layout.local_space(site_variable).values.tolist())
-        if values != {0, 1}:
-            raise ValueError("PXPSpinFlipOperator requires binary site variables {0, 1}.")
+        self._validate_local_space_values(
+            site_variable,
+            {0, 1},
+            operator_name=type(self).__name__,
+        )
 
         self.layout.local_space(site_variable).validate_value(self.occupied_value)
 
         for variable_index in neighbor_variables:
+            self._validate_local_space_values(
+                int(variable_index),
+                {0, 1},
+                operator_name=type(self).__name__,
+            )
             self.layout.local_space(int(variable_index)).validate_value(self.occupied_value)
 
-        object.__setattr__(self, "_site_variable", site_variable)
-        object.__setattr__(self, "_neighbor_sites", neighbor_sites)
-        object.__setattr__(self, "_neighbor_variables", neighbor_variables)
+        object.__setattr__(self, "_site_variable", int(site_variable))
+        object.__setattr__(self, "_neighbor_sites", self._cached_array(neighbor_sites))
+        object.__setattr__(self, "_neighbor_variables", self._cached_array(neighbor_variables))
 
     @property
     def site_variable(self) -> int:
@@ -60,11 +67,11 @@ class PXPSpinFlipOperator(BaseLocalOperator):
 
     @property
     def neighbor_sites(self) -> npt.NDArray[np.int64]:
-        return self._neighbor_sites.copy()
+        return self._copy_indices(self._neighbor_sites)
 
     @property
     def neighbor_variables(self) -> npt.NDArray[np.int64]:
-        return self._neighbor_variables.copy()
+        return self._copy_indices(self._neighbor_variables)
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return np.asarray(
