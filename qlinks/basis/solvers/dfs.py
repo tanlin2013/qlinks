@@ -11,6 +11,15 @@ from qlinks.constraints import Constraint, SectorCondition
 from qlinks.variables import VariableLayout
 
 
+ConditionLike = Constraint | SectorCondition
+
+
+@dataclass(frozen=True, slots=True)
+class _ConditionInfo:
+    condition: ConditionLike
+    affected_variables: npt.NDArray[np.int64]
+
+
 @dataclass(frozen=True, slots=True)
 class DFSBasisSolver:
     sort: bool = True
@@ -23,32 +32,42 @@ class DFSBasisSolver:
         sectors: Sequence[SectorCondition] = (),
     ) -> Basis:
         n = layout.n_variables
-
         config = layout.default_config()
         assigned_mask = np.zeros(n, dtype=bool)
 
         states: list[npt.NDArray[np.int64]] = []
 
-        all_conditions = tuple(constraints) + tuple(sectors)
+        all_conditions: tuple[ConditionLike, ...] = tuple(constraints) + tuple(sectors)
 
-        condition_indices_by_variable = self._build_condition_lookup(
+        condition_infos = self._build_condition_infos(
             n_variables=n,
             conditions=all_conditions,
         )
 
+        condition_indices_by_variable = self._build_condition_lookup(
+            n_variables=n,
+            condition_infos=condition_infos,
+        )
+
+        # Conditions with no affected variables are global constants.
+        # They should be checked once before DFS starts.
+        if not self._zero_variable_conditions_are_satisfied(
+            config=config,
+            assigned_mask=assigned_mask,
+            condition_infos=condition_infos,
+        ):
+            return Basis.empty(layout)
+
         if self.variable_order is None:
             variable_order = self._variable_order(
                 layout=layout,
-                conditions=all_conditions,
+                condition_infos=condition_infos,
             )
         else:
-            variable_order = np.asarray(self.variable_order, dtype=np.int64)
-
-            if variable_order.shape != (n,):
-                raise ValueError("variable_order must have shape (layout.n_variables,).")
-
-            if set(variable_order.tolist()) != set(range(n)):
-                raise ValueError("variable_order must be a permutation of variable indices.")
+            variable_order = self._validate_variable_order(
+                variable_order=self.variable_order,
+                n_variables=n,
+            )
 
         def dfs(depth: int) -> None:
             if depth == n:
@@ -67,7 +86,7 @@ class DFSBasisSolver:
                     config=config,
                     assigned_mask=assigned_mask,
                     variable_index=variable_index,
-                    all_conditions=all_conditions,
+                    condition_infos=condition_infos,
                     condition_indices_by_variable=condition_indices_by_variable,
                 ):
                     dfs(depth + 1)
@@ -88,39 +107,113 @@ class DFSBasisSolver:
         return Basis.from_states(layout, arr)
 
     @staticmethod
+    def _validate_variable_order(
+        *,
+        variable_order: npt.ArrayLike,
+        n_variables: int,
+    ) -> npt.NDArray[np.int64]:
+        order = np.asarray(variable_order, dtype=np.int64)
+
+        if order.shape != (n_variables,):
+            raise ValueError("variable_order must have shape (layout.n_variables,).")
+
+        if set(order.tolist()) != set(range(n_variables)):
+            raise ValueError("variable_order must be a permutation of variable indices.")
+
+        return order
+
+    @staticmethod
+    def _normalize_affected_variables(
+        *,
+        n_variables: int,
+        condition: ConditionLike,
+    ) -> npt.NDArray[np.int64]:
+        affected = np.asarray(condition.affected_variables(), dtype=np.int64)
+
+        if affected.ndim != 1:
+            raise ValueError(
+                f"{condition.name}.affected_variables() must return a 1D array."
+            )
+
+        if affected.size == 0:
+            return affected
+
+        if np.any(affected < 0) or np.any(affected >= n_variables):
+            raise ValueError(
+                f"{condition.name}.affected_variables() contains indices outside "
+                f"[0, {n_variables})."
+            )
+
+        # Remove duplicates while preserving deterministic order.
+        _, first_indices = np.unique(affected, return_index=True)
+        affected = affected[np.sort(first_indices)]
+
+        return affected.astype(np.int64, copy=False)
+
+    @classmethod
+    def _build_condition_infos(
+        cls,
+        *,
+        n_variables: int,
+        conditions: Sequence[ConditionLike],
+    ) -> tuple[_ConditionInfo, ...]:
+        return tuple(
+            _ConditionInfo(
+                condition=condition,
+                affected_variables=cls._normalize_affected_variables(
+                    n_variables=n_variables,
+                    condition=condition,
+                ),
+            )
+            for condition in conditions
+        )
+
+    @staticmethod
     def _build_condition_lookup(
         *,
         n_variables: int,
-        conditions: Sequence[Constraint | SectorCondition],
+        condition_infos: Sequence[_ConditionInfo],
     ) -> list[list[int]]:
         lookup: list[list[int]] = [[] for _ in range(n_variables)]
 
-        for condition_index, condition in enumerate(conditions):
-            affected = np.asarray(condition.affected_variables(), dtype=np.int64)
-
-            for variable_index in affected:
+        for condition_index, info in enumerate(condition_infos):
+            for variable_index in info.affected_variables:
                 lookup[int(variable_index)].append(condition_index)
 
         return lookup
 
     @staticmethod
+    def _zero_variable_conditions_are_satisfied(
+        *,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+        condition_infos: Sequence[_ConditionInfo],
+    ) -> bool:
+        for info in condition_infos:
+            if info.affected_variables.size != 0:
+                continue
+
+            if not info.condition.partial_check(config, assigned_mask):
+                return False
+
+        return True
+
+    @staticmethod
     def _variable_order(
         *,
         layout: VariableLayout,
-        conditions: Sequence[Constraint | SectorCondition],
+        condition_infos: Sequence[_ConditionInfo],
     ) -> npt.NDArray[np.int64]:
         """
-        Simple heuristic:
-            assign high-degree variables first.
+        Simple static heuristic: assign high-degree variables first.
 
-        A variable that appears in many local constraints is more useful for
-        early pruning.
+        A variable that appears in many local constraints/sectors is more useful
+        for early pruning.
         """
         scores = np.zeros(layout.n_variables, dtype=np.int64)
 
-        for condition in conditions:
-            affected = np.asarray(condition.affected_variables(), dtype=np.int64)
-            for variable_index in affected:
+        for info in condition_infos:
+            for variable_index in info.affected_variables:
                 scores[int(variable_index)] += 1
 
         # Descending score, stable tie-break by variable index.
@@ -132,11 +225,11 @@ class DFSBasisSolver:
         config: npt.NDArray[np.int64],
         assigned_mask: npt.NDArray[np.bool_],
         variable_index: int,
-        all_conditions: Sequence[Constraint | SectorCondition],
+        condition_infos: Sequence[_ConditionInfo],
         condition_indices_by_variable: list[list[int]],
     ) -> bool:
         for condition_index in condition_indices_by_variable[variable_index]:
-            condition = all_conditions[condition_index]
+            condition = condition_infos[condition_index].condition
 
             if not condition.partial_check(config, assigned_mask):
                 return False
@@ -146,6 +239,6 @@ class DFSBasisSolver:
     @staticmethod
     def _full_check(
         config: npt.NDArray[np.int64],
-        conditions: Sequence[Constraint | SectorCondition],
+        conditions: Sequence[ConditionLike],
     ) -> bool:
         return all(condition.is_satisfied(config) for condition in conditions)

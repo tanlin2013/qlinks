@@ -1,7 +1,15 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 import numpy as np
+import numpy.typing as npt
+import pytest
 
 from qlinks.basis import BruteForceBasisSolver, DFSBasisSolver
 from qlinks.constraints import (
+    BaseConstraint,
+    ConstraintResult,
     DimerCoveringConstraint,
     FixedValueConstraint,
     GaussLawConstraint,
@@ -10,7 +18,7 @@ from qlinks.constraints import (
 )
 from qlinks.lattice import ChainLattice
 from qlinks.models import PXPModel, SquareQDMModel
-from qlinks.variables import LocalSpace, VariableLayout
+from qlinks.variables import LocalSpace, VariableKind, VariableLayout, VariableSpec
 
 
 def assert_same_basis(basis_a, basis_b) -> None:
@@ -199,3 +207,189 @@ def test_dfs_partial_bruteforce_agree_small_qdm() -> None:
 
     assert dfs_basis.n_states == brute_basis.n_states
     np.testing.assert_array_equal(dfs_basis.states, brute_basis.states)
+
+
+@dataclass
+class CountingConstraint:
+    layout: VariableLayout
+    affected: tuple[int, ...]
+    target_sum: int
+    name: str = "counting_constraint"
+
+    def __post_init__(self) -> None:
+        self.partial_calls = 0
+        self.full_calls = 0
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return np.asarray(self.affected, dtype=np.int64)
+
+    def _unique_affected(self) -> npt.NDArray[np.int64]:
+        return np.unique(np.asarray(self.affected, dtype=np.int64))
+
+    def check(self, config: npt.ArrayLike) -> ConstraintResult:
+        self.full_calls += 1
+        arr = np.asarray(config, dtype=np.int64)
+        affected = self._unique_affected()
+        value = int(np.sum(arr[affected]))
+
+        return ConstraintResult(
+            satisfied=value == self.target_sum,
+            name=self.name,
+            residual=value,
+        )
+
+    def is_satisfied(self, config: npt.ArrayLike) -> bool:
+        return self.check(config).satisfied
+
+    def partial_check(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> bool:
+        self.partial_calls += 1
+
+        arr = np.asarray(config, dtype=np.int64)
+        assigned = np.asarray(assigned_mask, dtype=bool)
+        affected = self._unique_affected()
+
+        if np.all(assigned[affected]):
+            return int(np.sum(arr[affected])) == self.target_sum
+
+        return True
+
+
+def _binary_site_layout(n: int) -> VariableLayout:
+    local_space = LocalSpace.binary()
+
+    return VariableLayout(
+        specs=tuple(
+            VariableSpec(
+                kind=VariableKind.SITE,
+                geometry_index=i,
+                local_space=local_space,
+            )
+            for i in range(n)
+        )
+    )
+
+
+def test_dfs_only_checks_conditions_affected_by_assigned_variable() -> None:
+    layout = _binary_site_layout(3)
+
+    c0 = CountingConstraint(
+        layout=layout,
+        affected=(0,),
+        target_sum=1,
+        name="c0",
+    )
+    c2 = CountingConstraint(
+        layout=layout,
+        affected=(2,),
+        target_sum=1,
+        name="c2",
+    )
+
+    solver = DFSBasisSolver(
+        sort=True,
+        variable_order=np.array([0, 1, 2], dtype=np.int64),
+    )
+
+    basis = solver.solve(
+        layout,
+        constraints=(c0, c2),
+    )
+
+    # Correct basis: variable 0 and 2 fixed to 1, variable 1 free.
+    assert basis.n_states == 2
+
+    # c0 is checked only after assigning variable 0.
+    # It should not be checked again after assigning variable 1 or 2.
+    assert c0.partial_calls == 2
+
+    # c2 is reached only on branches surviving c0 and after variable 1 choices.
+    assert c2.partial_calls == 4
+
+
+@dataclass
+class BadAffectedConstraint:
+    layout: VariableLayout
+    affected: object
+    name: str = "bad_affected"
+
+    def affected_variables(self):
+        return self.affected
+
+    def check(self, config):
+        return ConstraintResult(True, name=self.name)
+
+    def is_satisfied(self, config):
+        return True
+
+    def partial_check(self, config, assigned_mask):
+        return True
+
+
+def test_dfs_rejects_out_of_range_affected_variables() -> None:
+    layout = _binary_site_layout(2)
+
+    constraint = BadAffectedConstraint(
+        layout=layout,
+        affected=np.array([2], dtype=np.int64),
+    )
+
+    solver = DFSBasisSolver()
+
+    with pytest.raises(ValueError, match="outside"):
+        solver.solve(layout, constraints=(constraint,))
+
+
+def test_dfs_deduplicates_affected_variables() -> None:
+    layout = _binary_site_layout(2)
+
+    constraint = CountingConstraint(
+        layout=layout,
+        affected=(0, 0),
+        target_sum=1,
+    )
+
+    solver = DFSBasisSolver(
+        variable_order=np.array([0, 1], dtype=np.int64),
+    )
+
+    basis = solver.solve(layout, constraints=(constraint,))
+
+    assert basis.n_states == 2
+
+    # If affected_variables were not deduplicated, this would be called twice
+    # per assignment of variable 0.
+    assert constraint.partial_calls == 2
+
+
+class AlwaysTrueGlobalConstraint(BaseConstraint):
+    layout: VariableLayout
+    name: str = "always_true"
+
+    def __init__(self, layout: VariableLayout):
+        self.layout = layout
+        self.name = "always_true"
+
+    def check(self, config):
+        self._as_config(config)
+        return ConstraintResult(True, name=self.name)
+
+
+def test_dfs_base_constraint_default_affects_all_variables() -> None:
+    layout = _binary_site_layout(3)
+
+    constraint = AlwaysTrueGlobalConstraint(layout)
+
+    solver = DFSBasisSolver(sort=True)
+    basis = solver.solve(layout, constraints=(constraint,))
+
+    assert basis.n_states == 8
+
+    affected = constraint.affected_variables()
+    np.testing.assert_array_equal(
+        affected,
+        np.arange(layout.n_variables, dtype=np.int64),
+    )
