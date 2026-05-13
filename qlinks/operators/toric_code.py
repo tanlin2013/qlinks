@@ -7,7 +7,7 @@ import numpy.typing as npt
 
 from qlinks.lattice import SquareLattice
 from qlinks.operators.base import BaseLocalOperator, OperatorAction
-from qlinks.variables import VariableKind, VariableLayout
+from qlinks.variables import VariableLayout
 
 
 @dataclass(frozen=True, slots=True)

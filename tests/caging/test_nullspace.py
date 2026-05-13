@@ -45,4 +45,3 @@ def test_nullspace_svd_empty_row_matrix_has_full_nullspace() -> None:
         np.eye(3),
         atol=1e-12,
     )
-    

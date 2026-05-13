@@ -150,8 +150,7 @@ class BaseLocalOperator:
         operator_name: str | None = None,
     ) -> None:
         actual_values = set(
-            int(v)
-            for v in self.layout.local_space(int(variable_index)).values.tolist()
+            int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
         )
 
         if actual_values != set(expected_values):

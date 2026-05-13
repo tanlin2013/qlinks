@@ -88,4 +88,3 @@ def test_invariant_boundary_nullspace_rejects_shape_mismatch() -> None:
         assert "same number of columns" in str(error)
     else:
         raise AssertionError("Expected ValueError.")
-    

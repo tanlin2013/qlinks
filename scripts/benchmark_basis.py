@@ -113,11 +113,7 @@ def model_parameters(model: object) -> dict:
     if hasattr(model, "__dataclass_fields__"):
         return asdict(model)
 
-    return {
-        key: value
-        for key, value in vars(model).items()
-        if not key.startswith("_")
-    }
+    return {key: value for key, value in vars(model).items() if not key.startswith("_")}
 
 
 def run_basis_benchmark(
@@ -170,10 +166,7 @@ def print_table(results: list[BasisBenchmarkResult]) -> None:
         for result in results
     ]
 
-    widths = [
-        max(len(header), *(len(row[i]) for row in rows))
-        for i, header in enumerate(headers)
-    ]
+    widths = [max(len(header), *(len(row[i]) for row in rows)) for i, header in enumerate(headers)]
 
     print("  ".join(header.ljust(widths[i]) for i, header in enumerate(headers)))
     print("  ".join("-" * widths[i] for i in range(len(headers))))
