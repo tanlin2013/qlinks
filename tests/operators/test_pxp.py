@@ -79,7 +79,7 @@ def test_pxp_rejects_non_binary_site_space() -> None:
     lattice = ChainLattice(2, boundary_condition="open")
     layout = VariableLayout.from_lattice_sites(lattice, LocalSpace.spin_half_flux())
 
-    with pytest.raises(ValueError, match="requires binary"):
+    with pytest.raises(ValueError, match=r"requires local-space values \[0, 1\]"):
         PXPSpinFlipOperator(
             layout=layout,
             lattice=lattice,

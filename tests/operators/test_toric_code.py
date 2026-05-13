@@ -170,7 +170,7 @@ def test_toric_code_star_flip_rejects_non_flux_local_space() -> None:
         LocalSpace.binary(),
     )
 
-    with pytest.raises(ValueError, match=r"\{-1, \+1\}"):
+    with pytest.raises(ValueError, match=r"requires local-space values \[-1, 1\]"):
         ToricCodeStarFlipOperator(
             layout=layout,
             lattice=lattice,
@@ -186,7 +186,7 @@ def test_toric_code_plaquette_flux_rejects_non_flux_local_space() -> None:
         LocalSpace.binary(),
     )
 
-    with pytest.raises(ValueError, match=r"\{-1, \+1\}"):
+    with pytest.raises(ValueError, match=r"requires local-space values \[-1, 1\]"):
         ToricCodePlaquetteFluxOperator(
             layout=layout,
             lattice=lattice,

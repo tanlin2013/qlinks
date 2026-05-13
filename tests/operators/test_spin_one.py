@@ -134,7 +134,7 @@ def test_spin_one_xy_bond_rejects_wrong_local_space() -> None:
         LocalSpace.binary(),
     )
 
-    with pytest.raises(ValueError, match=r"\{-1, 0, \+1\}"):
+    with pytest.raises(ValueError, match=r"requires local-space values \[-1, 0, 1\]"):
         SpinOneXYBondOperator(
             layout=layout,
             lattice=lattice,
