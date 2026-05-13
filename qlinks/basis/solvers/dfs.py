@@ -53,7 +53,7 @@ class DFSBasisSolver:
 
         condition_indices_by_variable = self._build_condition_lookup(
             n_variables=n,
-            conditions=condition_infos,
+            condition_infos=condition_infos,
         )
 
         # Conditions with no affected variables are global constants.
@@ -68,7 +68,7 @@ class DFSBasisSolver:
         if self.variable_order is None:
             variable_order = self._choose_variable_order(
                 layout=layout,
-                conditions=all_conditions,
+                condition_infos=condition_infos,
                 strategy=self.variable_order_strategy,
             )
         else:
@@ -135,7 +135,7 @@ class DFSBasisSolver:
         cls,
         *,
         layout: VariableLayout,
-        conditions: Sequence[Constraint | SectorCondition],
+        condition_infos: Sequence[_ConditionInfo],
         strategy: VariableOrderStrategy,
     ) -> npt.NDArray[np.int64]:
         if strategy == "auto":
@@ -147,7 +147,7 @@ class DFSBasisSolver:
         if strategy == "degree":
             return cls._degree_variable_order(
                 layout=layout,
-                conditions=conditions,
+                condition_infos=condition_infos,
             )
 
         raise ValueError("variable_order_strategy must be one of 'auto', 'layout', or 'degree'.")
@@ -158,12 +158,7 @@ class DFSBasisSolver:
         condition: Constraint | SectorCondition,
         n_variables: int,
     ) -> npt.NDArray[np.int64]:
-        raw_affected = condition.affected_variables
-
-        if callable(raw_affected):
-            raw_affected = raw_affected()
-
-        affected = np.asarray(raw_affected, dtype=np.int64)
+        affected = np.asarray(condition.affected_variables(), dtype=np.int64)
 
         if affected.ndim != 1:
             raise ValueError(f"{condition.name}.affected_variables() must return a 1D array.")
@@ -186,7 +181,7 @@ class DFSBasisSolver:
         cls,
         *,
         layout: VariableLayout,
-        conditions: Sequence[Constraint | SectorCondition],
+        condition_infos: Sequence[_ConditionInfo],
     ) -> npt.NDArray[np.int64]:
         """
         Static degree heuristic.
@@ -196,13 +191,8 @@ class DFSBasisSolver:
         """
         scores = np.zeros(layout.n_variables, dtype=np.int64)
 
-        for condition in conditions:
-            affected = cls._condition_affected_variables(
-                condition=condition,
-                n_variables=layout.n_variables,
-            )
-
-            for variable_index in affected:
+        for info in condition_infos:
+            for variable_index in info.affected_variables:
                 scores[int(variable_index)] += 1
 
         # Descending score, deterministic tie-break by variable index.
@@ -244,7 +234,7 @@ class DFSBasisSolver:
         return tuple(
             _ConditionInfo(
                 condition=condition,
-                affected_variables=cls._normalize_affected_variables(
+                affected_variables=cls._condition_affected_variables(
                     n_variables=n_variables,
                     condition=condition,
                 ),
@@ -252,22 +242,16 @@ class DFSBasisSolver:
             for condition in conditions
         )
 
-    @classmethod
+    @staticmethod
     def _build_condition_lookup(
-        cls,
         *,
         n_variables: int,
-        conditions: Sequence[Constraint | SectorCondition],
+        condition_infos: Sequence[_ConditionInfo],
     ) -> list[list[int]]:
         lookup: list[list[int]] = [[] for _ in range(n_variables)]
 
-        for condition_index, condition in enumerate(conditions):
-            affected = cls._condition_affected_variables(
-                condition=condition,
-                n_variables=n_variables,
-            )
-
-            for variable_index in affected:
+        for condition_index, info in enumerate(condition_infos):
+            for variable_index in info.affected_variables:
                 lookup[int(variable_index)].append(condition_index)
 
         return lookup

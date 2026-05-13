@@ -458,9 +458,14 @@ def test_dfs_layout_variable_order_strategy() -> None:
         variable_order_strategy="layout",
     )
 
+    condition_infos = solver._build_condition_infos(
+        n_variables=layout.n_variables,
+        conditions=(),
+    )
+
     order = solver._choose_variable_order(
         layout=layout,
-        conditions=(),
+        condition_infos=condition_infos,
         strategy="layout",
     )
 
@@ -487,9 +492,14 @@ def test_dfs_degree_variable_order_strategy() -> None:
         variable_order_strategy="degree",
     )
 
+    condition_infos = solver._build_condition_infos(
+        n_variables=layout.n_variables,
+        conditions=conditions,
+    )
+
     order = solver._choose_variable_order(
         layout=layout,
-        conditions=conditions,
+        condition_infos=condition_infos,
         strategy="degree",
     )
 
@@ -527,11 +537,15 @@ def test_dfs_explicit_variable_order_overrides_strategy() -> None:
 def test_dfs_invalid_variable_order_strategy_raises() -> None:
     layout = _binary_site_layout(2)
     solver = DFSBasisSolver()
+    condition_infos = solver._build_condition_infos(
+        n_variables=layout.n_variables,
+        conditions=(),
+    )
 
     with pytest.raises(ValueError, match="variable_order_strategy"):
         solver._choose_variable_order(
             layout=layout,
-            conditions=(),
+            condition_infos=condition_infos,
             strategy="bad",  # type: ignore[arg-type]
         )
 
