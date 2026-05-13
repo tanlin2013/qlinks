@@ -374,10 +374,7 @@ class BoundaryNullityFilter:
         if nullity < self.min_nullity:
             return CandidateFilterResult(
                 accepted=False,
-                reason=(
-                    f"boundary nullity {nullity} is smaller than "
-                    f"{self.min_nullity}"
-                ),
+                reason=(f"boundary nullity {nullity} is smaller than " f"{self.min_nullity}"),
                 metadata={"boundary_nullity": nullity},
             )
 
