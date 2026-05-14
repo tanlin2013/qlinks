@@ -156,7 +156,7 @@ class SparseBuildOptions:
 
     backend: SparseBackendName | SparseBackend = "scipy"
     dtype: npt.DTypeLike = np.complex128
-    on_missing: Literal["skip", "raise"] = "skip"
+    on_missing: Literal["skip", "raise"] = "raise"
     drop_zero_atol: float = 0.0
 
 
@@ -374,7 +374,7 @@ class HamiltonianModelBase:
         backend: SparseBackendName | SparseBackend = "scipy",
         dtype: npt.DTypeLike = np.complex128,
         sort_basis: bool = True,
-        on_missing: Literal["skip", "raise"] = "skip",
+        on_missing: Literal["skip", "raise"] = "raise",
         drop_zero_atol: float = 0.0,
     ) -> ModelBuildResult:
         """
@@ -408,7 +408,7 @@ class HamiltonianModelBase:
         backend: SparseBackendName | SparseBackend = "scipy",
         dtype: npt.DTypeLike = np.complex128,
         sort_basis: bool = True,
-        on_missing: Literal["skip", "raise"] = "skip",
+        on_missing: Literal["skip", "raise"] = "raise",
         drop_zero_atol: float = 0.0,
     ) -> Any:
         """
@@ -475,7 +475,7 @@ class GenericModelBuilder:
         backend: SparseBackendName | SparseBackend = "scipy",
         dtype: npt.DTypeLike = np.complex128,
         sort_basis: bool = True,
-        on_missing: Literal["skip", "raise"] = "skip",
+        on_missing: Literal["skip", "raise"] = "raise",
         drop_zero_atol: float = 0.0,
     ) -> ModelBuildResult:
         validate_builder_name(builder)
@@ -565,7 +565,7 @@ class GenericModelBuilder:
         backend: SparseBackendName | SparseBackend = "scipy",
         dtype: npt.DTypeLike = np.complex128,
         sort_basis: bool = True,
-        on_missing: Literal["skip", "raise"] = "skip",
+        on_missing: Literal["skip", "raise"] = "raise",
         drop_zero_atol: float = 0.0,
     ) -> Any:
         return self.build(
