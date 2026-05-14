@@ -32,6 +32,12 @@ from qlinks.caging.solver import (
     solve_candidates,
 )
 from qlinks.caging.types import CageSolverConfig
+from qlinks.caging.partition import (
+    VertexSignature,
+    group_vertices_by_signature,
+    type1_candidates_from_bipartite_self_loops,
+    type2_candidates_from_self_loops,
+)
 
 __all__ = [
     "BoundaryNullityFilter",
@@ -62,4 +68,8 @@ __all__ = [
     "run_candidate_filters",
     "solve_candidate",
     "solve_candidates",
+    "VertexSignature",
+    "group_vertices_by_signature",
+    "type1_candidates_from_bipartite_self_loops",
+    "type2_candidates_from_self_loops",
 ]
