@@ -231,6 +231,30 @@ def test_square_qlm_known_basis_counts(
     assert basis.n_states == expected_n_states
 
 
+@pytest.mark.parametrize("builder_name", ["sparse", "bitmask"])
+def test_square_qlm_kinetic_nonzero(builder_name: str) -> None:
+    model = SquareQLMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        charges=0,
+        kinetic=1.0,
+        potential=0.0,
+    )
+
+    build_result = model.build(
+        basis_solver="dfs",
+        builder=builder_name,
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    assert build_result.kinetic.nnz > 0
+
+
 def test_square_qlm_basis_smoke() -> None:
     charges = np.array([-1, 0, 0, 1], dtype=np.int64)
 
@@ -345,3 +369,124 @@ def test_honeycomb_qlm_winding_sector_builds() -> None:
     sectors = model.make_sectors(model.layout)
     for state in basis.states:
         assert all(sector.is_satisfied(state) for sector in sectors)
+
+
+@pytest.mark.parametrize("builder_name", ["sparse", "bitmask"])
+def test_square_qlm_2x2_pbc_kinetic_preserves_gauss_law(
+    builder_name: str,
+) -> None:
+    model = SquareQLMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="periodic",
+        charges=0,
+        kinetic=1.0,
+        potential=0.0,
+    )
+
+    build_result = model.build(
+        basis_solver="dfs",
+        builder=builder_name,
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    assert build_result.kinetic is not None
+    assert build_result.kinetic.nnz > 0
+
+
+
+@pytest.mark.parametrize("builder_name", ["sparse", "bitmask"])
+def test_square_qlm_2x2_pbc_w00_kinetic_preserves_basis(
+    builder_name: str,
+) -> None:
+    model = SquareQLMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        charges=0,
+        kinetic=1.0,
+        potential=0.0,
+    )
+
+    build_result = model.build(
+        basis_solver="dfs",
+        builder=builder_name,
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    assert build_result.kinetic is not None
+    assert build_result.kinetic.nnz > 0
+
+
+@pytest.mark.parametrize("builder_name", ["sparse", "bitmask"])
+def test_square_qlm_2x2_pbc_potential_nonzero(
+    builder_name: str,
+) -> None:
+    model = SquareQLMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="periodic",
+        charges=0,
+        kinetic=0.0,
+        potential=1.0,
+    )
+
+    build_result = model.build(
+        basis_solver="dfs",
+        builder=builder_name,
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    assert build_result.potential is not None
+    assert build_result.potential.nnz > 0
+
+
+@pytest.mark.parametrize(
+    ("kinetic", "potential"),
+    [
+        (1.0, 0.0),
+        (0.0, 1.0),
+        (1.0, 1.0),
+    ],
+)
+def test_square_qlm_2x2_sparse_and_bitmask_match(
+    kinetic: float,
+    potential: float,
+) -> None:
+    model = SquareQLMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="periodic",
+        charges=0,
+        kinetic=kinetic,
+        potential=potential,
+    )
+
+    sparse_result = model.build(
+        basis_solver="dfs",
+        builder="sparse",
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    bitmask_result = model.build(
+        basis=sparse_result.basis,
+        builder="bitmask",
+        backend="scipy",
+        sort_basis=False,
+        on_missing="raise",
+    )
+
+    difference_matrix = sparse_result.hamiltonian - bitmask_result.hamiltonian
+    difference_matrix.eliminate_zeros()
+
+    assert difference_matrix.nnz == 0

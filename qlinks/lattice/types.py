@@ -91,6 +91,25 @@ class Link:
 
 
 @dataclass(frozen=True, slots=True)
+class OrientedLink:
+    """A link with an orientation relative to a plaquette boundary.
+
+    orientation = +1 means the plaquette traverses the link along its stored
+    source -> target direction.
+
+    orientation = -1 means the plaquette traverses the link opposite to its
+    stored source -> target direction.
+    """
+
+    link_id: LinkId
+    orientation: int
+
+    def __post_init__(self) -> None:
+        if self.orientation not in (-1, 1):
+            raise ValueError("OrientedLink.orientation must be either -1 or +1.")
+
+
+@dataclass(frozen=True, slots=True)
 class Plaquette:
     """
     Oriented elementary loop.
@@ -130,3 +149,15 @@ class Plaquette:
         bad = [ori for ori in self.orientations if ori not in (-1, 1)]
         if bad:
             raise ValueError("Plaquette.orientations must only contain +1 or -1.")
+
+    @property
+    def boundary(self) -> tuple[OrientedLink, ...]:
+        """Return the oriented boundary links of this plaquette."""
+        return tuple(
+            OrientedLink(link_id=link_id, orientation=orientation)
+            for link_id, orientation in zip(
+                self.links,
+                self.orientations,
+                strict=True,
+            )
+        )

@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
-from qlinks.lattice.types import BoundaryCondition, Link, Plaquette, Site
+from qlinks.lattice.types import BoundaryCondition, Link, OrientedLink, Plaquette, Site
 
 
 @dataclass(frozen=True, slots=True)
@@ -218,9 +218,38 @@ class LatticeGraph:
         self._validate_plaquette_id(plaquette_id)
         return np.asarray(self.plaquettes[plaquette_id].orientations, dtype=np.int64)
 
+    def plaquette_boundary(self, plaquette_id: int) -> tuple[OrientedLink, ...]:
+        """Return the oriented boundary of a plaquette."""
+        return self.plaquettes[int(plaquette_id)].boundary
+
     def plaquette_sites(self, plaquette_id: int) -> npt.NDArray[np.int64]:
         self._validate_plaquette_id(plaquette_id)
         return np.asarray(self.plaquettes[plaquette_id].sites, dtype=np.int64)
+
+    def plaquette_incidence_matrix(self) -> sp.csr_array:
+        """Return oriented link-plaquette incidence matrix.
+
+        The matrix has shape ``(num_links, num_plaquettes)`` and entries
+
+            B[link, plaquette] = +1 or -1
+
+        depending on the orientation of the link in the plaquette boundary.
+        """
+        row_indices: list[int] = []
+        column_indices: list[int] = []
+        data_values: list[int] = []
+
+        for plaquette in self.plaquettes:
+            for oriented_link in plaquette.boundary:
+                row_indices.append(int(oriented_link.link_id))
+                column_indices.append(int(plaquette.id))
+                data_values.append(int(oriented_link.orientation))
+
+        return sp.coo_array(
+            (data_values, (row_indices, column_indices)),
+            shape=(self.num_links, self.num_plaquettes),
+            dtype=np.int8,
+        ).tocsr()
 
     def translate_site(self, site_id: int, displacement: tuple[int, ...]) -> int | None:
         """

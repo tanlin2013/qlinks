@@ -473,59 +473,165 @@ def bitmask_qdm_flippability_projectors(
     )
 
 
+def binary_pattern_from_flux_pattern(
+    flux_pattern: npt.NDArray[np.int64],
+) -> npt.NDArray[np.int64]:
+    """Convert physical QLM flux values {-1, +1} to binary values {0, 1}."""
+    flux_pattern = np.asarray(flux_pattern, dtype=np.int64)
+
+    if not np.all(np.isin(flux_pattern, [-1, 1])):
+        raise ValueError("flux_pattern must contain only -1 and +1.")
+
+    return ((flux_pattern + 1) // 2).astype(np.int64)
+
+
 def bitmask_qlm_flippability_projectors(
     layout: VariableLayout,
     lattice: LatticeGraph,
     plaquette_id: int,
     coefficient: complex = 1.0,
 ) -> tuple[BitmaskPatternDiagonalOperator, BitmaskPatternDiagonalOperator]:
-    """
-    Bitmask projectors for spin-1/2 QLM flippable flux plaquettes.
+    """Bitmask projectors for spin-1/2 QLM flippable flux plaquettes.
 
-    Flux encoding convention:
+    The physical QLM flippable flux patterns are the oriented plaquette
+    boundary pattern and its negative. With binary convention
 
         -1 -> 0
         +1 -> 1
 
-    Therefore the two flux patterns
-
-        [+1, -1, +1, -1]
-        [-1, +1, -1, +1]
-
-    become binary patterns
-
-        1010
-        0101
+    these become binary_pattern and 1 - binary_pattern.
     """
+    link_ids = lattice.plaquette_links(plaquette_id)
+    variable_indices = np.asarray(
+        [
+            layout.link_variable_index(int(link_id))
+            for link_id in link_ids
+        ],
+        dtype=np.int64,
+    )
 
-    return bitmask_qdm_flippability_projectors(
-        layout=layout,
-        lattice=lattice,
-        plaquette_id=plaquette_id,
-        coefficient=coefficient,
+    orientation_pattern = np.asarray(
+        lattice.plaquette_orientations(int(plaquette_id)),
+        dtype=np.int64,
+    )
+
+    if variable_indices.size != orientation_pattern.size:
+        raise ValueError(
+            "Plaquette links and orientations must have the same length."
+        )
+
+    binary_pattern = binary_pattern_from_flux_pattern(orientation_pattern)
+
+    return (
+        BitmaskPatternDiagonalOperator(
+            layout=layout,
+            variable_indices=variable_indices,
+            pattern=binary_pattern,
+            coefficient=coefficient,
+            name="bitmask_qlm_flippability_oriented",
+        ),
+        BitmaskPatternDiagonalOperator(
+            layout=layout,
+            variable_indices=variable_indices,
+            pattern=1 - binary_pattern,
+            coefficient=coefficient,
+            name="bitmask_qlm_flippability_reversed",
+        ),
     )
 
 
 @dataclass(frozen=True, slots=True)
-class BitmaskQLMFluxFlipOperator(BitmaskQDMFlipOperator):
-    """
-    Spin-1/2 QLM plaquette ring exchange in binary flux encoding.
+class BitmaskQLMFluxFlipOperator:
+    """Spin-1/2 QLM plaquette ring exchange in binary flux encoding.
 
-    Encoding:
-
+    Physical convention:
         -1 -> 0
         +1 -> 1
 
-    The QLM ring exchange
-
-        [+1, -1, +1, -1] <-> [-1, +1, -1, +1]
-
-    becomes
-
-        1010 <-> 0101
+    The flippable QLM flux patterns are given by the plaquette orientation
+    signs and their negatives.
     """
 
+    layout: VariableLayout
+    lattice: LatticeGraph
+    plaquette_id: int
+    coefficient: complex = 1.0
     name: str = "bitmask_qlm_flux_flip"
+
+    _variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False)
+    _op_oriented_to_reversed: BitmaskPatternFlipOperator = field(
+        init=False,
+        repr=False,
+    )
+    _op_reversed_to_oriented: BitmaskPatternFlipOperator = field(
+        init=False,
+        repr=False,
+    )
+
+    def __post_init__(self) -> None:
+        link_ids = self.lattice.plaquette_links(self.plaquette_id)
+        variable_indices = np.asarray(
+            [
+                self.layout.link_variable_index(int(link_id))
+                for link_id in link_ids
+            ],
+            dtype=np.int64,
+        )
+
+        orientation_pattern = np.asarray(
+            self.lattice.plaquette_orientations(int(self.plaquette_id)),
+            dtype=np.int64,
+        )
+
+        if variable_indices.size != orientation_pattern.size:
+            raise ValueError(
+                "Plaquette links and orientations must have the same length."
+            )
+
+        binary_pattern = binary_pattern_from_flux_pattern(orientation_pattern)
+        reversed_binary_pattern = 1 - binary_pattern
+
+        op_oriented_to_reversed = BitmaskPatternFlipOperator(
+            layout=self.layout,
+            variable_indices=variable_indices,
+            initial_values=binary_pattern,
+            final_values=reversed_binary_pattern,
+            coefficient=self.coefficient,
+            name="bitmask_qlm_flux_flip_oriented_to_reversed",
+        )
+        op_reversed_to_oriented = BitmaskPatternFlipOperator(
+            layout=self.layout,
+            variable_indices=variable_indices,
+            initial_values=reversed_binary_pattern,
+            final_values=binary_pattern,
+            coefficient=self.coefficient,
+            name="bitmask_qlm_flux_flip_reversed_to_oriented",
+        )
+
+        object.__setattr__(self, "_variable_indices", variable_indices)
+        object.__setattr__(
+            self,
+            "_op_oriented_to_reversed",
+            op_oriented_to_reversed,
+        )
+        object.__setattr__(
+            self,
+            "_op_reversed_to_oriented",
+            op_reversed_to_oriented,
+        )
+
+    @property
+    def variable_indices(self) -> npt.NDArray[np.int64]:
+        return self._variable_indices.copy()
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return self._variable_indices.copy()
+
+    def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
+        return (
+            self._op_oriented_to_reversed.apply_code(code)
+            + self._op_reversed_to_oriented.apply_code(code)
+        )
 
 
 def bitmask_alternating_flippability_projectors(

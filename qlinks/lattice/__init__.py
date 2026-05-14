@@ -3,7 +3,7 @@ from qlinks.lattice.graph import LatticeGraph
 from qlinks.lattice.honeycomb import HoneycombLattice
 from qlinks.lattice.square import SquareLattice
 from qlinks.lattice.triangular import TriangularLattice
-from qlinks.lattice.types import BoundaryCondition, Link, Plaquette, Site
+from qlinks.lattice.types import BoundaryCondition, Link, OrientedLink, Plaquette, Site
 
 __all__ = [
     "BoundaryCondition",
@@ -11,6 +11,7 @@ __all__ = [
     "HoneycombLattice",
     "LatticeGraph",
     "Link",
+    "OrientedLink",
     "Plaquette",
     "Site",
     "SquareLattice",

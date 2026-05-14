@@ -449,3 +449,29 @@ def test_square_winding_sector_spin_half_target() -> None:
 
     # If the x cut has raw sum 2, physical spin-half winding is 1.
     assert sector.is_satisfied(config)
+
+
+def test_square_winding_covectors_annihilate_plaquette_boundaries() -> None:
+    lattice = SquareLattice(4, 4, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    for direction in ("x", "y"):
+        winding = SquareWindingSector(
+            layout=layout,
+            lattice=lattice,
+            direction=direction,
+            target=0,
+        )
+
+        winding_covector = np.zeros(lattice.num_links, dtype=np.int64)
+        winding_covector[winding.link_ids] = 1
+
+        plaquette_incidence = lattice.plaquette_incidence_matrix()
+
+        np.testing.assert_array_equal(
+            winding_covector @ plaquette_incidence.toarray(),
+            np.zeros(lattice.num_plaquettes, dtype=np.int64),
+        )
