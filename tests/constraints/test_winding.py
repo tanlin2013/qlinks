@@ -451,27 +451,62 @@ def test_square_winding_sector_spin_half_target() -> None:
     assert sector.is_satisfied(config)
 
 
-def test_square_winding_covectors_annihilate_plaquette_boundaries() -> None:
-    lattice = SquareLattice(4, 4, boundary_condition="periodic")
+def _winding_covector(
+    lattice: SquareLattice,
+    sector: SquareWindingSector,
+) -> np.ndarray:
+    covector = np.zeros(lattice.num_links, dtype=np.int64)
+    covector[sector.link_ids] = 1
+    return covector
+
+
+def test_square_winding_sector_annihilates_plaquette_boundaries_2x2_pbc() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
         lattice,
         LocalSpace.spin_half_flux(),
     )
 
+    plaquette_incidence = lattice.plaquette_incidence_matrix().toarray()
+
     for direction in ("x", "y"):
-        winding = SquareWindingSector(
+        sector = SquareWindingSector(
             layout=layout,
             lattice=lattice,
             direction=direction,
             target=0,
         )
 
-        winding_covector = np.zeros(lattice.num_links, dtype=np.int64)
-        winding_covector[winding.link_ids] = 1
-
-        plaquette_incidence = lattice.plaquette_incidence_matrix()
+        covector = np.zeros(lattice.num_links, dtype=np.int64)
+        covector[sector.link_ids] = sector.signs
 
         np.testing.assert_array_equal(
-            winding_covector @ plaquette_incidence.toarray(),
+            covector @ plaquette_incidence,
+            np.zeros(lattice.num_plaquettes, dtype=np.int64),
+        )
+
+
+def test_square_winding_sector_annihilates_plaquette_boundaries_4x4_pbc() -> None:
+    lattice = SquareLattice(4, 4, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    plaquette_incidence = lattice.plaquette_incidence_matrix().toarray()
+
+    for direction in ("x", "y"):
+        sector = SquareWindingSector(
+            layout=layout,
+            lattice=lattice,
+            direction=direction,
+            target=0,
+        )
+
+        covector = np.zeros(lattice.num_links, dtype=np.int64)
+        covector[sector.link_ids] = sector.signs
+
+        np.testing.assert_array_equal(
+            covector @ plaquette_incidence,
             np.zeros(lattice.num_plaquettes, dtype=np.int64),
         )

@@ -39,6 +39,119 @@ def internal_flux_winding_value(
     raise ValueError("flux_normalization must be 'integer_flux' or 'spin_half'.")
 
 
+def _signed_direction_links_annihilating_plaquettes(
+    *,
+    lattice,
+    direction: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return signed direction links whose covector annihilates plaquettes.
+
+    The returned ``link_ids`` and ``signs`` define a covector ``w`` with
+
+        w[link_ids] = signs
+
+    such that
+
+        w @ lattice.plaquette_incidence_matrix() == 0.
+
+    This is more robust than using wrapping links or all direction links with
+    positive signs, especially on small PBC lattices such as 2x2.
+    """
+    link_ids = [
+        int(link.id)
+        for link in lattice.links
+        if link.kind == direction
+    ]
+
+    if len(link_ids) == 0:
+        raise ValueError(f"No {direction}-links found.")
+
+    selected_link_set = set(link_ids)
+    signs_by_link: dict[int, int] = {}
+
+    for seed_link_id in link_ids:
+        if seed_link_id in signs_by_link:
+            continue
+
+        signs_by_link[seed_link_id] = 1
+        search_stack = [seed_link_id]
+
+        while search_stack:
+            current_link_id = search_stack.pop()
+
+            for plaquette_id in lattice.plaquette_ids:
+                plaquette_links = lattice.plaquette_links(int(plaquette_id))
+                plaquette_orientations = lattice.plaquette_orientations(
+                    int(plaquette_id)
+                )
+
+                local_entries = [
+                    (int(link_id), int(orientation))
+                    for link_id, orientation in zip(
+                        plaquette_links,
+                        plaquette_orientations,
+                        strict=True,
+                    )
+                    if int(link_id) in selected_link_set
+                ]
+
+                if len(local_entries) != 2:
+                    continue
+
+                first_link_id, first_orientation = local_entries[0]
+                second_link_id, second_orientation = local_entries[1]
+
+                if current_link_id not in (first_link_id, second_link_id):
+                    continue
+
+                if current_link_id == first_link_id:
+                    known_link_id = first_link_id
+                    known_orientation = first_orientation
+                    unknown_link_id = second_link_id
+                    unknown_orientation = second_orientation
+                else:
+                    known_link_id = second_link_id
+                    known_orientation = second_orientation
+                    unknown_link_id = first_link_id
+                    unknown_orientation = first_orientation
+
+                inferred_sign = -(
+                    signs_by_link[known_link_id]
+                    * known_orientation
+                    // unknown_orientation
+                )
+
+                if unknown_link_id in signs_by_link:
+                    if signs_by_link[unknown_link_id] != inferred_sign:
+                        raise ValueError(
+                            "Inconsistent winding-sign constraints for "
+                            f"direction={direction!r}."
+                        )
+                else:
+                    signs_by_link[unknown_link_id] = inferred_sign
+                    search_stack.append(unknown_link_id)
+
+    ordered_link_ids = np.asarray(link_ids, dtype=np.int64)
+    signs = np.asarray(
+        [signs_by_link[int(link_id)] for link_id in ordered_link_ids],
+        dtype=np.int64,
+    )
+
+    plaquette_incidence = lattice.plaquette_incidence_matrix().toarray()
+    covector = np.zeros(lattice.num_links, dtype=np.int64)
+    covector[ordered_link_ids] = signs
+
+    winding_change = covector @ plaquette_incidence
+
+    if np.any(winding_change != 0):
+        raise ValueError(
+            "Derived winding covector does not annihilate plaquette boundaries: "
+            f"{winding_change.tolist()}"
+        )
+
+    return ordered_link_ids, signs
+
+
 @dataclass(frozen=True, slots=True)
 class SquareWindingSector(BaseSectorCondition):
     """
@@ -70,31 +183,32 @@ class SquareWindingSector(BaseSectorCondition):
         if self.direction not in ("x", "y"):
             raise ValueError("direction must be 'x' or 'y'.")
 
-        link_ids: list[int] = []
-
-        for link in self.lattice.links:
-            if self.direction == "x":
-                if link.kind == "x" and link.wrap:
-                    link_ids.append(link.id)
-            else:
-                if link.kind == "y" and link.wrap:
-                    link_ids.append(link.id)
-
-        if len(link_ids) == 0:
-            raise ValueError(f"No wrapping {self.direction}-links found.")
+        link_ids, signs = _signed_direction_links_annihilating_plaquettes(
+            lattice=self.lattice,
+            direction=self.direction,
+        )
 
         variable_indices = np.asarray(
-            [self.layout.link_variable_index(link_id) for link_id in link_ids],
+            [
+                self.layout.link_variable_index(int(link_id))
+                for link_id in link_ids
+            ],
             dtype=np.int64,
         )
 
-        object.__setattr__(self, "_link_ids", np.asarray(link_ids, dtype=np.int64))
+        object.__setattr__(self, "_link_ids", link_ids)
+        object.__setattr__(self, "_signs", signs)
         object.__setattr__(self, "_variable_indices", variable_indices)
         object.__setattr__(self, "target", int(self.target))
 
     @property
     def link_ids(self) -> npt.NDArray[np.int64]:
         return self._link_ids.copy()
+
+    @property
+    def signs(self) -> np.ndarray:
+        """Signs used in the winding covector."""
+        return self._signs.copy()
 
     @property
     def variable_indices(self) -> npt.NDArray[np.int64]:
@@ -105,7 +219,7 @@ class SquareWindingSector(BaseSectorCondition):
 
     def value(self, config: npt.ArrayLike) -> int:
         arr = self._as_config(config)
-        return int(np.sum(arr[self._variable_indices]))
+        return int(np.dot(self._signs, arr[self._variable_indices]))
 
     def internal_target(self) -> int:
         values_seen: set[int] = set()
