@@ -28,10 +28,7 @@ def test_square_qlm_manual_single_plaquette_sparse() -> None:
 
     link_ids = model.lattice.plaquette_links(plaquette_id)
     variable_indices = np.asarray(
-        [
-            layout.link_variable_index(int(link_id))
-            for link_id in link_ids
-        ],
+        [layout.link_variable_index(int(link_id)) for link_id in link_ids],
         dtype=np.int64,
     )
     orientation_pattern = model.lattice.plaquette_orientations(plaquette_id)
@@ -92,7 +89,7 @@ def test_square_qlm_bitmask_matches_sparse() -> None:
         np.array(
             [
                 orientation_pattern,
-                - orientation_pattern,
+                -orientation_pattern,
             ],
             dtype=np.int64,
         ),
@@ -135,7 +132,7 @@ def test_square_qlm_optimized_matches_sparse_for_kinetic_only() -> None:
         np.array(
             [
                 orientation_pattern,
-                - orientation_pattern,
+                -orientation_pattern,
             ],
             dtype=np.int64,
         ),
@@ -176,7 +173,7 @@ def test_square_qlm_potential_rejects_optimized() -> None:
         np.array(
             [
                 orientation_pattern,
-                - orientation_pattern,
+                -orientation_pattern,
             ],
             dtype=np.int64,
         ),
