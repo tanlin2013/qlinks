@@ -145,19 +145,11 @@ def _signed_direction_links_annihilating_plaquettes(
 
 @dataclass(frozen=True, slots=True)
 class SquareWindingSector(BaseSectorCondition):
-    """
-    Simple diagonal winding-flux sector for SquareLattice link variables.
+    """Square-lattice electric winding sector.
 
-    This fixes the sum of link variables along a non-contractible cut.
-
-    For direction="x":
-        Sum x-links crossing from x = lx - 1 to x = 0 over all y.
-
-    For direction="y":
-        Sum y-links crossing from y = ly - 1 to y = 0 over all x.
-
-    This class is intentionally square-lattice specific. Other lattices should
-    define their own topological-sector objects.
+    The winding covector is a signed direction-link covector chosen so that it
+    annihilates every plaquette boundary. This guarantees that local plaquette
+    flips preserve the sector, including on small PBC lattices.
     """
 
     layout: VariableLayout
@@ -249,17 +241,29 @@ class SquareWindingSector(BaseSectorCondition):
         assigned = np.asarray(assigned_mask, dtype=bool)
 
         variable_indices = self._variable_indices
-        assigned_local = assigned[variable_indices]
+        signs = self._signs
 
-        current = int(np.sum(arr[variable_indices[assigned_local]]))
+        assigned_local = assigned[variable_indices]
+        current = int(
+            np.dot(
+                signs[assigned_local],
+                arr[variable_indices[assigned_local]],
+            )
+        )
 
         min_remaining = 0
         max_remaining = 0
 
-        for idx in variable_indices[~assigned_local]:
-            values = self.layout.local_space(int(idx)).values
-            min_remaining += int(np.min(values))
-            max_remaining += int(np.max(values))
+        for local_position, variable_index in enumerate(variable_indices):
+            if assigned_local[local_position]:
+                continue
+
+            sign = int(signs[local_position])
+            values = self.layout.local_space(int(variable_index)).values
+
+            signed_values = sign * values
+            min_remaining += int(np.min(signed_values))
+            max_remaining += int(np.max(signed_values))
 
         target = self.internal_target()
 
