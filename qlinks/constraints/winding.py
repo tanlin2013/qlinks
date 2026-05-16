@@ -408,6 +408,65 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
 
 @dataclass(frozen=True, slots=True)
 class HoneycombElectricWindingSector(BaseSectorCondition):
+    """
+    Electric winding sector for the honeycomb QLM on a periodic lattice.
+
+    This sector fixes one of the two conserved electric-flux winding numbers
+    on a honeycomb torus. The winding number is defined as the signed electric
+    flux through a non-contractible cut of the periodic lattice. The signs are
+    determined by the oriented-link convention of the lattice, so the sector is
+    invariant under local plaquette flips.
+
+    Notes
+    -----
+    The ``direction`` argument labels the two independent periodic directions
+    of the integer unit-cell coordinates, not the Cartesian directions of the
+    plotting embedding.
+
+    Specifically,
+
+        direction="x"
+
+    means the winding sector associated with the first unit-cell direction,
+    and
+
+        direction="y"
+
+    means the winding sector associated with the second unit-cell direction.
+
+    For a honeycomb lattice these cell directions are generally oblique in the
+    visual embedding. They should be understood as the two primitive torus
+    cycles, or equivalently as a chosen basis of H_1(T^2, Z). Choosing a
+    different pair of independent non-contractible cycles would give an
+    equivalent winding basis, with sector labels related by an integer change
+    of basis.
+
+    The primitive vectors and basis offsets used for plotting do not define
+    the winding sector. The winding sector is defined by the combinatorial
+    periodic cell coordinates and the oriented link/cut convention.
+
+    Parameters
+    ----------
+    layout:
+        Variable layout whose link variables represent spin-half electric
+        fluxes.
+
+    lattice:
+        Periodic honeycomb lattice.
+
+    direction:
+        Either ``"x"`` or ``"y"``. These refer to the two unit-cell periodic
+        directions, not Cartesian plot axes.
+
+    target:
+        Target winding value in the chosen direction.
+
+    flux_normalization:
+        Normalization convention for the electric flux variables. For example,
+        ``"spin_half"`` corresponds to link values ``{-1, +1}`` representing
+        twice the physical spin-half electric field.
+    """
+
     layout: VariableLayout
     lattice: HoneycombLattice
     direction: Literal["x", "y"]
@@ -421,7 +480,10 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
             raise ValueError("HoneycombElectricWindingSector requires PBC.")
 
         if self.direction not in ("x", "y"):
-            raise ValueError("direction must be 'x' or 'y'.")
+            raise ValueError(
+                "direction must be 'x' or 'y', referring to the two periodic "
+                "unit-cell directions, not Cartesian plotting axes."
+            )
 
         if self.value_convention not in ("binary", "flux_pm"):
             raise ValueError("value_convention must be 'binary' or 'flux_pm'.")
