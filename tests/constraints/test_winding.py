@@ -1,8 +1,9 @@
 import numpy as np
 import pytest
 
-from qlinks.constraints import HoneycombElectricWindingSector, SquareWindingSector
+from qlinks.constraints import HoneycombElectricWindingSector, SquareWindingSector, SquareQDMElectricWindingSector
 from qlinks.lattice import HoneycombLattice, SquareLattice
+from qlinks.models import SquareQDMModel
 from qlinks.variables import LocalSpace, VariableLayout
 
 
@@ -460,53 +461,94 @@ def _winding_covector(
     return covector
 
 
-def test_square_winding_sector_annihilates_plaquette_boundaries_2x2_pbc() -> None:
+@pytest.mark.parametrize(
+    ("lattice_size_x", "lattice_size_y"),
+    [
+        (2, 2),
+        (4, 4),
+    ],
+)
+def test_square_winding_sector_annihilates_plaquette_boundaries_pbc(
+    lattice_size_x: int,
+    lattice_size_y: int,
+) -> None:
+    lattice = SquareLattice(lattice_size_x, lattice_size_y, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    plaquette_incidence = lattice.plaquette_incidence_matrix().toarray()
+
+    for direction in ("x", "y"):
+        sector = SquareWindingSector(
+            layout=layout,
+            lattice=lattice,
+            direction=direction,
+            target=0,
+        )
+
+        covector = np.zeros(lattice.num_links, dtype=np.int64)
+        covector[sector.link_ids] = sector.signs
+
+        np.testing.assert_array_equal(
+            covector @ plaquette_incidence,
+            np.zeros(lattice.num_plaquettes, dtype=np.int64),
+        )
+
+
+@pytest.mark.parametrize("builder_name", ["sparse", "bitmask"])
+@pytest.mark.parametrize(
+    ("lattice_size_x", "lattice_size_y"),
+    [
+        (2, 2),
+        (4, 4),
+    ],
+)
+def test_square_qdm_electric_winding_sector_preserves_plaquette_flips(
+    builder_name: str,
+    lattice_size_x: int,
+    lattice_size_y: int,
+) -> None:
+    """QDM plaquette flips should preserve the selected electric winding sector."""
+    model = SquareQDMModel(
+        lx=lattice_size_x,
+        ly=lattice_size_y,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        kinetic=1.0,
+        potential=0.0,
+    )
+
+    build_result = model.build(
+        basis_solver="dfs",
+        builder=builder_name,
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    assert build_result.kinetic is not None
+    assert build_result.kinetic.nnz > 0
+
+
+def test_square_qdm_electric_winding_has_signed_covector_2x2_pbc() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
         lattice,
-        LocalSpace.spin_half_flux(),
+        LocalSpace.binary(),
     )
 
-    plaquette_incidence = lattice.plaquette_incidence_matrix().toarray()
-
     for direction in ("x", "y"):
-        sector = SquareWindingSector(
+        sector = SquareQDMElectricWindingSector(
             layout=layout,
             lattice=lattice,
             direction=direction,
             target=0,
         )
 
-        covector = np.zeros(lattice.num_links, dtype=np.int64)
-        covector[sector.link_ids] = sector.signs
-
-        np.testing.assert_array_equal(
-            covector @ plaquette_incidence,
-            np.zeros(lattice.num_plaquettes, dtype=np.int64),
-        )
-
-
-def test_square_winding_sector_annihilates_plaquette_boundaries_4x4_pbc() -> None:
-    lattice = SquareLattice(4, 4, boundary_condition="periodic")
-    layout = VariableLayout.from_lattice_links(
-        lattice,
-        LocalSpace.spin_half_flux(),
-    )
-
-    plaquette_incidence = lattice.plaquette_incidence_matrix().toarray()
-
-    for direction in ("x", "y"):
-        sector = SquareWindingSector(
-            layout=layout,
-            lattice=lattice,
-            direction=direction,
-            target=0,
-        )
-
-        covector = np.zeros(lattice.num_links, dtype=np.int64)
-        covector[sector.link_ids] = sector.signs
-
-        np.testing.assert_array_equal(
-            covector @ plaquette_incidence,
-            np.zeros(lattice.num_plaquettes, dtype=np.int64),
-        )
+        assert sector.link_ids.size > 0
+        assert sector.signs.size == sector.link_ids.size
+        assert set(sector.signs.tolist()) <= {-1, 1}

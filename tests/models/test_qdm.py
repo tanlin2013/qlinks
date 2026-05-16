@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from qlinks.builders import is_hermitian_sparse
 from qlinks.models import (
@@ -227,3 +228,48 @@ def test_honeycomb_qdm_winding_sector_builds() -> None:
     sectors = model.make_sectors(model.layout)
     for state in basis.states:
         assert all(sector.is_satisfied(state) for sector in sectors)
+
+
+@pytest.mark.parametrize(
+    ("kinetic", "potential"),
+    [
+        (1.0, 0.0),
+        (0.0, 1.0),
+        (1.0, 1.0),
+    ],
+)
+def test_square_qdm_2x2_sparse_and_bitmask_match_in_electric_winding_sector(
+    kinetic: float,
+    potential: float,
+) -> None:
+    model = SquareQDMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        kinetic=kinetic,
+        potential=potential,
+    )
+
+    sparse_result = model.build(
+        basis_solver="dfs",
+        builder="sparse",
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    bitmask_result = model.build(
+        basis=sparse_result.basis,
+        builder="bitmask",
+        backend="scipy",
+        sort_basis=False,
+        on_missing="raise",
+    )
+
+    difference_matrix = sparse_result.hamiltonian - bitmask_result.hamiltonian
+    difference_matrix.eliminate_zeros()
+
+    assert difference_matrix.nnz == 0

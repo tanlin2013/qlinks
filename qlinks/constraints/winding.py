@@ -320,40 +320,42 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
 
     def __post_init__(self) -> None:
         if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
-            raise ValueError("SquareQDMElectricWindingSector requires a periodic SquareLattice.")
+            raise ValueError(
+                "SquareQDMElectricWindingSector requires a periodic SquareLattice."
+            )
 
         if self.direction not in ("x", "y"):
             raise ValueError("direction must be 'x' or 'y'.")
 
-        link_ids: list[int] = []
-        signs: list[int] = []
+        base_link_ids, base_signs = _signed_direction_links_annihilating_plaquettes(
+            lattice=self.lattice,
+            direction=self.direction,
+        )
 
-        for link in self.lattice.links:
-            if link.kind != self.direction:
-                continue
+        qdm_signs: list[int] = []
 
-            if not link.wrap:
-                continue
+        for link_id, base_sign in zip(base_link_ids, base_signs, strict=True):
+            link = self.lattice.links[int(link_id)]
+            source_site = self.lattice.sites[int(link.source)]
+            source_x, source_y = source_site.cell
 
-            source_site = self.lattice.sites[link.source]
-            x, y = source_site.cell
+            staggered_sign = 1 if (int(source_x) + int(source_y)) % 2 == 0 else -1
 
-            eta = 1 if (x + y) % 2 == 0 else -1
+            qdm_signs.append(int(base_sign) * staggered_sign)
 
-            link_ids.append(link.id)
-            signs.append(eta)
-
-        if len(link_ids) == 0:
-            raise ValueError(f"No wrapping {self.direction}-links found.")
+        signs = np.asarray(qdm_signs, dtype=np.int64)
 
         variable_indices = np.asarray(
-            [self.layout.link_variable_index(link_id) for link_id in link_ids],
+            [
+                self.layout.link_variable_index(int(link_id))
+                for link_id in base_link_ids
+            ],
             dtype=np.int64,
         )
 
-        object.__setattr__(self, "_link_ids", np.asarray(link_ids, dtype=np.int64))
+        object.__setattr__(self, "_link_ids", base_link_ids)
+        object.__setattr__(self, "_signs", signs)
         object.__setattr__(self, "_variable_indices", variable_indices)
-        object.__setattr__(self, "_signs", np.asarray(signs, dtype=np.int64))
         object.__setattr__(self, "target", int(self.target))
 
     @property
@@ -371,15 +373,13 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
     def signs(self) -> npt.NDArray[np.int64]:
         return self._signs.copy()
 
-    def value(self, config: npt.ArrayLike) -> int:
-        arr = self._as_config(config)
-
-        n = arr[self._variable_indices]
-
-        # E_l = eta_l * (2 n_l - 1)
-        electric_flux = self._signs * (2 * n - 1)
-
-        return int(np.sum(electric_flux))
+    def value(self, configuration: np.ndarray) -> int:
+        return int(
+            np.dot(
+                self._signs,
+                configuration[self._variable_indices],
+            )
+        )
 
     def partial_check(
         self,
