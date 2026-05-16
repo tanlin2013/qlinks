@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 
-from qlinks.constraints import HoneycombElectricWindingSector, SquareWindingSector, SquareQDMElectricWindingSector
+from qlinks.constraints import (
+    HoneycombElectricWindingSector,
+    SquareQDMElectricWindingSector,
+    SquareWindingSector,
+)
 from qlinks.lattice import HoneycombLattice, SquareLattice
 from qlinks.models import SquareQDMModel
 from qlinks.variables import LocalSpace, VariableLayout

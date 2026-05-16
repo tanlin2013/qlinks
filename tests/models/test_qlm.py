@@ -396,7 +396,6 @@ def test_square_qlm_2x2_pbc_kinetic_preserves_gauss_law(
     assert build_result.kinetic.nnz > 0
 
 
-
 @pytest.mark.parametrize("builder_name", ["sparse", "bitmask"])
 def test_square_qlm_2x2_pbc_w00_kinetic_preserves_basis(
     builder_name: str,

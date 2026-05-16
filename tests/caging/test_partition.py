@@ -1,8 +1,10 @@
 import numpy as np
 
-from qlinks.caging import group_vertices_by_signature
-from qlinks.caging import type1_candidates_from_bipartite_self_loops
-from qlinks.caging import type2_candidates_from_self_loops
+from qlinks.caging import (
+    group_vertices_by_signature,
+    type1_candidates_from_bipartite_self_loops,
+    type2_candidates_from_self_loops,
+)
 
 
 def test_group_vertices_by_signature_uses_bipartition_and_self_loop() -> None:
@@ -15,10 +17,7 @@ def test_group_vertices_by_signature_uses_bipartition_and_self_loop() -> None:
         include_bipartition=True,
     )
 
-    sorted_group_sizes = sorted(
-        vertex_indices.size
-        for vertex_indices in signature_groups.values()
-    )
+    sorted_group_sizes = sorted(vertex_indices.size for vertex_indices in signature_groups.values())
 
     assert sorted_group_sizes == [1, 1, 2]
 
@@ -66,8 +65,7 @@ def test_type2_candidates_use_internal_kinetic_components() -> None:
     )
 
     observed_supports = sorted(
-        tuple(candidate_subgraph.vertices.tolist())
-        for candidate_subgraph in candidate_subgraphs
+        tuple(candidate_subgraph.vertices.tolist()) for candidate_subgraph in candidate_subgraphs
     )
 
     assert observed_supports == [(0, 1), (2, 3)]

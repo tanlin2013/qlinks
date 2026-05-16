@@ -503,10 +503,7 @@ def bitmask_qlm_flippability_projectors(
     """
     link_ids = lattice.plaquette_links(plaquette_id)
     variable_indices = np.asarray(
-        [
-            layout.link_variable_index(int(link_id))
-            for link_id in link_ids
-        ],
+        [layout.link_variable_index(int(link_id)) for link_id in link_ids],
         dtype=np.int64,
     )
 
@@ -516,9 +513,7 @@ def bitmask_qlm_flippability_projectors(
     )
 
     if variable_indices.size != orientation_pattern.size:
-        raise ValueError(
-            "Plaquette links and orientations must have the same length."
-        )
+        raise ValueError("Plaquette links and orientations must have the same length.")
 
     binary_pattern = binary_pattern_from_flux_pattern(orientation_pattern)
 
@@ -571,10 +566,7 @@ class BitmaskQLMFluxFlipOperator:
     def __post_init__(self) -> None:
         link_ids = self.lattice.plaquette_links(self.plaquette_id)
         variable_indices = np.asarray(
-            [
-                self.layout.link_variable_index(int(link_id))
-                for link_id in link_ids
-            ],
+            [self.layout.link_variable_index(int(link_id)) for link_id in link_ids],
             dtype=np.int64,
         )
 
@@ -584,9 +576,7 @@ class BitmaskQLMFluxFlipOperator:
         )
 
         if variable_indices.size != orientation_pattern.size:
-            raise ValueError(
-                "Plaquette links and orientations must have the same length."
-            )
+            raise ValueError("Plaquette links and orientations must have the same length.")
 
         binary_pattern = binary_pattern_from_flux_pattern(orientation_pattern)
         reversed_binary_pattern = 1 - binary_pattern
@@ -628,10 +618,9 @@ class BitmaskQLMFluxFlipOperator:
         return self._variable_indices.copy()
 
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
-        return (
-            self._op_oriented_to_reversed.apply_code(code)
-            + self._op_reversed_to_oriented.apply_code(code)
-        )
+        return self._op_oriented_to_reversed.apply_code(
+            code
+        ) + self._op_reversed_to_oriented.apply_code(code)
 
 
 def bitmask_alternating_flippability_projectors(

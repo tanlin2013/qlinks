@@ -18,15 +18,15 @@ import pytest
 import scipy.sparse as scipy_sparse
 
 from qlinks.caging import (
-    CandidateSubgraph,
     CageSolverConfig,
     CandidateFilterContext,
+    CandidateSubgraph,
     CombinedBoundaryKineticTargetNullityFilter,
-    type1_candidates_from_bipartite_self_loops,
-    type2_candidates_from_self_loops,
+    extract_subblocks,
     run_candidate_filters,
     solve_candidate,
-    extract_subblocks,
+    type1_candidates_from_bipartite_self_loops,
+    type2_candidates_from_self_loops,
 )
 from qlinks.models import (
     SquareQDMModel,

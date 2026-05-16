@@ -206,14 +206,10 @@ def test_square_lattice_2x2_pbc_plaquette_boundary_matches_legacy_fields() -> No
         boundary = lattice.plaquette_boundary(int(plaquette_id))
 
         observed_links = tuple(oriented_link.link_id for oriented_link in boundary)
-        observed_orientations = tuple(
-            oriented_link.orientation for oriented_link in boundary
-        )
+        observed_orientations = tuple(oriented_link.orientation for oriented_link in boundary)
 
         expected_links = tuple(lattice.plaquette_links(int(plaquette_id)).tolist())
-        expected_orientations = tuple(
-            lattice.plaquette_orientations(int(plaquette_id)).tolist()
-        )
+        expected_orientations = tuple(lattice.plaquette_orientations(int(plaquette_id)).tolist())
 
         assert observed_links == expected_links
         assert observed_orientations == expected_orientations
@@ -222,9 +218,7 @@ def test_square_lattice_2x2_pbc_plaquette_boundary_matches_legacy_fields() -> No
 def test_square_lattice_2x2_pbc_boundary_of_boundary_is_zero() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
 
-    boundary_of_boundary = (
-        lattice.incidence_matrix() @ lattice.plaquette_incidence_matrix()
-    )
+    boundary_of_boundary = lattice.incidence_matrix() @ lattice.plaquette_incidence_matrix()
 
     np.testing.assert_array_equal(
         boundary_of_boundary.toarray(),

@@ -57,11 +57,7 @@ def _signed_direction_links_annihilating_plaquettes(
     This is more robust than using wrapping links or all direction links with
     positive signs, especially on small PBC lattices such as 2x2.
     """
-    link_ids = [
-        int(link.id)
-        for link in lattice.links
-        if link.kind == direction
-    ]
+    link_ids = [int(link.id) for link in lattice.links if link.kind == direction]
 
     if len(link_ids) == 0:
         raise ValueError(f"No {direction}-links found.")
@@ -81,9 +77,7 @@ def _signed_direction_links_annihilating_plaquettes(
 
             for plaquette_id in lattice.plaquette_ids:
                 plaquette_links = lattice.plaquette_links(int(plaquette_id))
-                plaquette_orientations = lattice.plaquette_orientations(
-                    int(plaquette_id)
-                )
+                plaquette_orientations = lattice.plaquette_orientations(int(plaquette_id))
 
                 local_entries = [
                     (int(link_id), int(orientation))
@@ -116,16 +110,13 @@ def _signed_direction_links_annihilating_plaquettes(
                     unknown_orientation = first_orientation
 
                 inferred_sign = -(
-                    signs_by_link[known_link_id]
-                    * known_orientation
-                    // unknown_orientation
+                    signs_by_link[known_link_id] * known_orientation // unknown_orientation
                 )
 
                 if unknown_link_id in signs_by_link:
                     if signs_by_link[unknown_link_id] != inferred_sign:
                         raise ValueError(
-                            "Inconsistent winding-sign constraints for "
-                            f"direction={direction!r}."
+                            "Inconsistent winding-sign constraints for " f"direction={direction!r}."
                         )
                 else:
                     signs_by_link[unknown_link_id] = inferred_sign
@@ -189,10 +180,7 @@ class SquareWindingSector(BaseSectorCondition):
         )
 
         variable_indices = np.asarray(
-            [
-                self.layout.link_variable_index(int(link_id))
-                for link_id in link_ids
-            ],
+            [self.layout.link_variable_index(int(link_id)) for link_id in link_ids],
             dtype=np.int64,
         )
 
@@ -320,9 +308,7 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
 
     def __post_init__(self) -> None:
         if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
-            raise ValueError(
-                "SquareQDMElectricWindingSector requires a periodic SquareLattice."
-            )
+            raise ValueError("SquareQDMElectricWindingSector requires a periodic SquareLattice.")
 
         if self.direction not in ("x", "y"):
             raise ValueError("direction must be 'x' or 'y'.")
@@ -346,10 +332,7 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         signs = np.asarray(qdm_signs, dtype=np.int64)
 
         variable_indices = np.asarray(
-            [
-                self.layout.link_variable_index(int(link_id))
-                for link_id in base_link_ids
-            ],
+            [self.layout.link_variable_index(int(link_id)) for link_id in base_link_ids],
             dtype=np.int64,
         )
 

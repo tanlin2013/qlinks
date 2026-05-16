@@ -4,6 +4,12 @@ from qlinks.caging.nullspace import (
     as_dense_array,
     nullspace_svd,
 )
+from qlinks.caging.partition import (
+    VertexSignature,
+    group_vertices_by_signature,
+    type1_candidates_from_bipartite_self_loops,
+    type2_candidates_from_self_loops,
+)
 from qlinks.caging.prefilters import (
     BoundaryNullityFilter,
     CandidateFilter,
@@ -32,12 +38,6 @@ from qlinks.caging.solver import (
     solve_candidates,
 )
 from qlinks.caging.types import CageSolverConfig
-from qlinks.caging.partition import (
-    VertexSignature,
-    group_vertices_by_signature,
-    type1_candidates_from_bipartite_self_loops,
-    type2_candidates_from_self_loops,
-)
 
 __all__ = [
     "BoundaryNullityFilter",

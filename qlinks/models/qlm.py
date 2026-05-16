@@ -281,10 +281,7 @@ class QLMBase(HamiltonianModelBase):
             for plaquette_id in self.plaquette_ids():
                 link_ids = self.lattice.plaquette_links(int(plaquette_id))
                 variable_indices = np.asarray(
-                    [
-                        layout.link_variable_index(int(link_id))
-                        for link_id in link_ids
-                    ],
+                    [layout.link_variable_index(int(link_id)) for link_id in link_ids],
                     dtype=np.int64,
                 )
                 orientation_pattern = np.asarray(
@@ -514,10 +511,7 @@ class SquareQLMModel(QLMBase):
             for plaquette_id in self.plaquette_ids():
                 link_ids = self.lattice.plaquette_links(int(plaquette_id))
                 variable_indices = np.asarray(
-                    [
-                        layout.link_variable_index(int(link_id))
-                        for link_id in link_ids
-                    ],
+                    [layout.link_variable_index(int(link_id)) for link_id in link_ids],
                     dtype=np.int64,
                 )
                 orientation_pattern = np.asarray(
