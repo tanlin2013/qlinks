@@ -11,61 +11,71 @@ from qlinks.models import SquareQDMModel
 from qlinks.variables import LocalSpace, VariableLayout
 
 
-def test_square_winding_sector_x_2_by_2() -> None:
-    lattice = SquareLattice(2, 2, boundary_condition="periodic")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
+def _sector_covector(lattice, sector) -> np.ndarray:
+    covector = np.zeros(lattice.num_links, dtype=np.int64)
+    covector[sector.link_ids] = sector.signs
+    return covector
 
+
+@pytest.mark.parametrize("direction", ["x", "y"])
+def test_square_winding_sector_annihilates_plaquette_boundaries_2_by_2(
+    direction: str,
+) -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
     sector = SquareWindingSector(
         layout=layout,
         lattice=lattice,
-        direction="x",
-        target=2,
-        flux_normalization="integer_flux",
+        direction=direction,
+        target=0,
     )
 
-    # For 2x2 periodic square, there are two x-wrapping links.
-    assert sector.link_ids.size == 2
+    covector = _sector_covector(lattice, sector)
+    plaquette_incidence = lattice.plaquette_incidence_matrix().toarray()
 
-    config = np.ones(lattice.num_links, dtype=np.int64)
-
-    assert sector.value(config) == 2
-    assert sector.is_satisfied(config)
-
-
-def test_square_winding_sector_y_2_by_2() -> None:
-    lattice = SquareLattice(2, 2, boundary_condition="periodic")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
-
-    sector = SquareWindingSector(
-        layout=layout,
-        lattice=lattice,
-        direction="y",
-        target=-2,
-        flux_normalization="integer_flux",
+    np.testing.assert_array_equal(
+        covector @ plaquette_incidence,
+        np.zeros(lattice.num_plaquettes, dtype=np.int64),
     )
 
-    assert sector.link_ids.size == 2
 
-    config = -np.ones(lattice.num_links, dtype=np.int64)
-
-    assert sector.value(config) == -2
-    assert sector.is_satisfied(config)
-
-
-def test_square_winding_sector_unsatisfied() -> None:
+def test_square_winding_sector_target_satisfaction() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
-
-    sector = SquareWindingSector(
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+    sector_probe = SquareWindingSector(
         layout=layout,
         lattice=lattice,
         direction="x",
         target=0,
+        flux_normalization="integer_flux",
     )
 
     config = np.ones(lattice.num_links, dtype=np.int64)
+    actual_value = sector_probe.value(config)
 
-    assert not sector.is_satisfied(config)
+    matching_sector = SquareWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=actual_value,
+        flux_normalization="integer_flux",
+    )
+    nonmatching_sector = SquareWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=actual_value + 2,
+        flux_normalization="integer_flux",
+    )
+
+    assert matching_sector.is_satisfied(config)
+    assert not nonmatching_sector.is_satisfied(config)
 
 
 def test_square_winding_requires_periodic_lattice() -> None:
@@ -441,19 +451,29 @@ def test_square_winding_sector_spin_half_target() -> None:
         lattice,
         LocalSpace.spin_half_flux(),
     )
-
-    sector = SquareWindingSector(
+    probe_sector = SquareWindingSector(
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=1,
+        target=0,
         flux_normalization="spin_half",
     )
 
     config = np.ones(layout.n_variables, dtype=np.int64)
+    config[probe_sector.variable_indices] = probe_sector.signs
 
-    # If the x cut has raw sum 2, physical spin-half winding is 1.
-    assert sector.is_satisfied(config)
+    raw_value = probe_sector.value(config)
+    assert raw_value % 2 == 0
+
+    matching_sector = SquareWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=raw_value // 2,
+        flux_normalization="spin_half",
+    )
+
+    assert matching_sector.is_satisfied(config)
 
 
 def _winding_covector(

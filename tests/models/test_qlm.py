@@ -24,13 +24,30 @@ def test_square_qlm_manual_single_plaquette_sparse() -> None:
     )
 
     layout = model.layout
+    plaquette_id = model.plaquette_ids()[0]
+
+    link_ids = model.lattice.plaquette_links(plaquette_id)
+    variable_indices = np.asarray(
+        [
+            layout.link_variable_index(int(link_id))
+            for link_id in link_ids
+        ],
+        dtype=np.int64,
+    )
+    orientation_pattern = model.lattice.plaquette_orientations(plaquette_id)
+
+    state_forward = -np.ones(layout.n_variables, dtype=np.int64)
+    state_backward = -np.ones(layout.n_variables, dtype=np.int64)
+
+    state_forward[variable_indices] = orientation_pattern
+    state_backward[variable_indices] = -orientation_pattern
 
     basis = Basis.from_states(
         layout,
         np.array(
             [
-                [1, -1, 1, -1],
-                [-1, 1, -1, 1],
+                state_forward,
+                state_backward,
             ],
             dtype=np.int64,
         ),
@@ -39,6 +56,7 @@ def test_square_qlm_manual_single_plaquette_sparse() -> None:
     result = model.build(
         basis=basis,
         builder="sparse",
+        on_missing="raise",
     )
 
     expected = np.array(
@@ -66,13 +84,15 @@ def test_square_qlm_bitmask_matches_sparse() -> None:
     )
 
     layout = model.layout
+    plaquette_id = model.plaquette_ids()[0]
+    orientation_pattern = model.lattice.plaquette_orientations(plaquette_id)
 
     flux_basis = Basis.from_states(
         layout,
         np.array(
             [
-                [1, -1, 1, -1],
-                [-1, 1, -1, 1],
+                orientation_pattern,
+                - orientation_pattern,
             ],
             dtype=np.int64,
         ),
@@ -107,13 +127,15 @@ def test_square_qlm_optimized_matches_sparse_for_kinetic_only() -> None:
     )
 
     layout = model.layout
+    plaquette_id = model.plaquette_ids()[0]
+    orientation_pattern = model.lattice.plaquette_orientations(plaquette_id)
 
     basis = Basis.from_states(
         layout,
         np.array(
             [
-                [1, -1, 1, -1],
-                [-1, 1, -1, 1],
+                orientation_pattern,
+                - orientation_pattern,
             ],
             dtype=np.int64,
         ),
@@ -146,13 +168,15 @@ def test_square_qlm_potential_rejects_optimized() -> None:
     )
 
     layout = model.layout
+    plaquette_id = model.plaquette_ids()[0]
+    orientation_pattern = model.lattice.plaquette_orientations(plaquette_id)
 
     basis = Basis.from_states(
         layout,
         np.array(
             [
-                [1, -1, 1, -1],
-                [-1, 1, -1, 1],
+                orientation_pattern,
+                - orientation_pattern,
             ],
             dtype=np.int64,
         ),
@@ -394,6 +418,30 @@ def test_square_qlm_2x2_pbc_kinetic_preserves_gauss_law(
 
     assert build_result.kinetic is not None
     assert build_result.kinetic.nnz > 0
+
+
+def _debug_config_against_model(model, config: np.ndarray) -> None:
+    print("config =", config.tolist())
+
+    for constraint_index, constraint in enumerate(model.make_constraints(model.layout)):
+        result = constraint.check(config)
+        print(
+            "constraint",
+            constraint_index,
+            type(constraint).__name__,
+            result.satisfied,
+            result.message,
+        )
+
+    for sector_index, sector in enumerate(model.make_sectors(model.layout)):
+        result = sector.check(config)
+        print(
+            "sector",
+            sector_index,
+            type(sector).__name__,
+            result.satisfied,
+            result.message,
+        )
 
 
 @pytest.mark.parametrize("builder_name", ["sparse", "bitmask"])
