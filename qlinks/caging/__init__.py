@@ -32,7 +32,11 @@ from qlinks.caging.prefilters import (
     matrix_nullity,
     run_candidate_filters,
 )
-from qlinks.caging.results import CageState
+from qlinks.caging.results import (
+    CageState,
+    cage_state_to_full_vector,
+    cage_states_to_full_matrix,
+)
 from qlinks.caging.solver import (
     solve_candidate,
     solve_candidates,
@@ -55,6 +59,8 @@ __all__ = [
     "ZeroInternalKineticFilter",
     "as_dense_array",
     "boundary_nullity",
+    "cage_state_to_full_vector",
+    "cage_states_to_full_matrix",
     "diagonal_values",
     "extract_subblocks",
     "filter_candidates",
