@@ -78,7 +78,7 @@ jobs:
       - name: Test
         shell: bash
         run: |
-          poetry run pytest tests/ -s --trace-config \
+          poetry run pytest tests/ -s --trace-config -m "no manual" \
             --cov=${{ github.event.repository.name }}/ \
             --cov-report=term-missing ${@-}
           poetry run coverage xml

@@ -71,6 +71,11 @@ lxml = { version = "^5.0.0", extras = ["html_clean"]}
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+markers = [
+    "manual: integration tests that are not run in normal CI",
+]
+
 [tool.black]
 line-length = 100
 
