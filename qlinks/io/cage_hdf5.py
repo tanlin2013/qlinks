@@ -13,7 +13,7 @@ import numpy.typing as npt
 from qlinks.caging import (
     CageState,
     cage_state_to_full_vector,
-    cage_states_to_full_matrix
+    cage_states_to_full_matrix,
 )
 from qlinks.io.hdf5 import _as_path, _normalize_index, _write_attrs
 
@@ -154,9 +154,7 @@ class CageStateHDF5Writer:
         )
         full_residuals = np.asarray(
             [
-                np.nan
-                if cage_state.full_residual is None
-                else cage_state.full_residual
+                np.nan if cage_state.full_residual is None else cage_state.full_residual
                 for cage_state in cage_states
             ],
             dtype=np.float64,
@@ -221,7 +219,9 @@ class CageStateHDF5Writer:
             group.attrs["hilbert_size"] = int(hilbert_size)
 
         if write_signature_metadata:
-            if any((cage_state.metadata or {}).get("kappa") is not None for cage_state in cage_states):
+            if any(
+                (cage_state.metadata or {}).get("kappa") is not None for cage_state in cage_states
+            ):
                 group.create_dataset(
                     "kappa_values",
                     data=_metadata_values(cage_states, "kappa"),
@@ -230,7 +230,10 @@ class CageStateHDF5Writer:
                     chunks=True,
                 )
 
-            if any((cage_state.metadata or {}).get("potential_value") is not None for cage_state in cage_states):
+            if any(
+                (cage_state.metadata or {}).get("potential_value") is not None
+                for cage_state in cage_states
+            ):
                 group.create_dataset(
                     "potential_values",
                     data=_metadata_values(cage_states, "potential_value"),
@@ -321,20 +324,10 @@ class CageStateHDF5Reader:
         local_state = self.read_local_state(cage_index)
 
         energy = complex(self.file["cage_states/energies"][cage_index])
-        boundary_residual = float(
-            self.file["cage_states/boundary_residuals"][cage_index]
-        )
-        eigen_residual = float(
-            self.file["cage_states/eigen_residuals"][cage_index]
-        )
-        full_residual_value = float(
-            self.file["cage_states/full_residuals"][cage_index]
-        )
-        full_residual = (
-            None
-            if np.isnan(full_residual_value)
-            else full_residual_value
-        )
+        boundary_residual = float(self.file["cage_states/boundary_residuals"][cage_index])
+        eigen_residual = float(self.file["cage_states/eigen_residuals"][cage_index])
+        full_residual_value = float(self.file["cage_states/full_residuals"][cage_index])
+        full_residual = None if np.isnan(full_residual_value) else full_residual_value
 
         metadata: dict[str, object] = {}
 
@@ -405,9 +398,7 @@ class CageStateHDF5Reader:
             hilbert_size = self.hilbert_size
 
         if hilbert_size is None:
-            raise ValueError(
-                "hilbert_size was not provided and is not stored in the file."
-            )
+            raise ValueError("hilbert_size was not provided and is not stored in the file.")
 
         cage_state = self.read_cage_state(index)
 
@@ -427,9 +418,7 @@ class CageStateHDF5Reader:
             hilbert_size = self.hilbert_size
 
         if hilbert_size is None:
-            raise ValueError(
-                "hilbert_size was not provided and is not stored in the file."
-            )
+            raise ValueError("hilbert_size was not provided and is not stored in the file.")
 
         cage_states = self.read_cage_states(index)
 

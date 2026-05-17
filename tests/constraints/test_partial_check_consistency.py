@@ -3,13 +3,13 @@ import numpy.typing as npt
 
 from qlinks.constraints import (
     GaussLawConstraint,
-    SquareWindingSector,
-    SquareQDMElectricWindingSector,
     HoneycombElectricWindingSector,
+    SquareQDMElectricWindingSector,
+    SquareWindingSector,
 )
-from qlinks.lattice import SquareLattice, HoneycombLattice
-from qlinks.variables import LocalSpace, VariableLayout
+from qlinks.lattice import HoneycombLattice, SquareLattice
 from qlinks.models import SquareQLMModel
+from qlinks.variables import LocalSpace, VariableLayout
 
 
 def assert_partial_check_matches_full_check(

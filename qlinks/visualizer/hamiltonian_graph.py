@@ -9,7 +9,6 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as scipy_sparse
-from scipy.sparse.csgraph import connected_components
 
 GraphBackend = Literal["igraph", "networkx"]
 NodeColorRule = Literal[
@@ -63,9 +62,13 @@ class HamiltonianGraphData:
 
     @property
     def degrees(self) -> npt.NDArray[np.int64]:
-        return np.asarray(
-            self.adjacency.astype(bool).sum(axis=1),
-        ).ravel().astype(np.int64)
+        return (
+            np.asarray(
+                self.adjacency.astype(bool).sum(axis=1),
+            )
+            .ravel()
+            .astype(np.int64)
+        )
 
 
 @dataclass
@@ -162,11 +165,11 @@ class HamiltonianGraphVisualizer:
             return self.graph_data.degrees.astype(np.float64)
 
         if color_by in (
-                "state_weight",
-                "state_amplitude_real",
-                "state_amplitude_imag",
-                "state_amplitude_abs",
-                "state_phase",
+            "state_weight",
+            "state_amplitude_real",
+            "state_amplitude_imag",
+            "state_amplitude_abs",
+            "state_phase",
         ):
             if state_vector is None:
                 raise ValueError(f"state_vector is required for color_by={color_by!r}.")
@@ -316,9 +319,7 @@ class HamiltonianGraphVisualizer:
             import matplotlib.pyplot as plt
             import networkx as nx
         except ImportError as error:
-            raise ImportError(
-                "The networkx backend requires networkx and matplotlib."
-            ) from error
+            raise ImportError("The networkx backend requires networkx and matplotlib.") from error
 
         graph = self.to_networkx()
         values = self.node_values(
@@ -457,9 +458,7 @@ def _validate_node_values(
         raise ValueError("Node values must be one-dimensional.")
 
     if values_array.shape[0] != n_vertices:
-        raise ValueError(
-            f"Expected {n_vertices} node values, got {values_array.shape[0]}."
-        )
+        raise ValueError(f"Expected {n_vertices} node values, got {values_array.shape[0]}.")
 
 
 def bipartition_labels(
@@ -535,8 +534,8 @@ def _add_colorbar(
 ) -> None:
     """Attach a scalar colorbar to an axis."""
     import matplotlib.pyplot as plt
-    from matplotlib.colors import Normalize
     from matplotlib.cm import ScalarMappable
+    from matplotlib.colors import Normalize
 
     values = np.asarray(values, dtype=np.float64)
 

@@ -1331,11 +1331,7 @@ class BasisConfigurationVisualizer:
 
         for shift_x in (-1, 0, 1):
             for shift_y in (-1, 0, 1):
-                candidate = (
-                        position_array
-                        + shift_x * translation_x
-                        + shift_y * translation_y
-                )
+                candidate = position_array + shift_x * translation_x + shift_y * translation_y
 
                 distance = np.linalg.norm(candidate - anchor_array)
 
@@ -1352,10 +1348,7 @@ class BasisConfigurationVisualizer:
         if primitive_vectors is None:
             return None
 
-        primitive_vectors = tuple(
-            np.asarray(vector, dtype=float)
-            for vector in primitive_vectors
-        )
+        primitive_vectors = tuple(np.asarray(vector, dtype=float) for vector in primitive_vectors)
 
         lattice_x = getattr(self.lattice, "lx", None)
         lattice_y = getattr(self.lattice, "ly", None)
@@ -1387,18 +1380,15 @@ class BasisConfigurationVisualizer:
     def _visible_site_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """Return plotting-coordinate bounds of visible positive-patch sites."""
         positions = np.asarray(
-            [
-                self._apply_visual_transform(site.position)
-                for site in self.lattice.sites
-            ],
+            [self._apply_visual_transform(site.position) for site in self.lattice.sites],
             dtype=float,
         )
 
         return np.min(positions, axis=0), np.max(positions, axis=0)
 
     def _best_visible_periodic_image(
-            self,
-            position: npt.ArrayLike,
+        self,
+        position: npt.ArrayLike,
     ) -> np.ndarray:
         """Choose the periodic image whose transformed position is most visible.
 
@@ -1422,11 +1412,7 @@ class BasisConfigurationVisualizer:
 
         for shift_x in (-1, 0, 1):
             for shift_y in (-1, 0, 1):
-                candidate = (
-                        position_array
-                        + shift_x * translation_x
-                        + shift_y * translation_y
-                )
+                candidate = position_array + shift_x * translation_x + shift_y * translation_y
                 candidate_draw = self._apply_visual_transform(candidate)
 
                 # Penalize being outside the visible site bounding box.
@@ -1469,9 +1455,9 @@ class BasisConfigurationVisualizer:
         for shift_x in (-1, 0, 1):
             for shift_y in (-1, 0, 1):
                 candidate = (
-                        np.asarray(position, dtype=float)
-                        + shift_x * translation_x
-                        + shift_y * translation_y
+                    np.asarray(position, dtype=float)
+                    + shift_x * translation_x
+                    + shift_y * translation_y
                 )
                 distance = np.linalg.norm(candidate - reference)
 
@@ -1484,10 +1470,7 @@ class BasisConfigurationVisualizer:
     def _plaquette_site_positions(self, plaquette) -> np.ndarray:
         """Return raw site positions of a plaquette."""
         return np.asarray(
-            [
-                self.lattice.sites[int(site_id)].position
-                for site_id in plaquette.sites
-            ],
+            [self.lattice.sites[int(site_id)].position for site_id in plaquette.sites],
             dtype=float,
         )
 
@@ -1501,10 +1484,7 @@ class BasisConfigurationVisualizer:
         visually meaningful plaquette center for PBC lattices.
         """
         raw_positions = np.asarray(
-            [
-                self.lattice.sites[int(site_id)].position
-                for site_id in plaquette.sites
-            ],
+            [self.lattice.sites[int(site_id)].position for site_id in plaquette.sites],
             dtype=float,
         )
 
@@ -1566,10 +1546,7 @@ class BasisConfigurationVisualizer:
     ) -> np.ndarray:
         """Return plaquette site positions unwrapped near the first site."""
         positions = np.asarray(
-            [
-                self.lattice.sites[int(site_id)].position
-                for site_id in plaquette.sites
-            ],
+            [self.lattice.sites[int(site_id)].position for site_id in plaquette.sites],
             dtype=float,
         )
 
@@ -1762,10 +1739,7 @@ class BasisConfigurationVisualizer:
                 config,
                 plaquette,
             )
-            signs = [
-                1 if value > 0 else -1
-                for value in oriented_values
-            ]
+            signs = [1 if value > 0 else -1 for value in oriented_values]
 
             if all(sign > 0 for sign in signs):
                 symbol = "↺"
@@ -1812,8 +1786,8 @@ class BasisConfigurationVisualizer:
         return value > 0
 
     def _square_visual_cell_from_center(
-            self,
-            center: npt.ArrayLike,
+        self,
+        center: npt.ArrayLike,
     ) -> tuple[int, int]:
         """Infer square-lattice visual cell from a drawn plaquette center.
 
@@ -1849,10 +1823,7 @@ class BasisConfigurationVisualizer:
         for link in self.lattice.links:
             source_site = self.lattice.sites[int(link.source)]
 
-            if (
-                    tuple(source_site.cell) == (lattice_x, lattice_y)
-                    and link.kind == kind
-            ):
+            if tuple(source_site.cell) == (lattice_x, lattice_y) and link.kind == kind:
                 return int(link.id)
 
         raise KeyError(f"No {kind}-link found at cell {(lattice_x, lattice_y)}.")
