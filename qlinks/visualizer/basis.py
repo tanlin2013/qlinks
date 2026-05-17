@@ -72,6 +72,7 @@ class LinkVisualStyle:
     site_label_fontsize: float | None = None
     link_label_fontsize: float | None = None
     plaquette_symbol_fontsize: float = 22.0
+    plaquette_symbol_offset: tuple[float, float] = (0.0, 0.0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1262,8 +1263,6 @@ class BasisConfigurationVisualizer:
         if self.lattice.num_plaquettes == 0:
             return []
 
-        period_vectors = self._period_vectors_2d()
-
         if (
             self.lattice.boundary_condition != BoundaryCondition.PERIODIC
             or self.periodic_image_mode == "none"
@@ -1278,16 +1277,25 @@ class BasisConfigurationVisualizer:
 
         for image_shift in image_shifts:
             for plaquette in self.lattice.plaquettes:
-                center = self._visual_plaquette_center(
-                    plaquette_id=int(plaquette.id),
-                    image_shift=image_shift,
-                    period_vectors=period_vectors,
-                )
+                raw_site_positions = self._plaquette_site_positions(plaquette)
+
+                raw_center = np.mean(raw_site_positions, axis=0)
+
+                site_positions = self._unwrapped_plaquette_site_positions(plaquette)
+                center = np.mean(site_positions, axis=0)
+
+                if self.periodic_image_mode == "positive_patch":
+                    center = self._nearest_periodic_image_to_anchor(
+                        center,
+                        raw_center,
+                    )
+
+                draw_center = self._apply_visual_transform(center)
 
                 if (
                     self.lattice.boundary_condition == BoundaryCondition.PERIODIC
                     and self.periodic_image_mode == "positive_patch"
-                    and not self._is_plaquette_center_in_positive_patch(center)
+                    and not self._is_plaquette_center_in_positive_patch(draw_center)
                 ):
                     continue
 
@@ -1296,11 +1304,301 @@ class BasisConfigurationVisualizer:
                         plaquette_id=int(plaquette.id),
                         image_shift=image_shift,
                         visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
-                        center=center,
+                        center=draw_center,
                     )
                 )
 
         return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
+
+    def _nearest_periodic_image_to_anchor(
+        self,
+        position: npt.ArrayLike,
+        anchor: npt.ArrayLike,
+    ) -> np.ndarray:
+        """Return periodic image of position closest to a visual anchor."""
+        position_array = np.asarray(position, dtype=float)
+        anchor_array = np.asarray(anchor, dtype=float)
+
+        translations = self._torus_translation_vectors()
+
+        if translations is None:
+            return position_array
+
+        translation_x, translation_y = translations
+
+        best_position = position_array
+        best_distance = np.inf
+
+        for shift_x in (-1, 0, 1):
+            for shift_y in (-1, 0, 1):
+                candidate = (
+                        position_array
+                        + shift_x * translation_x
+                        + shift_y * translation_y
+                )
+
+                distance = np.linalg.norm(candidate - anchor_array)
+
+                if distance < best_distance:
+                    best_distance = distance
+                    best_position = candidate
+
+        return best_position
+
+    def _torus_translation_vectors(self) -> tuple[np.ndarray, np.ndarray] | None:
+        """Return full-system torus translation vectors."""
+        primitive_vectors = getattr(self.lattice, "primitive_vectors", None)
+
+        if primitive_vectors is None:
+            return None
+
+        primitive_vectors = tuple(
+            np.asarray(vector, dtype=float)
+            for vector in primitive_vectors
+        )
+
+        lattice_x = getattr(self.lattice, "lx", None)
+        lattice_y = getattr(self.lattice, "ly", None)
+
+        if lattice_x is None or lattice_y is None:
+            shape = getattr(self.lattice, "shape", None)
+
+            if shape is None:
+                return None
+
+            lattice_x = shape[0]
+            lattice_y = shape[1]
+
+        return (
+            int(lattice_x) * primitive_vectors[0],
+            int(lattice_y) * primitive_vectors[1],
+        )
+
+    def _apply_visual_transform(self, position: npt.ArrayLike) -> np.ndarray:
+        """Apply coordinate scale and transform to one position."""
+        position_array = np.asarray(position, dtype=float)
+
+        if self.coordinate_transform is not None:
+            transform = np.asarray(self.coordinate_transform, dtype=float)
+            position_array = transform @ position_array
+
+        return self.coordinate_scale * position_array
+
+    def _visible_site_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+        """Return plotting-coordinate bounds of visible positive-patch sites."""
+        positions = np.asarray(
+            [
+                self._apply_visual_transform(site.position)
+                for site in self.lattice.sites
+            ],
+            dtype=float,
+        )
+
+        return np.min(positions, axis=0), np.max(positions, axis=0)
+
+    def _best_visible_periodic_image(
+            self,
+            position: npt.ArrayLike,
+    ) -> np.ndarray:
+        """Choose the periodic image whose transformed position is most visible.
+
+        This is intended for drawing centers on oblique PBC lattices. It is more
+        visualizer-friendly than wrapping fractional coordinates into the primitive
+        fundamental domain.
+        """
+        position_array = np.asarray(position, dtype=float)
+        translations = self._torus_translation_vectors()
+
+        if translations is None:
+            return position_array
+
+        translation_x, translation_y = translations
+
+        lower_bound, upper_bound = self._visible_site_bounds()
+        box_center = 0.5 * (lower_bound + upper_bound)
+
+        best_position = position_array
+        best_score = np.inf
+
+        for shift_x in (-1, 0, 1):
+            for shift_y in (-1, 0, 1):
+                candidate = (
+                        position_array
+                        + shift_x * translation_x
+                        + shift_y * translation_y
+                )
+                candidate_draw = self._apply_visual_transform(candidate)
+
+                # Penalize being outside the visible site bounding box.
+                below = np.maximum(lower_bound - candidate_draw, 0.0)
+                above = np.maximum(candidate_draw - upper_bound, 0.0)
+                outside_penalty = np.linalg.norm(below + above)
+
+                # Tie-break by closeness to the visible drawing region.
+                center_penalty = 1e-3 * np.linalg.norm(candidate_draw - box_center)
+
+                score = outside_penalty + center_penalty
+
+                if score < best_score:
+                    best_score = score
+                    best_position = candidate
+
+        return best_position
+
+    def _nearest_periodic_image(
+        self,
+        position: np.ndarray,
+        reference: np.ndarray,
+    ) -> np.ndarray:
+        """Return the torus image of ``position`` nearest to ``reference``.
+
+        Important:
+            For a finite PBC lattice, the periodic translations are the full torus
+            periods, not the primitive lattice vectors.
+        """
+        translations = self._torus_translation_vectors()
+
+        if translations is None:
+            return position
+
+        translation_x, translation_y = translations
+
+        best_position = np.asarray(position, dtype=float)
+        best_distance = np.linalg.norm(best_position - reference)
+
+        for shift_x in (-1, 0, 1):
+            for shift_y in (-1, 0, 1):
+                candidate = (
+                        np.asarray(position, dtype=float)
+                        + shift_x * translation_x
+                        + shift_y * translation_y
+                )
+                distance = np.linalg.norm(candidate - reference)
+
+                if distance < best_distance:
+                    best_distance = distance
+                    best_position = candidate
+
+        return best_position
+
+    def _plaquette_site_positions(self, plaquette) -> np.ndarray:
+        """Return raw site positions of a plaquette."""
+        return np.asarray(
+            [
+                self.lattice.sites[int(site_id)].position
+                for site_id in plaquette.sites
+            ],
+            dtype=float,
+        )
+
+    def _unwrapped_plaquette_site_positions(
+        self,
+        plaquette,
+    ) -> np.ndarray:
+        """Return plaquette site positions unwrapped along the plaquette boundary.
+
+        This keeps neighboring plaquette vertices close to each other and gives a
+        visually meaningful plaquette center for PBC lattices.
+        """
+        raw_positions = np.asarray(
+            [
+                self.lattice.sites[int(site_id)].position
+                for site_id in plaquette.sites
+            ],
+            dtype=float,
+        )
+
+        if raw_positions.shape[0] == 0:
+            return raw_positions
+
+        unwrapped_positions = [raw_positions[0]]
+
+        for raw_position in raw_positions[1:]:
+            previous_position = unwrapped_positions[-1]
+            unwrapped_positions.append(
+                self._nearest_periodic_image(
+                    raw_position,
+                    previous_position,
+                )
+            )
+
+        return np.asarray(unwrapped_positions, dtype=float)
+
+    def _wrap_position_to_positive_patch(
+        self,
+        position: npt.ArrayLike,
+    ) -> np.ndarray:
+        """Map a periodic position back into the positive visual patch."""
+        position_array = np.asarray(position, dtype=float)
+
+        primitive_vectors = getattr(self.lattice, "primitive_vectors", None)
+
+        if primitive_vectors is None:
+            return position_array
+
+        primitive_matrix = np.asarray(primitive_vectors, dtype=float).T
+        inverse_primitive_matrix = np.linalg.inv(primitive_matrix)
+
+        fractional = inverse_primitive_matrix @ position_array
+
+        # Wrap into the displayed unit-cell range.
+        # This assumes the visual positive patch uses cells:
+        #     0 <= x < lx
+        #     0 <= y < ly
+        lattice_shape = getattr(self.lattice, "shape", None)
+
+        if lattice_shape is None:
+            lx = getattr(self.lattice, "lx", None)
+            ly = getattr(self.lattice, "ly", None)
+            lattice_shape = (lx, ly)
+
+        if lattice_shape[0] is None or lattice_shape[1] is None:
+            return position_array
+
+        fractional[0] = fractional[0] % int(lattice_shape[0])
+        fractional[1] = fractional[1] % int(lattice_shape[1])
+
+        return primitive_matrix @ fractional
+
+    def _unwrapped_plaquette_positions(
+        self,
+        plaquette,
+    ) -> np.ndarray:
+        """Return plaquette site positions unwrapped near the first site."""
+        positions = np.asarray(
+            [
+                self.lattice.sites[int(site_id)].position
+                for site_id in plaquette.sites
+            ],
+            dtype=float,
+        )
+
+        if self.lattice.boundary_condition.name.lower() != "periodic":
+            return positions
+
+        # Use primitive vectors if present.
+        primitive_vectors = getattr(self.lattice, "primitive_vectors", None)
+
+        if primitive_vectors is None:
+            return positions
+
+        primitive_matrix = np.asarray(primitive_vectors, dtype=float).T
+        inverse_primitive_matrix = np.linalg.inv(primitive_matrix)
+
+        reference = positions[0]
+        unwrapped_positions = [reference]
+
+        for position in positions[1:]:
+            displacement = position - reference
+            fractional_displacement = inverse_primitive_matrix @ displacement
+
+            # Move displacement into the nearest periodic image.
+            fractional_displacement -= np.round(fractional_displacement)
+
+            unwrapped_position = reference + primitive_matrix @ fractional_displacement
+            unwrapped_positions.append(unwrapped_position)
+
+        return np.asarray(unwrapped_positions, dtype=float)
 
     def _visual_plaquette_center(
         self,
@@ -1412,12 +1710,7 @@ class BasisConfigurationVisualizer:
         config: npt.NDArray[np.int64],
         draw_plaquettes: list[_DrawPlaquette],
     ) -> None:
-        """
-        Draw the square-QLM-specific 16-symbol plaquette overlay.
-
-        The centers come from visual plaquettes, so PBC positive_patch images are
-        repeated correctly.
-        """
+        """Draw the square-QLM-specific 16-symbol plaquette overlay."""
         if not isinstance(self.lattice, SquareLattice):
             return
 
@@ -1427,8 +1720,12 @@ class BasisConfigurationVisualizer:
             if len(plaquette.links) != 4:
                 continue
 
-            link_values = [self.link_value(config, int(link_id)) for link_id in plaquette.links]
+            visual_cell = self._square_visual_cell_from_center(draw_plaquette.center)
 
+            link_values = self._square_visual_qlm_symbol_link_values(
+                config,
+                tuple(int(value) for value in visual_cell),
+            )
             key = self._plaquette_key(link_values)
             symbol_info = _SQUARE_QLM_PLAQUETTE_SYMBOLS.get(key)
 
@@ -1461,34 +1758,31 @@ class BasisConfigurationVisualizer:
             if len(plaquette.links) == 0:
                 continue
 
-            signs: list[int] = []
+            oriented_values = self._oriented_plaquette_link_values(
+                config,
+                plaquette,
+            )
+            signs = [
+                1 if value > 0 else -1
+                for value in oriented_values
+            ]
 
-            for link_id, orientation in zip(
-                plaquette.links,
-                plaquette.orientations,
-                strict=True,
-            ):
-                value = self.link_value(config, int(link_id))
-
-                sign = 1 if value > 0 else -1
-                sign *= int(orientation)
-                signs.append(sign)
-
-            if all(s > 0 for s in signs):
-                symbol = "↻"
-                color = "red"
-            elif all(s < 0 for s in signs):
+            if all(sign > 0 for sign in signs):
                 symbol = "↺"
                 color = "blue"
+            elif all(sign < 0 for sign in signs):
+                symbol = "↻"
+                color = "red"
             else:
                 continue
 
             center = draw_plaquette.center
 
-            ax.text(
-                center[0],
-                center[1],
+            ax.annotate(
                 symbol,
+                xy=(center[0], center[1]),
+                xytext=self.style.plaquette_symbol_offset,
+                textcoords="offset points",
                 fontsize=self.style.plaquette_symbol_fontsize,
                 color=color,
                 ha="center",
@@ -1516,6 +1810,146 @@ class BasisConfigurationVisualizer:
         """
 
         return value > 0
+
+    def _square_visual_cell_from_center(
+            self,
+            center: npt.ArrayLike,
+    ) -> tuple[int, int]:
+        """Infer square-lattice visual cell from a drawn plaquette center.
+
+        In the positive-patch drawing, the visual plaquette at cell (x, y) is
+        centered at approximately (x + 1/2, y + 1/2), up to coordinate transforms.
+        """
+        center_array = np.asarray(center, dtype=float)
+
+        # If coordinate transforms/scales are applied before storing draw centers,
+        # this helper assumes draw centers are already in plotting coordinates.
+        # For the default square plotting, this is correct.
+        cell_x = int(round(float(center_array[0]) - 0.5))
+        cell_y = int(round(float(center_array[1]) - 0.5))
+
+        return cell_x, cell_y
+
+    def _square_visual_link_id(
+        self,
+        *,
+        cell: tuple[int, int],
+        kind: str,
+    ) -> int:
+        """Return the square-lattice link id at a visual cell and kind."""
+        if not isinstance(self.lattice, SquareLattice):
+            raise TypeError("Expected SquareLattice.")
+
+        cell_x = int(cell[0])
+        cell_y = int(cell[1])
+
+        lattice_x = cell_x % int(self.lattice.lx)
+        lattice_y = cell_y % int(self.lattice.ly)
+
+        for link in self.lattice.links:
+            source_site = self.lattice.sites[int(link.source)]
+
+            if (
+                    tuple(source_site.cell) == (lattice_x, lattice_y)
+                    and link.kind == kind
+            ):
+                return int(link.id)
+
+        raise KeyError(f"No {kind}-link found at cell {(lattice_x, lattice_y)}.")
+
+    def _square_visual_qlm_symbol_link_values(
+        self,
+        config: npt.ArrayLike,
+        visual_cell: tuple[int, int],
+    ) -> list[int]:
+        """Return square-QLM symbol values from the drawn visual plaquette.
+
+        Key convention:
+            bottom, left, right, top
+
+        These values follow the visible positive-patch arrows, not the abstract
+        periodic plaquette object's stored boundary. This matters for small PBC
+        lattices such as 2x2.
+        """
+        cell_x = int(visual_cell[0])
+        cell_y = int(visual_cell[1])
+
+        bottom_link = self._square_visual_link_id(
+            cell=(cell_x, cell_y),
+            kind="x",
+        )
+        left_link = self._square_visual_link_id(
+            cell=(cell_x, cell_y),
+            kind="y",
+        )
+        right_link = self._square_visual_link_id(
+            cell=(cell_x + 1, cell_y),
+            kind="y",
+        )
+        top_link = self._square_visual_link_id(
+            cell=(cell_x, cell_y + 1),
+            kind="x",
+        )
+
+        return [
+            self.link_value(config, bottom_link),
+            self.link_value(config, left_link),
+            self.link_value(config, right_link),
+            self.link_value(config, top_link),
+        ]
+
+    def _square_qlm_legacy_symbol_link_values(
+        self,
+        config: npt.ArrayLike,
+        plaquette,
+    ) -> list[int]:
+        """Return square-QLM symbol values in the legacy dictionary convention.
+
+        Convention:
+            bottom, left, right, top
+
+        These are raw stored link values. They are not multiplied by plaquette
+        orientations. This matches the legacy 16-symbol square-QLM dictionary,
+        whose symbols were defined according to visual arrow directions rather than
+        oriented plaquette-boundary circulation.
+        """
+        if len(plaquette.links) != 4:
+            raise ValueError("square_qlm plaquette symbols require four-link plaquettes.")
+
+        # Current SquareLattice plaquette boundary order is:
+        #
+        #     bottom, right, top, left
+        #
+        # Legacy symbol key order is:
+        #
+        #     bottom, left, right, top
+        #
+        bottom_link = int(plaquette.links[0])
+        right_link = int(plaquette.links[1])
+        top_link = int(plaquette.links[2])
+        left_link = int(plaquette.links[3])
+
+        return [
+            self.link_value(config, bottom_link),
+            self.link_value(config, left_link),
+            self.link_value(config, right_link),
+            self.link_value(config, top_link),
+        ]
+
+    def _oriented_plaquette_link_values(
+        self,
+        config: npt.ArrayLike,
+        plaquette,
+    ) -> list[int]:
+        """Return link values measured in the plaquette-boundary orientation."""
+        return [
+            self.link_value(config, int(link_id)) * int(orientation)
+            for link_id, orientation in zip(
+                plaquette.links,
+                plaquette.orientations,
+                strict=True,
+            )
+        ]
 
     @staticmethod
     def _plaquette_key(values: list[int]) -> str:

@@ -21,6 +21,7 @@ from qlinks.visualizer import (
     plot_basis_config,
     plot_basis_grid,
 )
+from qlinks.visualizer.basis import _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 matplotlib.use("Agg")
 
@@ -973,3 +974,90 @@ def test_honeycomb_site_label_includes_sublattice() -> None:
 
     assert "A(0, 0)" in labels
     assert "B(0, 0)" in labels
+
+
+def test_square_qlm_plaquette_key_uses_plaquette_orientations() -> None:
+    lattice = SquareLattice(
+        2,
+        2,
+        boundary_condition="open",
+    )
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=None,
+    )
+
+    plaquette = lattice.plaquettes[0]
+    config = np.zeros(lattice.num_links, dtype=np.int64)
+
+    for link_id, orientation in zip(
+        plaquette.links,
+        plaquette.orientations,
+        strict=True,
+    ):
+        config[int(link_id)] = int(orientation)
+
+    oriented_values = visualizer._oriented_plaquette_link_values(
+        config,
+        plaquette,
+    )
+
+    assert visualizer._plaquette_key(oriented_values) == "1111"
+
+
+def test_square_qlm_plaquette_key_uses_negative_plaquette_orientations() -> None:
+    lattice = SquareLattice(
+        2,
+        2,
+        boundary_condition="open",
+    )
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=None,
+    )
+
+    plaquette = lattice.plaquettes[0]
+    config = np.zeros(lattice.num_links, dtype=np.int64)
+
+    for link_id, orientation in zip(
+        plaquette.links,
+        plaquette.orientations,
+        strict=True,
+    ):
+        config[int(link_id)] = -int(orientation)
+
+    oriented_values = visualizer._oriented_plaquette_link_values(
+        config,
+        plaquette,
+    )
+
+    assert visualizer._plaquette_key(oriented_values) == "0000"
+
+
+def test_square_qlm_visual_symbol_values_2x2_pbc_use_visual_cell() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=None)
+
+    config = np.array([1, -1, -1, 1, 1, 1, -1, -1], dtype=np.int64)
+
+    values = visualizer._square_visual_qlm_symbol_link_values(
+        config,
+        visual_cell=(0, 0),
+    )
+
+    assert visualizer._plaquette_key(values) in _SQUARE_QLM_PLAQUETTE_SYMBOLS
+
+
+def test_square_qlm_visual_symbol_key_order_bottom_left_right_top() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=None)
+
+    config = np.array([1, -1, -1, 1, 1, 1, -1, -1], dtype=np.int64)
+
+    values = visualizer._square_visual_qlm_symbol_link_values(
+        config,
+        visual_cell=(0, 0),
+    )
+
+    # bottom, left, right, top for visual cell (0, 0)
+    assert values == [1, -1, 1, -1]
