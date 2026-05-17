@@ -18,6 +18,10 @@ NodeColorRule = Literal[
     "self_loop",
     "degree",
     "state_weight",
+    "state_amplitude_real",
+    "state_amplitude_imag",
+    "state_amplitude_abs",
+    "state_phase",
 ]
 LayoutName = Literal[
     "auto",
@@ -157,14 +161,33 @@ class HamiltonianGraphVisualizer:
         if color_by == "degree":
             return self.graph_data.degrees.astype(np.float64)
 
-        if color_by == "state_weight":
+        if color_by in (
+                "state_weight",
+                "state_amplitude_real",
+                "state_amplitude_imag",
+                "state_amplitude_abs",
+                "state_phase",
+        ):
             if state_vector is None:
-                raise ValueError("state_vector is required for color_by='state_weight'.")
+                raise ValueError(f"state_vector is required for color_by={color_by!r}.")
 
             vector = np.asarray(state_vector, dtype=np.complex128)
             _validate_node_values(vector, self.graph_data.n_vertices)
 
-            return np.abs(vector) ** 2
+            if color_by == "state_weight":
+                return np.abs(vector) ** 2
+
+            if color_by == "state_amplitude_real":
+                return np.real(vector).astype(np.float64)
+
+            if color_by == "state_amplitude_imag":
+                return np.imag(vector).astype(np.float64)
+
+            if color_by == "state_amplitude_abs":
+                return np.abs(vector).astype(np.float64)
+
+            if color_by == "state_phase":
+                return np.angle(vector).astype(np.float64)
 
         raise ValueError(f"Unsupported color_by rule: {color_by!r}")
 
