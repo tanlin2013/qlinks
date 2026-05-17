@@ -1,5 +1,5 @@
 ### Custom field
-docs/source/notebooks/data/
+experimental/data/
 sciagraph-result/
 *.svg
 *.pdf
