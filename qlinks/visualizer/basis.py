@@ -1370,15 +1370,16 @@ class BasisConfigurationVisualizer:
                 draw_plaquettes.append(
                     _DrawPlaquette(
                         plaquette_id=int(plaquette.id),
-                        image_shift=first_draw_link.image_shift
-                        if hasattr(first_draw_link, "image_shift")
-                        else tuple(0 for _ in range(self.lattice.ndim)),
+                        image_shift=(
+                            first_draw_link.image_shift
+                            if hasattr(first_draw_link, "image_shift")
+                            else tuple(0 for _ in range(self.lattice.ndim))
+                        ),
                         visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
                         center=(float(center[0]), float(center[1])),
                         link_ids=tuple(int(link_id) for link_id in plaquette.links),
                         link_orientations=tuple(
-                            int(orientation)
-                            for orientation in plaquette.orientations
+                            int(orientation) for orientation in plaquette.orientations
                         ),
                     )
                 )
@@ -1841,16 +1842,14 @@ class BasisConfigurationVisualizer:
         for draw_plaquette in draw_plaquettes:
             link_ids = tuple(int(link_id) for link_id in draw_plaquette.link_ids)
             link_orientations = tuple(
-                int(orientation)
-                for orientation in draw_plaquette.link_orientations
+                int(orientation) for orientation in draw_plaquette.link_orientations
             )
 
             if len(link_ids) == 0:
                 plaquette = self.lattice.plaquettes[draw_plaquette.plaquette_id]
                 link_ids = tuple(int(link_id) for link_id in plaquette.links)
                 link_orientations = tuple(
-                    int(orientation)
-                    for orientation in plaquette.orientations
+                    int(orientation) for orientation in plaquette.orientations
                 )
 
             oriented_values = [
@@ -1862,10 +1861,7 @@ class BasisConfigurationVisualizer:
                 )
             ]
 
-            signs = [
-                1 if value > 0 else -1
-                for value in oriented_values
-            ]
+            signs = [1 if value > 0 else -1 for value in oriented_values]
 
             if all(sign > 0 for sign in signs):
                 symbol = "↺"
