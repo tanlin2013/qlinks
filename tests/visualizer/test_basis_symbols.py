@@ -5,6 +5,7 @@ import numpy as np
 from qlinks.lattice import (
     HoneycombLattice,
     SquareLattice,
+    TriangularLattice,
 )
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
@@ -180,3 +181,217 @@ def test_honeycomb_drawn_plaquettes_carry_link_metadata() -> None:
         assert len(draw_plaquette.link_orientations) == 6
         assert all(isinstance(link_id, int) for link_id in draw_plaquette.link_ids)
         assert set(draw_plaquette.link_orientations) <= {-1, 1}
+
+
+def test_triangular_circulation_primitives_skip_triangles() -> None:
+    lattice = TriangularLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+        include_triangles=True,
+        include_rhombi=True,
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    draw_plaquettes = visualizer._draw_plaquette_primitives()
+
+    assert draw_plaquettes
+
+    for draw_plaquette in draw_plaquettes:
+        plaquette = lattice.plaquettes[draw_plaquette.plaquette_id]
+        assert len(plaquette.links) == 4
+
+
+def test_generic_circulation_primitives_are_closed_cycles() -> None:
+    lattice = HoneycombLattice(4, 4, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    draw_plaquettes = visualizer._draw_plaquette_primitives()
+
+    assert draw_plaquettes
+
+    _nodes, draw_links = visualizer._draw_primitives()
+    links_by_id = {}
+    for draw_link in draw_links:
+        links_by_id.setdefault(draw_link.link_id, []).append(draw_link)
+
+    for draw_plaquette in draw_plaquettes:
+        selected = visualizer._select_closed_visual_plaquette(
+            [links_by_id[link_id] for link_id in draw_plaquette.link_ids]
+        )
+
+        assert selected is not None
+        assert visualizer._draw_links_form_closed_cycle(selected)
+
+
+def test_qdm_resonance_symbol_uses_diamond_markers() -> None:
+    assert BasisConfigurationVisualizer._qdm_resonance_symbol([1, 0, 1, 0]) == (
+        "◆",
+        "blue",
+    )
+    assert BasisConfigurationVisualizer._qdm_resonance_symbol([0, 1, 0, 1]) == (
+        "◇",
+        "red",
+    )
+    assert BasisConfigurationVisualizer._qdm_resonance_symbol([1, 1, 0, 0]) is None
+    assert BasisConfigurationVisualizer._qdm_resonance_symbol([0, 0, 0, 0]) is None
+
+
+def test_triangular_qdm_canonical_visual_order_is_stable_for_horizontal_dimers() -> None:
+    lattice = TriangularLattice(
+        4,
+        4,
+        boundary_condition="periodic",
+        include_triangles=True,
+        include_rhombi=True,
+    )
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    draw_plaquettes = [
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    ]
+
+    assert draw_plaquettes
+
+    for draw_plaquette in draw_plaquettes:
+        # Canonical visual order should always contain the same physical links
+        # as the abstract plaquette, only reordered.
+        plaquette = lattice.plaquettes[draw_plaquette.plaquette_id]
+        assert set(draw_plaquette.link_ids) == {
+            int(link_id) for link_id in plaquette.links
+        }
+
+
+def test_qdm_circulation_style_draws_diamond_symbol_on_honeycomb() -> None:
+    lattice = HoneycombLattice(3, 3, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=layout)
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 6
+    )
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+    for i, link_id in enumerate(draw_plaquette.link_ids):
+        config[int(link_id)] = 1 if i % 2 == 0 else 0
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    symbols = {text.get_text() for text in ax.texts}
+    assert "◆" in symbols
+    assert "↺" not in symbols
+    assert "↻" not in symbols
+
+    plt.close(fig)
+
+
+def test_circulation_style_does_not_mark_binary_qdm_resonance() -> None:
+    lattice = HoneycombLattice(3, 3, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=layout)
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 6
+    )
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+    for i, link_id in enumerate(draw_plaquette.link_ids):
+        config[int(link_id)] = 1 if i % 2 == 0 else 0
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="circulation",
+    )
+
+    assert not any(text.get_text() in {"◆", "◇"} for text in ax.texts)
+    assert not any(text.get_text() in {"↺", "↻"} for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_resonance_style_marks_binary_qdm_resonance() -> None:
+    lattice = HoneycombLattice(3, 3, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=layout)
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 6
+    )
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+    for i, link_id in enumerate(draw_plaquette.link_ids):
+        config[int(link_id)] = 1 if i % 2 == 0 else 0
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    symbols = {text.get_text() for text in ax.texts}
+    assert symbols & {"◆", "◇"}
+    assert "↺" not in symbols
+    assert "↻" not in symbols
+
+    plt.close(fig)
