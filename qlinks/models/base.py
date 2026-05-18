@@ -275,6 +275,26 @@ class HamiltonianModelBase:
     def model_builder(self) -> GenericModelBuilder:
         return GenericModelBuilder(self)
 
+    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        """
+        Return allowed user-facing quantum labels for diagonal symmetry sectors.
+
+        Models without user-selectable sectors return an empty dictionary.
+        Geometry-specific subclasses should override this method.
+
+        Examples
+        --------
+        SquareQLMModel(...).allowed_sector_labels()
+
+        may return:
+
+            {
+                "winding_x": (...),
+                "winding_y": (...),
+            }
+        """
+        return {}
+
     def _make_lattice(self) -> object:
         raise NotImplementedError
 

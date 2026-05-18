@@ -132,12 +132,6 @@ class TriangularZ2WindingSector(BaseSectorCondition):
         )
 
     def __post_init__(self) -> None:
-        if self.target not in (0, 1):
-            raise ValueError("target must be 0 or 1.")
-
-        if self.value_convention not in ("binary", "flux_pm"):
-            raise ValueError("value_convention must be 'binary' or 'flux_pm'.")
-
         cut = self.cut_data(
             layout=self.layout,
             lattice=self.lattice,
@@ -147,6 +141,14 @@ class TriangularZ2WindingSector(BaseSectorCondition):
         object.__setattr__(self, "_link_ids", cut.link_ids)
         object.__setattr__(self, "_variable_indices", cut.variable_indices)
         object.__setattr__(self, "target", int(self.target))
+
+        self.validate_target(
+            target=self.target,
+            layout=self.layout,
+            lattice=self.lattice,
+            direction=self.direction,
+            value_convention=self.value_convention,
+        )
 
     @property
     def link_ids(self) -> npt.NDArray[np.int64]:
@@ -198,3 +200,47 @@ class TriangularZ2WindingSector(BaseSectorCondition):
             return self.is_satisfied(config)
 
         return True
+
+    @classmethod
+    def allowed_targets(
+        cls,
+        *,
+        layout: VariableLayout,
+        lattice: TriangularLattice,
+        direction: TriangularCycleDirection,
+        value_convention: Z2ValueConvention = "binary",
+    ) -> tuple[int, ...]:
+        # This also validates the direction/lattice and builds the cut.
+        _ = cls.cut_data(
+            layout=layout,
+            lattice=lattice,
+            direction=direction,
+        )
+
+        if value_convention not in ("binary", "flux_pm"):
+            raise ValueError("value_convention must be 'binary' or 'flux_pm'.")
+
+        return (0, 1)
+
+    @classmethod
+    def validate_target(
+        cls,
+        *,
+        target: int,
+        layout: VariableLayout,
+        lattice: TriangularLattice,
+        direction: TriangularCycleDirection,
+        value_convention: Z2ValueConvention = "binary",
+    ) -> None:
+        allowed = cls.allowed_targets(
+            layout=layout,
+            lattice=lattice,
+            direction=direction,
+            value_convention=value_convention,
+        )
+
+        if int(target) not in allowed:
+            raise ValueError(
+                f"Illegal {cls.__name__} target {target} for "
+                f"direction={direction!r}. Allowed targets are {allowed}."
+            )

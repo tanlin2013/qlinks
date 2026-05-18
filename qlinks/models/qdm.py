@@ -9,6 +9,7 @@ from qlinks.constraints import (
     SquareQDMElectricWindingSector,
     SquareWindingSector,
     TriangularZ2WindingSector,
+    WindingTarget,
 )
 from qlinks.encoded import (
     BitmaskAlternatingPlaquetteFlipOperator,
@@ -261,8 +262,8 @@ class SquareQDMModel(QDMBase):
     lx: int = 2
     ly: int = 2
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
-    winding_x: int | None = None
-    winding_y: int | None = None
+    winding_x: WindingTarget | None = None
+    winding_y: WindingTarget | None = None
     winding_convention: Literal["cut_count", "electric"] = "electric"
 
     def _make_lattice(self) -> SquareLattice:
@@ -274,6 +275,34 @@ class SquareQDMModel(QDMBase):
 
     def plaquette_ids(self) -> list[int]:
         return [int(p) for p in self.lattice.plaquette_ids]
+
+    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        if self.winding_convention == "cut_count":
+            winding_cls = SquareWindingSector
+            kwargs = {"flux_normalization": "integer_flux"}
+        elif self.winding_convention == "electric":
+            winding_cls = SquareQDMElectricWindingSector
+            kwargs = {}
+        else:
+            raise ValueError("winding_convention must be 'cut_count' or 'electric'.")
+
+        return {
+            "winding_x": winding_cls.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="x",
+                **kwargs,
+            ),
+            "winding_y": winding_cls.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="y",
+                **kwargs,
+            ),
+        }
 
     def make_sectors(
         self,
@@ -446,6 +475,25 @@ class TriangularQDMModel(QDMBase):
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qdm_plaquette_ids())
 
+    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        return {
+            "winding_a": TriangularZ2WindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="a",
+                value_convention="binary",
+            ),
+            "winding_b": TriangularZ2WindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="b",
+                value_convention="binary",
+            ),
+        }
+
     def make_sectors(
         self,
         layout: VariableLayout | None = None,
@@ -491,8 +539,8 @@ class HoneycombQDMModel(QDMBase):
     lx: int = 2
     ly: int = 2
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
-    winding_x: int | None = None
-    winding_y: int | None = None
+    winding_x: WindingTarget | None = None
+    winding_y: WindingTarget | None = None
 
     def _make_lattice(self) -> HoneycombLattice:
         return HoneycombLattice(
@@ -503,6 +551,25 @@ class HoneycombQDMModel(QDMBase):
 
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qdm_plaquette_ids())
+
+    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        return {
+            "winding_x": HoneycombElectricWindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="x",
+                value_convention="binary",
+            ),
+            "winding_y": HoneycombElectricWindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="y",
+                value_convention="binary",
+            ),
+        }
 
     def make_sectors(self, layout: VariableLayout | None = None):
         if layout is None:

@@ -13,6 +13,7 @@ from qlinks.constraints import (
     HoneycombElectricWindingSector,
     SquareWindingSector,
     TriangularZ2WindingSector,
+    WindingTarget,
 )
 from qlinks.conventions import SublatticeSignConvention, square_qdm_staggered_charges
 from qlinks.encoded import (
@@ -385,8 +386,8 @@ class SquareQLMModel(QLMBase):
     lx: int = 2
     ly: int = 2
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
-    winding_x: int | None = None
-    winding_y: int | None = None
+    winding_x: WindingTarget | None = None
+    winding_y: WindingTarget | None = None
 
     def _make_lattice(self) -> SquareLattice:
         return SquareLattice(
@@ -397,6 +398,25 @@ class SquareQLMModel(QLMBase):
 
     def plaquette_ids(self) -> list[int]:
         return [int(p) for p in self.lattice.plaquette_ids]
+
+    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        return {
+            "winding_x": SquareWindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="x",
+                flux_normalization=self.charge_normalization,
+            ),
+            "winding_y": SquareWindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="y",
+                flux_normalization=self.charge_normalization,
+            ),
+        }
 
     def make_sectors(
         self,
@@ -630,6 +650,25 @@ class TriangularQLMModel(QLMBase):
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qlm_plaquette_ids())
 
+    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        return {
+            "winding_a": TriangularZ2WindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="a",
+                value_convention="flux_pm",
+            ),
+            "winding_b": TriangularZ2WindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="b",
+                value_convention="flux_pm",
+            ),
+        }
+
     def make_sectors(
         self,
         layout: VariableLayout | None = None,
@@ -675,8 +714,8 @@ class HoneycombQLMModel(QLMBase):
     lx: int = 2
     ly: int = 2
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
-    winding_x: int | None = None
-    winding_y: int | None = None
+    winding_x: WindingTarget | None = None
+    winding_y: WindingTarget | None = None
 
     def _make_lattice(self) -> HoneycombLattice:
         return HoneycombLattice(
@@ -687,6 +726,27 @@ class HoneycombQLMModel(QLMBase):
 
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qlm_plaquette_ids())
+
+    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        return {
+            "winding_x": HoneycombElectricWindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="x",
+                value_convention="flux_pm",
+                flux_normalization=self.charge_normalization,
+            ),
+            "winding_y": HoneycombElectricWindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="y",
+                value_convention="flux_pm",
+                flux_normalization=self.charge_normalization,
+            ),
+        }
 
     def make_sectors(self, layout: VariableLayout | None = None):
         if layout is None:

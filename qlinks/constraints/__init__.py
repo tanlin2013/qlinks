@@ -21,6 +21,7 @@ from qlinks.constraints.winding import (
     HoneycombElectricWindingSector,
     SquareQDMElectricWindingSector,
     SquareWindingSector,
+    WindingTarget,
     internal_flux_winding_value,
 )
 from qlinks.constraints.z2_winding import TriangularZ2WindingSector
@@ -48,4 +49,5 @@ __all__ = [
     "internal_flux_winding_value",
     "HoneycombElectricWindingSector",
     "TriangularZ2WindingSector",
+    "WindingTarget",
 ]
