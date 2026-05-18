@@ -717,6 +717,105 @@ class HoneycombQLMModel(QLMBase):
     winding_x: WindingTarget | None = None
     winding_y: WindingTarget | None = None
 
+    @classmethod
+    def staggered_background_charges(
+        cls,
+        lx: int,
+        ly: int,
+        *,
+        boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
+        charge_magnitude: int = 1,
+        charge_convention: SublatticeSignConvention = "even_positive",
+    ) -> npt.NDArray[np.int64]:
+        """Return staggered honeycomb background charges.
+
+        For the honeycomb spin-1/2 QLM with integer-flux variables E_l = ±1,
+        each bulk site has degree 3, so allowed local charges are odd:
+        ±1 or ±3.
+
+        Sublattice convention:
+            sublattice 0 = A
+            sublattice 1 = B
+
+        charge_convention:
+            "even_positive":
+                A sites carry +charge_magnitude,
+                B sites carry -charge_magnitude.
+
+            "even_negative":
+                A sites carry -charge_magnitude,
+                B sites carry +charge_magnitude.
+        """
+        if charge_magnitude not in (1, 3):
+            raise ValueError(
+                "Honeycomb spin-1/2 QLM staggered charges should have "
+                "charge_magnitude=1 or charge_magnitude=3 in integer_flux "
+                "normalization."
+            )
+
+        lattice = HoneycombLattice(
+            lx,
+            ly,
+            boundary_condition=boundary_condition,
+        )
+
+        if charge_convention == "even_positive":
+            even_sign = +1
+        elif charge_convention == "even_negative":
+            even_sign = -1
+        else:
+            raise ValueError(
+                "charge_convention must be 'even_positive' or 'even_negative'."
+            )
+
+        charges = np.empty(lattice.num_sites, dtype=np.int64)
+
+        for site in lattice.sites:
+            # HoneycombLattice uses sublattice 0 = A, sublattice 1 = B.
+            sublattice_sign = even_sign if site.sublattice == 0 else -even_sign
+            charges[int(site.id)] = sublattice_sign * charge_magnitude
+
+        return charges
+
+    @classmethod
+    def from_staggered_background(
+        cls,
+        lx: int,
+        ly: int,
+        *,
+        boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
+        kinetic: complex = -1.0,
+        potential: complex = 0.0,
+        charge_magnitude: int = 1,
+        charge_convention: SublatticeSignConvention = "even_positive",
+        winding_x: int | None = None,
+        winding_y: int | None = None,
+    ) -> HoneycombQLMModel:
+        """Construct a honeycomb QLM with staggered ±1 or ±3 charges.
+
+        Uses charge_normalization='integer_flux' because honeycomb spin-1/2
+        Gauss law needs odd internal charge targets.
+        """
+        charges = cls.staggered_background_charges(
+            lx,
+            ly,
+            boundary_condition=boundary_condition,
+            charge_magnitude=charge_magnitude,
+            charge_convention=charge_convention,
+        )
+
+        return cls(
+            lx=lx,
+            ly=ly,
+            boundary_condition=boundary_condition,
+            kinetic=kinetic,
+            potential=potential,
+            charges=charges,
+            charge_normalization="integer_flux",
+            winding_x=winding_x,
+            winding_y=winding_y,
+        )
+
     def _make_lattice(self) -> HoneycombLattice:
         return HoneycombLattice(
             self.lx,
