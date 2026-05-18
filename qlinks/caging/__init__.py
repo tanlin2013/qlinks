@@ -42,7 +42,6 @@ from qlinks.caging.search import (
     CageSearchConfig,
     CageSearcher,
     CageSearchResult,
-    diagonal_values,
     embed_cage_state,
     signature_from_energy_and_self_loop,
 )
@@ -91,7 +90,6 @@ __all__ = [
     "CageSearchConfig",
     "CageSearcher",
     "CageSearchResult",
-    "diagonal_values",
     "embed_cage_state",
     "signature_from_energy_and_self_loop",
 ]
