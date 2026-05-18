@@ -208,56 +208,7 @@ def test_show_square_basis_grid_positive_patch() -> None:
     )
 
 
-def _force_drawn_plaquettes_to_circulate(
-    *,
-    visualizer: BasisConfigurationVisualizer,
-    layout: VariableLayout,
-    config: np.ndarray,
-    n_plaquettes: int,
-    sign: int = 1,
-) -> list[int]:
-    """Force several actually-drawn plaquettes to have circulation symbols."""
-    draw_plaquettes = visualizer._draw_plaquette_primitives()
-
-    forced_ids: list[int] = []
-
-    for draw_plaquette in draw_plaquettes[:n_plaquettes]:
-        plaquette_id = int(draw_plaquette.plaquette_id)
-        plaquette = visualizer.lattice.plaquettes[plaquette_id]
-
-        for link_id, orientation in zip(
-            plaquette.links,
-            plaquette.orientations,
-            strict=True,
-        ):
-            variable_index = layout.link_variable_index(int(link_id))
-            config[variable_index] = sign * int(orientation)
-
-        forced_ids.append(plaquette_id)
-
-    return forced_ids
-
-
-def _debug_drawn_plaquette_centers(
-    visualizer: BasisConfigurationVisualizer,
-) -> None:
-    print()
-    print("drawn plaquette centers:")
-
-    for draw_plaquette in visualizer._draw_plaquette_primitives():
-        print(
-            "plaquette_id =",
-            int(draw_plaquette.plaquette_id),
-            "image_shift =",
-            draw_plaquette.image_shift,
-            "visual_cell =",
-            draw_plaquette.visual_cell,
-            "center =",
-            np.asarray(draw_plaquette.center, dtype=float),
-        )
-
-
-def test_show_honeycomb_grid_multiple_circulation_symbols() -> None:
+def test_show_honeycomb_single_and_grid_circulation_symbols_match() -> None:
     lattice = HoneycombLattice(4, 4, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
         lattice,
@@ -290,17 +241,6 @@ def test_show_honeycomb_grid_multiple_circulation_symbols() -> None:
     )
 
     config = -np.ones(layout.n_variables, dtype=np.int64)
-
-    forced_ids = _force_drawn_plaquettes_to_circulate(
-        visualizer=single_visualizer,
-        layout=layout,
-        config=config,
-        n_plaquettes=4,
-        sign=1,
-    )
-
-    print("forced plaquette ids =", forced_ids)
-    _debug_drawn_plaquette_centers(single_visualizer)
 
     # Single plot: this should be correct first.
     single_visualizer.plot(
