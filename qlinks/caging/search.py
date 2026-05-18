@@ -102,11 +102,7 @@ class CageSearchResult:
         self,
         signature: tuple[int, int],
     ) -> list[CageRecord]:
-        return [
-            record
-            for record in self.records
-            if record.signature == signature
-        ]
+        return [record for record in self.records if record.signature == signature]
 
     def first(
         self,
@@ -129,11 +125,7 @@ class CageSearchResult:
         self,
         signature: tuple[int, int] | None = None,
     ) -> npt.NDArray[np.complex128]:
-        records = (
-            self.records
-            if signature is None
-            else self.records_by_signature(signature)
-        )
+        records = self.records if signature is None else self.records_by_signature(signature)
 
         full_matrix = np.zeros(
             (len(records), self.hilbert_size),
@@ -192,18 +184,10 @@ class CageSearcher:
         type1_enabled, type2_enabled = self._enabled_candidate_types()
 
         if type1_candidates is None:
-            type1_candidates = (
-                self._build_type1_candidates()
-                if type1_enabled
-                else []
-            )
+            type1_candidates = self._build_type1_candidates() if type1_enabled else []
 
         if type2_candidates is None:
-            type2_candidates = (
-                self._build_type2_candidates()
-                if type2_enabled
-                else []
-            )
+            type2_candidates = self._build_type2_candidates() if type2_enabled else []
 
         records: list[CageRecord] = []
 
@@ -290,10 +274,7 @@ class CageSearcher:
 
         candidate_filters = [
             CombinedBoundaryKineticTargetNullityFilter(
-                target_kappas=tuple(
-                    float(kappa_value)
-                    for kappa_value in allowed_kappas
-                ),
+                target_kappas=tuple(float(kappa_value) for kappa_value in allowed_kappas),
                 tolerance=self.config.tolerance,
                 require_nonzero_kappa=False,
             ),
@@ -322,10 +303,7 @@ class CageSearcher:
                 signature = signature_from_energy_and_self_loop(
                     cage_state.energy,
                     self_loop_value,
-                    tolerance=(
-                        self.config.signature_tolerance_factor
-                        * self.config.tolerance
-                    ),
+                    tolerance=(self.config.signature_tolerance_factor * self.config.tolerance),
                 )
 
                 if signature is None:
@@ -362,10 +340,7 @@ class CageSearcher:
         grouped_records: dict[tuple[int, int], list[CageRecord]] = defaultdict(list)
         grouped_states: dict[tuple[int, int], list[np.ndarray]] = defaultdict(list)
 
-        rank_tolerance = (
-            self.config.rank_tolerance_factor
-            * self.config.tolerance
-        )
+        rank_tolerance = self.config.rank_tolerance_factor * self.config.tolerance
 
         for record in records:
             states = grouped_states[record.signature]

@@ -1392,10 +1392,7 @@ class BasisConfigurationVisualizer:
             )
         }
 
-        return tuple(
-            int(orientation_by_link_id[int(link_id)])
-            for link_id in canonical_link_ids
-        )
+        return tuple(int(orientation_by_link_id[int(link_id)]) for link_id in canonical_link_ids)
 
     def _draw_plaquette_primitives(self) -> list[_DrawPlaquette]:
         """Build visual plaquette centers from actually drawn closed cycles.
@@ -1886,10 +1883,7 @@ class BasisConfigurationVisualizer:
                 plaquette = self.lattice.plaquettes[draw_plaquette.plaquette_id]
                 link_ids = tuple(int(link_id) for link_id in plaquette.links)
 
-            values = [
-                self.link_value(config, int(link_id))
-                for link_id in link_ids
-            ]
+            values = [self.link_value(config, int(link_id)) for link_id in link_ids]
 
             symbol_info = self._qdm_resonance_symbol(values)
             if symbol_info is None:
@@ -1930,10 +1924,7 @@ class BasisConfigurationVisualizer:
                     int(orientation) for orientation in plaquette.orientations
                 )
 
-            values = [
-                self.link_value(config, int(link_id))
-                for link_id in link_ids
-            ]
+            values = [self.link_value(config, int(link_id)) for link_id in link_ids]
 
             symbol_info = None
 

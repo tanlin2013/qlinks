@@ -286,9 +286,7 @@ def test_triangular_qdm_canonical_visual_order_is_stable_for_horizontal_dimers()
         # Canonical visual order should always contain the same physical links
         # as the abstract plaquette, only reordered.
         plaquette = lattice.plaquettes[draw_plaquette.plaquette_id]
-        assert set(draw_plaquette.link_ids) == {
-            int(link_id) for link_id in plaquette.links
-        }
+        assert set(draw_plaquette.link_ids) == {int(link_id) for link_id in plaquette.links}
 
 
 def test_qdm_circulation_style_draws_diamond_symbol_on_honeycomb() -> None:

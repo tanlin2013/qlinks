@@ -1,7 +1,7 @@
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 
 from qlinks.lattice import (
@@ -13,15 +13,14 @@ from qlinks.lattice import (
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
-    BasisGridVisualizer,
     LinkVisualStyle,
     plot_basis_grid,
 )
 
-# pytestmark = pytest.mark.skipif(
-#     os.environ.get("QLINKS_SHOW_PLOTS") != "1",
-#     reason="Manual visual tests. Run with QLINKS_SHOW_PLOTS=1.",
-# )
+pytestmark = pytest.mark.skipif(
+    os.environ.get("QLINKS_SHOW_PLOTS") != "1",
+    reason="Manual visual tests. Run with QLINKS_SHOW_PLOTS=1.",
+)
 
 
 def _force_circulating_plaquette(
@@ -48,17 +47,7 @@ def _force_circulating_plaquette(
 
 def _plaquette_ids_with_n_links(lattice, n_links: int) -> list[int]:
     return [
-        int(plaquette.id)
-        for plaquette in lattice.plaquettes
-        if len(plaquette.links) == n_links
-    ]
-
-
-def _plaquette_ids_with_n_links(lattice, n_links: int) -> list[int]:
-    return [
-        int(plaquette.id)
-        for plaquette in lattice.plaquettes
-        if len(plaquette.links) == n_links
+        int(plaquette.id) for plaquette in lattice.plaquettes if len(plaquette.links) == n_links
     ]
 
 
