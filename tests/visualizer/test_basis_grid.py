@@ -1,31 +1,21 @@
-from pathlib import Path
-
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from matplotlib.collections import LineCollection
 
 from qlinks.lattice import (
     ChainLattice,
-    HoneycombLattice,
     SquareLattice,
-    TriangularLattice,
 )
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
     BasisGridVisualizer,
-    LinkVisualStyle,
     automatic_grid_shape,
-    format_basis_config,
-    plot_basis_config,
     plot_basis_grid,
 )
-from qlinks.visualizer.basis import _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 matplotlib.use("Agg")
-
 
 
 def test_automatic_grid_shape_near_square() -> None:
@@ -35,21 +25,17 @@ def test_automatic_grid_shape_near_square() -> None:
     assert automatic_grid_shape(10) == (3, 4)
 
 
-
 def test_automatic_grid_shape_with_ncols() -> None:
     assert automatic_grid_shape(10, ncols=3) == (4, 3)
-
 
 
 def test_automatic_grid_shape_with_nrows() -> None:
     assert automatic_grid_shape(10, nrows=2) == (2, 5)
 
 
-
 def test_automatic_grid_shape_rejects_too_small_grid() -> None:
     with pytest.raises(ValueError, match="smaller"):
         automatic_grid_shape(10, nrows=2, ncols=4)
-
 
 
 def test_basis_grid_visualizer_chain_site_values() -> None:
@@ -93,7 +79,6 @@ def test_basis_grid_visualizer_chain_site_values() -> None:
     plt.close(fig)
 
 
-
 def test_plot_basis_grid_functional_wrapper() -> None:
     lattice = ChainLattice(4, boundary_condition="open")
     layout = VariableLayout.from_lattice_sites(lattice, LocalSpace.binary())
@@ -125,7 +110,6 @@ def test_plot_basis_grid_functional_wrapper() -> None:
     plt.close(fig)
 
 
-
 def test_basis_grid_accepts_single_config() -> None:
     lattice = ChainLattice(4, boundary_condition="open")
     layout = VariableLayout.from_lattice_sites(lattice, LocalSpace.binary())
@@ -154,7 +138,6 @@ def test_basis_grid_accepts_single_config() -> None:
     plt.close(fig)
 
 
-
 def test_basis_grid_networkx_backend_runs() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(
@@ -178,7 +161,6 @@ def test_basis_grid_networkx_backend_runs() -> None:
     assert axes.shape == (1, 2)
 
     plt.close(fig)
-
 
 
 def test_basis_grid_reuses_draw_primitives(monkeypatch) -> None:
@@ -222,7 +204,6 @@ def test_basis_grid_reuses_draw_primitives(monkeypatch) -> None:
     assert call_count == 1
 
     plt.close(fig)
-
 
 
 def test_basis_grid_reuses_plaquette_primitives(monkeypatch) -> None:

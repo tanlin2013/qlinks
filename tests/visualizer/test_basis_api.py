@@ -15,17 +15,11 @@ from qlinks.lattice import (
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
-    BasisGridVisualizer,
-    LinkVisualStyle,
-    automatic_grid_shape,
     format_basis_config,
     plot_basis_config,
-    plot_basis_grid,
 )
-from qlinks.visualizer.basis import _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 matplotlib.use("Agg")
-
 
 
 def line_collection_segment_count(ax) -> int:
@@ -34,7 +28,6 @@ def line_collection_segment_count(ax) -> int:
         for collection in ax.collections
         if isinstance(collection, LineCollection)
     )
-
 
 
 def test_square_qdm_dimer_plot_runs() -> None:
@@ -68,7 +61,6 @@ def test_square_qdm_dimer_plot_runs() -> None:
     plt.close(fig)
 
 
-
 def test_link_value_plot_draws_batched_backbone() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
@@ -90,7 +82,6 @@ def test_link_value_plot_draws_batched_backbone() -> None:
     assert len(ax.texts) >= lattice.num_links
 
     plt.close(fig)
-
 
 
 def test_square_qlm_arrow_plot_runs() -> None:
@@ -122,7 +113,6 @@ def test_square_qlm_arrow_plot_runs() -> None:
     plt.close(fig)
 
 
-
 def test_functional_plot_wrapper_runs() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
@@ -143,7 +133,6 @@ def test_functional_plot_wrapper_runs() -> None:
     assert returned_ax is ax
 
     plt.close(fig)
-
 
 
 def test_chain_site_values_plot_runs() -> None:
@@ -170,7 +159,6 @@ def test_chain_site_values_plot_runs() -> None:
     plt.close(fig)
 
 
-
 def test_save_plot(tmp_path: Path) -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
@@ -191,7 +179,6 @@ def test_save_plot(tmp_path: Path) -> None:
     assert out.stat().st_size > 0
 
 
-
 def test_link_value_without_layout_assumes_link_index_order() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
 
@@ -203,11 +190,9 @@ def test_link_value_without_layout_assumes_link_index_order() -> None:
     assert visualizer.link_value(config, 1) == 0
 
 
-
 def test_format_basis_config_binary_compact() -> None:
     config = np.array([0, 1, 0, 1], dtype=np.int64)
     assert format_basis_config(config, style="compact") == "0101"
-
 
 
 def test_format_basis_config_flux_compact() -> None:

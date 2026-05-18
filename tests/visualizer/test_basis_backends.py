@@ -1,13 +1,8 @@
-from pathlib import Path
-
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import pytest
-from matplotlib.collections import LineCollection
 
 from qlinks.lattice import (
-    ChainLattice,
     HoneycombLattice,
     SquareLattice,
     TriangularLattice,
@@ -15,17 +10,9 @@ from qlinks.lattice import (
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
-    BasisGridVisualizer,
-    LinkVisualStyle,
-    automatic_grid_shape,
-    format_basis_config,
-    plot_basis_config,
-    plot_basis_grid,
 )
-from qlinks.visualizer.basis import _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 matplotlib.use("Agg")
-
 
 
 def test_networkx_backend_runs_for_square_arrows() -> None:
@@ -60,7 +47,6 @@ def test_networkx_backend_runs_for_square_arrows() -> None:
     plt.close(fig)
 
 
-
 def test_networkx_backend_runs_for_dimers() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(
@@ -89,7 +75,6 @@ def test_networkx_backend_runs_for_dimers() -> None:
     assert len(ax.collections) > 0
 
     plt.close(fig)
-
 
 
 def test_networkx_backend_runs_for_triangular_positive_patch() -> None:
@@ -127,7 +112,6 @@ def test_networkx_backend_runs_for_triangular_positive_patch() -> None:
     assert len(ax.collections) > 0
 
     plt.close(fig)
-
 
 
 def test_networkx_backend_runs_for_honeycomb_positive_patch() -> None:

@@ -1,10 +1,5 @@
-from pathlib import Path
-
 import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
-import pytest
-from matplotlib.collections import LineCollection
 
 from qlinks.lattice import (
     ChainLattice,
@@ -15,17 +10,9 @@ from qlinks.lattice import (
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
-    BasisGridVisualizer,
-    LinkVisualStyle,
-    automatic_grid_shape,
-    format_basis_config,
-    plot_basis_config,
-    plot_basis_grid,
 )
-from qlinks.visualizer.basis import _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 matplotlib.use("Agg")
-
 
 
 def visual_cell_of_node(visualizer, node):
@@ -33,7 +20,6 @@ def visual_cell_of_node(visualizer, node):
         site_id=node.site_id,
         image_shift=node.image_shift,
     )
-
 
 
 def link_visual_cells(visualizer, nodes, link):
@@ -47,15 +33,12 @@ def link_visual_cells(visualizer, nodes, link):
     )
 
 
-
 def visual_edges(visualizer, nodes, links):
     return {link_visual_cells(visualizer, nodes, link) for link in links}
 
 
-
 def undirected_visual_edges(visualizer, nodes, links):
     return {frozenset(link_visual_cells(visualizer, nodes, link)) for link in links}
-
 
 
 def test_periodic_square_positive_patch_draws_boundary_images() -> None:
@@ -76,7 +59,6 @@ def test_periodic_square_positive_patch_draws_boundary_images() -> None:
     assert any(any(link.source_key[1]) or any(link.target_key[1]) for link in links)
 
 
-
 def test_square_pbc_without_images_draws_each_link_once() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
@@ -93,7 +75,6 @@ def test_square_pbc_without_images_draws_each_link_once() -> None:
     _, draw_links = visualizer._draw_primitives()
 
     assert len(draw_links) == lattice.num_links
-
 
 
 def test_square_2_by_2_positive_patch_connects_boundary_images() -> None:
@@ -138,7 +119,6 @@ def test_square_2_by_2_positive_patch_connects_boundary_images() -> None:
     )
 
 
-
 def test_square_2_by_2_positive_patch_places_wrapping_links_on_right_and_top() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
@@ -161,7 +141,6 @@ def test_square_2_by_2_positive_patch_places_wrapping_links_on_right_and_top() -
     assert ((0, 1), (0, 2)) in visual_edges or ((0, 2), (0, 1)) in visual_edges
 
 
-
 def test_chain_pbc_positive_patch_places_wrapping_link_on_right() -> None:
     lattice = ChainLattice(4, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
@@ -181,7 +160,6 @@ def test_chain_pbc_positive_patch_places_wrapping_link_on_right() -> None:
 
     assert any(any(node.image_shift) for node in nodes)
     assert frozenset({(3,), (4,)}) in edges
-
 
 
 def test_triangular_pbc_positive_patch_has_positive_images() -> None:
@@ -214,7 +192,6 @@ def test_triangular_pbc_positive_patch_has_positive_images() -> None:
     assert any(any(link.source_key[1]) or any(link.target_key[1]) for link in links)
 
 
-
 def test_honeycomb_pbc_positive_patch_has_positive_images() -> None:
     lattice = HoneycombLattice(3, 3, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
@@ -237,7 +214,6 @@ def test_honeycomb_pbc_positive_patch_has_positive_images() -> None:
         assert all(shift >= 0 for shift in node.image_shift)
 
     assert any(any(link.source_key[1]) or any(link.target_key[1]) for link in links)
-
 
 
 def test_honeycomb_pbc_positive_patch_has_boundary_visual_cells() -> None:
@@ -269,7 +245,6 @@ def test_honeycomb_pbc_positive_patch_has_boundary_visual_cells() -> None:
     assert any(cell[1] == spans[1] for cell in visual_cells)
 
 
-
 def test_visualizer_period_vectors_use_lattice_primitives() -> None:
     lattice = HoneycombLattice(4, 4, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
@@ -292,7 +267,6 @@ def test_visualizer_period_vectors_use_lattice_primitives() -> None:
     )
 
     np.testing.assert_allclose(periods, expected)
-
 
 
 def test_triangular_pbc_positive_patch_places_a_and_b_boundary_links() -> None:
@@ -320,7 +294,6 @@ def test_triangular_pbc_positive_patch_places_a_and_b_boundary_links() -> None:
 
     assert frozenset({(3, 0), (4, 0)}) in edges
     assert frozenset({(0, 3), (0, 4)}) in edges
-
 
 
 def test_honeycomb_positive_patch_upper_apex_has_two_links_not_three() -> None:

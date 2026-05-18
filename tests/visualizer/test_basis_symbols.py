@@ -1,31 +1,19 @@
-from pathlib import Path
-
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import pytest
-from matplotlib.collections import LineCollection
 
 from qlinks.lattice import (
-    ChainLattice,
     HoneycombLattice,
     SquareLattice,
-    TriangularLattice,
 )
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
-    BasisGridVisualizer,
-    LinkVisualStyle,
-    automatic_grid_shape,
-    format_basis_config,
-    plot_basis_config,
     plot_basis_grid,
 )
 from qlinks.visualizer.basis import _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 matplotlib.use("Agg")
-
 
 
 def test_square_qlm_symbols_draw_one_symbol_per_open_square_plaquette() -> None:
@@ -49,7 +37,6 @@ def test_square_qlm_symbols_draw_one_symbol_per_open_square_plaquette() -> None:
     assert len(ax.texts) == lattice.num_plaquettes
 
     plt.close(fig)
-
 
 
 def test_circulation_symbols_run_on_square() -> None:
@@ -77,7 +64,6 @@ def test_circulation_symbols_run_on_square() -> None:
     plt.close(fig)
 
 
-
 def test_square_2_by_2_positive_patch_draws_four_plaquette_visual_cells() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
@@ -96,7 +82,6 @@ def test_square_2_by_2_positive_patch_draws_four_plaquette_visual_cells() -> Non
     visual_cells = {p.visual_cell for p in draw_plaquettes}
 
     assert {(0, 0), (1, 0), (0, 1), (1, 1)} <= visual_cells
-
 
 
 def test_square_qlm_visual_symbol_key_accepts_circulating_open_plaquette() -> None:
@@ -121,7 +106,6 @@ def test_square_qlm_visual_symbol_key_accepts_circulating_open_plaquette() -> No
     assert visualizer._plaquette_key(values) in _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 
-
 def test_square_qlm_visual_symbol_key_accepts_anticirculating_open_plaquette() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=None)
@@ -144,7 +128,6 @@ def test_square_qlm_visual_symbol_key_accepts_anticirculating_open_plaquette() -
     assert visualizer._plaquette_key(values) in _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 
-
 def test_square_qlm_visual_symbol_values_2x2_pbc_use_visual_cell() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
     visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=None)
@@ -157,7 +140,6 @@ def test_square_qlm_visual_symbol_values_2x2_pbc_use_visual_cell() -> None:
     )
 
     assert visualizer._plaquette_key(values) in _SQUARE_QLM_PLAQUETTE_SYMBOLS
-
 
 
 def test_square_qlm_visual_symbol_key_order_bottom_left_right_top() -> None:
@@ -173,7 +155,6 @@ def test_square_qlm_visual_symbol_key_order_bottom_left_right_top() -> None:
 
     # bottom, left, right, top for visual cell (0, 0)
     assert values == [1, -1, 1, -1]
-
 
 
 def test_honeycomb_drawn_plaquettes_carry_link_metadata() -> None:

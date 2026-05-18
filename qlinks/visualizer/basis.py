@@ -1030,8 +1030,7 @@ class BasisConfigurationVisualizer:
         draw_links: list[_DrawLink],
     ) -> None:
         segments = [
-            [self._xy(link.source_position), self._xy(link.target_position)]
-            for link in draw_links
+            [self._xy(link.source_position), self._xy(link.target_position)] for link in draw_links
         ]
 
         if segments:
