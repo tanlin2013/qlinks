@@ -37,6 +37,15 @@ from qlinks.caging.results import (
     cage_state_to_full_vector,
     cage_states_to_full_matrix,
 )
+from qlinks.caging.search import (
+    CageRecord,
+    CageSearchConfig,
+    CageSearcher,
+    CageSearchResult,
+    diagonal_values,
+    embed_cage_state,
+    signature_from_energy_and_self_loop,
+)
 from qlinks.caging.solver import (
     solve_candidate,
     solve_candidates,
@@ -78,4 +87,11 @@ __all__ = [
     "group_vertices_by_signature",
     "type1_candidates_from_bipartite_self_loops",
     "type2_candidates_from_self_loops",
+    "CageRecord",
+    "CageSearchConfig",
+    "CageSearcher",
+    "CageSearchResult",
+    "diagonal_values",
+    "embed_cage_state",
+    "signature_from_energy_and_self_loop",
 ]
