@@ -206,6 +206,7 @@ class HamiltonianGraphVisualizer:
         ax=None,
         show: bool = True,
         save_path: str | Path | None = None,
+        **layout_kwargs,
     ):
         """Draw the graph."""
         if backend == "igraph":
@@ -217,6 +218,7 @@ class HamiltonianGraphVisualizer:
                 title=title,
                 show=show,
                 save_path=save_path,
+                **layout_kwargs,
             )
 
         if backend == "networkx":
@@ -229,6 +231,7 @@ class HamiltonianGraphVisualizer:
                 ax=ax,
                 show=show,
                 save_path=save_path,
+                **layout_kwargs,
             )
 
         raise ValueError("backend must be 'igraph' or 'networkx'.")
@@ -243,6 +246,7 @@ class HamiltonianGraphVisualizer:
         title: str | None,
         show: bool,
         save_path: str | Path | None,
+        **layout_kwargs,
     ):
         """Draw with python-igraph."""
         try:
@@ -264,7 +268,7 @@ class HamiltonianGraphVisualizer:
             cmap=self.style.cmap,
         )
 
-        layout_object = _igraph_layout(graph, layout)
+        layout_object = _igraph_layout(graph, layout, **layout_kwargs)
 
         fig, ax = plt.subplots(figsize=self.style.figure_size)
         ig.plot(
@@ -313,6 +317,7 @@ class HamiltonianGraphVisualizer:
         ax,
         show: bool,
         save_path: str | Path | None,
+        **layout_kwargs,
     ):
         """Draw with networkx."""
         try:
@@ -560,21 +565,26 @@ def _add_colorbar(
     )
 
 
-def _igraph_layout(graph, layout: LayoutName):
+def _igraph_layout(graph, layout: LayoutName, **kwargs):
     """Return an igraph layout."""
-    if layout in ("auto", "fr"):
-        return graph.layout_fruchterman_reingold()
+    if layout == "auto":
+        return graph.layout_auto(**kwargs)
 
-    if layout in ("kk", "kamada_kawai"):
-        return graph.layout_kamada_kawai()
+    aliases = {
+        "fr": "fruchterman_reingold",
+        "kk": "kamada_kawai",
+        "grid_fr": "grid_fruchterman_reingold",
+    }
 
-    if layout == "circle":
-        return graph.layout_circle()
+    layout_name = aliases.get(layout, layout)
 
-    if layout == "grid_fr":
-        return graph.layout_grid_fruchterman_reingold()
-
-    raise ValueError(f"Unsupported igraph layout: {layout!r}")
+    try:
+        return graph.layout(layout_name, **kwargs)
+    except Exception as exc:
+        raise ValueError(
+            f"Unsupported igraph layout: {layout!r}. "
+            "Pass any layout accepted by igraph.Graph.layout(...)."
+        ) from exc
 
 
 def _networkx_layout(graph, layout: LayoutName):
