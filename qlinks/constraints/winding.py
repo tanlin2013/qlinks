@@ -37,9 +37,7 @@ def normalize_winding_target(target: WindingTarget) -> Fraction:
     if isinstance(target, str):
         return Fraction(target)
 
-    raise TypeError(
-        "winding target must be an int, Fraction, or fraction string such as '3/2'."
-    )
+    raise TypeError("winding target must be an int, Fraction, or fraction string such as '3/2'.")
 
 
 def internal_flux_winding_value(
@@ -407,8 +405,7 @@ class SquareWindingSector(BaseSectorCondition):
 
         for variable_index in self._variable_indices:
             values_seen.update(
-                int(v)
-                for v in self.layout.local_space(int(variable_index)).values.tolist()
+                int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
             )
 
         if values_seen <= {-1, 1}:
@@ -525,8 +522,7 @@ class SquareWindingSector(BaseSectorCondition):
         values_seen: set[int] = set()
         for variable_index in cut.variable_indices:
             values_seen.update(
-                int(v)
-                for v in layout.local_space(int(variable_index)).values.tolist()
+                int(v) for v in layout.local_space(int(variable_index)).values.tolist()
             )
 
         # QLM flux sector: stored values {-1,+1}.
@@ -628,9 +624,7 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         direction: Direction,
     ) -> WindingCutData:
         if lattice.boundary_condition != BoundaryCondition.PERIODIC:
-            raise ValueError(
-                "SquareQDMElectricWindingSector requires a periodic SquareLattice."
-            )
+            raise ValueError("SquareQDMElectricWindingSector requires a periodic SquareLattice.")
 
         if direction not in ("x", "y"):
             raise ValueError("direction must be 'x' or 'y'.")
@@ -877,11 +871,7 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
                 "unit-cell directions, not Cartesian plotting axes."
             )
 
-        link_ids = [
-            int(link.id)
-            for link in lattice.links
-            if link.wrap and link.kind == direction
-        ]
+        link_ids = [int(link.id) for link in lattice.links if link.wrap and link.kind == direction]
 
         if len(link_ids) == 0:
             raise ValueError(f"No wrapping {direction}-links found.")
