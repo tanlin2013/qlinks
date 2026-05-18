@@ -99,7 +99,9 @@ class _DrawPlaquette:
     plaquette_id: int
     image_shift: tuple[int, ...]
     visual_cell: tuple[int, ...]
-    center: tuple[float, float]
+    center: npt.NDArray[np.float64]
+    link_ids: tuple[int, ...] = ()
+    link_orientations: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1144,12 +1146,36 @@ class BasisConfigurationVisualizer:
 
                 center_arr = lower_left_position + 0.5 * unit_vectors[0] + 0.5 * unit_vectors[1]
 
+                bottom_link = self._square_visual_link_id(
+                    cell=visual_cell,
+                    kind="x",
+                )
+                right_link = self._square_visual_link_id(
+                    cell=(visual_cell[0] + 1, visual_cell[1]),
+                    kind="y",
+                )
+                top_link = self._square_visual_link_id(
+                    cell=(visual_cell[0], visual_cell[1] + 1),
+                    kind="x",
+                )
+                left_link = self._square_visual_link_id(
+                    cell=visual_cell,
+                    kind="y",
+                )
+
                 draw_plaquettes.append(
                     _DrawPlaquette(
                         plaquette_id=int(plaquette_id),
                         image_shift=image_shift,
                         visual_cell=visual_cell,
                         center=(float(center_arr[0]), float(center_arr[1])),
+                        link_ids=(
+                            int(bottom_link),
+                            int(right_link),
+                            int(top_link),
+                            int(left_link),
+                        ),
+                        link_orientations=(1, 1, -1, -1),
                     )
                 )
 
@@ -1260,55 +1286,138 @@ class BasisConfigurationVisualizer:
         return out
 
     def _draw_plaquette_primitives(self) -> list[_DrawPlaquette]:
+        """Build visual plaquette centers from the actually drawn links.
+
+        For generic lattices, especially honeycomb/triangular/kagome with PBC,
+        the visual plaquette representative must be inferred from drawn link
+        primitives rather than from abstract plaquette site positions.
+        """
         if self.lattice.num_plaquettes == 0:
             return []
 
-        if (
-            self.lattice.boundary_condition != BoundaryCondition.PERIODIC
-            or self.periodic_image_mode == "none"
-        ):
-            image_shifts = (tuple(0 for _ in range(self.lattice.ndim)),)
-        elif self.periodic_image_mode == "positive_patch":
-            image_shifts = self._positive_patch_image_shifts()
-        else:
-            image_shifts = (tuple(0 for _ in range(self.lattice.ndim)),)
+        # The square_qlm path has its own visual-cell logic.
+        # For circulation on SquareLattice, using this generic path is also okay,
+        # but keeping square separate avoids changing the already-fixed behavior.
+        _draw_nodes, draw_links = self._draw_primitives()
+
+        draw_links_by_link_id: dict[int, list[_DrawLink]] = {}
+
+        for draw_link in draw_links:
+            draw_links_by_link_id.setdefault(int(draw_link.link_id), []).append(draw_link)
 
         draw_plaquettes: list[_DrawPlaquette] = []
 
-        for image_shift in image_shifts:
-            for plaquette in self.lattice.plaquettes:
-                raw_site_positions = self._plaquette_site_positions(plaquette)
+        for plaquette in self.lattice.plaquettes:
+            plaquette_link_ids = [int(link_id) for link_id in plaquette.links]
 
-                raw_center = np.mean(raw_site_positions, axis=0)
+            if len(plaquette_link_ids) == 0:
+                continue
 
-                site_positions = self._unwrapped_plaquette_site_positions(plaquette)
-                center = np.mean(site_positions, axis=0)
+            # Start with all drawn images of the first plaquette link.
+            first_link_id = plaquette_link_ids[0]
+            candidate_draw_links = draw_links_by_link_id.get(first_link_id, [])
 
-                if self.periodic_image_mode == "positive_patch":
-                    center = self._nearest_periodic_image_to_anchor(
-                        center,
-                        raw_center,
+            for first_draw_link in candidate_draw_links:
+                selected_draw_links = [first_draw_link]
+                selected_positions = [
+                    np.asarray(first_draw_link.source_position, dtype=float),
+                    np.asarray(first_draw_link.target_position, dtype=float),
+                ]
+
+                for link_id in plaquette_link_ids[1:]:
+                    candidates = draw_links_by_link_id.get(link_id, [])
+
+                    if not candidates:
+                        selected_draw_links = []
+                        break
+
+                    # Choose the drawn image of this link closest to the current
+                    # partial plaquette center.
+                    current_center = np.mean(
+                        np.asarray(selected_positions, dtype=float),
+                        axis=0,
                     )
 
-                draw_center = self._apply_visual_transform(center)
+                    best_candidate = min(
+                        candidates,
+                        key=lambda draw_link: self._draw_link_distance_to_point(
+                            draw_link,
+                            current_center,
+                        ),
+                    )
 
-                if (
-                    self.lattice.boundary_condition == BoundaryCondition.PERIODIC
-                    and self.periodic_image_mode == "positive_patch"
-                    and not self._is_plaquette_center_in_positive_patch(draw_center)
-                ):
+                    selected_draw_links.append(best_candidate)
+                    selected_positions.append(
+                        np.asarray(best_candidate.source_position, dtype=float)
+                    )
+                    selected_positions.append(
+                        np.asarray(best_candidate.target_position, dtype=float)
+                    )
+
+                if len(selected_draw_links) != len(plaquette_link_ids):
                     continue
+
+                unique_positions = self._unique_positions(selected_positions)
+
+                if len(unique_positions) < 3:
+                    continue
+
+                center = np.mean(
+                    np.asarray(unique_positions, dtype=float),
+                    axis=0,
+                )
 
                 draw_plaquettes.append(
                     _DrawPlaquette(
                         plaquette_id=int(plaquette.id),
-                        image_shift=image_shift,
+                        image_shift=first_draw_link.image_shift
+                        if hasattr(first_draw_link, "image_shift")
+                        else tuple(0 for _ in range(self.lattice.ndim)),
                         visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
-                        center=draw_center,
+                        center=(float(center[0]), float(center[1])),
+                        link_ids=tuple(int(link_id) for link_id in plaquette.links),
+                        link_orientations=tuple(
+                            int(orientation)
+                            for orientation in plaquette.orientations
+                        ),
                     )
                 )
 
         return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
+
+    @staticmethod
+    def _draw_link_distance_to_point(
+        draw_link: _DrawLink,
+        point: npt.ArrayLike,
+    ) -> float:
+        """Distance from a drawn link midpoint to a point."""
+        source = np.asarray(draw_link.source_position, dtype=float)
+        target = np.asarray(draw_link.target_position, dtype=float)
+        midpoint = 0.5 * (source + target)
+
+        return float(np.linalg.norm(midpoint - np.asarray(point, dtype=float)))
+
+    @staticmethod
+    def _unique_positions(
+        positions: list[npt.NDArray[np.float64]],
+        *,
+        decimals: int = 10,
+    ) -> list[npt.NDArray[np.float64]]:
+        """Remove duplicate plotting positions."""
+        out: list[npt.NDArray[np.float64]] = []
+        seen: set[tuple[float, float]] = set()
+
+        for position in positions:
+            position_array = np.asarray(position, dtype=float)
+            key = tuple(np.round(position_array, decimals=decimals).tolist())
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+            out.append(position_array)
+
+        return out
 
     def _nearest_periodic_image_to_anchor(
         self,
@@ -1730,16 +1839,33 @@ class BasisConfigurationVisualizer:
         draw_plaquettes: list[_DrawPlaquette],
     ) -> None:
         for draw_plaquette in draw_plaquettes:
-            plaquette = self.lattice.plaquettes[draw_plaquette.plaquette_id]
-
-            if len(plaquette.links) == 0:
-                continue
-
-            oriented_values = self._oriented_plaquette_link_values(
-                config,
-                plaquette,
+            link_ids = tuple(int(link_id) for link_id in draw_plaquette.link_ids)
+            link_orientations = tuple(
+                int(orientation)
+                for orientation in draw_plaquette.link_orientations
             )
-            signs = [1 if value > 0 else -1 for value in oriented_values]
+
+            if len(link_ids) == 0:
+                plaquette = self.lattice.plaquettes[draw_plaquette.plaquette_id]
+                link_ids = tuple(int(link_id) for link_id in plaquette.links)
+                link_orientations = tuple(
+                    int(orientation)
+                    for orientation in plaquette.orientations
+                )
+
+            oriented_values = [
+                self.link_value(config, link_id) * orientation
+                for link_id, orientation in zip(
+                    link_ids,
+                    link_orientations,
+                    strict=True,
+                )
+            ]
+
+            signs = [
+                1 if value > 0 else -1
+                for value in oriented_values
+            ]
 
             if all(sign > 0 for sign in signs):
                 symbol = "↺"
