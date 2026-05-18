@@ -13,28 +13,33 @@ from qlinks.variables import VariableLayout
 TriangularCycleDirection = Literal["a", "b"]
 Z2ValueConvention = Literal["binary", "flux_pm"]
 
+_TRIANGULAR_KIND_DISPLACEMENTS: dict[str, tuple[int, int]] = {
+    "a": (1, 0),
+    "b": (0, 1),
+    "c": (-1, 1),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Z2CutData:
+    link_ids: npt.NDArray[np.int64]
+    variable_indices: npt.NDArray[np.int64]
+
 
 @dataclass(frozen=True, slots=True)
 class TriangularZ2WindingSector(BaseSectorCondition):
     """
     Z2 topological winding sector for triangular-lattice QDM/QLM on a torus.
 
-    The invariant is the parity of occupied/electric-positive links crossing a
-    non-contractible cut.
+    The sector is the parity of occupied/electric-positive links crossing a
+    non-contractible cut. The labels ``direction="a"`` and ``direction="b"``
+    refer to the two independent periodic cell directions of the triangular
+    torus, not to filtering links by ``link.kind``.
 
-    direction:
-        "a":
-            cut links wrapping across the a1 / x periodic seam.
-
-        "b":
-            cut links wrapping across the a2 / y periodic seam.
-
-    value_convention:
-        "binary":
-            config values are already n_l in {0, 1}. Use n_l directly.
-
-        "flux_pm":
-            config values are E_l in {-1, +1}. Convert to n_l = (E_l + 1) // 2.
+    The cut is constructed from the periodic image shift of each link. This is
+    important because triangular ``c`` links can also cross the primitive seams.
+    Counting only wrapping links of kind ``"a"`` or ``"b"`` is not invariant
+    under all triangular QDM rhombus flips.
     """
 
     layout: VariableLayout
@@ -44,53 +49,103 @@ class TriangularZ2WindingSector(BaseSectorCondition):
     value_convention: Z2ValueConvention = "binary"
     name: str = "triangular_z2_winding_sector"
 
-    def __post_init__(self) -> None:
-        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+    @classmethod
+    def _link_image_shift(
+        cls,
+        *,
+        lattice: TriangularLattice,
+        link_id: int,
+    ) -> tuple[int, int]:
+        link = lattice.links[int(link_id)]
+
+        if link.kind not in _TRIANGULAR_KIND_DISPLACEMENTS:
+            raise ValueError(f"Unsupported triangular link kind: {link.kind!r}")
+
+        dx, dy = _TRIANGULAR_KIND_DISPLACEMENTS[str(link.kind)]
+
+        source = lattice.sites[int(link.source)]
+        target = lattice.sites[int(link.target)]
+
+        sx, sy = (int(source.cell[0]), int(source.cell[1]))
+        tx, ty = (int(target.cell[0]), int(target.cell[1]))
+
+        expected_tx = sx + dx
+        expected_ty = sy + dy
+
+        delta_x = expected_tx - tx
+        delta_y = expected_ty - ty
+
+        if delta_x % lattice.lx != 0:
+            raise ValueError(
+                f"Link {link_id} has inconsistent x image shift: "
+                f"expected target x {expected_tx}, stored target x {tx}."
+            )
+
+        if delta_y % lattice.ly != 0:
+            raise ValueError(
+                f"Link {link_id} has inconsistent y image shift: "
+                f"expected target y {expected_ty}, stored target y {ty}."
+            )
+
+        return delta_x // lattice.lx, delta_y // lattice.ly
+
+    @classmethod
+    def cut_data(
+        cls,
+        *,
+        layout: VariableLayout,
+        lattice: TriangularLattice,
+        direction: TriangularCycleDirection,
+    ) -> Z2CutData:
+        if lattice.boundary_condition != BoundaryCondition.PERIODIC:
             raise ValueError("TriangularZ2WindingSector requires periodic boundary conditions.")
 
-        if self.direction not in ("a", "b"):
+        if direction not in ("a", "b"):
             raise ValueError("direction must be 'a' or 'b'.")
 
+        direction_axis = 0 if direction == "a" else 1
+
+        link_ids: list[int] = []
+
+        for link in lattice.links:
+            image_shift = cls._link_image_shift(
+                lattice=lattice,
+                link_id=int(link.id),
+            )
+
+            # Z2 winding only needs parity. A shift of -1 and +1 are the same
+            # modulo 2.
+            if int(image_shift[direction_axis]) % 2 != 0:
+                link_ids.append(int(link.id))
+
+        if len(link_ids) == 0:
+            raise ValueError(f"No links cross the triangular {direction!r} Z2 cut.")
+
+        variable_indices = np.asarray(
+            [layout.link_variable_index(int(link_id)) for link_id in link_ids],
+            dtype=np.int64,
+        )
+
+        return Z2CutData(
+            link_ids=np.asarray(link_ids, dtype=np.int64),
+            variable_indices=variable_indices,
+        )
+
+    def __post_init__(self) -> None:
         if self.target not in (0, 1):
             raise ValueError("target must be 0 or 1.")
 
         if self.value_convention not in ("binary", "flux_pm"):
             raise ValueError("value_convention must be 'binary' or 'flux_pm'.")
 
-        link_ids: list[int] = []
-
-        for link in self.lattice.links:
-            if not link.wrap:
-                continue
-
-            # TriangularLattice link kinds are:
-            #   a: (x, y) -> (x + 1, y)
-            #   b: (x, y) -> (x, y + 1)
-            #   c: (x, y) -> (x - 1, y + 1)
-            #
-            # For a first clean convention:
-            #   direction="a" uses wrapping a-links.
-            #   direction="b" uses wrapping b-links.
-            #
-            # The c-links also wind on some seams depending on embedding, but
-            # this simple convention is enough if your lattice construction
-            # consistently tags wrap=True and kind='a'/'b' for the primitive cuts.
-            if self.direction == "a" and link.kind == "a":
-                link_ids.append(int(link.id))
-
-            if self.direction == "b" and link.kind == "b":
-                link_ids.append(int(link.id))
-
-        if len(link_ids) == 0:
-            raise ValueError(f"No wrapping links found for triangular {self.direction}-cycle.")
-
-        variable_indices = np.asarray(
-            [self.layout.link_variable_index(link_id) for link_id in link_ids],
-            dtype=np.int64,
+        cut = self.cut_data(
+            layout=self.layout,
+            lattice=self.lattice,
+            direction=self.direction,
         )
 
-        object.__setattr__(self, "_link_ids", np.asarray(link_ids, dtype=np.int64))
-        object.__setattr__(self, "_variable_indices", variable_indices)
+        object.__setattr__(self, "_link_ids", cut.link_ids)
+        object.__setattr__(self, "_variable_indices", cut.variable_indices)
         object.__setattr__(self, "target", int(self.target))
 
     @property
@@ -104,7 +159,10 @@ class TriangularZ2WindingSector(BaseSectorCondition):
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
-    def _occupation_values(self, values: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
+    def _occupation_values(
+        self,
+        values: npt.NDArray[np.int64],
+    ) -> npt.NDArray[np.int64]:
         if self.value_convention == "binary":
             return values.astype(np.int64, copy=False)
 
@@ -115,10 +173,8 @@ class TriangularZ2WindingSector(BaseSectorCondition):
 
     def value(self, config: npt.ArrayLike) -> int:
         arr = self._as_config(config)
-
         values = arr[self._variable_indices]
         occ = self._occupation_values(values)
-
         return int(np.sum(occ) % 2)
 
     def is_satisfied(self, config: npt.ArrayLike) -> bool:
