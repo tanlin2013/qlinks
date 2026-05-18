@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 import numpy as np
 import pytest
 
@@ -6,6 +8,7 @@ from qlinks.constraints import (
     SquareQDMElectricWindingSector,
     SquareWindingSector,
 )
+from qlinks.constraints.winding import raw_targets_from_user_targets
 from qlinks.lattice import HoneycombLattice, SquareLattice
 from qlinks.models import SquareQDMModel
 from qlinks.variables import LocalSpace, VariableLayout
@@ -91,6 +94,42 @@ def test_square_winding_requires_periodic_lattice() -> None:
         )
 
 
+def test_square_winding_spin_half_allows_fractional_targets() -> None:
+    lattice = SquareLattice(3, 3, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    allowed = SquareWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        flux_normalization="spin_half",
+    )
+
+    assert Fraction(1, 2) in allowed
+    assert Fraction(3, 2) in allowed
+
+
+def test_square_winding_integer_flux_uses_raw_targets() -> None:
+    lattice = SquareLattice(3, 3, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    allowed = SquareWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        flux_normalization="integer_flux",
+    )
+
+    assert Fraction(1, 1) in allowed
+    assert Fraction(3, 1) in allowed
+
+
 def test_honeycomb_electric_winding_binary_value() -> None:
     lattice = HoneycombLattice(
         3,
@@ -106,7 +145,7 @@ def test_honeycomb_electric_winding_binary_value() -> None:
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=0,
+        target=1,
         value_convention="binary",
     )
 
@@ -136,7 +175,7 @@ def test_honeycomb_electric_winding_binary_all_occupied() -> None:
         layout=layout,
         lattice=lattice,
         direction="y",
-        target=0,
+        target=1,
         value_convention="binary",
     )
 
@@ -165,8 +204,9 @@ def test_honeycomb_electric_winding_flux_pm_value() -> None:
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=0,
+        target="3/2",
         value_convention="flux_pm",
+        flux_normalization="spin_half",
     )
 
     config = np.full(layout.n_variables, -1, dtype=np.int64)
@@ -191,8 +231,9 @@ def test_honeycomb_electric_winding_flux_pm_all_positive() -> None:
         layout=layout,
         lattice=lattice,
         direction="y",
-        target=0,
+        target="3/2",
         value_convention="flux_pm",
+        flux_normalization="spin_half",
     )
 
     config = np.ones(layout.n_variables, dtype=np.int64)
@@ -200,6 +241,44 @@ def test_honeycomb_electric_winding_flux_pm_all_positive() -> None:
     expected = sector.affected_variables().size
 
     assert sector.value(config) == expected
+
+
+def test_honeycomb_flux_pm_spin_half_allows_fractional_targets() -> None:
+    lattice = HoneycombLattice(3, 3, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    allowed = HoneycombElectricWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="y",
+        value_convention="flux_pm",
+        flux_normalization="spin_half",
+    )
+
+    assert Fraction(3, 2) in allowed
+    assert Fraction(1, 2) in allowed
+    assert 1 not in allowed
+
+
+def test_honeycomb_flux_pm_integer_flux_uses_raw_targets() -> None:
+    lattice = HoneycombLattice(3, 3, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    allowed = HoneycombElectricWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="y",
+        value_convention="flux_pm",
+        flux_normalization="integer_flux",
+    )
+
+    assert allowed == (Fraction(-3, 1), Fraction(-1, 1), Fraction(1, 1), Fraction(3, 1))
 
 
 def test_honeycomb_electric_winding_affected_variables_are_nonempty() -> None:
@@ -217,7 +296,7 @@ def test_honeycomb_electric_winding_affected_variables_are_nonempty() -> None:
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=0,
+        target=1,
         value_convention="binary",
     )
 
@@ -225,7 +304,7 @@ def test_honeycomb_electric_winding_affected_variables_are_nonempty() -> None:
         layout=layout,
         lattice=lattice,
         direction="y",
-        target=0,
+        target=1,
         value_convention="binary",
     )
 
@@ -256,7 +335,7 @@ def test_honeycomb_electric_winding_target_satisfaction() -> None:
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=0,
+        target=1,
         value_convention="binary",
     )
 
@@ -299,7 +378,7 @@ def test_honeycomb_electric_winding_partial_check_fully_assigned() -> None:
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=0,
+        target=1,
         value_convention="binary",
     )
 
@@ -335,7 +414,7 @@ def test_honeycomb_electric_winding_partial_check_fully_assigned_rejects() -> No
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=0,
+        target=1,
         value_convention="binary",
     )
 
@@ -369,7 +448,7 @@ def test_honeycomb_electric_winding_partial_check_not_fully_assigned_can_still_p
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=0,
+        target=1,
         value_convention="binary",
     )
 
@@ -398,7 +477,7 @@ def test_honeycomb_electric_winding_requires_periodic_boundary() -> None:
             layout=layout,
             lattice=lattice,
             direction="x",
-            target=0,
+            target=1,
             value_convention="binary",
         )
 
@@ -419,7 +498,7 @@ def test_honeycomb_electric_winding_rejects_bad_direction() -> None:
             layout=layout,
             lattice=lattice,
             direction="z",  # type: ignore[arg-type]
-            target=0,
+            target=1,
             value_convention="binary",
         )
 
@@ -440,7 +519,7 @@ def test_honeycomb_electric_winding_rejects_bad_value_convention() -> None:
             layout=layout,
             lattice=lattice,
             direction="x",
-            target=0,
+            target=1,
             value_convention="bad",  # type: ignore[arg-type]
         )
 
@@ -576,3 +655,93 @@ def test_square_qdm_electric_winding_has_signed_covector_2x2_pbc() -> None:
         assert sector.link_ids.size > 0
         assert sector.signs.size == sector.link_ids.size
         assert set(sector.signs.tolist()) <= {-1, 1}
+
+
+def test_square_winding_allowed_targets_spin_half_are_user_facing() -> None:
+    lattice = SquareLattice(4, 4, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    allowed = SquareWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        flux_normalization="spin_half",
+    )
+
+    assert 0 in allowed
+
+    raw_allowed = SquareWindingSector.allowed_internal_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+    )
+
+    assert set(
+        raw_targets_from_user_targets(
+            allowed,
+            flux_normalization="spin_half",
+        )
+    ) <= set(raw_allowed)
+
+
+def test_square_winding_rejects_illegal_target() -> None:
+    lattice = SquareLattice(4, 4, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    allowed = SquareWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        flux_normalization="spin_half",
+    )
+
+    illegal = max(allowed) + 1
+
+    with pytest.raises(ValueError, match="Illegal"):
+        SquareWindingSector(
+            layout=layout,
+            lattice=lattice,
+            direction="x",
+            target=illegal,
+            flux_normalization="spin_half",
+        )
+
+
+def test_square_qdm_electric_winding_allowed_targets() -> None:
+    lattice = SquareLattice(4, 4, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    allowed = SquareQDMElectricWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+    )
+
+    assert 0 in allowed
+
+
+def test_honeycomb_electric_winding_allowed_targets() -> None:
+    lattice = HoneycombLattice(3, 3, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    allowed = HoneycombElectricWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        value_convention="flux_pm",
+        flux_normalization="spin_half",
+    )
+
+    assert isinstance(allowed, tuple)

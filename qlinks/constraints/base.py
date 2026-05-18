@@ -203,6 +203,42 @@ class BaseSectorCondition:
 
         return True
 
+    @classmethod
+    def allowed_targets(
+        cls,
+        *,
+        layout,
+        lattice,
+        **kwargs,
+    ) -> tuple[int, ...]:
+        """
+        Return all allowed target quantum numbers for this sector condition.
+
+        Subclasses should override this when the allowed labels can be
+        determined from the lattice/layout.
+        """
+        raise NotImplementedError(f"{cls.__name__} does not implement allowed_targets().")
+
+    @classmethod
+    def validate_target(
+        cls,
+        *,
+        target: int,
+        layout,
+        lattice,
+        **kwargs,
+    ) -> None:
+        allowed = cls.allowed_targets(
+            layout=layout,
+            lattice=lattice,
+            **kwargs,
+        )
+
+        if int(target) not in allowed:
+            raise ValueError(
+                f"Illegal {cls.__name__} target {target}. " f"Allowed targets are {allowed}."
+            )
+
 
 def all_satisfied(
     config: npt.ArrayLike,
