@@ -214,8 +214,8 @@ def test_honeycomb_qdm_winding_sector_builds() -> None:
         kinetic=-1.0,
         potential=0.0,
         required_count=1,
-        winding_x=0,
-        winding_y=0,
+        winding_x=1,
+        winding_y=1,
     )
 
     basis = model.build_basis(

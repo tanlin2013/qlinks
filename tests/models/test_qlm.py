@@ -376,8 +376,8 @@ def test_honeycomb_qlm_winding_sector_builds() -> None:
         kinetic=-1.0,
         potential=0.0,
         charges=0,
-        winding_x=0,
-        winding_y=0,
+        winding_x="1/2",
+        winding_y="1/2",
     )
 
     basis = model.build_basis(

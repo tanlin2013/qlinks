@@ -34,6 +34,18 @@ def assert_partial_check_matches_full_check(
         )
 
 
+def _first_allowed_target(sector_cls, **kwargs):
+    allowed = sector_cls.allowed_targets(**kwargs)
+
+    assert len(allowed) > 0
+
+    # Prefer zero when it exists, otherwise use the first legal sector.
+    if 0 in allowed:
+        return 0
+
+    return allowed[0]
+
+
 def test_gauss_law_partial_check_matches_full_check_on_complete_configs() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
@@ -143,10 +155,31 @@ def test_square_qdm_electric_winding_partial_check_matches_full_check_on_complet
 
 
 def test_honeycomb_electric_winding_partial_check_matches_full_check_on_complete_configs() -> None:
-    lattice = HoneycombLattice(3, 3, boundary_condition="periodic")
+    lattice = HoneycombLattice(
+        3,
+        3,
+        boundary_condition="periodic",
+    )
     layout = VariableLayout.from_lattice_links(
         lattice,
         LocalSpace.spin_half_flux(),
+    )
+
+    target_x = _first_allowed_target(
+        HoneycombElectricWindingSector,
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        value_convention="flux_pm",
+        flux_normalization="spin_half",
+    )
+    target_y = _first_allowed_target(
+        HoneycombElectricWindingSector,
+        layout=layout,
+        lattice=lattice,
+        direction="y",
+        value_convention="flux_pm",
+        flux_normalization="spin_half",
     )
 
     sectors = (
@@ -154,14 +187,16 @@ def test_honeycomb_electric_winding_partial_check_matches_full_check_on_complete
             layout=layout,
             lattice=lattice,
             direction="x",
-            target=0,
+            target=target_x,
+            value_convention="flux_pm",
             flux_normalization="spin_half",
         ),
         HoneycombElectricWindingSector(
             layout=layout,
             lattice=lattice,
             direction="y",
-            target=0,
+            target=target_y,
+            value_convention="flux_pm",
             flux_normalization="spin_half",
         ),
     )
