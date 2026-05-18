@@ -4,6 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from matplotlib.collections import LineCollection
 
 from qlinks.lattice import (
     ChainLattice,
@@ -52,6 +53,14 @@ def undirected_visual_edges(visualizer, nodes, links):
     return {frozenset(link_visual_cells(visualizer, nodes, link)) for link in links}
 
 
+def line_collection_segment_count(ax) -> int:
+    return sum(
+        len(collection.get_segments())
+        for collection in ax.collections
+        if isinstance(collection, LineCollection)
+    )
+
+
 def test_square_qdm_dimer_plot_runs() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
@@ -75,10 +84,33 @@ def test_square_qdm_dimer_plot_runs() -> None:
     assert len(ax.collections) >= 1
 
     # Dimer links are drawn as Line2D objects.
-    assert len(ax.lines) == lattice.num_links
+    assert line_collection_segment_count(ax) == lattice.num_links
 
     # Plaquette symbol should add text beyond node labels.
     assert len(ax.texts) >= lattice.num_sites
+
+    plt.close(fig)
+
+
+def test_link_value_plot_draws_batched_backbone() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    config = np.array([1, 0, 1, 0], dtype=np.int64)
+
+    fig, ax = plt.subplots()
+
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=layout)
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="values",
+        with_link_values=True,
+        with_plaquette_symbols=False,
+    )
+
+    assert line_collection_segment_count(ax) == lattice.num_links
+    assert len(ax.texts) >= lattice.num_links
 
     plt.close(fig)
 
@@ -337,32 +369,25 @@ def test_basis_grid_accepts_single_config() -> None:
     plt.close(fig)
 
 
-def test_square_qlm_symbols_are_square_specific() -> None:
+def test_square_qlm_symbols_draw_one_symbol_per_open_square_plaquette() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
+    config = np.array([1, -1, 1, -1], dtype=np.int64)
 
-    states = np.array(
-        [
-            [1, -1, 1, -1],
-            [-1, 1, -1, 1],
-        ],
-        dtype=np.int64,
-    )
+    fig, ax = plt.subplots()
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=layout)
 
-    fig, axes = plot_basis_grid(
-        lattice=lattice,
-        layout=layout,
-        states=states,
-        ncols=2,
-        mode="arrows",
-        plaquette_symbols="square_qlm",
+    visualizer.plot(
+        config,
+        ax=ax,
         show=False,
+        mode="arrows",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="square_qlm",
     )
 
-    assert axes.shape == (1, 2)
-
-    # At least node labels plus plaquette symbol texts should exist.
-    assert sum(len(ax.texts) for ax in axes.flat) > 0
+    assert len(ax.texts) == lattice.num_plaquettes
 
     plt.close(fig)
 
@@ -976,19 +1001,12 @@ def test_honeycomb_site_label_includes_sublattice() -> None:
     assert "B(0, 0)" in labels
 
 
-def test_square_qlm_plaquette_key_uses_plaquette_orientations() -> None:
-    lattice = SquareLattice(
-        2,
-        2,
-        boundary_condition="open",
-    )
-    visualizer = BasisConfigurationVisualizer(
-        lattice=lattice,
-        layout=None,
-    )
+def test_square_qlm_visual_symbol_key_accepts_circulating_open_plaquette() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=None)
 
-    plaquette = lattice.plaquettes[0]
     config = np.zeros(lattice.num_links, dtype=np.int64)
+    plaquette = lattice.plaquettes[0]
 
     for link_id, orientation in zip(
         plaquette.links,
@@ -997,27 +1015,20 @@ def test_square_qlm_plaquette_key_uses_plaquette_orientations() -> None:
     ):
         config[int(link_id)] = int(orientation)
 
-    oriented_values = visualizer._oriented_plaquette_link_values(
+    values = visualizer._square_visual_qlm_symbol_link_values(
         config,
-        plaquette,
+        visual_cell=(0, 0),
     )
 
-    assert visualizer._plaquette_key(oriented_values) == "1111"
+    assert visualizer._plaquette_key(values) in _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 
-def test_square_qlm_plaquette_key_uses_negative_plaquette_orientations() -> None:
-    lattice = SquareLattice(
-        2,
-        2,
-        boundary_condition="open",
-    )
-    visualizer = BasisConfigurationVisualizer(
-        lattice=lattice,
-        layout=None,
-    )
+def test_square_qlm_visual_symbol_key_accepts_anticirculating_open_plaquette() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=None)
 
-    plaquette = lattice.plaquettes[0]
     config = np.zeros(lattice.num_links, dtype=np.int64)
+    plaquette = lattice.plaquettes[0]
 
     for link_id, orientation in zip(
         plaquette.links,
@@ -1026,12 +1037,12 @@ def test_square_qlm_plaquette_key_uses_negative_plaquette_orientations() -> None
     ):
         config[int(link_id)] = -int(orientation)
 
-    oriented_values = visualizer._oriented_plaquette_link_values(
+    values = visualizer._square_visual_qlm_symbol_link_values(
         config,
-        plaquette,
+        visual_cell=(0, 0),
     )
 
-    assert visualizer._plaquette_key(oriented_values) == "0000"
+    assert visualizer._plaquette_key(values) in _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 
 def test_square_qlm_visual_symbol_values_2x2_pbc_use_visual_cell() -> None:
@@ -1061,3 +1072,107 @@ def test_square_qlm_visual_symbol_key_order_bottom_left_right_top() -> None:
 
     # bottom, left, right, top for visual cell (0, 0)
     assert values == [1, -1, 1, -1]
+
+
+def test_honeycomb_drawn_plaquettes_carry_link_metadata() -> None:
+    lattice = HoneycombLattice(4, 4, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    draw_plaquettes = visualizer._draw_plaquette_primitives()
+
+    assert draw_plaquettes
+
+    for draw_plaquette in draw_plaquettes:
+        assert len(draw_plaquette.link_ids) == 6
+        assert len(draw_plaquette.link_orientations) == 6
+        assert all(isinstance(link_id, int) for link_id in draw_plaquette.link_ids)
+        assert set(draw_plaquette.link_orientations) <= {-1, 1}
+
+
+def test_basis_grid_reuses_draw_primitives(monkeypatch) -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    states = np.array(
+        [
+            [1, 0, 1, 0],
+            [0, 1, 0, 1],
+            [1, 1, 0, 0],
+        ],
+        dtype=np.int64,
+    )
+
+    call_count = 0
+    original = BasisConfigurationVisualizer._draw_primitives
+
+    def counted_draw_primitives(self):
+        nonlocal call_count
+        call_count += 1
+        return original(self)
+
+    monkeypatch.setattr(
+        BasisConfigurationVisualizer,
+        "_draw_primitives",
+        counted_draw_primitives,
+    )
+
+    fig, axes = plot_basis_grid(
+        lattice=lattice,
+        layout=layout,
+        states=states,
+        ncols=2,
+        mode="dimers",
+        show=False,
+        plaquette_symbols="none",
+    )
+
+    assert axes.shape == (2, 2)
+    assert call_count == 1
+
+    plt.close(fig)
+
+
+def test_basis_grid_reuses_plaquette_primitives(monkeypatch) -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
+
+    states = np.ones((3, layout.n_variables), dtype=np.int64)
+
+    call_count = 0
+    original = BasisConfigurationVisualizer._draw_square_qlm_plaquette_primitives
+
+    def counted_draw_square_plaquettes(self):
+        nonlocal call_count
+        call_count += 1
+        return original(self)
+
+    monkeypatch.setattr(
+        BasisConfigurationVisualizer,
+        "_draw_square_qlm_plaquette_primitives",
+        counted_draw_square_plaquettes,
+    )
+
+    fig, _ = plot_basis_grid(
+        lattice=lattice,
+        layout=layout,
+        states=states,
+        ncols=3,
+        mode="arrows",
+        show=False,
+        plaquette_symbols="square_qlm",
+        periodic_image_mode="positive_patch",
+    )
+
+    assert call_count == 1
+
+    plt.close(fig)

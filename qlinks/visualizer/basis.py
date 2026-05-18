@@ -7,6 +7,7 @@ from typing import Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
+from matplotlib.collections import LineCollection
 
 from qlinks.lattice import (
     BoundaryCondition,
@@ -214,11 +215,56 @@ class BasisConfigurationVisualizer:
         mode="values":
             Draw the lattice and place link values at link centers.
         """
-
         import matplotlib.pyplot as plt
 
         if ax is None:
             _, ax = plt.subplots()
+
+        draw_nodes, draw_links = self._draw_primitives()
+
+        draw_plaquettes = None
+        if with_plaquette_symbols and plaquette_symbol_style != "none":
+            if plaquette_symbol_style == "square_qlm":
+                draw_plaquettes = self._draw_square_qlm_plaquette_primitives()
+            else:
+                draw_plaquettes = self._draw_plaquette_primitives()
+
+        return self._plot_with_primitives(
+            config,
+            ax=ax,
+            draw_nodes=draw_nodes,
+            draw_links=draw_links,
+            draw_plaquettes=draw_plaquettes,
+            show=show,
+            backend=backend,
+            mode=mode,
+            with_site_labels=with_site_labels,
+            with_site_values=with_site_values,
+            with_link_values=with_link_values,
+            with_plaquette_symbols=with_plaquette_symbols,
+            plaquette_symbol_style=plaquette_symbol_style,
+            title=title,
+        )
+
+    def _plot_with_primitives(
+        self,
+        config: npt.ArrayLike,
+        *,
+        ax,
+        draw_nodes: list[_DrawNode],
+        draw_links: list[_DrawLink],
+        draw_plaquettes: list[_DrawPlaquette] | None,
+        show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
+        mode: LinkPlotMode = "arrows",
+        with_site_labels: bool = True,
+        with_site_values: bool = False,
+        with_link_values: bool = False,
+        with_plaquette_symbols: bool = True,
+        plaquette_symbol_style: PlaquetteSymbolStyle = "square_qlm",
+        title: str | None = None,
+    ):
+        import matplotlib.pyplot as plt
 
         arr = self._as_config(config)
 
@@ -228,23 +274,35 @@ class BasisConfigurationVisualizer:
                 "For site-only layouts, use mode='values' with with_site_values=True."
             )
 
-        draw_nodes, draw_links = self._draw_primitives()
-
         if backend == "matplotlib":
-            self._draw_matplotlib(
+            self._draw_links(
+                ax=ax,
+                config=arr,
+                draw_links=draw_links,
+                mode=mode,
+            )
+            self._draw_nodes(
                 ax=ax,
                 config=arr,
                 draw_nodes=draw_nodes,
-                draw_links=draw_links,
-                mode=mode,
                 with_site_labels=with_site_labels,
                 with_site_values=with_site_values,
-                with_link_values=with_link_values,
-                with_plaquette_symbols=with_plaquette_symbols,
-                plaquette_symbol_style=plaquette_symbol_style,
-                title=title,
             )
-        elif backend == "networkx":
+            if (with_link_values or mode == "values") and self.has_link_variables():
+                self._draw_link_values(
+                    ax=ax,
+                    config=arr,
+                    draw_links=draw_links,
+                )
+            if with_plaquette_symbols and plaquette_symbol_style != "none":
+                self._draw_plaquette_symbols(
+                    ax=ax,
+                    config=arr,
+                    style=plaquette_symbol_style,
+                    draw_plaquettes=draw_plaquettes or [],
+                )
+        else:
+            # Keep current path for now, or refactor similarly later.
             self._draw_networkx(
                 ax=ax,
                 config=arr,
@@ -256,10 +314,10 @@ class BasisConfigurationVisualizer:
                 with_link_values=with_link_values,
                 with_plaquette_symbols=with_plaquette_symbols,
                 plaquette_symbol_style=plaquette_symbol_style,
-                title=title,
+                title=None,
             )
-        else:
-            raise ValueError("backend must be 'matplotlib' or 'networkx'.")
+
+        self._finish_axes(ax, title=title)
 
         if show:
             plt.show()
@@ -927,24 +985,42 @@ class BasisConfigurationVisualizer:
         config: npt.NDArray[np.int64],
         draw_links: list[_DrawLink],
     ) -> None:
+        occupied_segments = []
+        empty_segments = []
+
         for draw_link in draw_links:
             value = self.link_value(config, draw_link.link_id)
+            segment = [
+                self._xy(draw_link.source_position),
+                self._xy(draw_link.target_position),
+            ]
+            if value != 0:
+                occupied_segments.append(segment)
+            else:
+                empty_segments.append(segment)
 
-            occupied = value != 0
+        if empty_segments:
+            ax.add_collection(
+                LineCollection(
+                    empty_segments,
+                    colors=self.style.empty_edge_color,
+                    linewidths=self.style.empty_width,
+                    alpha=self.style.empty_alpha,
+                    capstyle="round",
+                    zorder=1,
+                )
+            )
 
-            sx, sy = self._xy(draw_link.source_position)
-            tx, ty = self._xy(draw_link.target_position)
-
-            x = [sx, tx]
-            y = [sy, ty]
-
-            ax.plot(
-                x,
-                y,
-                color=self.style.edge_color if occupied else self.style.empty_edge_color,
-                linewidth=self.style.occupied_width if occupied else self.style.empty_width,
-                alpha=self.style.occupied_alpha if occupied else self.style.empty_alpha,
-                solid_capstyle="round",
+        if occupied_segments:
+            ax.add_collection(
+                LineCollection(
+                    occupied_segments,
+                    colors=self.style.edge_color,
+                    linewidths=self.style.occupied_width,
+                    alpha=self.style.occupied_alpha,
+                    capstyle="round",
+                    zorder=2,
+                )
             )
 
     def _draw_value_backbone(
@@ -953,19 +1029,20 @@ class BasisConfigurationVisualizer:
         ax,
         draw_links: list[_DrawLink],
     ) -> None:
-        for draw_link in draw_links:
-            sx, sy = self._xy(draw_link.source_position)
-            tx, ty = self._xy(draw_link.target_position)
+        segments = [
+            [self._xy(link.source_position), self._xy(link.target_position)]
+            for link in draw_links
+        ]
 
-            x = [sx, tx]
-            y = [sy, ty]
-
-            ax.plot(
-                x,
-                y,
-                color=self.style.empty_edge_color,
-                linewidth=self.style.empty_width,
-                alpha=0.7,
+        if segments:
+            ax.add_collection(
+                LineCollection(
+                    segments,
+                    colors=self.style.empty_edge_color,
+                    linewidths=self.style.empty_width,
+                    alpha=0.7,
+                    zorder=1,
+                )
             )
 
     def _draw_nodes(
@@ -1529,8 +1606,6 @@ class BasisConfigurationVisualizer:
             return
 
         if style == "square_qlm":
-            draw_plaquettes = self._draw_square_qlm_plaquette_primitives()
-
             self._draw_square_qlm_plaquette_symbols(
                 ax=ax,
                 config=config,
@@ -1546,7 +1621,7 @@ class BasisConfigurationVisualizer:
             )
             return
 
-        raise ValueError("plaquette symbol style must be 'none', 'square_qlm', or 'circulation'.")
+        raise ValueError(f"Unsupported plaquette symbol style: {style!r}")
 
     def _draw_square_qlm_plaquette_symbols(
         self,
@@ -2482,6 +2557,15 @@ class BasisGridVisualizer:
             site_label_style=self.site_label_style,
         )
 
+        draw_nodes, draw_links = single_visualizer._draw_primitives()
+
+        if plaquette_symbols == "none":
+            draw_plaquettes = None
+        elif plaquette_symbols == "square_qlm":
+            draw_plaquettes = single_visualizer._draw_square_qlm_plaquette_primitives()
+        else:
+            draw_plaquettes = single_visualizer._draw_plaquette_primitives()
+
         if single_plot_kwargs is None:
             single_plot_kwargs = {}
 
@@ -2525,9 +2609,12 @@ class BasisGridVisualizer:
             plot_kwargs.pop("coordinate_transform", None)
             plot_kwargs.pop("site_label_style", None)
 
-            single_visualizer.plot(
+            single_visualizer._plot_with_primitives(
                 config,
                 ax=ax,
+                draw_nodes=draw_nodes,
+                draw_links=draw_links,
+                draw_plaquettes=draw_plaquettes,
                 show=False,
                 backend=backend,
                 mode=mode,
