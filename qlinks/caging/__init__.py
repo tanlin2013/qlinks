@@ -1,4 +1,13 @@
 from qlinks.caging.candidate import CandidateSubgraph
+from qlinks.caging.classification import (
+    CageClassificationConfig,
+    CageClassificationReport,
+    CageSpatialLabel,
+    InterferenceZeroReport,
+    LocalTransitionPattern,
+    classify_cage_state,
+    classify_full_state,
+)
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
 from qlinks.caging.localization import (
     IPRLocalizationConfig,
@@ -106,4 +115,11 @@ __all__ = [
     "inverse_participation_ratio",
     "localized_basis_by_many_start_ipr",
     "maximize_ipr_once",
+    "CageClassificationConfig",
+    "CageClassificationReport",
+    "CageSpatialLabel",
+    "InterferenceZeroReport",
+    "LocalTransitionPattern",
+    "classify_cage_state",
+    "classify_full_state",
 ]
