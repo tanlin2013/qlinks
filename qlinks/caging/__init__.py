@@ -1,5 +1,13 @@
 from qlinks.caging.candidate import CandidateSubgraph
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
+from qlinks.caging.localization import (
+    IPRLocalizationConfig,
+    LocalizedState,
+    exact_compact_states_from_support,
+    inverse_participation_ratio,
+    localized_basis_by_many_start_ipr,
+    maximize_ipr_once,
+)
 from qlinks.caging.nullspace import (
     as_dense_array,
     nullspace_svd,
@@ -92,4 +100,10 @@ __all__ = [
     "CageSearchResult",
     "embed_cage_state",
     "signature_from_energy_and_self_loop",
+    "IPRLocalizationConfig",
+    "LocalizedState",
+    "exact_compact_states_from_support",
+    "inverse_participation_ratio",
+    "localized_basis_by_many_start_ipr",
+    "maximize_ipr_once",
 ]

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import Literal
+from numbers import Integral
+from typing import Literal, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -37,6 +39,13 @@ class CageSearchConfig:
     tolerance: float = 1e-10
     min_component_size: int = 2
     validate_full_residual: bool = True
+
+    degenerate_basis_strategy: Literal["none", "ipr"] = "none"
+    ipr_n_restarts: int = 128
+    ipr_max_iter: int = 1000
+    ipr_step_size: float = 0.1
+    ipr_candidate_count: int = 64
+    ipr_random_seed: int | None = None
 
     type1_kappas: tuple[int, ...] = (0,)
     type2_kappas: tuple[int, ...] = (-2, 2)
@@ -75,6 +84,46 @@ class CageRecord:
         return self.cage_state.local_state
 
 
+@dataclass(frozen=True, slots=True)
+class CageRecordView:
+    """Indexable view into a subset of cage records."""
+
+    records: Sequence[CageRecord]
+    signature: tuple[int, int] | None = None
+
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __iter__(self) -> Iterator[CageRecord]:
+        return iter(self.records)
+
+    @overload
+    def __getitem__(self, index: int) -> CageRecord:
+        ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list[CageRecord]:
+        ...
+
+    def __getitem__(
+        self,
+        index: int | slice,
+    ) -> CageRecord | list[CageRecord]:
+        return self.records[index]
+
+    def first(self) -> CageRecord:
+        if len(self.records) == 0:
+            if self.signature is None:
+                raise ValueError("No cage records are available.")
+            raise ValueError(
+                f"No cage record found for signature {self.signature}."
+            )
+        return self.records[0]
+
+    def to_list(self) -> list[CageRecord]:
+        return list(self.records)
+
+
 @dataclass
 class CageSearchResult:
     """Result of a high-level cage search."""
@@ -85,13 +134,98 @@ class CageSearchResult:
     type1_candidates: list[CandidateSubgraph] = field(default_factory=list)
     type2_candidates: list[CandidateSubgraph] = field(default_factory=list)
 
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __iter__(self) -> Iterator[CageRecord]:
+        return iter(self.records)
+
+    @overload
+    def __getitem__(self, index: int) -> CageRecord:
+        ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list[CageRecord]:
+        ...
+
+    @overload
+    def __getitem__(self, index: tuple[int, int]) -> CageRecordView:
+        ...
+
+    @overload
+    def __getitem__(
+        self,
+        index: tuple[tuple[int, int], int],
+    ) -> CageRecord:
+        ...
+
+    @overload
+    def __getitem__(
+        self,
+        index: tuple[tuple[int, int], slice],
+    ) -> list[CageRecord]:
+        ...
+
+    def __getitem__(
+        self,
+        index: (
+            int
+            | slice
+            | tuple[int, int]
+            | tuple[tuple[int, int], int]
+            | tuple[tuple[int, int], slice]
+        ),
+    ) -> CageRecord | list[CageRecord] | CageRecordView:
+        """
+        Index cage records.
+
+        Supported forms
+        ---------------
+        result[i]
+            Return the i-th record among all records.
+
+        result[i:j]
+            Return a list of records among all records.
+
+        result[(kappa, z)]
+            Return an indexable view of records with this signature.
+
+        result[(kappa, z), i]
+            Return the i-th record with this signature.
+
+        result[(kappa, z), i:j]
+            Return records with this signature in the given slice.
+        """
+        if isinstance(index, Integral):
+            return self.records[int(index)]
+
+        if isinstance(index, slice):
+            return self.records[index]
+
+        if _is_signature_index(index):
+            signature = _normalize_signature(index)
+            return CageRecordView(
+                records=self.records_by_signature(signature),
+                signature=signature,
+            )
+
+        if _is_signature_record_index(index):
+            signature = _normalize_signature(index[0])
+            record_index = index[1]
+            records = self.records_by_signature(signature)
+            return records[record_index]
+
+        raise TypeError(
+            "CageSearchResult indices must be an integer, a slice, "
+            "a signature tuple like (kappa, Z), or "
+            "a pair like ((kappa, Z), index)."
+        )
+
     @property
     def counts_by_signature(self) -> dict[tuple[int, int], int]:
         counts: dict[tuple[int, int], int] = {}
-
         for record in self.records:
             counts[record.signature] = counts.get(record.signature, 0) + 1
-
         return counts
 
     @property
@@ -102,7 +236,19 @@ class CageSearchResult:
         self,
         signature: tuple[int, int],
     ) -> list[CageRecord]:
+        signature = _normalize_signature(signature)
         return [record for record in self.records if record.signature == signature]
+
+    def by_signature(
+        self,
+        signature: tuple[int, int],
+    ) -> CageRecordView:
+        """Return an indexable view of records with a fixed signature."""
+        signature = _normalize_signature(signature)
+        return CageRecordView(
+            records=self.records_by_signature(signature),
+            signature=signature,
+        )
 
     def first(
         self,
@@ -111,15 +257,9 @@ class CageSearchResult:
         if signature is None:
             if len(self.records) == 0:
                 raise ValueError("No cage records are available.")
-
             return self.records[0]
 
-        records = self.records_by_signature(signature)
-
-        if len(records) == 0:
-            raise ValueError(f"No cage record found for signature {signature}.")
-
-        return records[0]
+        return self.by_signature(signature).first()
 
     def full_state_matrix(
         self,
@@ -265,6 +405,12 @@ class CageSearcher:
         solver_config = CageSolverConfig(
             tolerance=self.config.tolerance,
             validate_full_residual=self.config.validate_full_residual,
+            degenerate_basis_strategy=self.config.degenerate_basis_strategy,
+            ipr_n_restarts=self.config.ipr_n_restarts,
+            ipr_max_iter=self.config.ipr_max_iter,
+            ipr_step_size=self.config.ipr_step_size,
+            ipr_candidate_count=self.config.ipr_candidate_count,
+            ipr_random_seed=self.config.ipr_random_seed,
         )
 
         filter_context = CandidateFilterContext(
@@ -487,3 +633,32 @@ def bipartition_labels(matrix) -> npt.NDArray[np.int64]:
                     raise ValueError("Graph is not bipartite.")
 
     return labels
+
+
+def _is_signature_index(index: object) -> bool:
+    """Return whether index looks like a cage signature ``(kappa, Z)``."""
+    return (
+        isinstance(index, tuple)
+        and len(index) == 2
+        and isinstance(index[0], Integral)
+        and isinstance(index[1], Integral)
+    )
+
+
+def _is_signature_record_index(index: object) -> bool:
+    """Return whether index looks like ``((kappa, Z), record_index)``."""
+    return (
+        isinstance(index, tuple)
+        and len(index) == 2
+        and _is_signature_index(index[0])
+        and isinstance(index[1], (Integral, slice))
+    )
+
+
+def _normalize_signature(signature: tuple[int, int]) -> tuple[int, int]:
+    """Convert numpy integer signatures to plain Python integer tuples."""
+    if not _is_signature_index(signature):
+        raise TypeError(
+            "Signature must be a tuple of two integers: (kappa, Z)."
+        )
+    return int(signature[0]), int(signature[1])
