@@ -336,7 +336,7 @@ class HamiltonianGraphVisualizer:
         if ax is None:
             _, ax = plt.subplots(figsize=self.style.figure_size)
 
-        positions = _networkx_layout(graph, layout)
+        positions = _networkx_layout(graph, layout, **layout_kwargs)
 
         nx.draw_networkx_nodes(
             graph,
@@ -429,6 +429,188 @@ class HamiltonianGraphVisualizer:
                     weight=float(abs(value)),
                     hamiltonian_weight=complex(value),
                 )
+
+        return graph
+
+    def save_graph(
+        self,
+        path: str | Path,
+        *,
+        layout_backend: GraphBackend = "networkx",
+        layout: LayoutName = "auto",
+        color_by: NodeColorRule = "constant",
+        self_loop_values: npt.ArrayLike | None = None,
+        state_vector: npt.ArrayLike | None = None,
+        **layout_kwargs,
+    ) -> None:
+        """Save graph with computed layout coordinates.
+
+        The graph is always exported through NetworkX writers.
+
+        Supported formats:
+            .graphml
+            .gexf
+
+        The layout may be computed with either NetworkX or igraph.
+        """
+        import networkx as nx
+
+        path = Path(path)
+        suffix = path.suffix.lower()
+
+        if suffix not in {".graphml", ".gexf"}:
+            raise ValueError("Graph export path must end with .graphml or .gexf.")
+
+        graph = self.to_networkx_with_layout(
+            layout_backend=layout_backend,
+            layout=layout,
+            color_by=color_by,
+            self_loop_values=self_loop_values,
+            state_vector=state_vector,
+            **layout_kwargs,
+        )
+
+        if suffix == ".graphml":
+            # GraphML cannot serialize nested dict attributes like "viz".
+            for node in graph.nodes:
+                graph.nodes[node].pop("viz", None)
+
+            nx.write_graphml(graph, path)
+            return
+
+        if suffix == ".gexf":
+            nx.write_gexf(graph, path)
+            return
+
+    def to_networkx_with_layout(
+        self,
+        *,
+        layout_backend: GraphBackend = "networkx",
+        layout: LayoutName = "auto",
+        color_by: NodeColorRule = "constant",
+        self_loop_values: npt.ArrayLike | None = None,
+        state_vector: npt.ArrayLike | None = None,
+        **layout_kwargs,
+    ):
+        """Convert to NetworkX graph and attach computed layout coordinates.
+
+        The graph is always returned as NetworkX, but the layout can be computed
+        using either NetworkX or igraph.
+        """
+        graph = self.to_networkx()
+
+        if layout_backend == "networkx":
+            positions = _networkx_layout(
+                graph,
+                layout,
+                **layout_kwargs,
+            )
+        elif layout_backend == "igraph":
+            igraph_graph = self.to_igraph()
+            igraph_layout = _igraph_layout(
+                igraph_graph,
+                layout,
+                **layout_kwargs,
+            )
+            positions = {
+                index: np.asarray(position, dtype=float)
+                for index, position in enumerate(igraph_layout)
+            }
+        else:
+            raise ValueError("layout_backend must be 'networkx' or 'igraph'.")
+
+        color_values = self.node_values(
+            color_by=color_by,
+            self_loop_values=self_loop_values,
+            state_vector=state_vector,
+        )
+
+        degrees = self.graph_data.degrees
+        self_loops = self.graph_data.self_loop_values
+
+        for node in graph.nodes:
+            position = np.asarray(positions[node], dtype=float)
+
+            graph.nodes[node]["x"] = float(position[0])
+            graph.nodes[node]["y"] = float(position[1])
+            graph.nodes[node]["color_value"] = float(color_values[node])
+            graph.nodes[node]["degree"] = int(degrees[node])
+            graph.nodes[node]["self_loop_real"] = float(np.real(self_loops[node]))
+            graph.nodes[node]["self_loop_imag"] = float(np.imag(self_loops[node]))
+
+            # Gephi GEXF reads this "viz" block as actual node position.
+            graph.nodes[node]["viz"] = {
+                "position": {
+                    "x": float(position[0]),
+                    "y": float(position[1]),
+                    "z": 0.0,
+                }
+            }
+
+        for source, target, data in graph.edges(data=True):
+            value = data.get("hamiltonian_weight", data.get("weight", 1.0))
+
+            # NetworkX GraphML/GEXF writers cannot safely serialize complex values.
+            data.pop("hamiltonian_weight", None)
+
+            data["weight"] = float(abs(value))
+            data["hamiltonian_weight_real"] = float(np.real(value))
+            data["hamiltonian_weight_imag"] = float(np.imag(value))
+
+        return graph
+
+    def to_igraph_with_layout(
+        self,
+        *,
+        layout: LayoutName = "auto",
+        color_by: NodeColorRule = "constant",
+        self_loop_values: npt.ArrayLike | None = None,
+        state_vector: npt.ArrayLike | None = None,
+        **layout_kwargs,
+    ):
+        """Convert to an igraph graph and attach computed layout coordinates."""
+        graph = self.to_igraph()
+
+        layout_object = _igraph_layout(
+            graph,
+            layout,
+            **layout_kwargs,
+        )
+
+        color_values = self.node_values(
+            color_by=color_by,
+            self_loop_values=self_loop_values,
+            state_vector=state_vector,
+        )
+
+        degrees = self.graph_data.degrees
+        self_loops = self.graph_data.self_loop_values
+
+        for vertex_index, position in enumerate(layout_object):
+            graph.vs[vertex_index]["x"] = float(position[0])
+            graph.vs[vertex_index]["y"] = float(position[1])
+            graph.vs[vertex_index]["color_value"] = float(color_values[vertex_index])
+            graph.vs[vertex_index]["degree"] = int(degrees[vertex_index])
+            graph.vs[vertex_index]["self_loop_real"] = float(np.real(self_loops[vertex_index]))
+            graph.vs[vertex_index]["self_loop_imag"] = float(np.imag(self_loops[vertex_index]))
+
+        # Attach edge weights from adjacency.
+        weight_by_edge = {}
+        adjacency = self.graph_data.adjacency.tocoo()
+        for row, col, value in zip(adjacency.row, adjacency.col, adjacency.data, strict=True):
+            source = int(row)
+            target = int(col)
+            if source < target:
+                weight_by_edge[(source, target)] = complex(value)
+
+        for edge in graph.es:
+            source = int(edge.source)
+            target = int(edge.target)
+            key = (source, target) if source < target else (target, source)
+            value = weight_by_edge.get(key, 0.0)
+            edge["weight"] = float(abs(value))
+            edge["hamiltonian_weight_real"] = float(np.real(value))
+            edge["hamiltonian_weight_imag"] = float(np.imag(value))
 
         return graph
 
@@ -587,17 +769,18 @@ def _igraph_layout(graph, layout: LayoutName, **kwargs):
         ) from exc
 
 
-def _networkx_layout(graph, layout: LayoutName):
+def _networkx_layout(graph, layout: LayoutName, **kwargs):
     """Return networkx positions."""
     import networkx as nx
 
     if layout in ("auto", "spring", "fr", "grid_fr"):
-        return nx.spring_layout(graph, seed=0)
+        kwargs.setdefault("seed", 0)
+        return nx.spring_layout(graph, **kwargs)
 
     if layout in ("kk", "kamada_kawai"):
-        return nx.kamada_kawai_layout(graph)
+        return nx.kamada_kawai_layout(graph, **kwargs)
 
     if layout == "circle":
-        return nx.circular_layout(graph)
+        return nx.circular_layout(graph, **kwargs)
 
     raise ValueError(f"Unsupported networkx layout: {layout!r}")
