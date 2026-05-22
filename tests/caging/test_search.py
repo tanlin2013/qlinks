@@ -1,10 +1,10 @@
 import numpy as np
 
 from qlinks.caging import (
-    CageState,
+    CageRecord,
     CageSearchConfig,
     CageSearchResult,
-    CageRecord,
+    CageState,
     CandidateSubgraph,
 )
 

@@ -110,16 +110,34 @@ def _make_two_zero_closed_interference_kinetic(
     n_basis = basis_configs.shape[0]
 
     rows = [
-        h0, h0, v1, v2,
-        h1, h1, w1, w2,
+        h0,
+        h0,
+        v1,
+        v2,
+        h1,
+        h1,
+        w1,
+        w2,
     ]
     cols = [
-        v1, v2, h0, h0,
-        w1, w2, h1, h1,
+        v1,
+        v2,
+        h0,
+        h0,
+        w1,
+        w2,
+        h1,
+        h1,
     ]
     data = [
-        1.0, 1.0, 1.0, 1.0,
-        1.0, 1.0, 1.0, 1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
     ]
 
     kinetic = scipy_sparse.csr_array(
@@ -237,8 +255,7 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
     assert report.fraction_zeros_with_closed_complement_targets == pytest.approx(1.0)
 
     reports_by_zero = {
-        int(zero_report.zero_index): zero_report
-        for zero_report in report.zero_reports
+        int(zero_report.zero_index): zero_report for zero_report in report.zero_reports
     }
 
     h0_report = reports_by_zero[indices["h0"]]
@@ -247,12 +264,8 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
     assert h0_report.q_sector_weight == pytest.approx(0.5)
     assert h1_report.q_sector_weight == pytest.approx(0.5)
 
-    assert set(int(i) for i in h0_report.complement_target_indices) == {
-        indices["h1"]
-    }
-    assert set(int(i) for i in h1_report.complement_target_indices) == {
-        indices["h0"]
-    }
+    assert set(int(i) for i in h0_report.complement_target_indices) == {indices["h1"]}
+    assert set(int(i) for i in h1_report.complement_target_indices) == {indices["h0"]}
 
     assert h0_report.complement_targets_are_known_zeros
     assert h1_report.complement_targets_are_known_zeros
@@ -318,9 +331,7 @@ def test_classify_full_state_detects_extended_like_unexplained_complement_cancel
     assert zero_report.q_sector_weight == pytest.approx(0.5)
     assert zero_report.complement_action_norm <= config.action_tolerance
 
-    assert set(int(i) for i in zero_report.complement_target_indices) == {
-        unexplained_target
-    }
+    assert set(int(i) for i in zero_report.complement_target_indices) == {unexplained_target}
     assert set(int(i) for i in zero_report.explained_complement_target_indices) == set()
     assert set(int(i) for i in zero_report.unexplained_complement_target_indices) == {
         unexplained_target
@@ -370,9 +381,7 @@ def test_classify_full_state_returns_ambiguous_when_complement_action_is_nonzero
     assert zero_report.q_sector_weight > config.action_tolerance
     assert zero_report.complement_action_norm > config.action_tolerance
 
-    assert set(int(i) for i in zero_report.complement_target_indices) == {
-        unexplained_target
-    }
+    assert set(int(i) for i in zero_report.complement_target_indices) == {unexplained_target}
     assert set(int(i) for i in zero_report.unexplained_complement_target_indices) == {
         unexplained_target
     }
@@ -452,10 +461,7 @@ def test_classify_full_state_ignores_trivial_zeros_without_active_neighbors():
         config=config,
     )
 
-    zero_indices = {
-        int(zero_report.zero_index)
-        for zero_report in report.zero_reports
-    }
+    zero_indices = {int(zero_report.zero_index) for zero_report in report.zero_reports}
 
     # Only |000> is connected to active support and has nontrivial
     # cancellation. Other zero-amplitude basis states are trivial zeros.

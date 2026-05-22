@@ -182,10 +182,7 @@ def test_solve_candidate_ipr_splits_degenerate_union_support():
 
     assert len(cage_states) == 2
 
-    supports = [
-        set(int(index) for index in cage_state.support)
-        for cage_state in cage_states
-    ]
+    supports = [set(int(index) for index in cage_state.support) for cage_state in cage_states]
 
     assert {0, 1} in supports
     assert {2, 3} in supports
@@ -206,8 +203,5 @@ def test_solve_candidate_ipr_splits_degenerate_union_support():
             hilbert_size=hamiltonian.shape[0],
         )
 
-        residual = np.linalg.norm(
-            hamiltonian @ full_vector
-            - cage_state.energy * full_vector
-        )
+        residual = np.linalg.norm(hamiltonian @ full_vector - cage_state.energy * full_vector)
         assert residual <= config.tolerance

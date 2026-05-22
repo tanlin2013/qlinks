@@ -98,12 +98,10 @@ class CageRecordView:
         return iter(self.records)
 
     @overload
-    def __getitem__(self, index: int) -> CageRecord:
-        ...
+    def __getitem__(self, index: int) -> CageRecord: ...
 
     @overload
-    def __getitem__(self, index: slice) -> list[CageRecord]:
-        ...
+    def __getitem__(self, index: slice) -> list[CageRecord]: ...
 
     def __getitem__(
         self,
@@ -115,9 +113,7 @@ class CageRecordView:
         if len(self.records) == 0:
             if self.signature is None:
                 raise ValueError("No cage records are available.")
-            raise ValueError(
-                f"No cage record found for signature {self.signature}."
-            )
+            raise ValueError(f"No cage record found for signature {self.signature}.")
         return self.records[0]
 
     def to_list(self) -> list[CageRecord]:
@@ -141,30 +137,25 @@ class CageSearchResult:
         return iter(self.records)
 
     @overload
-    def __getitem__(self, index: int) -> CageRecord:
-        ...
+    def __getitem__(self, index: int) -> CageRecord: ...
 
     @overload
-    def __getitem__(self, index: slice) -> list[CageRecord]:
-        ...
+    def __getitem__(self, index: slice) -> list[CageRecord]: ...
 
     @overload
-    def __getitem__(self, index: tuple[int, int]) -> CageRecordView:
-        ...
+    def __getitem__(self, index: tuple[int, int]) -> CageRecordView: ...
 
     @overload
     def __getitem__(
         self,
         index: tuple[tuple[int, int], int],
-    ) -> CageRecord:
-        ...
+    ) -> CageRecord: ...
 
     @overload
     def __getitem__(
         self,
         index: tuple[tuple[int, int], slice],
-    ) -> list[CageRecord]:
-        ...
+    ) -> list[CageRecord]: ...
 
     def __getitem__(
         self,
@@ -658,7 +649,5 @@ def _is_signature_record_index(index: object) -> bool:
 def _normalize_signature(signature: tuple[int, int]) -> tuple[int, int]:
     """Convert numpy integer signatures to plain Python integer tuples."""
     if not _is_signature_index(signature):
-        raise TypeError(
-            "Signature must be a tuple of two integers: (kappa, Z)."
-        )
+        raise TypeError("Signature must be a tuple of two integers: (kappa, Z).")
     return int(signature[0]), int(signature[1])

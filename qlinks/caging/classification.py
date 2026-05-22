@@ -9,7 +9,6 @@ from numpy.typing import NDArray
 
 from qlinks.caging.results import CageState, cage_state_to_full_vector
 
-
 CageSpatialLabel = Literal[
     "regional_candidate",
     "extended_candidate",
@@ -157,10 +156,7 @@ class CageClassificationReport:
             "Complement closure",
             "------------------",
             f"complement targets: {self.n_complement_targets}",
-            (
-                "unexplained complement targets: "
-                f"{self.n_unexplained_complement_targets}"
-            ),
+            ("unexplained complement targets: " f"{self.n_unexplained_complement_targets}"),
             (
                 "fraction zeros with closed complement targets: "
                 f"{_format_float(self.fraction_zeros_with_closed_complement_targets)}"
@@ -170,22 +166,10 @@ class CageClassificationReport:
             "--------------------",
             f"mean Q-sector weight: {_format_float(self.mean_q_sector_weight)}",
             f"max Q-sector weight: {_format_float(self.max_q_sector_weight)}",
-            (
-                "mean reduced action norm: "
-                f"{_format_float(self.mean_reduced_action_norm)}"
-            ),
-            (
-                "max reduced action norm: "
-                f"{_format_float(self.max_reduced_action_norm)}"
-            ),
-            (
-                "mean complement action norm: "
-                f"{_format_float(self.mean_complement_action_norm)}"
-            ),
-            (
-                "max complement action norm: "
-                f"{_format_float(self.max_complement_action_norm)}"
-            ),
+            ("mean reduced action norm: " f"{_format_float(self.mean_reduced_action_norm)}"),
+            ("max reduced action norm: " f"{_format_float(self.max_reduced_action_norm)}"),
+            ("mean complement action norm: " f"{_format_float(self.mean_complement_action_norm)}"),
+            ("max complement action norm: " f"{_format_float(self.max_complement_action_norm)}"),
         ]
 
         if self.metadata:
@@ -213,22 +197,13 @@ class CageClassificationReport:
                 lines.extend(
                     [
                         f"[{report_index}] zero index: {zero_report.zero_index}",
-                        (
-                            "    active neighbors: "
-                            f"{zero_report.active_neighbors.tolist()}"
-                        ),
+                        ("    active neighbors: " f"{zero_report.active_neighbors.tolist()}"),
                         (
                             "    cancellation residual: "
                             f"{_format_float(zero_report.cancellation_residual)}"
                         ),
-                        (
-                            "    local region size: "
-                            f"{zero_report.local_region_size}"
-                        ),
-                        (
-                            "    Q-sector weight: "
-                            f"{_format_float(zero_report.q_sector_weight)}"
-                        ),
+                        ("    local region size: " f"{zero_report.local_region_size}"),
+                        ("    Q-sector weight: " f"{_format_float(zero_report.q_sector_weight)}"),
                         (
                             "    complement action norm: "
                             f"{_format_float(zero_report.complement_action_norm)}"
@@ -328,9 +303,7 @@ def classify_full_state(
 
     hilbert_size = int(full_state.size)
     if basis_configs.shape[0] != hilbert_size:
-        raise ValueError(
-            "basis_configs.shape[0] must match full_state.size."
-        )
+        raise ValueError("basis_configs.shape[0] must match full_state.size.")
 
     kinetic_csr = scipy_sparse.csr_array(kinetic_matrix)
 
@@ -359,10 +332,7 @@ def classify_full_state(
         config=config,
     )
 
-    pattern_keys = {
-        _local_pattern_key(report)
-        for report in zero_reports
-    }
+    pattern_keys = {_local_pattern_key(report) for report in zero_reports}
 
     q_weights = np.array(
         [report.q_sector_weight for report in zero_reports],
@@ -376,9 +346,7 @@ def classify_full_state(
         [report.complement_action_norm for report in zero_reports],
         dtype=float,
     )
-    n_complement_targets = sum(
-        report.n_complement_targets for report in zero_reports
-    )
+    n_complement_targets = sum(report.n_complement_targets for report in zero_reports)
     n_unexplained_complement_targets = sum(
         report.n_unexplained_complement_targets for report in zero_reports
     )
@@ -387,12 +355,7 @@ def classify_full_state(
         fraction_closed = 0.0
     else:
         fraction_closed = float(
-            np.mean(
-                [
-                    report.complement_targets_are_known_zeros
-                    for report in zero_reports
-                ]
-            )
+            np.mean([report.complement_targets_are_known_zeros for report in zero_reports])
         )
 
     return CageClassificationReport(
@@ -561,10 +524,7 @@ def _annotate_complement_closure(
     This is model-free. It only checks closure of the interference-zero
     network in Fock space.
     """
-    known_zero_indices = {
-        int(report.zero_index)
-        for report in zero_reports
-    }
+    known_zero_indices = {int(report.zero_index) for report in zero_reports}
 
     annotated_reports: list[InterferenceZeroReport] = []
 
@@ -603,9 +563,7 @@ def _annotate_complement_closure(
                     unexplained,
                     dtype=np.int64,
                 ),
-                complement_targets_are_known_zeros=(
-                    complement_targets_are_known_zeros
-                ),
+                complement_targets_are_known_zeros=(complement_targets_are_known_zeros),
                 local_transitions=report.local_transitions,
             )
         )
@@ -642,8 +600,7 @@ def _q_sector_weight(
         return 1.0
 
     same_common_sector = np.all(
-        basis_configs[:, common_mask]
-        == reference_config[common_mask][None, :],
+        basis_configs[:, common_mask] == reference_config[common_mask][None, :],
         axis=1,
     )
     complement_mask = ~same_common_sector
@@ -704,10 +661,7 @@ def _apply_reduced_local_operator(
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     local_mask: NDArray[np.bool_],
-    local_transitions: (
-        tuple[LocalTransitionPattern, ...]
-        | list[LocalTransitionPattern]
-    ),
+    local_transitions: tuple[LocalTransitionPattern, ...] | list[LocalTransitionPattern],
     common_mask: NDArray[np.bool_] | None = None,
     reference_config: NDArray[np.integer] | None = None,
     use_complement_common_sector: bool = False,
@@ -739,14 +693,9 @@ def _apply_reduced_local_operator(
 
         if common_mask is not None:
             if reference_config is None:
-                raise ValueError(
-                    "reference_config is required when common_mask is used."
-                )
+                raise ValueError("reference_config is required when common_mask is used.")
 
-            in_common_sector = np.all(
-                source_config[common_mask]
-                == reference_config[common_mask]
-            )
+            in_common_sector = np.all(source_config[common_mask] == reference_config[common_mask])
 
             if use_complement_common_sector and in_common_sector:
                 continue
@@ -788,10 +737,7 @@ def _build_config_to_index(
     basis_configs: NDArray[np.integer],
 ) -> dict[tuple[int, ...], int]:
     """Map each full basis configuration to its basis index."""
-    return {
-        _config_key(config): int(index)
-        for index, config in enumerate(basis_configs)
-    }
+    return {_config_key(config): int(index) for index, config in enumerate(basis_configs)}
 
 
 def _config_key(config: NDArray[np.integer]) -> tuple[int, ...]:
@@ -854,9 +800,7 @@ def _classify_from_zero_reports(
         dtype=float,
     )
 
-    small_support = (
-        support_fraction <= config.regional_support_fraction_threshold
-    )
+    small_support = support_fraction <= config.regional_support_fraction_threshold
 
     q_empty = q_weights <= config.action_tolerance
 
@@ -866,10 +810,7 @@ def _classify_from_zero_reports(
     # closer to projector-like annihilation or constrained annihilation.
     complement_closed_by_known_zeros = np.array(
         [
-            (
-                report.complement_targets_are_known_zeros
-                and report.n_complement_targets > 0
-            )
+            (report.complement_targets_are_known_zeros and report.n_complement_targets > 0)
             for report in zero_reports
         ],
         dtype=bool,
@@ -880,21 +821,14 @@ def _classify_from_zero_reports(
     if small_support and bool(np.all(regionally_explained)):
         return "regional_candidate"
 
-    complement_action_small_for_all = bool(
-        np.all(complement_norms <= config.action_tolerance)
-    )
+    complement_action_small_for_all = bool(np.all(complement_norms <= config.action_tolerance))
 
-    q_sector_nonempty_fraction = float(
-        np.mean(q_weights > config.action_tolerance)
-    )
+    q_sector_nonempty_fraction = float(np.mean(q_weights > config.action_tolerance))
 
-    complement_not_regionally_explained = bool(
-        np.any(~regionally_explained)
-    )
+    complement_not_regionally_explained = bool(np.any(~regionally_explained))
 
     if (
-        q_sector_nonempty_fraction
-        >= config.extended_q_weight_fraction_threshold
+        q_sector_nonempty_fraction >= config.extended_q_weight_fraction_threshold
         and complement_action_small_for_all
         and complement_not_regionally_explained
     ):

@@ -96,19 +96,14 @@ def _build_validated_cage_state(
     compact_vertices, compact_local_state = _compact_support_from_local_state(
         parent_vertices,
         local_state_on_parent,
-        tolerance=(
-            config.ipr_support_tolerance_factor * config.tolerance
-        ),
+        tolerance=(config.ipr_support_tolerance_factor * config.tolerance),
     )
 
     # Validate against the parent candidate first.
-    boundary_residual = float(
-        scipy_linalg.norm(dense_boundary_matrix @ local_state_on_parent)
-    )
+    boundary_residual = float(scipy_linalg.norm(dense_boundary_matrix @ local_state_on_parent))
     eigen_residual = float(
         scipy_linalg.norm(
-            dense_internal_matrix @ local_state_on_parent
-            - energy_value * local_state_on_parent
+            dense_internal_matrix @ local_state_on_parent - energy_value * local_state_on_parent
         )
     )
 
@@ -120,10 +115,7 @@ def _build_validated_cage_state(
         )
         full_state[parent_vertices] = local_state_on_parent
         full_residual = float(
-            scipy_linalg.norm(
-                _apply_matrix(hamiltonian, full_state)
-                - energy_value * full_state
-            )
+            scipy_linalg.norm(_apply_matrix(hamiltonian, full_state) - energy_value * full_state)
         )
 
     if boundary_residual > config.tolerance:
@@ -132,10 +124,7 @@ def _build_validated_cage_state(
     if eigen_residual > config.tolerance:
         return None
 
-    if (
-        full_residual is not None
-        and full_residual > config.tolerance
-    ):
+    if full_residual is not None and full_residual > config.tolerance:
         return None
 
     return CageState(
@@ -203,22 +192,15 @@ def solve_candidate(
 
         used_ipr = False
 
-        if (
-                len(state_indices) > 1
-                and config.degenerate_basis_strategy == "ipr"
-        ):
+        if len(state_indices) > 1 and config.degenerate_basis_strategy == "ipr":
             ipr_config = IPRLocalizationConfig(
                 n_restarts=config.ipr_n_restarts,
                 max_iter=config.ipr_max_iter,
                 step_size=config.ipr_step_size,
                 convergence_tolerance=config.ipr_convergence_tolerance,
                 candidate_count=config.ipr_candidate_count,
-                amplitude_tolerance=(
-                        config.ipr_support_tolerance_factor * config.tolerance
-                ),
-                rank_tolerance=(
-                        config.ipr_rank_tolerance_factor * config.tolerance
-                ),
+                amplitude_tolerance=(config.ipr_support_tolerance_factor * config.tolerance),
+                rank_tolerance=(config.ipr_rank_tolerance_factor * config.tolerance),
                 random_seed=config.ipr_random_seed,
             )
 
@@ -244,9 +226,7 @@ def solve_candidate(
                     "invariant_subspace_dim": subspace_basis.shape[1],
                     "degenerate_group_index": group_index,
                     "degenerate_group_size": len(state_indices),
-                    "degenerate_basis_strategy": (
-                        "ipr" if used_ipr else "none"
-                    ),
+                    "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
                 },
             )
 

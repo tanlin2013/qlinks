@@ -764,9 +764,7 @@ class HoneycombQLMModel(QLMBase):
         elif charge_convention == "even_negative":
             even_sign = -1
         else:
-            raise ValueError(
-                "charge_convention must be 'even_positive' or 'even_negative'."
-            )
+            raise ValueError("charge_convention must be 'even_positive' or 'even_negative'.")
 
         charges = np.empty(lattice.num_sites, dtype=np.int64)
 

@@ -154,14 +154,10 @@ def maximize_ipr_once(
             break
         previous_value = ipr_value
 
-        gradient = 2.0 * (
-            basis.conj().T @ ((np.abs(local_state) ** 2) * local_state)
-        )
+        gradient = 2.0 * (basis.conj().T @ ((np.abs(local_state) ** 2) * local_state))
 
         # Tangent-space projection for ||coefficients||_2 = 1.
-        gradient = gradient - coefficients * np.real(
-            np.vdot(coefficients, gradient)
-        )
+        gradient = gradient - coefficients * np.real(np.vdot(coefficients, gradient))
 
         trial_coefficients = coefficients + step_size * gradient
         trial_coefficients = _normalize_vector(
