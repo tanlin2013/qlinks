@@ -69,13 +69,12 @@ The exact public API is still evolving, so treat this section as the intended hi
 ### 1. Build a model and Hamiltonian
 
 ```python
-from qlinks.models import SquareQLMModel
+from qlinks.models import SquareQDMModel
 
-model = SquareQLMModel(
+model = SquareQDMModel(
     lx=4,
     ly=4,
     boundary_condition="periodic",
-    charges=0,
     winding_x=0,
     winding_y=0,
     kinetic=1.0,
@@ -104,9 +103,8 @@ basis = build_result.basis
 from qlinks.caging import CageSearchConfig, CageSearcher
 
 config = CageSearchConfig(
-    search_type="qlm",
+    search_type="qdm",
     type1_kappas=(0,),
-    type2_kappas=(-2, 2),
     tolerance=1e-10,
     degenerate_basis_strategy="ipr",
     ipr_n_restarts=256,
