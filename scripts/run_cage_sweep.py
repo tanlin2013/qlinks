@@ -199,10 +199,13 @@ def should_skip_completed(task: CageSweepTask) -> bool:
     if status is None:
         return False
 
-    return status.get("status") == "completed" and hdf5_path(
-        task.settings.output_root,
-        task.job,
-    ).exists()
+    return (
+        status.get("status") == "completed"
+        and hdf5_path(
+            task.settings.output_root,
+            task.job,
+        ).exists()
+    )
 
 
 def make_model(job: CageSweepJob):
@@ -367,12 +370,8 @@ def write_cage_hdf5(
             n_nontrivial_zeros[record_index] = report.n_nontrivial_zeros
             n_distinct_local_patterns[record_index] = report.n_distinct_local_patterns
             n_complement_targets[record_index] = report.n_complement_targets
-            n_unexplained_complement_targets[record_index] = (
-                report.n_unexplained_complement_targets
-            )
-            closed_fractions[record_index] = (
-                report.fraction_zeros_with_closed_complement_targets
-            )
+            n_unexplained_complement_targets[record_index] = report.n_unexplained_complement_targets
+            closed_fractions[record_index] = report.fraction_zeros_with_closed_complement_targets
             mean_q_weights[record_index] = report.mean_q_sector_weight
             max_q_weights[record_index] = report.max_q_sector_weight
             mean_complement_norms[record_index] = report.mean_complement_action_norm
@@ -660,8 +659,7 @@ def run_one_job(task: CageSweepTask) -> dict[str, Any]:
         write_json(directory / "summary.json", summary)
         if classification_reports:
             report_text = "\n\n".join(
-                report.to_text(verbose=False)
-                for report in classification_reports[:20]
+                report.to_text(verbose=False) for report in classification_reports[:20]
             )
             (directory / "classification_preview.txt").write_text(
                 report_text,
@@ -745,14 +743,10 @@ def make_sector_probe_model(
         charges="zero" if model_kind == "qlm" and geometry != "honeycomb" else None,
         charge_magnitude=1 if model_kind == "qlm" and geometry == "honeycomb" else None,
         charge_convention=(
-            "even_positive"
-            if model_kind == "qlm" and geometry == "honeycomb"
-            else None
+            "even_positive" if model_kind == "qlm" and geometry == "honeycomb" else None
         ),
         charge_normalization=(
-            "integer_flux"
-            if model_kind == "qlm" and geometry == "honeycomb"
-            else "spin_half"
+            "integer_flux" if model_kind == "qlm" and geometry == "honeycomb" else "spin_half"
         ),
     )
     return make_model(dummy)
@@ -927,9 +921,7 @@ def main() -> None:
         sizes["honeycomb"] = parse_size_list(args.honeycomb_sizes)
 
     model_kinds = [item.strip() for item in args.models.split(",") if item.strip()]
-    geometries = [
-        item.strip() for item in args.geometries.split(",") if item.strip()
-    ]
+    geometries = [item.strip() for item in args.geometries.split(",") if item.strip()]
 
     jobs = make_jobs(
         model_kinds=model_kinds,  # type: ignore[arg-type]

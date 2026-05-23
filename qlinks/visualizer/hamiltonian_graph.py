@@ -364,9 +364,7 @@ class HamiltonianGraphVisualizer:
         try:
             import igraph as ig
         except ImportError as error:
-            raise ImportError(
-                "The igraph-cairo backend requires python-igraph."
-            ) from error
+            raise ImportError("The igraph-cairo backend requires python-igraph.") from error
 
         _ensure_cairo_available()
 
@@ -391,9 +389,7 @@ class HamiltonianGraphVisualizer:
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
 
         vertex_labels = (
-            [str(index) for index in range(graph.vcount())]
-            if self.style.label_vertices
-            else None
+            [str(index) for index in range(graph.vcount())] if self.style.label_vertices else None
         )
 
         visual_style = {
@@ -739,18 +735,18 @@ class HamiltonianGraphVisualizer:
         return graph
 
     def save_plot(
-            self,
-            path: str | Path,
-            *,
-            backend: GraphBackend = "igraph-cairo",
-            color_by: NodeColorRule = "constant",
-            layout: LayoutName = "auto",
-            self_loop_values: npt.ArrayLike | None = None,
-            state_vector: npt.ArrayLike | None = None,
-            title: str | None = None,
-            bbox: tuple[int, int] = (800, 800),
-            margin: int = 40,
-            **layout_kwargs,
+        self,
+        path: str | Path,
+        *,
+        backend: GraphBackend = "igraph-cairo",
+        color_by: NodeColorRule = "constant",
+        layout: LayoutName = "auto",
+        self_loop_values: npt.ArrayLike | None = None,
+        state_vector: npt.ArrayLike | None = None,
+        title: str | None = None,
+        bbox: tuple[int, int] = (800, 800),
+        margin: int = 40,
+        **layout_kwargs,
     ) -> Path:
         """Save a graph visualization to disk.
 
@@ -802,18 +798,18 @@ class HamiltonianGraphVisualizer:
         return path
 
     def save(
-            self,
-            path: str | Path,
-            *,
-            backend: GraphBackend = "igraph-cairo",
-            color_by: NodeColorRule = "constant",
-            layout: LayoutName = "auto",
-            self_loop_values: npt.ArrayLike | None = None,
-            state_vector: npt.ArrayLike | None = None,
-            title: str | None = None,
-            bbox: tuple[int, int] = (800, 800),
-            margin: int = 40,
-            **layout_kwargs,
+        self,
+        path: str | Path,
+        *,
+        backend: GraphBackend = "igraph-cairo",
+        color_by: NodeColorRule = "constant",
+        layout: LayoutName = "auto",
+        self_loop_values: npt.ArrayLike | None = None,
+        state_vector: npt.ArrayLike | None = None,
+        title: str | None = None,
+        bbox: tuple[int, int] = (800, 800),
+        margin: int = 40,
+        **layout_kwargs,
     ) -> Path:
         """Alias for :meth:`save_plot`."""
         return self.save_plot(
@@ -828,8 +824,6 @@ class HamiltonianGraphVisualizer:
             margin=margin,
             **layout_kwargs,
         )
-
-
 
 
 def _as_csr_array(matrix) -> scipy_sparse.csr_array:
@@ -953,10 +947,7 @@ def _scalar_values_to_hex_colors(
 
     colormap = plt.get_cmap(cmap)
 
-    return [
-        to_hex(colormap(float(value)))
-        for value in normalized_values
-    ]
+    return [to_hex(colormap(float(value))) for value in normalized_values]
 
 
 def _add_colorbar(
@@ -1037,12 +1028,14 @@ def _ensure_cairo_available() -> None:
     """Raise an informative error if no Cairo Python binding is available."""
     try:
         import cairo  # noqa: F401
+
         return
     except ImportError:
         pass
 
     try:
         import cairocffi  # noqa: F401
+
         return
     except ImportError as error:
         raise ImportError(
