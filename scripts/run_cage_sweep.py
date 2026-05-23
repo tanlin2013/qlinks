@@ -10,6 +10,7 @@ import time
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from fractions import Fraction
 from pathlib import Path
 from typing import Any, Literal
 
@@ -121,10 +122,22 @@ def dataclass_to_jsonable(obj: Any) -> Any:
         }
 
     if isinstance(obj, dict):
-        return {str(key): dataclass_to_jsonable(value) for key, value in obj.items()}
+        return {
+            str(dataclass_to_jsonable(key)): dataclass_to_jsonable(value)
+            for key, value in obj.items()
+        }
 
     if isinstance(obj, (list, tuple)):
         return [dataclass_to_jsonable(value) for value in obj]
+
+    if isinstance(obj, Fraction):
+        if obj.denominator == 1:
+            return int(obj.numerator)
+        return {
+            "numerator": int(obj.numerator),
+            "denominator": int(obj.denominator),
+            "as_string": str(obj),
+        }
 
     if isinstance(obj, np.ndarray):
         return obj.tolist()
@@ -142,6 +155,23 @@ def dataclass_to_jsonable(obj: Any) -> Any:
         return {"real": float(obj.real), "imag": float(obj.imag)}
 
     return obj
+
+
+def safe_label_value(value: Any) -> str:
+    """Return a path-safe label value."""
+    if isinstance(value, Fraction):
+        if value.denominator == 1:
+            return str(value.numerator)
+        return f"{value.numerator}over{value.denominator}"
+
+    text = str(value)
+    return (
+        text.replace("/", "over")
+        .replace(" ", "")
+        .replace("(", "")
+        .replace(")", "")
+        .replace(",", "_")
+    )
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -783,7 +813,8 @@ def make_jobs(
 
                 for sector in sectors:
                     sector_label = "_".join(
-                        f"{key}{value}" for key, value in sorted(sector.items())
+                        f"{key}{safe_label_value(value)}"
+                        for key, value in sorted(sector.items())
                     )
                     if not sector_label:
                         sector_label = "nosector"
