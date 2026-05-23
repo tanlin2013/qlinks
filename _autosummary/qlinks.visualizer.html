@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks.visualizer &#8212; qlinks 0.1.0rc1 documentation</title>
+    <title>qlinks.visualizer &#8212; qlinks 1.0.0a0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=370c4a40"></script>
+    <script src="../_static/documentation_options.js?v=20af2631"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -50,7 +50,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0rc1" />
+  <meta name="docsearch:version" content="1.0.0a0" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 0.1.0rc1 documentation</p>
+    <p class="title logo__title">qlinks 1.0.0a0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -156,21 +156,25 @@
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../lattice.html">1. Lattice</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.component.html">1.1. qlinks.lattice.component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.square_lattice.html">1.2. qlinks.lattice.square_lattice</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../symmetry.html">2. Symmetry</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.symmetry.gauss_law.html">2.1. qlinks.symmetry.gauss_law</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.symmetry.translation.html">2.2. qlinks.symmetry.translation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../solver.html">3. Solver</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.solver.deep_first_search.html">3.1. qlinks.solver.deep_first_search</a></li>
-</ul>
-</details></li>
-<li class="toctree-l1"><a class="reference internal" href="../visualizer.html">4. Visualizer</a></li>
 </ul>
 
     </div>
@@ -293,7 +297,9 @@
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
 </button>
-
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
 </div></div>
       
     </div>
@@ -309,6 +315,107 @@
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.lattice"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.lattice</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.layout"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.layout</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.style"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.periodic_image_mode"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.periodic_image_mode</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.collapse_duplicate_visual_links"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.collapse_duplicate_visual_links</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.coordinate_scale"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.coordinate_scale</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.coordinate_transform"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.coordinate_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.site_label_style"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.site_label_style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.link_value"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.link_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.site_value"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.site_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.has_link_variables"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.has_link_variables()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.plot"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.save"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.save()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.__init__"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.lattice"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.lattice</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.layout"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.layout</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.style"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.periodic_image_mode"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.periodic_image_mode</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.collapse_duplicate_visual_links"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.collapse_duplicate_visual_links</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.coordinate_scale"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.coordinate_scale</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.coordinate_transform"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.coordinate_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.site_label_style"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.site_label_style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.plot"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.__init__"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.adjacency"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.adjacency</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.self_loop_values"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.self_loop_values</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.n_vertices"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.n_vertices</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.degrees"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.degrees</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.__init__"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.vertex_size"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.vertex_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_width"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.edge_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_alpha"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.edge_alpha</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.label_vertices"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.label_vertices</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.vertex_label_size"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.vertex_label_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.colorbar"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.colorbar</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.cmap"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.cmap</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.default_vertex_color"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.default_vertex_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_color"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.edge_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.figure_size"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.figure_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.__init__"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.graph_data"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.graph_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.style"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.from_sparse_matrix"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.from_sparse_matrix()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.bipartition_labels"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.bipartition_labels()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.node_values"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.node_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.plot"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_igraph()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_networkx()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save_graph"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.save_graph()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx_with_layout"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_networkx_with_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph_with_layout"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_igraph_with_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save_plot"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.save_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.save()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.__init__"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.node_size"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.node_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.node_color"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.node_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.edge_color"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.edge_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.empty_edge_color"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.empty_edge_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.arrow_linewidth"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.arrow_linewidth</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.arrow_alpha"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.arrow_alpha</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.arrow_mutation_scale"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.arrow_mutation_scale</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.arrow_shrink_points"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.arrow_shrink_points</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.occupied_width"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.occupied_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.empty_width"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.empty_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.occupied_alpha"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.occupied_alpha</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.empty_alpha"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.empty_alpha</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.site_label_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.site_label_fontsize</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.link_label_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.link_label_fontsize</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.plaquette_symbol_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.plaquette_symbol_fontsize</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.plaquette_symbol_offset"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.plaquette_symbol_offset</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.__init__"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.automatic_grid_shape"><code class="docutils literal notranslate"><span class="pre">automatic_grid_shape()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.bipartition_labels"><code class="docutils literal notranslate"><span class="pre">bipartition_labels()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.format_basis_config"><code class="docutils literal notranslate"><span class="pre">format_basis_config()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.plot_basis_config"><code class="docutils literal notranslate"><span class="pre">plot_basis_config()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.plot_basis_grid"><code class="docutils literal notranslate"><span class="pre">plot_basis_grid()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -320,6 +427,976 @@
                   
   <section id="module-qlinks.visualizer">
 <span id="qlinks-visualizer"></span><h1>qlinks.visualizer<a class="headerlink" href="#module-qlinks.visualizer" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">BasisConfigurationVisualizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic_image_mode='positive_patch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_duplicate_visual_links=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_scale=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_transform=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_label_style='cell_sublattice'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#BasisConfigurationVisualizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Geometry-detached basis-configuration visualizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lattice</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>qlinks.lattice.graph.LatticeGraph</em></a>) – A LatticeGraph, e.g. ChainLattice or SquareLattice.</p></li>
+<li><p><strong>layout</strong> (<a class="reference internal" href="../qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>qlinks.variables.layout.VariableLayout</em></a><em> | </em><em>None</em>) – VariableLayout mapping site/link ids to positions in the raw config
+array. If None, the visualizer assumes link variable index == link id
+for link plotting.</p></li>
+<li><p><strong>periodic_image_mode</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'positive_patch'</em><em>]</em>) – <p>How to draw links that wrap periodic boundaries.</p>
+<p>”none”: Don’t draw wrapped links.</p>
+<p>”positive”: Draw wrapped links with the target site shifted by +1 period
+so they appear next to the source site. This is usually more intuitive
+for small lattices.</p>
+<p>”both”: Draw both the original wrapped link and the complementary image
+link. This is more complete but can be visually cluttered.</p>
+</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle" title="qlinks.visualizer.basis.LinkVisualStyle"><em>LinkVisualStyle</em></a>)</p></li>
+<li><p><strong>collapse_duplicate_visual_links</strong> (<em>bool</em>)</p></li>
+<li><p><strong>coordinate_scale</strong> (<em>float</em>)</p></li>
+<li><p><strong>coordinate_transform</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>float64</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>site_label_style</strong> (<em>Literal</em><em>[</em><em>'cell'</em><em>, </em><em>'cell_sublattice'</em><em>, </em><em>'sublattice_cell'</em><em>, </em><em>'site_id'</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.lattice">
+<span class="sig-name descname"><span class="pre">lattice</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><span class="pre">LatticeGraph</span></a></em><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.lattice" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.layout">
+<span class="sig-name descname"><span class="pre">layout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><span class="pre">VariableLayout</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.layout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.style">
+<span class="sig-name descname"><span class="pre">style</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle" title="qlinks.visualizer.basis.LinkVisualStyle"><span class="pre">LinkVisualStyle</span></a></em><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.style" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.periodic_image_mode">
+<span class="sig-name descname"><span class="pre">periodic_image_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'none'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'positive_patch'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'positive_patch'</span></em><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.periodic_image_mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.collapse_duplicate_visual_links">
+<span class="sig-name descname"><span class="pre">collapse_duplicate_visual_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.collapse_duplicate_visual_links" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.coordinate_scale">
+<span class="sig-name descname"><span class="pre">coordinate_scale</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></em><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.coordinate_scale" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.coordinate_transform">
+<span class="sig-name descname"><span class="pre">coordinate_transform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.coordinate_transform" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.site_label_style">
+<span class="sig-name descname"><span class="pre">site_label_style</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'cell'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cell_sublattice'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sublattice_cell'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'site_id'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cell_sublattice'</span></em><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.site_label_style" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.link_value">
+<span class="sig-name descname"><span class="pre">link_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#BasisConfigurationVisualizer.link_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.link_value" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
+<li><p><strong>link_id</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.site_value">
+<span class="sig-name descname"><span class="pre">site_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#BasisConfigurationVisualizer.site_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.site_value" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
+<li><p><strong>site_id</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.has_link_variables">
+<span class="sig-name descname"><span class="pre">has_link_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#BasisConfigurationVisualizer.has_link_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.has_link_variables" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'matplotlib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'arrows'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_site_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_site_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_link_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_plaquette_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_symbol_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'square_qlm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#BasisConfigurationVisualizer.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot one basis configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode=&quot;arrows&quot;</strong> – QLM-like style. Positive / 1 values point along the stored link
+orientation. Negative / 0 values point opposite.</p></li>
+<li><p><strong>mode=&quot;dimers&quot;</strong> – QDM-like style. Value 1 links are drawn thick; value 0 links are
+faint.</p></li>
+<li><p><strong>mode=&quot;values&quot;</strong> – Draw the lattice and place link values at link centers.</p></li>
+<li><p><strong>plaquette_symbol_style</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'square_qlm'</em><em>, </em><em>'circulation'</em><em>, </em><em>'resonance'</em><em>]</em>)</p></li>
+<li><p><strong>&quot;circulation&quot;</strong> – <p>QLM-like signed-flux circulation marker.
+Draws circular arrows only when all nonzero signed link variables circulate</p>
+<blockquote>
+<div><p>consistently around a plaquette.</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>&quot;resonance&quot;</strong> – QDM-like binary resonance marker.</p></li>
+<li><p><strong>plaquette.</strong> (<em>Draws a marker when binary dimer occupations alternate around an even-length</em>)</p></li>
+<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
+<li><p><strong>show</strong> (<em>bool</em>)</p></li>
+<li><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'matplotlib'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>mode</strong> (<em>Literal</em><em>[</em><em>'arrows'</em><em>, </em><em>'dimers'</em><em>, </em><em>'values'</em><em>]</em>)</p></li>
+<li><p><strong>with_site_labels</strong> (<em>bool</em>)</p></li>
+<li><p><strong>with_site_values</strong> (<em>bool</em>)</p></li>
+<li><p><strong>with_link_values</strong> (<em>bool</em>)</p></li>
+<li><p><strong>with_plaquette_symbols</strong> (<em>bool</em>)</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">plot_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#BasisConfigurationVisualizer.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.save" title="Link to this definition">#</a></dt>
+<dd><p>Save a visualization to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
+<li><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p></li>
+<li><p><strong>dpi</strong> (<em>int</em>)</p></li>
+<li><p><strong>show</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisConfigurationVisualizer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic_image_mode='positive_patch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_duplicate_visual_links=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_scale=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_transform=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_label_style='cell_sublattice'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.visualizer.BasisConfigurationVisualizer.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lattice</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
+<li><p><strong>layout</strong> (<a class="reference internal" href="../qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle" title="qlinks.visualizer.basis.LinkVisualStyle"><em>LinkVisualStyle</em></a>)</p></li>
+<li><p><strong>periodic_image_mode</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'positive_patch'</em><em>]</em>)</p></li>
+<li><p><strong>collapse_duplicate_visual_links</strong> (<em>bool</em>)</p></li>
+<li><p><strong>coordinate_scale</strong> (<em>float</em>)</p></li>
+<li><p><strong>coordinate_transform</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>float64</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>site_label_style</strong> (<em>Literal</em><em>[</em><em>'cell'</em><em>, </em><em>'cell_sublattice'</em><em>, </em><em>'sublattice_cell'</em><em>, </em><em>'site_id'</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">BasisGridVisualizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic_image_mode='positive_patch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_duplicate_visual_links=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_scale=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_transform=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_label_style='cell_sublattice'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#BasisGridVisualizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Plot many basis configurations as an n by m grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lattice</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>qlinks.lattice.graph.LatticeGraph</em></a>) – Geometry/topology object.</p></li>
+<li><p><strong>layout</strong> (<a class="reference internal" href="../qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>qlinks.variables.layout.VariableLayout</em></a><em> | </em><em>None</em>) – Variable layout used to interpret each config array.</p></li>
+<li><p><strong>single_visualizer</strong> – Optional custom single-state visualizer. If omitted, this class creates
+BasisConfigurationVisualizer(lattice, layout).</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle" title="qlinks.visualizer.basis.LinkVisualStyle"><em>LinkVisualStyle</em></a>)</p></li>
+<li><p><strong>periodic_image_mode</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'positive_patch'</em><em>]</em>)</p></li>
+<li><p><strong>collapse_duplicate_visual_links</strong> (<em>bool</em>)</p></li>
+<li><p><strong>coordinate_scale</strong> (<em>float</em>)</p></li>
+<li><p><strong>coordinate_transform</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>site_label_style</strong> (<em>Literal</em><em>[</em><em>'cell'</em><em>, </em><em>'cell_sublattice'</em><em>, </em><em>'sublattice_cell'</em><em>, </em><em>'site_id'</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.lattice">
+<span class="sig-name descname"><span class="pre">lattice</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><span class="pre">LatticeGraph</span></a></em><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.lattice" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.layout">
+<span class="sig-name descname"><span class="pre">layout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><span class="pre">VariableLayout</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.layout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.style">
+<span class="sig-name descname"><span class="pre">style</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle" title="qlinks.visualizer.basis.LinkVisualStyle"><span class="pre">LinkVisualStyle</span></a></em><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.style" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.periodic_image_mode">
+<span class="sig-name descname"><span class="pre">periodic_image_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'none'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'positive_patch'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'positive_patch'</span></em><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.periodic_image_mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.collapse_duplicate_visual_links">
+<span class="sig-name descname"><span class="pre">collapse_duplicate_visual_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.collapse_duplicate_visual_links" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.coordinate_scale">
+<span class="sig-name descname"><span class="pre">coordinate_scale</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></em><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.coordinate_scale" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.coordinate_transform">
+<span class="sig-name descname"><span class="pre">coordinate_transform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ArrayLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.coordinate_transform" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.site_label_style">
+<span class="sig-name descname"><span class="pre">site_label_style</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'cell'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cell_sublattice'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sublattice_cell'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'site_id'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cell_sublattice'</span></em><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.site_label_style" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_config_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_label_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'compact'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_label_max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'arrows'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'matplotlib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suptitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_plot_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#BasisGridVisualizer.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot a batch of basis states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>states</strong> (<em>ArrayLike</em>) – Either a single config with shape (n_variables,) or a batch with
+shape (n_states, n_variables). Slices like basis.states[:12] work.</p></li>
+<li><p><strong>nrows</strong> (<em>int</em><em> | </em><em>None</em>) – Optional grid shape. If not provided, a near-square shape is chosen.</p></li>
+<li><p><strong>ncols</strong> (<em>int</em><em> | </em><em>None</em>) – Optional grid shape. If not provided, a near-square shape is chosen.</p></li>
+<li><p><strong>start_index</strong> (<em>int</em>) – Index offset used in automatic labels. For example, if plotting
+basis.states[20:30], pass start_index=20.</p></li>
+<li><p><strong>labels</strong> (<em>Sequence</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional explicit labels for each subplot.</p></li>
+<li><p><strong>show_config_label</strong> (<em>bool</em>) – Whether to include the raw config/binary string below the state
+index label.</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – Passed to BasisConfigurationVisualizer.plot.
+Common values: “arrows”, “dimers”, “values”.</p></li>
+<li><p><strong>plaquette_symbols</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'square_qlm'</em><em>, </em><em>'circulation'</em><em>, </em><em>'resonance'</em><em>]</em>) – <dl class="simple">
+<dt>“none”:</dt><dd><p>draw no plaquette symbols.</p>
+</dd>
+<dt>”square_qlm”:</dt><dd><p>use the old 16-symbol square-QLM dictionary. This is only
+meaningful for SquareLattice four-link plaquettes.</p>
+</dd>
+<dt>”circulation”:</dt><dd><p>generic QLM-like circulation marker. Draws circular arrows when
+all link variables circulate consistently around a plaquette.</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>config_label_style</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'compact'</em><em>, </em><em>'array'</em><em>]</em>)</p></li>
+<li><p><strong>config_label_max_length</strong> (<em>int</em>)</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>show</strong> (<em>bool</em>)</p></li>
+<li><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'matplotlib'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>suptitle</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>single_plot_kwargs</strong> (<em>dict</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.BasisGridVisualizer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic_image_mode='positive_patch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_duplicate_visual_links=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_scale=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_transform=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_label_style='cell_sublattice'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.visualizer.BasisGridVisualizer.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lattice</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
+<li><p><strong>layout</strong> (<a class="reference internal" href="../qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle" title="qlinks.visualizer.basis.LinkVisualStyle"><em>LinkVisualStyle</em></a>)</p></li>
+<li><p><strong>periodic_image_mode</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'positive_patch'</em><em>]</em>)</p></li>
+<li><p><strong>collapse_duplicate_visual_links</strong> (<em>bool</em>)</p></li>
+<li><p><strong>coordinate_scale</strong> (<em>float</em>)</p></li>
+<li><p><strong>coordinate_transform</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>site_label_style</strong> (<em>Literal</em><em>[</em><em>'cell'</em><em>, </em><em>'cell_sublattice'</em><em>, </em><em>'sublattice_cell'</em><em>, </em><em>'site_id'</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">HamiltonianGraphData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adjacency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphData" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Graph data extracted from a sparse Hamiltonian matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adjacency</strong> (<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.17.0)"><em>csr_array</em></a>)</p></li>
+<li><p><strong>self_loop_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>complex128</em><em>]</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphData.adjacency">
+<span class="sig-name descname"><span class="pre">adjacency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.17.0)"><span class="pre">csr_array</span></a></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphData.adjacency" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphData.self_loop_values">
+<span class="sig-name descname"><span class="pre">self_loop_values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">complex128</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphData.self_loop_values" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphData.n_vertices">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_vertices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphData.n_vertices" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphData.degrees">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">degrees</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphData.degrees" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adjacency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphData.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adjacency</strong> (<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.17.0)"><em>csr_array</em></a>)</p></li>
+<li><p><strong>self_loop_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>complex128</em><em>]</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">HamiltonianGraphStyle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_vertices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_vertex_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figure_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(7.0,</span> <span class="pre">7.0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphStyle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Style options for drawing Hamiltonian/Fock-space graphs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertex_size</strong> (<em>float</em>)</p></li>
+<li><p><strong>edge_width</strong> (<em>float</em>)</p></li>
+<li><p><strong>edge_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>label_vertices</strong> (<em>bool</em>)</p></li>
+<li><p><strong>vertex_label_size</strong> (<em>float</em>)</p></li>
+<li><p><strong>colorbar</strong> (<em>bool</em>)</p></li>
+<li><p><strong>cmap</strong> (<em>str</em>)</p></li>
+<li><p><strong>default_vertex_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>edge_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>figure_size</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.vertex_size">
+<span class="sig-name descname"><span class="pre">vertex_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.vertex_size" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.edge_width">
+<span class="sig-name descname"><span class="pre">edge_width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_width" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.edge_alpha">
+<span class="sig-name descname"><span class="pre">edge_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_alpha" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.label_vertices">
+<span class="sig-name descname"><span class="pre">label_vertices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.label_vertices" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.vertex_label_size">
+<span class="sig-name descname"><span class="pre">vertex_label_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.vertex_label_size" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.colorbar">
+<span class="sig-name descname"><span class="pre">colorbar</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.colorbar" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.cmap">
+<span class="sig-name descname"><span class="pre">cmap</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.cmap" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.default_vertex_color">
+<span class="sig-name descname"><span class="pre">default_vertex_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.default_vertex_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.edge_color">
+<span class="sig-name descname"><span class="pre">edge_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.figure_size">
+<span class="sig-name descname"><span class="pre">figure_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.figure_size" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphStyle.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_vertices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_vertex_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figure_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(7.0,</span> <span class="pre">7.0)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphStyle.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertex_size</strong> (<em>float</em>)</p></li>
+<li><p><strong>edge_width</strong> (<em>float</em>)</p></li>
+<li><p><strong>edge_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>label_vertices</strong> (<em>bool</em>)</p></li>
+<li><p><strong>vertex_label_size</strong> (<em>float</em>)</p></li>
+<li><p><strong>colorbar</strong> (<em>bool</em>)</p></li>
+<li><p><strong>cmap</strong> (<em>str</em>)</p></li>
+<li><p><strong>default_vertex_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>edge_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>figure_size</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">HamiltonianGraphVisualizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">HamiltonianGraphStyle(vertex_size=14.0,</span> <span class="pre">edge_width=0.8,</span> <span class="pre">edge_alpha=0.45,</span> <span class="pre">label_vertices=False,</span> <span class="pre">vertex_label_size=8.0,</span> <span class="pre">colorbar=True,</span> <span class="pre">cmap='viridis',</span> <span class="pre">default_vertex_color='lightgray',</span> <span class="pre">edge_color='gray',</span> <span class="pre">figure_size=(7.0,</span> <span class="pre">7.0))</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Visualizer for Fock-space graphs induced by Hamiltonian matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph_data</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphData" title="qlinks.visualizer.hamiltonian_graph.HamiltonianGraphData"><em>HamiltonianGraphData</em></a>)</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphStyle" title="qlinks.visualizer.hamiltonian_graph.HamiltonianGraphStyle"><em>HamiltonianGraphStyle</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.graph_data">
+<span class="sig-name descname"><span class="pre">graph_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphData" title="qlinks.visualizer.hamiltonian_graph.HamiltonianGraphData"><span class="pre">HamiltonianGraphData</span></a></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.graph_data" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.style">
+<span class="sig-name descname"><span class="pre">style</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphStyle" title="qlinks.visualizer.hamiltonian_graph.HamiltonianGraphStyle"><span class="pre">HamiltonianGraphStyle</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">HamiltonianGraphStyle(vertex_size=14.0,</span> <span class="pre">edge_width=0.8,</span> <span class="pre">edge_alpha=0.45,</span> <span class="pre">label_vertices=False,</span> <span class="pre">vertex_label_size=8.0,</span> <span class="pre">colorbar=True,</span> <span class="pre">cmap='viridis',</span> <span class="pre">default_vertex_color='lightgray',</span> <span class="pre">edge_color='gray',</span> <span class="pre">figure_size=(7.0,</span> <span class="pre">7.0))</span></em><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.style" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.from_sparse_matrix">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_sparse_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_self_loops</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.from_sparse_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.from_sparse_matrix" title="Link to this definition">#</a></dt>
+<dd><p>Construct a visualizer from a sparse or dense Hamiltonian matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>matrix</strong> – Hamiltonian or kinetic matrix. Nonzero off-diagonal entries define
+graph edges. Diagonal entries are stored as self-loop values.</p></li>
+<li><p><strong>include_self_loops</strong> (<em>bool</em>) – Whether to keep diagonal graph edges. Usually False for drawing.</p></li>
+<li><p><strong>weight_tolerance</strong> (<em>float</em>) – Entries with absolute value &lt;= this threshold are removed.</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphStyle" title="qlinks.visualizer.hamiltonian_graph.HamiltonianGraphStyle"><em>HamiltonianGraphStyle</em></a><em> | </em><em>None</em>) – Optional drawing style.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphVisualizer" title="qlinks.visualizer.hamiltonian_graph.HamiltonianGraphVisualizer"><em>HamiltonianGraphVisualizer</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.bipartition_labels">
+<span class="sig-name descname"><span class="pre">bipartition_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.bipartition_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.bipartition_labels" title="Link to this definition">#</a></dt>
+<dd><p>Return bipartition labels for the graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the graph is not bipartite.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.node_values">
+<span class="sig-name descname"><span class="pre">node_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.node_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.node_values" title="Link to this definition">#</a></dt>
+<dd><p>Return scalar node values used for coloring.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>color_by</strong> (<em>Literal</em><em>[</em><em>'constant'</em><em>, </em><em>'bipartition'</em><em>, </em><em>'self_loop'</em><em>, </em><em>'degree'</em><em>, </em><em>'state_weight'</em><em>, </em><em>'state_amplitude_real'</em><em>, </em><em>'state_amplitude_imag'</em><em>, </em><em>'state_amplitude_abs'</em><em>, </em><em>'state_phase'</em><em>]</em>)</p></li>
+<li><p><strong>self_loop_values</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>state_vector</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>float64</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'igraph'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(800,</span> <span class="pre">800)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">layout_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.plot" title="Link to this definition">#</a></dt>
+<dd><p>Draw the graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'igraph'</em><em>, </em><em>'igraph-mpl'</em><em>, </em><em>'igraph-cairo'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>color_by</strong> (<em>Literal</em><em>[</em><em>'constant'</em><em>, </em><em>'bipartition'</em><em>, </em><em>'self_loop'</em><em>, </em><em>'degree'</em><em>, </em><em>'state_weight'</em><em>, </em><em>'state_amplitude_real'</em><em>, </em><em>'state_amplitude_imag'</em><em>, </em><em>'state_amplitude_abs'</em><em>, </em><em>'state_phase'</em><em>]</em>)</p></li>
+<li><p><strong>layout</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'fr'</em><em>, </em><em>'kk'</em><em>, </em><em>'circle'</em><em>, </em><em>'grid_fr'</em><em>, </em><em>'kamada_kawai'</em><em>, </em><em>'spring'</em><em>]</em>)</p></li>
+<li><p><strong>self_loop_values</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>state_vector</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>show</strong> (<em>bool</em>)</p></li>
+<li><p><strong>save_path</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>target</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>bbox</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>margin</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph">
+<span class="sig-name descname"><span class="pre">to_igraph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.to_igraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph" title="Link to this definition">#</a></dt>
+<dd><p>Convert to an igraph.Graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx">
+<span class="sig-name descname"><span class="pre">to_networkx</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.to_networkx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx" title="Link to this definition">#</a></dt>
+<dd><p>Convert to a networkx.Graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.save_graph">
+<span class="sig-name descname"><span class="pre">save_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'networkx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">layout_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.save_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save_graph" title="Link to this definition">#</a></dt>
+<dd><p>Save graph with computed layout coordinates.</p>
+<p>The graph is always exported through NetworkX writers.</p>
+<dl class="simple">
+<dt>Supported formats:</dt><dd><p>.graphml
+.gexf</p>
+</dd>
+</dl>
+<p>The layout may be computed with either NetworkX or igraph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p></li>
+<li><p><strong>layout_backend</strong> (<em>Literal</em><em>[</em><em>'igraph'</em><em>, </em><em>'igraph-mpl'</em><em>, </em><em>'igraph-cairo'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>layout</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'fr'</em><em>, </em><em>'kk'</em><em>, </em><em>'circle'</em><em>, </em><em>'grid_fr'</em><em>, </em><em>'kamada_kawai'</em><em>, </em><em>'spring'</em><em>]</em>)</p></li>
+<li><p><strong>color_by</strong> (<em>Literal</em><em>[</em><em>'constant'</em><em>, </em><em>'bipartition'</em><em>, </em><em>'self_loop'</em><em>, </em><em>'degree'</em><em>, </em><em>'state_weight'</em><em>, </em><em>'state_amplitude_real'</em><em>, </em><em>'state_amplitude_imag'</em><em>, </em><em>'state_amplitude_abs'</em><em>, </em><em>'state_phase'</em><em>]</em>)</p></li>
+<li><p><strong>self_loop_values</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>state_vector</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx_with_layout">
+<span class="sig-name descname"><span class="pre">to_networkx_with_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'networkx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">layout_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.to_networkx_with_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx_with_layout" title="Link to this definition">#</a></dt>
+<dd><p>Convert to NetworkX graph and attach computed layout coordinates.</p>
+<p>The graph is always returned as NetworkX, but the layout can be computed
+using either NetworkX or igraph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout_backend</strong> (<em>Literal</em><em>[</em><em>'igraph'</em><em>, </em><em>'igraph-mpl'</em><em>, </em><em>'igraph-cairo'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>layout</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'fr'</em><em>, </em><em>'kk'</em><em>, </em><em>'circle'</em><em>, </em><em>'grid_fr'</em><em>, </em><em>'kamada_kawai'</em><em>, </em><em>'spring'</em><em>]</em>)</p></li>
+<li><p><strong>color_by</strong> (<em>Literal</em><em>[</em><em>'constant'</em><em>, </em><em>'bipartition'</em><em>, </em><em>'self_loop'</em><em>, </em><em>'degree'</em><em>, </em><em>'state_weight'</em><em>, </em><em>'state_amplitude_real'</em><em>, </em><em>'state_amplitude_imag'</em><em>, </em><em>'state_amplitude_abs'</em><em>, </em><em>'state_phase'</em><em>]</em>)</p></li>
+<li><p><strong>self_loop_values</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>state_vector</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph_with_layout">
+<span class="sig-name descname"><span class="pre">to_igraph_with_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">layout_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.to_igraph_with_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph_with_layout" title="Link to this definition">#</a></dt>
+<dd><p>Convert to an igraph graph and attach computed layout coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'fr'</em><em>, </em><em>'kk'</em><em>, </em><em>'circle'</em><em>, </em><em>'grid_fr'</em><em>, </em><em>'kamada_kawai'</em><em>, </em><em>'spring'</em><em>]</em>)</p></li>
+<li><p><strong>color_by</strong> (<em>Literal</em><em>[</em><em>'constant'</em><em>, </em><em>'bipartition'</em><em>, </em><em>'self_loop'</em><em>, </em><em>'degree'</em><em>, </em><em>'state_weight'</em><em>, </em><em>'state_amplitude_real'</em><em>, </em><em>'state_amplitude_imag'</em><em>, </em><em>'state_amplitude_abs'</em><em>, </em><em>'state_phase'</em><em>]</em>)</p></li>
+<li><p><strong>self_loop_values</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>state_vector</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.save_plot">
+<span class="sig-name descname"><span class="pre">save_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'igraph-cairo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(800,</span> <span class="pre">800)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">layout_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.save_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save_plot" title="Link to this definition">#</a></dt>
+<dd><p>Save a graph visualization to disk.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">backend='igraph-cairo'</span></code>, the plot is rendered directly by
+igraph/Cairo to <code class="docutils literal notranslate"><span class="pre">path</span></code>.</p>
+<p>For Matplotlib-based backends, the plot is drawn on a Matplotlib figure
+and saved with <code class="docutils literal notranslate"><span class="pre">fig.savefig(path)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p></li>
+<li><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'igraph'</em><em>, </em><em>'igraph-mpl'</em><em>, </em><em>'igraph-cairo'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>color_by</strong> (<em>Literal</em><em>[</em><em>'constant'</em><em>, </em><em>'bipartition'</em><em>, </em><em>'self_loop'</em><em>, </em><em>'degree'</em><em>, </em><em>'state_weight'</em><em>, </em><em>'state_amplitude_real'</em><em>, </em><em>'state_amplitude_imag'</em><em>, </em><em>'state_amplitude_abs'</em><em>, </em><em>'state_phase'</em><em>]</em>)</p></li>
+<li><p><strong>layout</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'fr'</em><em>, </em><em>'kk'</em><em>, </em><em>'circle'</em><em>, </em><em>'grid_fr'</em><em>, </em><em>'kamada_kawai'</em><em>, </em><em>'spring'</em><em>]</em>)</p></li>
+<li><p><strong>self_loop_values</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>state_vector</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>bbox</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>margin</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Path</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'igraph-cairo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_loop_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(800,</span> <span class="pre">800)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">layout_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save" title="Link to this definition">#</a></dt>
+<dd><p>Alias for <a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphVisualizer.save_plot" title="qlinks.visualizer.HamiltonianGraphVisualizer.save_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_plot()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p></li>
+<li><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'igraph'</em><em>, </em><em>'igraph-mpl'</em><em>, </em><em>'igraph-cairo'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>color_by</strong> (<em>Literal</em><em>[</em><em>'constant'</em><em>, </em><em>'bipartition'</em><em>, </em><em>'self_loop'</em><em>, </em><em>'degree'</em><em>, </em><em>'state_weight'</em><em>, </em><em>'state_amplitude_real'</em><em>, </em><em>'state_amplitude_imag'</em><em>, </em><em>'state_amplitude_abs'</em><em>, </em><em>'state_phase'</em><em>]</em>)</p></li>
+<li><p><strong>layout</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'fr'</em><em>, </em><em>'kk'</em><em>, </em><em>'circle'</em><em>, </em><em>'grid_fr'</em><em>, </em><em>'kamada_kawai'</em><em>, </em><em>'spring'</em><em>]</em>)</p></li>
+<li><p><strong>self_loop_values</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>state_vector</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>bbox</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>margin</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Path</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">HamiltonianGraphStyle(vertex_size=14.0,</span> <span class="pre">edge_width=0.8,</span> <span class="pre">edge_alpha=0.45,</span> <span class="pre">label_vertices=False,</span> <span class="pre">vertex_label_size=8.0,</span> <span class="pre">colorbar=True,</span> <span class="pre">cmap='viridis',</span> <span class="pre">default_vertex_color='lightgray',</span> <span class="pre">edge_color='gray',</span> <span class="pre">figure_size=(7.0,</span> <span class="pre">7.0))</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph_data</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphData" title="qlinks.visualizer.hamiltonian_graph.HamiltonianGraphData"><em>HamiltonianGraphData</em></a>)</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphStyle" title="qlinks.visualizer.hamiltonian_graph.HamiltonianGraphStyle"><em>HamiltonianGraphStyle</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">LinkVisualStyle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">180.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tab:orange'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_edge_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_mutation_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_shrink_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">occupied_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">occupied_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_symbol_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">22.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_symbol_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#LinkVisualStyle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Basic visual style for link drawing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_size</strong> (<em>float</em>)</p></li>
+<li><p><strong>node_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>edge_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>empty_edge_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>arrow_linewidth</strong> (<em>float</em>)</p></li>
+<li><p><strong>arrow_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>arrow_mutation_scale</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>arrow_shrink_points</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>occupied_width</strong> (<em>float</em>)</p></li>
+<li><p><strong>empty_width</strong> (<em>float</em>)</p></li>
+<li><p><strong>occupied_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>empty_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>site_label_fontsize</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>link_label_fontsize</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>plaquette_symbol_fontsize</strong> (<em>float</em>)</p></li>
+<li><p><strong>plaquette_symbol_offset</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.node_size">
+<span class="sig-name descname"><span class="pre">node_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.node_size" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.node_color">
+<span class="sig-name descname"><span class="pre">node_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.node_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.edge_color">
+<span class="sig-name descname"><span class="pre">edge_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.edge_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.empty_edge_color">
+<span class="sig-name descname"><span class="pre">empty_edge_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.empty_edge_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.arrow_linewidth">
+<span class="sig-name descname"><span class="pre">arrow_linewidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.arrow_linewidth" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.arrow_alpha">
+<span class="sig-name descname"><span class="pre">arrow_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.arrow_alpha" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.arrow_mutation_scale">
+<span class="sig-name descname"><span class="pre">arrow_mutation_scale</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.arrow_mutation_scale" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.arrow_shrink_points">
+<span class="sig-name descname"><span class="pre">arrow_shrink_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.arrow_shrink_points" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.occupied_width">
+<span class="sig-name descname"><span class="pre">occupied_width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.occupied_width" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.empty_width">
+<span class="sig-name descname"><span class="pre">empty_width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.empty_width" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.occupied_alpha">
+<span class="sig-name descname"><span class="pre">occupied_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.occupied_alpha" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.empty_alpha">
+<span class="sig-name descname"><span class="pre">empty_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.empty_alpha" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.site_label_fontsize">
+<span class="sig-name descname"><span class="pre">site_label_fontsize</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.site_label_fontsize" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.link_label_fontsize">
+<span class="sig-name descname"><span class="pre">link_label_fontsize</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.link_label_fontsize" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.plaquette_symbol_fontsize">
+<span class="sig-name descname"><span class="pre">plaquette_symbol_fontsize</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.plaquette_symbol_fontsize" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.plaquette_symbol_offset">
+<span class="sig-name descname"><span class="pre">plaquette_symbol_offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.plaquette_symbol_offset" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.LinkVisualStyle.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">180.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tab:orange'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_edge_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_mutation_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_shrink_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">occupied_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">occupied_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_symbol_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">22.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_symbol_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.visualizer.LinkVisualStyle.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_size</strong> (<em>float</em>)</p></li>
+<li><p><strong>node_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>edge_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>empty_edge_color</strong> (<em>str</em>)</p></li>
+<li><p><strong>arrow_linewidth</strong> (<em>float</em>)</p></li>
+<li><p><strong>arrow_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>arrow_mutation_scale</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>arrow_shrink_points</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>occupied_width</strong> (<em>float</em>)</p></li>
+<li><p><strong>empty_width</strong> (<em>float</em>)</p></li>
+<li><p><strong>occupied_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>empty_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>site_label_fontsize</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>link_label_fontsize</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>plaquette_symbol_fontsize</strong> (<em>float</em>)</p></li>
+<li><p><strong>plaquette_symbol_offset</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.visualizer.automatic_grid_shape">
+<span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">automatic_grid_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_items</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#automatic_grid_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.automatic_grid_shape" title="Link to this definition">#</a></dt>
+<dd><p>Decide a reasonable grid shape.</p>
+<p>If both nrows and ncols are given, they must fit n_items.
+If only one is given, the other is inferred.
+If neither is given, use a near-square grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_items</strong> (<em>int</em>)</p></li>
+<li><p><strong>ncols</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>nrows</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[int, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.visualizer.bipartition_labels">
+<span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">bipartition_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adjacency_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#bipartition_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.bipartition_labels" title="Link to this definition">#</a></dt>
+<dd><p>Compute bipartition labels for an undirected graph.</p>
+<p>Disconnected components are handled independently. Isolated vertices are
+assigned label 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.visualizer.format_basis_config">
+<span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">format_basis_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'compact'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#format_basis_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.format_basis_config" title="Link to this definition">#</a></dt>
+<dd><p>Format one basis configuration for subplot labels.</p>
+<dl class="simple">
+<dt>style=”compact”:</dt><dd><p>binary configs are printed like 010101.
+other configs are printed like 1,-1,1,-1.</p>
+</dd>
+<dt>style=”array”:</dt><dd><p>use numpy array formatting.</p>
+</dd>
+<dt>style=”none”:</dt><dd><p>return an empty string.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
+<li><p><strong>style</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'compact'</em><em>, </em><em>'array'</em><em>]</em>)</p></li>
+<li><p><strong>max_length</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.visualizer.plot_basis_config">
+<span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">plot_basis_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'matplotlib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'arrows'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_site_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_site_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_link_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_plaquette_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_symbol_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'square_qlm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic_image_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'positive_patch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_duplicate_visual_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_label_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cell_sublattice'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#plot_basis_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.plot_basis_config" title="Link to this definition">#</a></dt>
+<dd><p>Functional convenience wrapper around BasisConfigurationVisualizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lattice</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
+<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
+<li><p><strong>layout</strong> (<a class="reference internal" href="../qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>show</strong> (<em>bool</em>)</p></li>
+<li><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'matplotlib'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>mode</strong> (<em>Literal</em><em>[</em><em>'arrows'</em><em>, </em><em>'dimers'</em><em>, </em><em>'values'</em><em>]</em>)</p></li>
+<li><p><strong>with_site_labels</strong> (<em>bool</em>)</p></li>
+<li><p><strong>with_site_values</strong> (<em>bool</em>)</p></li>
+<li><p><strong>with_link_values</strong> (<em>bool</em>)</p></li>
+<li><p><strong>with_plaquette_symbols</strong> (<em>bool</em>)</p></li>
+<li><p><strong>plaquette_symbol_style</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'square_qlm'</em><em>, </em><em>'circulation'</em><em>, </em><em>'resonance'</em><em>]</em>)</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>periodic_image_mode</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'positive_patch'</em><em>]</em>)</p></li>
+<li><p><strong>collapse_duplicate_visual_links</strong> (<em>bool</em>)</p></li>
+<li><p><strong>coordinate_scale</strong> (<em>float</em>)</p></li>
+<li><p><strong>coordinate_transform</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>site_label_style</strong> (<em>Literal</em><em>[</em><em>'cell'</em><em>, </em><em>'cell_sublattice'</em><em>, </em><em>'sublattice_cell'</em><em>, </em><em>'site_id'</em><em>]</em>)</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle" title="qlinks.visualizer.basis.LinkVisualStyle"><em>LinkVisualStyle</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.visualizer.plot_basis_grid">
+<span class="sig-prename descclassname"><span class="pre">qlinks.visualizer.</span></span><span class="sig-name descname"><span class="pre">plot_basis_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_config_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_label_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'compact'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_label_max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'matplotlib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'arrows'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic_image_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'positive_patch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_duplicate_visual_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_label_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cell_sublattice'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suptitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_plot_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/basis.html#plot_basis_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.plot_basis_grid" title="Link to this definition">#</a></dt>
+<dd><p>Functional wrapper around BasisGridVisualizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lattice</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
+<li><p><strong>states</strong> (<em>ArrayLike</em>)</p></li>
+<li><p><strong>layout</strong> (<a class="reference internal" href="../qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>nrows</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>ncols</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>start_index</strong> (<em>int</em>)</p></li>
+<li><p><strong>labels</strong> (<em>Sequence</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>show_config_label</strong> (<em>bool</em>)</p></li>
+<li><p><strong>config_label_style</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'compact'</em><em>, </em><em>'array'</em><em>]</em>)</p></li>
+<li><p><strong>config_label_max_length</strong> (<em>int</em>)</p></li>
+<li><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'matplotlib'</em><em>, </em><em>'networkx'</em><em>]</em>)</p></li>
+<li><p><strong>mode</strong> (<em>Literal</em><em>[</em><em>'arrows'</em><em>, </em><em>'dimers'</em><em>, </em><em>'values'</em><em>]</em>)</p></li>
+<li><p><strong>plaquette_symbols</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'square_qlm'</em><em>, </em><em>'circulation'</em><em>, </em><em>'resonance'</em><em>]</em>)</p></li>
+<li><p><strong>periodic_image_mode</strong> (<em>Literal</em><em>[</em><em>'none'</em><em>, </em><em>'positive_patch'</em><em>]</em>)</p></li>
+<li><p><strong>collapse_duplicate_visual_links</strong> (<em>bool</em>)</p></li>
+<li><p><strong>coordinate_scale</strong> (<em>float</em>)</p></li>
+<li><p><strong>coordinate_transform</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>site_label_style</strong> (<em>Literal</em><em>[</em><em>'cell'</em><em>, </em><em>'cell_sublattice'</em><em>, </em><em>'sublattice_cell'</em><em>, </em><em>'site_id'</em><em>]</em>)</p></li>
+<li><p><strong>style</strong> (<a class="reference internal" href="../qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle" title="qlinks.visualizer.basis.LinkVisualStyle"><em>LinkVisualStyle</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>show</strong> (<em>bool</em>)</p></li>
+<li><p><strong>suptitle</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>single_plot_kwargs</strong> (<em>dict</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -339,6 +1416,116 @@
             </div>
             
             
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.lattice"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.lattice</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.layout"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.layout</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.style"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.periodic_image_mode"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.periodic_image_mode</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.collapse_duplicate_visual_links"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.collapse_duplicate_visual_links</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.coordinate_scale"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.coordinate_scale</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.coordinate_transform"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.coordinate_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.site_label_style"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.site_label_style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.link_value"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.link_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.site_value"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.site_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.has_link_variables"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.has_link_variables()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.plot"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.save"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.save()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisConfigurationVisualizer.__init__"><code class="docutils literal notranslate"><span class="pre">BasisConfigurationVisualizer.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.lattice"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.lattice</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.layout"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.layout</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.style"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.periodic_image_mode"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.periodic_image_mode</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.collapse_duplicate_visual_links"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.collapse_duplicate_visual_links</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.coordinate_scale"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.coordinate_scale</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.coordinate_transform"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.coordinate_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.site_label_style"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.site_label_style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.plot"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.BasisGridVisualizer.__init__"><code class="docutils literal notranslate"><span class="pre">BasisGridVisualizer.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.adjacency"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.adjacency</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.self_loop_values"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.self_loop_values</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.n_vertices"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.n_vertices</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.degrees"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.degrees</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphData.__init__"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphData.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.vertex_size"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.vertex_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_width"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.edge_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_alpha"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.edge_alpha</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.label_vertices"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.label_vertices</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.vertex_label_size"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.vertex_label_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.colorbar"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.colorbar</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.cmap"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.cmap</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.default_vertex_color"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.default_vertex_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.edge_color"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.edge_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.figure_size"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.figure_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphStyle.__init__"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphStyle.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.graph_data"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.graph_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.style"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.style</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.from_sparse_matrix"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.from_sparse_matrix()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.bipartition_labels"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.bipartition_labels()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.node_values"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.node_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.plot"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_igraph()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_networkx()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save_graph"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.save_graph()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx_with_layout"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_networkx_with_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph_with_layout"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_igraph_with_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save_plot"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.save_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.save()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.__init__"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.node_size"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.node_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.node_color"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.node_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.edge_color"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.edge_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.empty_edge_color"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.empty_edge_color</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.arrow_linewidth"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.arrow_linewidth</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.arrow_alpha"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.arrow_alpha</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.arrow_mutation_scale"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.arrow_mutation_scale</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.arrow_shrink_points"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.arrow_shrink_points</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.occupied_width"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.occupied_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.empty_width"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.empty_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.occupied_alpha"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.occupied_alpha</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.empty_alpha"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.empty_alpha</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.site_label_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.site_label_fontsize</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.link_label_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.link_label_fontsize</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.plaquette_symbol_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.plaquette_symbol_fontsize</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.plaquette_symbol_offset"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.plaquette_symbol_offset</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.LinkVisualStyle.__init__"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.automatic_grid_shape"><code class="docutils literal notranslate"><span class="pre">automatic_grid_shape()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.bipartition_labels"><code class="docutils literal notranslate"><span class="pre">bipartition_labels()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.format_basis_config"><code class="docutils literal notranslate"><span class="pre">format_basis_config()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.plot_basis_config"><code class="docutils literal notranslate"><span class="pre">plot_basis_config()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.plot_basis_grid"><code class="docutils literal notranslate"><span class="pre">plot_basis_grid()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
