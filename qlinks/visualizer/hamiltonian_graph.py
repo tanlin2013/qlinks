@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as scipy_sparse
 
-GraphBackend = Literal["igraph", "networkx"]
+GraphBackend = Literal["igraph", "igraph-mpl", "igraph-cairo", "networkx"]
+NormalizedGraphBackend = Literal["igraph-mpl", "igraph-cairo", "networkx"]
 NodeColorRule = Literal[
     "constant",
     "bipartition",
@@ -206,22 +207,44 @@ class HamiltonianGraphVisualizer:
         ax=None,
         show: bool = True,
         save_path: str | Path | None = None,
+        target: str | Path | None = None,
+        bbox: tuple[int, int] = (800, 800),
+        margin: int = 40,
         **layout_kwargs,
     ):
         """Draw the graph."""
-        if backend == "igraph":
-            return self._plot_igraph(
+        normalized_backend = _normalize_graph_backend(backend)
+
+        if normalized_backend == "igraph-mpl":
+            return self._plot_igraph_matplotlib(
                 color_by=color_by,
                 layout=layout,
                 self_loop_values=self_loop_values,
                 state_vector=state_vector,
                 title=title,
+                ax=ax,
                 show=show,
                 save_path=save_path,
                 **layout_kwargs,
             )
 
-        if backend == "networkx":
+        if normalized_backend == "igraph-cairo":
+            return self._plot_igraph_cairo(
+                color_by=color_by,
+                layout=layout,
+                self_loop_values=self_loop_values,
+                state_vector=state_vector,
+                title=title,
+                ax=ax,
+                show=show,
+                save_path=save_path,
+                target=target,
+                bbox=bbox,
+                margin=margin,
+                **layout_kwargs,
+            )
+
+        if normalized_backend == "networkx":
             return self._plot_networkx(
                 color_by=color_by,
                 layout=layout,
@@ -234,9 +257,9 @@ class HamiltonianGraphVisualizer:
                 **layout_kwargs,
             )
 
-        raise ValueError("backend must be 'igraph' or 'networkx'.")
+        raise ValueError(f"Unsupported backend: {backend!r}")
 
-    def _plot_igraph(
+    def _plot_igraph_matplotlib(
         self,
         *,
         color_by: NodeColorRule,
@@ -244,11 +267,12 @@ class HamiltonianGraphVisualizer:
         self_loop_values: npt.ArrayLike | None,
         state_vector: npt.ArrayLike | None,
         title: str | None,
+        ax,
         show: bool,
         save_path: str | Path | None,
         **layout_kwargs,
     ):
-        """Draw with python-igraph."""
+        """Draw with python-igraph layout and Matplotlib rendering."""
         try:
             import igraph as ig
             import matplotlib.pyplot as plt
@@ -270,7 +294,11 @@ class HamiltonianGraphVisualizer:
 
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
 
-        fig, ax = plt.subplots(figsize=self.style.figure_size)
+        if ax is None:
+            fig, ax = plt.subplots(figsize=self.style.figure_size)
+        else:
+            fig = ax.figure
+
         ig.plot(
             graph,
             target=ax,
@@ -305,6 +333,102 @@ class HamiltonianGraphVisualizer:
             plt.show()
 
         return ax
+
+    def _plot_igraph_cairo(
+        self,
+        *,
+        color_by: NodeColorRule,
+        layout: LayoutName,
+        self_loop_values: npt.ArrayLike | None,
+        state_vector: npt.ArrayLike | None,
+        title: str | None,
+        ax,
+        show: bool,
+        save_path: str | Path | None,
+        target: str | Path | None,
+        bbox: tuple[int, int],
+        margin: int,
+        **layout_kwargs,
+    ):
+        """Draw with python-igraph layout and Cairo rendering.
+
+        Cairo rendering is target/file oriented and does not draw into a
+        Matplotlib axis.
+        """
+        if ax is not None:
+            raise ValueError(
+                "backend='igraph-cairo' does not draw on a matplotlib Axes. "
+                "Pass target=... or save_path=... instead."
+            )
+
+        try:
+            import igraph as ig
+        except ImportError as error:
+            raise ImportError(
+                "The igraph-cairo backend requires python-igraph."
+            ) from error
+
+        _ensure_cairo_available()
+
+        if target is not None and save_path is not None:
+            raise ValueError("Pass only one of target=... or save_path=..., not both.")
+
+        output_path = target if target is not None else save_path
+
+        graph = self.to_igraph()
+
+        values = self.node_values(
+            color_by=color_by,
+            self_loop_values=self_loop_values,
+            state_vector=state_vector,
+        )
+
+        vertex_colors = _scalar_values_to_hex_colors(
+            values,
+            cmap=self.style.cmap,
+        )
+
+        layout_object = _igraph_layout(graph, layout, **layout_kwargs)
+
+        vertex_labels = (
+            [str(index) for index in range(graph.vcount())]
+            if self.style.label_vertices
+            else None
+        )
+
+        visual_style = {
+            "layout": layout_object,
+            "bbox": bbox,
+            "margin": margin,
+            "vertex_size": self.style.vertex_size,
+            "vertex_color": vertex_colors,
+            "vertex_label": vertex_labels,
+            "vertex_label_size": self.style.vertex_label_size,
+            "edge_width": self.style.edge_width,
+            "edge_color": self.style.edge_color,
+        }
+
+        # Optional graph title. Cairo plots do not have a Matplotlib Axes title,
+        # so attach a graph label instead.
+        if title is not None:
+            visual_style["label"] = title
+
+        if output_path is not None:
+            ig.plot(
+                graph,
+                target=str(output_path),
+                **visual_style,
+            )
+            return Path(output_path)
+
+        plot = ig.plot(
+            graph,
+            **visual_style,
+        )
+
+        # For Cairo, show=False simply returns the igraph Plot object.
+        # There is no Matplotlib plt.show() equivalent here.
+        return plot
 
     def _plot_networkx(
         self,
@@ -712,6 +836,36 @@ def _scalar_values_to_colors(
     return [colormap(float(value)) for value in normalized_values]
 
 
+def _scalar_values_to_hex_colors(
+    values: npt.ArrayLike,
+    *,
+    cmap: str,
+) -> list[str]:
+    """Convert scalar values to hex color strings."""
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import Normalize, to_hex
+
+    values = np.asarray(values, dtype=np.float64)
+
+    if values.size == 0:
+        return []
+
+    if np.allclose(values, values[0]):
+        normalized_values = np.zeros_like(values, dtype=np.float64)
+    else:
+        normalized_values = Normalize(
+            vmin=float(np.min(values)),
+            vmax=float(np.max(values)),
+        )(values)
+
+    colormap = plt.get_cmap(cmap)
+
+    return [
+        to_hex(colormap(float(value)))
+        for value in normalized_values
+    ]
+
+
 def _add_colorbar(
     *,
     ax,
@@ -784,3 +938,38 @@ def _networkx_layout(graph, layout: LayoutName, **kwargs):
         return nx.circular_layout(graph, **kwargs)
 
     raise ValueError(f"Unsupported networkx layout: {layout!r}")
+
+
+def _ensure_cairo_available() -> None:
+    """Raise an informative error if no Cairo Python binding is available."""
+    try:
+        import cairo  # noqa: F401
+        return
+    except ImportError:
+        pass
+
+    try:
+        import cairocffi  # noqa: F401
+        return
+    except ImportError as error:
+        raise ImportError(
+            "The igraph-cairo backend requires a Cairo Python binding. "
+            "Install either pycairo or cairocffi."
+        ) from error
+
+
+def _normalize_graph_backend(backend: GraphBackend) -> NormalizedGraphBackend:
+    """Normalize graph plotting backend names.
+
+    ``"igraph"`` is kept as a backward-compatible alias for ``"igraph-mpl"``.
+    """
+    if backend == "igraph":
+        return "igraph-mpl"
+
+    if backend in ("igraph-mpl", "igraph-cairo", "networkx"):
+        return cast(NormalizedGraphBackend, backend)
+
+    raise ValueError(
+        "backend must be 'networkx', 'igraph-mpl', or 'igraph-cairo'. "
+        "'igraph' is accepted as an alias for 'igraph-mpl'."
+    )

@@ -8,8 +8,22 @@ from qlinks.visualizer import (
     HamiltonianGraphVisualizer,
     bipartition_labels,
 )
+from qlinks.visualizer.hamiltonian_graph import _normalize_graph_backend
 
 igraph_available = importlib.util.find_spec("igraph") is not None
+
+
+def _small_hamiltonian():
+    return scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 0.0],
+                [1.0, 2.0, 1.0],
+                [0.0, 1.0, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
 
 
 def test_bipartition_labels_for_path_graph() -> None:
@@ -158,3 +172,149 @@ def test_to_igraph_has_expected_nodes_and_edges() -> None:
 
     assert graph.vcount() == 3
     assert graph.ecount() == 2
+
+
+def test_normalize_graph_backend_accepts_legacy_igraph_alias() -> None:
+    assert _normalize_graph_backend("igraph") == "igraph-mpl"
+    assert _normalize_graph_backend("igraph-mpl") == "igraph-mpl"
+    assert _normalize_graph_backend("igraph-cairo") == "igraph-cairo"
+    assert _normalize_graph_backend("networkx") == "networkx"
+
+
+def test_normalize_graph_backend_rejects_unknown_backend() -> None:
+    with pytest.raises(ValueError, match="igraph-cairo"):
+        _normalize_graph_backend("bad-backend")  # type: ignore[arg-type]
+
+
+def test_legacy_igraph_backend_alias_plots_with_matplotlib() -> None:
+    pytest.importorskip("igraph")
+
+    import matplotlib.pyplot as plt
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    fig, ax = plt.subplots()
+
+    returned_ax = visualizer.plot(
+        backend="igraph",
+        ax=ax,
+        show=False,
+        color_by="degree",
+    )
+
+    assert returned_ax is ax
+
+    plt.close(fig)
+
+
+def test_igraph_mpl_backend_plots_with_matplotlib_axis() -> None:
+    pytest.importorskip("igraph")
+
+    import matplotlib.pyplot as plt
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    fig, ax = plt.subplots()
+
+    returned_ax = visualizer.plot(
+        backend="igraph-mpl",
+        ax=ax,
+        show=False,
+        color_by="degree",
+    )
+
+    assert returned_ax is ax
+
+    plt.close(fig)
+
+
+def test_igraph_cairo_backend_rejects_matplotlib_axes() -> None:
+    import matplotlib.pyplot as plt
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    fig, ax = plt.subplots()
+
+    with pytest.raises(ValueError, match="matplotlib Axes"):
+        visualizer.plot(
+            backend="igraph-cairo",
+            ax=ax,
+            show=False,
+        )
+
+    plt.close(fig)
+
+
+def test_igraph_cairo_backend_uses_cairo_dependency_check(monkeypatch) -> None:
+    pytest.importorskip("igraph")
+
+    import qlinks.visualizer.hamiltonian_graph as module
+
+    def fail_cairo_check() -> None:
+        raise ImportError("missing cairo test")
+
+    monkeypatch.setattr(module, "_ensure_cairo_available", fail_cairo_check)
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    with pytest.raises(ImportError, match="missing cairo test"):
+        visualizer.plot(
+            backend="igraph-cairo",
+            show=False,
+        )
+
+
+def test_igraph_cairo_backend_saves_svg_when_available(tmp_path) -> None:
+    pytest.importorskip("igraph")
+
+    has_cairo = False
+    try:
+        __import__("cairo")
+        has_cairo = True
+    except ImportError:
+        try:
+            __import__("cairocffi")
+            has_cairo = True
+        except ImportError:
+            pass
+
+    if not has_cairo:
+        pytest.skip("No Cairo Python binding installed.")
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    out = tmp_path / "graph.svg"
+
+    returned = visualizer.plot(
+        backend="igraph-cairo",
+        target=out,
+        show=False,
+        color_by="degree",
+    )
+
+    assert returned == out
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_networkx_backend_accepts_layout_kwargs() -> None:
+    pytest.importorskip("networkx")
+
+    import matplotlib.pyplot as plt
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    fig, ax = plt.subplots()
+
+    returned_ax = visualizer.plot(
+        backend="networkx",
+        layout="spring",
+        ax=ax,
+        show=False,
+        seed=123,
+        iterations=5,
+    )
+
+    assert returned_ax is ax
+
+    plt.close(fig)
