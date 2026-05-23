@@ -813,8 +813,7 @@ def make_jobs(
 
                 for sector in sectors:
                     sector_label = "_".join(
-                        f"{key}{safe_label_value(value)}"
-                        for key, value in sorted(sector.items())
+                        f"{key}{safe_label_value(value)}" for key, value in sorted(sector.items())
                     )
                     if not sector_label:
                         sector_label = "nosector"
