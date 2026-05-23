@@ -738,6 +738,99 @@ class HamiltonianGraphVisualizer:
 
         return graph
 
+    def save_plot(
+            self,
+            path: str | Path,
+            *,
+            backend: GraphBackend = "igraph-cairo",
+            color_by: NodeColorRule = "constant",
+            layout: LayoutName = "auto",
+            self_loop_values: npt.ArrayLike | None = None,
+            state_vector: npt.ArrayLike | None = None,
+            title: str | None = None,
+            bbox: tuple[int, int] = (800, 800),
+            margin: int = 40,
+            **layout_kwargs,
+    ) -> Path:
+        """Save a graph visualization to disk.
+
+        For ``backend='igraph-cairo'``, the plot is rendered directly by
+        igraph/Cairo to ``path``.
+
+        For Matplotlib-based backends, the plot is drawn on a Matplotlib figure
+        and saved with ``fig.savefig(path)``.
+        """
+        path = Path(path)
+        normalized_backend = _normalize_graph_backend(backend)
+
+        if normalized_backend == "igraph-cairo":
+            result = self.plot(
+                backend="igraph-cairo",
+                target=path,
+                color_by=color_by,
+                layout=layout,
+                self_loop_values=self_loop_values,
+                state_vector=state_vector,
+                title=title,
+                show=False,
+                bbox=bbox,
+                margin=margin,
+                **layout_kwargs,
+            )
+
+            return Path(result)
+
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots(figsize=self.style.figure_size)
+
+        self.plot(
+            backend=normalized_backend,
+            ax=ax,
+            color_by=color_by,
+            layout=layout,
+            self_loop_values=self_loop_values,
+            state_vector=state_vector,
+            title=title,
+            show=False,
+            **layout_kwargs,
+        )
+
+        fig.savefig(path, bbox_inches="tight")
+        plt.close(fig)
+
+        return path
+
+    def save(
+            self,
+            path: str | Path,
+            *,
+            backend: GraphBackend = "igraph-cairo",
+            color_by: NodeColorRule = "constant",
+            layout: LayoutName = "auto",
+            self_loop_values: npt.ArrayLike | None = None,
+            state_vector: npt.ArrayLike | None = None,
+            title: str | None = None,
+            bbox: tuple[int, int] = (800, 800),
+            margin: int = 40,
+            **layout_kwargs,
+    ) -> Path:
+        """Alias for :meth:`save_plot`."""
+        return self.save_plot(
+            path,
+            backend=backend,
+            color_by=color_by,
+            layout=layout,
+            self_loop_values=self_loop_values,
+            state_vector=state_vector,
+            title=title,
+            bbox=bbox,
+            margin=margin,
+            **layout_kwargs,
+        )
+
+
+
 
 def _as_csr_array(matrix) -> scipy_sparse.csr_array:
     """Convert dense or sparse input to ``csr_array``."""

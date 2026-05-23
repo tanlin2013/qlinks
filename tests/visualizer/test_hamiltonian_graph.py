@@ -1,4 +1,5 @@
 import importlib.util
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -318,3 +319,115 @@ def test_networkx_backend_accepts_layout_kwargs() -> None:
     assert returned_ax is ax
 
     plt.close(fig)
+
+
+def test_save_plot_with_networkx_backend(tmp_path) -> None:
+    pytest.importorskip("networkx")
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    out = tmp_path / "graph_networkx.png"
+
+    returned = visualizer.save_plot(
+        out,
+        backend="networkx",
+        layout="spring",
+        color_by="degree",
+        seed=123,
+        iterations=5,
+    )
+
+    assert returned == out
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_save_plot_with_igraph_mpl_backend(tmp_path) -> None:
+    pytest.importorskip("igraph")
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    out = tmp_path / "graph_igraph_mpl.png"
+
+    returned = visualizer.save_plot(
+        out,
+        backend="igraph-mpl",
+        layout="fr",
+        color_by="degree",
+    )
+
+    assert returned == out
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_save_plot_accepts_legacy_igraph_alias(tmp_path) -> None:
+    pytest.importorskip("igraph")
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    out = tmp_path / "graph_igraph_alias.png"
+
+    returned = visualizer.save_plot(
+        out,
+        backend="igraph",
+        layout="fr",
+    )
+
+    assert returned == out
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_save_plot_with_igraph_cairo_uses_direct_target(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    out = tmp_path / "graph.svg"
+    seen = {}
+
+    def fake_plot_igraph_cairo(self, **kwargs):
+        seen.update(kwargs)
+        path = Path(kwargs["target"])
+        path.write_text("<svg></svg>")
+        return path
+
+    monkeypatch.setattr(
+        HamiltonianGraphVisualizer,
+        "_plot_igraph_cairo",
+        fake_plot_igraph_cairo,
+    )
+
+    returned = visualizer.save_plot(
+        out,
+        backend="igraph-cairo",
+        layout="fr",
+    )
+
+    assert returned == out
+    assert seen["target"] == out
+    assert seen["save_path"] is None
+    assert seen["show"] is False
+    assert out.exists()
+
+
+def test_save_alias_calls_save_plot(tmp_path) -> None:
+    pytest.importorskip("networkx")
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    out = tmp_path / "graph.png"
+
+    returned = visualizer.save(
+        out,
+        backend="networkx",
+        layout="spring",
+        seed=123,
+        iterations=5,
+    )
+
+    assert returned == out
+    assert out.exists()
+    assert out.stat().st_size > 0
