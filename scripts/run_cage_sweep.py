@@ -376,6 +376,8 @@ def write_cage_hdf5(
     max_q_weights = np.zeros(n_records, dtype=np.float64)
     mean_complement_norms = np.zeros(n_records, dtype=np.float64)
     max_complement_norms = np.zeros(n_records, dtype=np.float64)
+    mean_reduced_norms = np.zeros(n_records, dtype=np.float64)
+    max_reduced_norms = np.zeros(n_records, dtype=np.float64)
     n_q_empty_zeros = np.zeros(n_records, dtype=np.int64)
     n_closed_by_known_zero_zeros = np.zeros(n_records, dtype=np.int64)
     n_projector_like_zeros = np.zeros(n_records, dtype=np.int64)
@@ -413,6 +415,8 @@ def write_cage_hdf5(
             max_q_weights[record_index] = report.max_q_sector_weight
             mean_complement_norms[record_index] = report.mean_complement_action_norm
             max_complement_norms[record_index] = report.max_complement_action_norm
+            mean_reduced_norms[record_index] = report.mean_reduced_action_norm
+            max_reduced_norms[record_index] = report.max_reduced_action_norm
             n_q_empty_zeros[record_index] = report.n_q_empty_zeros
             n_closed_by_known_zero_zeros[record_index] = report.n_closed_by_known_zero_zeros
             n_projector_like_zeros[record_index] = report.n_projector_like_zeros
@@ -423,7 +427,7 @@ def write_cage_hdf5(
 
     with h5py.File(tmp_path, "w") as h5:
         h5.attrs["format"] = "qlinks_cage_sweep"
-        h5.attrs["schema_version"] = "0.1"
+        h5.attrs["schema_version"] = "0.2"
         h5.attrs["created_at"] = utc_now()
 
         write_attrs(
@@ -475,20 +479,26 @@ def write_cage_hdf5(
         cages.create_dataset("energies", data=energies, chunks=True)
         cages.create_dataset("signatures", data=signatures, chunks=True)
         cages.create_dataset("support_sizes", data=support_sizes, chunks=True)
-        cages.create_dataset(
-            "supports",
-            data=supports,
-            compression="gzip",
-            compression_opts=4,
-            chunks=(1, max(1, max_support_size)),
-        )
-        cages.create_dataset(
-            "local_states",
-            data=local_states,
-            compression="gzip",
-            compression_opts=4,
-            chunks=(1, max(1, max_support_size)),
-        )
+
+        if n_records == 0:
+            cages.create_dataset("supports", data=supports)
+            cages.create_dataset("local_states", data=local_states)
+        else:
+            cages.create_dataset(
+                "supports",
+                data=supports,
+                compression="gzip",
+                compression_opts=4,
+                chunks=(1, max(1, max_support_size)),
+            )
+            cages.create_dataset(
+                "local_states",
+                data=local_states,
+                compression="gzip",
+                compression_opts=4,
+                chunks=(1, max(1, max_support_size)),
+            )
+            
         cages.create_dataset(
             "boundary_residuals",
             data=boundary_residuals,
@@ -551,6 +561,16 @@ def write_cage_hdf5(
                 chunks=True,
             )
             cls_group.create_dataset(
+                "mean_reduced_action_norms",
+                data=mean_reduced_norms,
+                chunks=True,
+            )
+            cls_group.create_dataset(
+                "max_reduced_action_norms",
+                data=max_reduced_norms,
+                chunks=True,
+            )
+            cls_group.create_dataset(
                 "n_q_empty_zeros",
                 data=n_q_empty_zeros,
                 chunks=True,
@@ -584,6 +604,16 @@ def write_cage_hdf5(
                 "n_failure_mechanism_zeros",
                 data=n_failure_mechanism_zeros,
                 chunks=True,
+            )
+            cls_group.attrs["regional_mechanism_definition"] = (
+                "q_empty + closed_by_known_zeros"
+            )
+            cls_group.attrs["extended_mechanism_definition"] = "projector_like"
+            cls_group.attrs["failure_mechanism_definition"] = "unexplained_leakage"
+            cls_group.attrs["label_rule"] = (
+                "invalid if unexplained_leakage exists; "
+                "extended if projector_like exists; "
+                "otherwise regional"
             )
 
         mechanisms_group = cls_group.require_group("mechanism_zero_indices")
@@ -754,6 +784,38 @@ def run_one_job(task: CageSweepTask) -> dict[str, Any]:
         for report in classification_reports:
             labels[report.label] = labels.get(report.label, 0) + 1
 
+        mechanism_totals = {
+            "q_empty": 0,
+            "closed_by_known_zeros": 0,
+            "projector_like": 0,
+            "unexplained_leakage": 0,
+            "regional": 0,
+            "extended": 0,
+            "failure": 0,
+        }
+
+        for report in classification_reports:
+            mechanism_totals["q_empty"] += int(report.n_q_empty_zeros)
+            mechanism_totals["closed_by_known_zeros"] += int(
+                report.n_closed_by_known_zero_zeros
+            )
+            mechanism_totals["projector_like"] += int(report.n_projector_like_zeros)
+            mechanism_totals["unexplained_leakage"] += int(
+                report.n_unexplained_leakage_zeros
+            )
+            mechanism_totals["regional"] += int(report.n_regional_mechanism_zeros)
+            mechanism_totals["extended"] += int(report.n_extended_mechanism_zeros)
+            mechanism_totals["failure"] += int(report.n_failure_mechanism_zeros)
+
+        n_invalid_reports = sum(
+            int(report.label == "invalid_or_inconsistent")
+            for report in classification_reports
+        )
+        n_reports_with_unexplained_leakage = sum(
+            int(report.n_unexplained_leakage_zeros > 0)
+            for report in classification_reports
+        )
+
         summary = {
             "job_id": job.job_id,
             "status": "completed",
@@ -764,6 +826,9 @@ def run_one_job(task: CageSweepTask) -> dict[str, Any]:
             "n_records": len(cage_result.records),
             "counts_by_signature": counts_by_signature,
             "classification_counts": labels,
+            "classification_mechanism_totals": mechanism_totals,
+            "n_invalid_classification_reports": n_invalid_reports,
+            "n_reports_with_unexplained_leakage": n_reports_with_unexplained_leakage,
             "elapsed_seconds": elapsed,
             "hdf5_path": str(hdf5_path(settings.output_root, job)),
         }
