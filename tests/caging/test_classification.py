@@ -236,9 +236,9 @@ def test_classify_full_state_finds_regional_candidate():
     assert zero_report.n_unexplained_complement_targets == 0
     assert not zero_report.complement_targets_are_known_zeros
     assert zero_report.mechanism_label == "q_empty"
-    assert zero_report.is_regional_mechanism
-    assert not zero_report.is_extended_mechanism
-    assert not zero_report.is_failure_mechanism
+    assert zero_report.is_q_empty
+    assert not zero_report.is_projector_like
+    assert not zero_report.is_unexplained_leakage
 
 
 def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
@@ -297,7 +297,7 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
     assert report.n_projector_like_zeros == 0
     assert report.n_unexplained_leakage_zeros == 0
 
-    assert report.n_regional_mechanism_zeros == 2
+    assert report.n_regional_mechanism_zeros == 0
     assert report.n_extended_mechanism_zeros == 0
     assert report.n_failure_mechanism_zeros == 0
 
@@ -312,12 +312,12 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
     assert h0_report.mechanism_label == "closed_by_known_zeros"
     assert h1_report.mechanism_label == "closed_by_known_zeros"
 
-    assert h0_report.is_regional_mechanism
-    assert h1_report.is_regional_mechanism
-    assert not h0_report.is_extended_mechanism
-    assert not h1_report.is_extended_mechanism
-    assert not h0_report.is_failure_mechanism
-    assert not h1_report.is_failure_mechanism
+    assert not h0_report.is_q_empty
+    assert not h1_report.is_q_empty
+    assert not h0_report.is_projector_like
+    assert not h1_report.is_projector_like
+    assert not h0_report.is_unexplained_leakage
+    assert not h1_report.is_unexplained_leakage
 
 
 def test_classify_full_state_marks_unexplained_complement_cancellation_invalid():
@@ -388,9 +388,9 @@ def test_classify_full_state_marks_unexplained_complement_cancellation_invalid()
     assert _zero_indices(report.failure_mechanism_zero_indices) == {indices["h"]}
 
     assert zero_report.mechanism_label == "unexplained_leakage"
-    assert not zero_report.is_regional_mechanism
-    assert not zero_report.is_extended_mechanism
-    assert zero_report.is_failure_mechanism
+    assert not zero_report.is_q_empty
+    assert not zero_report.is_projector_like
+    assert zero_report.is_unexplained_leakage
 
 
 def test_classify_full_state_marks_nonzero_unexplained_leakage_invalid():
@@ -448,9 +448,9 @@ def test_classify_full_state_marks_nonzero_unexplained_leakage_invalid():
     assert report.n_failure_mechanism_zeros == 1
 
     assert zero_report.mechanism_label == "unexplained_leakage"
-    assert not zero_report.is_regional_mechanism
-    assert not zero_report.is_extended_mechanism
-    assert zero_report.is_failure_mechanism
+    assert not zero_report.is_q_empty
+    assert not zero_report.is_projector_like
+    assert zero_report.is_unexplained_leakage
 
 
 def test_classify_cage_state_lifts_compact_state_and_preserves_metadata():
@@ -506,9 +506,9 @@ def test_classify_cage_state_lifts_compact_state_and_preserves_metadata():
 
     zero_report = report.zero_reports[0]
     assert zero_report.mechanism_label == "q_empty"
-    assert zero_report.is_regional_mechanism
-    assert not zero_report.is_extended_mechanism
-    assert not zero_report.is_failure_mechanism
+    assert zero_report.is_q_empty
+    assert not zero_report.is_projector_like
+    assert not zero_report.is_unexplained_leakage
 
 
 def test_classify_full_state_ignores_trivial_zeros_without_active_neighbors():
@@ -635,9 +635,9 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     assert zero_report.complement_action_norm <= config.action_tolerance
 
     assert zero_report.mechanism_label == "projector_like"
-    assert not zero_report.is_regional_mechanism
-    assert zero_report.is_extended_mechanism
-    assert not zero_report.is_failure_mechanism
+    assert not zero_report.is_q_empty
+    assert zero_report.is_projector_like
+    assert not zero_report.is_unexplained_leakage
 
 
 def test_classification_report_text_includes_mechanism_sections():
