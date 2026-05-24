@@ -3011,6 +3011,90 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_select_cage_record</span><span class="p">(</span>
+    <span class="n">result_or_record</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">record_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a CageRecord from either a CageRecord or CageSearchResult.</span>
+
+<span class="sd">    This intentionally uses duck typing to avoid making the visualizer module</span>
+<span class="sd">    depend directly on qlinks.caging.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result_or_record</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span>
+        <span class="n">result_or_record</span><span class="p">,</span>
+        <span class="s2">&quot;local_state&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="n">result_or_record</span>
+
+    <span class="k">if</span> <span class="n">signature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result_or_record</span><span class="p">[</span><span class="n">record_index</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">result_or_record</span><span class="p">[</span><span class="n">signature</span><span class="p">,</span> <span class="n">record_index</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_amplitude_label</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">amplitude</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="n">digits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">real</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">amplitude</span><span class="p">))</span>
+    <span class="n">imag</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">amplitude</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">imag</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">digits</span><span class="p">):</span>
+        <span class="n">amp_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">digits</span><span class="si">}</span><span class="s2">g</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">real</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">digits</span><span class="p">):</span>
+        <span class="n">amp_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">imag</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">digits</span><span class="si">}</span><span class="s2">g</span><span class="si">}</span><span class="s2">j&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">amp_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">digits</span><span class="si">}</span><span class="s2">g</span><span class="si">}{</span><span class="n">imag</span><span class="si">:</span><span class="s2">+.</span><span class="si">{</span><span class="n">digits</span><span class="si">}</span><span class="s2">g</span><span class="si">}</span><span class="s2">j&quot;</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;basis </span><span class="si">{</span><span class="n">basis_index</span><span class="si">}</span><span class="se">\n</span><span class="s2">amp=</span><span class="si">{</span><span class="n">amp_text</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_zero_mechanism_label_map</span><span class="p">(</span><span class="n">report</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Map zero index to its zero-level mechanism label.&quot;&quot;&quot;</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">zero_report</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">zero_reports</span><span class="p">:</span>
+        <span class="n">labels</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">zero_report</span><span class="o">.</span><span class="n">zero_index</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">zero_report</span><span class="o">.</span><span class="n">mechanism_label</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">labels</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_zero_indices_for_mechanism</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">,</span>
+    <span class="n">mechanism</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return zero indices selected by mechanism name.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">mechanism</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">zero</span><span class="o">.</span><span class="n">zero_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">zero</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">zero_reports</span><span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">field_name_by_mechanism</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;q_empty&quot;</span><span class="p">:</span> <span class="s2">&quot;q_empty_zero_indices&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;closed_by_known_zeros&quot;</span><span class="p">:</span> <span class="s2">&quot;closed_by_known_zero_indices&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;projector_like&quot;</span><span class="p">:</span> <span class="s2">&quot;projector_like_zero_indices&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unexplained_leakage&quot;</span><span class="p">:</span> <span class="s2">&quot;unexplained_leakage_zero_indices&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;regional&quot;</span><span class="p">:</span> <span class="s2">&quot;regional_mechanism_zero_indices&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;extended&quot;</span><span class="p">:</span> <span class="s2">&quot;extended_mechanism_zero_indices&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;failure&quot;</span><span class="p">:</span> <span class="s2">&quot;failure_mechanism_zero_indices&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">field_name</span> <span class="o">=</span> <span class="n">field_name_by_mechanism</span><span class="p">[</span><span class="n">mechanism</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">allowed</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">field_name_by_mechanism</span><span class="p">])</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown zero mechanism </span><span class="si">{</span><span class="n">mechanism</span><span class="si">!r}</span><span class="s2">. &quot;</span> <span class="sa">f</span><span class="s2">&quot;Expected one of: </span><span class="si">{</span><span class="n">allowed</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">field_name</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="BasisGridVisualizer">
 <a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.BasisGridVisualizer">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3059,6 +3143,8 @@
         <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">backend</span><span class="p">:</span> <span class="n">VisualizerBackend</span> <span class="o">=</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span>
         <span class="n">suptitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">suptitle_y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.995</span><span class="p">,</span>
+        <span class="n">tight_layout_rect</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">single_plot_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -3200,14 +3286,167 @@
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">suptitle</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">suptitle</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">suptitle_y</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">tight_layout_rect</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tight_layout_rect</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tight_layout_rect</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="n">tight_layout_rect</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span></div>
+
+
+<div class="viewcode-block" id="BasisGridVisualizer.plot_cage_support">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.BasisGridVisualizer.plot_cage_support">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_cage_support</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">result_or_record</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">record_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_amplitudes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">amplitude_digits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">suptitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot the support basis states of one cage record.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result_or_record:</span>
+<span class="sd">            Either a CageSearchResult or a CageRecord.</span>
+<span class="sd">        basis_configs:</span>
+<span class="sd">            Basis configuration array with shape (hilbert_size, n_variables).</span>
+<span class="sd">        signature:</span>
+<span class="sd">            Optional cage signature (kappa, Z). If provided, select</span>
+<span class="sd">            result_or_record[signature, record_index].</span>
+<span class="sd">        record_index:</span>
+<span class="sd">            Record index among all records, or among records with the given</span>
+<span class="sd">            signature.</span>
+<span class="sd">        max_states:</span>
+<span class="sd">            Optional cap on the number of support states to plot.</span>
+<span class="sd">        show_amplitudes:</span>
+<span class="sd">            Whether subplot labels include local-state amplitudes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">basis_configs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">basis_configs</span><span class="p">)</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">_select_cage_record</span><span class="p">(</span>
+            <span class="n">result_or_record</span><span class="p">,</span>
+            <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
+            <span class="n">record_index</span><span class="o">=</span><span class="n">record_index</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">support</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">support</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">local_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">local_state</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">support</span> <span class="o">=</span> <span class="n">support</span><span class="p">[:</span><span class="n">max_states</span><span class="p">]</span>
+            <span class="n">local_state</span> <span class="o">=</span> <span class="n">local_state</span><span class="p">[:</span><span class="n">max_states</span><span class="p">]</span>
+
+        <span class="n">states</span> <span class="o">=</span> <span class="n">basis_configs</span><span class="p">[</span><span class="n">support</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">show_amplitudes</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">_amplitude_label</span><span class="p">(</span>
+                        <span class="n">basis_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">),</span>
+                        <span class="n">amplitude</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">amplitude</span><span class="p">),</span>
+                        <span class="n">digits</span><span class="o">=</span><span class="n">amplitude_digits</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">amplitude</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">support</span><span class="p">,</span> <span class="n">local_state</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;basis </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">support</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">suptitle</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cage support, signature=</span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">signature</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;support size=</span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">support</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">states</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">suptitle</span><span class="o">=</span><span class="n">suptitle</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasisGridVisualizer.plot_interference_zeros">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.BasisGridVisualizer.plot_interference_zeros">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_interference_zeros</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">classification_report</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">mechanism</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
+        <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">suptitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot basis states corresponding to nontrivial interference zeros.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        classification_report:</span>
+<span class="sd">            CageClassificationReport returned by classify_cage_state or</span>
+<span class="sd">            classify_full_state.</span>
+<span class="sd">        basis_configs:</span>
+<span class="sd">            Basis configuration array with shape (hilbert_size, n_variables).</span>
+<span class="sd">        mechanism:</span>
+<span class="sd">            One of:</span>
+<span class="sd">                &quot;all&quot;,</span>
+<span class="sd">                &quot;q_empty&quot;,</span>
+<span class="sd">                &quot;closed_by_known_zeros&quot;,</span>
+<span class="sd">                &quot;projector_like&quot;,</span>
+<span class="sd">                &quot;unexplained_leakage&quot;,</span>
+<span class="sd">                &quot;regional&quot;,</span>
+<span class="sd">                &quot;extended&quot;,</span>
+<span class="sd">                &quot;failure&quot;.</span>
+<span class="sd">        max_states:</span>
+<span class="sd">            Optional cap on the number of zero states to plot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">basis_configs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">basis_configs</span><span class="p">)</span>
+        <span class="n">zero_indices</span> <span class="o">=</span> <span class="n">_zero_indices_for_mechanism</span><span class="p">(</span>
+            <span class="n">classification_report</span><span class="p">,</span>
+            <span class="n">mechanism</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">zero_indices</span> <span class="o">=</span> <span class="n">zero_indices</span><span class="p">[:</span><span class="n">max_states</span><span class="p">]</span>
+
+        <span class="n">states</span> <span class="o">=</span> <span class="n">basis_configs</span><span class="p">[</span><span class="n">zero_indices</span><span class="p">]</span>
+        <span class="n">mechanism_labels</span> <span class="o">=</span> <span class="n">_zero_mechanism_label_map</span><span class="p">(</span><span class="n">classification_report</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;zero </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">mechanism_labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">),</span><span class="w"> </span><span class="n">mechanism</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">zero_indices</span>
+            <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mechanism</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="n">suptitle</span> <span class="o">=</span> <span class="s2">&quot;Nontrivial interference zeros &quot;</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">zero_indices</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> states)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">suptitle</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Nontrivial interference zeros: </span><span class="si">{</span><span class="n">mechanism</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">zero_indices</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> states)&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">states</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">suptitle</span><span class="o">=</span><span class="n">suptitle</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
 </div>
 
 

@@ -372,6 +372,43 @@
 
 
 
+<div class="viewcode-block" id="LocalSquareValueDiagonalOperator">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalSquareValueDiagonalOperator">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalSquareValueDiagonalOperator</span><span class="p">(</span><span class="n">BaseLocalOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagonal operator proportional to one squared variable value.</span>
+
+<span class="sd">    coefficient * config[variable_index] ** 2</span>
+
+<span class="sd">    For spin-1 variables m in {-1, 0, +1}, this represents</span>
+<span class="sd">    coefficient * (S^z)^2 in the S^z product basis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span>
+    <span class="n">variable_index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;local_square_value_diagonal&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LocalSquareValueDiagonalOperator.affected_variables">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalSquareValueDiagonalOperator.affected_variables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">affected_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LocalSquareValueDiagonalOperator.apply">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalSquareValueDiagonalOperator.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">OperatorAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">])</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">value</span> <span class="o">*</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">OperatorAction</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">copy</span><span class="p">()),)</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="LocalSumDiagonalOperator">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalSumDiagonalOperator">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
