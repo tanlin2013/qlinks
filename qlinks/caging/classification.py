@@ -67,10 +67,6 @@ class InterferenceZeroReport:
     complement_targets_are_known_zeros: bool
 
     mechanism_label: ZeroMechanismLabel
-    is_regional_mechanism: bool
-    is_extended_mechanism: bool
-    is_failure_mechanism: bool
-
     local_transitions: tuple[LocalTransitionPattern, ...]
 
     @property
@@ -88,6 +84,22 @@ class InterferenceZeroReport:
     @property
     def n_unexplained_complement_targets(self) -> int:
         return int(self.unexplained_complement_target_indices.size)
+
+    @property
+    def is_q_empty(self) -> bool:
+        return self.mechanism_label == "q_empty"
+
+    @property
+    def is_closed_by_known_zeros(self) -> bool:
+        return self.mechanism_label == "closed_by_known_zeros"
+
+    @property
+    def is_projector_like(self) -> bool:
+        return self.mechanism_label == "projector_like"
+
+    @property
+    def is_unexplained_leakage(self) -> bool:
+        return self.mechanism_label == "unexplained_leakage"
 
 
 @dataclass(frozen=True, slots=True)
@@ -636,9 +648,6 @@ def _build_zero_report(
         unexplained_complement_target_indices=complement_target_indices,
         complement_targets_are_known_zeros=False,
         mechanism_label="unexplained_leakage",
-        is_regional_mechanism=False,
-        is_extended_mechanism=True,
-        is_failure_mechanism=True,
         local_transitions=tuple(local_transitions),
     )
 
@@ -695,27 +704,12 @@ def _annotate_zero_mechanisms(
 
         if q_empty:
             mechanism_label: ZeroMechanismLabel = "q_empty"
-            is_regional = True
-            is_extended = False
-            is_failure = False
-
         elif complement_targets_are_known_zeros:
             mechanism_label = "closed_by_known_zeros"
-            is_regional = True
-            is_extended = False
-            is_failure = False
-
         elif n_targets == 0:
             mechanism_label = "projector_like"
-            is_regional = False
-            is_extended = True
-            is_failure = False
-
         else:
             mechanism_label = "unexplained_leakage"
-            is_regional = False
-            is_extended = False
-            is_failure = True
 
         annotated_reports.append(
             InterferenceZeroReport(
@@ -740,9 +734,6 @@ def _annotate_zero_mechanisms(
                 ),
                 complement_targets_are_known_zeros=(complement_targets_are_known_zeros),
                 mechanism_label=mechanism_label,
-                is_regional_mechanism=is_regional,
-                is_extended_mechanism=is_extended,
-                is_failure_mechanism=is_failure,
                 local_transitions=report.local_transitions,
             )
         )
@@ -968,13 +959,15 @@ def _classify_from_zero_reports(
     if len(zero_reports) == 0:
         return "invalid_or_inconsistent"
 
-    if any(report.is_failure_mechanism for report in zero_reports):
+    if any(report.is_unexplained_leakage for report in zero_reports):
         return "invalid_or_inconsistent"
 
-    if any(report.is_extended_mechanism for report in zero_reports):
+    if any(report.is_projector_like for report in zero_reports):
         return "extended_candidate"
 
-    if all(report.is_regional_mechanism for report in zero_reports):
+    if all(
+        report.mechanism_label in {"q_empty", "closed_by_known_zeros"} for report in zero_reports
+    ):
         return "regional_candidate"
 
     return "invalid_or_inconsistent"
@@ -1031,19 +1024,19 @@ def _zero_indices_with_flag(
 ) -> NDArray[np.int64]:
     if flag == "regional":
         return np.array(
-            [int(report.zero_index) for report in zero_reports if report.is_regional_mechanism],
+            [int(report.zero_index) for report in zero_reports if report.is_q_empty],
             dtype=np.int64,
         )
 
     if flag == "extended":
         return np.array(
-            [int(report.zero_index) for report in zero_reports if report.is_extended_mechanism],
+            [int(report.zero_index) for report in zero_reports if report.is_projector_like],
             dtype=np.int64,
         )
 
     if flag == "failure":
         return np.array(
-            [int(report.zero_index) for report in zero_reports if report.is_failure_mechanism],
+            [int(report.zero_index) for report in zero_reports if report.is_unexplained_leakage],
             dtype=np.int64,
         )
 
