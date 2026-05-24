@@ -12,7 +12,13 @@ from qlinks.caging.results import CageState, cage_state_to_full_vector
 CageSpatialLabel = Literal[
     "regional_candidate",
     "extended_candidate",
-    "ambiguous",
+    "invalid_or_inconsistent",
+]
+ZeroMechanismLabel = Literal[
+    "q_empty",
+    "closed_by_known_zeros",
+    "projector_like",
+    "unexplained_leakage",
 ]
 
 
@@ -23,13 +29,6 @@ class CageClassificationConfig:
     amplitude_tolerance: float = 1e-10
     cancellation_tolerance: float = 1e-9
     action_tolerance: float = 1e-9
-
-    # Finite-size heuristic. Do not interpret as thermodynamic criterion.
-    regional_support_fraction_threshold: float = 0.1
-
-    # If many zeros have Q-sector weight but small Q-sector action,
-    # the state is extended-like.
-    extended_q_weight_fraction_threshold: float = 0.5
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,13 +61,15 @@ class InterferenceZeroReport:
     reduced_action_norm: float
     complement_action_norm: float
 
-    # New: raw targets touched by the complement operator before cancellation.
     complement_target_indices: NDArray[np.int64]
-
-    # New: filled in after all nontrivial zeros are known.
     explained_complement_target_indices: NDArray[np.int64]
     unexplained_complement_target_indices: NDArray[np.int64]
     complement_targets_are_known_zeros: bool
+
+    mechanism_label: ZeroMechanismLabel
+    is_regional_mechanism: bool
+    is_extended_mechanism: bool
+    is_failure_mechanism: bool
 
     local_transitions: tuple[LocalTransitionPattern, ...]
 
@@ -105,6 +106,24 @@ class CageClassificationReport:
     n_unexplained_complement_targets: int
     fraction_zeros_with_closed_complement_targets: float
 
+    n_q_empty_zeros: int
+    n_closed_by_known_zero_zeros: int
+    n_projector_like_zeros: int
+    n_unexplained_leakage_zeros: int
+
+    n_regional_mechanism_zeros: int
+    n_extended_mechanism_zeros: int
+    n_failure_mechanism_zeros: int
+
+    q_empty_zero_indices: NDArray[np.int64]
+    closed_by_known_zero_indices: NDArray[np.int64]
+    projector_like_zero_indices: NDArray[np.int64]
+    unexplained_leakage_zero_indices: NDArray[np.int64]
+
+    regional_mechanism_zero_indices: NDArray[np.int64]
+    extended_mechanism_zero_indices: NDArray[np.int64]
+    failure_mechanism_zero_indices: NDArray[np.int64]
+
     mean_q_sector_weight: float
     max_q_sector_weight: float
     mean_reduced_action_norm: float
@@ -122,8 +141,9 @@ class CageClassificationReport:
             f"support_size={self.support_size}, "
             f"hilbert_size={self.hilbert_size}, "
             f"n_nontrivial_zeros={self.n_nontrivial_zeros}, "
-            f"n_unexplained_complement_targets="
-            f"{self.n_unexplained_complement_targets}"
+            f"n_regional_mechanism_zeros={self.n_regional_mechanism_zeros}, "
+            f"n_extended_mechanism_zeros={self.n_extended_mechanism_zeros}, "
+            f"n_failure_mechanism_zeros={self.n_failure_mechanism_zeros}"
             ")"
         )
 
@@ -171,6 +191,65 @@ class CageClassificationReport:
             ("mean complement action norm: " f"{_format_float(self.mean_complement_action_norm)}"),
             ("max complement action norm: " f"{_format_float(self.max_complement_action_norm)}"),
         ]
+        lines.extend(
+            [
+                "",
+                "Zero mechanisms",
+                "---------------",
+                "regional mechanisms:",
+                f"  q-empty zeros: {self.n_q_empty_zeros}",
+                (
+                    "  closed-by-known-zero zeros: "
+                    f"{self.n_closed_by_known_zero_zeros}"
+                ),
+                f"  total regional-mechanism zeros: {self.n_regional_mechanism_zeros}",
+                "extended mechanisms:",
+                f"  projector-like zeros: {self.n_projector_like_zeros}",
+                f"  total extended-mechanism zeros: {self.n_extended_mechanism_zeros}",
+                "diagnostic failures:",
+                (
+                    "  unexplained-leakage zeros: "
+                    f"{self.n_unexplained_leakage_zeros}"
+                ),
+                f"  total failure-mechanism zeros: {self.n_failure_mechanism_zeros}",
+            ]
+        )
+        lines.extend(
+            [
+                "",
+                "State-level interpretation",
+                "--------------------------",
+                (
+                    "has only regional mechanisms: "
+                    f"{self.n_extended_mechanism_zeros == 0 and self.n_failure_mechanism_zeros == 0}"
+                ),
+                (
+                    "contains projector-like extended mechanisms: "
+                    f"{self.n_extended_mechanism_zeros > 0}"
+                ),
+                (
+                    "has unexplained leakage: "
+                    f"{self.n_failure_mechanism_zeros > 0}"
+                ),
+            ]
+        )
+        lines.extend(
+            [
+                "",
+                "Mechanism zero indices",
+                "----------------------",
+                f"q-empty: {_format_index_preview(self.q_empty_zero_indices)}",
+                (
+                    "closed-by-known-zero: "
+                    f"{_format_index_preview(self.closed_by_known_zero_indices)}"
+                ),
+                f"projector-like: {_format_index_preview(self.projector_like_zero_indices)}",
+                (
+                    "unexplained-leakage: "
+                    f"{_format_index_preview(self.unexplained_leakage_zero_indices)}"
+                ),
+            ]
+        )
 
         if self.metadata:
             lines.extend(
@@ -198,6 +277,22 @@ class CageClassificationReport:
                     [
                         f"[{report_index}] zero index: {zero_report.zero_index}",
                         ("    active neighbors: " f"{zero_report.active_neighbors.tolist()}"),
+                        (
+                            "    mechanism: "
+                            f"{zero_report.mechanism_label}"
+                        ),
+                        (
+                            "    regional mechanism: "
+                            f"{zero_report.is_regional_mechanism}"
+                        ),
+                        (
+                            "    extended mechanism: "
+                            f"{zero_report.is_extended_mechanism}"
+                        ),
+                        (
+                            "    failure mechanism: "
+                            f"{zero_report.is_failure_mechanism}"
+                        ),
                         (
                             "    cancellation residual: "
                             f"{_format_float(zero_report.cancellation_residual)}"
@@ -322,12 +417,12 @@ def classify_full_state(
         config=config,
     )
 
-    zero_reports = _annotate_complement_closure(
+    zero_reports = _annotate_zero_mechanisms(
         zero_reports,
+        config=config,
     )
 
     label = _classify_from_zero_reports(
-        support_fraction=support_fraction,
         zero_reports=zero_reports,
         config=config,
     )
@@ -350,12 +445,46 @@ def classify_full_state(
     n_unexplained_complement_targets = sum(
         report.n_unexplained_complement_targets for report in zero_reports
     )
+    q_empty_zero_indices = _zero_indices_with_mechanism(
+        zero_reports,
+        "q_empty",
+    )
+    closed_by_known_zero_indices = _zero_indices_with_mechanism(
+        zero_reports,
+        "closed_by_known_zeros",
+    )
+    projector_like_zero_indices = _zero_indices_with_mechanism(
+        zero_reports,
+        "projector_like",
+    )
+    unexplained_leakage_zero_indices = _zero_indices_with_mechanism(
+        zero_reports,
+        "unexplained_leakage",
+    )
+
+    regional_mechanism_zero_indices = _zero_indices_with_flag(
+        zero_reports,
+        flag="regional",
+    )
+    extended_mechanism_zero_indices = _zero_indices_with_flag(
+        zero_reports,
+        flag="extended",
+    )
+    failure_mechanism_zero_indices = _zero_indices_with_flag(
+        zero_reports,
+        flag="failure",
+    )
 
     if len(zero_reports) == 0:
         fraction_closed = 0.0
     else:
         fraction_closed = float(
-            np.mean([report.complement_targets_are_known_zeros for report in zero_reports])
+            np.mean(
+                [
+                    report.complement_targets_are_known_zeros
+                    for report in zero_reports
+                ]
+            )
         )
 
     return CageClassificationReport(
@@ -368,6 +497,20 @@ def classify_full_state(
         n_complement_targets=n_complement_targets,
         n_unexplained_complement_targets=n_unexplained_complement_targets,
         fraction_zeros_with_closed_complement_targets=fraction_closed,
+        n_q_empty_zeros=int(q_empty_zero_indices.size),
+        n_closed_by_known_zero_zeros=int(closed_by_known_zero_indices.size),
+        n_projector_like_zeros=int(projector_like_zero_indices.size),
+        n_unexplained_leakage_zeros=int(unexplained_leakage_zero_indices.size),
+        n_regional_mechanism_zeros=int(regional_mechanism_zero_indices.size),
+        n_extended_mechanism_zeros=int(extended_mechanism_zero_indices.size),
+        n_failure_mechanism_zeros=int(failure_mechanism_zero_indices.size),
+        q_empty_zero_indices=q_empty_zero_indices,
+        closed_by_known_zero_indices=closed_by_known_zero_indices,
+        projector_like_zero_indices=projector_like_zero_indices,
+        unexplained_leakage_zero_indices=unexplained_leakage_zero_indices,
+        regional_mechanism_zero_indices=regional_mechanism_zero_indices,
+        extended_mechanism_zero_indices=extended_mechanism_zero_indices,
+        failure_mechanism_zero_indices=failure_mechanism_zero_indices,
         mean_q_sector_weight=_safe_mean(q_weights),
         max_q_sector_weight=_safe_max(q_weights),
         mean_reduced_action_norm=_safe_mean(reduced_norms),
@@ -511,20 +654,45 @@ def _build_zero_report(
         explained_complement_target_indices=np.array([], dtype=np.int64),
         unexplained_complement_target_indices=complement_target_indices,
         complement_targets_are_known_zeros=False,
+        mechanism_label="unexplained_leakage",
+        is_regional_mechanism=False,
+        is_extended_mechanism=True,
+        is_failure_mechanism=True,
         local_transitions=tuple(local_transitions),
     )
 
 
-def _annotate_complement_closure(
+def _annotate_zero_mechanisms(
     zero_reports: list[InterferenceZeroReport],
+    *,
+    config: CageClassificationConfig,
 ) -> list[InterferenceZeroReport]:
     """
-    Mark whether each zero's complement targets are known nontrivial zeros.
+    Annotate each nontrivial zero with its zero-level mechanism.
 
-    This is model-free. It only checks closure of the interference-zero
-    network in Fock space.
+    Mechanism meanings
+    ------------------
+    q_empty:
+        There is no Q-sector amplitude to transfer.
+
+    closed_by_known_zeros:
+        There is Q-sector amplitude, and the complement operator targets
+        only known nontrivial interference zeros.
+
+    projector_like:
+        There is Q-sector amplitude, but the complement operator has no
+        raw targets. This is the extended/projector-like mechanism.
+
+    unexplained_leakage:
+        There is Q-sector amplitude, and at least one complement target is
+        not a known nontrivial zero. For a cage found by the caging solver,
+        this should be treated as a failure/inconsistency, not as a valid
+        extended mechanism.
     """
-    known_zero_indices = {int(report.zero_index) for report in zero_reports}
+    known_zero_indices = {
+        int(report.zero_index)
+        for report in zero_reports
+    }
 
     annotated_reports: list[InterferenceZeroReport] = []
 
@@ -540,7 +708,38 @@ def _annotate_complement_closure(
             else:
                 unexplained.append(target)
 
-        complement_targets_are_known_zeros = len(unexplained) == 0
+        n_targets = int(report.complement_target_indices.size)
+        n_unexplained = len(unexplained)
+
+        complement_targets_are_known_zeros = (
+            n_targets > 0 and n_unexplained == 0
+        )
+
+        q_empty = report.q_sector_weight <= config.action_tolerance
+
+        if q_empty:
+            mechanism_label: ZeroMechanismLabel = "q_empty"
+            is_regional = True
+            is_extended = False
+            is_failure = False
+
+        elif complement_targets_are_known_zeros:
+            mechanism_label = "closed_by_known_zeros"
+            is_regional = True
+            is_extended = False
+            is_failure = False
+
+        elif n_targets == 0:
+            mechanism_label = "projector_like"
+            is_regional = False
+            is_extended = True
+            is_failure = False
+
+        else:
+            mechanism_label = "unexplained_leakage"
+            is_regional = False
+            is_extended = False
+            is_failure = True
 
         annotated_reports.append(
             InterferenceZeroReport(
@@ -563,7 +762,13 @@ def _annotate_complement_closure(
                     unexplained,
                     dtype=np.int64,
                 ),
-                complement_targets_are_known_zeros=(complement_targets_are_known_zeros),
+                complement_targets_are_known_zeros=(
+                    complement_targets_are_known_zeros
+                ),
+                mechanism_label=mechanism_label,
+                is_regional_mechanism=is_regional,
+                is_extended_mechanism=is_extended,
+                is_failure_mechanism=is_failure,
                 local_transitions=report.local_transitions,
             )
         )
@@ -767,74 +972,38 @@ def _complex_key(value: complex, *, digits: int = 12) -> tuple[float, float]:
 
 def _classify_from_zero_reports(
     *,
-    support_fraction: float,
     zero_reports: list[InterferenceZeroReport],
     config: CageClassificationConfig,
 ) -> CageSpatialLabel:
     """
-    Heuristic finite-size classification.
+    First-layer regional/extended classification.
 
-    Regional means:
-    - small support, and
-    - each zero is explained either by no Q-sector weight or by complement
-      targets landing only on already-known nontrivial zeros.
+    State-level rule
+    ----------------
+    invalid_or_inconsistent:
+        At least one zero has unexplained leakage.
 
-    Extended means:
-    - Q-sector weight is often present,
-    - the complement action norm is small,
-    - but complement targets are not closed among known zeros, or there are
-      no raw complement targets despite nonzero Q weight, suggesting local
-      annihilation/projector-like behavior.
+    extended_candidate:
+        No unexplained leakage, but at least one zero is projector_like.
 
-    Otherwise ambiguous.
+    regional_candidate:
+        All zeros are regional mechanisms: q_empty or closed_by_known_zeros.
     """
+    del config
+
     if len(zero_reports) == 0:
-        return "ambiguous"
+        return "invalid_or_inconsistent"
 
-    q_weights = np.array(
-        [report.q_sector_weight for report in zero_reports],
-        dtype=float,
-    )
-    complement_norms = np.array(
-        [report.complement_action_norm for report in zero_reports],
-        dtype=float,
-    )
+    if any(report.is_failure_mechanism for report in zero_reports):
+        return "invalid_or_inconsistent"
 
-    small_support = support_fraction <= config.regional_support_fraction_threshold
-
-    q_empty = q_weights <= config.action_tolerance
-
-    # A zero with nonzero Q-sector weight is regionally explained only if
-    # the complement operator actually targets other known nontrivial zeros.
-    # Empty target set with nonzero Q weight is not regional closure; it is
-    # closer to projector-like annihilation or constrained annihilation.
-    complement_closed_by_known_zeros = np.array(
-        [
-            (report.complement_targets_are_known_zeros and report.n_complement_targets > 0)
-            for report in zero_reports
-        ],
-        dtype=bool,
-    )
-
-    regionally_explained = q_empty | complement_closed_by_known_zeros
-
-    if small_support and bool(np.all(regionally_explained)):
-        return "regional_candidate"
-
-    complement_action_small_for_all = bool(np.all(complement_norms <= config.action_tolerance))
-
-    q_sector_nonempty_fraction = float(np.mean(q_weights > config.action_tolerance))
-
-    complement_not_regionally_explained = bool(np.any(~regionally_explained))
-
-    if (
-        q_sector_nonempty_fraction >= config.extended_q_weight_fraction_threshold
-        and complement_action_small_for_all
-        and complement_not_regionally_explained
-    ):
+    if any(report.is_extended_mechanism for report in zero_reports):
         return "extended_candidate"
 
-    return "ambiguous"
+    if all(report.is_regional_mechanism for report in zero_reports):
+        return "regional_candidate"
+
+    return "invalid_or_inconsistent"
 
 
 def _safe_mean(values: NDArray[np.float64]) -> float:
@@ -859,3 +1028,65 @@ def _format_float(value: float) -> str:
         return f"{value:.3e}"
 
     return f"{value:.6g}"
+
+
+def _format_index_preview(
+    indices: NDArray[np.int64],
+    *,
+    max_items: int = 20,
+) -> str:
+    values = [int(value) for value in indices[:max_items]]
+    suffix = "" if len(indices) <= max_items else f", ... +{len(indices) - max_items}"
+    return f"{values}{suffix}"
+
+
+def _zero_indices_with_mechanism(
+    zero_reports: list[InterferenceZeroReport],
+    mechanism: ZeroMechanismLabel,
+) -> NDArray[np.int64]:
+    return np.array(
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if report.mechanism_label == mechanism
+        ],
+        dtype=np.int64,
+    )
+
+
+def _zero_indices_with_flag(
+    zero_reports: list[InterferenceZeroReport],
+    *,
+    flag: Literal["regional", "extended", "failure"],
+) -> NDArray[np.int64]:
+    if flag == "regional":
+        return np.array(
+            [
+                int(report.zero_index)
+                for report in zero_reports
+                if report.is_regional_mechanism
+            ],
+            dtype=np.int64,
+        )
+
+    if flag == "extended":
+        return np.array(
+            [
+                int(report.zero_index)
+                for report in zero_reports
+                if report.is_extended_mechanism
+            ],
+            dtype=np.int64,
+        )
+
+    if flag == "failure":
+        return np.array(
+            [
+                int(report.zero_index)
+                for report in zero_reports
+                if report.is_failure_mechanism
+            ],
+            dtype=np.int64,
+        )
+
+    raise ValueError(f"Unknown mechanism flag: {flag!r}")

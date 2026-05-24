@@ -376,6 +376,13 @@ def write_cage_hdf5(
     max_q_weights = np.zeros(n_records, dtype=np.float64)
     mean_complement_norms = np.zeros(n_records, dtype=np.float64)
     max_complement_norms = np.zeros(n_records, dtype=np.float64)
+    n_q_empty_zeros = np.zeros(n_records, dtype=np.int64)
+    n_closed_by_known_zero_zeros = np.zeros(n_records, dtype=np.int64)
+    n_projector_like_zeros = np.zeros(n_records, dtype=np.int64)
+    n_unexplained_leakage_zeros = np.zeros(n_records, dtype=np.int64)
+    n_regional_mechanism_zeros = np.zeros(n_records, dtype=np.int64)
+    n_extended_mechanism_zeros = np.zeros(n_records, dtype=np.int64)
+    n_failure_mechanism_zeros = np.zeros(n_records, dtype=np.int64)
 
     for record_index, record in enumerate(records):
         cage_state = record.cage_state
@@ -406,6 +413,23 @@ def write_cage_hdf5(
             max_q_weights[record_index] = report.max_q_sector_weight
             mean_complement_norms[record_index] = report.mean_complement_action_norm
             max_complement_norms[record_index] = report.max_complement_action_norm
+            n_q_empty_zeros[record_index] = report.n_q_empty_zeros
+            n_closed_by_known_zero_zeros[record_index] = (
+                report.n_closed_by_known_zero_zeros
+            )
+            n_projector_like_zeros[record_index] = report.n_projector_like_zeros
+            n_unexplained_leakage_zeros[record_index] = (
+                report.n_unexplained_leakage_zeros
+            )
+            n_regional_mechanism_zeros[record_index] = (
+                report.n_regional_mechanism_zeros
+            )
+            n_extended_mechanism_zeros[record_index] = (
+                report.n_extended_mechanism_zeros
+            )
+            n_failure_mechanism_zeros[record_index] = (
+                report.n_failure_mechanism_zeros
+            )
 
     with h5py.File(tmp_path, "w") as h5:
         h5.attrs["format"] = "qlinks_cage_sweep"
@@ -536,6 +560,74 @@ def write_cage_hdf5(
                 data=max_complement_norms,
                 chunks=True,
             )
+            cls_group.create_dataset(
+                "n_q_empty_zeros",
+                data=n_q_empty_zeros,
+                chunks=True,
+            )
+            cls_group.create_dataset(
+                "n_closed_by_known_zero_zeros",
+                data=n_closed_by_known_zero_zeros,
+                chunks=True,
+            )
+            cls_group.create_dataset(
+                "n_projector_like_zeros",
+                data=n_projector_like_zeros,
+                chunks=True,
+            )
+            cls_group.create_dataset(
+                "n_unexplained_leakage_zeros",
+                data=n_unexplained_leakage_zeros,
+                chunks=True,
+            )
+            cls_group.create_dataset(
+                "n_regional_mechanism_zeros",
+                data=n_regional_mechanism_zeros,
+                chunks=True,
+            )
+            cls_group.create_dataset(
+                "n_extended_mechanism_zeros",
+                data=n_extended_mechanism_zeros,
+                chunks=True,
+            )
+            cls_group.create_dataset(
+                "n_failure_mechanism_zeros",
+                data=n_failure_mechanism_zeros,
+                chunks=True,
+            )
+
+        mechanisms_group = cls_group.require_group("mechanism_zero_indices")
+
+        for record_index, report in enumerate(classification_reports):
+            record_group = mechanisms_group.require_group(str(record_index))
+            record_group.create_dataset(
+                "q_empty",
+                data=report.q_empty_zero_indices,
+            )
+            record_group.create_dataset(
+                "closed_by_known_zeros",
+                data=report.closed_by_known_zero_indices,
+            )
+            record_group.create_dataset(
+                "projector_like",
+                data=report.projector_like_zero_indices,
+            )
+            record_group.create_dataset(
+                "unexplained_leakage",
+                data=report.unexplained_leakage_zero_indices,
+            )
+            record_group.create_dataset(
+                "regional",
+                data=report.regional_mechanism_zero_indices,
+            )
+            record_group.create_dataset(
+                "extended",
+                data=report.extended_mechanism_zero_indices,
+            )
+            record_group.create_dataset(
+                "failure",
+                data=report.failure_mechanism_zero_indices,
+            )
 
     tmp_path.replace(path)
 
@@ -591,7 +683,7 @@ def run_one_job(task: CageSweepTask) -> dict[str, Any]:
                 "n_states": n_states,
             }
 
-        if n_states < settings.min_states:
+        if n_states <= settings.min_states:
             update_status(
                 settings.output_root,
                 job,
@@ -776,7 +868,7 @@ def make_sector_probe_model(
             "even_positive" if model_kind == "qlm" and geometry == "honeycomb" else None
         ),
         charge_normalization=(
-            "integer_flux" if model_kind == "qlm" and geometry == "honeycomb" else "spin_half"
+            "spin_half" if model_kind == "qlm" and geometry == "honeycomb" else "integer_flux"
         ),
     )
     return make_model(dummy)
