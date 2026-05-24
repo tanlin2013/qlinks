@@ -117,3 +117,56 @@ def test_spin_one_xy_chain_two_site_matrix_elements() -> None:
 
     # |-1,1> connects to |0,0> with matrix element 1.
     assert np.isclose(H[i, j2], 1.0)
+
+
+def test_spin_one_xy_potential_diagonal_matches_h_and_d_terms():
+    model = SpinOneXYChainModel(
+        length=2,
+        boundary_condition="open",
+        j_xy=0.0,
+        h_z=0.3,
+        d_z=2.0,
+    )
+
+    result = model.build(
+        builder="sparse",
+        basis_solver="dfs",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    assert result.potential is not None
+
+    basis = result.basis.states
+    diagonal = result.potential.diagonal()
+
+    expected = np.array(
+        [
+            0.3 * np.sum(config)
+            + 2.0 * np.sum(config * config)
+            for config in basis
+        ],
+        dtype=np.complex128,
+    )
+
+    np.testing.assert_allclose(diagonal, expected)
+
+
+def test_spin_one_xy_zero_h_and_d_has_no_potential_term_by_default():
+    model = SpinOneXYChainModel(
+        length=3,
+        boundary_condition="open",
+        j_xy=1.0,
+        h_z=0.0,
+        d_z=0.0,
+    )
+
+    result = model.build(
+        builder="sparse",
+        basis_solver="dfs",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    assert result.kinetic is not None
+    assert result.potential is None

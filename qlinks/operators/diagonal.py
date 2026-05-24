@@ -51,6 +51,34 @@ class LocalValueDiagonalOperator(BaseLocalOperator):
 
 
 @dataclass(frozen=True, slots=True)
+class LocalSquareValueDiagonalOperator(BaseLocalOperator):
+    """Diagonal operator proportional to one squared variable value.
+
+    coefficient * config[variable_index] ** 2
+
+    For spin-1 variables m in {-1, 0, +1}, this represents
+    coefficient * (S^z)^2 in the S^z product basis.
+    """
+
+    layout: VariableLayout
+    variable_index: int
+    coefficient: complex = 1.0
+    name: str = "local_square_value_diagonal"
+
+    def __post_init__(self) -> None:
+        self.layout.spec(self.variable_index)
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return np.asarray([self.variable_index], dtype=np.int64)
+
+    def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
+        arr = self._as_config(config)
+        value = int(arr[self.variable_index])
+        coeff = complex(self.coefficient) * value * value
+        return (OperatorAction(coeff, arr.copy()),)
+
+
+@dataclass(frozen=True, slots=True)
 class LocalSumDiagonalOperator(BaseLocalOperator):
     """
     Diagonal operator

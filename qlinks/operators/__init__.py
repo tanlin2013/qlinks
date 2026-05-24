@@ -7,6 +7,7 @@ from qlinks.operators.base import (
 )
 from qlinks.operators.diagonal import (
     ConstantDiagonalOperator,
+    LocalSquareValueDiagonalOperator,
     LocalSumDiagonalOperator,
     LocalValueDiagonalOperator,
     PatternDiagonalOperator,
@@ -61,6 +62,7 @@ __all__ = [
     "BinaryFlipOperator",
     "ConstantDiagonalOperator",
     "LocalOperator",
+    "LocalSquareValueDiagonalOperator",
     "LocalSumDiagonalOperator",
     "LocalValueDiagonalOperator",
     "MultiNegationFlipOperator",

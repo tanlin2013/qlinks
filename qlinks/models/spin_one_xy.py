@@ -9,7 +9,11 @@ from qlinks.models.base import (
     HamiltonianTermSpec,
     validate_builder_name,
 )
-from qlinks.operators import SpinOneXYBondOperator
+from qlinks.operators import (
+    LocalSquareValueDiagonalOperator,
+    LocalValueDiagonalOperator,
+    SpinOneXYBondOperator,
+)
 from qlinks.variables import LocalSpace, VariableLayout
 
 
@@ -33,6 +37,8 @@ class SpinOneXYChainModel(HamiltonianModelBase):
     length: int
     boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
     j_xy: complex = 1.0
+    h_z: complex = 0.0
+    d_z: complex = 0.0
 
     def _make_lattice(self) -> ChainLattice:
         return ChainLattice(
@@ -58,7 +64,7 @@ class SpinOneXYChainModel(HamiltonianModelBase):
     ):
         return ()
 
-    def make_operators(
+    def make_kinetic_operators(
         self,
         layout: VariableLayout | None = None,
         *,
@@ -84,19 +90,90 @@ class SpinOneXYChainModel(HamiltonianModelBase):
             for link_id in self.lattice.link_ids
         )
 
+    def make_potential_operators(
+        self,
+        layout: VariableLayout | None = None,
+        *,
+        builder: HamiltonianBuilderName = "sparse",
+    ) -> tuple[object, ...]:
+        validate_builder_name(builder)
+
+        if builder != "sparse":
+            raise NotImplementedError(
+                "SpinOneXYChainModel currently supports only builder='sparse'."
+            )
+
+        if layout is None:
+            layout = self.layout
+
+        operators: list[object] = []
+
+        for site_id in self.lattice.site_ids:
+            variable_index = int(layout.site_variable_index(int(site_id)))
+
+            if self.h_z != 0:
+                operators.append(
+                    LocalValueDiagonalOperator(
+                        layout=layout,
+                        variable_index=variable_index,
+                        coefficient=self.h_z,
+                        name="spin_one_zeeman_z",
+                    )
+                )
+
+            if self.d_z != 0:
+                operators.append(
+                    LocalSquareValueDiagonalOperator(
+                        layout=layout,
+                        variable_index=variable_index,
+                        coefficient=self.d_z,
+                        name="spin_one_single_ion_anisotropy",
+                    )
+                )
+
+        return tuple(operators)
+
+    def make_operators(
+        self,
+        layout: VariableLayout | None = None,
+        *,
+        builder: HamiltonianBuilderName = "sparse",
+    ) -> tuple[object, ...]:
+        return (
+            *self.make_kinetic_operators(layout, builder=builder),
+            *self.make_potential_operators(layout, builder=builder),
+        )
+
     def make_terms(
         self,
         layout: VariableLayout,
         *,
         builder: HamiltonianBuilderName = "sparse",
     ) -> tuple[HamiltonianTermSpec, ...]:
-        return (
+        kinetic_operators = self.make_kinetic_operators(
+            layout,
+            builder=builder,
+        )
+        potential_operators = self.make_potential_operators(
+            layout,
+            builder=builder,
+        )
+
+        terms = [
             HamiltonianTermSpec.from_operators(
                 name="kinetic",
-                operators=self.make_operators(
-                    layout,
-                    builder=builder,
-                ),
+                operators=kinetic_operators,
                 kind="kinetic",
             ),
-        )
+        ]
+
+        if len(potential_operators) > 0:
+            terms.append(
+                HamiltonianTermSpec.from_operators(
+                    name="potential",
+                    operators=potential_operators,
+                    kind="potential",
+                )
+            )
+
+        return tuple(terms)
