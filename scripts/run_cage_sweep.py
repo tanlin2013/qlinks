@@ -498,7 +498,7 @@ def write_cage_hdf5(
                 compression_opts=4,
                 chunks=(1, max(1, max_support_size)),
             )
-            
+
         cages.create_dataset(
             "boundary_residuals",
             data=boundary_residuals,
@@ -605,9 +605,7 @@ def write_cage_hdf5(
                 data=n_failure_mechanism_zeros,
                 chunks=True,
             )
-            cls_group.attrs["regional_mechanism_definition"] = (
-                "q_empty + closed_by_known_zeros"
-            )
+            cls_group.attrs["regional_mechanism_definition"] = "q_empty + closed_by_known_zeros"
             cls_group.attrs["extended_mechanism_definition"] = "projector_like"
             cls_group.attrs["failure_mechanism_definition"] = "unexplained_leakage"
             cls_group.attrs["label_rule"] = (
@@ -796,24 +794,18 @@ def run_one_job(task: CageSweepTask) -> dict[str, Any]:
 
         for report in classification_reports:
             mechanism_totals["q_empty"] += int(report.n_q_empty_zeros)
-            mechanism_totals["closed_by_known_zeros"] += int(
-                report.n_closed_by_known_zero_zeros
-            )
+            mechanism_totals["closed_by_known_zeros"] += int(report.n_closed_by_known_zero_zeros)
             mechanism_totals["projector_like"] += int(report.n_projector_like_zeros)
-            mechanism_totals["unexplained_leakage"] += int(
-                report.n_unexplained_leakage_zeros
-            )
+            mechanism_totals["unexplained_leakage"] += int(report.n_unexplained_leakage_zeros)
             mechanism_totals["regional"] += int(report.n_regional_mechanism_zeros)
             mechanism_totals["extended"] += int(report.n_extended_mechanism_zeros)
             mechanism_totals["failure"] += int(report.n_failure_mechanism_zeros)
 
         n_invalid_reports = sum(
-            int(report.label == "invalid_or_inconsistent")
-            for report in classification_reports
+            int(report.label == "invalid_or_inconsistent") for report in classification_reports
         )
         n_reports_with_unexplained_leakage = sum(
-            int(report.n_unexplained_leakage_zeros > 0)
-            for report in classification_reports
+            int(report.n_unexplained_leakage_zeros > 0) for report in classification_reports
         )
 
         summary = {
