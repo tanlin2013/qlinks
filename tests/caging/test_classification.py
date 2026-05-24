@@ -384,12 +384,8 @@ def test_classify_full_state_marks_unexplained_complement_cancellation_invalid()
     assert report.n_extended_mechanism_zeros == 0
     assert report.n_failure_mechanism_zeros == 1
 
-    assert _zero_indices(report.unexplained_leakage_zero_indices) == {
-        indices["h"]
-    }
-    assert _zero_indices(report.failure_mechanism_zero_indices) == {
-        indices["h"]
-    }
+    assert _zero_indices(report.unexplained_leakage_zero_indices) == {indices["h"]}
+    assert _zero_indices(report.failure_mechanism_zero_indices) == {indices["h"]}
 
     assert zero_report.mechanism_label == "unexplained_leakage"
     assert not zero_report.is_regional_mechanism

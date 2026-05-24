@@ -2752,8 +2752,7 @@ def _zero_indices_for_mechanism(
     except KeyError as exc:
         allowed = ", ".join(["all", *field_name_by_mechanism])
         raise ValueError(
-            f"Unknown zero mechanism {mechanism!r}. "
-            f"Expected one of: {allowed}."
+            f"Unknown zero mechanism {mechanism!r}. " f"Expected one of: {allowed}."
         ) from exc
 
     return np.asarray(getattr(report, field_name), dtype=np.int64)
@@ -3089,14 +3088,10 @@ class BasisGridVisualizer:
 
         if suptitle is None:
             if mechanism == "all":
-                suptitle = (
-                    "Nontrivial interference zeros "
-                    f"({zero_indices.size} states)"
-                )
+                suptitle = "Nontrivial interference zeros " f"({zero_indices.size} states)"
             else:
                 suptitle = (
-                    f"Nontrivial interference zeros: {mechanism} "
-                    f"({zero_indices.size} states)"
+                    f"Nontrivial interference zeros: {mechanism} " f"({zero_indices.size} states)"
                 )
 
         return self.plot(

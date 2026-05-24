@@ -141,11 +141,7 @@ def test_spin_one_xy_potential_diagonal_matches_h_and_d_terms():
     diagonal = result.potential.diagonal()
 
     expected = np.array(
-        [
-            0.3 * np.sum(config)
-            + 2.0 * np.sum(config * config)
-            for config in basis
-        ],
+        [0.3 * np.sum(config) + 2.0 * np.sum(config * config) for config in basis],
         dtype=np.complex128,
     )
 

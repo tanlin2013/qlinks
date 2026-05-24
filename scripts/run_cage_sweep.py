@@ -414,22 +414,12 @@ def write_cage_hdf5(
             mean_complement_norms[record_index] = report.mean_complement_action_norm
             max_complement_norms[record_index] = report.max_complement_action_norm
             n_q_empty_zeros[record_index] = report.n_q_empty_zeros
-            n_closed_by_known_zero_zeros[record_index] = (
-                report.n_closed_by_known_zero_zeros
-            )
+            n_closed_by_known_zero_zeros[record_index] = report.n_closed_by_known_zero_zeros
             n_projector_like_zeros[record_index] = report.n_projector_like_zeros
-            n_unexplained_leakage_zeros[record_index] = (
-                report.n_unexplained_leakage_zeros
-            )
-            n_regional_mechanism_zeros[record_index] = (
-                report.n_regional_mechanism_zeros
-            )
-            n_extended_mechanism_zeros[record_index] = (
-                report.n_extended_mechanism_zeros
-            )
-            n_failure_mechanism_zeros[record_index] = (
-                report.n_failure_mechanism_zeros
-            )
+            n_unexplained_leakage_zeros[record_index] = report.n_unexplained_leakage_zeros
+            n_regional_mechanism_zeros[record_index] = report.n_regional_mechanism_zeros
+            n_extended_mechanism_zeros[record_index] = report.n_extended_mechanism_zeros
+            n_failure_mechanism_zeros[record_index] = report.n_failure_mechanism_zeros
 
     with h5py.File(tmp_path, "w") as h5:
         h5.attrs["format"] = "qlinks_cage_sweep"
