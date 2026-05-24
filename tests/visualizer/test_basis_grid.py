@@ -14,8 +14,31 @@ from qlinks.visualizer import (
     automatic_grid_shape,
     plot_basis_grid,
 )
+from qlinks.visualizer.basis import _zero_indices_for_mechanism
 
 matplotlib.use("Agg")
+
+
+class DummyZeroReport:
+    def __init__(self, zero_index, mechanism_label):
+        self.zero_index = zero_index
+        self.mechanism_label = mechanism_label
+
+
+class DummyClassificationReport:
+    zero_reports = (
+        DummyZeroReport(2, "q_empty"),
+        DummyZeroReport(5, "projector_like"),
+    )
+
+    q_empty_zero_indices = np.array([2], dtype=np.int64)
+    closed_by_known_zero_indices = np.array([], dtype=np.int64)
+    projector_like_zero_indices = np.array([5], dtype=np.int64)
+    unexplained_leakage_zero_indices = np.array([], dtype=np.int64)
+
+    regional_mechanism_zero_indices = np.array([2], dtype=np.int64)
+    extended_mechanism_zero_indices = np.array([5], dtype=np.int64)
+    failure_mechanism_zero_indices = np.array([], dtype=np.int64)
 
 
 def test_automatic_grid_shape_near_square() -> None:
@@ -240,3 +263,27 @@ def test_basis_grid_reuses_plaquette_primitives(monkeypatch) -> None:
     assert call_count == 1
 
     plt.close(fig)
+
+
+def test_zero_indices_for_mechanism_all():
+    report = DummyClassificationReport()
+
+    indices = _zero_indices_for_mechanism(report, "all")
+
+    assert indices.tolist() == [2, 5]
+
+
+def test_zero_indices_for_mechanism_projector_like():
+    report = DummyClassificationReport()
+
+    indices = _zero_indices_for_mechanism(report, "projector_like")
+
+    assert indices.tolist() == [5]
+
+
+def test_zero_indices_for_mechanism_extended_group():
+    report = DummyClassificationReport()
+
+    indices = _zero_indices_for_mechanism(report, "extended")
+
+    assert indices.tolist() == [5]

@@ -2674,6 +2674,91 @@ def automatic_grid_shape(
     return nrows_auto, ncols_auto
 
 
+def _select_cage_record(
+    result_or_record,
+    *,
+    signature: tuple[int, int] | None = None,
+    record_index: int = 0,
+):
+    """Return a CageRecord from either a CageRecord or CageSearchResult.
+
+    This intentionally uses duck typing to avoid making the visualizer module
+    depend directly on qlinks.caging.
+    """
+    if hasattr(result_or_record, "support") and hasattr(
+        result_or_record,
+        "local_state",
+    ):
+        return result_or_record
+
+    if signature is None:
+        return result_or_record[record_index]
+
+    return result_or_record[signature, record_index]
+
+
+def _amplitude_label(
+    *,
+    basis_index: int,
+    amplitude: complex,
+    digits: int = 3,
+) -> str:
+    real = float(np.real(amplitude))
+    imag = float(np.imag(amplitude))
+
+    if abs(imag) < 10 ** (-digits):
+        amp_text = f"{real:.{digits}g}"
+    elif abs(real) < 10 ** (-digits):
+        amp_text = f"{imag:.{digits}g}j"
+    else:
+        amp_text = f"{real:.{digits}g}{imag:+.{digits}g}j"
+
+    return f"basis {basis_index}\namp={amp_text}"
+
+
+def _zero_mechanism_label_map(report) -> dict[int, str]:
+    """Map zero index to its zero-level mechanism label."""
+    labels: dict[int, str] = {}
+
+    for zero_report in report.zero_reports:
+        labels[int(zero_report.zero_index)] = str(zero_report.mechanism_label)
+
+    return labels
+
+
+def _zero_indices_for_mechanism(
+    report,
+    mechanism: str,
+) -> npt.NDArray[np.int64]:
+    """Return zero indices selected by mechanism name."""
+    if mechanism == "all":
+        return np.array(
+            [int(zero.zero_index) for zero in report.zero_reports],
+            dtype=np.int64,
+        )
+
+    field_name_by_mechanism = {
+        "q_empty": "q_empty_zero_indices",
+        "closed_by_known_zeros": "closed_by_known_zero_indices",
+        "projector_like": "projector_like_zero_indices",
+        "unexplained_leakage": "unexplained_leakage_zero_indices",
+        "regional": "regional_mechanism_zero_indices",
+        "extended": "extended_mechanism_zero_indices",
+        "failure": "failure_mechanism_zero_indices",
+    }
+
+    try:
+        field_name = field_name_by_mechanism[mechanism]
+    except KeyError as exc:
+        allowed = ", ".join(["all", *field_name_by_mechanism])
+        raise ValueError(
+            f"Unknown zero mechanism {mechanism!r}. "
+            f"Expected one of: {allowed}."
+        ) from exc
+
+    return np.asarray(getattr(report, field_name), dtype=np.int64)
+
+
 @dataclass(frozen=True)
 class BasisGridVisualizer:
     """
@@ -2718,6 +2803,8 @@ class BasisGridVisualizer:
         show: bool = True,
         backend: VisualizerBackend = "matplotlib",
         suptitle: str | None = None,
+        suptitle_y: float = 0.995,
+        tight_layout_rect: tuple[float, float, float, float] | None = None,
         single_plot_kwargs: dict | None = None,
     ):
         """
@@ -2859,14 +2946,165 @@ class BasisGridVisualizer:
             )
 
         if suptitle is not None:
-            fig.suptitle(suptitle)
+            fig.suptitle(suptitle, y=suptitle_y)
 
-        fig.tight_layout()
+        if tight_layout_rect is None:
+            if suptitle is None:
+                tight_layout_rect = (0.0, 0.0, 1.0, 1.0)
+            else:
+                tight_layout_rect = (0.0, 0.0, 1.0, 0.96)
+
+        fig.tight_layout(rect=tight_layout_rect)
 
         if show:
             plt.show()
 
         return fig, axes
+
+    def plot_cage_support(
+        self,
+        result_or_record,
+        *,
+        basis_configs: npt.ArrayLike,
+        signature: tuple[int, int] | None = None,
+        record_index: int = 0,
+        max_states: int | None = None,
+        show_amplitudes: bool = True,
+        amplitude_digits: int = 3,
+        labels: Sequence[str] | None = None,
+        suptitle: str | None = None,
+        **plot_kwargs,
+    ):
+        """Plot the support basis states of one cage record.
+
+        Parameters
+        ----------
+        result_or_record:
+            Either a CageSearchResult or a CageRecord.
+        basis_configs:
+            Basis configuration array with shape (hilbert_size, n_variables).
+        signature:
+            Optional cage signature (kappa, Z). If provided, select
+            result_or_record[signature, record_index].
+        record_index:
+            Record index among all records, or among records with the given
+            signature.
+        max_states:
+            Optional cap on the number of support states to plot.
+        show_amplitudes:
+            Whether subplot labels include local-state amplitudes.
+        """
+        basis_configs = np.asarray(basis_configs)
+        record = _select_cage_record(
+            result_or_record,
+            signature=signature,
+            record_index=record_index,
+        )
+
+        support = np.asarray(record.support, dtype=np.int64)
+        local_state = np.asarray(record.local_state, dtype=np.complex128)
+
+        if max_states is not None:
+            support = support[:max_states]
+            local_state = local_state[:max_states]
+
+        states = basis_configs[support]
+
+        if labels is None:
+            if show_amplitudes:
+                labels = [
+                    _amplitude_label(
+                        basis_index=int(index),
+                        amplitude=complex(amplitude),
+                        digits=amplitude_digits,
+                    )
+                    for index, amplitude in zip(support, local_state, strict=True)
+                ]
+            else:
+                labels = [f"basis {int(index)}" for index in support]
+
+        if suptitle is None:
+            suptitle = (
+                f"Cage support, signature={record.signature}, "
+                f"support size={record.support.size}"
+            )
+
+        return self.plot(
+            states,
+            labels=labels,
+            suptitle=suptitle,
+            **plot_kwargs,
+        )
+
+    def plot_interference_zeros(
+        self,
+        classification_report,
+        *,
+        basis_configs: npt.ArrayLike,
+        mechanism: str = "all",
+        max_states: int | None = None,
+        labels: Sequence[str] | None = None,
+        suptitle: str | None = None,
+        **plot_kwargs,
+    ):
+        """Plot basis states corresponding to nontrivial interference zeros.
+
+        Parameters
+        ----------
+        classification_report:
+            CageClassificationReport returned by classify_cage_state or
+            classify_full_state.
+        basis_configs:
+            Basis configuration array with shape (hilbert_size, n_variables).
+        mechanism:
+            One of:
+                "all",
+                "q_empty",
+                "closed_by_known_zeros",
+                "projector_like",
+                "unexplained_leakage",
+                "regional",
+                "extended",
+                "failure".
+        max_states:
+            Optional cap on the number of zero states to plot.
+        """
+        basis_configs = np.asarray(basis_configs)
+        zero_indices = _zero_indices_for_mechanism(
+            classification_report,
+            mechanism,
+        )
+
+        if max_states is not None:
+            zero_indices = zero_indices[:max_states]
+
+        states = basis_configs[zero_indices]
+        mechanism_labels = _zero_mechanism_label_map(classification_report)
+
+        if labels is None:
+            labels = [
+                f"zero {int(index)}\n{mechanism_labels.get(int(index), mechanism)}"
+                for index in zero_indices
+            ]
+
+        if suptitle is None:
+            if mechanism == "all":
+                suptitle = (
+                    "Nontrivial interference zeros "
+                    f"({zero_indices.size} states)"
+                )
+            else:
+                suptitle = (
+                    f"Nontrivial interference zeros: {mechanism} "
+                    f"({zero_indices.size} states)"
+                )
+
+        return self.plot(
+            states,
+            labels=labels,
+            suptitle=suptitle,
+            **plot_kwargs,
+        )
 
 
 def plot_basis_grid(
