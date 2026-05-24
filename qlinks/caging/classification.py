@@ -222,8 +222,7 @@ class CageClassificationReport:
         )
 
         has_only_regional_mechanisms = (
-                self.n_extended_mechanism_zeros == 0
-                and self.n_failure_mechanism_zeros == 0
+            self.n_extended_mechanism_zeros == 0 and self.n_failure_mechanism_zeros == 0
         )
 
         lines.extend(
@@ -231,10 +230,7 @@ class CageClassificationReport:
                 "",
                 "State-level interpretation",
                 "--------------------------",
-                (
-                    "has only regional mechanisms: "
-                    f"{has_only_regional_mechanisms}"
-                ),
+                ("has only regional mechanisms: " f"{has_only_regional_mechanisms}"),
                 (
                     "contains projector-like extended mechanisms: "
                     f"{self.n_extended_mechanism_zeros > 0}"
