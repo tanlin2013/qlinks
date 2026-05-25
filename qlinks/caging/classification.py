@@ -275,9 +275,12 @@ class CageClassificationReport:
     ) -> Group:
         """Return a Rich renderable for this report."""
         renderables = [
-            Panel.fit(
-                Text("Cage classification report", style="bold"),
-                subtitle=f"label: {self.label}",
+            Panel(
+                Group(
+                    Text("Cage classification report", style="bold"),
+                    Text(f"label: {self.label}"),
+                ),
+                expand=False,
             ),
             _rich_key_value_section(
                 "Support",
