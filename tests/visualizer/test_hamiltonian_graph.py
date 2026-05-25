@@ -7,6 +7,7 @@ import pytest
 import scipy.sparse as scipy_sparse
 
 from qlinks.visualizer import (
+    HamiltonianGraphStyle,
     HamiltonianGraphVisualizer,
     bipartition_labels,
 )
@@ -14,6 +15,8 @@ from qlinks.visualizer.hamiltonian_graph import (
     _normalize_graph_backend,
     _scalar_values_to_colors,
     _scalar_values_to_hex_colors,
+    _orbit_labels_to_hex_colors,
+    _orbit_labels_to_rgba_colors,
 )
 
 igraph_available = importlib.util.find_spec("igraph") is not None
@@ -484,3 +487,168 @@ def test_degree_colors_are_not_zero_centered() -> None:
     expected_min = plt.get_cmap("coolwarm")(0.0)
 
     assert to_hex(colors[0]) == to_hex(expected_min)
+
+
+def test_dense_orbit_labels_compacts_representatives() -> None:
+    raw = np.asarray([0, 0, 2, 2, 0, 5], dtype=np.int64)
+
+    labels = HamiltonianGraphVisualizer._dense_orbit_labels(raw)
+
+    np.testing.assert_array_equal(
+        labels,
+        np.asarray([0, 0, 1, 1, 0, 2], dtype=np.int64),
+    )
+
+
+def test_orbit_labels_to_hex_colors_groups_equal_labels() -> None:
+    colors = _orbit_labels_to_hex_colors(
+        np.asarray([0, 1, 0, 2, 1], dtype=np.int64)
+    )
+
+    assert colors[0] == colors[2]
+    assert colors[1] == colors[4]
+    assert len({colors[0], colors[1], colors[3]}) == 3
+
+
+def test_igraph_automorphism_orbits_path_graph() -> None:
+    pytest.importorskip("igraph")
+
+    hamiltonian = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 0.0],
+                [1.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(hamiltonian)
+
+    labels = visualizer.automorphism_orbits(backend="igraph")
+
+    assert labels[0] == labels[2]
+    assert labels[1] != labels[0]
+
+
+def test_pynauty_automorphism_orbits_path_graph() -> None:
+    pytest.importorskip("pynauty")
+
+    hamiltonian = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 0.0],
+                [1.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(hamiltonian)
+
+    labels = visualizer.automorphism_orbits(backend="pynauty")
+
+    assert labels[0] == labels[2]
+    assert labels[1] != labels[0]
+
+
+def test_plot_networkx_colored_by_automorphism_orbit() -> None:
+    pytest.importorskip("networkx")
+    pytest.importorskip("igraph")
+
+    import matplotlib.pyplot as plt
+
+    hamiltonian = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 0.0],
+                [1.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(hamiltonian)
+
+    fig, ax = plt.subplots()
+
+    returned_ax = visualizer.plot(
+        backend="networkx",
+        color_by="automorphism_orbit",
+        automorphism_backend="igraph",
+        ax=ax,
+        show=False,
+    )
+
+    assert returned_ax is ax
+    assert len(ax.collections) > 0
+
+    plt.close(fig)
+
+
+def test_orbit_labels_to_rgba_colors_uses_requested_alpha() -> None:
+    colors = _orbit_labels_to_rgba_colors(
+        np.asarray([0, 1, 0], dtype=np.int64),
+        alpha=0.42,
+    )
+
+    assert colors[0] == colors[2]
+    assert colors[0][3] == pytest.approx(0.42)
+    assert colors[1][3] == pytest.approx(0.42)
+    assert colors[0] != colors[1]
+
+
+def test_orbit_hex_colors_can_be_lightened() -> None:
+    labels = np.asarray([0, 1, 2], dtype=np.int64)
+
+    normal = _orbit_labels_to_hex_colors(labels, lightness_boost=0.0)
+    light = _orbit_labels_to_hex_colors(labels, lightness_boost=0.2)
+
+    assert len(normal) == len(light)
+    assert normal != light
+
+
+def test_networkx_orbit_colors_are_transparent() -> None:
+    pytest.importorskip("networkx")
+    pytest.importorskip("igraph")
+
+    import matplotlib.pyplot as plt
+    import scipy.sparse as scipy_sparse
+
+    hamiltonian = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 0.0],
+                [1.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    style = HamiltonianGraphStyle(orbit_alpha=0.4)
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(
+        hamiltonian,
+        style=style,
+    )
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        backend="networkx",
+        color_by="automorphism_orbit",
+        automorphism_backend="igraph",
+        ax=ax,
+        show=False,
+    )
+
+    node_collection = ax.collections[0]
+    facecolors = node_collection.get_facecolors()
+
+    assert facecolors.shape[0] > 0
+    assert np.allclose(facecolors[:, 3], 0.4)
+
+    plt.close(fig)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal, cast, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -17,6 +17,7 @@ NodeColorRule = Literal[
     "bipartition",
     "self_loop",
     "degree",
+    "automorphism_orbit",
     "state_weight",
     "state_amplitude_real",
     "state_amplitude_imag",
@@ -32,6 +33,7 @@ LayoutName = Literal[
     "kamada_kawai",
     "spring",
 ]
+AutomorphismBackend = Literal["auto", "pynauty", "igraph"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +50,8 @@ class HamiltonianGraphStyle:
     default_vertex_color: str = "lightgray"
     edge_color: str = "gray"
     figure_size: tuple[float, float] = (7.0, 7.0)
+    orbit_alpha: float = 0.65
+    orbit_lightness_boost: float = 0.15
 
 
 @dataclass(frozen=True)
@@ -145,6 +149,7 @@ class HamiltonianGraphVisualizer:
         color_by: NodeColorRule,
         self_loop_values: npt.ArrayLike | None = None,
         state_vector: npt.ArrayLike | None = None,
+        automorphism_backend: AutomorphismBackend = "auto",
     ) -> npt.NDArray[np.float64]:
         """Return scalar node values used for coloring."""
         if color_by == "constant":
@@ -164,6 +169,9 @@ class HamiltonianGraphVisualizer:
 
         if color_by == "degree":
             return self.graph_data.degrees.astype(np.float64)
+
+        if color_by == "automorphism_orbit":
+            return self.automorphism_orbits(backend=automorphism_backend).astype(np.float64)
 
         if color_by in (
             "state_weight",
@@ -270,6 +278,7 @@ class HamiltonianGraphVisualizer:
         ax,
         show: bool,
         save_path: str | Path | None,
+        automorphism_backend: AutomorphismBackend = "auto",
         **layout_kwargs,
     ):
         """Draw with python-igraph layout and Matplotlib rendering."""
@@ -286,12 +295,19 @@ class HamiltonianGraphVisualizer:
             color_by=color_by,
             self_loop_values=self_loop_values,
             state_vector=state_vector,
+            automorphism_backend=automorphism_backend,
         )
-        vertex_colors = _scalar_values_to_colors(
-            values,
-            cmap=self.style.cmap,
-            color_by=color_by,
-        )
+        if color_by == "automorphism_orbit":
+            vertex_colors = _orbit_labels_to_rgba_colors(
+                values.astype(np.int64),
+                alpha=self.style.orbit_alpha,
+            )
+        else:
+            vertex_colors = _scalar_values_to_colors(
+                values,
+                cmap=self.style.cmap,
+                color_by=color_by,
+            )
 
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
 
@@ -319,7 +335,7 @@ class HamiltonianGraphVisualizer:
         if title is not None:
             ax.set_title(title)
 
-        if self.style.colorbar and color_by != "constant":
+        if self.style.colorbar and color_by not in ("constant", "automorphism_orbit"):
             _add_colorbar(
                 ax=ax,
                 values=values,
@@ -350,6 +366,7 @@ class HamiltonianGraphVisualizer:
         target: str | Path | None,
         bbox: tuple[int, int],
         margin: int,
+        automorphism_backend: AutomorphismBackend = "auto",
         **layout_kwargs,
     ):
         """Draw with python-igraph layout and Cairo rendering.
@@ -381,13 +398,20 @@ class HamiltonianGraphVisualizer:
             color_by=color_by,
             self_loop_values=self_loop_values,
             state_vector=state_vector,
+            automorphism_backend=automorphism_backend,
         )
 
-        vertex_colors = _scalar_values_to_hex_colors(
-            values,
-            cmap=self.style.cmap,
-            color_by=color_by,
-        )
+        if color_by == "automorphism_orbit":
+            vertex_colors = _orbit_labels_to_hex_colors(
+                values.astype(np.int64),
+                lightness_boost=self.style.orbit_lightness_boost,
+            )
+        else:
+            vertex_colors = _scalar_values_to_hex_colors(
+                values,
+                cmap=self.style.cmap,
+                color_by=color_by,
+            )
 
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
 
@@ -440,6 +464,7 @@ class HamiltonianGraphVisualizer:
         ax,
         show: bool,
         save_path: str | Path | None,
+        automorphism_backend: AutomorphismBackend = "auto",
         **layout_kwargs,
     ):
         """Draw with networkx."""
@@ -454,6 +479,7 @@ class HamiltonianGraphVisualizer:
             color_by=color_by,
             self_loop_values=self_loop_values,
             state_vector=state_vector,
+            automorphism_backend=automorphism_backend,
         )
 
         if ax is None:
@@ -461,11 +487,17 @@ class HamiltonianGraphVisualizer:
 
         positions = _networkx_layout(graph, layout, **layout_kwargs)
 
-        node_colors = _scalar_values_to_colors(
-            values,
-            cmap=self.style.cmap,
-            color_by=color_by,
-        )
+        if color_by == "automorphism_orbit":
+            node_colors = _orbit_labels_to_rgba_colors(
+                values.astype(np.int64),
+                alpha=self.style.orbit_alpha,
+            )
+        else:
+            node_colors = _scalar_values_to_colors(
+                values,
+                cmap=self.style.cmap,
+                color_by=color_by,
+            )
 
         nx.draw_networkx_nodes(
             graph,
@@ -496,7 +528,7 @@ class HamiltonianGraphVisualizer:
 
         ax.set_axis_off()
 
-        if self.style.colorbar and color_by != "constant":
+        if self.style.colorbar and color_by not in ("constant", "automorphism_orbit"):
             _add_colorbar(
                 ax=ax,
                 values=values,
@@ -504,6 +536,9 @@ class HamiltonianGraphVisualizer:
                 label=color_by,
                 color_by=color_by,
             )
+
+        if color_by == "automorphism_orbit":
+            _add_orbit_legend(ax=ax, labels=values.astype(np.int64), colors=node_colors)
 
         if save_path is not None:
             ax.figure.savefig(save_path, bbox_inches="tight", dpi=200)
@@ -619,6 +654,7 @@ class HamiltonianGraphVisualizer:
         color_by: NodeColorRule = "constant",
         self_loop_values: npt.ArrayLike | None = None,
         state_vector: npt.ArrayLike | None = None,
+        automorphism_backend: AutomorphismBackend = "auto",
         **layout_kwargs,
     ):
         """Convert to NetworkX graph and attach computed layout coordinates.
@@ -652,10 +688,16 @@ class HamiltonianGraphVisualizer:
             color_by=color_by,
             self_loop_values=self_loop_values,
             state_vector=state_vector,
+            automorphism_backend=automorphism_backend,
         )
 
         degrees = self.graph_data.degrees
         self_loops = self.graph_data.self_loop_values
+        orbit_labels = (
+            self.automorphism_orbits(backend=automorphism_backend)
+            if color_by == "automorphism_orbit"
+            else None
+        )
 
         for node in graph.nodes:
             position = np.asarray(positions[node], dtype=float)
@@ -666,6 +708,8 @@ class HamiltonianGraphVisualizer:
             graph.nodes[node]["degree"] = int(degrees[node])
             graph.nodes[node]["self_loop_real"] = float(np.real(self_loops[node]))
             graph.nodes[node]["self_loop_imag"] = float(np.imag(self_loops[node]))
+            if orbit_labels is not None:
+                graph.nodes[node]["automorphism_orbit"] = int(orbit_labels[node])
 
             # Gephi GEXF reads this "viz" block as actual node position.
             graph.nodes[node]["viz"] = {
@@ -695,6 +739,7 @@ class HamiltonianGraphVisualizer:
         color_by: NodeColorRule = "constant",
         self_loop_values: npt.ArrayLike | None = None,
         state_vector: npt.ArrayLike | None = None,
+        automorphism_backend: AutomorphismBackend = "auto",
         **layout_kwargs,
     ):
         """Convert to an igraph graph and attach computed layout coordinates."""
@@ -710,6 +755,7 @@ class HamiltonianGraphVisualizer:
             color_by=color_by,
             self_loop_values=self_loop_values,
             state_vector=state_vector,
+            automorphism_backend=automorphism_backend,
         )
 
         degrees = self.graph_data.degrees
@@ -833,6 +879,120 @@ class HamiltonianGraphVisualizer:
             margin=margin,
             **layout_kwargs,
         )
+
+    def automorphism_orbits(
+        self,
+        *,
+        backend: AutomorphismBackend = "auto",
+    ) -> np.ndarray:
+        """Return dense vertex-orbit labels under graph automorphisms.
+
+        The returned array has shape ``(n_vertices,)`` and integer labels
+        ``0, 1, ..., n_orbits - 1``.
+        """
+        if backend == "auto":
+            try:
+                return self._automorphism_orbits_pynauty()
+            except ImportError:
+                return self._automorphism_orbits_igraph()
+
+        if backend == "pynauty":
+            return self._automorphism_orbits_pynauty()
+
+        if backend == "igraph":
+            return self._automorphism_orbits_igraph()
+
+        raise ValueError("backend must be 'auto', 'pynauty', or 'igraph'.")
+
+    @staticmethod
+    def _dense_orbit_labels(raw_orbits: npt.ArrayLike) -> np.ndarray:
+        """Convert arbitrary orbit representatives to dense labels."""
+        raw = np.asarray(raw_orbits, dtype=np.int64)
+
+        representative_to_label: dict[int, int] = {}
+        labels = np.empty_like(raw)
+
+        for i, representative in enumerate(raw):
+            key = int(representative)
+
+            if key not in representative_to_label:
+                representative_to_label[key] = len(representative_to_label)
+
+            labels[i] = representative_to_label[key]
+
+        return labels
+
+    def _automorphism_orbits_pynauty(self) -> np.ndarray:
+        """Compute vertex orbits with pynauty."""
+        try:
+            import pynauty
+        except ImportError as error:
+            raise ImportError(
+                "automorphism_backend='pynauty' requires pynauty."
+            ) from error
+
+        adjacency = self.graph_data.adjacency.tocsr()
+        n_vertices = int(adjacency.shape[0])
+
+        adjacency_dict: dict[int, list[int]] = {}
+
+        for vertex in range(n_vertices):
+            start = int(adjacency.indptr[vertex])
+            end = int(adjacency.indptr[vertex + 1])
+            neighbors = sorted(
+                int(neighbor)
+                for neighbor in adjacency.indices[start:end]
+                if int(neighbor) != vertex
+            )
+            adjacency_dict[vertex] = neighbors
+
+        graph = pynauty.Graph(
+            number_of_vertices=n_vertices,
+            directed=False,
+            adjacency_dict=adjacency_dict,
+        )
+
+        # pynauty.autgrp returns group data; the fourth item is the orbit array.
+        # This mirrors pynauty's documented/common usage: pynauty.autgrp(g)[3].
+        raw_orbits = pynauty.autgrp(graph)[3]
+
+        return self._dense_orbit_labels(raw_orbits)
+
+    def _automorphism_orbits_igraph(self) -> np.ndarray:
+        """Compute vertex orbits with igraph by enumerating automorphisms."""
+        try:
+            import igraph as ig  # noqa: F401
+        except ImportError as error:
+            raise ImportError(
+                "automorphism_backend='igraph' requires python-igraph."
+            ) from error
+
+        graph = self.to_igraph()
+        n_vertices = int(graph.vcount())
+
+        parent = np.arange(n_vertices, dtype=np.int64)
+
+        def find(x: int) -> int:
+            while int(parent[x]) != x:
+                parent[x] = parent[int(parent[x])]
+                x = int(parent[x])
+            return x
+
+        def union(a: int, b: int) -> None:
+            root_a = find(a)
+            root_b = find(b)
+            if root_a == root_b:
+                return
+            if root_b < root_a:
+                root_a, root_b = root_b, root_a
+            parent[root_b] = root_a
+
+        for automorphism in graph.get_automorphisms_vf2():
+            for source, target in enumerate(automorphism):
+                union(int(source), int(target))
+
+        raw_orbits = np.asarray([find(i) for i in range(n_vertices)], dtype=np.int64)
+        return self._dense_orbit_labels(raw_orbits)
 
 
 def _as_csr_array(matrix) -> scipy_sparse.csr_array:
@@ -979,6 +1139,43 @@ def _add_colorbar(
     )
 
 
+def _add_orbit_legend(
+    *,
+    ax,
+    labels: npt.ArrayLike,
+    colors: Sequence[str],
+    max_entries: int = 12,
+) -> None:
+    """Add a compact orbit legend for small orbit counts."""
+    import matplotlib.patches as mpatches
+
+    labels = np.asarray(labels, dtype=np.int64)
+    unique_labels = sorted(int(label) for label in np.unique(labels))
+
+    if len(unique_labels) > max_entries:
+        return
+
+    label_to_color = {
+        int(label): color
+        for label, color in zip(labels, colors, strict=True)
+    }
+
+    handles = [
+        mpatches.Patch(
+            color=label_to_color[label],
+            label=f"orbit {label}",
+        )
+        for label in unique_labels
+    ]
+
+    ax.legend(
+        handles=handles,
+        loc="best",
+        fontsize="small",
+        frameon=False,
+    )
+
+
 def _uses_zero_centered_colormap(color_by: NodeColorRule) -> bool:
     """Return whether node colors should be centered at zero."""
     return color_by in {
@@ -1029,6 +1226,59 @@ def _node_color_norm(
         vmin=float(np.min(values)),
         vmax=float(np.max(values)),
     )
+
+
+def _orbit_labels_to_hex_colors(
+    labels: npt.ArrayLike,
+    *,
+    lightness_boost: float = 0.0,
+) -> list[str]:
+    """Return visually separated hex colors for integer orbit labels."""
+    import colorsys
+    from matplotlib.colors import to_hex
+
+    labels = np.asarray(labels, dtype=np.int64)
+
+    if labels.size == 0:
+        return []
+
+    unique_labels = sorted(int(label) for label in np.unique(labels))
+    label_to_color: dict[int, str] = {}
+
+    golden_ratio_conjugate = 0.618033988749895
+
+    for rank, label in enumerate(unique_labels):
+        hue = (rank * golden_ratio_conjugate) % 1.0
+
+        saturation = 0.70 if rank % 2 == 0 else 0.95
+        lightness = 0.52 if (rank // 2) % 2 == 0 else 0.68
+
+        lightness = min(0.95, lightness + lightness_boost)
+
+        red, green, blue = colorsys.hls_to_rgb(
+            hue,
+            lightness,
+            saturation,
+        )
+        label_to_color[label] = to_hex((red, green, blue))
+
+    return [label_to_color[int(label)] for label in labels]
+
+
+def _orbit_labels_to_rgba_colors(
+    labels: npt.ArrayLike,
+    *,
+    alpha: float,
+) -> list[tuple[float, float, float, float]]:
+    """Return visually separated RGBA colors for integer orbit labels."""
+    from matplotlib.colors import to_rgba
+
+    hex_colors = _orbit_labels_to_hex_colors(labels)
+
+    return [
+        to_rgba(color, alpha=alpha)
+        for color in hex_colors
+    ]
 
 
 def _igraph_layout(graph, layout: LayoutName, **kwargs):
