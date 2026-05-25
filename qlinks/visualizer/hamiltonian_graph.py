@@ -290,6 +290,7 @@ class HamiltonianGraphVisualizer:
         vertex_colors = _scalar_values_to_colors(
             values,
             cmap=self.style.cmap,
+            color_by=color_by,
         )
 
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
@@ -324,6 +325,7 @@ class HamiltonianGraphVisualizer:
                 values=values,
                 cmap=self.style.cmap,
                 label=color_by,
+                color_by=color_by,
             )
 
         if save_path is not None:
@@ -384,6 +386,7 @@ class HamiltonianGraphVisualizer:
         vertex_colors = _scalar_values_to_hex_colors(
             values,
             cmap=self.style.cmap,
+            color_by=color_by,
         )
 
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
@@ -458,11 +461,16 @@ class HamiltonianGraphVisualizer:
 
         positions = _networkx_layout(graph, layout, **layout_kwargs)
 
+        node_colors = _scalar_values_to_colors(
+            values,
+            cmap=self.style.cmap,
+            color_by=color_by,
+        )
+
         nx.draw_networkx_nodes(
             graph,
             positions,
-            node_color=values,
-            cmap=self.style.cmap,
+            node_color=node_colors,
             node_size=self.style.vertex_size * 12,
             ax=ax,
         )
@@ -494,6 +502,7 @@ class HamiltonianGraphVisualizer:
                 values=values,
                 cmap=self.style.cmap,
                 label=color_by,
+                color_by=color_by,
             )
 
         if save_path is not None:
@@ -900,54 +909,41 @@ def _scalar_values_to_colors(
     values: npt.ArrayLike,
     *,
     cmap: str,
+    color_by: NodeColorRule,
 ) -> list:
     """Convert scalar values to matplotlib colors."""
     import matplotlib.pyplot as plt
-    from matplotlib.colors import Normalize
 
     values = np.asarray(values, dtype=np.float64)
 
     if values.size == 0:
         return []
 
-    if np.allclose(values, values[0]):
-        normalized_values = np.zeros_like(values, dtype=np.float64)
-    else:
-        normalized_values = Normalize(
-            vmin=float(np.min(values)),
-            vmax=float(np.max(values)),
-        )(values)
-
+    norm = _node_color_norm(values, color_by=color_by)
     colormap = plt.get_cmap(cmap)
 
-    return [colormap(float(value)) for value in normalized_values]
+    return [colormap(float(norm(value))) for value in values]
 
 
 def _scalar_values_to_hex_colors(
     values: npt.ArrayLike,
     *,
     cmap: str,
+    color_by: NodeColorRule,
 ) -> list[str]:
     """Convert scalar values to hex color strings."""
     import matplotlib.pyplot as plt
-    from matplotlib.colors import Normalize, to_hex
+    from matplotlib.colors import to_hex
 
     values = np.asarray(values, dtype=np.float64)
 
     if values.size == 0:
         return []
 
-    if np.allclose(values, values[0]):
-        normalized_values = np.zeros_like(values, dtype=np.float64)
-    else:
-        normalized_values = Normalize(
-            vmin=float(np.min(values)),
-            vmax=float(np.max(values)),
-        )(values)
-
+    norm = _node_color_norm(values, color_by=color_by)
     colormap = plt.get_cmap(cmap)
 
-    return [to_hex(colormap(float(value))) for value in normalized_values]
+    return [to_hex(colormap(float(norm(value)))) for value in values]
 
 
 def _add_colorbar(
@@ -956,21 +952,19 @@ def _add_colorbar(
     values: npt.ArrayLike,
     cmap: str,
     label: str,
+    color_by: NodeColorRule,
 ) -> None:
     """Attach a scalar colorbar to an axis."""
     import matplotlib.pyplot as plt
     from matplotlib.cm import ScalarMappable
-    from matplotlib.colors import Normalize
 
     values = np.asarray(values, dtype=np.float64)
 
     if values.size == 0 or np.allclose(values, values[0]):
         return
 
-    norm = Normalize(
-        vmin=float(np.min(values)),
-        vmax=float(np.max(values)),
-    )
+    norm = _node_color_norm(values, color_by=color_by)
+
     scalar_mappable = ScalarMappable(
         cmap=plt.get_cmap(cmap),
         norm=norm,
@@ -982,6 +976,58 @@ def _add_colorbar(
         ax=ax,
         label=label,
         shrink=0.8,
+    )
+
+
+def _uses_zero_centered_colormap(color_by: NodeColorRule) -> bool:
+    """Return whether node colors should be centered at zero."""
+    return color_by in {
+        "state_amplitude_real",
+        "state_amplitude_imag",
+    }
+
+
+def _node_color_norm(
+    values: npt.ArrayLike,
+    *,
+    color_by: NodeColorRule,
+):
+    """Return a Matplotlib norm for node colors."""
+    from matplotlib.colors import Normalize, TwoSlopeNorm
+
+    values = np.asarray(values, dtype=np.float64)
+
+    if values.size == 0:
+        return Normalize(vmin=0.0, vmax=1.0)
+
+    if np.allclose(values, values[0]):
+        value = float(values[0])
+
+        if _uses_zero_centered_colormap(color_by):
+            scale = max(abs(value), 1.0)
+            return TwoSlopeNorm(
+                vmin=-scale,
+                vcenter=0.0,
+                vmax=scale,
+            )
+
+        return Normalize(vmin=value - 0.5, vmax=value + 0.5)
+
+    if _uses_zero_centered_colormap(color_by):
+        scale = float(np.max(np.abs(values)))
+
+        if scale == 0.0:
+            scale = 1.0
+
+        return TwoSlopeNorm(
+            vmin=-scale,
+            vcenter=0.0,
+            vmax=scale,
+        )
+
+    return Normalize(
+        vmin=float(np.min(values)),
+        vmax=float(np.max(values)),
     )
 
 

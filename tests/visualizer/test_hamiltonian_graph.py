@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import scipy.sparse as scipy_sparse
@@ -9,7 +10,11 @@ from qlinks.visualizer import (
     HamiltonianGraphVisualizer,
     bipartition_labels,
 )
-from qlinks.visualizer.hamiltonian_graph import _normalize_graph_backend
+from qlinks.visualizer.hamiltonian_graph import (
+    _normalize_graph_backend,
+    _scalar_values_to_colors,
+    _scalar_values_to_hex_colors,
+)
 
 igraph_available = importlib.util.find_spec("igraph") is not None
 
@@ -431,3 +436,51 @@ def test_save_alias_calls_save_plot(tmp_path) -> None:
     assert returned == out
     assert out.exists()
     assert out.stat().st_size > 0
+
+
+def test_state_amplitude_real_colors_are_zero_centered() -> None:
+    from matplotlib.colors import to_hex
+
+    values = np.asarray([-0.2, 0.0, 0.1], dtype=np.float64)
+
+    colors = _scalar_values_to_colors(
+        values,
+        cmap="coolwarm",
+        color_by="state_amplitude_real",
+    )
+
+    expected_zero = plt.get_cmap("coolwarm")(0.5)
+
+    assert to_hex(colors[1]) == to_hex(expected_zero)
+
+
+def test_state_amplitude_real_hex_colors_are_zero_centered() -> None:
+    from matplotlib.colors import to_hex
+
+    values = np.asarray([-0.2, 0.0, 0.1], dtype=np.float64)
+
+    colors = _scalar_values_to_hex_colors(
+        values,
+        cmap="coolwarm",
+        color_by="state_amplitude_real",
+    )
+
+    expected_zero = to_hex(plt.get_cmap("coolwarm")(0.5))
+
+    assert colors[1] == expected_zero
+
+
+def test_degree_colors_are_not_zero_centered() -> None:
+    from matplotlib.colors import to_hex
+
+    values = np.asarray([1.0, 2.0, 3.0], dtype=np.float64)
+
+    colors = _scalar_values_to_colors(
+        values,
+        cmap="coolwarm",
+        color_by="degree",
+    )
+
+    expected_min = plt.get_cmap("coolwarm")(0.0)
+
+    assert to_hex(colors[0]) == to_hex(expected_min)
