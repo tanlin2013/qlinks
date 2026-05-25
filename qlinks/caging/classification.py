@@ -77,6 +77,10 @@ class InterferenceZeroReport:
     projector_like_iz_target_indices: NDArray[np.int64]
     unexpected_target_indices: NDArray[np.int64]
 
+    complement_support_indices: NDArray[np.int64]
+    complement_contributing_input_indices: NDArray[np.int64]
+    projector_like_annihilated_input_indices: NDArray[np.int64]
+
     has_unexpected_targets: bool
     has_nonzero_complement_action: bool
     unexpected_target_probe_failure_indices: NDArray[np.int64]
@@ -142,6 +146,18 @@ class InterferenceZeroReport:
     def n_nonzero_complement_action_targets(self) -> int:
         return int(self.nonzero_complement_action_target_indices.size)
 
+    @property
+    def n_complement_support_inputs(self) -> int:
+        return int(self.complement_support_indices.size)
+
+    @property
+    def n_complement_contributing_inputs(self) -> int:
+        return int(self.complement_contributing_input_indices.size)
+
+    @property
+    def n_projector_like_annihilated_inputs(self) -> int:
+        return int(self.projector_like_annihilated_input_indices.size)
+
 
 @dataclass(frozen=True, slots=True)
 class CageClassificationReport:
@@ -182,6 +198,14 @@ class CageClassificationReport:
     closed_by_known_zero_indices: NDArray[np.int64]
     projector_like_zero_indices: NDArray[np.int64]
     unexplained_leakage_zero_indices: NDArray[np.int64]
+
+    n_source_projector_like_probes: int
+    n_indirect_projector_like_probes: int
+    n_projector_like_annihilated_inputs: int
+
+    source_projector_like_probe_indices: NDArray[np.int64]
+    indirect_projector_like_probe_indices: NDArray[np.int64]
+    projector_like_annihilated_input_indices: NDArray[np.int64]
 
     regional_mechanism_zero_indices: NDArray[np.int64]
     extended_mechanism_zero_indices: NDArray[np.int64]
@@ -285,6 +309,25 @@ class CageClassificationReport:
                 f"unexpected targets: {self.n_unexpected_targets}",
             ]
         )
+        lines.extend(
+            [
+                "",
+                "Projector-like diagnostics",
+                "--------------------------",
+                (
+                    "direct projector-like source probes: "
+                    f"{self.n_source_projector_like_probes}"
+                ),
+                (
+                    "indirect projector-like source probes: "
+                    f"{self.n_indirect_projector_like_probes}"
+                ),
+                (
+                    "projector-annihilated complement inputs: "
+                    f"{self.n_projector_like_annihilated_inputs}"
+                ),
+            ]
+        )
 
         has_only_regional_mechanisms = (
             self.n_extended_mechanism_zeros == 0 and self.n_failure_mechanism_zeros == 0
@@ -325,6 +368,18 @@ class CageClassificationReport:
                 (
                     "nonzero-complement-action failures: "
                     f"{_format_index_preview(self.nonzero_complement_action_probe_failure_indices)}"
+                ),
+                (
+                    "direct projector-like source probes: "
+                    f"{_format_index_preview(self.source_projector_like_probe_indices)}"
+                ),
+                (
+                    "indirect projector-like source probes: "
+                    f"{_format_index_preview(self.indirect_projector_like_probe_indices)}"
+                ),
+                (
+                    "projector-annihilated complement inputs: "
+                    f"{_format_index_preview(self.projector_like_annihilated_input_indices)}"
                 ),
             ]
         )
@@ -409,6 +464,30 @@ class CageClassificationReport:
                         (
                             "    nonzero complement-action targets: "
                             f"{zero_report.nonzero_complement_action_target_indices.tolist()}"
+                        ),
+                    ]
+                )
+                lines.extend(
+                    [
+                        (
+                            "    source projector-like: "
+                            f"{zero_report.source_projector_like}"
+                        ),
+                        (
+                            "    complement support inputs: "
+                            f"{zero_report.complement_support_indices.tolist()}"
+                        ),
+                        (
+                            "    complement contributing inputs: "
+                            f"{zero_report.complement_contributing_input_indices.tolist()}"
+                        ),
+                        (
+                            "    projector-annihilated inputs: "
+                            f"{zero_report.projector_like_annihilated_input_indices.tolist()}"
+                        ),
+                        (
+                            "    projector-like IZ targets: "
+                            f"{zero_report.projector_like_iz_target_indices.tolist()}"
                         ),
                     ]
                 )
@@ -565,6 +644,11 @@ def classify_full_state(
         zero_reports,
         "closed_by_known_zeros",
     )
+    source_projector_like_probe_indices = _zero_indices_with_source_projector_like(zero_reports)
+    indirect_projector_like_probe_indices = _zero_indices_with_indirect_projector_like(zero_reports)
+    projector_like_annihilated_input_indices = _union_projector_like_annihilated_inputs(
+        zero_reports
+    )
     projector_like_zero_indices = _zero_indices_with_mechanism(
         zero_reports,
         "projector_like",
@@ -625,6 +709,12 @@ def classify_full_state(
         n_unexpected_targets=n_unexpected_targets,
         q_empty_zero_indices=q_empty_zero_indices,
         closed_by_known_zero_indices=closed_by_known_zero_indices,
+        n_source_projector_like_probes=int(source_projector_like_probe_indices.size),
+        n_indirect_projector_like_probes=int(indirect_projector_like_probe_indices.size),
+        n_projector_like_annihilated_inputs=int(projector_like_annihilated_input_indices.size),
+        source_projector_like_probe_indices=source_projector_like_probe_indices,
+        indirect_projector_like_probe_indices=(indirect_projector_like_probe_indices),
+        projector_like_annihilated_input_indices=(projector_like_annihilated_input_indices),
         projector_like_zero_indices=projector_like_zero_indices,
         unexplained_leakage_zero_indices=unexplained_leakage_zero_indices,
         regional_mechanism_zero_indices=regional_mechanism_zero_indices,
@@ -765,7 +855,7 @@ def _build_zero_report(
         local_mask=local_mask,
     )
 
-    reduced_action, _reduced_targets = _apply_reduced_local_operator(
+    reduced_action, _reduced_targets, _reduced_inputs = _apply_reduced_local_operator(
         full_state,
         basis_configs=basis_configs,
         config_to_index=config_to_index,
@@ -776,17 +866,33 @@ def _build_zero_report(
         amplitude_tolerance=config.amplitude_tolerance,
     )
 
-    complement_action, complement_target_indices = _apply_reduced_local_operator(
+    complement_action, complement_target_indices, complement_contributing_input_indices = (
+        _apply_reduced_local_operator(
+            full_state,
+            basis_configs=basis_configs,
+            config_to_index=config_to_index,
+            common_mask=common_mask,
+            reference_config=basis_configs[zero_index],
+            local_mask=local_mask,
+            local_transitions=local_transitions,
+            use_complement_common_sector=True,
+            amplitude_tolerance=config.amplitude_tolerance,
+        )
+    )
+
+    complement_support_indices = _complement_support_indices(
         full_state,
         basis_configs=basis_configs,
-        config_to_index=config_to_index,
-        common_mask=common_mask,
         reference_config=basis_configs[zero_index],
-        local_mask=local_mask,
-        local_transitions=local_transitions,
-        use_complement_common_sector=True,
+        common_mask=common_mask,
         amplitude_tolerance=config.amplitude_tolerance,
     )
+
+    projector_like_annihilated_input_indices = np.setdiff1d(
+        complement_support_indices,
+        complement_contributing_input_indices,
+        assume_unique=False,
+    ).astype(np.int64, copy=False)
 
     nonzero_complement_action_target_indices = np.array(
         [
@@ -800,7 +906,9 @@ def _build_zero_report(
     has_nonzero_complement_action = nonzero_complement_action_target_indices.size > 0
 
     source_projector_like = (
-        q_sector_weight > config.action_tolerance and complement_target_indices.size == 0
+        q_sector_weight > config.action_tolerance
+        and complement_target_indices.size == 0
+        and projector_like_annihilated_input_indices.size > 0
     )
 
     return InterferenceZeroReport(
@@ -822,6 +930,9 @@ def _build_zero_report(
         has_nonzero_complement_action=has_nonzero_complement_action,
         unexpected_target_probe_failure_indices=np.array([], dtype=np.int64),
         nonzero_complement_action_target_indices=(nonzero_complement_action_target_indices),
+        complement_support_indices=complement_support_indices,
+        complement_contributing_input_indices=complement_contributing_input_indices,
+        projector_like_annihilated_input_indices=(projector_like_annihilated_input_indices),
         source_projector_like=source_projector_like,
         trivial_target_indices=np.array([], dtype=np.int64),
         destructive_iz_target_indices=np.array([], dtype=np.int64),
@@ -1015,6 +1126,13 @@ def _replace_interference_zero_report(
         "nonzero_complement_action_target_indices": (
             report.nonzero_complement_action_target_indices
         ),
+        "complement_support_indices": report.complement_support_indices,
+        "complement_contributing_input_indices": (
+            report.complement_contributing_input_indices
+        ),
+        "projector_like_annihilated_input_indices": (
+            report.projector_like_annihilated_input_indices
+        ),
         "source_projector_like": report.source_projector_like,
         "trivial_target_indices": report.trivial_target_indices,
         "destructive_iz_target_indices": (report.destructive_iz_target_indices),
@@ -1156,6 +1274,33 @@ def _q_sector_weight(
     return float(np.sum(np.abs(amplitudes[active]) ** 2))
 
 
+def _complement_support_indices(
+    full_state: NDArray[np.complex128],
+    *,
+    basis_configs: NDArray[np.integer],
+    reference_config: NDArray[np.integer],
+    common_mask: NDArray[np.bool_],
+    amplitude_tolerance: float,
+) -> NDArray[np.int64]:
+    """Return finite-amplitude basis indices outside the beta common sector."""
+    if np.count_nonzero(common_mask) == 0:
+        complement_mask = np.ones(full_state.size, dtype=np.bool_)
+    else:
+        same_common_sector = np.all(
+            basis_configs[:, common_mask]
+            == reference_config[common_mask][None, :],
+            axis=1,
+        )
+        complement_mask = ~same_common_sector
+
+    active_mask = np.abs(full_state) > amplitude_tolerance
+
+    return np.flatnonzero(complement_mask & active_mask).astype(
+        np.int64,
+        copy=False,
+    )
+
+
 def _local_transitions_for_zero(
     zero_index: int,
     *,
@@ -1212,7 +1357,7 @@ def _apply_reduced_local_operator(
     reference_config: NDArray[np.integer] | None = None,
     use_complement_common_sector: bool = False,
     amplitude_tolerance: float = 0.0,
-) -> tuple[NDArray[np.complex128], NDArray[np.int64]]:
+) -> tuple[NDArray[np.complex128], NDArray[np.int64], NDArray[np.int64]]:
     """
     Apply local Z_h pattern to the full state.
 
@@ -1230,6 +1375,7 @@ def _apply_reduced_local_operator(
     """
     output = np.zeros_like(full_state)
     target_indices: set[int] = set()
+    contributing_input_indices: set[int] = set()
 
     for source_index, source_config in enumerate(basis_configs):
         source_amplitude = full_state[source_index]
@@ -1272,10 +1418,12 @@ def _apply_reduced_local_operator(
 
             output[target_index] += contribution
             target_indices.add(int(target_index))
+            contributing_input_indices.add(int(source_index))
 
     return (
         output,
         np.array(sorted(target_indices), dtype=np.int64),
+        np.array(sorted(contributing_input_indices), dtype=np.int64),
     )
 
 
@@ -1447,3 +1595,47 @@ def _zero_indices_with_nonzero_complement_action_failure(
         [int(report.zero_index) for report in zero_reports if report.has_nonzero_complement_action],
         dtype=np.int64,
     )
+
+
+def _zero_indices_with_source_projector_like(
+    zero_reports: list[InterferenceZeroReport],
+) -> NDArray[np.int64]:
+    return np.array(
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if report.source_projector_like
+        ],
+        dtype=np.int64,
+    )
+
+
+def _zero_indices_with_indirect_projector_like(
+    zero_reports: list[InterferenceZeroReport],
+) -> NDArray[np.int64]:
+    return np.array(
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if (
+                report.mechanism_label == "projector_like"
+                and not report.source_projector_like
+            )
+        ],
+        dtype=np.int64,
+    )
+
+
+def _union_projector_like_annihilated_inputs(
+    zero_reports: list[InterferenceZeroReport],
+) -> NDArray[np.int64]:
+    arrays = [
+        report.projector_like_annihilated_input_indices
+        for report in zero_reports
+        if report.source_projector_like
+    ]
+
+    if len(arrays) == 0:
+        return np.array([], dtype=np.int64)
+
+    return np.unique(np.concatenate(arrays)).astype(np.int64, copy=False)

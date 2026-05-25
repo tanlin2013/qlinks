@@ -68,6 +68,9 @@ def _minimal_zero_report(
     complement_targets: tuple[int, ...],
     complement_action_norm: float = 0.0,
     source_projector_like: bool = False,
+    complement_support: tuple[int, ...] = (),
+    complement_contributing_inputs: tuple[int, ...] = (),
+    projector_like_annihilated_inputs: tuple[int, ...] = (),
 ) -> InterferenceZeroReport:
     """Build a minimal InterferenceZeroReport for annotation tests."""
     complement_target_indices = np.array(
@@ -106,6 +109,18 @@ def _minimal_zero_report(
         source_projector_like=source_projector_like,
         mechanism_label="unexplained_leakage",
         local_transitions=(),
+        complement_support_indices=np.array(
+            complement_support,
+            dtype=np.int64,
+        ),
+        complement_contributing_input_indices=np.array(
+            complement_contributing_inputs,
+            dtype=np.int64,
+        ),
+        projector_like_annihilated_input_indices=np.array(
+            projector_like_annihilated_inputs,
+            dtype=np.int64,
+        ),
     )
 
 
