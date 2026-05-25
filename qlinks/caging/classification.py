@@ -1,26 +1,35 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, TypeAlias
 
 import numpy as np
 import scipy.sparse as scipy_sparse
 from numpy.typing import NDArray
+from rich.console import Console, Group
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
 
 from qlinks.caging.results import CageState, cage_state_to_full_vector
 
-CageSpatialLabel = Literal[
+CageSpatialLabel: TypeAlias = Literal[
     "regional_candidate",
     "extended_candidate",
     "invalid_or_inconsistent",
 ]
-ZeroMechanismLabel = Literal[
+# Mechanism label for the reduced IZ probe associated with a source zero.
+#
+# The label is attached to the probe Z_h^(R), not intrinsically to the
+# source zero vertex or to the target vertices reached by the complement
+# action.
+IZProbeMechanismLabel: TypeAlias = Literal[
     "q_empty",
     "closed_by_known_zeros",
     "projector_like",
     "unexplained_leakage",
 ]
-IZTargetExplanationLabel = Literal[
+IZTargetExplanationLabel: TypeAlias = Literal[
     "trivial_zero",
     "destructive_iz",
     "projector_like_iz",
@@ -52,7 +61,12 @@ class LocalTransitionPattern:
 
 @dataclass(frozen=True, slots=True)
 class InterferenceZeroReport:
-    """Diagnostics for one nontrivial interference zero."""
+    """Diagnostics for one source nontrivial interference zero.
+
+    The field ``zero_index`` is the source zero h used to construct the
+    reduced IZ probe Z_h^(R). The mechanism label describes the behavior of
+    this source probe on the cage state.
+    """
 
     zero_index: int
     active_neighbors: NDArray[np.int64]
@@ -73,7 +87,7 @@ class InterferenceZeroReport:
     complement_targets_are_known_zeros: bool
 
     trivial_target_indices: NDArray[np.int64]
-    destructive_iz_target_indices: NDArray[np.int64]
+    known_nonprojector_iz_target_indices: NDArray[np.int64]
     projector_like_iz_target_indices: NDArray[np.int64]
     unexpected_target_indices: NDArray[np.int64]
 
@@ -87,7 +101,7 @@ class InterferenceZeroReport:
     nonzero_complement_action_target_indices: NDArray[np.int64]
 
     source_projector_like: bool
-    mechanism_label: ZeroMechanismLabel
+    probe_mechanism_label: IZProbeMechanismLabel
     local_transitions: tuple[LocalTransitionPattern, ...]
 
     @property
@@ -108,27 +122,27 @@ class InterferenceZeroReport:
 
     @property
     def is_q_empty(self) -> bool:
-        return self.mechanism_label == "q_empty"
+        return self.probe_mechanism_label == "q_empty"
 
     @property
     def is_closed_by_known_zeros(self) -> bool:
-        return self.mechanism_label == "closed_by_known_zeros"
+        return self.probe_mechanism_label == "closed_by_known_zeros"
 
     @property
     def is_projector_like(self) -> bool:
-        return self.mechanism_label == "projector_like"
+        return self.probe_mechanism_label == "projector_like"
 
     @property
-    def is_unexplained_leakage(self) -> bool:
-        return self.mechanism_label == "unexplained_leakage"
+    def is_invalid_probe(self) -> bool:
+        return self.probe_mechanism_label == "unexplained_leakage"
 
     @property
     def n_trivial_targets(self) -> int:
         return int(self.trivial_target_indices.size)
 
     @property
-    def n_destructive_iz_targets(self) -> int:
-        return int(self.destructive_iz_target_indices.size)
+    def n_known_nonprojector_iz_targets(self) -> int:
+        return int(self.known_nonprojector_iz_target_indices.size)
 
     @property
     def n_projector_like_iz_targets(self) -> int:
@@ -175,10 +189,10 @@ class CageClassificationReport:
     n_unexplained_complement_targets: int
     fraction_zeros_with_closed_complement_targets: float
 
-    n_q_empty_zeros: int
-    n_closed_by_known_zero_zeros: int
-    n_projector_like_zeros: int
-    n_unexplained_leakage_zeros: int
+    n_q_empty_source_probes: int
+    n_closed_by_known_zero_network_source_probes: int
+    n_projector_like_source_probes: int
+    n_invalid_source_probes: int
 
     n_trivial_targets: int
     n_destructive_iz_targets: int
@@ -190,14 +204,13 @@ class CageClassificationReport:
     unexpected_target_probe_failure_indices: NDArray[np.int64]
     nonzero_complement_action_probe_failure_indices: NDArray[np.int64]
 
-    n_regional_mechanism_zeros: int
-    n_extended_mechanism_zeros: int
-    n_failure_mechanism_zeros: int
+    n_regional_source_probes: int
+    n_projector_like_source_probes: int
 
-    q_empty_zero_indices: NDArray[np.int64]
-    closed_by_known_zero_indices: NDArray[np.int64]
-    projector_like_zero_indices: NDArray[np.int64]
-    unexplained_leakage_zero_indices: NDArray[np.int64]
+    q_empty_source_zero_indices: NDArray[np.int64]
+    closed_by_known_zero_network_source_zero_indices: NDArray[np.int64]
+    projector_like_source_zero_indices: NDArray[np.int64]
+    invalid_source_zero_indices: NDArray[np.int64]
 
     n_source_projector_like_probes: int
     n_indirect_projector_like_probes: int
@@ -207,9 +220,8 @@ class CageClassificationReport:
     indirect_projector_like_probe_indices: NDArray[np.int64]
     projector_like_annihilated_input_indices: NDArray[np.int64]
 
-    regional_mechanism_zero_indices: NDArray[np.int64]
-    extended_mechanism_zero_indices: NDArray[np.int64]
-    failure_mechanism_zero_indices: NDArray[np.int64]
+    regional_source_zero_indices: NDArray[np.int64]
+    extended_source_zero_indices: NDArray[np.int64]
 
     mean_q_sector_weight: float
     max_q_sector_weight: float
@@ -228,7 +240,7 @@ class CageClassificationReport:
             f"support_size={self.support_size}, "
             f"hilbert_size={self.hilbert_size}, "
             f"n_nontrivial_zeros={self.n_nontrivial_zeros}, "
-            f"n_projector_like_zeros={self.n_projector_like_zeros}, "
+            f"n_projector_like_zeros={self.n_projector_like_source_probes}, "
             f"n_unexpected_target_probe_failures="
             f"{self.n_unexpected_target_probe_failures}, "
             f"n_nonzero_complement_action_probe_failures="
@@ -239,258 +251,242 @@ class CageClassificationReport:
     def __str__(self) -> str:
         return self.to_text()
 
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(
+        self,
+        *,
+        verbose: bool = False,
+        max_zero_reports: int = 10,
+    ) -> Group:
+        """Return a Rich renderable for this report."""
+        renderables = [
+            Panel.fit(
+                Text("Cage classification report", style="bold"),
+                subtitle=f"label: {self.label}",
+            ),
+            _rich_key_value_section(
+                "Support",
+                [
+                    ("support size", self.support_size),
+                    ("Hilbert size", self.hilbert_size),
+                    ("support fraction", _format_float(self.support_fraction)),
+                ],
+            ),
+            _rich_key_value_section(
+                "Interference zeros",
+                [
+                    ("nontrivial zeros", self.n_nontrivial_zeros),
+                    ("distinct local patterns", self.n_distinct_local_patterns),
+                ],
+            ),
+            _rich_key_value_section(
+                "Complement closure",
+                [
+                    ("complement targets", self.n_complement_targets),
+                    (
+                        "unexplained complement targets",
+                        self.n_unexplained_complement_targets,
+                    ),
+                    (
+                        "fraction zeros with closed complement targets",
+                        _format_float(self.fraction_zeros_with_closed_complement_targets),
+                    ),
+                ],
+            ),
+            _rich_key_value_section(
+                "Operator diagnostics",
+                [
+                    ("mean Q-sector weight", _format_float(self.mean_q_sector_weight)),
+                    ("max Q-sector weight", _format_float(self.max_q_sector_weight)),
+                    (
+                        "mean reduced action norm",
+                        _format_float(self.mean_reduced_action_norm),
+                    ),
+                    (
+                        "max reduced action norm",
+                        _format_float(self.max_reduced_action_norm),
+                    ),
+                    (
+                        "mean complement action norm",
+                        _format_float(self.mean_complement_action_norm),
+                    ),
+                    (
+                        "max complement action norm",
+                        _format_float(self.max_complement_action_norm),
+                    ),
+                ],
+            ),
+            _rich_key_value_section(
+                "Reduced IZ probe mechanisms",
+                [
+                    ("q-empty source probes", self.n_q_empty_source_probes),
+                    (
+                        "closed-by-known-zero-network source probes",
+                        self.n_closed_by_known_zero_network_source_probes,
+                    ),
+                    ("projector-like source probes", self.n_projector_like_source_probes),
+                    (
+                        "unexplained-leakage source probes",
+                        self.n_invalid_source_probes,
+                    ),
+                ],
+            ),
+            _rich_key_value_section(
+                "Invalid probe reasons",
+                [
+                    (
+                        "unexpected-target source probes",
+                        self.n_unexpected_target_probe_failures,
+                    ),
+                    (
+                        "nonzero-complement-action source probes",
+                        self.n_nonzero_complement_action_probe_failures,
+                    ),
+                ],
+            ),
+            _rich_key_value_section(
+                "Complement target explanations",
+                [
+                    ("trivial zero targets", self.n_trivial_targets),
+                    (
+                        "known non-projector IZ targets",
+                        self.n_destructive_iz_targets,
+                    ),
+                    (
+                        "projector-like IZ targets",
+                        self.n_projector_like_iz_targets,
+                    ),
+                    ("unexpected targets", self.n_unexpected_targets),
+                ],
+            ),
+            _rich_key_value_section(
+                "State-level interpretation",
+                [
+                    (
+                        "has only regional mechanisms",
+                        self.n_projector_like_source_probes == 0 and self.n_invalid_source_probes == 0,
+                    ),
+                    (
+                        "contains projector-like extended mechanisms",
+                        self.n_projector_like_source_probes > 0,
+                    ),
+                    (
+                        "has invalid probe failures",
+                        self.n_invalid_source_probes > 0,
+                    ),
+                ],
+            ),
+            _rich_key_value_section(
+                "Mechanism zero indices",
+                [
+                    ("q-empty", _format_index_preview(self.q_empty_source_zero_indices)),
+                    (
+                        "closed-by-known-zero",
+                        _format_index_preview(self.closed_by_known_zero_network_source_zero_indices),
+                    ),
+                    (
+                        "projector-like",
+                        _format_index_preview(self.projector_like_source_zero_indices),
+                    ),
+                    (
+                        "unexplained-leakage",
+                        _format_index_preview(self.invalid_source_zero_indices),
+                    ),
+                    (
+                        "unexpected-target failures",
+                        _format_index_preview(self.unexpected_target_probe_failure_indices),
+                    ),
+                    (
+                        "nonzero-complement-action failures",
+                        _format_index_preview(self.nonzero_complement_action_probe_failure_indices),
+                    ),
+                ],
+            ),
+        ]
+
+        if self.metadata:
+            renderables.append(
+                _rich_key_value_section(
+                    "Metadata",
+                    [(key, value) for key, value in sorted(self.metadata.items())],
+                )
+            )
+
+        if verbose:
+            renderables.append(
+                _rich_zero_reports_section(
+                    self.zero_reports[:max_zero_reports],
+                    n_hidden=len(self.zero_reports)
+                    - min(
+                        len(self.zero_reports),
+                        max_zero_reports,
+                    ),
+                )
+            )
+
+        return Group(*renderables)
+
     def to_text(
         self,
         *,
         verbose: bool = False,
         max_zero_reports: int = 10,
+        width: int = 120,
     ) -> str:
-        """Return a human-readable multiline classification report."""
-        lines = [
-            "Cage classification report",
-            "==========================",
-            f"label: {self.label}",
-            "",
-            "Support",
-            "-------",
-            f"support size: {self.support_size}",
-            f"Hilbert size: {self.hilbert_size}",
-            f"support fraction: {_format_float(self.support_fraction)}",
-            "",
-            "Interference zeros",
-            "------------------",
-            f"nontrivial zeros: {self.n_nontrivial_zeros}",
-            f"distinct local patterns: {self.n_distinct_local_patterns}",
-            "",
-            "Complement closure",
-            "------------------",
-            f"complement targets: {self.n_complement_targets}",
-            ("unexplained complement targets: " f"{self.n_unexplained_complement_targets}"),
-            (
-                "fraction zeros with closed complement targets: "
-                f"{_format_float(self.fraction_zeros_with_closed_complement_targets)}"
-            ),
-            "",
-            "Operator diagnostics",
-            "--------------------",
-            f"mean Q-sector weight: {_format_float(self.mean_q_sector_weight)}",
-            f"max Q-sector weight: {_format_float(self.max_q_sector_weight)}",
-            ("mean reduced action norm: " f"{_format_float(self.mean_reduced_action_norm)}"),
-            ("max reduced action norm: " f"{_format_float(self.max_reduced_action_norm)}"),
-            ("mean complement action norm: " f"{_format_float(self.mean_complement_action_norm)}"),
-            ("max complement action norm: " f"{_format_float(self.max_complement_action_norm)}"),
-        ]
-        lines.extend(
-            [
-                "",
-                "Reduced IZ probe mechanisms",
-                "---------------------------",
-                f"q-empty source probes: {self.n_q_empty_zeros}",
-                (
-                    "closed-by-known-zero-network source probes: "
-                    f"{self.n_closed_by_known_zero_zeros}"
-                ),
-                f"projector-like source probes: {self.n_projector_like_zeros}",
-                ("unexplained-leakage source probes: " f"{self.n_unexplained_leakage_zeros}"),
-                "",
-                "Invalid probe reasons",
-                "---------------------",
-                ("unexpected-target source probes: " f"{self.n_unexpected_target_probe_failures}"),
-                (
-                    "nonzero-complement-action source probes: "
-                    f"{self.n_nonzero_complement_action_probe_failures}"
-                ),
-                "",
-                "Complement target explanations",
-                "------------------------------",
-                f"trivial zero targets: {self.n_trivial_targets}",
-                f"destructive IZ targets: {self.n_destructive_iz_targets}",
-                f"projector-like IZ targets: {self.n_projector_like_iz_targets}",
-                f"unexpected targets: {self.n_unexpected_targets}",
-            ]
+        """Return a plain-text Rich rendering of the classification report."""
+        console = Console(
+            record=True,
+            width=width,
+            force_terminal=False,
+            color_system=None,
         )
-        lines.extend(
-            [
-                "",
-                "Projector-like diagnostics",
-                "--------------------------",
-                ("direct projector-like source probes: " f"{self.n_source_projector_like_probes}"),
-                (
-                    "indirect projector-like source probes: "
-                    f"{self.n_indirect_projector_like_probes}"
-                ),
-                (
-                    "projector-annihilated complement inputs: "
-                    f"{self.n_projector_like_annihilated_inputs}"
-                ),
-            ]
-        )
-
-        has_only_regional_mechanisms = (
-            self.n_extended_mechanism_zeros == 0 and self.n_failure_mechanism_zeros == 0
-        )
-
-        lines.extend(
-            [
-                "",
-                "State-level interpretation",
-                "--------------------------",
-                ("has only regional mechanisms: " f"{has_only_regional_mechanisms}"),
-                (
-                    "contains projector-like extended mechanisms: "
-                    f"{self.n_extended_mechanism_zeros > 0}"
-                ),
-                ("has unexplained leakage: " f"{self.n_failure_mechanism_zeros > 0}"),
-            ]
-        )
-        lines.extend(
-            [
-                "",
-                "Mechanism zero indices",
-                "----------------------",
-                f"q-empty: {_format_index_preview(self.q_empty_zero_indices)}",
-                (
-                    "closed-by-known-zero: "
-                    f"{_format_index_preview(self.closed_by_known_zero_indices)}"
-                ),
-                f"projector-like: {_format_index_preview(self.projector_like_zero_indices)}",
-                (
-                    "unexplained-leakage: "
-                    f"{_format_index_preview(self.unexplained_leakage_zero_indices)}"
-                ),
-                (
-                    "unexpected-target failures: "
-                    f"{_format_index_preview(self.unexpected_target_probe_failure_indices)}"
-                ),
-                (
-                    "nonzero-complement-action failures: "
-                    f"{_format_index_preview(self.nonzero_complement_action_probe_failure_indices)}"
-                ),
-                (
-                    "direct projector-like source probes: "
-                    f"{_format_index_preview(self.source_projector_like_probe_indices)}"
-                ),
-                (
-                    "indirect projector-like source probes: "
-                    f"{_format_index_preview(self.indirect_projector_like_probe_indices)}"
-                ),
-                (
-                    "projector-annihilated complement inputs: "
-                    f"{_format_index_preview(self.projector_like_annihilated_input_indices)}"
-                ),
-            ]
-        )
-
-        if self.metadata:
-            lines.extend(
-                [
-                    "",
-                    "Metadata",
-                    "--------",
-                ]
+        console.print(
+            self.to_rich(
+                verbose=verbose,
+                max_zero_reports=max_zero_reports,
             )
-            for key, value in sorted(self.metadata.items()):
-                lines.append(f"{key}: {value}")
+        )
+        return console.export_text(styles=False).rstrip()
 
-        if verbose:
-            lines.extend(
-                [
-                    "",
-                    "Zero reports",
-                    "------------",
-                ]
-            )
-
-            zero_reports = self.zero_reports[:max_zero_reports]
-            for report_index, zero_report in enumerate(zero_reports):
-                lines.extend(
-                    [
-                        f"[{report_index}] zero index: {zero_report.zero_index}",
-                        ("    active neighbors: " f"{zero_report.active_neighbors.tolist()}"),
-                        ("    mechanism: " f"{zero_report.mechanism_label}"),
-                        ("    regional mechanism: " f"{zero_report.is_q_empty}"),
-                        ("    extended mechanism: " f"{zero_report.is_projector_like}"),
-                        ("    closed known zeros: " f"{zero_report.is_closed_by_known_zeros}"),
-                        ("    failure mechanism: " f"{zero_report.is_unexplained_leakage}"),
-                        (
-                            "    cancellation residual: "
-                            f"{_format_float(zero_report.cancellation_residual)}"
-                        ),
-                        ("    local region size: " f"{zero_report.local_region_size}"),
-                        ("    Q-sector weight: " f"{_format_float(zero_report.q_sector_weight)}"),
-                        (
-                            "    complement action norm: "
-                            f"{_format_float(zero_report.complement_action_norm)}"
-                        ),
-                        (
-                            "    complement targets: "
-                            f"{zero_report.complement_target_indices.tolist()}"
-                        ),
-                        (
-                            "    unexplained targets: "
-                            f"{zero_report.unexplained_complement_target_indices.tolist()}"
-                        ),
-                        (
-                            "    complement targets are known zeros: "
-                            f"{zero_report.complement_targets_are_known_zeros}"
-                        ),
-                    ]
-                )
-                lines.extend(
-                    [
-                        f" mechanism: {zero_report.mechanism_label}",
-                        (" source projector-like: " f"{zero_report.source_projector_like}"),
-                        (" trivial targets: " f"{zero_report.trivial_target_indices.tolist()}"),
-                        (
-                            " destructive IZ targets: "
-                            f"{zero_report.destructive_iz_target_indices.tolist()}"
-                        ),
-                        (
-                            " projector-like IZ targets: "
-                            f"{zero_report.projector_like_iz_target_indices.tolist()}"
-                        ),
-                        (
-                            " unexpected targets: "
-                            f"{zero_report.unexpected_target_indices.tolist()}"
-                        ),
-                        ("    has unexpected targets: " f"{zero_report.has_unexpected_targets}"),
-                        (
-                            "    has nonzero complement action: "
-                            f"{zero_report.has_nonzero_complement_action}"
-                        ),
-                        (
-                            "    nonzero complement-action targets: "
-                            f"{zero_report.nonzero_complement_action_target_indices.tolist()}"
-                        ),
-                    ]
-                )
-                lines.extend(
-                    [
-                        ("    source projector-like: " f"{zero_report.source_projector_like}"),
-                        (
-                            "    complement support inputs: "
-                            f"{zero_report.complement_support_indices.tolist()}"
-                        ),
-                        (
-                            "    complement contributing inputs: "
-                            f"{zero_report.complement_contributing_input_indices.tolist()}"
-                        ),
-                        (
-                            "    projector-annihilated inputs: "
-                            f"{zero_report.projector_like_annihilated_input_indices.tolist()}"
-                        ),
-                        (
-                            "    projector-like IZ targets: "
-                            f"{zero_report.projector_like_iz_target_indices.tolist()}"
-                        ),
-                    ]
-                )
-
-            n_hidden = len(self.zero_reports) - len(zero_reports)
-            if n_hidden > 0:
-                lines.append(f"... {n_hidden} more zero reports omitted")
-
-        return "\n".join(lines)
+    def to_summary_dict(self) -> dict[str, dict[str, object]]:
+        """Structured summary used by text rendering and tests."""
+        return {
+            "Support": {
+                "support size": self.support_size,
+                "Hilbert size": self.hilbert_size,
+                "support fraction": self.support_fraction,
+            },
+            "Interference zeros": {
+                "nontrivial zeros": self.n_nontrivial_zeros,
+                "distinct local patterns": self.n_distinct_local_patterns,
+            },
+            "Reduced IZ probe mechanisms": {
+                "q-empty source probes": self.n_q_empty_source_probes,
+                "closed-by-known-zero-network source probes": (
+                    self.n_closed_by_known_zero_network_source_probes
+                ),
+                "projector-like source probes": self.n_projector_like_source_probes,
+                "unexplained-leakage source probes": (
+                    self.n_invalid_source_probes
+                ),
+            },
+            "Invalid probe reasons": {
+                "unexpected-target source probes": (
+                    self.n_unexpected_target_probe_failures
+                ),
+                "nonzero-complement-action source probes": (
+                    self.n_nonzero_complement_action_probe_failures
+                ),
+            },
+            "Complement target explanations": {
+                "trivial zero targets": self.n_trivial_targets,
+                "known non-projector IZ targets": self.n_destructive_iz_targets,
+                "projector-like IZ targets": self.n_projector_like_iz_targets,
+                "unexpected targets": self.n_unexpected_targets,
+            },
+        }
 
 
 def classify_cage_state(
@@ -621,7 +617,7 @@ def classify_full_state(
         report.n_unexplained_complement_targets for report in zero_reports
     )
     n_trivial_targets = sum(report.n_trivial_targets for report in zero_reports)
-    n_destructive_iz_targets = sum(report.n_destructive_iz_targets for report in zero_reports)
+    n_destructive_iz_targets = sum(report.n_known_nonprojector_iz_targets for report in zero_reports)
     n_projector_like_iz_targets = sum(report.n_projector_like_iz_targets for report in zero_reports)
     n_unexpected_targets = sum(report.n_unexpected_targets for report in zero_reports)
     unexpected_target_probe_failure_indices = _zero_indices_with_unexpected_target_failure(
@@ -647,7 +643,7 @@ def classify_full_state(
         zero_reports,
         "projector_like",
     )
-    unexplained_leakage_zero_indices = _zero_indices_with_mechanism(
+    invalid_source_zero_indices = _zero_indices_with_mechanism(
         zero_reports,
         "unexplained_leakage",
     )
@@ -682,10 +678,10 @@ def classify_full_state(
         n_complement_targets=n_complement_targets,
         n_unexplained_complement_targets=n_unexplained_complement_targets,
         fraction_zeros_with_closed_complement_targets=fraction_closed,
-        n_q_empty_zeros=int(q_empty_zero_indices.size),
-        n_closed_by_known_zero_zeros=int(closed_by_known_zero_indices.size),
-        n_projector_like_zeros=int(projector_like_zero_indices.size),
-        n_unexplained_leakage_zeros=int(unexplained_leakage_zero_indices.size),
+        n_q_empty_source_probes=int(q_empty_zero_indices.size),
+        n_closed_by_known_zero_network_source_probes=int(closed_by_known_zero_indices.size),
+        n_projector_like_source_probes=int(projector_like_zero_indices.size),
+        n_invalid_source_probes=int(invalid_source_zero_indices.size),
         n_unexpected_target_probe_failures=int(unexpected_target_probe_failure_indices.size),
         n_nonzero_complement_action_probe_failures=int(
             nonzero_complement_action_probe_failure_indices.size
@@ -694,26 +690,26 @@ def classify_full_state(
         nonzero_complement_action_probe_failure_indices=(
             nonzero_complement_action_probe_failure_indices
         ),
-        n_regional_mechanism_zeros=int(regional_mechanism_zero_indices.size),
-        n_extended_mechanism_zeros=int(extended_mechanism_zero_indices.size),
-        n_failure_mechanism_zeros=int(failure_mechanism_zero_indices.size),
+        n_regional_source_probes=int(regional_mechanism_zero_indices.size),
+        n_projector_like_source_probes=int(extended_mechanism_zero_indices.size),
+        n_invalid_source_probes=int(failure_mechanism_zero_indices.size),
         n_trivial_targets=n_trivial_targets,
         n_destructive_iz_targets=n_destructive_iz_targets,
         n_projector_like_iz_targets=n_projector_like_iz_targets,
         n_unexpected_targets=n_unexpected_targets,
-        q_empty_zero_indices=q_empty_zero_indices,
-        closed_by_known_zero_indices=closed_by_known_zero_indices,
+        q_empty_source_zero_indices=q_empty_zero_indices,
+        closed_by_known_zero_network_source_zero_indices=closed_by_known_zero_indices,
         n_source_projector_like_probes=int(source_projector_like_probe_indices.size),
         n_indirect_projector_like_probes=int(indirect_projector_like_probe_indices.size),
         n_projector_like_annihilated_inputs=int(projector_like_annihilated_input_indices.size),
         source_projector_like_probe_indices=source_projector_like_probe_indices,
         indirect_projector_like_probe_indices=(indirect_projector_like_probe_indices),
         projector_like_annihilated_input_indices=(projector_like_annihilated_input_indices),
-        projector_like_zero_indices=projector_like_zero_indices,
-        unexplained_leakage_zero_indices=unexplained_leakage_zero_indices,
-        regional_mechanism_zero_indices=regional_mechanism_zero_indices,
-        extended_mechanism_zero_indices=extended_mechanism_zero_indices,
-        failure_mechanism_zero_indices=failure_mechanism_zero_indices,
+        projector_like_source_zero_indices=projector_like_zero_indices,
+        invalid_source_zero_indices=invalid_source_zero_indices,
+        regional_source_zero_indices=regional_mechanism_zero_indices,
+        extended_source_zero_indices=extended_mechanism_zero_indices,
+        invalid_source_zero_indices=failure_mechanism_zero_indices,
         mean_q_sector_weight=_safe_mean(q_weights),
         max_q_sector_weight=_safe_max(q_weights),
         mean_reduced_action_norm=_safe_mean(reduced_norms),
@@ -929,10 +925,10 @@ def _build_zero_report(
         projector_like_annihilated_input_indices=(projector_like_annihilated_input_indices),
         source_projector_like=source_projector_like,
         trivial_target_indices=np.array([], dtype=np.int64),
-        destructive_iz_target_indices=np.array([], dtype=np.int64),
+        known_nonprojector_iz_target_indices=np.array([], dtype=np.int64),
         projector_like_iz_target_indices=np.array([], dtype=np.int64),
         unexpected_target_indices=np.array([], dtype=np.int64),
-        mechanism_label="unexplained_leakage",
+        probe_mechanism_label="unexplained_leakage",
         local_transitions=tuple(local_transitions),
     )
 
@@ -1033,7 +1029,7 @@ def _annotate_probe_mechanisms(
         q_empty = report.q_sector_weight <= config.action_tolerance
 
         if source in invalid_sources:
-            mechanism_label: ZeroMechanismLabel = "unexplained_leakage"
+            mechanism_label: IZProbeMechanismLabel = "unexplained_leakage"
         elif source in projector_dependent_sources:
             mechanism_label = "projector_like"
         elif q_empty:
@@ -1113,7 +1109,7 @@ def _replace_interference_zero_report(
         "explained_complement_target_indices": (report.explained_complement_target_indices),
         "unexplained_complement_target_indices": (report.unexplained_complement_target_indices),
         "complement_targets_are_known_zeros": (report.complement_targets_are_known_zeros),
-        "mechanism_label": report.mechanism_label,
+        "mechanism_label": report.probe_mechanism_label,
         "has_unexpected_targets": report.has_unexpected_targets,
         "has_nonzero_complement_action": report.has_nonzero_complement_action,
         "unexpected_target_probe_failure_indices": (report.unexpected_target_probe_failure_indices),
@@ -1127,7 +1123,7 @@ def _replace_interference_zero_report(
         ),
         "source_projector_like": report.source_projector_like,
         "trivial_target_indices": report.trivial_target_indices,
-        "destructive_iz_target_indices": (report.destructive_iz_target_indices),
+        "destructive_iz_target_indices": (report.known_nonprojector_iz_target_indices),
         "projector_like_iz_target_indices": (report.projector_like_iz_target_indices),
         "unexpected_target_indices": report.unexpected_target_indices,
         "local_transitions": report.local_transitions,
@@ -1136,95 +1132,6 @@ def _replace_interference_zero_report(
     values.update(updates)
 
     return InterferenceZeroReport(**values)
-
-
-def _annotate_zero_mechanisms(
-    zero_reports: list[InterferenceZeroReport],
-    *,
-    config: CageClassificationConfig,
-) -> list[InterferenceZeroReport]:
-    """
-    Annotate each nontrivial zero with its zero-level mechanism.
-
-    Mechanism meanings
-    ------------------
-    q_empty:
-        There is no Q-sector amplitude to transfer.
-
-    closed_by_known_zeros:
-        There is Q-sector amplitude, and the complement operator targets
-        only known nontrivial interference zeros.
-
-    projector_like:
-        There is Q-sector amplitude, but the complement operator has no
-        raw targets. This is the extended/projector-like mechanism.
-
-    unexplained_leakage:
-        There is Q-sector amplitude, and at least one complement target is
-        not a known nontrivial zero. For a cage found by the caging solver,
-        this should be treated as a failure/inconsistency, not as a valid
-        extended mechanism.
-    """
-    known_zero_indices = {int(report.zero_index) for report in zero_reports}
-
-    annotated_reports: list[InterferenceZeroReport] = []
-
-    for report in zero_reports:
-        explained: list[int] = []
-        unexplained: list[int] = []
-
-        for target_index in report.complement_target_indices:
-            target = int(target_index)
-
-            if target in known_zero_indices:
-                explained.append(target)
-            else:
-                unexplained.append(target)
-
-        n_targets = int(report.complement_target_indices.size)
-        n_unexplained = len(unexplained)
-
-        complement_targets_are_known_zeros = n_targets > 0 and n_unexplained == 0
-
-        q_empty = report.q_sector_weight <= config.action_tolerance
-
-        if q_empty:
-            mechanism_label: ZeroMechanismLabel = "q_empty"
-        elif complement_targets_are_known_zeros:
-            mechanism_label = "closed_by_known_zeros"
-        elif n_targets == 0:
-            mechanism_label = "projector_like"
-        else:
-            mechanism_label = "unexplained_leakage"
-
-        annotated_reports.append(
-            InterferenceZeroReport(
-                zero_index=report.zero_index,
-                active_neighbors=report.active_neighbors,
-                active_matrix_elements=report.active_matrix_elements,
-                active_amplitudes=report.active_amplitudes,
-                cancellation_residual=report.cancellation_residual,
-                common_mask=report.common_mask,
-                local_mask=report.local_mask,
-                q_sector_weight=report.q_sector_weight,
-                reduced_action_norm=report.reduced_action_norm,
-                complement_action_norm=report.complement_action_norm,
-                complement_target_indices=report.complement_target_indices,
-                explained_complement_target_indices=np.array(
-                    explained,
-                    dtype=np.int64,
-                ),
-                unexplained_complement_target_indices=np.array(
-                    unexplained,
-                    dtype=np.int64,
-                ),
-                complement_targets_are_known_zeros=(complement_targets_are_known_zeros),
-                mechanism_label=mechanism_label,
-                local_transitions=report.local_transitions,
-            )
-        )
-
-    return annotated_reports
 
 
 def _common_mask(
@@ -1474,14 +1381,14 @@ def _classify_from_zero_reports(
     if len(zero_reports) == 0:
         return "invalid_or_inconsistent"
 
-    if any(report.is_unexplained_leakage for report in zero_reports):
+    if any(report.is_invalid_probe for report in zero_reports):
         return "invalid_or_inconsistent"
 
     if any(report.is_projector_like for report in zero_reports):
         return "extended_candidate"
 
     if all(
-        report.mechanism_label in {"q_empty", "closed_by_known_zeros"} for report in zero_reports
+            report.probe_mechanism_label in {"q_empty", "closed_by_known_zeros"} for report in zero_reports
     ):
         return "regional_candidate"
 
@@ -1522,12 +1429,112 @@ def _format_index_preview(
     return f"{values}{suffix}"
 
 
+def _rich_key_value_section(
+    title: str,
+    rows: list[tuple[str, object]],
+) -> Table:
+    table = Table.grid(padding=(0, 2))
+    table.title = title
+    table.add_column("field", style="bold")
+    table.add_column("value")
+
+    for key, value in rows:
+        table.add_row(str(key), str(value))
+
+    return table
+
+
+def _rich_zero_reports_section(
+    zero_reports: tuple[InterferenceZeroReport, ...]
+    | list[InterferenceZeroReport],
+    *,
+    n_hidden: int,
+) -> Group:
+    renderables = [Text("Zero reports", style="bold")]
+
+    for report_index, zero_report in enumerate(zero_reports):
+        table = Table.grid(padding=(0, 2))
+        table.title = f"[{report_index}] source zero {zero_report.zero_index}"
+        table.add_column("field", style="bold")
+        table.add_column("value")
+
+        rows = [
+            ("active neighbors", zero_report.active_neighbors.tolist()),
+            ("probe mechanism", zero_report.probe_mechanism_label),
+            ("q-empty probe", zero_report.is_q_empty),
+            ("closed known-zero-network probe", zero_report.is_closed_by_known_zeros),
+            ("projector-like probe", zero_report.is_projector_like),
+            ("invalid/leakage probe", zero_report.is_invalid_probe),
+            (
+                "cancellation residual",
+                _format_float(zero_report.cancellation_residual),
+            ),
+            ("local region size", zero_report.local_region_size),
+            ("Q-sector weight", _format_float(zero_report.q_sector_weight)),
+            (
+                "complement action norm",
+                _format_float(zero_report.complement_action_norm),
+            ),
+            ("complement targets", zero_report.complement_target_indices.tolist()),
+            (
+                "unexplained targets",
+                zero_report.unexplained_complement_target_indices.tolist(),
+            ),
+            (
+                "complement targets are known zeros",
+                zero_report.complement_targets_are_known_zeros,
+            ),
+            ("source projector-like", zero_report.source_projector_like),
+            ("trivial targets", zero_report.trivial_target_indices.tolist()),
+            (
+                "known non-projector IZ targets",
+                zero_report.known_nonprojector_iz_target_indices.tolist(),
+            ),
+            (
+                "projector-like IZ targets",
+                zero_report.projector_like_iz_target_indices.tolist(),
+            ),
+            ("unexpected targets", zero_report.unexpected_target_indices.tolist()),
+            ("has unexpected targets", zero_report.has_unexpected_targets),
+            (
+                "has nonzero complement action",
+                zero_report.has_nonzero_complement_action,
+            ),
+            (
+                "nonzero complement-action targets",
+                zero_report.nonzero_complement_action_target_indices.tolist(),
+            ),
+            (
+                "complement support inputs",
+                zero_report.complement_support_indices.tolist(),
+            ),
+            (
+                "complement contributing inputs",
+                zero_report.complement_contributing_input_indices.tolist(),
+            ),
+            (
+                "projector-annihilated inputs",
+                zero_report.projector_like_annihilated_input_indices.tolist(),
+            ),
+        ]
+
+        for key, value in rows:
+            table.add_row(str(key), str(value))
+
+        renderables.append(table)
+
+    if n_hidden > 0:
+        renderables.append(Text(f"... {n_hidden} more zero reports omitted"))
+
+    return Group(*renderables)
+
+
 def _zero_indices_with_mechanism(
     zero_reports: list[InterferenceZeroReport],
-    mechanism: ZeroMechanismLabel,
+    mechanism: IZProbeMechanismLabel,
 ) -> NDArray[np.int64]:
     return np.array(
-        [int(report.zero_index) for report in zero_reports if report.mechanism_label == mechanism],
+        [int(report.zero_index) for report in zero_reports if report.probe_mechanism_label == mechanism],
         dtype=np.int64,
     )
 
@@ -1542,7 +1549,7 @@ def _zero_indices_with_flag(
             [
                 int(report.zero_index)
                 for report in zero_reports
-                if report.mechanism_label in {"q_empty", "closed_by_known_zeros"}
+                if report.probe_mechanism_label in {"q_empty", "closed_by_known_zeros"}
             ],
             dtype=np.int64,
         )
@@ -1552,7 +1559,7 @@ def _zero_indices_with_flag(
             [
                 int(report.zero_index)
                 for report in zero_reports
-                if report.mechanism_label == "projector_like"
+                if report.probe_mechanism_label == "projector_like"
             ],
             dtype=np.int64,
         )
@@ -1562,7 +1569,7 @@ def _zero_indices_with_flag(
             [
                 int(report.zero_index)
                 for report in zero_reports
-                if report.mechanism_label == "unexplained_leakage"
+                if report.probe_mechanism_label == "unexplained_leakage"
             ],
             dtype=np.int64,
         )
@@ -1604,7 +1611,7 @@ def _zero_indices_with_indirect_projector_like(
         [
             int(report.zero_index)
             for report in zero_reports
-            if (report.mechanism_label == "projector_like" and not report.source_projector_like)
+            if (report.probe_mechanism_label == "projector_like" and not report.source_projector_like)
         ],
         dtype=np.int64,
     )

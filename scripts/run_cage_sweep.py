@@ -417,13 +417,13 @@ def write_cage_hdf5(
             max_complement_norms[record_index] = report.max_complement_action_norm
             mean_reduced_norms[record_index] = report.mean_reduced_action_norm
             max_reduced_norms[record_index] = report.max_reduced_action_norm
-            n_q_empty_zeros[record_index] = report.n_q_empty_zeros
-            n_closed_by_known_zero_zeros[record_index] = report.n_closed_by_known_zero_zeros
-            n_projector_like_zeros[record_index] = report.n_projector_like_zeros
-            n_unexplained_leakage_zeros[record_index] = report.n_unexplained_leakage_zeros
-            n_regional_mechanism_zeros[record_index] = report.n_regional_mechanism_zeros
-            n_extended_mechanism_zeros[record_index] = report.n_extended_mechanism_zeros
-            n_failure_mechanism_zeros[record_index] = report.n_failure_mechanism_zeros
+            n_q_empty_zeros[record_index] = report.n_q_empty_source_probes
+            n_closed_by_known_zero_zeros[record_index] = report.n_closed_by_known_zero_network_source_probes
+            n_projector_like_zeros[record_index] = report.n_projector_like_source_probes
+            n_unexplained_leakage_zeros[record_index] = report.n_invalid_source_probes
+            n_regional_mechanism_zeros[record_index] = report.n_regional_source_probes
+            n_extended_mechanism_zeros[record_index] = report.n_projector_like_source_probes
+            n_failure_mechanism_zeros[record_index] = report.n_invalid_source_probes
 
     with h5py.File(tmp_path, "w") as h5:
         h5.attrs["format"] = "qlinks_cage_sweep"
@@ -620,31 +620,31 @@ def write_cage_hdf5(
             record_group = mechanisms_group.require_group(str(record_index))
             record_group.create_dataset(
                 "q_empty",
-                data=report.q_empty_zero_indices,
+                data=report.q_empty_source_zero_indices,
             )
             record_group.create_dataset(
                 "closed_by_known_zeros",
-                data=report.closed_by_known_zero_indices,
+                data=report.closed_by_known_zero_network_source_zero_indices,
             )
             record_group.create_dataset(
                 "projector_like",
-                data=report.projector_like_zero_indices,
+                data=report.projector_like_source_zero_indices,
             )
             record_group.create_dataset(
                 "unexplained_leakage",
-                data=report.unexplained_leakage_zero_indices,
+                data=report.invalid_source_zero_indices,
             )
             record_group.create_dataset(
                 "regional",
-                data=report.regional_mechanism_zero_indices,
+                data=report.regional_source_zero_indices,
             )
             record_group.create_dataset(
                 "extended",
-                data=report.extended_mechanism_zero_indices,
+                data=report.extended_source_zero_indices,
             )
             record_group.create_dataset(
                 "failure",
-                data=report.failure_mechanism_zero_indices,
+                data=report.invalid_source_zero_indices,
             )
 
     tmp_path.replace(path)
@@ -793,19 +793,19 @@ def run_one_job(task: CageSweepTask) -> dict[str, Any]:
         }
 
         for report in classification_reports:
-            mechanism_totals["q_empty"] += int(report.n_q_empty_zeros)
-            mechanism_totals["closed_by_known_zeros"] += int(report.n_closed_by_known_zero_zeros)
-            mechanism_totals["projector_like"] += int(report.n_projector_like_zeros)
-            mechanism_totals["unexplained_leakage"] += int(report.n_unexplained_leakage_zeros)
-            mechanism_totals["regional"] += int(report.n_regional_mechanism_zeros)
-            mechanism_totals["extended"] += int(report.n_extended_mechanism_zeros)
-            mechanism_totals["failure"] += int(report.n_failure_mechanism_zeros)
+            mechanism_totals["q_empty"] += int(report.n_q_empty_source_probes)
+            mechanism_totals["closed_by_known_zeros"] += int(report.n_closed_by_known_zero_network_source_probes)
+            mechanism_totals["projector_like"] += int(report.n_projector_like_source_probes)
+            mechanism_totals["unexplained_leakage"] += int(report.n_invalid_source_probes)
+            mechanism_totals["regional"] += int(report.n_regional_source_probes)
+            mechanism_totals["extended"] += int(report.n_projector_like_source_probes)
+            mechanism_totals["failure"] += int(report.n_invalid_source_probes)
 
         n_invalid_reports = sum(
             int(report.label == "invalid_or_inconsistent") for report in classification_reports
         )
         n_reports_with_unexplained_leakage = sum(
-            int(report.n_unexplained_leakage_zeros > 0) for report in classification_reports
+            int(report.n_invalid_source_probes > 0) for report in classification_reports
         )
 
         summary = {

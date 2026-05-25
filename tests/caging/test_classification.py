@@ -99,7 +99,7 @@ def _minimal_zero_report(
         unexplained_complement_target_indices=complement_target_indices,
         complement_targets_are_known_zeros=False,
         trivial_target_indices=_empty_int_array(),
-        destructive_iz_target_indices=_empty_int_array(),
+        known_nonprojector_iz_target_indices=_empty_int_array(),
         projector_like_iz_target_indices=_empty_int_array(),
         unexpected_target_indices=_empty_int_array(),
         has_unexpected_targets=False,
@@ -107,7 +107,7 @@ def _minimal_zero_report(
         unexpected_target_probe_failure_indices=_empty_int_array(),
         nonzero_complement_action_target_indices=(nonzero_complement_action_target_indices),
         source_projector_like=source_projector_like,
-        mechanism_label="unexplained_leakage",
+        probe_mechanism_label="unexplained_leakage",
         local_transitions=(),
         complement_support_indices=np.array(
             complement_support,
@@ -291,28 +291,28 @@ def test_classify_full_state_finds_regional_candidate():
     assert report.n_unexplained_complement_targets == 0
     assert report.fraction_zeros_with_closed_complement_targets == pytest.approx(0.0)
 
-    assert report.n_q_empty_zeros == 1
-    assert report.n_closed_by_known_zero_zeros == 0
-    assert report.n_projector_like_zeros == 0
-    assert report.n_unexplained_leakage_zeros == 0
+    assert report.n_q_empty_source_probes == 1
+    assert report.n_closed_by_known_zero_network_source_probes == 0
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
-    assert report.n_regional_mechanism_zeros == 1
-    assert report.n_extended_mechanism_zeros == 0
-    assert report.n_failure_mechanism_zeros == 0
+    assert report.n_regional_source_probes == 1
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
-    assert _zero_indices(report.q_empty_zero_indices) == {indices["h"]}
-    assert _zero_indices(report.closed_by_known_zero_indices) == set()
-    assert _zero_indices(report.projector_like_zero_indices) == set()
-    assert _zero_indices(report.unexplained_leakage_zero_indices) == set()
+    assert _zero_indices(report.q_empty_source_zero_indices) == {indices["h"]}
+    assert _zero_indices(report.closed_by_known_zero_network_source_zero_indices) == set()
+    assert _zero_indices(report.projector_like_source_zero_indices) == set()
+    assert _zero_indices(report.invalid_source_zero_indices) == set()
 
     zero_report = report.zero_reports[0]
     assert zero_report.n_complement_targets == 0
     assert zero_report.n_unexplained_complement_targets == 0
     assert not zero_report.complement_targets_are_known_zeros
-    assert zero_report.mechanism_label == "q_empty"
+    assert zero_report.probe_mechanism_label == "q_empty"
     assert zero_report.is_q_empty
     assert not zero_report.is_projector_like
-    assert not zero_report.is_unexplained_leakage
+    assert not zero_report.is_invalid_probe
     assert not zero_report.source_projector_like
 
     assert report.n_trivial_targets == 0
@@ -321,7 +321,7 @@ def test_classify_full_state_finds_regional_candidate():
     assert report.n_unexpected_targets == 0
 
     assert zero_report.n_trivial_targets == 0
-    assert zero_report.n_destructive_iz_targets == 0
+    assert zero_report.n_known_nonprojector_iz_targets == 0
     assert zero_report.n_projector_like_iz_targets == 0
     assert zero_report.n_unexpected_targets == 0
 
@@ -384,37 +384,37 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
     assert h0_report.complement_action_norm <= config.action_tolerance
     assert h1_report.complement_action_norm <= config.action_tolerance
 
-    assert report.n_q_empty_zeros == 0
-    assert report.n_closed_by_known_zero_zeros == 2
-    assert report.n_projector_like_zeros == 0
-    assert report.n_unexplained_leakage_zeros == 0
+    assert report.n_q_empty_source_probes == 0
+    assert report.n_closed_by_known_zero_network_source_probes == 2
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
-    assert report.n_regional_mechanism_zeros == 2
-    assert report.n_extended_mechanism_zeros == 0
-    assert report.n_failure_mechanism_zeros == 0
+    assert report.n_regional_source_probes == 2
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
-    assert _zero_indices(report.q_empty_zero_indices) == set()
-    assert _zero_indices(report.closed_by_known_zero_indices) == {
+    assert _zero_indices(report.q_empty_source_zero_indices) == set()
+    assert _zero_indices(report.closed_by_known_zero_network_source_zero_indices) == {
         indices["h0"],
         indices["h1"],
     }
-    assert _zero_indices(report.projector_like_zero_indices) == set()
-    assert _zero_indices(report.unexplained_leakage_zero_indices) == set()
+    assert _zero_indices(report.projector_like_source_zero_indices) == set()
+    assert _zero_indices(report.invalid_source_zero_indices) == set()
 
-    assert h0_report.mechanism_label == "closed_by_known_zeros"
-    assert h1_report.mechanism_label == "closed_by_known_zeros"
+    assert h0_report.probe_mechanism_label == "closed_by_known_zeros"
+    assert h1_report.probe_mechanism_label == "closed_by_known_zeros"
 
     assert not h0_report.is_q_empty
     assert not h1_report.is_q_empty
     assert not h0_report.is_projector_like
     assert not h1_report.is_projector_like
-    assert not h0_report.is_unexplained_leakage
-    assert not h1_report.is_unexplained_leakage
+    assert not h0_report.is_invalid_probe
+    assert not h1_report.is_invalid_probe
     assert not h0_report.source_projector_like
     assert not h1_report.source_projector_like
 
-    assert _zero_indices(h0_report.destructive_iz_target_indices) == {indices["h1"]}
-    assert _zero_indices(h1_report.destructive_iz_target_indices) == {indices["h0"]}
+    assert _zero_indices(h0_report.known_nonprojector_iz_target_indices) == {indices["h1"]}
+    assert _zero_indices(h1_report.known_nonprojector_iz_target_indices) == {indices["h0"]}
 
     assert _zero_indices(h0_report.projector_like_iz_target_indices) == set()
     assert _zero_indices(h1_report.projector_like_iz_target_indices) == set()
@@ -482,23 +482,23 @@ def test_classify_full_state_treats_trivial_target_cancellation_as_regional():
     assert _zero_indices(zero_report.unexplained_complement_target_indices) == set()
     assert zero_report.complement_targets_are_known_zeros
 
-    assert report.n_q_empty_zeros == 0
-    assert report.n_closed_by_known_zero_zeros == 1
-    assert report.n_projector_like_zeros == 0
-    assert report.n_unexplained_leakage_zeros == 0
+    assert report.n_q_empty_source_probes == 0
+    assert report.n_closed_by_known_zero_network_source_probes == 1
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
-    assert report.n_regional_mechanism_zeros == 1
-    assert report.n_extended_mechanism_zeros == 0
-    assert report.n_failure_mechanism_zeros == 0
+    assert report.n_regional_source_probes == 1
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
-    assert _zero_indices(report.closed_by_known_zero_indices) == {indices["h"]}
-    assert _zero_indices(report.failure_mechanism_zero_indices) == set()
+    assert _zero_indices(report.closed_by_known_zero_network_source_zero_indices) == {indices["h"]}
+    assert _zero_indices(report.invalid_source_zero_indices) == set()
 
-    assert zero_report.mechanism_label == "closed_by_known_zeros"
+    assert zero_report.probe_mechanism_label == "closed_by_known_zeros"
     assert zero_report.is_closed_by_known_zeros
     assert not zero_report.is_q_empty
     assert not zero_report.is_projector_like
-    assert not zero_report.is_unexplained_leakage
+    assert not zero_report.is_invalid_probe
 
     assert not zero_report.has_unexpected_targets
     assert not zero_report.has_nonzero_complement_action
@@ -514,7 +514,7 @@ def test_classify_full_state_treats_trivial_target_cancellation_as_regional():
     assert report.n_unexpected_targets == 0
 
     assert _zero_indices(zero_report.trivial_target_indices) == {trivial_target}
-    assert _zero_indices(zero_report.destructive_iz_target_indices) == set()
+    assert _zero_indices(zero_report.known_nonprojector_iz_target_indices) == set()
     assert _zero_indices(zero_report.projector_like_iz_target_indices) == set()
     assert _zero_indices(zero_report.unexpected_target_indices) == set()
     assert _zero_indices(zero_report.nonzero_complement_action_target_indices) == set()
@@ -553,15 +553,15 @@ def test_classify_full_state_marks_nonzero_unexplained_leakage_invalid():
 
     zero_report = report.zero_reports[0]
 
-    assert zero_report.mechanism_label == "unexplained_leakage"
-    assert zero_report.is_unexplained_leakage
+    assert zero_report.probe_mechanism_label == "unexplained_leakage"
+    assert zero_report.is_invalid_probe
     assert zero_report.q_sector_weight > config.action_tolerance
     assert zero_report.complement_action_norm > config.action_tolerance
 
     assert not zero_report.has_unexpected_targets
     assert zero_report.has_nonzero_complement_action
 
-    assert report.n_failure_mechanism_zeros == 1
+    assert report.n_invalid_source_probes == 1
     assert report.n_unexpected_target_probe_failures == 0
     assert report.n_nonzero_complement_action_probe_failures == 1
 
@@ -624,20 +624,20 @@ def test_classify_cage_state_lifts_compact_state_and_preserves_metadata():
     assert report.metadata["eigen_residual"] == cage_state.eigen_residual
     assert report.metadata["full_residual"] == cage_state.full_residual
 
-    assert report.n_q_empty_zeros == 1
-    assert report.n_closed_by_known_zero_zeros == 0
-    assert report.n_projector_like_zeros == 0
-    assert report.n_unexplained_leakage_zeros == 0
+    assert report.n_q_empty_source_probes == 1
+    assert report.n_closed_by_known_zero_network_source_probes == 0
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
-    assert report.n_regional_mechanism_zeros == 1
-    assert report.n_extended_mechanism_zeros == 0
-    assert report.n_failure_mechanism_zeros == 0
+    assert report.n_regional_source_probes == 1
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
     zero_report = report.zero_reports[0]
-    assert zero_report.mechanism_label == "q_empty"
+    assert zero_report.probe_mechanism_label == "q_empty"
     assert zero_report.is_q_empty
     assert not zero_report.is_projector_like
-    assert not zero_report.is_unexplained_leakage
+    assert not zero_report.is_invalid_probe
     assert not zero_report.source_projector_like
 
     assert report.n_trivial_targets == 0
@@ -677,10 +677,10 @@ def test_classify_full_state_ignores_trivial_zeros_without_active_neighbors():
     assert zero_indices == {indices["h"]}
 
     assert report.n_nontrivial_zeros == 1
-    assert report.n_q_empty_zeros == 1
-    assert report.n_regional_mechanism_zeros == 1
-    assert report.n_extended_mechanism_zeros == 0
-    assert report.n_failure_mechanism_zeros == 0
+    assert report.n_q_empty_source_probes == 1
+    assert report.n_regional_source_probes == 1
+    assert report.n_projector_like_source_probes == 0
+    assert report.n_invalid_source_probes == 0
 
 
 def test_classify_full_state_rejects_wrong_basis_shape():
@@ -755,18 +755,18 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     assert report.n_unexplained_complement_targets == 0
     assert report.fraction_zeros_with_closed_complement_targets == pytest.approx(0.0)
 
-    assert report.n_q_empty_zeros == 0
-    assert report.n_closed_by_known_zero_zeros == 0
-    assert report.n_projector_like_zeros == 1
-    assert report.n_unexplained_leakage_zeros == 0
+    assert report.n_q_empty_source_probes == 0
+    assert report.n_closed_by_known_zero_network_source_probes == 0
+    assert report.n_projector_like_source_probes == 1
+    assert report.n_invalid_source_probes == 0
 
-    assert report.n_regional_mechanism_zeros == 0
-    assert report.n_extended_mechanism_zeros == 1
-    assert report.n_failure_mechanism_zeros == 0
+    assert report.n_regional_source_probes == 0
+    assert report.n_projector_like_source_probes == 1
+    assert report.n_invalid_source_probes == 0
 
-    assert _zero_indices(report.projector_like_zero_indices) == {indices["h"]}
-    assert _zero_indices(report.extended_mechanism_zero_indices) == {indices["h"]}
-    assert _zero_indices(report.failure_mechanism_zero_indices) == set()
+    assert _zero_indices(report.projector_like_source_zero_indices) == {indices["h"]}
+    assert _zero_indices(report.extended_source_zero_indices) == {indices["h"]}
+    assert _zero_indices(report.invalid_source_zero_indices) == set()
 
     zero_report = report.zero_reports[0]
     assert zero_report.zero_index == indices["h"]
@@ -776,10 +776,10 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     assert not zero_report.complement_targets_are_known_zeros
     assert zero_report.complement_action_norm <= config.action_tolerance
 
-    assert zero_report.mechanism_label == "projector_like"
+    assert zero_report.probe_mechanism_label == "projector_like"
     assert not zero_report.is_q_empty
     assert zero_report.is_projector_like
-    assert not zero_report.is_unexplained_leakage
+    assert not zero_report.is_invalid_probe
     assert zero_report.source_projector_like
 
     assert report.n_trivial_targets == 0
@@ -788,7 +788,7 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     assert report.n_unexpected_targets == 0
 
     assert zero_report.n_trivial_targets == 0
-    assert zero_report.n_destructive_iz_targets == 0
+    assert zero_report.n_known_nonprojector_iz_targets == 0
     assert zero_report.n_projector_like_iz_targets == 0
     assert zero_report.n_unexpected_targets == 0
 
@@ -801,7 +801,7 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     assert _zero_indices(zero_report.nonzero_complement_action_target_indices) == set()
 
 
-def test_classification_report_text_includes_mechanism_sections():
+def test_classification_report_summary_dict_is_stable():
     basis_configs = _binary_basis(n_variables=3)
     kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
 
@@ -816,22 +816,12 @@ def test_classification_report_text_includes_mechanism_sections():
         config=_base_classification_config(),
     )
 
-    text = str(report)
+    summary = report.to_summary_dict()
 
-    assert "Reduced IZ probe mechanisms" in text
-    assert "q-empty source probes: 1" in text
-    assert "closed-by-known-zero-network source probes: 0" in text
-    assert "projector-like source probes: 0" in text
-    assert "unexplained-leakage source probes: 0" in text
-    assert "Complement target explanations" in text
-    assert "trivial zero targets: 0" in text
-    assert "destructive IZ targets: 0" in text
-    assert "projector-like IZ targets: 0" in text
-    assert "unexpected targets: 0" in text
-    assert "State-level interpretation" in text
-    assert "Invalid probe reasons" in text
-    assert "unexpected-target source probes: 0" in text
-    assert "nonzero-complement-action source probes: 0" in text
+    assert summary["Reduced IZ probe mechanisms"]["q-empty source probes"] == 1
+    assert summary["Reduced IZ probe mechanisms"]["closed-by-known-zero-network source probes"] == 0
+    assert summary["Invalid probe reasons"]["unexpected-target source probes"] == 0
+    assert summary["Invalid probe reasons"]["nonzero-complement-action source probes"] == 0
 
 
 def test_probe_mechanism_propagates_projector_like_target_dependence():
@@ -865,17 +855,17 @@ def test_probe_mechanism_propagates_projector_like_target_dependence():
     source = reports_by_zero[source_zero]
     target = reports_by_zero[projector_target_zero]
 
-    assert target.mechanism_label == "projector_like"
+    assert target.probe_mechanism_label == "projector_like"
     assert target.source_projector_like
     assert not target.has_unexpected_targets
     assert not target.has_nonzero_complement_action
 
-    assert source.mechanism_label == "projector_like"
+    assert source.probe_mechanism_label == "projector_like"
     assert not source.source_projector_like
     assert not source.has_unexpected_targets
     assert not source.has_nonzero_complement_action
     assert _zero_indices(source.projector_like_iz_target_indices) == {projector_target_zero}
-    assert _zero_indices(source.destructive_iz_target_indices) == set()
+    assert _zero_indices(source.known_nonprojector_iz_target_indices) == set()
     assert _zero_indices(source.unexpected_target_indices) == set()
     assert _zero_indices(source.nonzero_complement_action_target_indices) == set()
 
@@ -919,8 +909,8 @@ def test_probe_mechanism_keeps_trivial_and_destructive_closure_regional():
     source = reports_by_zero[source_zero]
     target = reports_by_zero[destructive_target_zero]
 
-    assert source.mechanism_label == "closed_by_known_zeros"
-    assert target.mechanism_label == "closed_by_known_zeros"
+    assert source.probe_mechanism_label == "closed_by_known_zeros"
+    assert target.probe_mechanism_label == "closed_by_known_zeros"
 
     assert not source.has_unexpected_targets
     assert not source.has_nonzero_complement_action
@@ -928,7 +918,7 @@ def test_probe_mechanism_keeps_trivial_and_destructive_closure_regional():
     assert not target.has_nonzero_complement_action
 
     assert _zero_indices(source.nonzero_complement_action_target_indices) == set()
-    assert _zero_indices(source.destructive_iz_target_indices) == {destructive_target_zero}
+    assert _zero_indices(source.known_nonprojector_iz_target_indices) == {destructive_target_zero}
     assert _zero_indices(source.projector_like_iz_target_indices) == set()
     assert _zero_indices(source.unexpected_target_indices) == set()
 
@@ -966,7 +956,7 @@ def test_probe_mechanism_marks_unexpected_target_invalid():
 
     report = annotated[0]
 
-    assert report.mechanism_label == "unexplained_leakage"
+    assert report.probe_mechanism_label == "unexplained_leakage"
     assert _zero_indices(report.unexpected_target_indices) == {unexpected_target}
 
     label = _classify_from_zero_reports(

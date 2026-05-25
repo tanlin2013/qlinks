@@ -2721,7 +2721,7 @@ def _zero_mechanism_label_map(report) -> dict[int, str]:
     labels: dict[int, str] = {}
 
     for zero_report in report.zero_reports:
-        labels[int(zero_report.zero_index)] = str(zero_report.mechanism_label)
+        labels[int(zero_report.zero_index)] = str(zero_report.probe_mechanism_label)
 
     return labels
 
