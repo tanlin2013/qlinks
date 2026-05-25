@@ -55,14 +55,40 @@ python scripts/run_cage_sweep.py \
 
 ## Status inspection
 
-You can monitor with:
+Declare the path to output folder
 ```bash
-find ./data/qlinks_cage_sweep_full/jobs -name status.json \
+OUTPUT_ROOT=/path/to/cage_sweep_output
+```
+Note that the commands below require to have `jq` installed.
+
+Then, you can monitor with:
+```bash
+find "$OUTPUT_ROOT/jobs" -name status.json \
   -exec jq -r '[.status, .job_id, (.n_states // ""), (.n_records // "")] | @tsv' {} \;
 ```
 
 Counts:
 ```bash
-find ./data/qlinks_cage_sweep_full/jobs -name status.json \
+find "$OUTPUT_ROOT/jobs" -name status.json \
   -exec jq -r '.status' {} \; | sort | uniq -c
+```
+
+### Find jobs that contain regional candidates
+
+```bash
+find "$OUTPUT_ROOT/jobs" -name summary.json -print0 \
+  | xargs -0 jq -r '
+      select((.classification_counts.regional_candidate // 0) > 0)
+      | "job=\(.job_id)  n_states=\(.n_states)  regional=\(.classification_counts.regional_candidate)  h5=\(.hdf5_path)"
+    '
+```
+
+### Count total regional candidates across the whole sweep
+
+```bash
+find "$OUTPUT_ROOT/jobs" -name summary.json -print0 \
+  | xargs -0 jq -s '
+      map(.classification_counts.regional_candidate // 0)
+      | add
+    '
 ```
