@@ -418,7 +418,9 @@ def write_cage_hdf5(
             mean_reduced_norms[record_index] = report.mean_reduced_action_norm
             max_reduced_norms[record_index] = report.max_reduced_action_norm
             n_q_empty_zeros[record_index] = report.n_q_empty_source_probes
-            n_closed_by_known_zero_zeros[record_index] = report.n_closed_by_known_zero_network_source_probes
+            n_closed_by_known_zero_zeros[record_index] = (
+                report.n_closed_by_known_zero_network_source_probes
+            )
             n_projector_like_zeros[record_index] = report.n_projector_like_source_probes
             n_unexplained_leakage_zeros[record_index] = report.n_invalid_source_probes
             n_regional_mechanism_zeros[record_index] = report.n_regional_source_probes
@@ -794,7 +796,9 @@ def run_one_job(task: CageSweepTask) -> dict[str, Any]:
 
         for report in classification_reports:
             mechanism_totals["q_empty"] += int(report.n_q_empty_source_probes)
-            mechanism_totals["closed_by_known_zeros"] += int(report.n_closed_by_known_zero_network_source_probes)
+            mechanism_totals["closed_by_known_zeros"] += int(
+                report.n_closed_by_known_zero_network_source_probes
+            )
             mechanism_totals["projector_like"] += int(report.n_projector_like_source_probes)
             mechanism_totals["unexplained_leakage"] += int(report.n_invalid_source_probes)
             mechanism_totals["regional"] += int(report.n_regional_source_probes)

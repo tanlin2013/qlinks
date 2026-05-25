@@ -366,7 +366,8 @@ class CageClassificationReport:
                 [
                     (
                         "has only regional mechanisms",
-                        self.n_projector_like_source_probes == 0 and self.n_invalid_source_probes == 0,
+                        self.n_projector_like_source_probes == 0
+                        and self.n_invalid_source_probes == 0,
                     ),
                     (
                         "contains projector-like extended mechanisms",
@@ -384,7 +385,9 @@ class CageClassificationReport:
                     ("q-empty", _format_index_preview(self.q_empty_source_zero_indices)),
                     (
                         "closed-by-known-zero",
-                        _format_index_preview(self.closed_by_known_zero_network_source_zero_indices),
+                        _format_index_preview(
+                            self.closed_by_known_zero_network_source_zero_indices
+                        ),
                     ),
                     (
                         "projector-like",
@@ -468,14 +471,10 @@ class CageClassificationReport:
                     self.n_closed_by_known_zero_network_source_probes
                 ),
                 "projector-like source probes": self.n_projector_like_source_probes,
-                "unexplained-leakage source probes": (
-                    self.n_invalid_source_probes
-                ),
+                "unexplained-leakage source probes": (self.n_invalid_source_probes),
             },
             "Invalid probe reasons": {
-                "unexpected-target source probes": (
-                    self.n_unexpected_target_probe_failures
-                ),
+                "unexpected-target source probes": (self.n_unexpected_target_probe_failures),
                 "nonzero-complement-action source probes": (
                     self.n_nonzero_complement_action_probe_failures
                 ),
@@ -617,7 +616,9 @@ def classify_full_state(
         report.n_unexplained_complement_targets for report in zero_reports
     )
     n_trivial_targets = sum(report.n_trivial_targets for report in zero_reports)
-    n_destructive_iz_targets = sum(report.n_known_nonprojector_iz_targets for report in zero_reports)
+    n_destructive_iz_targets = sum(
+        report.n_known_nonprojector_iz_targets for report in zero_reports
+    )
     n_projector_like_iz_targets = sum(report.n_projector_like_iz_targets for report in zero_reports)
     n_unexpected_targets = sum(report.n_unexpected_targets for report in zero_reports)
     unexpected_target_probe_failure_indices = _zero_indices_with_unexpected_target_failure(
@@ -1388,7 +1389,8 @@ def _classify_from_zero_reports(
         return "extended_candidate"
 
     if all(
-            report.probe_mechanism_label in {"q_empty", "closed_by_known_zeros"} for report in zero_reports
+        report.probe_mechanism_label in {"q_empty", "closed_by_known_zeros"}
+        for report in zero_reports
     ):
         return "regional_candidate"
 
@@ -1445,8 +1447,7 @@ def _rich_key_value_section(
 
 
 def _rich_zero_reports_section(
-    zero_reports: tuple[InterferenceZeroReport, ...]
-    | list[InterferenceZeroReport],
+    zero_reports: tuple[InterferenceZeroReport, ...] | list[InterferenceZeroReport],
     *,
     n_hidden: int,
 ) -> Group:
@@ -1534,7 +1535,11 @@ def _zero_indices_with_mechanism(
     mechanism: IZProbeMechanismLabel,
 ) -> NDArray[np.int64]:
     return np.array(
-        [int(report.zero_index) for report in zero_reports if report.probe_mechanism_label == mechanism],
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if report.probe_mechanism_label == mechanism
+        ],
         dtype=np.int64,
     )
 
@@ -1611,7 +1616,10 @@ def _zero_indices_with_indirect_projector_like(
         [
             int(report.zero_index)
             for report in zero_reports
-            if (report.probe_mechanism_label == "projector_like" and not report.source_projector_like)
+            if (
+                report.probe_mechanism_label == "projector_like"
+                and not report.source_projector_like
+            )
         ],
         dtype=np.int64,
     )
