@@ -77,8 +77,12 @@ class InterferenceZeroReport:
     projector_like_iz_target_indices: NDArray[np.int64]
     unexpected_target_indices: NDArray[np.int64]
 
-    source_projector_like: bool
+    has_unexpected_targets: bool
+    has_nonzero_complement_action: bool
+    unexpected_target_probe_failure_indices: NDArray[np.int64]
+    nonzero_complement_action_target_indices: NDArray[np.int64]
 
+    source_projector_like: bool
     mechanism_label: ZeroMechanismLabel
     local_transitions: tuple[LocalTransitionPattern, ...]
 
@@ -130,6 +134,14 @@ class InterferenceZeroReport:
     def n_unexpected_targets(self) -> int:
         return int(self.unexpected_target_indices.size)
 
+    @property
+    def n_unexpected_target_probe_failures(self) -> int:
+        return int(self.unexpected_target_probe_failure_indices.size)
+
+    @property
+    def n_nonzero_complement_action_targets(self) -> int:
+        return int(self.nonzero_complement_action_target_indices.size)
+
 
 @dataclass(frozen=True, slots=True)
 class CageClassificationReport:
@@ -156,6 +168,11 @@ class CageClassificationReport:
     n_destructive_iz_targets: int
     n_projector_like_iz_targets: int
     n_unexpected_targets: int
+    n_unexpected_target_probe_failures: int
+    n_nonzero_complement_action_probe_failures: int
+
+    unexpected_target_probe_failure_indices: NDArray[np.int64]
+    nonzero_complement_action_probe_failure_indices: NDArray[np.int64]
 
     n_regional_mechanism_zeros: int
     n_extended_mechanism_zeros: int
@@ -187,9 +204,11 @@ class CageClassificationReport:
             f"support_size={self.support_size}, "
             f"hilbert_size={self.hilbert_size}, "
             f"n_nontrivial_zeros={self.n_nontrivial_zeros}, "
-            f"n_regional_mechanism_zeros={self.n_regional_mechanism_zeros}, "
-            f"n_extended_mechanism_zeros={self.n_extended_mechanism_zeros}, "
-            f"n_failure_mechanism_zeros={self.n_failure_mechanism_zeros}"
+            f"n_projector_like_zeros={self.n_projector_like_zeros}, "
+            f"n_unexpected_target_probe_failures="
+            f"{self.n_unexpected_target_probe_failures}, "
+            f"n_nonzero_complement_action_probe_failures="
+            f"{self.n_nonzero_complement_action_probe_failures}"
             ")"
         )
 
@@ -248,9 +267,14 @@ class CageClassificationReport:
                     f"{self.n_closed_by_known_zero_zeros}"
                 ),
                 f"projector-like source probes: {self.n_projector_like_zeros}",
+                ("unexplained-leakage source probes: " f"{self.n_unexplained_leakage_zeros}"),
+                "",
+                "Invalid probe reasons",
+                "---------------------",
+                ("unexpected-target source probes: " f"{self.n_unexpected_target_probe_failures}"),
                 (
-                    "unexplained-leakage source probes: "
-                    f"{self.n_unexplained_leakage_zeros}"
+                    "nonzero-complement-action source probes: "
+                    f"{self.n_nonzero_complement_action_probe_failures}"
                 ),
                 "",
                 "Complement target explanations",
@@ -293,6 +317,14 @@ class CageClassificationReport:
                 (
                     "unexplained-leakage: "
                     f"{_format_index_preview(self.unexplained_leakage_zero_indices)}"
+                ),
+                (
+                    "unexpected-target failures: "
+                    f"{_format_index_preview(self.unexpected_target_probe_failure_indices)}"
+                ),
+                (
+                    "nonzero-complement-action failures: "
+                    f"{_format_index_preview(self.nonzero_complement_action_probe_failure_indices)}"
                 ),
             ]
         )
@@ -355,14 +387,8 @@ class CageClassificationReport:
                 lines.extend(
                     [
                         f" mechanism: {zero_report.mechanism_label}",
-                        (
-                            " source projector-like: "
-                            f"{zero_report.source_projector_like}"
-                        ),
-                        (
-                            " trivial targets: "
-                            f"{zero_report.trivial_target_indices.tolist()}"
-                        ),
+                        (" source projector-like: " f"{zero_report.source_projector_like}"),
+                        (" trivial targets: " f"{zero_report.trivial_target_indices.tolist()}"),
                         (
                             " destructive IZ targets: "
                             f"{zero_report.destructive_iz_target_indices.tolist()}"
@@ -374,6 +400,15 @@ class CageClassificationReport:
                         (
                             " unexpected targets: "
                             f"{zero_report.unexpected_target_indices.tolist()}"
+                        ),
+                        ("    has unexpected targets: " f"{zero_report.has_unexpected_targets}"),
+                        (
+                            "    has nonzero complement action: "
+                            f"{zero_report.has_nonzero_complement_action}"
+                        ),
+                        (
+                            "    nonzero complement-action targets: "
+                            f"{zero_report.nonzero_complement_action_target_indices.tolist()}"
                         ),
                     ]
                 )
@@ -512,21 +547,15 @@ def classify_full_state(
     n_unexplained_complement_targets = sum(
         report.n_unexplained_complement_targets for report in zero_reports
     )
-    n_trivial_targets = sum(
-        report.n_trivial_targets
-        for report in zero_reports
+    n_trivial_targets = sum(report.n_trivial_targets for report in zero_reports)
+    n_destructive_iz_targets = sum(report.n_destructive_iz_targets for report in zero_reports)
+    n_projector_like_iz_targets = sum(report.n_projector_like_iz_targets for report in zero_reports)
+    n_unexpected_targets = sum(report.n_unexpected_targets for report in zero_reports)
+    unexpected_target_probe_failure_indices = _zero_indices_with_unexpected_target_failure(
+        zero_reports
     )
-    n_destructive_iz_targets = sum(
-        report.n_destructive_iz_targets
-        for report in zero_reports
-    )
-    n_projector_like_iz_targets = sum(
-        report.n_projector_like_iz_targets
-        for report in zero_reports
-    )
-    n_unexpected_targets = sum(
-        report.n_unexpected_targets
-        for report in zero_reports
+    nonzero_complement_action_probe_failure_indices = (
+        _zero_indices_with_nonzero_complement_action_failure(zero_reports)
     )
     q_empty_zero_indices = _zero_indices_with_mechanism(
         zero_reports,
@@ -579,6 +608,14 @@ def classify_full_state(
         n_closed_by_known_zero_zeros=int(closed_by_known_zero_indices.size),
         n_projector_like_zeros=int(projector_like_zero_indices.size),
         n_unexplained_leakage_zeros=int(unexplained_leakage_zero_indices.size),
+        n_unexpected_target_probe_failures=int(unexpected_target_probe_failure_indices.size),
+        n_nonzero_complement_action_probe_failures=int(
+            nonzero_complement_action_probe_failure_indices.size
+        ),
+        unexpected_target_probe_failure_indices=unexpected_target_probe_failure_indices,
+        nonzero_complement_action_probe_failure_indices=(
+            nonzero_complement_action_probe_failure_indices
+        ),
         n_regional_mechanism_zeros=int(regional_mechanism_zero_indices.size),
         n_extended_mechanism_zeros=int(extended_mechanism_zero_indices.size),
         n_failure_mechanism_zeros=int(failure_mechanism_zero_indices.size),
@@ -751,9 +788,19 @@ def _build_zero_report(
         amplitude_tolerance=config.amplitude_tolerance,
     )
 
+    nonzero_complement_action_target_indices = np.array(
+        [
+            int(index)
+            for index in complement_target_indices
+            if abs(complement_action[int(index)]) > config.action_tolerance
+        ],
+        dtype=np.int64,
+    )
+
+    has_nonzero_complement_action = nonzero_complement_action_target_indices.size > 0
+
     source_projector_like = (
-        q_sector_weight > config.action_tolerance
-        and complement_target_indices.size == 0
+        q_sector_weight > config.action_tolerance and complement_target_indices.size == 0
     )
 
     return InterferenceZeroReport(
@@ -771,6 +818,10 @@ def _build_zero_report(
         explained_complement_target_indices=np.array([], dtype=np.int64),
         unexplained_complement_target_indices=complement_target_indices,
         complement_targets_are_known_zeros=False,
+        has_unexpected_targets=False,
+        has_nonzero_complement_action=has_nonzero_complement_action,
+        unexpected_target_probe_failure_indices=np.array([], dtype=np.int64),
+        nonzero_complement_action_target_indices=(nonzero_complement_action_target_indices),
         source_projector_like=source_projector_like,
         trivial_target_indices=np.array([], dtype=np.int64),
         destructive_iz_target_indices=np.array([], dtype=np.int64),
@@ -801,10 +852,7 @@ def _annotate_probe_mechanisms(
     targets are either trivial zeros or non-projector-dependent known IZs.
     """
     known_zero_indices = {int(report.zero_index) for report in zero_reports}
-    report_by_zero = {
-        int(report.zero_index): report
-        for report in zero_reports
-    }
+    report_by_zero = {int(report.zero_index): report for report in zero_reports}
 
     # First split each source probe's raw targets.
     trivial_targets_by_zero: dict[int, set[int]] = {}
@@ -833,22 +881,18 @@ def _annotate_probe_mechanisms(
         unexpected_targets_by_zero[source] = unexpected_targets
 
     # Seed invalid and projector-dependent source probes.
-    invalid_sources = {
-        source
-        for source, targets in unexpected_targets_by_zero.items()
-        if len(targets) > 0
+    unexpected_target_failure_sources = {
+        source for source, targets in unexpected_targets_by_zero.items() if len(targets) > 0
     }
 
-    invalid_sources.update(
-        int(report.zero_index)
-        for report in zero_reports
-        if report.complement_action_norm > config.action_tolerance
-    )
+    nonzero_complement_action_failure_sources = {
+        int(report.zero_index) for report in zero_reports if report.has_nonzero_complement_action
+    }
+
+    invalid_sources = unexpected_target_failure_sources | nonzero_complement_action_failure_sources
 
     projector_dependent_sources = {
-        int(report.zero_index)
-        for report in zero_reports
-        if report.source_projector_like
+        int(report.zero_index) for report in zero_reports if report.source_projector_like
     }
 
     # Propagate projector-dependence backward:
@@ -862,10 +906,7 @@ def _annotate_probe_mechanisms(
             if source in projector_dependent_sources:
                 continue
 
-            if any(
-                target in projector_dependent_sources
-                for target in iz_targets
-            ):
+            if any(target in projector_dependent_sources for target in iz_targets):
                 projector_dependent_sources.add(source)
                 changed = True
 
@@ -877,11 +918,11 @@ def _annotate_probe_mechanisms(
         trivial_targets = trivial_targets_by_zero[source]
         iz_targets = iz_targets_by_zero[source]
         unexpected_targets = unexpected_targets_by_zero[source]
+        has_unexpected_targets = source in unexpected_target_failure_sources
+        has_nonzero_complement_action = source in nonzero_complement_action_failure_sources
 
         projector_like_iz_targets = {
-            target
-            for target in iz_targets
-            if target in projector_dependent_sources
+            target for target in iz_targets if target in projector_dependent_sources
         }
         destructive_iz_targets = iz_targets - projector_like_iz_targets
 
@@ -899,9 +940,7 @@ def _annotate_probe_mechanisms(
             mechanism_label = "closed_by_known_zeros"
 
         explained_targets = sorted(
-            trivial_targets
-            | destructive_iz_targets
-            | projector_like_iz_targets
+            trivial_targets | destructive_iz_targets | projector_like_iz_targets
         )
 
         annotated_reports.append(
@@ -924,6 +963,15 @@ def _annotate_probe_mechanisms(
                     sorted(unexpected_targets),
                     dtype=np.int64,
                 ),
+                has_unexpected_targets=has_unexpected_targets,
+                has_nonzero_complement_action=has_nonzero_complement_action,
+                unexpected_target_probe_failure_indices=np.array(
+                    sorted(unexpected_targets),
+                    dtype=np.int64,
+                ),
+                nonzero_complement_action_target_indices=(
+                    report.nonzero_complement_action_target_indices
+                ),
                 explained_complement_target_indices=np.array(
                     explained_targets,
                     dtype=np.int64,
@@ -933,8 +981,7 @@ def _annotate_probe_mechanisms(
                     dtype=np.int64,
                 ),
                 complement_targets_are_known_zeros=(
-                    len(report.complement_target_indices) > 0
-                    and len(unexpected_targets) == 0
+                    len(report.complement_target_indices) > 0 and len(unexpected_targets) == 0
                 ),
             )
         )
@@ -959,24 +1006,20 @@ def _replace_interference_zero_report(
         "reduced_action_norm": report.reduced_action_norm,
         "complement_action_norm": report.complement_action_norm,
         "complement_target_indices": report.complement_target_indices,
-        "explained_complement_target_indices": (
-            report.explained_complement_target_indices
-        ),
-        "unexplained_complement_target_indices": (
-            report.unexplained_complement_target_indices
-        ),
-        "complement_targets_are_known_zeros": (
-            report.complement_targets_are_known_zeros
-        ),
+        "explained_complement_target_indices": (report.explained_complement_target_indices),
+        "unexplained_complement_target_indices": (report.unexplained_complement_target_indices),
+        "complement_targets_are_known_zeros": (report.complement_targets_are_known_zeros),
         "mechanism_label": report.mechanism_label,
+        "has_unexpected_targets": report.has_unexpected_targets,
+        "has_nonzero_complement_action": report.has_nonzero_complement_action,
+        "unexpected_target_probe_failure_indices": (report.unexpected_target_probe_failure_indices),
+        "nonzero_complement_action_target_indices": (
+            report.nonzero_complement_action_target_indices
+        ),
         "source_projector_like": report.source_projector_like,
         "trivial_target_indices": report.trivial_target_indices,
-        "destructive_iz_target_indices": (
-            report.destructive_iz_target_indices
-        ),
-        "projector_like_iz_target_indices": (
-            report.projector_like_iz_target_indices
-        ),
+        "destructive_iz_target_indices": (report.destructive_iz_target_indices),
+        "projector_like_iz_target_indices": (report.projector_like_iz_target_indices),
         "unexpected_target_indices": report.unexpected_target_indices,
         "local_transitions": report.local_transitions,
     }
@@ -1387,3 +1430,21 @@ def _zero_indices_with_flag(
         )
 
     raise ValueError(f"Unknown mechanism flag: {flag!r}")
+
+
+def _zero_indices_with_unexpected_target_failure(
+    zero_reports: list[InterferenceZeroReport],
+) -> NDArray[np.int64]:
+    return np.array(
+        [int(report.zero_index) for report in zero_reports if report.has_unexpected_targets],
+        dtype=np.int64,
+    )
+
+
+def _zero_indices_with_nonzero_complement_action_failure(
+    zero_reports: list[InterferenceZeroReport],
+) -> NDArray[np.int64]:
+    return np.array(
+        [int(report.zero_index) for report in zero_reports if report.has_nonzero_complement_action],
+        dtype=np.int64,
+    )
