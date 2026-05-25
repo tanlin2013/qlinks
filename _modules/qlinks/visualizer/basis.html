@@ -3058,7 +3058,7 @@
     <span class="n">labels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">for</span> <span class="n">zero_report</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">zero_reports</span><span class="p">:</span>
-        <span class="n">labels</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">zero_report</span><span class="o">.</span><span class="n">zero_index</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">zero_report</span><span class="o">.</span><span class="n">mechanism_label</span><span class="p">)</span>
+        <span class="n">labels</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">zero_report</span><span class="o">.</span><span class="n">zero_index</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">zero_report</span><span class="o">.</span><span class="n">probe_mechanism_label</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">labels</span>
 
