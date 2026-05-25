@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, cast, Sequence
+from typing import Literal, Sequence, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -927,9 +927,7 @@ class HamiltonianGraphVisualizer:
         try:
             import pynauty
         except ImportError as error:
-            raise ImportError(
-                "automorphism_backend='pynauty' requires pynauty."
-            ) from error
+            raise ImportError("automorphism_backend='pynauty' requires pynauty.") from error
 
         adjacency = self.graph_data.adjacency.tocsr()
         n_vertices = int(adjacency.shape[0])
@@ -963,9 +961,7 @@ class HamiltonianGraphVisualizer:
         try:
             import igraph as ig  # noqa: F401
         except ImportError as error:
-            raise ImportError(
-                "automorphism_backend='igraph' requires python-igraph."
-            ) from error
+            raise ImportError("automorphism_backend='igraph' requires python-igraph.") from error
 
         graph = self.to_igraph()
         n_vertices = int(graph.vcount())
@@ -1155,10 +1151,7 @@ def _add_orbit_legend(
     if len(unique_labels) > max_entries:
         return
 
-    label_to_color = {
-        int(label): color
-        for label, color in zip(labels, colors, strict=True)
-    }
+    label_to_color = {int(label): color for label, color in zip(labels, colors, strict=True)}
 
     handles = [
         mpatches.Patch(
@@ -1235,6 +1228,7 @@ def _orbit_labels_to_hex_colors(
 ) -> list[str]:
     """Return visually separated hex colors for integer orbit labels."""
     import colorsys
+
     from matplotlib.colors import to_hex
 
     labels = np.asarray(labels, dtype=np.int64)
@@ -1275,10 +1269,7 @@ def _orbit_labels_to_rgba_colors(
 
     hex_colors = _orbit_labels_to_hex_colors(labels)
 
-    return [
-        to_rgba(color, alpha=alpha)
-        for color in hex_colors
-    ]
+    return [to_rgba(color, alpha=alpha) for color in hex_colors]
 
 
 def _igraph_layout(graph, layout: LayoutName, **kwargs):

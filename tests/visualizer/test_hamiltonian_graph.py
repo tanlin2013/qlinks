@@ -13,10 +13,10 @@ from qlinks.visualizer import (
 )
 from qlinks.visualizer.hamiltonian_graph import (
     _normalize_graph_backend,
-    _scalar_values_to_colors,
-    _scalar_values_to_hex_colors,
     _orbit_labels_to_hex_colors,
     _orbit_labels_to_rgba_colors,
+    _scalar_values_to_colors,
+    _scalar_values_to_hex_colors,
 )
 
 igraph_available = importlib.util.find_spec("igraph") is not None
@@ -501,9 +501,7 @@ def test_dense_orbit_labels_compacts_representatives() -> None:
 
 
 def test_orbit_labels_to_hex_colors_groups_equal_labels() -> None:
-    colors = _orbit_labels_to_hex_colors(
-        np.asarray([0, 1, 0, 2, 1], dtype=np.int64)
-    )
+    colors = _orbit_labels_to_hex_colors(np.asarray([0, 1, 0, 2, 1], dtype=np.int64))
 
     assert colors[0] == colors[2]
     assert colors[1] == colors[4]

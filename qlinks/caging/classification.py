@@ -690,17 +690,13 @@ def classify_full_state(
         n_complement_targets=n_complement_targets,
         n_unexplained_complement_targets=n_unexplained_complement_targets,
         fraction_zeros_with_closed_complement_targets=fraction_closed,
-
         n_q_empty_source_probes=int(q_empty_source_zero_indices.size),
         n_closed_by_known_zero_network_source_probes=int(
             closed_by_known_zero_network_source_zero_indices.size
         ),
-        n_projector_like_source_probes=int(
-            projector_like_source_zero_indices.size
-        ),
+        n_projector_like_source_probes=int(projector_like_source_zero_indices.size),
         n_invalid_source_probes=int(invalid_source_zero_indices.size),
         n_regional_source_probes=int(regional_source_zero_indices.size),
-
         q_empty_source_zero_indices=q_empty_source_zero_indices,
         closed_by_known_zero_network_source_zero_indices=(
             closed_by_known_zero_network_source_zero_indices
@@ -708,42 +704,24 @@ def classify_full_state(
         projector_like_source_zero_indices=projector_like_source_zero_indices,
         invalid_source_zero_indices=invalid_source_zero_indices,
         regional_source_zero_indices=regional_source_zero_indices,
-
         n_trivial_targets=n_trivial_targets,
         n_known_nonprojector_iz_targets=n_known_nonprojector_iz_targets,
         n_projector_like_iz_targets=n_projector_like_iz_targets,
         n_unexpected_targets=n_unexpected_targets,
-
-        n_unexpected_target_probe_failures=int(
-            unexpected_target_probe_failure_indices.size
-        ),
+        n_unexpected_target_probe_failures=int(unexpected_target_probe_failure_indices.size),
         n_nonzero_complement_action_probe_failures=int(
             nonzero_complement_action_probe_failure_indices.size
         ),
-        unexpected_target_probe_failure_indices=(
-            unexpected_target_probe_failure_indices
-        ),
+        unexpected_target_probe_failure_indices=(unexpected_target_probe_failure_indices),
         nonzero_complement_action_probe_failure_indices=(
             nonzero_complement_action_probe_failure_indices
         ),
-
-        n_source_projector_like_probes=int(
-            source_projector_like_probe_indices.size
-        ),
-        n_indirect_projector_like_probes=int(
-            indirect_projector_like_probe_indices.size
-        ),
-        n_projector_like_annihilated_inputs=int(
-            projector_like_annihilated_input_indices.size
-        ),
+        n_source_projector_like_probes=int(source_projector_like_probe_indices.size),
+        n_indirect_projector_like_probes=int(indirect_projector_like_probe_indices.size),
+        n_projector_like_annihilated_inputs=int(projector_like_annihilated_input_indices.size),
         source_projector_like_probe_indices=source_projector_like_probe_indices,
-        indirect_projector_like_probe_indices=(
-            indirect_projector_like_probe_indices
-        ),
-        projector_like_annihilated_input_indices=(
-            projector_like_annihilated_input_indices
-        ),
-
+        indirect_projector_like_probe_indices=(indirect_projector_like_probe_indices),
+        projector_like_annihilated_input_indices=(projector_like_annihilated_input_indices),
         mean_q_sector_weight=_safe_mean(q_weights),
         max_q_sector_weight=_safe_max(q_weights),
         mean_reduced_action_norm=_safe_mean(reduced_norms),
@@ -1115,8 +1093,7 @@ def _annotate_probe_mechanisms(
                     dtype=np.int64,
                 ),
                 complement_targets_are_known_zeros=(
-                        len(report.complement_target_indices) > 0
-                        and len(unexpected_targets) == 0
+                    len(report.complement_target_indices) > 0 and len(unexpected_targets) == 0
                 ),
             )
         )
@@ -1138,51 +1115,29 @@ def _replace_interference_zero_report(
         "common_mask": report.common_mask,
         "local_mask": report.local_mask,
         "local_transitions": report.local_transitions,
-
         "q_sector_weight": report.q_sector_weight,
         "reduced_action_norm": report.reduced_action_norm,
         "complement_action_norm": report.complement_action_norm,
-
         "complement_target_indices": report.complement_target_indices,
-        "explained_complement_target_indices": (
-            report.explained_complement_target_indices
-        ),
-        "unexplained_complement_target_indices": (
-            report.unexplained_complement_target_indices
-        ),
-        "complement_targets_are_known_zeros": (
-            report.complement_targets_are_known_zeros
-        ),
-
+        "explained_complement_target_indices": (report.explained_complement_target_indices),
+        "unexplained_complement_target_indices": (report.unexplained_complement_target_indices),
+        "complement_targets_are_known_zeros": (report.complement_targets_are_known_zeros),
         "trivial_target_indices": report.trivial_target_indices,
-        "known_nonprojector_iz_target_indices": (
-            report.known_nonprojector_iz_target_indices
-        ),
-        "projector_like_iz_target_indices": (
-            report.projector_like_iz_target_indices
-        ),
+        "known_nonprojector_iz_target_indices": (report.known_nonprojector_iz_target_indices),
+        "projector_like_iz_target_indices": (report.projector_like_iz_target_indices),
         "unexpected_target_indices": report.unexpected_target_indices,
-
         "complement_support_indices": report.complement_support_indices,
-        "complement_contributing_input_indices": (
-            report.complement_contributing_input_indices
-        ),
+        "complement_contributing_input_indices": (report.complement_contributing_input_indices),
         "projector_like_annihilated_input_indices": (
             report.projector_like_annihilated_input_indices
         ),
         "source_projector_like": report.source_projector_like,
-
         "has_unexpected_targets": report.has_unexpected_targets,
-        "has_nonzero_complement_action": (
-            report.has_nonzero_complement_action
-        ),
-        "unexpected_target_probe_failure_indices": (
-            report.unexpected_target_probe_failure_indices
-        ),
+        "has_nonzero_complement_action": (report.has_nonzero_complement_action),
+        "unexpected_target_probe_failure_indices": (report.unexpected_target_probe_failure_indices),
         "nonzero_complement_action_target_indices": (
             report.nonzero_complement_action_target_indices
         ),
-
         "probe_mechanism_label": report.probe_mechanism_label,
     }
 
