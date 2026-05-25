@@ -316,7 +316,7 @@ def test_classify_full_state_finds_regional_candidate():
     assert not zero_report.source_projector_like
 
     assert report.n_trivial_targets == 0
-    assert report.n_destructive_iz_targets == 0
+    assert report.n_known_nonprojector_iz_targets == 0
     assert report.n_projector_like_iz_targets == 0
     assert report.n_unexpected_targets == 0
 
@@ -424,7 +424,7 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
     assert _zero_indices(h1_report.unexpected_target_indices) == set()
 
     assert report.n_trivial_targets == 0
-    assert report.n_destructive_iz_targets == 2
+    assert report.n_known_nonprojector_iz_targets == 2
     assert report.n_projector_like_iz_targets == 0
     assert report.n_unexpected_targets == 0
 
@@ -509,7 +509,7 @@ def test_classify_full_state_treats_trivial_target_cancellation_as_regional():
     assert _zero_indices(report.nonzero_complement_action_probe_failure_indices) == set()
 
     assert report.n_trivial_targets == 1
-    assert report.n_destructive_iz_targets == 0
+    assert report.n_known_nonprojector_iz_targets == 0
     assert report.n_projector_like_iz_targets == 0
     assert report.n_unexpected_targets == 0
 
@@ -577,7 +577,7 @@ def test_classify_full_state_marks_nonzero_unexplained_leakage_invalid():
     assert _zero_indices(zero_report.nonzero_complement_action_target_indices) == {trivial_target}
 
     assert report.n_trivial_targets == 1
-    assert report.n_destructive_iz_targets == 0
+    assert report.n_known_nonprojector_iz_targets == 0
     assert report.n_projector_like_iz_targets == 0
     assert report.n_unexpected_targets == 0
 
@@ -641,7 +641,7 @@ def test_classify_cage_state_lifts_compact_state_and_preserves_metadata():
     assert not zero_report.source_projector_like
 
     assert report.n_trivial_targets == 0
-    assert report.n_destructive_iz_targets == 0
+    assert report.n_known_nonprojector_iz_targets == 0
     assert report.n_projector_like_iz_targets == 0
     assert report.n_unexpected_targets == 0
 
@@ -765,7 +765,6 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     assert report.n_invalid_source_probes == 0
 
     assert _zero_indices(report.projector_like_source_zero_indices) == {indices["h"]}
-    assert _zero_indices(report.extended_source_zero_indices) == {indices["h"]}
     assert _zero_indices(report.invalid_source_zero_indices) == set()
 
     zero_report = report.zero_reports[0]
@@ -783,7 +782,7 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     assert zero_report.source_projector_like
 
     assert report.n_trivial_targets == 0
-    assert report.n_destructive_iz_targets == 0
+    assert report.n_known_nonprojector_iz_targets == 0
     assert report.n_projector_like_iz_targets == 0
     assert report.n_unexpected_targets == 0
 
