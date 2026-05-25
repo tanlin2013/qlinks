@@ -311,7 +311,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
@@ -324,6 +324,7 @@
     <span class="s2">&quot;bipartition&quot;</span><span class="p">,</span>
     <span class="s2">&quot;self_loop&quot;</span><span class="p">,</span>
     <span class="s2">&quot;degree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">,</span>
     <span class="s2">&quot;state_weight&quot;</span><span class="p">,</span>
     <span class="s2">&quot;state_amplitude_real&quot;</span><span class="p">,</span>
     <span class="s2">&quot;state_amplitude_imag&quot;</span><span class="p">,</span>
@@ -339,6 +340,7 @@
     <span class="s2">&quot;kamada_kawai&quot;</span><span class="p">,</span>
     <span class="s2">&quot;spring&quot;</span><span class="p">,</span>
 <span class="p">]</span>
+<span class="n">AutomorphismBackend</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="s2">&quot;pynauty&quot;</span><span class="p">,</span> <span class="s2">&quot;igraph&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="HamiltonianGraphStyle">
@@ -356,7 +358,9 @@
     <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;viridis&quot;</span>
     <span class="n">default_vertex_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;lightgray&quot;</span>
     <span class="n">edge_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gray&quot;</span>
-    <span class="n">figure_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">7.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">)</span></div>
+    <span class="n">figure_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">7.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">)</span>
+    <span class="n">orbit_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.65</span>
+    <span class="n">orbit_lightness_boost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.15</span></div>
 
 
 
@@ -468,6 +472,7 @@
         <span class="n">color_by</span><span class="p">:</span> <span class="n">NodeColorRule</span><span class="p">,</span>
         <span class="n">self_loop_values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">state_vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">automorphism_backend</span><span class="p">:</span> <span class="n">AutomorphismBackend</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return scalar node values used for coloring.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
@@ -487,6 +492,9 @@
 
         <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;degree&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">degrees</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">automorphism_orbits</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">automorphism_backend</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">color_by</span> <span class="ow">in</span> <span class="p">(</span>
             <span class="s2">&quot;state_weight&quot;</span><span class="p">,</span>
@@ -597,6 +605,7 @@
         <span class="n">ax</span><span class="p">,</span>
         <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">automorphism_backend</span><span class="p">:</span> <span class="n">AutomorphismBackend</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
         <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Draw with python-igraph layout and Matplotlib rendering.&quot;&quot;&quot;</span>
@@ -613,11 +622,19 @@
             <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
             <span class="n">self_loop_values</span><span class="o">=</span><span class="n">self_loop_values</span><span class="p">,</span>
             <span class="n">state_vector</span><span class="o">=</span><span class="n">state_vector</span><span class="p">,</span>
+            <span class="n">automorphism_backend</span><span class="o">=</span><span class="n">automorphism_backend</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">vertex_colors</span> <span class="o">=</span> <span class="n">_scalar_values_to_colors</span><span class="p">(</span>
-            <span class="n">values</span><span class="p">,</span>
-            <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">:</span>
+            <span class="n">vertex_colors</span> <span class="o">=</span> <span class="n">_orbit_labels_to_rgba_colors</span><span class="p">(</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">orbit_alpha</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vertex_colors</span> <span class="o">=</span> <span class="n">_scalar_values_to_colors</span><span class="p">(</span>
+                <span class="n">values</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+                <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">layout_object</span> <span class="o">=</span> <span class="n">_igraph_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">)</span>
 
@@ -645,12 +662,13 @@
         <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">colorbar</span> <span class="ow">and</span> <span class="n">color_by</span> <span class="o">!=</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">colorbar</span> <span class="ow">and</span> <span class="n">color_by</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">):</span>
             <span class="n">_add_colorbar</span><span class="p">(</span>
                 <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
                 <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
                 <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
                 <span class="n">label</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
+                <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -675,6 +693,7 @@
         <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">bbox</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">margin</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">automorphism_backend</span><span class="p">:</span> <span class="n">AutomorphismBackend</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
         <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Draw with python-igraph layout and Cairo rendering.</span>
@@ -706,12 +725,20 @@
             <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
             <span class="n">self_loop_values</span><span class="o">=</span><span class="n">self_loop_values</span><span class="p">,</span>
             <span class="n">state_vector</span><span class="o">=</span><span class="n">state_vector</span><span class="p">,</span>
+            <span class="n">automorphism_backend</span><span class="o">=</span><span class="n">automorphism_backend</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">vertex_colors</span> <span class="o">=</span> <span class="n">_scalar_values_to_hex_colors</span><span class="p">(</span>
-            <span class="n">values</span><span class="p">,</span>
-            <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">:</span>
+            <span class="n">vertex_colors</span> <span class="o">=</span> <span class="n">_orbit_labels_to_hex_colors</span><span class="p">(</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+                <span class="n">lightness_boost</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">orbit_lightness_boost</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vertex_colors</span> <span class="o">=</span> <span class="n">_scalar_values_to_hex_colors</span><span class="p">(</span>
+                <span class="n">values</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+                <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">layout_object</span> <span class="o">=</span> <span class="n">_igraph_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">)</span>
 
@@ -764,6 +791,7 @@
         <span class="n">ax</span><span class="p">,</span>
         <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">automorphism_backend</span><span class="p">:</span> <span class="n">AutomorphismBackend</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
         <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Draw with networkx.&quot;&quot;&quot;</span>
@@ -778,6 +806,7 @@
             <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
             <span class="n">self_loop_values</span><span class="o">=</span><span class="n">self_loop_values</span><span class="p">,</span>
             <span class="n">state_vector</span><span class="o">=</span><span class="n">state_vector</span><span class="p">,</span>
+            <span class="n">automorphism_backend</span><span class="o">=</span><span class="n">automorphism_backend</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -785,11 +814,22 @@
 
         <span class="n">positions</span> <span class="o">=</span> <span class="n">_networkx_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">:</span>
+            <span class="n">node_colors</span> <span class="o">=</span> <span class="n">_orbit_labels_to_rgba_colors</span><span class="p">(</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">orbit_alpha</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node_colors</span> <span class="o">=</span> <span class="n">_scalar_values_to_colors</span><span class="p">(</span>
+                <span class="n">values</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+                <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span>
             <span class="n">graph</span><span class="p">,</span>
             <span class="n">positions</span><span class="p">,</span>
-            <span class="n">node_color</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
-            <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+            <span class="n">node_color</span><span class="o">=</span><span class="n">node_colors</span><span class="p">,</span>
             <span class="n">node_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">vertex_size</span> <span class="o">*</span> <span class="mi">12</span><span class="p">,</span>
             <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
         <span class="p">)</span>
@@ -815,13 +855,17 @@
 
         <span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">colorbar</span> <span class="ow">and</span> <span class="n">color_by</span> <span class="o">!=</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">colorbar</span> <span class="ow">and</span> <span class="n">color_by</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">):</span>
             <span class="n">_add_colorbar</span><span class="p">(</span>
                 <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
                 <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
                 <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
                 <span class="n">label</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
+                <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
             <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">:</span>
+            <span class="n">_add_orbit_legend</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span> <span class="n">colors</span><span class="o">=</span><span class="n">node_colors</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
@@ -948,6 +992,7 @@
         <span class="n">color_by</span><span class="p">:</span> <span class="n">NodeColorRule</span> <span class="o">=</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span>
         <span class="n">self_loop_values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">state_vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">automorphism_backend</span><span class="p">:</span> <span class="n">AutomorphismBackend</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
         <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to NetworkX graph and attach computed layout coordinates.</span>
@@ -981,10 +1026,16 @@
             <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
             <span class="n">self_loop_values</span><span class="o">=</span><span class="n">self_loop_values</span><span class="p">,</span>
             <span class="n">state_vector</span><span class="o">=</span><span class="n">state_vector</span><span class="p">,</span>
+            <span class="n">automorphism_backend</span><span class="o">=</span><span class="n">automorphism_backend</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">degrees</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">degrees</span>
         <span class="n">self_loops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">self_loop_values</span>
+        <span class="n">orbit_labels</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">automorphism_orbits</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">automorphism_backend</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;automorphism_orbit&quot;</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
             <span class="n">position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -995,6 +1046,8 @@
             <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;degree&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">degrees</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;self_loop_real&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">self_loops</span><span class="p">[</span><span class="n">node</span><span class="p">]))</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;self_loop_imag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">self_loops</span><span class="p">[</span><span class="n">node</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">orbit_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">orbit_labels</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
 
             <span class="c1"># Gephi GEXF reads this &quot;viz&quot; block as actual node position.</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;viz&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -1027,6 +1080,7 @@
         <span class="n">color_by</span><span class="p">:</span> <span class="n">NodeColorRule</span> <span class="o">=</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span>
         <span class="n">self_loop_values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">state_vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">automorphism_backend</span><span class="p">:</span> <span class="n">AutomorphismBackend</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
         <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to an igraph graph and attach computed layout coordinates.&quot;&quot;&quot;</span>
@@ -1042,6 +1096,7 @@
             <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
             <span class="n">self_loop_values</span><span class="o">=</span><span class="n">self_loop_values</span><span class="p">,</span>
             <span class="n">state_vector</span><span class="o">=</span><span class="n">state_vector</span><span class="p">,</span>
+            <span class="n">automorphism_backend</span><span class="o">=</span><span class="n">automorphism_backend</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">degrees</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">degrees</span>
@@ -1171,7 +1226,120 @@
             <span class="n">margin</span><span class="o">=</span><span class="n">margin</span><span class="p">,</span>
             <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
-</div>
+
+
+<div class="viewcode-block" id="HamiltonianGraphVisualizer.automorphism_orbits">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphVisualizer.automorphism_orbits">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">automorphism_orbits</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="n">AutomorphismBackend</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dense vertex-orbit labels under graph automorphisms.</span>
+
+<span class="sd">        The returned array has shape ``(n_vertices,)`` and integer labels</span>
+<span class="sd">        ``0, 1, ..., n_orbits - 1``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_automorphism_orbits_pynauty</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_automorphism_orbits_igraph</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;pynauty&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_automorphism_orbits_pynauty</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;igraph&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_automorphism_orbits_igraph</span><span class="p">()</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;backend must be &#39;auto&#39;, &#39;pynauty&#39;, or &#39;igraph&#39;.&quot;</span><span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dense_orbit_labels</span><span class="p">(</span><span class="n">raw_orbits</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert arbitrary orbit representatives to dense labels.&quot;&quot;&quot;</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">raw_orbits</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="n">representative_to_label</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">representative</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">raw</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">representative</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">representative_to_label</span><span class="p">:</span>
+                <span class="n">representative_to_label</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">representative_to_label</span><span class="p">)</span>
+
+            <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">representative_to_label</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">labels</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_automorphism_orbits_pynauty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute vertex orbits with pynauty.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">pynauty</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;automorphism_backend=&#39;pynauty&#39; requires pynauty.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+        <span class="n">adjacency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">adjacency</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        <span class="n">n_vertices</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">adjacency</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">adjacency_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">adjacency</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">vertex</span><span class="p">])</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">adjacency</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">vertex</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">adjacency</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span> <span class="o">!=</span> <span class="n">vertex</span>
+            <span class="p">)</span>
+            <span class="n">adjacency_dict</span><span class="p">[</span><span class="n">vertex</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbors</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">pynauty</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span>
+            <span class="n">number_of_vertices</span><span class="o">=</span><span class="n">n_vertices</span><span class="p">,</span>
+            <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">adjacency_dict</span><span class="o">=</span><span class="n">adjacency_dict</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># pynauty.autgrp returns group data; the fourth item is the orbit array.</span>
+        <span class="c1"># This mirrors pynauty&#39;s documented/common usage: pynauty.autgrp(g)[3].</span>
+        <span class="n">raw_orbits</span> <span class="o">=</span> <span class="n">pynauty</span><span class="o">.</span><span class="n">autgrp</span><span class="p">(</span><span class="n">graph</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dense_orbit_labels</span><span class="p">(</span><span class="n">raw_orbits</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_automorphism_orbits_igraph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute vertex orbits with igraph by enumerating automorphisms.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">igraph</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ig</span>  <span class="c1"># noqa: F401</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;automorphism_backend=&#39;igraph&#39; requires python-igraph.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_igraph</span><span class="p">()</span>
+        <span class="n">n_vertices</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">vcount</span><span class="p">())</span>
+
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">while</span> <span class="nb">int</span><span class="p">(</span><span class="n">parent</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="o">!=</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">parent</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">parent</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">parent</span><span class="p">[</span><span class="n">x</span><span class="p">])]</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parent</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">x</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">root_a</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">root_b</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">root_a</span> <span class="o">==</span> <span class="n">root_b</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="n">root_b</span> <span class="o">&lt;</span> <span class="n">root_a</span><span class="p">:</span>
+                <span class="n">root_a</span><span class="p">,</span> <span class="n">root_b</span> <span class="o">=</span> <span class="n">root_b</span><span class="p">,</span> <span class="n">root_a</span>
+            <span class="n">parent</span><span class="p">[</span><span class="n">root_b</span><span class="p">]</span> <span class="o">=</span> <span class="n">root_a</span>
+
+        <span class="k">for</span> <span class="n">automorphism</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_automorphisms_vf2</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">automorphism</span><span class="p">):</span>
+                <span class="n">union</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+
+        <span class="n">raw_orbits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">find</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dense_orbit_labels</span><span class="p">(</span><span class="n">raw_orbits</span><span class="p">)</span></div>
 
 
 
@@ -1252,54 +1420,41 @@
     <span class="n">values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">color_by</span><span class="p">:</span> <span class="n">NodeColorRule</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert scalar values to matplotlib colors.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span>
 
     <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
 
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="n">normalized_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">normalized_values</span> <span class="o">=</span> <span class="n">Normalize</span><span class="p">(</span>
-            <span class="n">vmin</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span>
-            <span class="n">vmax</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span>
-        <span class="p">)(</span><span class="n">values</span><span class="p">)</span>
-
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">_node_color_norm</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">)</span>
     <span class="n">colormap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="p">[</span><span class="n">colormap</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">normalized_values</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">colormap</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_scalar_values_to_hex_colors</span><span class="p">(</span>
     <span class="n">values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">color_by</span><span class="p">:</span> <span class="n">NodeColorRule</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert scalar values to hex color strings.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span><span class="p">,</span> <span class="n">to_hex</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_hex</span>
 
     <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
 
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="n">normalized_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">normalized_values</span> <span class="o">=</span> <span class="n">Normalize</span><span class="p">(</span>
-            <span class="n">vmin</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span>
-            <span class="n">vmax</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span>
-        <span class="p">)(</span><span class="n">values</span><span class="p">)</span>
-
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">_node_color_norm</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">)</span>
     <span class="n">colormap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">colormap</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">normalized_values</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">colormap</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">value</span><span class="p">))))</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_add_colorbar</span><span class="p">(</span>
@@ -1308,21 +1463,19 @@
     <span class="n">values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">color_by</span><span class="p">:</span> <span class="n">NodeColorRule</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Attach a scalar colorbar to an axis.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.cm</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarMappable</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span>
 
     <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
         <span class="k">return</span>
 
-    <span class="n">norm</span> <span class="o">=</span> <span class="n">Normalize</span><span class="p">(</span>
-        <span class="n">vmin</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span>
-        <span class="n">vmax</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span>
-    <span class="p">)</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">_node_color_norm</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">)</span>
+
     <span class="n">scalar_mappable</span> <span class="o">=</span> <span class="n">ScalarMappable</span><span class="p">(</span>
         <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">),</span>
         <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
@@ -1335,6 +1488,143 @@
         <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
         <span class="n">shrink</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_orbit_legend</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">ax</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">colors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">max_entries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a compact orbit legend for small orbit counts.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpatches</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">unique_labels</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_labels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_entries</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">label_to_color</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="p">):</span> <span class="n">color</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)}</span>
+
+    <span class="n">handles</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">label_to_color</span><span class="p">[</span><span class="n">label</span><span class="p">],</span>
+            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;orbit </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">unique_labels</span>
+    <span class="p">]</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+        <span class="n">handles</span><span class="o">=</span><span class="n">handles</span><span class="p">,</span>
+        <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span>
+        <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_uses_zero_centered_colormap</span><span class="p">(</span><span class="n">color_by</span><span class="p">:</span> <span class="n">NodeColorRule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether node colors should be centered at zero.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">color_by</span> <span class="ow">in</span> <span class="p">{</span>
+        <span class="s2">&quot;state_amplitude_real&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;state_amplitude_imag&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_node_color_norm</span><span class="p">(</span>
+    <span class="n">values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">color_by</span><span class="p">:</span> <span class="n">NodeColorRule</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Matplotlib norm for node colors.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span><span class="p">,</span> <span class="n">TwoSlopeNorm</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">_uses_zero_centered_colormap</span><span class="p">(</span><span class="n">color_by</span><span class="p">):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">TwoSlopeNorm</span><span class="p">(</span>
+                <span class="n">vmin</span><span class="o">=-</span><span class="n">scale</span><span class="p">,</span>
+                <span class="n">vcenter</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">vmax</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">value</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">value</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">_uses_zero_centered_colormap</span><span class="p">(</span><span class="n">color_by</span><span class="p">):</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">values</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="k">return</span> <span class="n">TwoSlopeNorm</span><span class="p">(</span>
+            <span class="n">vmin</span><span class="o">=-</span><span class="n">scale</span><span class="p">,</span>
+            <span class="n">vcenter</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">vmax</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Normalize</span><span class="p">(</span>
+        <span class="n">vmin</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span>
+        <span class="n">vmax</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_orbit_labels_to_hex_colors</span><span class="p">(</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">lightness_boost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return visually separated hex colors for integer orbit labels.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">colorsys</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_hex</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">unique_labels</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
+    <span class="n">label_to_color</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">golden_ratio_conjugate</span> <span class="o">=</span> <span class="mf">0.618033988749895</span>
+
+    <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_labels</span><span class="p">):</span>
+        <span class="n">hue</span> <span class="o">=</span> <span class="p">(</span><span class="n">rank</span> <span class="o">*</span> <span class="n">golden_ratio_conjugate</span><span class="p">)</span> <span class="o">%</span> <span class="mf">1.0</span>
+
+        <span class="n">saturation</span> <span class="o">=</span> <span class="mf">0.70</span> <span class="k">if</span> <span class="n">rank</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.95</span>
+        <span class="n">lightness</span> <span class="o">=</span> <span class="mf">0.52</span> <span class="k">if</span> <span class="p">(</span><span class="n">rank</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.68</span>
+
+        <span class="n">lightness</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">lightness</span> <span class="o">+</span> <span class="n">lightness_boost</span><span class="p">)</span>
+
+        <span class="n">red</span><span class="p">,</span> <span class="n">green</span><span class="p">,</span> <span class="n">blue</span> <span class="o">=</span> <span class="n">colorsys</span><span class="o">.</span><span class="n">hls_to_rgb</span><span class="p">(</span>
+            <span class="n">hue</span><span class="p">,</span>
+            <span class="n">lightness</span><span class="p">,</span>
+            <span class="n">saturation</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">label_to_color</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_hex</span><span class="p">((</span><span class="n">red</span><span class="p">,</span> <span class="n">green</span><span class="p">,</span> <span class="n">blue</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">label_to_color</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="p">)]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_orbit_labels_to_rgba_colors</span><span class="p">(</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return visually separated RGBA colors for integer orbit labels.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_rgba</span>
+
+    <span class="n">hex_colors</span> <span class="o">=</span> <span class="n">_orbit_labels_to_hex_colors</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">to_rgba</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span> <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">hex_colors</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_igraph_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">LayoutName</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
