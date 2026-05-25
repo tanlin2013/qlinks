@@ -852,7 +852,6 @@ def _annotate_probe_mechanisms(
     targets are either trivial zeros or non-projector-dependent known IZs.
     """
     known_zero_indices = {int(report.zero_index) for report in zero_reports}
-    report_by_zero = {int(report.zero_index): report for report in zero_reports}
 
     # First split each source probe's raw targets.
     trivial_targets_by_zero: dict[int, set[int]] = {}
