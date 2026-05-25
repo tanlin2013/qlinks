@@ -314,10 +314,7 @@ class CageClassificationReport:
                 "",
                 "Projector-like diagnostics",
                 "--------------------------",
-                (
-                    "direct projector-like source probes: "
-                    f"{self.n_source_projector_like_probes}"
-                ),
+                ("direct projector-like source probes: " f"{self.n_source_projector_like_probes}"),
                 (
                     "indirect projector-like source probes: "
                     f"{self.n_indirect_projector_like_probes}"
@@ -469,10 +466,7 @@ class CageClassificationReport:
                 )
                 lines.extend(
                     [
-                        (
-                            "    source projector-like: "
-                            f"{zero_report.source_projector_like}"
-                        ),
+                        ("    source projector-like: " f"{zero_report.source_projector_like}"),
                         (
                             "    complement support inputs: "
                             f"{zero_report.complement_support_indices.tolist()}"
@@ -1127,9 +1121,7 @@ def _replace_interference_zero_report(
             report.nonzero_complement_action_target_indices
         ),
         "complement_support_indices": report.complement_support_indices,
-        "complement_contributing_input_indices": (
-            report.complement_contributing_input_indices
-        ),
+        "complement_contributing_input_indices": (report.complement_contributing_input_indices),
         "projector_like_annihilated_input_indices": (
             report.projector_like_annihilated_input_indices
         ),
@@ -1287,8 +1279,7 @@ def _complement_support_indices(
         complement_mask = np.ones(full_state.size, dtype=np.bool_)
     else:
         same_common_sector = np.all(
-            basis_configs[:, common_mask]
-            == reference_config[common_mask][None, :],
+            basis_configs[:, common_mask] == reference_config[common_mask][None, :],
             axis=1,
         )
         complement_mask = ~same_common_sector
@@ -1601,11 +1592,7 @@ def _zero_indices_with_source_projector_like(
     zero_reports: list[InterferenceZeroReport],
 ) -> NDArray[np.int64]:
     return np.array(
-        [
-            int(report.zero_index)
-            for report in zero_reports
-            if report.source_projector_like
-        ],
+        [int(report.zero_index) for report in zero_reports if report.source_projector_like],
         dtype=np.int64,
     )
 
@@ -1617,10 +1604,7 @@ def _zero_indices_with_indirect_projector_like(
         [
             int(report.zero_index)
             for report in zero_reports
-            if (
-                report.mechanism_label == "projector_like"
-                and not report.source_projector_like
-            )
+            if (report.mechanism_label == "projector_like" and not report.source_projector_like)
         ],
         dtype=np.int64,
     )
