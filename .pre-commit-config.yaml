@@ -42,6 +42,12 @@ repos:
     -   id: commitizen-branch
         stages: [pre-push]
 
+-   repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
+    hooks:
+      - id: nbstripout
+        files: \.ipynb$
+
 -   repo: local
     hooks:
     -   id: cruft-check
