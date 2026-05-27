@@ -7,6 +7,8 @@ from qlinks.caging.classification import (
     LocalTransitionPattern,
     classify_cage_state,
     classify_full_state,
+    sector_mask_from_build_result,
+    sector_mask_from_sectors,
 )
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
 from qlinks.caging.localization import (
@@ -122,4 +124,6 @@ __all__ = [
     "LocalTransitionPattern",
     "classify_cage_state",
     "classify_full_state",
+    "sector_mask_from_build_result",
+    "sector_mask_from_sectors",
 ]

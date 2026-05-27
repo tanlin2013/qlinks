@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, TypeAlias
+from typing import Any, Literal, TypeAlias
 
 import numpy as np
 import scipy.sparse as scipy_sparse
@@ -12,6 +12,8 @@ from rich.table import Table
 from rich.text import Text
 
 from qlinks.caging.results import CageState, cage_state_to_full_vector
+from qlinks.constraints import SectorCondition
+from qlinks.models import ModelBuildResult
 
 CageSpatialLabel: TypeAlias = Literal[
     "regional_candidate",
@@ -1729,3 +1731,38 @@ def _resolve_classification_domain_mask(
         return component_labels == component
 
     raise ValueError(f"Unknown sector_policy: {config.sector_policy!r}")
+
+
+def sector_mask_from_build_result(build_result: ModelBuildResult) -> NDArray[np.bool_]:
+    """Return the classification sector mask for a ModelBuildResult.
+
+    If the build result was already constructed in a sector, the returned
+    mask is usually all True. If the basis is larger than the sector filters,
+    this selects the states satisfying build_result.sectors.
+    """
+    basis = build_result.basis
+
+    if hasattr(basis, "to_array_basis"):
+        basis = basis.to_array_basis()
+
+    basis_configs = basis.states
+
+    return sector_mask_from_sectors(
+        basis_configs,
+        build_result.sectors,
+    )
+
+
+def sector_mask_from_sectors(
+    basis_configs: NDArray[Any], sectors: tuple[SectorCondition, ...]
+) -> NDArray[np.bool_]:
+    """Return mask selecting basis states satisfying all sector conditions."""
+    basis_configs = np.asarray(basis_configs)
+
+    if len(sectors) == 0:
+        return np.ones(basis_configs.shape[0], dtype=bool)
+
+    return np.array(
+        [all(sector.is_satisfied(config) for sector in sectors) for config in basis_configs],
+        dtype=bool,
+    )
