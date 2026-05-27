@@ -35,6 +35,11 @@ IZTargetExplanationLabel: TypeAlias = Literal[
     "projector_like_iz",
     "unexpected",
 ]
+SectorPolicy = Literal[
+    "raise_if_disconnected",
+    "infer_support_component",
+    "ignore",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +49,7 @@ class CageClassificationConfig:
     amplitude_tolerance: float = 1e-10
     cancellation_tolerance: float = 1e-9
     action_tolerance: float = 1e-9
+    sector_policy: SectorPolicy = "raise_if_disconnected"
 
 
 @dataclass(frozen=True, slots=True)
@@ -510,6 +516,7 @@ def classify_cage_state(
     kinetic_matrix: scipy_sparse.spmatrix | scipy_sparse.sparray | NDArray,
     basis_configs: NDArray[np.integer],
     hilbert_size: int | None = None,
+    sector_mask: NDArray[np.bool_] | None = None,
     config: CageClassificationConfig | None = None,
 ) -> CageClassificationReport:
     """
@@ -546,6 +553,7 @@ def classify_cage_state(
         full_state,
         kinetic_matrix=kinetic_matrix,
         basis_configs=basis_configs,
+        sector_mask=sector_mask,
         config=config,
         metadata={
             "energy": cage_state.energy,
@@ -562,6 +570,7 @@ def classify_full_state(
     *,
     kinetic_matrix: scipy_sparse.spmatrix | scipy_sparse.sparray | NDArray,
     basis_configs: NDArray[np.integer],
+    sector_mask: NDArray[np.bool_] | None = None,
     config: CageClassificationConfig | None = None,
     metadata: dict[str, object] | None = None,
 ) -> CageClassificationReport:
@@ -585,6 +594,13 @@ def classify_full_state(
     support_size = int(np.count_nonzero(support_mask))
     support_fraction = support_size / float(hilbert_size)
 
+    domain_mask = _resolve_classification_domain_mask(
+        kinetic_csr,
+        support_mask=support_mask,
+        sector_mask=sector_mask,
+        config=config,
+    )
+
     config_to_index = _build_config_to_index(basis_configs)
 
     zero_reports = _find_nontrivial_interference_zeros(
@@ -593,6 +609,7 @@ def classify_full_state(
         basis_configs=basis_configs,
         config_to_index=config_to_index,
         support_mask=support_mask,
+        domain_mask=domain_mask,
         config=config,
     )
 
@@ -600,6 +617,7 @@ def classify_full_state(
         full_state,
         kinetic_csr,
         support_mask=support_mask,
+        domain_mask=domain_mask,
     )
 
     zero_reports = _annotate_probe_mechanisms(
@@ -680,6 +698,17 @@ def classify_full_state(
             np.mean([report.complement_targets_are_known_zeros for report in zero_reports])
         )
 
+    metadata = {} if metadata is None else dict(metadata)
+    metadata.setdefault(
+        "classification_domain_size",
+        int(np.count_nonzero(domain_mask)),
+    )
+    metadata.setdefault(
+        "classification_domain_fraction",
+        float(np.count_nonzero(domain_mask)) / float(hilbert_size),
+    )
+    metadata.setdefault("sector_policy", config.sector_policy)
+
     return CageClassificationReport(
         label=label,
         support_size=support_size,
@@ -729,7 +758,7 @@ def classify_full_state(
         mean_complement_action_norm=_safe_mean(complement_norms),
         max_complement_action_norm=_safe_max(complement_norms),
         zero_reports=tuple(zero_reports),
-        metadata={} if metadata is None else dict(metadata),
+        metadata=metadata,
     )
 
 
@@ -738,6 +767,7 @@ def _find_trivial_zero_indices(
     kinetic_matrix: scipy_sparse.csr_array,
     *,
     support_mask: NDArray[np.bool_],
+    domain_mask: NDArray[np.bool_],
 ) -> set[int]:
     """Return zero-amplitude vertices with no active kinetic neighbors.
 
@@ -747,7 +777,7 @@ def _find_trivial_zero_indices(
     """
     trivial_zero_indices: set[int] = set()
 
-    for zero_index in range(full_state.size):
+    for zero_index in np.flatnonzero(domain_mask):
         if support_mask[zero_index]:
             continue
 
@@ -770,12 +800,16 @@ def _find_nontrivial_interference_zeros(
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     support_mask: NDArray[np.bool_],
+    domain_mask: NDArray[np.bool_],
     config: CageClassificationConfig,
 ) -> list[InterferenceZeroReport]:
     """Find zero vertices with nontrivial cancellation from active neighbors."""
     reports: list[InterferenceZeroReport] = []
 
     for zero_index in range(full_state.size):
+        if not domain_mask[zero_index]:
+            continue
+
         if support_mask[zero_index]:
             continue
 
@@ -785,7 +819,7 @@ def _find_nontrivial_interference_zeros(
         neighbors = kinetic_matrix.indices[row_start:row_end]
         matrix_elements = kinetic_matrix.data[row_start:row_end]
 
-        active_mask = support_mask[neighbors]
+        active_mask = support_mask[neighbors] & domain_mask[neighbors]
         if not np.any(active_mask):
             continue
 
@@ -811,6 +845,7 @@ def _find_nontrivial_interference_zeros(
             full_state=full_state,
             basis_configs=basis_configs,
             config_to_index=config_to_index,
+            domain_mask=domain_mask,
             config=config,
         )
         reports.append(report)
@@ -828,6 +863,7 @@ def _build_zero_report(
     full_state: NDArray[np.complex128],
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
+    domain_mask: NDArray[np.bool_],
     config: CageClassificationConfig,
 ) -> InterferenceZeroReport:
     """Build one interference-zero diagnostic report."""
@@ -861,6 +897,7 @@ def _build_zero_report(
         full_state,
         basis_configs=basis_configs,
         config_to_index=config_to_index,
+        domain_mask=domain_mask,
         common_mask=None,
         reference_config=None,
         local_mask=local_mask,
@@ -873,6 +910,7 @@ def _build_zero_report(
             full_state,
             basis_configs=basis_configs,
             config_to_index=config_to_index,
+            domain_mask=domain_mask,
             common_mask=common_mask,
             reference_config=basis_configs[zero_index],
             local_mask=local_mask,
@@ -886,6 +924,7 @@ def _build_zero_report(
         full_state,
         basis_configs=basis_configs,
         reference_config=basis_configs[zero_index],
+        domain_mask=domain_mask,
         common_mask=common_mask,
         amplitude_tolerance=config.amplitude_tolerance,
     )
@@ -1191,6 +1230,7 @@ def _complement_support_indices(
     basis_configs: NDArray[np.integer],
     reference_config: NDArray[np.integer],
     common_mask: NDArray[np.bool_],
+    domain_mask: NDArray[np.bool_],
     amplitude_tolerance: float,
 ) -> NDArray[np.int64]:
     """Return finite-amplitude basis indices outside the beta common sector."""
@@ -1205,7 +1245,7 @@ def _complement_support_indices(
 
     active_mask = np.abs(full_state) > amplitude_tolerance
 
-    return np.flatnonzero(complement_mask & active_mask).astype(
+    return np.flatnonzero(complement_mask & active_mask & domain_mask).astype(
         np.int64,
         copy=False,
     )
@@ -1263,6 +1303,7 @@ def _apply_reduced_local_operator(
     config_to_index: dict[tuple[int, ...], int],
     local_mask: NDArray[np.bool_],
     local_transitions: tuple[LocalTransitionPattern, ...] | list[LocalTransitionPattern],
+    domain_mask: NDArray[np.bool_],
     common_mask: NDArray[np.bool_] | None = None,
     reference_config: NDArray[np.integer] | None = None,
     use_complement_common_sector: bool = False,
@@ -1288,6 +1329,9 @@ def _apply_reduced_local_operator(
     contributing_input_indices: set[int] = set()
 
     for source_index, source_config in enumerate(basis_configs):
+        if not domain_mask[source_index]:
+            continue
+
         source_amplitude = full_state[source_index]
 
         if abs(source_amplitude) <= amplitude_tolerance:
@@ -1319,6 +1363,9 @@ def _apply_reduced_local_operator(
 
             target_index = config_to_index.get(_config_key(target_config))
             if target_index is None:
+                continue
+
+            if not domain_mask[target_index]:
                 continue
 
             contribution = transition.matrix_element * source_amplitude
@@ -1611,3 +1658,74 @@ def _union_projector_like_annihilated_inputs(
         return np.array([], dtype=np.int64)
 
     return np.unique(np.concatenate(arrays)).astype(np.int64, copy=False)
+
+
+def _resolve_classification_domain_mask(
+    kinetic_matrix: scipy_sparse.csr_array,
+    *,
+    support_mask: NDArray[np.bool_],
+    sector_mask: NDArray[np.bool_] | None,
+    config: CageClassificationConfig,
+) -> NDArray[np.bool_]:
+    """Return the basis-domain mask used by the classifier.
+
+    The classification domain is normally one topological sector or one
+    connected Fock-space component. Reduced IZ probes are only allowed to
+    see targets inside this domain.
+    """
+    n_basis = support_mask.size
+
+    if sector_mask is not None:
+        domain_mask = np.asarray(sector_mask, dtype=np.bool_)
+
+        if domain_mask.shape != (n_basis,):
+            raise ValueError("sector_mask must have shape (hilbert_size,).")
+
+        if np.any(support_mask & ~domain_mask):
+            raise ValueError(
+                "The cage support is not contained in the provided "
+                "sector_mask."
+            )
+
+        return domain_mask
+
+    if config.sector_policy == "ignore":
+        return np.ones(n_basis, dtype=np.bool_)
+
+    graph = kinetic_matrix.copy()
+    graph.data = np.ones_like(graph.data, dtype=np.int8)
+    graph = graph.maximum(graph.T)
+
+    n_components, component_labels = scipy_sparse.csgraph.connected_components(
+        graph,
+        directed=False,
+        return_labels=True,
+    )
+
+    if n_components == 1:
+        return np.ones(n_basis, dtype=np.bool_)
+
+    support_components = np.unique(component_labels[support_mask])
+
+    if support_components.size == 0:
+        raise ValueError("Cannot infer a sector/component from empty support.")
+
+    if support_components.size > 1:
+        raise ValueError(
+            "The cage support spans multiple disconnected Fock-space "
+            "components. Provide sector_mask explicitly."
+        )
+
+    if config.sector_policy == "raise_if_disconnected":
+        raise ValueError(
+            "The kinetic/Fock-space graph is disconnected, but no sector_mask "
+            "was provided. Either pass sector_mask for the intended "
+            "topological sector, build the model directly in one sector, or "
+            "set config.sector_policy='infer_support_component'."
+        )
+
+    if config.sector_policy == "infer_support_component":
+        component = int(support_components[0])
+        return component_labels == component
+
+    raise ValueError(f"Unknown sector_policy: {config.sector_policy!r}")

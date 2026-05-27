@@ -46,6 +46,7 @@ def _base_classification_config() -> CageClassificationConfig:
         amplitude_tolerance=1e-12,
         cancellation_tolerance=1e-12,
         action_tolerance=1e-12,
+        sector_policy="ignore",
     )
 
 
@@ -971,3 +972,55 @@ def test_probe_mechanism_marks_unexpected_target_invalid():
     assert _zero_indices(report.unexpected_target_probe_failure_indices) == {unexpected_target}
     assert _zero_indices(report.nonzero_complement_action_target_indices) == set()
     assert _zero_indices(report.unexpected_target_indices) == {unexpected_target}
+
+
+def test_classify_full_state_raises_without_sector_on_disconnected_graph():
+    basis_configs = _binary_basis(n_variables=3)
+    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+
+    state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
+    state[indices["v1"]] = 1.0 / np.sqrt(2.0)
+    state[indices["v2"]] = -1.0 / np.sqrt(2.0)
+
+    config = CageClassificationConfig(
+        amplitude_tolerance=1e-12,
+        cancellation_tolerance=1e-12,
+        action_tolerance=1e-12,
+        sector_policy="raise_if_disconnected",
+    )
+
+    with pytest.raises(ValueError, match="disconnected"):
+        classify_full_state(
+            state,
+            kinetic_matrix=kinetic,
+            basis_configs=basis_configs,
+            config=config,
+        )
+
+
+def test_classify_full_state_ignores_complement_targets_outside_sector_mask():
+    basis_configs = _binary_basis(n_variables=3)
+    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+
+    state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
+    state[indices["v1"]] = 1.0 / np.sqrt(2.0)
+    state[indices["v2"]] = -1.0 / np.sqrt(2.0)
+
+    sector_mask = np.zeros(basis_configs.shape[0], dtype=np.bool_)
+    sector_mask[[indices["h"], indices["v1"], indices["v2"]]] = True
+
+    report = classify_full_state(
+        state,
+        kinetic_matrix=kinetic,
+        basis_configs=basis_configs,
+        sector_mask=sector_mask,
+        config=CageClassificationConfig(
+            amplitude_tolerance=1e-12,
+            cancellation_tolerance=1e-12,
+            action_tolerance=1e-12,
+            sector_policy="raise_if_disconnected",
+        ),
+    )
+
+    assert report.metadata["classification_domain_size"] == 3
+    assert report.label == "regional_candidate"
