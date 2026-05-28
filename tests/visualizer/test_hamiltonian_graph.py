@@ -1,4 +1,6 @@
 import importlib.util
+import subprocess
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,6 +22,24 @@ from qlinks.visualizer.hamiltonian_graph import (
 )
 
 igraph_available = importlib.util.find_spec("igraph") is not None
+
+
+def pynauty_is_safe() -> bool:
+    code = """
+import pynauty
+g = pynauty.Graph(3)
+g.connect_vertex(0, [1])
+g.connect_vertex(1, [0, 2])
+g.connect_vertex(2, [1])
+pynauty.autgrp(g)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return result.returncode == 0
 
 
 def _small_hamiltonian():
@@ -530,6 +550,10 @@ def test_igraph_automorphism_orbits_path_graph() -> None:
     assert labels[1] != labels[0]
 
 
+@pytest.mark.skipif(
+    not pynauty_is_safe(),
+    reason="pynauty is not safe on this platform",
+)
 def test_pynauty_automorphism_orbits_path_graph() -> None:
     pytest.importorskip("pynauty")
 
