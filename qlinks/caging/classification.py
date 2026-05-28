@@ -1730,19 +1730,43 @@ def _resolve_classification_domain_mask(
     raise ValueError(f"Unknown sector_policy: {config.sector_policy!r}")
 
 
+def basis_configs_from_basis(basis: Any) -> NDArray[np.integer]:
+    """Return explicit basis configurations for ArrayBasis or BinaryEncodedBasis.
+
+    The classifier needs one row per basis state. Sparse/array builders usually
+    expose this as ``basis.states``. Bitmask builders may use BinaryEncodedBasis,
+    which stores compact integer codes and exposes ``to_array_basis()``.
+    """
+    if hasattr(basis, "states"):
+        return np.asarray(basis.states)
+
+    if hasattr(basis, "to_array_basis"):
+        array_basis = basis.to_array_basis()
+        if hasattr(array_basis, "states"):
+            return np.asarray(array_basis.states)
+
+    raise TypeError(
+        "Unsupported basis type for classification: "
+        f"{type(basis)!r}. Expected an object with `.states` or "
+        "`.to_array_basis().states`."
+    )
+
+
+def basis_configs_from_build_result(
+    build_result: ModelBuildResult,
+) -> NDArray[np.integer]:
+    """Return explicit basis configurations from a ModelBuildResult."""
+    return basis_configs_from_basis(build_result.basis)
+
+
 def sector_mask_from_build_result(build_result: ModelBuildResult) -> NDArray[np.bool_]:
     """Return the classification sector mask for a ModelBuildResult.
 
-    If the build result was already constructed in a sector, the returned
-    mask is usually all True. If the basis is larger than the sector filters,
-    this selects the states satisfying build_result.sectors.
+    If the build result was already constructed in a sector, the returned mask
+    is usually all True. If the basis is larger than the sector filters, this
+    selects the states satisfying build_result.sectors.
     """
-    basis = build_result.basis
-
-    if hasattr(basis, "to_array_basis"):
-        basis = basis.to_array_basis()
-
-    basis_configs = basis.states
+    basis_configs = basis_configs_from_build_result(build_result)
 
     return sector_mask_from_sectors(
         basis_configs,
