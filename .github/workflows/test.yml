@@ -72,6 +72,8 @@ jobs:
             ${{ runner.os }}-py${{ matrix.python-version }}-poetry${{ needs.versions.outputs.poetry-version }}-
 
       - name: Install dependencies
+        env:
+          POETRY_INSTALLER_NO_BINARY: pynauty
         run: |
           poetry install -vvv --with dev --sync
 
