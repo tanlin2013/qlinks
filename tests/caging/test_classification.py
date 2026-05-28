@@ -11,6 +11,7 @@ from qlinks.caging.classification import (
     InterferenceZeroReport,
     _annotate_probe_mechanisms,
     _classify_from_zero_reports,
+    basis_configs_from_basis,
     classify_cage_state,
     classify_full_state,
 )
@@ -1024,3 +1025,56 @@ def test_classify_full_state_ignores_complement_targets_outside_sector_mask():
 
     assert report.metadata["classification_domain_size"] == 3
     assert report.label == "regional_candidate"
+
+
+def test_basis_configs_from_basis_uses_states_attribute():
+    class DummyArrayBasis:
+        states = np.array([[0, 1], [1, 0]], dtype=np.int8)
+
+    configs = basis_configs_from_basis(DummyArrayBasis())
+
+    np.testing.assert_array_equal(
+        configs,
+        np.array([[0, 1], [1, 0]], dtype=np.int8),
+    )
+
+
+def test_basis_configs_from_basis_uses_to_array_basis():
+    class DummyArrayBasis:
+        states = np.array([[0, 1], [1, 0]], dtype=np.int8)
+
+    class DummyEncodedBasis:
+        def to_array_basis(self):
+            return DummyArrayBasis()
+
+    configs = basis_configs_from_basis(DummyEncodedBasis())
+
+    np.testing.assert_array_equal(
+        configs,
+        np.array([[0, 1], [1, 0]], dtype=np.int8),
+    )
+
+
+def test_mixed_projected_and_locally_cancelled_inputs_are_projector_like():
+    report = _minimal_zero_report(
+        zero_index=14,
+        q_sector_weight=2.0 / 3.0,
+        complement_targets=(66,),
+        complement_action_norm=0.0,
+        complement_support=(24, 56, 60, 72),
+        complement_contributing_inputs=(60, 72),
+        projector_like_annihilated_inputs=(24, 56),
+        source_projector_like=True,
+    )
+
+    annotated = _annotate_probe_mechanisms(
+        [report],
+        trivial_zero_indices={66},
+        config=_base_classification_config(),
+    )
+
+    assert annotated[0].probe_mechanism_label == "projector_like"
+    assert annotated[0].is_projector_like
+    assert annotated[0].source_projector_like
+    assert not annotated[0].has_unexpected_targets
+    assert not annotated[0].has_nonzero_complement_action

@@ -947,10 +947,12 @@ def _build_zero_report(
     )
 
     has_nonzero_complement_action = nonzero_complement_action_target_indices.size > 0
+    complement_action_norm = float(np.linalg.norm(complement_action))
+    complement_action_is_zero = complement_action_norm <= config.action_tolerance
 
     source_projector_like = (
         q_sector_weight > config.action_tolerance
-        and complement_target_indices.size == 0
+        and complement_action_is_zero
         and projector_like_annihilated_input_indices.size > 0
     )
 
@@ -964,7 +966,7 @@ def _build_zero_report(
         local_mask=local_mask,
         q_sector_weight=q_sector_weight,
         reduced_action_norm=float(np.linalg.norm(reduced_action)),
-        complement_action_norm=float(np.linalg.norm(complement_action)),
+        complement_action_norm=complement_action_norm,
         complement_target_indices=complement_target_indices,
         explained_complement_target_indices=np.array([], dtype=np.int64),
         unexplained_complement_target_indices=complement_target_indices,
