@@ -117,8 +117,8 @@ searcher = CageSearcher.from_model_build_result(
     config=config,
 )
 
-result = searcher.run()
-print(result.counts_by_signature)
+search_result = searcher.run()
+print(search_result.counts_by_signature)
 ```
 > {(0, 4): 12, (0, 6): 9}
 
@@ -129,17 +129,8 @@ A cage result is expected to contain the participating basis-state indices, the 
 ```python
 from qlinks.visualizer import BasisGridVisualizer
 
-# lazy indexing by signature, cage index
-record = result[(0, 4), 0]
-full_state = record.full_state
-
-# custom labels if necessary
-labels = [
-    f"idx={int(basis_index)}\n"
-    f"amp={full_state[int(basis_index)].real:+.3g}"
-    f"{full_state[int(basis_index)].imag:+.3g}j"
-    for basis_index in nonzero_indices
-]
+signature = (0, 4)
+record_index = 0
 
 grid_visualizer = BasisGridVisualizer(
     lattice=model.lattice,
@@ -147,9 +138,11 @@ grid_visualizer = BasisGridVisualizer(
     periodic_image_mode="positive_patch",
 )
 
-grid_visualizer.plot(
-    basis.states[record.support],
-    labels=labels,
+grid_visualizer.plot_cage_support(
+    search_result,
+    basis_configs=basis.states,
+    signature=signature,
+    record_index=record_index,
     ncols=4,
     mode="dimers",
     plaquette_symbols="resonance",
@@ -164,6 +157,9 @@ grid_visualizer.plot(
 ```python
 from qlinks.visualizer import HamiltonianGraphVisualizer, HamiltonianGraphStyle
 
+# Lazy indexing by [signature, record_index]
+record = search_result[signature, record_index]
+
 graph_visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(
     K,
     include_self_loops=False,
@@ -176,7 +172,7 @@ graph_visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(
 graph_visualizer.plot(
     backend="igraph-cairo",
     color_by="state_amplitude_real",
-    state_vector=full_state,
+    state_vector=record.full_state,
     layout="kk",
 )
 ```
@@ -220,6 +216,28 @@ pre-commit run --all-files
 The documentation is hosted on GitHub Pages:
 
 <https://tanlin2013.github.io/qlinks/>
+
+---
+
+## References
+
+1. T.-L. Tan and Y.-P. Huang, Interference-caged quantum
+many-body scars: the fock space topological localization
+and interference zeros, arXiv preprint arXiv:2504.07780
+(2025). <https://arxiv.org/abs/2504.07780>
+
+2. T. Ben-Ami, M. Heyl, and R. Moessner, Many-body
+cages: disorder-free glassiness from flat bands in fock
+space, and many-body rabi oscillations, arXiv preprint
+arXiv:2504.13086 (2025).
+
+3. E. Nicolau, M. Ljubotina, and M. Serbyn, Fragmentation, zero modes, and collective bound states in
+constrained models, arXiv preprint arXiv:2504.17627
+(2025).
+
+4. C. Jonay and F. Pollmann, Localized fock space
+cages in kinetically constrained models, arXiv preprint
+arXiv:2504.20987 (2025).
 
 ---
 
