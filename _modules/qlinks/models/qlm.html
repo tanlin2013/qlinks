@@ -343,6 +343,7 @@
     <span class="n">HamiltonianTermSpec</span><span class="p">,</span>
     <span class="n">validate_builder_name</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.couplings</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlaquetteCoupling</span><span class="p">,</span> <span class="n">plaquette_coupling_value</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.operators</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">PatternDiagonalOperator</span><span class="p">,</span>
     <span class="n">PlaquettePatternOperator</span><span class="p">,</span>
@@ -379,10 +380,24 @@
 <span class="sd">            +1 -&gt; 1</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">kinetic</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
-    <span class="n">potential</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">coup_kin</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="n">coup_pot</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">charges</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">charge_normalization</span><span class="p">:</span> <span class="n">ChargeNormalization</span> <span class="o">=</span> <span class="s2">&quot;spin_half&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_coup_kin_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">plaquette_coupling_value</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coup_kin</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;coup_kin&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_coup_pot_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">plaquette_coupling_value</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coup_pot</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;coup_pot&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_make_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VariableLayout</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">VariableLayout</span><span class="o">.</span><span class="n">from_lattice_links</span><span class="p">(</span>
@@ -553,14 +568,14 @@
                 <span class="n">PlaquettePatternOperator</span><span class="p">(</span>
                     <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                     <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">),</span>
                     <span class="n">transitions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux_transitions_from_pattern</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)),</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">kinetic</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span>
                     <span class="p">),</span>
                     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qlm_plaquette_ring_exchange&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
@@ -569,7 +584,7 @@
                     <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                     <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
                     <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">),</span>
-                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kinetic</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span>
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
             <span class="p">)</span>
@@ -587,9 +602,6 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
         <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">potential</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">()</span>
-
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;Generic optimized QLM potential is not implemented yet. &quot;</span>
@@ -605,14 +617,20 @@
         <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">link_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_links</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">link_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_links</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
                 <span class="n">variable_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
                     <span class="p">[</span><span class="n">layout</span><span class="o">.</span><span class="n">link_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">))</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">],</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">orientation_pattern</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
                 <span class="p">)</span>
 
@@ -621,7 +639,7 @@
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
                         <span class="n">pattern</span><span class="o">=</span><span class="n">orientation_pattern</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">potential</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
                         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qlm_flippability_pos&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
@@ -630,7 +648,7 @@
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
                         <span class="n">pattern</span><span class="o">=-</span><span class="n">orientation_pattern</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">potential</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
                         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qlm_flippability_neg&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
@@ -638,15 +656,22 @@
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
                 <span class="n">operators</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
                     <span class="n">bitmask_qlm_flippability_projectors</span><span class="p">(</span>
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">potential</span><span class="p">,</span>
+                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
+
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
 
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
@@ -817,14 +842,14 @@
                 <span class="n">PlaquettePatternOperator</span><span class="p">(</span>
                     <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                     <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">),</span>
                     <span class="n">transitions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux_transitions_from_pattern</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)),</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">kinetic</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span>
                     <span class="p">),</span>
                     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qlm_plaquette_ring_exchange&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
@@ -832,14 +857,14 @@
                 <span class="n">UpdatePlaquettePatternOperator</span><span class="p">(</span>
                     <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                     <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">),</span>
                     <span class="n">transitions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_flux_transitions_from_pattern</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)),</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">kinetic</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span>
                     <span class="p">),</span>
                     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;update_qlm_plaquette_ring_exchange&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
@@ -847,10 +872,10 @@
                 <span class="n">BitmaskQLMFluxFlipOperator</span><span class="p">(</span>
                     <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                     <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
-                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kinetic</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">),</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span>
                 <span class="p">)</span>
-                <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()</span>
             <span class="p">)</span>
 
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
@@ -866,9 +891,6 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
         <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">potential</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">()</span>
-
         <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
                 <span class="n">layout</span> <span class="o">=</span> <span class="n">binary_layout_like_flux_layout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">)</span>
@@ -878,14 +900,20 @@
         <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">link_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_links</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">link_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_links</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
                 <span class="n">variable_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
                     <span class="p">[</span><span class="n">layout</span><span class="o">.</span><span class="n">link_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">))</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">],</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">orientation_pattern</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_orientations</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
                 <span class="p">)</span>
 
@@ -894,7 +922,7 @@
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
                         <span class="n">pattern</span><span class="o">=</span><span class="n">orientation_pattern</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">potential</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
                         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qlm_flippability_pos&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
@@ -903,7 +931,7 @@
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
                         <span class="n">pattern</span><span class="o">=-</span><span class="n">orientation_pattern</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">potential</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
                         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qlm_flippability_neg&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
@@ -912,12 +940,18 @@
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
                 <span class="n">operators</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
                     <span class="n">bitmask_qlm_flippability_projectors</span><span class="p">(</span>
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">),</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">potential</span><span class="p">,</span>
+                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
 
@@ -932,17 +966,17 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SquareQLMModel.from_qdm_staggered_background">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qlm.SquareQLMModel.from_qdm_staggered_background">[docs]</a>
+<div class="viewcode-block" id="SquareQLMModel.from_staggered_background">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qlm.SquareQLMModel.from_staggered_background">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_qdm_staggered_background</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_staggered_background</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">lx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">ly</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">BoundaryCondition</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">OPEN</span><span class="p">,</span>
-        <span class="n">kinetic</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">potential</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">coup_kin</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">coup_pot</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">charge_magnitude</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">charge_convention</span><span class="p">:</span> <span class="n">SublatticeSignConvention</span> <span class="o">=</span> <span class="s2">&quot;even_positive&quot;</span><span class="p">,</span>
         <span class="n">charge_normalization</span><span class="p">:</span> <span class="n">ChargeNormalization</span> <span class="o">=</span> <span class="s2">&quot;spin_half&quot;</span><span class="p">,</span>
@@ -966,8 +1000,8 @@
             <span class="n">lx</span><span class="o">=</span><span class="n">lx</span><span class="p">,</span>
             <span class="n">ly</span><span class="o">=</span><span class="n">ly</span><span class="p">,</span>
             <span class="n">boundary_condition</span><span class="o">=</span><span class="n">boundary_condition</span><span class="p">,</span>
-            <span class="n">kinetic</span><span class="o">=</span><span class="n">kinetic</span><span class="p">,</span>
-            <span class="n">potential</span><span class="o">=</span><span class="n">potential</span><span class="p">,</span>
+            <span class="n">coup_kin</span><span class="o">=</span><span class="n">coup_kin</span><span class="p">,</span>
+            <span class="n">coup_pot</span><span class="o">=</span><span class="n">coup_pot</span><span class="p">,</span>
             <span class="n">charges</span><span class="o">=</span><span class="n">charges</span><span class="p">,</span>
             <span class="n">charge_normalization</span><span class="o">=</span><span class="n">charge_normalization</span><span class="p">,</span>
             <span class="n">winding_x</span><span class="o">=</span><span class="n">winding_x</span><span class="p">,</span>
@@ -1156,8 +1190,8 @@
         <span class="n">ly</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">BoundaryCondition</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">OPEN</span><span class="p">,</span>
-        <span class="n">kinetic</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">potential</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">coup_kin</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">coup_pot</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">charge_magnitude</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">charge_convention</span><span class="p">:</span> <span class="n">SublatticeSignConvention</span> <span class="o">=</span> <span class="s2">&quot;even_positive&quot;</span><span class="p">,</span>
         <span class="n">winding_x</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1180,8 +1214,8 @@
             <span class="n">lx</span><span class="o">=</span><span class="n">lx</span><span class="p">,</span>
             <span class="n">ly</span><span class="o">=</span><span class="n">ly</span><span class="p">,</span>
             <span class="n">boundary_condition</span><span class="o">=</span><span class="n">boundary_condition</span><span class="p">,</span>
-            <span class="n">kinetic</span><span class="o">=</span><span class="n">kinetic</span><span class="p">,</span>
-            <span class="n">potential</span><span class="o">=</span><span class="n">potential</span><span class="p">,</span>
+            <span class="n">coup_kin</span><span class="o">=</span><span class="n">coup_kin</span><span class="p">,</span>
+            <span class="n">coup_pot</span><span class="o">=</span><span class="n">coup_pot</span><span class="p">,</span>
             <span class="n">charges</span><span class="o">=</span><span class="n">charges</span><span class="p">,</span>
             <span class="n">charge_normalization</span><span class="o">=</span><span class="s2">&quot;integer_flux&quot;</span><span class="p">,</span>
             <span class="n">winding_x</span><span class="o">=</span><span class="n">winding_x</span><span class="p">,</span>
@@ -1298,16 +1332,16 @@
         <span class="n">ly</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">BoundaryCondition</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">OPEN</span><span class="p">,</span>
-        <span class="n">kinetic</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">potential</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">coup_kin</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">coup_pot</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">charges</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularQLMModel</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TriangularQLMModel</span><span class="p">(</span>
             <span class="n">lx</span><span class="o">=</span><span class="n">lx</span><span class="p">,</span>
             <span class="n">ly</span><span class="o">=</span><span class="n">ly</span><span class="p">,</span>
             <span class="n">boundary_condition</span><span class="o">=</span><span class="n">boundary_condition</span><span class="p">,</span>
-            <span class="n">kinetic</span><span class="o">=</span><span class="n">kinetic</span><span class="p">,</span>
-            <span class="n">potential</span><span class="o">=</span><span class="n">potential</span><span class="p">,</span>
+            <span class="n">coup_kin</span><span class="o">=</span><span class="n">coup_kin</span><span class="p">,</span>
+            <span class="n">coup_pot</span><span class="o">=</span><span class="n">coup_pot</span><span class="p">,</span>
             <span class="n">charges</span><span class="o">=</span><span class="n">charges</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -1321,16 +1355,16 @@
         <span class="n">ly</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">BoundaryCondition</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">OPEN</span><span class="p">,</span>
-        <span class="n">kinetic</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">potential</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">coup_kin</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">coup_pot</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">charges</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HoneycombQLMModel</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">HoneycombQLMModel</span><span class="p">(</span>
             <span class="n">lx</span><span class="o">=</span><span class="n">lx</span><span class="p">,</span>
             <span class="n">ly</span><span class="o">=</span><span class="n">ly</span><span class="p">,</span>
             <span class="n">boundary_condition</span><span class="o">=</span><span class="n">boundary_condition</span><span class="p">,</span>
-            <span class="n">kinetic</span><span class="o">=</span><span class="n">kinetic</span><span class="p">,</span>
-            <span class="n">potential</span><span class="o">=</span><span class="n">potential</span><span class="p">,</span>
+            <span class="n">coup_kin</span><span class="o">=</span><span class="n">coup_kin</span><span class="p">,</span>
+            <span class="n">coup_pot</span><span class="o">=</span><span class="n">coup_pot</span><span class="p">,</span>
             <span class="n">charges</span><span class="o">=</span><span class="n">charges</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>

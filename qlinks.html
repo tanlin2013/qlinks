@@ -1925,8 +1925,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html#module-qlinks.models.qdm">qlinks.models.qdm module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.models.html#qlinks.models.qdm.QDMBase"><code class="docutils literal notranslate"><span class="pre">QDMBase</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qdm.QDMBase.kinetic"><code class="docutils literal notranslate"><span class="pre">QDMBase.kinetic</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qdm.QDMBase.potential"><code class="docutils literal notranslate"><span class="pre">QDMBase.potential</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qdm.QDMBase.coup_kin"><code class="docutils literal notranslate"><span class="pre">QDMBase.coup_kin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qdm.QDMBase.coup_pot"><code class="docutils literal notranslate"><span class="pre">QDMBase.coup_pot</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qdm.QDMBase.required_count"><code class="docutils literal notranslate"><span class="pre">QDMBase.required_count</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qdm.QDMBase.make_constraints"><code class="docutils literal notranslate"><span class="pre">QDMBase.make_constraints()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qdm.QDMBase.make_sectors"><code class="docutils literal notranslate"><span class="pre">QDMBase.make_sectors()</span></code></a></li>
@@ -1988,8 +1988,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html#module-qlinks.models.qlm">qlinks.models.qlm module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.QLMBase"><code class="docutils literal notranslate"><span class="pre">QLMBase</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.QLMBase.kinetic"><code class="docutils literal notranslate"><span class="pre">QLMBase.kinetic</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.QLMBase.potential"><code class="docutils literal notranslate"><span class="pre">QLMBase.potential</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.QLMBase.coup_kin"><code class="docutils literal notranslate"><span class="pre">QLMBase.coup_kin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.QLMBase.coup_pot"><code class="docutils literal notranslate"><span class="pre">QLMBase.coup_pot</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.QLMBase.charges"><code class="docutils literal notranslate"><span class="pre">QLMBase.charges</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.QLMBase.charge_normalization"><code class="docutils literal notranslate"><span class="pre">QLMBase.charge_normalization</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.QLMBase.make_constraints"><code class="docutils literal notranslate"><span class="pre">QLMBase.make_constraints()</span></code></a></li>
@@ -2014,7 +2014,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.SquareQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_sectors()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.SquareQLMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.SquareQLMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_potential_operators()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.SquareQLMModel.from_qdm_staggered_background"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.from_qdm_staggered_background()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.SquareQLMModel.from_staggered_background"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.from_staggered_background()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.qlm.SquareQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -2137,8 +2137,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.models.html#qlinks.models.QDMBase"><code class="docutils literal notranslate"><span class="pre">QDMBase</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QDMBase.kinetic"><code class="docutils literal notranslate"><span class="pre">QDMBase.kinetic</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QDMBase.potential"><code class="docutils literal notranslate"><span class="pre">QDMBase.potential</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QDMBase.coup_kin"><code class="docutils literal notranslate"><span class="pre">QDMBase.coup_kin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QDMBase.coup_pot"><code class="docutils literal notranslate"><span class="pre">QDMBase.coup_pot</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QDMBase.required_count"><code class="docutils literal notranslate"><span class="pre">QDMBase.required_count</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QDMBase.make_constraints"><code class="docutils literal notranslate"><span class="pre">QDMBase.make_constraints()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QDMBase.make_sectors"><code class="docutils literal notranslate"><span class="pre">QDMBase.make_sectors()</span></code></a></li>
@@ -2183,7 +2183,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.SquareQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_sectors()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.SquareQLMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.SquareQLMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_potential_operators()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.SquareQLMModel.from_qdm_staggered_background"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.from_qdm_staggered_background()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.SquareQLMModel.from_staggered_background"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.from_staggered_background()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.SquareQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -2212,8 +2212,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.models.html#qlinks.models.QLMBase"><code class="docutils literal notranslate"><span class="pre">QLMBase</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QLMBase.kinetic"><code class="docutils literal notranslate"><span class="pre">QLMBase.kinetic</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QLMBase.potential"><code class="docutils literal notranslate"><span class="pre">QLMBase.potential</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QLMBase.coup_kin"><code class="docutils literal notranslate"><span class="pre">QLMBase.coup_kin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QLMBase.coup_pot"><code class="docutils literal notranslate"><span class="pre">QLMBase.coup_pot</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QLMBase.charges"><code class="docutils literal notranslate"><span class="pre">QLMBase.charges</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QLMBase.charge_normalization"><code class="docutils literal notranslate"><span class="pre">QLMBase.charge_normalization</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#qlinks.models.QLMBase.make_constraints"><code class="docutils literal notranslate"><span class="pre">QLMBase.make_constraints()</span></code></a></li>
@@ -3214,6 +3214,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle.site_label_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.site_label_fontsize</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle.link_label_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.link_label_fontsize</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle.plaquette_symbol_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.plaquette_symbol_fontsize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle.vulnerable_link_arrow_length_fraction"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.vulnerable_link_arrow_length_fraction</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle.plaquette_symbol_offset"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.plaquette_symbol_offset</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle.__init__"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.__init__()</span></code></a></li>
 </ul>
@@ -3347,6 +3348,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle.site_label_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.site_label_fontsize</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle.link_label_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.link_label_fontsize</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle.plaquette_symbol_fontsize"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.plaquette_symbol_fontsize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle.vulnerable_link_arrow_length_fraction"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.vulnerable_link_arrow_length_fraction</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle.plaquette_symbol_offset"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.plaquette_symbol_offset</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle.__init__"><code class="docutils literal notranslate"><span class="pre">LinkVisualStyle.__init__()</span></code></a></li>
 </ul>
