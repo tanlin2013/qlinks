@@ -14,8 +14,6 @@
 
 `qlinks` is a Python package for building constrained lattice Hamiltonians and studying their Fock-space structure. It is mainly designed for exact diagonalization workflows in quantum link models, quantum dimer models, constrained spin models, and related lattice systems.
 
-The current `main` branch contains the lattice-abstraction refactor formerly developed on the `abstract_lattice` branch.
-
 
 ![Fancy Hamiltonian graph placeholder](docs/assets/qdm_graph_4x4_thermal_ticqmbs_sicqmbs.png)
 
@@ -30,6 +28,9 @@ The current `main` branch contains the lattice-abstraction refactor formerly dev
 - Fock-space graph visualization
 - Interference-cage search utilities
 - HDF5-oriented workflows for large sweeps
+
+> [!NOTE]
+The current `main` branch contains the lattice-abstraction refactor formerly developed on the `abstract_lattice` branch.
 
 ---
 
@@ -64,6 +65,7 @@ The typical workflow is:
 3. search for interference cages,
 4. visualize the cage in real space and in the Hamiltonian graph.
 
+> [!WARNING]
 The exact public API is still evolving, so treat this section as the intended high-level workflow.
 
 ### 1. Build a model and Hamiltonian
@@ -217,7 +219,8 @@ The documentation is hosted on GitHub Pages:
 
 <https://tanlin2013.github.io/qlinks/>
 
-(<span style="color:red">Outdated and unmaintained</span>)
+> [!WARNING]
+> This documentation is currently outdated and unmaintained.
 
 ---
 
@@ -245,4 +248,4 @@ arXiv:2504.20987 (2025).
 
 ## License
 
-© Tan Tao-Lin, 2023. Licensed under the [MIT License](https://github.com/tanlin2013/qlinks/blob/main/LICENSE).
+© Tan Tao-Lin, 2023-2026. Licensed under the [MIT License](https://github.com/tanlin2013/qlinks/blob/main/LICENSE).
