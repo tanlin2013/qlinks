@@ -148,7 +148,12 @@ class TriangularLattice(LatticeGraph):
 
         plaquettes: list[Plaquette] = []
 
-        def add_loop(kind: str, coords: list[tuple[int, int]]) -> None:
+        def add_loop(
+            kind: str,
+            coords: list[tuple[int, int]],
+            *,
+            anchor_cell: tuple[int, int],
+        ) -> None:
             site_ids: list[int] = []
 
             for x, y in coords:
@@ -182,6 +187,7 @@ class TriangularLattice(LatticeGraph):
                     orientations=tuple(orientations),
                     sites=tuple(site_ids),
                     kind=kind,
+                    anchor_cell=anchor_cell,
                 )
             )
 
@@ -200,6 +206,7 @@ class TriangularLattice(LatticeGraph):
                             (x + 1, y),
                             (x, y + 1),
                         ],
+                        anchor_cell=(x, y),
                     )
 
                     # Down triangle:
@@ -211,6 +218,7 @@ class TriangularLattice(LatticeGraph):
                             (x + 1, y - 1),
                             (x + 1, y),
                         ],
+                        anchor_cell=(x, y),
                     )
 
         if include_rhombi:
@@ -236,6 +244,7 @@ class TriangularLattice(LatticeGraph):
                                 (x2, y2),
                                 (x3, y3),
                             ],
+                            anchor_cell=(x0, y0),
                         )
 
         translations: dict[tuple[int, tuple[int, int]], int] = {}
@@ -283,3 +292,24 @@ class TriangularLattice(LatticeGraph):
             ]
 
         return self.qdm_plaquette_ids()
+
+    def triangular_plaquette_id(
+        self,
+        x: int,
+        y: int,
+        *,
+        kind: str,
+    ) -> int:
+        return self.plaquette_id_from_anchor((x, y), kind=kind)
+
+    def rhombus_plaquette_id(
+        self,
+        x: int,
+        y: int,
+        *,
+        kind: str,
+    ) -> int:
+        if kind not in {"rhombus_ab", "rhombus_bc", "rhombus_ca"}:
+            raise ValueError(f"Invalid triangular rhombus kind: {kind!r}")
+
+        return self.plaquette_id_from_anchor((x, y), kind=kind)

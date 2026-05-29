@@ -221,6 +221,7 @@ class HoneycombLattice(LatticeGraph):
                     orientations=tuple(orientations),
                     sites=tuple(site_ids),
                     kind="hexagon",
+                    anchor_cell=(x, y),
                 )
             )
 
@@ -274,3 +275,6 @@ class HoneycombLattice(LatticeGraph):
 
     def qlm_plaquette_ids(self):
         return self.qdm_plaquette_ids()
+
+    def hexagon_plaquette_id(self, x: int, y: int) -> int:
+        return self.plaquette_id_from_anchor((x, y), kind="hexagon")

@@ -125,6 +125,10 @@ class Plaquette:
     sites:
         Site ids around the loop. This is metadata useful for debugging,
         plotting, and later local operator construction.
+
+    kind: Geometry-dependent plaquette type.
+
+    anchor_cell: Unit-cell coordinate used to label this plaquette.
     """
 
     id: PlaquetteId
@@ -132,6 +136,7 @@ class Plaquette:
     orientations: tuple[int, ...]
     sites: tuple[SiteId, ...]
     kind: str = ""
+    anchor_cell: CellCoord = ()
 
     def __post_init__(self) -> None:
         if self.id < 0:
@@ -149,6 +154,12 @@ class Plaquette:
         bad = [ori for ori in self.orientations if ori not in (-1, 1)]
         if bad:
             raise ValueError("Plaquette.orientations must only contain +1 or -1.")
+
+        object.__setattr__(
+            self,
+            "anchor_cell",
+            tuple(int(c) for c in self.anchor_cell),
+        )
 
     @property
     def boundary(self) -> tuple[OrientedLink, ...]:

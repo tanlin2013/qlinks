@@ -251,6 +251,49 @@ class LatticeGraph:
             dtype=np.int8,
         ).tocsr()
 
+    def plaquette_anchor_cell(self, plaquette_id: int) -> tuple[int, ...]:
+        self._validate_plaquette_id(plaquette_id)
+
+        anchor_cell = self.plaquettes[int(plaquette_id)].anchor_cell
+        if not anchor_cell:
+            raise ValueError(f"Plaquette {plaquette_id} does not define anchor_cell.")
+
+        return tuple(int(c) for c in anchor_cell)
+
+    def plaquette_id_from_anchor(
+        self,
+        cell: tuple[int, ...],
+        *,
+        kind: str | None = None,
+    ) -> int:
+        canonical_cell = self.canonical_cell(cell)
+
+        matches = [
+            plaquette.id
+            for plaquette in self.plaquettes
+            if plaquette.anchor_cell == canonical_cell and (kind is None or plaquette.kind == kind)
+        ]
+
+        if len(matches) == 1:
+            return int(matches[0])
+
+        if not matches:
+            kind_msg = "" if kind is None else f" with kind={kind!r}"
+            raise KeyError(f"No plaquette anchored at cell={canonical_cell}{kind_msg}.")
+
+        kinds = [self.plaquettes[int(pid)].kind for pid in matches]
+        raise ValueError(
+            "Multiple plaquettes match "
+            f"cell={canonical_cell}; specify kind. "
+            f"Matching kinds: {kinds}"
+        )
+
+    def canonical_cell(self, cell: tuple[int, ...]) -> tuple[int, ...]:
+        if len(cell) != self.ndim:
+            raise ValueError(f"Expected cell dimension {self.ndim}, got {len(cell)}.")
+
+        return tuple(int(c) for c in cell)
+
     def translate_site(self, site_id: int, displacement: tuple[int, ...]) -> int | None:
         """
         Translate a site by an integer lattice displacement.

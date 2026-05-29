@@ -162,6 +162,7 @@ class SquareLattice(LatticeGraph):
                             orientations=(o0, o1, o2, o3),
                             sites=loop_sites,
                             kind="square",
+                            anchor_cell=(x, y),
                         )
                     )
 
@@ -198,3 +199,20 @@ class SquareLattice(LatticeGraph):
             raise IndexError(f"site coordinate ({x}, {y}) outside lattice.")
 
         return x * self.ly + y
+
+    def canonical_cell(self, cell: tuple[int, ...]) -> tuple[int, ...]:
+        if len(cell) != 2:
+            raise ValueError(f"Expected 2D cell coordinate, got {cell!r}.")
+
+        x, y = (int(cell[0]), int(cell[1]))
+
+        if self.boundary_condition == BoundaryCondition.PERIODIC:
+            return x % self.lx, y % self.ly
+
+        return x, y
+
+    def plaquette_id_from_cell(self, x: int, y: int) -> int:
+        return self.plaquette_id_from_anchor((x, y), kind="square")
+
+    def square_plaquette_id(self, x: int, y: int) -> int:
+        return self.plaquette_id_from_cell(x, y)
