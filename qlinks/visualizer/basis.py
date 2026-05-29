@@ -25,7 +25,7 @@ BasisConfigLabelStyle = Literal["none", "compact", "array"]
 LinkPlotMode = Literal["arrows", "dimers", "values"]
 PeriodicImageMode = Literal["none", "positive_patch"]
 PlaquetteSymbolMode = Literal["binary", "flux"]
-PlaquetteSymbolStyle = Literal["none", "square_qlm", "circulation", "resonance"]
+PlaquetteSymbolStyle = Literal["auto", "none", "square_qlm", "circulation", "resonance"]
 SiteLabelStyle = Literal["cell", "cell_sublattice", "sublattice_cell", "site_id"]
 VisualizerBackend = Literal["matplotlib", "networkx"]
 
@@ -75,6 +75,7 @@ class LinkVisualStyle:
     site_label_fontsize: float | None = None
     link_label_fontsize: float | None = None
     plaquette_symbol_fontsize: float = 22.0
+    vulnerable_link_arrow_length_fraction: float = 1.1
     plaquette_symbol_offset: tuple[float, float] = (0.0, 0.0)
 
 
@@ -201,7 +202,7 @@ class BasisConfigurationVisualizer:
         with_site_values: bool = False,
         with_link_values: bool = False,
         with_plaquette_symbols: bool = True,
-        plaquette_symbol_style: PlaquetteSymbolStyle = "square_qlm",
+        plaquette_symbol_style: PlaquetteSymbolStyle = "auto",
         title: str | None = None,
     ):
         """
@@ -235,10 +236,14 @@ class BasisConfigurationVisualizer:
             _, ax = plt.subplots()
 
         draw_nodes, draw_links = self._draw_primitives()
+        resolved_plaquette_symbol_style = self._resolve_plaquette_symbol_style(
+            mode=mode,
+            plaquette_symbol_style=plaquette_symbol_style,
+        )
 
         draw_plaquettes = None
-        if with_plaquette_symbols and plaquette_symbol_style != "none":
-            if plaquette_symbol_style == "square_qlm":
+        if with_plaquette_symbols and resolved_plaquette_symbol_style != "none":
+            if resolved_plaquette_symbol_style == "square_qlm":
                 draw_plaquettes = self._draw_square_qlm_plaquette_primitives()
             else:
                 draw_plaquettes = self._draw_plaquette_primitives()
@@ -256,9 +261,38 @@ class BasisConfigurationVisualizer:
             with_site_values=with_site_values,
             with_link_values=with_link_values,
             with_plaquette_symbols=with_plaquette_symbols,
-            plaquette_symbol_style=plaquette_symbol_style,
+            plaquette_symbol_style=resolved_plaquette_symbol_style,
             title=title,
         )
+
+    def _resolve_plaquette_symbol_style(
+        self,
+        *,
+        mode: LinkPlotMode,
+        plaquette_symbol_style: PlaquetteSymbolStyle,
+    ) -> PlaquetteSymbolStyle:
+        """Resolve automatic plaquette-symbol style.
+
+        Concrete meaning:
+            arrows  -> QLM-like circulation, except square uses square_qlm
+            dimers  -> QDM-like resonance
+            values  -> none
+        """
+        if plaquette_symbol_style != "auto":
+            return plaquette_symbol_style
+
+        if mode == "arrows":
+            if isinstance(self.lattice, SquareLattice):
+                return "square_qlm"
+            return "circulation"
+
+        if mode == "dimers":
+            return "resonance"
+
+        if mode == "values":
+            return "none"
+
+        raise ValueError("mode must be one of 'arrows', 'dimers', or 'values'.")
 
     def _plot_with_primitives(
         self,
@@ -1755,6 +1789,9 @@ class BasisConfigurationVisualizer:
         style: PlaquetteSymbolStyle,
         draw_plaquettes: list[_DrawPlaquette],
     ) -> None:
+        if style == "auto":
+            raise ValueError("plaquette_symbol_style='auto' must be resolved before drawing.")
+
         if style == "none":
             return
 
@@ -1977,18 +2014,22 @@ class BasisConfigurationVisualizer:
 
         # A value < 1 keeps the arrow inside the plaquette and avoids placing the
         # arrow head directly on top of the link/dimer/flux arrow.
-        arrow_length_fraction = 0.72
+        arrow_length_fraction = self.style.vulnerable_link_arrow_length_fraction
         arrow_vector = arrow_length_fraction * direction
 
         start = center_array - 0.5 * arrow_vector
         end = center_array + 0.5 * arrow_vector
 
+        fontsize = float(self.style.plaquette_symbol_fontsize)
+        mutation_scale = fontsize
+        linewidth = max(1.0, 0.12 * fontsize)
+
         arrow = FancyArrowPatch(
             posA=(float(start[0]), float(start[1])),
             posB=(float(end[0]), float(end[1])),
             arrowstyle="->",
-            mutation_scale=14.0,
-            linewidth=2.0,
+            mutation_scale=mutation_scale,
+            linewidth=linewidth,
             color=color,
             zorder=7,
         )
@@ -3014,7 +3055,7 @@ class BasisGridVisualizer:
         config_label_style: BasisConfigLabelStyle = "compact",
         config_label_max_length: int = 48,
         mode: str = "arrows",
-        plaquette_symbols: PlaquetteSymbolStyle = "none",
+        plaquette_symbols: PlaquetteSymbolStyle = "auto",
         figsize: tuple[float, float] | None = None,
         show: bool = True,
         backend: VisualizerBackend = "matplotlib",
@@ -3094,11 +3135,15 @@ class BasisGridVisualizer:
             site_label_style=self.site_label_style,
         )
 
+        resolved_plaquette_symbols = single_visualizer._resolve_plaquette_symbol_style(
+            mode=mode,
+            plaquette_symbol_style=plaquette_symbols,
+        )
         draw_nodes, draw_links = single_visualizer._draw_primitives()
 
-        if plaquette_symbols == "none":
+        if resolved_plaquette_symbols == "none":
             draw_plaquettes = None
-        elif plaquette_symbols == "square_qlm":
+        elif resolved_plaquette_symbols == "square_qlm":
             draw_plaquettes = single_visualizer._draw_square_qlm_plaquette_primitives()
         else:
             draw_plaquettes = single_visualizer._draw_plaquette_primitives()
@@ -3155,8 +3200,8 @@ class BasisGridVisualizer:
                 show=False,
                 backend=backend,
                 mode=mode,
-                with_plaquette_symbols=(plaquette_symbols != "none"),
-                plaquette_symbol_style=plaquette_symbols,
+                with_plaquette_symbols=(resolved_plaquette_symbols != "none"),
+                plaquette_symbol_style=resolved_plaquette_symbols,
                 title=title,
                 **plot_kwargs,
             )
@@ -3333,7 +3378,7 @@ def plot_basis_grid(
     config_label_max_length: int = 48,
     backend: VisualizerBackend = "matplotlib",
     mode: LinkPlotMode = "arrows",
-    plaquette_symbols: PlaquetteSymbolStyle = "none",
+    plaquette_symbols: PlaquetteSymbolStyle = "auto",
     periodic_image_mode: PeriodicImageMode = "positive_patch",
     collapse_duplicate_visual_links: bool = True,
     coordinate_scale: float = 1.0,
