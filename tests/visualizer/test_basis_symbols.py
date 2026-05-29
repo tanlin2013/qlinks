@@ -393,3 +393,140 @@ def test_resonance_style_marks_binary_qdm_resonance() -> None:
     assert "↻" not in symbols
 
     plt.close(fig)
+
+
+def test_qdm_one_vulnerable_link_points_to_blue_resonance() -> None:
+    result = BasisConfigurationVisualizer._qdm_one_vulnerable_link([1, 0, 1, 1])
+
+    assert result == (3, "skyblue")
+
+
+def test_qdm_one_vulnerable_link_points_to_red_resonance() -> None:
+    result = BasisConfigurationVisualizer._qdm_one_vulnerable_link([0, 1, 0, 0])
+
+    assert result == (3, "salmon")
+
+
+def test_qdm_one_vulnerable_link_skips_already_resonant() -> None:
+    assert BasisConfigurationVisualizer._qdm_one_vulnerable_link([1, 0, 1, 0]) is None
+
+
+def test_qdm_one_vulnerable_link_skips_multiple_or_none() -> None:
+    assert BasisConfigurationVisualizer._qdm_one_vulnerable_link([1, 1, 0, 0]) is None
+
+
+def test_flux_one_vulnerable_link_points_to_blue_circulation() -> None:
+    result = BasisConfigurationVisualizer._flux_one_vulnerable_link(
+        [1, 1, 1, -1],
+        [1, 1, 1, 1],
+    )
+
+    assert result == (3, "skyblue")
+
+
+def test_flux_one_vulnerable_link_points_to_red_circulation() -> None:
+    result = BasisConfigurationVisualizer._flux_one_vulnerable_link(
+        [-1, -1, -1, 1],
+        [1, 1, 1, 1],
+    )
+
+    assert result == (3, "salmon")
+
+
+def test_flux_one_vulnerable_link_skips_already_circulating() -> None:
+    assert (
+        BasisConfigurationVisualizer._flux_one_vulnerable_link(
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+        )
+        is None
+    )
+
+
+def test_resonance_style_draws_one_vulnerable_link_arrow() -> None:
+    lattice = HoneycombLattice(3, 3, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=layout)
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 6
+    )
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    # Nearly resonant: 101011. Flipping the last link gives 101010.
+    values = [1, 0, 1, 0, 1, 1]
+
+    for link_id, value in zip(draw_plaquette.link_ids, values, strict=True):
+        config[int(link_id)] = value
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    # Vulnerable-link arrow is a Matplotlib patch from annotate(... arrowprops).
+    assert len(ax.patches) >= 1
+
+    # It should not draw the full resonance diamond.
+    assert not any(text.get_text() in {"◆", "◇"} for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_circulation_style_draws_one_vulnerable_link_arrow() -> None:
+    lattice = HoneycombLattice(3, 3, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, layout=layout)
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 6
+    )
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+
+    # Make the plaquette one sign flip away from positive circulation.
+    for link_id, orientation in zip(
+        draw_plaquette.link_ids,
+        draw_plaquette.link_orientations,
+        strict=True,
+    ):
+        config[int(link_id)] = int(orientation)
+
+    vulnerable_link = int(draw_plaquette.link_ids[-1])
+    config[vulnerable_link] *= -1
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="arrows",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="circulation",
+    )
+
+    # Link arrows plus vulnerable-link arrow are patches. We only need to know
+    # the vulnerable arrow exists and no full circulation text was drawn.
+    assert len(ax.patches) > lattice.num_links
+    assert not any(text.get_text() in {"↺", "↻"} for text in ax.texts)
+
+    plt.close(fig)

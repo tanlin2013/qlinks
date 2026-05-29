@@ -9,6 +9,7 @@ from typing import Literal, Sequence
 import numpy as np
 import numpy.typing as npt
 from matplotlib.collections import LineCollection
+from matplotlib.patches import FancyArrowPatch
 
 from qlinks.lattice import (
     BoundaryCondition,
@@ -101,9 +102,10 @@ class _DrawPlaquette:
     plaquette_id: int
     image_shift: tuple[int, ...]
     visual_cell: tuple[int, ...]
-    center: npt.NDArray[np.float64]
+    center: tuple[float, ...]
     link_ids: tuple[int, ...] = ()
     link_orientations: tuple[int, ...] = ()
+    link_midpoints: tuple[tuple[float, float], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -919,8 +921,6 @@ class BasisConfigurationVisualizer:
         config: npt.NDArray[np.int64],
         draw_links: list[_DrawLink],
     ) -> None:
-        from matplotlib.patches import FancyArrowPatch
-
         for draw_link in draw_links:
             value = self.link_value(config, draw_link.link_id)
 
@@ -1328,51 +1328,20 @@ class BasisConfigurationVisualizer:
 
         return out
 
+    @staticmethod
+    def _draw_link_midpoint(draw_link: _DrawLink) -> tuple[float, float]:
+        source = np.asarray(draw_link.source_position, dtype=float)
+        target = np.asarray(draw_link.target_position, dtype=float)
+        midpoint = 0.5 * (source + target)
+        return float(midpoint[0]), float(midpoint[1])
+
     def _canonical_visual_cycle_link_ids(
         self,
         draw_links: tuple[_DrawLink, ...],
     ) -> tuple[int, ...]:
-        """Return link ids in a canonical visual cyclic order.
-
-        The order is determined from the drawn polygon, not from
-        ``plaquette.links``. This makes QDM alternating patterns such as
-        1010 and 0101 stable across translated/rotated plaquette objects.
-
-        Convention:
-        1. sort edge midpoints counterclockwise around the visual center;
-        2. rotate so the first edge has the lowest midpoint y, then lowest x.
-        """
-        center = self._closed_visual_plaquette_center(draw_links)
-
-        records: list[tuple[float, float, float, int]] = []
-        for draw_link in draw_links:
-            source = np.asarray(draw_link.source_position, dtype=float)
-            target = np.asarray(draw_link.target_position, dtype=float)
-            midpoint = 0.5 * (source + target)
-            angle = math.atan2(
-                float(midpoint[1] - center[1]),
-                float(midpoint[0] - center[0]),
-            )
-            records.append(
-                (
-                    angle,
-                    float(midpoint[1]),
-                    float(midpoint[0]),
-                    int(draw_link.link_id),
-                )
-            )
-
-        records.sort(key=lambda item: item[0])
-
-        # Use the visually lowest edge as canonical edge 0. The x tie-breaker
-        # makes the rule deterministic for symmetric cases.
-        start = min(
-            range(len(records)),
-            key=lambda i: (records[i][1], records[i][2]),
-        )
-
-        rotated = records[start:] + records[:start]
-        return tuple(int(record[3]) for record in rotated)
+        """Return link ids in canonical visual cyclic order."""
+        canonical_links = self._canonical_visual_cycle_draw_links(draw_links)
+        return tuple(int(draw_link.link_id) for draw_link in canonical_links)
 
     def _canonical_visual_cycle_orientations(
         self,
@@ -1393,6 +1362,50 @@ class BasisConfigurationVisualizer:
         }
 
         return tuple(int(orientation_by_link_id[int(link_id)]) for link_id in canonical_link_ids)
+
+    def _canonical_visual_cycle_draw_links(
+        self,
+        draw_links: tuple[_DrawLink, ...],
+    ) -> tuple[_DrawLink, ...]:
+        """Return draw links in canonical visual cyclic order.
+
+        Convention:
+        1. sort edge midpoints counterclockwise around the visual center;
+        2. rotate so the first edge has the lowest midpoint y, then lowest x.
+        """
+        center = self._closed_visual_plaquette_center(draw_links)
+
+        records: list[tuple[float, float, float, _DrawLink]] = []
+
+        for draw_link in draw_links:
+            source = np.asarray(draw_link.source_position, dtype=float)
+            target = np.asarray(draw_link.target_position, dtype=float)
+            midpoint = 0.5 * (source + target)
+
+            angle = math.atan2(
+                float(midpoint[1] - center[1]),
+                float(midpoint[0] - center[0]),
+            )
+
+            records.append(
+                (
+                    angle,
+                    float(midpoint[1]),
+                    float(midpoint[0]),
+                    draw_link,
+                )
+            )
+
+        records.sort(key=lambda item: item[0])
+
+        start = min(
+            range(len(records)),
+            key=lambda i: (records[i][1], records[i][2]),
+        )
+
+        rotated = records[start:] + records[:start]
+
+        return tuple(record[3] for record in rotated)
 
     def _draw_plaquette_primitives(self) -> list[_DrawPlaquette]:
         """Build visual plaquette centers from actually drawn closed cycles.
@@ -1431,10 +1444,17 @@ class BasisConfigurationVisualizer:
 
             center = self._closed_visual_plaquette_center(selected)
 
-            canonical_link_ids = self._canonical_visual_cycle_link_ids(selected)
+            canonical_draw_links = self._canonical_visual_cycle_draw_links(selected)
+
+            canonical_link_ids = tuple(int(draw_link.link_id) for draw_link in canonical_draw_links)
+
             canonical_orientations = self._canonical_visual_cycle_orientations(
                 plaquette_id=int(plaquette.id),
                 canonical_link_ids=canonical_link_ids,
+            )
+
+            canonical_link_midpoints = tuple(
+                self._draw_link_midpoint(draw_link) for draw_link in canonical_draw_links
             )
 
             draw_plaquettes.append(
@@ -1445,6 +1465,7 @@ class BasisConfigurationVisualizer:
                     center=(float(center[0]), float(center[1])),
                     link_ids=canonical_link_ids,
                     link_orientations=canonical_orientations,
+                    link_midpoints=canonical_link_midpoints,
                 )
             )
 
@@ -1810,6 +1831,170 @@ class BasisConfigurationVisualizer:
         return set(int(value) for value in values) <= {0, 1}
 
     @staticmethod
+    def _vulnerable_color_from_target_symbol(symbol_info: tuple[str, str]) -> str:
+        """Return the arrow color for a one-link-away plaquette.
+
+        Blue target symbols get skyblue arrows.
+        Red target symbols get salmon arrows.
+        """
+        _symbol, color = symbol_info
+
+        if color == "blue":
+            return "skyblue"
+
+        if color == "red":
+            return "salmon"
+
+        return color
+
+    @staticmethod
+    def _qdm_one_vulnerable_link(
+        values: Sequence[int],
+    ) -> tuple[int, str] | None:
+        """Return the unique link whose flip makes a QDM plaquette resonant.
+
+        Returns
+        -------
+        tuple[int, str] | None
+            ``(vulnerable_link_index, arrow_color)`` if exactly one binary
+            link flip turns the plaquette into a QDM resonance pattern.
+        """
+        values_tuple = tuple(int(value) for value in values)
+
+        if len(values_tuple) < 4:
+            return None
+
+        if len(values_tuple) % 2 != 0:
+            return None
+
+        if not BasisConfigurationVisualizer._is_binary_link_pattern(values_tuple):
+            return None
+
+        # Already resonant: draw the diamond, not the vulnerable-link arrow.
+        if BasisConfigurationVisualizer._qdm_resonance_symbol(values_tuple) is not None:
+            return None
+
+        candidates: list[tuple[int, str]] = []
+
+        for index, value in enumerate(values_tuple):
+            flipped = list(values_tuple)
+            flipped[index] = 1 - int(value)
+
+            symbol_info = BasisConfigurationVisualizer._qdm_resonance_symbol(flipped)
+
+            if symbol_info is None:
+                continue
+
+            candidates.append(
+                (
+                    index,
+                    BasisConfigurationVisualizer._vulnerable_color_from_target_symbol(symbol_info),
+                )
+            )
+
+        if len(candidates) != 1:
+            return None
+
+        return candidates[0]
+
+    @staticmethod
+    def _flux_one_vulnerable_link(
+        values: Sequence[int],
+        orientations: Sequence[int],
+    ) -> tuple[int, str] | None:
+        """Return the unique link whose sign flip makes a flux plaquette circulate.
+
+        This is the QLM analogue of the one-vulnerable-link square symbols.
+        """
+        values_tuple = tuple(int(value) for value in values)
+        orientations_tuple = tuple(int(orientation) for orientation in orientations)
+
+        if len(values_tuple) != len(orientations_tuple):
+            return None
+
+        if len(values_tuple) < 4:
+            return None
+
+        # Already circulating: draw the circular arrow, not the vulnerable-link arrow.
+        if (
+            BasisConfigurationVisualizer._flux_circulation_symbol(
+                values_tuple,
+                orientations_tuple,
+            )
+            is not None
+        ):
+            return None
+
+        # Zero is not a signed flux direction.
+        if any(value == 0 for value in values_tuple):
+            return None
+
+        candidates: list[tuple[int, str]] = []
+
+        for index, value in enumerate(values_tuple):
+            flipped = list(values_tuple)
+            flipped[index] = -int(value)
+
+            symbol_info = BasisConfigurationVisualizer._flux_circulation_symbol(
+                flipped,
+                orientations_tuple,
+            )
+
+            if symbol_info is None:
+                continue
+
+            candidates.append(
+                (
+                    index,
+                    BasisConfigurationVisualizer._vulnerable_color_from_target_symbol(symbol_info),
+                )
+            )
+
+        if len(candidates) != 1:
+            return None
+
+        return candidates[0]
+
+    def _draw_vulnerable_link_arrow(
+        self,
+        *,
+        ax,
+        center: Sequence[float],
+        link_midpoint: Sequence[float],
+        color: str,
+    ) -> None:
+        """Draw an arrow centered at the plaquette center toward a vulnerable link."""
+        from matplotlib.patches import FancyArrowPatch
+
+        center_array = np.asarray(center, dtype=float)
+        midpoint_array = np.asarray(link_midpoint, dtype=float)
+
+        direction = midpoint_array - center_array
+        distance = float(np.linalg.norm(direction))
+
+        if distance <= 1e-12:
+            return
+
+        # A value < 1 keeps the arrow inside the plaquette and avoids placing the
+        # arrow head directly on top of the link/dimer/flux arrow.
+        arrow_length_fraction = 0.72
+        arrow_vector = arrow_length_fraction * direction
+
+        start = center_array - 0.5 * arrow_vector
+        end = center_array + 0.5 * arrow_vector
+
+        arrow = FancyArrowPatch(
+            posA=(float(start[0]), float(start[1])),
+            posB=(float(end[0]), float(end[1])),
+            arrowstyle="->",
+            mutation_scale=14.0,
+            linewidth=2.0,
+            color=color,
+            zorder=7,
+        )
+        ax.add_patch(arrow)
+
+    @staticmethod
     def _qdm_resonance_symbol(values: Sequence[int]) -> tuple[str, str] | None:
         """Return a QDM resonance marker for alternating binary dimers.
 
@@ -1886,22 +2071,39 @@ class BasisConfigurationVisualizer:
             values = [self.link_value(config, int(link_id)) for link_id in link_ids]
 
             symbol_info = self._qdm_resonance_symbol(values)
-            if symbol_info is None:
+
+            if symbol_info is not None:
+                symbol, color = symbol_info
+                center = draw_plaquette.center
+
+                ax.annotate(
+                    symbol,
+                    xy=(center[0], center[1]),
+                    xytext=self.style.plaquette_symbol_offset,
+                    textcoords="offset points",
+                    fontsize=self.style.plaquette_symbol_fontsize,
+                    color=color,
+                    ha="center",
+                    va="center",
+                    zorder=6,
+                )
                 continue
 
-            symbol, color = symbol_info
-            center = draw_plaquette.center
+            vulnerable_info = self._qdm_one_vulnerable_link(values)
 
-            ax.annotate(
-                symbol,
-                xy=(center[0], center[1]),
-                xytext=self.style.plaquette_symbol_offset,
-                textcoords="offset points",
-                fontsize=self.style.plaquette_symbol_fontsize,
+            if vulnerable_info is None:
+                continue
+
+            vulnerable_index, color = vulnerable_info
+
+            if vulnerable_index >= len(draw_plaquette.link_midpoints):
+                continue
+
+            self._draw_vulnerable_link_arrow(
+                ax=ax,
+                center=draw_plaquette.center,
+                link_midpoint=draw_plaquette.link_midpoints[vulnerable_index],
                 color=color,
-                ha="center",
-                va="center",
-                zorder=6,
             )
 
     def _draw_circulation_plaquette_symbols(
@@ -1926,31 +2128,46 @@ class BasisConfigurationVisualizer:
 
             values = [self.link_value(config, int(link_id)) for link_id in link_ids]
 
-            symbol_info = None
+            symbol_info = self._flux_circulation_symbol(
+                values,
+                link_orientations,
+            )
 
-            # QLM: signed flux circulation.
-            if symbol_info is None:
-                symbol_info = self._flux_circulation_symbol(
-                    values,
-                    link_orientations,
+            if symbol_info is not None:
+                symbol, color = symbol_info
+                center = draw_plaquette.center
+
+                ax.annotate(
+                    symbol,
+                    xy=(center[0], center[1]),
+                    xytext=self.style.plaquette_symbol_offset,
+                    textcoords="offset points",
+                    fontsize=self.style.plaquette_symbol_fontsize,
+                    color=color,
+                    ha="center",
+                    va="center",
+                    zorder=6,
                 )
-
-            if symbol_info is None:
                 continue
 
-            symbol, color = symbol_info
-            center = draw_plaquette.center
+            vulnerable_info = self._flux_one_vulnerable_link(
+                values,
+                link_orientations,
+            )
 
-            ax.annotate(
-                symbol,
-                xy=(center[0], center[1]),
-                xytext=self.style.plaquette_symbol_offset,
-                textcoords="offset points",
-                fontsize=self.style.plaquette_symbol_fontsize,
+            if vulnerable_info is None:
+                continue
+
+            vulnerable_index, color = vulnerable_info
+
+            if vulnerable_index >= len(draw_plaquette.link_midpoints):
+                continue
+
+            self._draw_vulnerable_link_arrow(
+                ax=ax,
+                center=draw_plaquette.center,
+                link_midpoint=draw_plaquette.link_midpoints[vulnerable_index],
                 color=color,
-                ha="center",
-                va="center",
-                zorder=6,
             )
 
     def _plaquette_center_2d(

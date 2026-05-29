@@ -617,3 +617,50 @@ def test_show_honeycomb_qdm_hexagon_dimer_symbols() -> None:
 
     plt.show()
     plt.close(fig)
+
+
+def test_show_honeycomb_one_vulnerable_resonance_arrows() -> None:
+    lattice = HoneycombLattice(4, 4, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    draw_plaquettes = [
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 6
+    ]
+
+    assert len(draw_plaquettes) >= 4
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    patterns = [
+        [1, 0, 1, 0, 1, 1],  # one flip from blue ◆
+        [0, 1, 0, 1, 0, 0],  # one flip from red ◇
+    ]
+
+    for draw_plaquette, pattern in zip(draw_plaquettes[:2], patterns, strict=True):
+        for link_id, value in zip(draw_plaquette.link_ids, pattern, strict=True):
+            config[int(link_id)] = value
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+        title="Honeycomb QDM: one-vulnerable-link resonance arrows",
+    )
+
+    plt.show()
+    plt.close(fig)
