@@ -77,8 +77,8 @@ model = SquareQDMModel(
     boundary_condition="periodic",
     winding_x=0,
     winding_y=0,
-    kinetic=1.0,
-    potential=1.0,
+    coup_kin=1.0,
+    coup_pot=1.0,
 )
 
 build_result = model.build(

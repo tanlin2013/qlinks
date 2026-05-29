@@ -18,8 +18,8 @@ def test_square_qlm_manual_single_plaquette_sparse() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=2.0,
+        coup_kin=-1.0,
+        coup_pot=2.0,
         charges=0,
     )
 
@@ -75,8 +75,8 @@ def test_square_qlm_bitmask_matches_sparse() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=2.0,
+        coup_kin=-1.0,
+        coup_pot=2.0,
         charges=0,
     )
 
@@ -118,8 +118,8 @@ def test_square_qlm_optimized_matches_sparse_for_kinetic_only() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=0.0,
+        coup_kin=-1.0,
+        coup_pot=0.0,
         charges=0,
     )
 
@@ -159,8 +159,8 @@ def test_square_qlm_potential_rejects_optimized() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=1.0,
+        coup_kin=-1.0,
+        coup_pot=1.0,
         charges=0,
     )
 
@@ -261,8 +261,8 @@ def test_square_qlm_kinetic_nonzero(builder_name: str) -> None:
         winding_x=0,
         winding_y=0,
         charges=0,
-        kinetic=1.0,
-        potential=0.0,
+        coup_kin=1.0,
+        coup_pot=0.0,
     )
 
     build_result = model.build(
@@ -283,8 +283,8 @@ def test_square_qlm_basis_smoke() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=0.0,
+        coup_kin=-1.0,
+        coup_pot=0.0,
         charges=charges,
     )
 
@@ -294,7 +294,7 @@ def test_square_qlm_basis_smoke() -> None:
 
 
 def test_square_qlm_from_qdm_staggered_background_defaults_to_spin_half_pm1() -> None:
-    model = SquareQLMModel.from_qdm_staggered_background(
+    model = SquareQLMModel.from_staggered_background(
         lx=2,
         ly=2,
         boundary_condition="open",
@@ -312,8 +312,8 @@ def test_triangular_qlm_smoke() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=0.0,
+        coup_kin=-1.0,
+        coup_pot=0.0,
         charges=0,
     )
 
@@ -331,8 +331,8 @@ def test_honeycomb_qlm_smoke() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=0.0,
+        coup_kin=-1.0,
+        coup_pot=0.0,
         charges=0,
     )
 
@@ -373,8 +373,8 @@ def test_honeycomb_qlm_winding_sector_builds() -> None:
         lx=3,
         ly=3,
         boundary_condition="periodic",
-        kinetic=-1.0,
-        potential=0.0,
+        coup_kin=-1.0,
+        coup_pot=0.0,
         charges=0,
         winding_x="1/2",
         winding_y="1/2",
@@ -401,8 +401,8 @@ def test_square_qlm_2x2_pbc_kinetic_preserves_gauss_law(
         ly=2,
         boundary_condition="periodic",
         charges=0,
-        kinetic=1.0,
-        potential=0.0,
+        coup_kin=1.0,
+        coup_pot=0.0,
     )
 
     build_result = model.build(
@@ -452,8 +452,8 @@ def test_square_qlm_2x2_pbc_w00_kinetic_preserves_basis(
         winding_x=0,
         winding_y=0,
         charges=0,
-        kinetic=1.0,
-        potential=0.0,
+        coup_kin=1.0,
+        coup_pot=0.0,
     )
 
     build_result = model.build(
@@ -477,8 +477,8 @@ def test_square_qlm_2x2_pbc_potential_nonzero(
         ly=2,
         boundary_condition="periodic",
         charges=0,
-        kinetic=0.0,
-        potential=1.0,
+        coup_kin=0.0,
+        coup_pot=1.0,
     )
 
     build_result = model.build(
@@ -510,8 +510,8 @@ def test_square_qlm_2x2_sparse_and_bitmask_match(
         ly=2,
         boundary_condition="periodic",
         charges=0,
-        kinetic=kinetic,
-        potential=potential,
+        coup_kin=kinetic,
+        coup_pot=potential,
     )
 
     sparse_result = model.build(

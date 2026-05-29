@@ -621,8 +621,8 @@ def test_square_qdm_electric_winding_sector_preserves_plaquette_flips(
         winding_x=0,
         winding_y=0,
         winding_convention="electric",
-        kinetic=1.0,
-        potential=0.0,
+        coup_kin=1.0,
+        coup_pot=0.0,
     )
 
     build_result = model.build(

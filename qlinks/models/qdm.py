@@ -59,8 +59,8 @@ class QDMBase(HamiltonianModelBase):
           + potential * sum_p flippability_p
     """
 
-    kinetic: complex = -1.0
-    potential: complex = 0.0
+    coup_kin: complex = -1.0
+    coup_pot: complex = 0.0
     required_count: int = 1
 
     def _make_layout(self) -> VariableLayout:
@@ -124,7 +124,7 @@ class QDMBase(HamiltonianModelBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.kinetic,
+                    coefficient=self.coup_kin,
                 )
                 for p in self.plaquette_ids()
             )
@@ -135,7 +135,7 @@ class QDMBase(HamiltonianModelBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.kinetic,
+                    coefficient=self.coup_kin,
                 )
                 for p in self.plaquette_ids()
             )
@@ -156,7 +156,7 @@ class QDMBase(HamiltonianModelBase):
     ) -> tuple[object, ...]:
         validate_builder_name(builder)
 
-        if self.potential == 0:
+        if self.coup_pot == 0:
             return ()
 
         if layout is None:
@@ -171,7 +171,7 @@ class QDMBase(HamiltonianModelBase):
                         layout=layout,
                         lattice=self.lattice,
                         plaquette_id=int(p),
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                     )
                 )
             return tuple(operators)
@@ -183,7 +183,7 @@ class QDMBase(HamiltonianModelBase):
                         layout=layout,
                         lattice=self.lattice,
                         plaquette_id=int(p),
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                     )
                 )
             return tuple(operators)
@@ -367,7 +367,7 @@ class SquareQDMModel(QDMBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.kinetic,
+                    coefficient=self.coup_kin,
                 )
                 for p in self.plaquette_ids()
             )
@@ -378,7 +378,7 @@ class SquareQDMModel(QDMBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.kinetic,
+                    coefficient=self.coup_kin,
                 )
                 for p in self.plaquette_ids()
             )
@@ -389,7 +389,7 @@ class SquareQDMModel(QDMBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.kinetic,
+                    coefficient=self.coup_kin,
                 )
                 for p in self.plaquette_ids()
             )
@@ -408,7 +408,7 @@ class SquareQDMModel(QDMBase):
 
         validate_builder_name(builder)
 
-        if self.potential == 0:
+        if self.coup_pot == 0:
             return ()
 
         if layout is None:
@@ -423,7 +423,7 @@ class SquareQDMModel(QDMBase):
                         layout=layout,
                         lattice=self.lattice,
                         plaquette_id=int(p),
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                     )
                 )
             return tuple(operators)
@@ -435,7 +435,7 @@ class SquareQDMModel(QDMBase):
                         layout=layout,
                         lattice=self.lattice,
                         plaquette_id=int(p),
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                     )
                 )
             return tuple(operators)
@@ -633,16 +633,16 @@ class QDMModel(QDMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        kinetic: complex = -1.0,
-        potential: complex = 0.0,
+        coup_kin: complex = -1.0,
+        coup_pot: complex = 0.0,
         required_count: int = 1,
     ) -> TriangularQDMModel:
         return TriangularQDMModel(
             lx=lx,
             ly=ly,
             boundary_condition=boundary_condition,
-            kinetic=kinetic,
-            potential=potential,
+            coup_kin=coup_kin,
+            coup_pot=coup_pot,
             required_count=required_count,
         )
 
@@ -653,15 +653,15 @@ class QDMModel(QDMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        kinetic: complex = -1.0,
-        potential: complex = 0.0,
+        coup_kin: complex = -1.0,
+        coup_pot: complex = 0.0,
         required_count: int = 1,
     ) -> HoneycombQDMModel:
         return HoneycombQDMModel(
             lx=lx,
             ly=ly,
             boundary_condition=boundary_condition,
-            kinetic=kinetic,
-            potential=potential,
+            coup_kin=coup_kin,
+            coup_pot=coup_pot,
             required_count=required_count,
         )

@@ -15,8 +15,8 @@ def test_square_qdm_single_plaquette_sparse() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=2.0,
+        coup_kin=-1.0,
+        coup_pot=2.0,
     )
 
     result = model.build(
@@ -44,8 +44,8 @@ def test_square_qdm_bitmask_matches_sparse() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=2.0,
+        coup_kin=-1.0,
+        coup_pot=2.0,
     )
 
     sparse_result = model.build(
@@ -109,8 +109,8 @@ def test_triangular_qdm_smoke() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=0.0,
+        coup_kin=-1.0,
+        coup_pot=0.0,
     )
 
     basis = model.build_basis(
@@ -127,8 +127,8 @@ def test_honeycomb_qdm_single_hexagon_sparse() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=1.0,
+        coup_kin=-1.0,
+        coup_pot=1.0,
     )
 
     result = model.build(
@@ -149,8 +149,8 @@ def test_honeycomb_qdm_bitmask_matches_sparse() -> None:
         lx=2,
         ly=2,
         boundary_condition="open",
-        kinetic=-1.0,
-        potential=1.0,
+        coup_kin=-1.0,
+        coup_pot=1.0,
     )
 
     sparse_result = model.build(
@@ -211,8 +211,8 @@ def test_honeycomb_qdm_winding_sector_builds() -> None:
         lx=3,
         ly=3,
         boundary_condition="periodic",
-        kinetic=-1.0,
-        potential=0.0,
+        coup_kin=-1.0,
+        coup_pot=0.0,
         required_count=1,
         winding_x=1,
         winding_y=1,
@@ -249,8 +249,8 @@ def test_square_qdm_2x2_sparse_and_bitmask_match_in_electric_winding_sector(
         winding_x=0,
         winding_y=0,
         winding_convention="electric",
-        kinetic=kinetic,
-        potential=potential,
+        coup_kin=kinetic,
+        coup_pot=potential,
     )
 
     sparse_result = model.build(

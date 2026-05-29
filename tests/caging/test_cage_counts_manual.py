@@ -82,8 +82,8 @@ def _build_square_model_result(square_case: SquareCageCase):
             winding_x=square_case.winding_x,
             winding_y=square_case.winding_y,
             winding_convention="electric",
-            kinetic=1.0,
-            potential=1.0,
+            coup_kin=1.0,
+            coup_pot=1.0,
         )
         builder_name = "sparse"
     elif square_case.model_name == "qlm":
@@ -94,8 +94,8 @@ def _build_square_model_result(square_case: SquareCageCase):
             winding_x=square_case.winding_x,
             winding_y=square_case.winding_y,
             charges=0,
-            kinetic=1.0,
-            potential=1.0,
+            coup_kin=1.0,
+            coup_pot=1.0,
         )
         builder_name = "bitmask"
     else:

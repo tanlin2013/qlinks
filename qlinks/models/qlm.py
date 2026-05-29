@@ -70,8 +70,8 @@ class QLMBase(HamiltonianModelBase):
             +1 -> 1
     """
 
-    kinetic: complex = -1.0
-    potential: complex = 0.0
+    coup_kin: complex = -1.0
+    coup_pot: complex = 0.0
     charges: int | Sequence[int] | npt.NDArray[np.int64] = 0
     charge_normalization: ChargeNormalization = "spin_half"
 
@@ -233,7 +233,7 @@ class QLMBase(HamiltonianModelBase):
                     plaquette_id=int(plaquette_id),
                     transitions=self._flux_transitions_from_pattern(
                         self.lattice.plaquette_orientations(int(plaquette_id)),
-                        self.kinetic,
+                        self.coup_kin,
                     ),
                     name="qlm_plaquette_ring_exchange",
                 )
@@ -246,7 +246,7 @@ class QLMBase(HamiltonianModelBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.kinetic,
+                    coefficient=self.coup_kin,
                 )
                 for p in self.plaquette_ids()
             )
@@ -261,7 +261,7 @@ class QLMBase(HamiltonianModelBase):
     ) -> tuple[object, ...]:
         validate_builder_name(builder)
 
-        if self.potential == 0:
+        if self.coup_pot == 0:
             return ()
 
         if builder == "optimized":
@@ -295,7 +295,7 @@ class QLMBase(HamiltonianModelBase):
                         layout=layout,
                         variable_indices=variable_indices,
                         pattern=orientation_pattern,
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                         name="qlm_flippability_pos",
                     )
                 )
@@ -304,7 +304,7 @@ class QLMBase(HamiltonianModelBase):
                         layout=layout,
                         variable_indices=variable_indices,
                         pattern=-orientation_pattern,
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                         name="qlm_flippability_neg",
                     )
                 )
@@ -318,7 +318,7 @@ class QLMBase(HamiltonianModelBase):
                         layout=layout,
                         lattice=self.lattice,
                         plaquette_id=int(plaquette_id),
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                     )
                 )
             return tuple(operators)
@@ -473,7 +473,7 @@ class SquareQLMModel(QLMBase):
                     plaquette_id=int(plaquette_id),
                     transitions=self._flux_transitions_from_pattern(
                         self.lattice.plaquette_orientations(int(plaquette_id)),
-                        self.kinetic,
+                        self.coup_kin,
                     ),
                     name="qlm_plaquette_ring_exchange",
                 )
@@ -488,7 +488,7 @@ class SquareQLMModel(QLMBase):
                     plaquette_id=int(plaquette_id),
                     transitions=self._update_flux_transitions_from_pattern(
                         self.lattice.plaquette_orientations(int(plaquette_id)),
-                        self.kinetic,
+                        self.coup_kin,
                     ),
                     name="update_qlm_plaquette_ring_exchange",
                 )
@@ -501,7 +501,7 @@ class SquareQLMModel(QLMBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(plaquette_id),
-                    coefficient=self.kinetic,
+                    coefficient=self.coup_kin,
                 )
                 for plaquette_id in self.plaquette_ids()
             )
@@ -516,7 +516,7 @@ class SquareQLMModel(QLMBase):
     ) -> tuple[object, ...]:
         validate_builder_name(builder)
 
-        if self.potential == 0:
+        if self.coup_pot == 0:
             return ()
 
         if layout is None:
@@ -544,7 +544,7 @@ class SquareQLMModel(QLMBase):
                         layout=layout,
                         variable_indices=variable_indices,
                         pattern=orientation_pattern,
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                         name="qlm_flippability_pos",
                     )
                 )
@@ -553,7 +553,7 @@ class SquareQLMModel(QLMBase):
                         layout=layout,
                         variable_indices=variable_indices,
                         pattern=-orientation_pattern,
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                         name="qlm_flippability_neg",
                     )
                 )
@@ -567,7 +567,7 @@ class SquareQLMModel(QLMBase):
                         layout=layout,
                         lattice=self.lattice,
                         plaquette_id=int(p),
-                        coefficient=self.potential,
+                        coefficient=self.coup_pot,
                     )
                 )
 
@@ -582,14 +582,14 @@ class SquareQLMModel(QLMBase):
         raise ValueError(f"Unsupported builder: {builder}")
 
     @classmethod
-    def from_qdm_staggered_background(
+    def from_staggered_background(
         cls,
         lx: int,
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        kinetic: complex = -1.0,
-        potential: complex = 0.0,
+        coup_kin: complex = -1.0,
+        coup_pot: complex = 0.0,
         charge_magnitude: int | None = None,
         charge_convention: SublatticeSignConvention = "even_positive",
         charge_normalization: ChargeNormalization = "spin_half",
@@ -613,8 +613,8 @@ class SquareQLMModel(QLMBase):
             lx=lx,
             ly=ly,
             boundary_condition=boundary_condition,
-            kinetic=kinetic,
-            potential=potential,
+            coup_kin=coup_kin,
+            coup_pot=coup_pot,
             charges=charges,
             charge_normalization=charge_normalization,
             winding_x=winding_x,
@@ -782,8 +782,8 @@ class HoneycombQLMModel(QLMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        kinetic: complex = -1.0,
-        potential: complex = 0.0,
+        coup_kin: complex = -1.0,
+        coup_pot: complex = 0.0,
         charge_magnitude: int = 1,
         charge_convention: SublatticeSignConvention = "even_positive",
         winding_x: int | None = None,
@@ -806,8 +806,8 @@ class HoneycombQLMModel(QLMBase):
             lx=lx,
             ly=ly,
             boundary_condition=boundary_condition,
-            kinetic=kinetic,
-            potential=potential,
+            coup_kin=coup_kin,
+            coup_pot=coup_pot,
             charges=charges,
             charge_normalization="integer_flux",
             winding_x=winding_x,
@@ -909,16 +909,16 @@ class QLMModel(QLMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        kinetic: complex = -1.0,
-        potential: complex = 0.0,
+        coup_kin: complex = -1.0,
+        coup_pot: complex = 0.0,
         charges: int | Sequence[int] | npt.NDArray[np.int64] = 0,
     ) -> TriangularQLMModel:
         return TriangularQLMModel(
             lx=lx,
             ly=ly,
             boundary_condition=boundary_condition,
-            kinetic=kinetic,
-            potential=potential,
+            coup_kin=coup_kin,
+            coup_pot=coup_pot,
             charges=charges,
         )
 
@@ -929,15 +929,15 @@ class QLMModel(QLMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        kinetic: complex = -1.0,
-        potential: complex = 0.0,
+        coup_kin: complex = -1.0,
+        coup_pot: complex = 0.0,
         charges: int | Sequence[int] | npt.NDArray[np.int64] = 0,
     ) -> HoneycombQLMModel:
         return HoneycombQLMModel(
             lx=lx,
             ly=ly,
             boundary_condition=boundary_condition,
-            kinetic=kinetic,
-            potential=potential,
+            coup_kin=coup_kin,
+            coup_pot=coup_pot,
             charges=charges,
         )
