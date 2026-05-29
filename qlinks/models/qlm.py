@@ -36,6 +36,7 @@ from qlinks.models.base import (
     HamiltonianTermSpec,
     validate_builder_name,
 )
+from qlinks.models.couplings import PlaquetteCoupling, plaquette_coupling_value
 from qlinks.operators import (
     PatternDiagonalOperator,
     PlaquettePatternOperator,
@@ -70,10 +71,24 @@ class QLMBase(HamiltonianModelBase):
             +1 -> 1
     """
 
-    coup_kin: complex = -1.0
-    coup_pot: complex = 0.0
+    coup_kin: PlaquetteCoupling = -1.0
+    coup_pot: PlaquetteCoupling = 0.0
     charges: int | Sequence[int] | npt.NDArray[np.int64] = 0
     charge_normalization: ChargeNormalization = "spin_half"
+
+    def _coup_kin_at(self, plaquette_id: int) -> complex:
+        return plaquette_coupling_value(
+            self.coup_kin,
+            int(plaquette_id),
+            name="coup_kin",
+        )
+
+    def _coup_pot_at(self, plaquette_id: int) -> complex:
+        return plaquette_coupling_value(
+            self.coup_pot,
+            int(plaquette_id),
+            name="coup_pot",
+        )
 
     def _make_layout(self) -> VariableLayout:
         return VariableLayout.from_lattice_links(
@@ -230,14 +245,14 @@ class QLMBase(HamiltonianModelBase):
                 PlaquettePatternOperator(
                     layout=layout,
                     lattice=self.lattice,
-                    plaquette_id=int(plaquette_id),
+                    plaquette_id=int(p),
                     transitions=self._flux_transitions_from_pattern(
-                        self.lattice.plaquette_orientations(int(plaquette_id)),
-                        self.coup_kin,
+                        self.lattice.plaquette_orientations(int(p)),
+                        self._coup_kin_at(int(p)),
                     ),
                     name="qlm_plaquette_ring_exchange",
                 )
-                for plaquette_id in self.plaquette_ids()
+                for p in self.plaquette_ids()
             )
 
         if builder == "bitmask":
@@ -246,7 +261,7 @@ class QLMBase(HamiltonianModelBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.coup_kin,
+                    coefficient=self._coup_kin_at(int(p)),
                 )
                 for p in self.plaquette_ids()
             )
@@ -260,9 +275,6 @@ class QLMBase(HamiltonianModelBase):
         builder: HamiltonianBuilderName = "sparse",
     ) -> tuple[object, ...]:
         validate_builder_name(builder)
-
-        if self.coup_pot == 0:
-            return ()
 
         if builder == "optimized":
             raise NotImplementedError(
@@ -279,14 +291,20 @@ class QLMBase(HamiltonianModelBase):
         operators: list[object] = []
 
         if builder == "sparse":
-            for plaquette_id in self.plaquette_ids():
-                link_ids = self.lattice.plaquette_links(int(plaquette_id))
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coefficient = self._coup_pot_at(plaquette_id)
+
+                if coefficient == 0:
+                    continue
+
+                link_ids = self.lattice.plaquette_links(plaquette_id)
                 variable_indices = np.asarray(
                     [layout.link_variable_index(int(link_id)) for link_id in link_ids],
                     dtype=np.int64,
                 )
                 orientation_pattern = np.asarray(
-                    self.lattice.plaquette_orientations(int(plaquette_id)),
+                    self.lattice.plaquette_orientations(plaquette_id),
                     dtype=np.int64,
                 )
 
@@ -295,7 +313,7 @@ class QLMBase(HamiltonianModelBase):
                         layout=layout,
                         variable_indices=variable_indices,
                         pattern=orientation_pattern,
-                        coefficient=self.coup_pot,
+                        coefficient=coefficient,
                         name="qlm_flippability_pos",
                     )
                 )
@@ -304,7 +322,7 @@ class QLMBase(HamiltonianModelBase):
                         layout=layout,
                         variable_indices=variable_indices,
                         pattern=-orientation_pattern,
-                        coefficient=self.coup_pot,
+                        coefficient=coefficient,
                         name="qlm_flippability_neg",
                     )
                 )
@@ -312,15 +330,22 @@ class QLMBase(HamiltonianModelBase):
             return tuple(operators)
 
         if builder == "bitmask":
-            for plaquette_id in self.plaquette_ids():
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coefficient = self._coup_pot_at(plaquette_id)
+
+                if coefficient == 0:
+                    continue
+
                 operators.extend(
                     bitmask_qlm_flippability_projectors(
                         layout=layout,
                         lattice=self.lattice,
-                        plaquette_id=int(plaquette_id),
-                        coefficient=self.coup_pot,
+                        plaquette_id=plaquette_id,
+                        coefficient=coefficient,
                     )
                 )
+
             return tuple(operators)
 
         raise ValueError(f"Unsupported builder: {builder}")
@@ -470,14 +495,14 @@ class SquareQLMModel(QLMBase):
                 PlaquettePatternOperator(
                     layout=layout,
                     lattice=self.lattice,
-                    plaquette_id=int(plaquette_id),
+                    plaquette_id=int(p),
                     transitions=self._flux_transitions_from_pattern(
-                        self.lattice.plaquette_orientations(int(plaquette_id)),
-                        self.coup_kin,
+                        self.lattice.plaquette_orientations(int(p)),
+                        self._coup_kin_at(int(p)),
                     ),
                     name="qlm_plaquette_ring_exchange",
                 )
-                for plaquette_id in self.plaquette_ids()
+                for p in self.plaquette_ids()
             )
 
         if builder == "optimized":
@@ -485,14 +510,14 @@ class SquareQLMModel(QLMBase):
                 UpdatePlaquettePatternOperator(
                     layout=layout,
                     lattice=self.lattice,
-                    plaquette_id=int(plaquette_id),
+                    plaquette_id=int(p),
                     transitions=self._update_flux_transitions_from_pattern(
-                        self.lattice.plaquette_orientations(int(plaquette_id)),
-                        self.coup_kin,
+                        self.lattice.plaquette_orientations(int(p)),
+                        self._coup_kin_at(int(p)),
                     ),
                     name="update_qlm_plaquette_ring_exchange",
                 )
-                for plaquette_id in self.plaquette_ids()
+                for p in self.plaquette_ids()
             )
 
         if builder == "bitmask":
@@ -500,10 +525,10 @@ class SquareQLMModel(QLMBase):
                 BitmaskQLMFluxFlipOperator(
                     layout=layout,
                     lattice=self.lattice,
-                    plaquette_id=int(plaquette_id),
-                    coefficient=self.coup_kin,
+                    plaquette_id=int(p),
+                    coefficient=self._coup_kin_at(int(p)),
                 )
-                for plaquette_id in self.plaquette_ids()
+                for p in self.plaquette_ids()
             )
 
         raise ValueError(f"Unsupported builder: {builder}")
@@ -516,9 +541,6 @@ class SquareQLMModel(QLMBase):
     ) -> tuple[object, ...]:
         validate_builder_name(builder)
 
-        if self.coup_pot == 0:
-            return ()
-
         if layout is None:
             if builder == "bitmask":
                 layout = binary_layout_like_flux_layout(self.layout)
@@ -528,14 +550,20 @@ class SquareQLMModel(QLMBase):
         operators: list[object] = []
 
         if builder == "sparse":
-            for plaquette_id in self.plaquette_ids():
-                link_ids = self.lattice.plaquette_links(int(plaquette_id))
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coefficient = self._coup_pot_at(plaquette_id)
+
+                if coefficient == 0:
+                    continue
+
+                link_ids = self.lattice.plaquette_links(plaquette_id)
                 variable_indices = np.asarray(
                     [layout.link_variable_index(int(link_id)) for link_id in link_ids],
                     dtype=np.int64,
                 )
                 orientation_pattern = np.asarray(
-                    self.lattice.plaquette_orientations(int(plaquette_id)),
+                    self.lattice.plaquette_orientations(plaquette_id),
                     dtype=np.int64,
                 )
 
@@ -544,7 +572,7 @@ class SquareQLMModel(QLMBase):
                         layout=layout,
                         variable_indices=variable_indices,
                         pattern=orientation_pattern,
-                        coefficient=self.coup_pot,
+                        coefficient=coefficient,
                         name="qlm_flippability_pos",
                     )
                 )
@@ -553,7 +581,7 @@ class SquareQLMModel(QLMBase):
                         layout=layout,
                         variable_indices=variable_indices,
                         pattern=-orientation_pattern,
-                        coefficient=self.coup_pot,
+                        coefficient=coefficient,
                         name="qlm_flippability_neg",
                     )
                 )
@@ -562,12 +590,18 @@ class SquareQLMModel(QLMBase):
 
         if builder == "bitmask":
             for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coefficient = self._coup_pot_at(plaquette_id)
+
+                if coefficient == 0:
+                    continue
+
                 operators.extend(
                     bitmask_qlm_flippability_projectors(
                         layout=layout,
                         lattice=self.lattice,
-                        plaquette_id=int(p),
-                        coefficient=self.coup_pot,
+                        plaquette_id=plaquette_id,
+                        coefficient=coefficient,
                     )
                 )
 
@@ -588,8 +622,8 @@ class SquareQLMModel(QLMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        coup_kin: complex = -1.0,
-        coup_pot: complex = 0.0,
+        coup_kin: PlaquetteCoupling = -1.0,
+        coup_pot: PlaquetteCoupling = 0.0,
         charge_magnitude: int | None = None,
         charge_convention: SublatticeSignConvention = "even_positive",
         charge_normalization: ChargeNormalization = "spin_half",
@@ -782,8 +816,8 @@ class HoneycombQLMModel(QLMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        coup_kin: complex = -1.0,
-        coup_pot: complex = 0.0,
+        coup_kin: PlaquetteCoupling = -1.0,
+        coup_pot: PlaquetteCoupling = 0.0,
         charge_magnitude: int = 1,
         charge_convention: SublatticeSignConvention = "even_positive",
         winding_x: int | None = None,
@@ -909,8 +943,8 @@ class QLMModel(QLMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        coup_kin: complex = -1.0,
-        coup_pot: complex = 0.0,
+        coup_kin: PlaquetteCoupling = -1.0,
+        coup_pot: PlaquetteCoupling = 0.0,
         charges: int | Sequence[int] | npt.NDArray[np.int64] = 0,
     ) -> TriangularQLMModel:
         return TriangularQLMModel(
@@ -929,8 +963,8 @@ class QLMModel(QLMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        coup_kin: complex = -1.0,
-        coup_pot: complex = 0.0,
+        coup_kin: PlaquetteCoupling = -1.0,
+        coup_pot: PlaquetteCoupling = 0.0,
         charges: int | Sequence[int] | npt.NDArray[np.int64] = 0,
     ) -> HoneycombQLMModel:
         return HoneycombQLMModel(

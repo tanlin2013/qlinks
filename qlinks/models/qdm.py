@@ -30,6 +30,7 @@ from qlinks.models.base import (
     HamiltonianTermSpec,
     validate_builder_name,
 )
+from qlinks.models.couplings import PlaquetteCoupling, plaquette_coupling_value
 from qlinks.operators import (
     PlaquettePatternOperator,
     UpdatePlaquettePatternOperator,
@@ -59,9 +60,23 @@ class QDMBase(HamiltonianModelBase):
           + potential * sum_p flippability_p
     """
 
-    coup_kin: complex = -1.0
-    coup_pot: complex = 0.0
+    coup_kin: PlaquetteCoupling = -1.0
+    coup_pot: PlaquetteCoupling = 0.0
     required_count: int = 1
+
+    def _coup_kin_at(self, plaquette_id: int) -> complex:
+        return plaquette_coupling_value(
+            self.coup_kin,
+            int(plaquette_id),
+            name="coup_kin",
+        )
+
+    def _coup_pot_at(self, plaquette_id: int) -> complex:
+        return plaquette_coupling_value(
+            self.coup_pot,
+            int(plaquette_id),
+            name="coup_pot",
+        )
 
     def _make_layout(self) -> VariableLayout:
         return VariableLayout.from_lattice_links(
@@ -124,7 +139,7 @@ class QDMBase(HamiltonianModelBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.coup_kin,
+                    coefficient=self._coup_kin_at(int(p)),
                 )
                 for p in self.plaquette_ids()
             )
@@ -135,7 +150,7 @@ class QDMBase(HamiltonianModelBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.coup_kin,
+                    coefficient=self._coup_kin_at(int(p)),
                 )
                 for p in self.plaquette_ids()
             )
@@ -156,9 +171,6 @@ class QDMBase(HamiltonianModelBase):
     ) -> tuple[object, ...]:
         validate_builder_name(builder)
 
-        if self.coup_pot == 0:
-            return ()
-
         if layout is None:
             layout = self.layout
 
@@ -166,26 +178,40 @@ class QDMBase(HamiltonianModelBase):
 
         if builder == "sparse":
             for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coefficient = self._coup_pot_at(plaquette_id)
+
+                if coefficient == 0:
+                    continue
+
                 operators.extend(
                     alternating_binary_flippability_projectors(
                         layout=layout,
                         lattice=self.lattice,
-                        plaquette_id=int(p),
-                        coefficient=self.coup_pot,
+                        plaquette_id=plaquette_id,
+                        coefficient=coefficient,
                     )
                 )
+
             return tuple(operators)
 
         if builder == "bitmask":
             for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coefficient = self._coup_pot_at(plaquette_id)
+
+                if coefficient == 0:
+                    continue
+
                 operators.extend(
                     bitmask_alternating_flippability_projectors(
                         layout=layout,
                         lattice=self.lattice,
-                        plaquette_id=int(p),
-                        coefficient=self.coup_pot,
+                        plaquette_id=plaquette_id,
+                        coefficient=coefficient,
                     )
                 )
+
             return tuple(operators)
 
         if builder == "optimized":
@@ -367,7 +393,7 @@ class SquareQDMModel(QDMBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.coup_kin,
+                    coefficient=self._coup_kin_at(int(p)),
                 )
                 for p in self.plaquette_ids()
             )
@@ -378,7 +404,7 @@ class SquareQDMModel(QDMBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.coup_kin,
+                    coefficient=self._coup_kin_at(int(p)),
                 )
                 for p in self.plaquette_ids()
             )
@@ -389,7 +415,7 @@ class SquareQDMModel(QDMBase):
                     layout=layout,
                     lattice=self.lattice,
                     plaquette_id=int(p),
-                    coefficient=self.coup_kin,
+                    coefficient=self._coup_kin_at(int(p)),
                 )
                 for p in self.plaquette_ids()
             )
@@ -408,9 +434,6 @@ class SquareQDMModel(QDMBase):
 
         validate_builder_name(builder)
 
-        if self.coup_pot == 0:
-            return ()
-
         if layout is None:
             layout = self.layout
 
@@ -418,26 +441,40 @@ class SquareQDMModel(QDMBase):
 
         if builder == "sparse":
             for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coefficient = self._coup_pot_at(plaquette_id)
+
+                if coefficient == 0:
+                    continue
+
                 operators.extend(
                     qdm_flippability_projectors(
                         layout=layout,
                         lattice=self.lattice,
-                        plaquette_id=int(p),
-                        coefficient=self.coup_pot,
+                        plaquette_id=plaquette_id,
+                        coefficient=coefficient,
                     )
                 )
+
             return tuple(operators)
 
         if builder == "bitmask":
             for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coefficient = self._coup_pot_at(plaquette_id)
+
+                if coefficient == 0:
+                    continue
+
                 operators.extend(
                     bitmask_qdm_flippability_projectors(
                         layout=layout,
                         lattice=self.lattice,
-                        plaquette_id=int(p),
-                        coefficient=self.coup_pot,
+                        plaquette_id=plaquette_id,
+                        coefficient=coefficient,
                     )
                 )
+
             return tuple(operators)
 
         if builder == "optimized":
@@ -633,8 +670,8 @@ class QDMModel(QDMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        coup_kin: complex = -1.0,
-        coup_pot: complex = 0.0,
+        coup_kin: PlaquetteCoupling = -1.0,
+        coup_pot: PlaquetteCoupling = 0.0,
         required_count: int = 1,
     ) -> TriangularQDMModel:
         return TriangularQDMModel(
@@ -653,8 +690,8 @@ class QDMModel(QDMBase):
         ly: int,
         *,
         boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
-        coup_kin: complex = -1.0,
-        coup_pot: complex = 0.0,
+        coup_kin: PlaquetteCoupling = -1.0,
+        coup_pot: PlaquetteCoupling = 0.0,
         required_count: int = 1,
     ) -> HoneycombQDMModel:
         return HoneycombQDMModel(
