@@ -170,7 +170,7 @@ graph_visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(
 )
 
 graph_visualizer.plot(
-    backend="igraph-cairo",
+    backend="igraph-mpl",
     color_by="state_amplitude_real",
     state_vector=record.full_state,
     layout="kk",
@@ -217,14 +217,16 @@ The documentation is hosted on GitHub Pages:
 
 <https://tanlin2013.github.io/qlinks/>
 
+(<span style="color:red">Outdated and unmaintained</span>)
+
 ---
 
 ## References
 
 1. T.-L. Tan and Y.-P. Huang, Interference-caged quantum
 many-body scars: the fock space topological localization
-and interference zeros, arXiv preprint arXiv:2504.07780
-(2025). <https://arxiv.org/abs/2504.07780>
+and interference zeros, arXiv preprint [arXiv:2504.07780
+(2025)](https://arxiv.org/abs/2504.07780).
 
 2. T. Ben-Ami, M. Heyl, and R. Moessner, Many-body
 cages: disorder-free glassiness from flat bands in fock
