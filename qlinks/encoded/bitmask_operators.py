@@ -300,6 +300,7 @@ class BitmaskQDMFlipOperator:
     lattice: LatticeGraph
     plaquette_id: int
     coefficient: complex = 1.0
+    reverse_coefficient: complex | None = None
     name: str = "bitmask_qdm_flip"
 
     _variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False)
@@ -317,6 +318,13 @@ class BitmaskQDMFlipOperator:
         if variable_indices.size != 4:
             raise ValueError("BitmaskQDMFlipOperator currently expects four-link plaquettes.")
 
+        if self.reverse_coefficient is None:
+            object.__setattr__(
+                self,
+                "reverse_coefficient",
+                complex(self.coefficient).conjugate(),
+            )
+
         op_1010_to_0101 = BitmaskPatternFlipOperator(
             layout=self.layout,
             variable_indices=variable_indices,
@@ -330,7 +338,7 @@ class BitmaskQDMFlipOperator:
             variable_indices=variable_indices,
             initial_values=np.asarray([0, 1, 0, 1], dtype=np.int64),
             final_values=np.asarray([1, 0, 1, 0], dtype=np.int64),
-            coefficient=self.coefficient,
+            coefficient=self.reverse_coefficient,
         )
 
         object.__setattr__(self, "_variable_indices", variable_indices)
@@ -551,6 +559,7 @@ class BitmaskQLMFluxFlipOperator:
     lattice: LatticeGraph
     plaquette_id: int
     coefficient: complex = 1.0
+    reverse_coefficient: complex | None = None
     name: str = "bitmask_qlm_flux_flip"
 
     _variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False)
@@ -578,6 +587,13 @@ class BitmaskQLMFluxFlipOperator:
         if variable_indices.size != orientation_pattern.size:
             raise ValueError("Plaquette links and orientations must have the same length.")
 
+        if self.reverse_coefficient is None:
+            object.__setattr__(
+                self,
+                "reverse_coefficient",
+                complex(self.coefficient).conjugate(),
+            )
+
         binary_pattern = binary_pattern_from_flux_pattern(orientation_pattern)
         reversed_binary_pattern = 1 - binary_pattern
 
@@ -594,7 +610,7 @@ class BitmaskQLMFluxFlipOperator:
             variable_indices=variable_indices,
             initial_values=reversed_binary_pattern,
             final_values=binary_pattern,
-            coefficient=self.coefficient,
+            coefficient=self.reverse_coefficient,
             name="bitmask_qlm_flux_flip_reversed_to_oriented",
         )
 
@@ -676,6 +692,7 @@ class BitmaskAlternatingPlaquetteFlipOperator:
     lattice: LatticeGraph
     plaquette_id: int
     coefficient: complex = 1.0
+    reverse_coefficient: complex | None = None
     name: str = "bitmask_alternating_plaquette_flip"
 
     _variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False)
@@ -695,6 +712,13 @@ class BitmaskAlternatingPlaquetteFlipOperator:
         if length % 2 != 0:
             raise ValueError("BitmaskAlternatingPlaquetteFlipOperator requires even length.")
 
+        if self.reverse_coefficient is None:
+            object.__setattr__(
+                self,
+                "reverse_coefficient",
+                complex(self.coefficient).conjugate(),
+            )
+
         p0 = np.asarray([1 if i % 2 == 0 else 0 for i in range(length)], dtype=np.int64)
         p1 = 1 - p0
 
@@ -711,7 +735,7 @@ class BitmaskAlternatingPlaquetteFlipOperator:
             variable_indices=variable_indices,
             initial_values=p1,
             final_values=p0,
-            coefficient=self.coefficient,
+            coefficient=self.reverse_coefficient,
         )
 
         object.__setattr__(self, "_variable_indices", variable_indices)

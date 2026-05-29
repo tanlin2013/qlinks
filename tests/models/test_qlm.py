@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from scipy import sparse
 
 from qlinks.basis import Basis
 from qlinks.builders import is_hermitian_sparse
@@ -11,6 +12,37 @@ from qlinks.models import (
     SquareQLMModel,
     TriangularQLMModel,
 )
+
+
+def _assert_hermitian(matrix, *, atol: float = 1.0e-12) -> None:
+    diff = matrix - matrix.conj().T
+
+    if diff.nnz == 0:
+        return
+
+    assert np.max(np.abs(diff.data)) < atol
+
+
+def _as_csr(matrix: sparse.spmatrix | sparse.sparray) -> sparse.csr_array:
+    return sparse.csr_array(matrix)
+
+
+def _assert_sparse_allclose(
+    actual: sparse.spmatrix | sparse.sparray,
+    expected: sparse.spmatrix | sparse.sparray,
+    *,
+    atol: float = 1.0e-12,
+) -> None:
+    actual_csr = _as_csr(actual)
+    expected_csr = _as_csr(expected)
+
+    difference = actual_csr - expected_csr
+
+    if difference.nnz == 0:
+        return
+
+    max_abs = np.max(np.abs(difference.data))
+    assert max_abs < atol
 
 
 def test_square_qlm_manual_single_plaquette_sparse() -> None:
@@ -534,3 +566,63 @@ def test_square_qlm_2x2_sparse_and_bitmask_match(
     difference_matrix.eliminate_zeros()
 
     assert difference_matrix.nnz == 0
+
+
+@pytest.mark.parametrize("builder", ["sparse", "bitmask"])
+def test_square_qlm_peierls_coup_kin_is_hermitian(builder: str) -> None:
+    reference_model = SquareQLMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        coup_kin=-1.0,
+        coup_pot=0.0,
+    )
+
+    coup_kin = {
+        int(p): np.exp(0.3j * index) for index, p in enumerate(reference_model.plaquette_ids())
+    }
+
+    model = SquareQLMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        coup_kin=coup_kin,
+        coup_pot=0.0,
+    )
+
+    result = model.build(builder=builder)
+
+    _assert_hermitian(result.kinetic)
+    _assert_hermitian(result.hamiltonian)
+
+
+def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
+    reference_model = SquareQLMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        coup_kin=-1.0,
+        coup_pot=0.0,
+    )
+
+    coup_kin = {
+        int(p): np.exp(0.2j * index) for index, p in enumerate(reference_model.plaquette_ids())
+    }
+
+    sparse_result = SquareQLMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        coup_kin=coup_kin,
+        coup_pot=0.0,
+    ).build(builder="sparse")
+
+    bitmask_result = SquareQLMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        coup_kin=coup_kin,
+        coup_pot=0.0,
+    ).build(builder="bitmask", sort_basis=False)
+
+    _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)

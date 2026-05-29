@@ -101,6 +101,7 @@ class PlaquettePatternOperator(BaseLocalOperator):
         lattice: LatticeGraph,
         plaquette_id: int,
         coefficient: complex = 1.0,
+        reverse_coefficient: complex | None = None,
     ) -> PlaquettePatternOperator:
         """
         Standard binary dimer plaquette flip:
@@ -109,17 +110,19 @@ class PlaquettePatternOperator(BaseLocalOperator):
 
         The order is the plaquette link order supplied by the lattice.
         """
+        if reverse_coefficient is None:
+            reverse_coefficient = complex(coefficient).conjugate()
 
         transitions = (
             PlaquettePatternTransition(
                 initial=np.asarray([1, 0, 1, 0], dtype=np.int64),
                 final=np.asarray([0, 1, 0, 1], dtype=np.int64),
-                coefficient=coefficient,
+                coefficient=complex(coefficient),
             ),
             PlaquettePatternTransition(
                 initial=np.asarray([0, 1, 0, 1], dtype=np.int64),
                 final=np.asarray([1, 0, 1, 0], dtype=np.int64),
-                coefficient=coefficient,
+                coefficient=complex(reverse_coefficient),
             ),
         )
 
@@ -138,13 +141,19 @@ class PlaquettePatternOperator(BaseLocalOperator):
         lattice: LatticeGraph,
         plaquette_id: int,
         coefficient: complex = 1.0,
+        reverse_coefficient: complex | None = None,
     ) -> PlaquettePatternOperator:
+        if reverse_coefficient is None:
+            reverse_coefficient = complex(coefficient).conjugate()
+
         link_ids = lattice.plaquette_links(plaquette_id)
         p0, p1 = alternating_binary_patterns(len(link_ids))
 
         transitions = (
-            PlaquettePatternTransition(initial=p0, final=p1, coefficient=coefficient),
-            PlaquettePatternTransition(initial=p1, final=p0, coefficient=coefficient),
+            PlaquettePatternTransition(initial=p0, final=p1, coefficient=complex(coefficient)),
+            PlaquettePatternTransition(
+                initial=p1, final=p0, coefficient=complex(reverse_coefficient)
+            ),
         )
 
         return cls(

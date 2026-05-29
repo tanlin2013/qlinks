@@ -414,17 +414,21 @@ class UpdatePlaquettePatternOperator(BaseLocalUpdateOperator):
         lattice: LatticeGraph,
         plaquette_id: int,
         coefficient: complex = 1.0,
+        reverse_coefficient: complex | None = None,
     ) -> UpdatePlaquettePatternOperator:
+        if reverse_coefficient is None:
+            reverse_coefficient = complex(coefficient).conjugate()
+
         transitions = (
             UpdatePlaquettePatternTransition(
                 initial=np.asarray([1, 0, 1, 0], dtype=np.int64),
                 final=np.asarray([0, 1, 0, 1], dtype=np.int64),
-                coefficient=coefficient,
+                coefficient=complex(coefficient),
             ),
             UpdatePlaquettePatternTransition(
                 initial=np.asarray([0, 1, 0, 1], dtype=np.int64),
                 final=np.asarray([1, 0, 1, 0], dtype=np.int64),
-                coefficient=coefficient,
+                coefficient=complex(reverse_coefficient),
             ),
         )
 

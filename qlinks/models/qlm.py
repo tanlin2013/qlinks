@@ -36,7 +36,14 @@ from qlinks.models.base import (
     HamiltonianTermSpec,
     validate_builder_name,
 )
-from qlinks.models.couplings import PlaquetteCoupling, plaquette_coupling_value
+from qlinks.models.couplings import (
+    DirectedPlaquetteCoupling,
+    DirectedPlaquetteCouplingLike,
+    PlaquetteCoupling,
+    directed_plaquette_coupling_value,
+    is_zero_coupling,
+    plaquette_coupling_value,
+)
 from qlinks.operators import (
     PatternDiagonalOperator,
     PlaquettePatternOperator,
@@ -71,13 +78,13 @@ class QLMBase(HamiltonianModelBase):
             +1 -> 1
     """
 
-    coup_kin: PlaquetteCoupling = -1.0
+    coup_kin: DirectedPlaquetteCouplingLike = -1.0
     coup_pot: PlaquetteCoupling = 0.0
     charges: int | Sequence[int] | npt.NDArray[np.int64] = 0
     charge_normalization: ChargeNormalization = "spin_half"
 
-    def _coup_kin_at(self, plaquette_id: int) -> complex:
-        return plaquette_coupling_value(
+    def _coup_kin_at(self, plaquette_id: int) -> DirectedPlaquetteCoupling:
+        return directed_plaquette_coupling_value(
             self.coup_kin,
             int(plaquette_id),
             name="coup_kin",
@@ -176,8 +183,12 @@ class QLMBase(HamiltonianModelBase):
     def _flux_transitions_from_pattern(
         orientation_pattern: npt.NDArray[np.int64],
         coefficient: complex,
+        reverse_coefficient: complex | None = None,
     ) -> tuple[PlaquettePatternTransition, PlaquettePatternTransition]:
         """Return QLM ring-exchange transitions for one oriented plaquette."""
+        if reverse_coefficient is None:
+            reverse_coefficient = complex(coefficient).conjugate()
+
         orientation_pattern = np.asarray(orientation_pattern, dtype=np.int64)
 
         if not np.all(np.isin(orientation_pattern, [-1, 1])):
@@ -187,12 +198,12 @@ class QLMBase(HamiltonianModelBase):
             PlaquettePatternTransition(
                 initial=orientation_pattern,
                 final=-orientation_pattern,
-                coefficient=coefficient,
+                coefficient=complex(coefficient),
             ),
             PlaquettePatternTransition(
                 initial=-orientation_pattern,
                 final=orientation_pattern,
-                coefficient=coefficient,
+                coefficient=complex(reverse_coefficient),
             ),
         )
 
@@ -240,31 +251,45 @@ class QLMBase(HamiltonianModelBase):
             else:
                 layout = self.layout
 
+        operators: list[object] = []
+
         if builder == "sparse":
-            return tuple(
-                PlaquettePatternOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    transitions=self._flux_transitions_from_pattern(
-                        self.lattice.plaquette_orientations(int(p)),
-                        self._coup_kin_at(int(p)),
-                    ),
-                    name="qlm_plaquette_ring_exchange",
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    PlaquettePatternOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=int(p),
+                        transitions=self._flux_transitions_from_pattern(
+                            self.lattice.plaquette_orientations(plaquette_id),
+                            coupling.resolved_forward(),
+                            coupling.resolved_backward(),
+                        ),
+                        name="qlm_plaquette_ring_exchange",
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         if builder == "bitmask":
-            return tuple(
-                BitmaskQLMFluxFlipOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    coefficient=self._coup_kin_at(int(p)),
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    BitmaskQLMFluxFlipOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=plaquette_id,
+                        coefficient=coupling.resolved_forward(),
+                        reverse_coefficient=coupling.resolved_backward(),
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         raise ValueError(f"Unsupported builder: {builder}")
 
@@ -287,6 +312,9 @@ class QLMBase(HamiltonianModelBase):
                 layout = binary_layout_like_flux_layout(self.layout)
             else:
                 layout = self.layout
+
+        if is_zero_coupling(self.coup_pot, self.plaquette_ids()):
+            return ()
 
         operators: list[object] = []
 
@@ -490,46 +518,66 @@ class SquareQLMModel(QLMBase):
             else:
                 layout = self.layout
 
+        operators: list[object] = []
+
         if builder == "sparse":
-            return tuple(
-                PlaquettePatternOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    transitions=self._flux_transitions_from_pattern(
-                        self.lattice.plaquette_orientations(int(p)),
-                        self._coup_kin_at(int(p)),
-                    ),
-                    name="qlm_plaquette_ring_exchange",
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    PlaquettePatternOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=int(p),
+                        transitions=self._flux_transitions_from_pattern(
+                            self.lattice.plaquette_orientations(plaquette_id),
+                            coupling.resolved_forward(),
+                            coupling.resolved_backward(),
+                        ),
+                        name="qlm_plaquette_ring_exchange",
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         if builder == "optimized":
-            return tuple(
-                UpdatePlaquettePatternOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    transitions=self._update_flux_transitions_from_pattern(
-                        self.lattice.plaquette_orientations(int(p)),
-                        self._coup_kin_at(int(p)),
-                    ),
-                    name="update_qlm_plaquette_ring_exchange",
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    UpdatePlaquettePatternOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=int(p),
+                        transitions=self._flux_transitions_from_pattern(
+                            self.lattice.plaquette_orientations(plaquette_id),
+                            coupling.resolved_forward(),
+                            coupling.resolved_backward(),
+                        ),
+                        name="update_qlm_plaquette_ring_exchange",
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         if builder == "bitmask":
-            return tuple(
-                BitmaskQLMFluxFlipOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    coefficient=self._coup_kin_at(int(p)),
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    BitmaskQLMFluxFlipOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=plaquette_id,
+                        coefficient=coupling.resolved_forward(),
+                        reverse_coefficient=coupling.resolved_backward(),
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         raise ValueError(f"Unsupported builder: {builder}")
 
@@ -546,6 +594,9 @@ class SquareQLMModel(QLMBase):
                 layout = binary_layout_like_flux_layout(self.layout)
             else:
                 layout = self.layout
+
+        if is_zero_coupling(self.coup_pot, self.plaquette_ids()):
+            return ()
 
         operators: list[object] = []
 

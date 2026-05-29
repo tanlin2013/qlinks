@@ -30,7 +30,14 @@ from qlinks.models.base import (
     HamiltonianTermSpec,
     validate_builder_name,
 )
-from qlinks.models.couplings import PlaquetteCoupling, plaquette_coupling_value
+from qlinks.models.couplings import (
+    DirectedPlaquetteCoupling,
+    DirectedPlaquetteCouplingLike,
+    PlaquetteCoupling,
+    directed_plaquette_coupling_value,
+    is_zero_coupling,
+    plaquette_coupling_value,
+)
 from qlinks.operators import (
     PlaquettePatternOperator,
     UpdatePlaquettePatternOperator,
@@ -60,12 +67,12 @@ class QDMBase(HamiltonianModelBase):
           + potential * sum_p flippability_p
     """
 
-    coup_kin: PlaquetteCoupling = -1.0
+    coup_kin: DirectedPlaquetteCouplingLike = -1.0
     coup_pot: PlaquetteCoupling = 0.0
     required_count: int = 1
 
-    def _coup_kin_at(self, plaquette_id: int) -> complex:
-        return plaquette_coupling_value(
+    def _coup_kin_at(self, plaquette_id: int) -> DirectedPlaquetteCoupling:
+        return directed_plaquette_coupling_value(
             self.coup_kin,
             int(plaquette_id),
             name="coup_kin",
@@ -133,27 +140,41 @@ class QDMBase(HamiltonianModelBase):
         if layout is None:
             layout = self.layout
 
+        operators: list[object] = []
+
         if builder == "sparse":
-            return tuple(
-                PlaquettePatternOperator.alternating_binary_flip(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    coefficient=self._coup_kin_at(int(p)),
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    PlaquettePatternOperator.alternating_binary_flip(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=plaquette_id,
+                        coefficient=coupling.resolved_forward(),
+                        reverse_coefficient=coupling.resolved_backward(),
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         if builder == "bitmask":
-            return tuple(
-                BitmaskAlternatingPlaquetteFlipOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    coefficient=self._coup_kin_at(int(p)),
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    BitmaskAlternatingPlaquetteFlipOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=plaquette_id,
+                        coefficient=coupling.resolved_forward(),
+                        reverse_coefficient=coupling.resolved_backward(),
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         if builder == "optimized":
             raise NotImplementedError(
@@ -173,6 +194,9 @@ class QDMBase(HamiltonianModelBase):
 
         if layout is None:
             layout = self.layout
+
+        if is_zero_coupling(self.coup_pot, self.plaquette_ids()):
+            return ()
 
         operators: list[object] = []
 
@@ -387,38 +411,58 @@ class SquareQDMModel(QDMBase):
         if layout is None:
             layout = self.layout
 
+        operators: list[object] = []
+
         if builder == "sparse":
-            return tuple(
-                PlaquettePatternOperator.qdm_flip(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    coefficient=self._coup_kin_at(int(p)),
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    PlaquettePatternOperator.qdm_flip(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=plaquette_id,
+                        coefficient=coupling.resolved_forward(),
+                        reverse_coefficient=coupling.resolved_backward(),
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         if builder == "optimized":
-            return tuple(
-                UpdatePlaquettePatternOperator.qdm_flip(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    coefficient=self._coup_kin_at(int(p)),
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    UpdatePlaquettePatternOperator.qdm_flip(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=plaquette_id,
+                        coefficient=coupling.resolved_forward(),
+                        reverse_coefficient=coupling.resolved_backward(),
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         if builder == "bitmask":
-            return tuple(
-                BitmaskQDMFlipOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    plaquette_id=int(p),
-                    coefficient=self._coup_kin_at(int(p)),
+            for p in self.plaquette_ids():
+                plaquette_id = int(p)
+                coupling = self._coup_kin_at(plaquette_id)
+
+                operators.append(
+                    BitmaskQDMFlipOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        plaquette_id=plaquette_id,
+                        coefficient=coupling.resolved_forward(),
+                        reverse_coefficient=coupling.resolved_backward(),
+                    )
                 )
-                for p in self.plaquette_ids()
-            )
+
+            return tuple(operators)
 
         raise ValueError(f"Unsupported builder: {builder}")
 
@@ -436,6 +480,9 @@ class SquareQDMModel(QDMBase):
 
         if layout is None:
             layout = self.layout
+
+        if is_zero_coupling(self.coup_pot, self.plaquette_ids()):
+            return ()
 
         operators: list[object] = []
 
