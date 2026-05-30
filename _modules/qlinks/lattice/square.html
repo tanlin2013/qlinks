@@ -473,6 +473,7 @@
                             <span class="n">orientations</span><span class="o">=</span><span class="p">(</span><span class="n">o0</span><span class="p">,</span> <span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">o3</span><span class="p">),</span>
                             <span class="n">sites</span><span class="o">=</span><span class="n">loop_sites</span><span class="p">,</span>
                             <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;square&quot;</span><span class="p">,</span>
+                            <span class="n">anchor_cell</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
 
@@ -512,6 +513,32 @@
             <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;site coordinate (</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">) outside lattice.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ly</span> <span class="o">+</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="SquareLattice.canonical_cell">
+<a class="viewcode-back" href="../../../qlinks.lattice.html#qlinks.lattice.SquareLattice.canonical_cell">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">canonical_cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected 2D cell coordinate, got </span><span class="si">{</span><span class="n">cell</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">==</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span> <span class="n">y</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">ly</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="SquareLattice.plaquette_id_from_cell">
+<a class="viewcode-back" href="../../../qlinks.lattice.html#qlinks.lattice.SquareLattice.plaquette_id_from_cell">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plaquette_id_from_cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_id_from_anchor</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;square&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareLattice.square_plaquette_id">
+<a class="viewcode-back" href="../../../qlinks.lattice.html#qlinks.lattice.SquareLattice.square_plaquette_id">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">square_plaquette_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_id_from_cell</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

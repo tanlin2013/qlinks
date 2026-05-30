@@ -532,6 +532,7 @@
                     <span class="n">orientations</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">orientations</span><span class="p">),</span>
                     <span class="n">sites</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">site_ids</span><span class="p">),</span>
                     <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;hexagon&quot;</span><span class="p">,</span>
+                    <span class="n">anchor_cell</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
@@ -594,6 +595,12 @@
 <a class="viewcode-back" href="../../../qlinks.lattice.html#qlinks.lattice.HoneycombLattice.qlm_plaquette_ids">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">qlm_plaquette_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">qdm_plaquette_ids</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="HoneycombLattice.hexagon_plaquette_id">
+<a class="viewcode-back" href="../../../qlinks.lattice.html#qlinks.lattice.HoneycombLattice.hexagon_plaquette_id">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hexagon_plaquette_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_id_from_anchor</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;hexagon&quot;</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

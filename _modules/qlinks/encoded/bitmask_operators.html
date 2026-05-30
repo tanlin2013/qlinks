@@ -669,6 +669,7 @@
     <span class="n">lattice</span><span class="p">:</span> <span class="n">LatticeGraph</span>
     <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">reverse_coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bitmask_qdm_flip&quot;</span>
 
     <span class="n">_variable_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -686,6 +687,13 @@
         <span class="k">if</span> <span class="n">variable_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;BitmaskQDMFlipOperator currently expects four-link plaquettes.&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_coefficient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="s2">&quot;reverse_coefficient&quot;</span><span class="p">,</span>
+                <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span>
+            <span class="p">)</span>
+
         <span class="n">op_1010_to_0101</span> <span class="o">=</span> <span class="n">BitmaskPatternFlipOperator</span><span class="p">(</span>
             <span class="n">layout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
             <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
@@ -699,7 +707,7 @@
             <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
             <span class="n">initial_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
             <span class="n">final_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
-            <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span>
+            <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reverse_coefficient</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_variable_indices&quot;</span><span class="p">,</span> <span class="n">variable_indices</span><span class="p">)</span>
@@ -947,6 +955,7 @@
     <span class="n">lattice</span><span class="p">:</span> <span class="n">LatticeGraph</span>
     <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">reverse_coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bitmask_qlm_flux_flip&quot;</span>
 
     <span class="n">_variable_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -974,6 +983,13 @@
         <span class="k">if</span> <span class="n">variable_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">orientation_pattern</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Plaquette links and orientations must have the same length.&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_coefficient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="s2">&quot;reverse_coefficient&quot;</span><span class="p">,</span>
+                <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span>
+            <span class="p">)</span>
+
         <span class="n">binary_pattern</span> <span class="o">=</span> <span class="n">binary_pattern_from_flux_pattern</span><span class="p">(</span><span class="n">orientation_pattern</span><span class="p">)</span>
         <span class="n">reversed_binary_pattern</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">binary_pattern</span>
 
@@ -990,7 +1006,7 @@
             <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
             <span class="n">initial_values</span><span class="o">=</span><span class="n">reversed_binary_pattern</span><span class="p">,</span>
             <span class="n">final_values</span><span class="o">=</span><span class="n">binary_pattern</span><span class="p">,</span>
-            <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span>
+            <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reverse_coefficient</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="s2">&quot;bitmask_qlm_flux_flip_reversed_to_oriented&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1084,6 +1100,7 @@
     <span class="n">lattice</span><span class="p">:</span> <span class="n">LatticeGraph</span>
     <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">reverse_coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bitmask_alternating_plaquette_flip&quot;</span>
 
     <span class="n">_variable_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1103,6 +1120,13 @@
         <span class="k">if</span> <span class="n">length</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;BitmaskAlternatingPlaquetteFlipOperator requires even length.&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_coefficient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="s2">&quot;reverse_coefficient&quot;</span><span class="p">,</span>
+                <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span>
+            <span class="p">)</span>
+
         <span class="n">p0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
         <span class="n">p1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">p0</span>
 
@@ -1119,7 +1143,7 @@
             <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
             <span class="n">initial_values</span><span class="o">=</span><span class="n">p1</span><span class="p">,</span>
             <span class="n">final_values</span><span class="o">=</span><span class="n">p0</span><span class="p">,</span>
-            <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span>
+            <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reverse_coefficient</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_variable_indices&quot;</span><span class="p">,</span> <span class="n">variable_indices</span><span class="p">)</span>

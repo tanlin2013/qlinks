@@ -1689,7 +1689,7 @@ geometry-specific topological sectors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 </ul>
@@ -1697,7 +1697,7 @@ geometry-specific topological sectors.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.models.qdm.QDMBase.coup_kin">
-<span class="sig-name descname"><span class="pre">coup_kin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></em><a class="headerlink" href="#qlinks.models.qdm.QDMBase.coup_kin" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">coup_kin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></em><a class="headerlink" href="#qlinks.models.qdm.QDMBase.coup_kin" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -1816,7 +1816,7 @@ than elementary triangles.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 </ul>
@@ -1849,7 +1849,7 @@ to staggered-charge QLM mapping.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -1984,7 +1984,7 @@ square-QDM convention explicitly.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -2012,7 +2012,7 @@ square-QDM convention explicitly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -2104,7 +2104,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -2131,7 +2131,7 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -2223,7 +2223,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -2256,7 +2256,7 @@ HoneycombQDMModel</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lattice_input</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a><em> | </em><em>None</em>)</p></li>
@@ -2314,7 +2314,7 @@ HoneycombQDMModel</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lattice_input</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a><em> | </em><em>None</em>)</p></li>
@@ -2360,7 +2360,7 @@ HoneycombQDMModel</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -2369,7 +2369,7 @@ HoneycombQDMModel</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.models.qlm.QLMBase.coup_kin">
-<span class="sig-name descname"><span class="pre">coup_kin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></em><a class="headerlink" href="#qlinks.models.qlm.QLMBase.coup_kin" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">coup_kin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></em><a class="headerlink" href="#qlinks.models.qlm.QLMBase.coup_kin" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -2513,7 +2513,7 @@ are {-1,+1}, while the bitmask backend needs binary {0,1}.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -2544,7 +2544,7 @@ are {-1,+1}, while the bitmask backend needs binary {0,1}.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -2692,7 +2692,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -2722,7 +2722,7 @@ even-length loops.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -2814,7 +2814,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -2842,7 +2842,7 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -2997,7 +2997,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -3031,7 +3031,7 @@ HoneycombQLMModel</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -3090,7 +3090,7 @@ HoneycombQLMModel</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -3995,7 +3995,7 @@ geometry-specific topological sectors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 </ul>
@@ -4003,7 +4003,7 @@ geometry-specific topological sectors.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.models.QDMBase.coup_kin">
-<span class="sig-name descname"><span class="pre">coup_kin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></em><a class="headerlink" href="#qlinks.models.QDMBase.coup_kin" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">coup_kin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></em><a class="headerlink" href="#qlinks.models.QDMBase.coup_kin" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -4122,7 +4122,7 @@ than elementary triangles.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 </ul>
@@ -4150,7 +4150,7 @@ HoneycombQDMModel</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lattice_input</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a><em> | </em><em>None</em>)</p></li>
@@ -4208,7 +4208,7 @@ HoneycombQDMModel</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lattice_input</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a><em> | </em><em>None</em>)</p></li>
@@ -4242,7 +4242,7 @@ to staggered-charge QLM mapping.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -4377,7 +4377,7 @@ square-QDM convention explicitly.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -4413,7 +4413,7 @@ square-QDM convention explicitly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -4561,7 +4561,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -4589,7 +4589,7 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -4681,7 +4681,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -4708,7 +4708,7 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -4800,7 +4800,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>required_count</strong> (<em>int</em>)</p></li>
 <li><p><strong>lx</strong> (<em>int</em>)</p></li>
@@ -4847,7 +4847,7 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -4856,7 +4856,7 @@ Geometry-specific subclasses should override this method.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.models.QLMBase.coup_kin">
-<span class="sig-name descname"><span class="pre">coup_kin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></em><a class="headerlink" href="#qlinks.models.QLMBase.coup_kin" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">coup_kin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DirectedPlaquetteCoupling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></em><a class="headerlink" href="#qlinks.models.QLMBase.coup_kin" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -5000,7 +5000,7 @@ are {-1,+1}, while the bitmask backend needs binary {0,1}.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -5029,7 +5029,7 @@ HoneycombQLMModel</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -5088,7 +5088,7 @@ HoneycombQLMModel</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -5427,7 +5427,7 @@ even-length loops.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -5519,7 +5519,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -5547,7 +5547,7 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>
@@ -5702,7 +5702,7 @@ Geometry-specific subclasses should override this method.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coup_kin</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
+<li><p><strong>coup_kin</strong> (<em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>DirectedPlaquetteCoupling</em><em> | </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>coup_pot</strong> (<em>complex</em><em> | </em><em>Mapping</em><em>[</em><em>int</em><em>, </em><em>complex</em><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>complex</em><em>]</em>)</p></li>
 <li><p><strong>charges</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
 <li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>)</p></li>

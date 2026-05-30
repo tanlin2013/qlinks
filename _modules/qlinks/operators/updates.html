@@ -803,17 +803,21 @@
         <span class="n">lattice</span><span class="p">:</span> <span class="n">LatticeGraph</span><span class="p">,</span>
         <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">reverse_coefficient</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UpdatePlaquettePatternOperator</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">reverse_coefficient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">reverse_coefficient</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+
         <span class="n">transitions</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">UpdatePlaquettePatternTransition</span><span class="p">(</span>
                 <span class="n">initial</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
                 <span class="n">final</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
-                <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">coefficient</span><span class="p">),</span>
             <span class="p">),</span>
             <span class="n">UpdatePlaquettePatternTransition</span><span class="p">(</span>
                 <span class="n">initial</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
                 <span class="n">final</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
-                <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">reverse_coefficient</span><span class="p">),</span>
             <span class="p">),</span>
         <span class="p">)</span>
 

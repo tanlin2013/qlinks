@@ -1727,7 +1727,7 @@ and other local loop moves.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.operators.plaquette.PlaquettePatternOperator.qdm_flip">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qdm_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/plaquette.html#PlaquettePatternOperator.qdm_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.plaquette.PlaquettePatternOperator.qdm_flip" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qdm_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/plaquette.html#PlaquettePatternOperator.qdm_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.plaquette.PlaquettePatternOperator.qdm_flip" title="Link to this definition">#</a></dt>
 <dd><p>Standard binary dimer plaquette flip:</p>
 <blockquote>
 <div><p>1010 &lt;-&gt; 0101</p>
@@ -1740,6 +1740,7 @@ and other local loop moves.</p>
 <li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
 <li><p><strong>plaquette_id</strong> (<em>int</em>)</p></li>
 <li><p><strong>coefficient</strong> (<em>complex</em>)</p></li>
+<li><p><strong>reverse_coefficient</strong> (<em>complex</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1750,7 +1751,7 @@ and other local loop moves.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.operators.plaquette.PlaquettePatternOperator.alternating_binary_flip">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alternating_binary_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/plaquette.html#PlaquettePatternOperator.alternating_binary_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.plaquette.PlaquettePatternOperator.alternating_binary_flip" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alternating_binary_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/plaquette.html#PlaquettePatternOperator.alternating_binary_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.plaquette.PlaquettePatternOperator.alternating_binary_flip" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1758,6 +1759,7 @@ and other local loop moves.</p>
 <li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
 <li><p><strong>plaquette_id</strong> (<em>int</em>)</p></li>
 <li><p><strong>coefficient</strong> (<em>complex</em>)</p></li>
+<li><p><strong>reverse_coefficient</strong> (<em>complex</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3119,7 +3121,7 @@ setting those variables to final_values.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.operators.updates.UpdatePlaquettePatternOperator.qdm_flip">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qdm_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdatePlaquettePatternOperator.qdm_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.updates.UpdatePlaquettePatternOperator.qdm_flip" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qdm_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdatePlaquettePatternOperator.qdm_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.updates.UpdatePlaquettePatternOperator.qdm_flip" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3127,6 +3129,7 @@ setting those variables to final_values.</p>
 <li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
 <li><p><strong>plaquette_id</strong> (<em>int</em>)</p></li>
 <li><p><strong>coefficient</strong> (<em>complex</em>)</p></li>
+<li><p><strong>reverse_coefficient</strong> (<em>complex</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -4540,7 +4543,7 @@ and other local loop moves.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.operators.PlaquettePatternOperator.qdm_flip">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qdm_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/plaquette.html#PlaquettePatternOperator.qdm_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.PlaquettePatternOperator.qdm_flip" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qdm_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/plaquette.html#PlaquettePatternOperator.qdm_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.PlaquettePatternOperator.qdm_flip" title="Link to this definition">#</a></dt>
 <dd><p>Standard binary dimer plaquette flip:</p>
 <blockquote>
 <div><p>1010 &lt;-&gt; 0101</p>
@@ -4553,6 +4556,7 @@ and other local loop moves.</p>
 <li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
 <li><p><strong>plaquette_id</strong> (<em>int</em>)</p></li>
 <li><p><strong>coefficient</strong> (<em>complex</em>)</p></li>
+<li><p><strong>reverse_coefficient</strong> (<em>complex</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -4563,7 +4567,7 @@ and other local loop moves.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.operators.PlaquettePatternOperator.alternating_binary_flip">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alternating_binary_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/plaquette.html#PlaquettePatternOperator.alternating_binary_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.PlaquettePatternOperator.alternating_binary_flip" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alternating_binary_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/plaquette.html#PlaquettePatternOperator.alternating_binary_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.PlaquettePatternOperator.alternating_binary_flip" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -4571,6 +4575,7 @@ and other local loop moves.</p>
 <li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
 <li><p><strong>plaquette_id</strong> (<em>int</em>)</p></li>
 <li><p><strong>coefficient</strong> (<em>complex</em>)</p></li>
+<li><p><strong>reverse_coefficient</strong> (<em>complex</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -6011,7 +6016,7 @@ local updates.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.operators.UpdatePlaquettePatternOperator.qdm_flip">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qdm_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdatePlaquettePatternOperator.qdm_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.UpdatePlaquettePatternOperator.qdm_flip" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">qdm_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdatePlaquettePatternOperator.qdm_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.UpdatePlaquettePatternOperator.qdm_flip" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -6019,6 +6024,7 @@ local updates.</p>
 <li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>)</p></li>
 <li><p><strong>plaquette_id</strong> (<em>int</em>)</p></li>
 <li><p><strong>coefficient</strong> (<em>complex</em>)</p></li>
+<li><p><strong>reverse_coefficient</strong> (<em>complex</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
