@@ -734,7 +734,7 @@ class BasisConfigurationVisualizer:
                     image_shift=source_shift,
                 )
 
-                if not self._is_visual_cell_in_positive_patch(source_visual_cell):
+                if not self._is_visual_cell_in_positive_patch_closure_shell(source_visual_cell):
                     continue
 
                 displacement = self._link_cell_displacement(link)
@@ -744,7 +744,7 @@ class BasisConfigurationVisualizer:
                     for d in range(self.lattice.ndim)
                 )
 
-                if not self._is_visual_cell_in_positive_patch(target_visual_cell):
+                if not self._is_visual_cell_in_positive_patch_closure_shell(target_visual_cell):
                     continue
 
                 target_shift = self._image_shift_for_visual_cell(
@@ -1530,9 +1530,9 @@ class BasisConfigurationVisualizer:
         self,
         candidate_lists: list[list[_DrawLink]],
     ) -> tuple[_DrawLink, ...] | None:
-        """Choose one drawn image per physical link that forms a closed cycle."""
+        """Choose the preferred closed visual representative of a plaquette."""
         best: tuple[_DrawLink, ...] | None = None
-        best_score = float("inf")
+        best_score: tuple[float, float, float] | None = None
 
         for candidate_tuple in product(*candidate_lists):
             selected = tuple(candidate_tuple)
@@ -1540,13 +1540,36 @@ class BasisConfigurationVisualizer:
             if not self._draw_links_form_closed_cycle(selected):
                 continue
 
-            score = self._visual_plaquette_compactness_score(selected)
+            score = self._visual_plaquette_representative_score(selected)
 
-            if score < best_score:
+            if best_score is None or score < best_score:
                 best = selected
                 best_score = score
 
         return best
+
+    def _visual_plaquette_representative_score(
+        self,
+        draw_links: tuple[_DrawLink, ...],
+    ) -> tuple[float, float, float]:
+        """Score visual plaquette representatives.
+
+        Lower score is preferred:
+            1. lower visual center;
+            2. left visual center;
+            3. compact closed polygon.
+
+        This makes the positive-patch plaquette-symbol convention prefer the
+        lower-left representative whenever several closed representatives exist.
+        """
+        center = self._closed_visual_plaquette_center(draw_links)
+        compactness = self._visual_plaquette_compactness_score(draw_links)
+
+        return (
+            float(center[1]),  # prefer bottom
+            float(center[0]),  # then prefer left
+            float(compactness),  # only then prefer compactness
+        )
 
     def _draw_links_form_closed_cycle(
         self,
@@ -2422,6 +2445,29 @@ class BasisConfigurationVisualizer:
 
         return True
 
+    def _is_visual_cell_in_positive_patch_closure_shell(
+        self,
+        visual_cell: tuple[int, ...],
+    ) -> bool:
+        """Return whether a visual cell may be used to close boundary plaquettes.
+
+        For triangular lattices, boundary rhombi may need a one-cell halo on the
+        positive side. We only allow the top/right halo, not the left/bottom halo,
+        because positive-patch drawing should show each periodic object once using
+        positive-side images.
+        """
+        if self.periodic_image_mode != "positive_patch":
+            return self._is_visual_cell_in_positive_patch(visual_cell)
+
+        if not isinstance(self.lattice, TriangularLattice):
+            return self._is_visual_cell_in_positive_patch(visual_cell)
+
+        spans = self._cell_spans()
+
+        return all(
+            0 <= int(cell) <= int(span) + 1 for cell, span in zip(visual_cell, spans, strict=True)
+        )
+
     def _positive_patch_node_image_shifts(self) -> tuple[tuple[int, ...], ...]:
         ndim = self.lattice.ndim
 
@@ -2447,10 +2493,9 @@ class BasisConfigurationVisualizer:
             return ((0,),)
 
         if ndim == 2:
-            # Honeycomb needs the corner source shift because the upper apex
-            # A-site at image_shift=(1,1) has outgoing A->B links that close
-            # the top boundary hexagon.
-            if isinstance(self.lattice, HoneycombLattice):
+            # Honeycomb and triangular lattices can require corner-source links
+            # to close boundary plaquettes in the positive patch.
+            if isinstance(self.lattice, (HoneycombLattice, TriangularLattice)):
                 return (
                     (0, 0),
                     (1, 0),
@@ -2458,7 +2503,7 @@ class BasisConfigurationVisualizer:
                     (1, 1),
                 )
 
-            # Square and triangular are fine without starting links from the
+            # Square is fine without starting links from the
             # corner image; this avoids overbuilding the outer shell.
             return (
                 (0, 0),

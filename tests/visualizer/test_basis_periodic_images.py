@@ -1,5 +1,8 @@
+from itertools import product
+
 import matplotlib
 import numpy as np
+import pytest
 
 from qlinks.lattice import (
     ChainLattice,
@@ -333,3 +336,168 @@ def test_honeycomb_positive_patch_upper_apex_has_two_links_not_three() -> None:
     # The upper apex should close the top hexagon with two links.
     # The outward z-link should be skipped.
     assert len(incident_links) == 2
+
+
+def test_triangular_positive_patch_uses_positive_side_source_shifts_only() -> None:
+    lattice = TriangularLattice(
+        4,
+        4,
+        boundary_condition="periodic",
+        include_triangles=True,
+        include_rhombi=True,
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    shifts = set(visualizer._positive_patch_link_source_shifts())
+
+    assert (1, 1) in shifts
+    assert (-1, 0) not in shifts
+    assert (0, -1) not in shifts
+    assert (-1, -1) not in shifts
+
+
+def test_triangular_pbc_positive_patch_draws_all_rhombus_plaquettes() -> None:
+    lattice = TriangularLattice(
+        4,
+        4,
+        boundary_condition="periodic",
+        include_triangles=True,
+        include_rhombi=True,
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    draw_plaquettes = visualizer._draw_plaquette_primitives()
+
+    drawn_ids = {int(draw_plaquette.plaquette_id) for draw_plaquette in draw_plaquettes}
+    expected_ids = {
+        int(plaquette.id) for plaquette in lattice.plaquettes if len(plaquette.links) == 4
+    }
+
+    assert drawn_ids == expected_ids, {
+        "missing": sorted(expected_ids - drawn_ids),
+        "extra": sorted(drawn_ids - expected_ids),
+    }
+
+
+def test_triangular_pbc_positive_patch_has_no_negative_visual_cells() -> None:
+    lattice = TriangularLattice(
+        4,
+        4,
+        boundary_condition="periodic",
+        include_triangles=True,
+        include_rhombi=True,
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    nodes, links = visualizer._draw_primitives()
+
+    for node in nodes:
+        visual_cell = visualizer._visual_cell(
+            site_id=node.site_id,
+            image_shift=node.image_shift,
+        )
+        assert all(int(cell) >= 0 for cell in visual_cell)
+
+    for link in links:
+        source_cell, target_cell = link_visual_cells(
+            visualizer,
+            nodes,
+            link,
+        )
+        assert all(int(cell) >= 0 for cell in source_cell)
+        assert all(int(cell) >= 0 for cell in target_cell)
+
+
+def test_triangular_closed_plaquette_representative_prefers_lowest_center() -> None:
+    lattice = TriangularLattice(
+        4,
+        4,
+        boundary_condition="periodic",
+        include_triangles=True,
+        include_rhombi=True,
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    _nodes, draw_links = visualizer._draw_primitives()
+
+    draw_links_by_link_id: dict[int, list] = {}
+    for draw_link in draw_links:
+        draw_links_by_link_id.setdefault(int(draw_link.link_id), []).append(draw_link)
+
+    found_multi_representative = False
+
+    for plaquette in lattice.plaquettes:
+        if len(plaquette.links) != 4:
+            continue
+
+        candidate_lists = [
+            draw_links_by_link_id.get(int(link_id), []) for link_id in plaquette.links
+        ]
+
+        if any(len(candidates) == 0 for candidates in candidate_lists):
+            continue
+
+        closed_representatives = [
+            tuple(candidate_tuple)
+            for candidate_tuple in product(*candidate_lists)
+            if visualizer._draw_links_form_closed_cycle(tuple(candidate_tuple))
+        ]
+
+        if len(closed_representatives) <= 1:
+            continue
+
+        found_multi_representative = True
+
+        selected = visualizer._select_closed_visual_plaquette(candidate_lists)
+        assert selected is not None
+
+        selected_center = visualizer._closed_visual_plaquette_center(selected)
+        all_centers = [
+            visualizer._closed_visual_plaquette_center(representative)
+            for representative in closed_representatives
+        ]
+
+        min_y = min(float(center[1]) for center in all_centers)
+
+        assert float(selected_center[1]) == pytest.approx(min_y)
+
+    assert found_multi_representative
