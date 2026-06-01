@@ -540,6 +540,8 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.affected_variables"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.affected_variables()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.signs"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.signs</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.value"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.internal_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.internal_target()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.check()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.partial_check()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.allowed_targets()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.validate_target()</span></code></a></li>
@@ -771,6 +773,8 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.affected_variables"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.affected_variables()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.signs"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.signs</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.value"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.internal_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.internal_target()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.check()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.partial_check()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.allowed_targets()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.validate_target()</span></code></a></li>
@@ -2768,6 +2772,29 @@ determined from the lattice/layout.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.constraints.winding.SquareQDMElectricWindingSector.internal_target">
+<span class="sig-name descname"><span class="pre">internal_target</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/winding.html#SquareQDMElectricWindingSector.internal_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.internal_target" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.constraints.winding.SquareQDMElectricWindingSector.check">
+<span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/winding.html#SquareQDMElectricWindingSector.check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.check" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>configuration</strong> (<em>ArrayLike</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#qlinks.constraints.base.ConstraintResult" title="qlinks.constraints.base.ConstraintResult"><em>ConstraintResult</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4967,6 +4994,29 @@ determined from the lattice/layout.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.constraints.SquareQDMElectricWindingSector.internal_target">
+<span class="sig-name descname"><span class="pre">internal_target</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/winding.html#SquareQDMElectricWindingSector.internal_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.SquareQDMElectricWindingSector.internal_target" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.constraints.SquareQDMElectricWindingSector.check">
+<span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/winding.html#SquareQDMElectricWindingSector.check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.SquareQDMElectricWindingSector.check" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>configuration</strong> (<em>ArrayLike</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#qlinks.constraints.base.ConstraintResult" title="qlinks.constraints.base.ConstraintResult"><em>ConstraintResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.constraints.SquareQDMElectricWindingSector.partial_check">
 <span class="sig-name descname"><span class="pre">partial_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assigned_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/winding.html#SquareQDMElectricWindingSector.partial_check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.SquareQDMElectricWindingSector.partial_check" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -5935,6 +5985,8 @@ determined from the lattice/layout.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.affected_variables"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.affected_variables()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.signs"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.signs</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.value"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.internal_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.internal_target()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.check()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.partial_check()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.allowed_targets()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.winding.SquareQDMElectricWindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.validate_target()</span></code></a></li>
@@ -6166,6 +6218,8 @@ determined from the lattice/layout.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.affected_variables"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.affected_variables()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.signs"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.signs</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.value"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.internal_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.internal_target()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.check()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.partial_check()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.allowed_targets()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.SquareQDMElectricWindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.validate_target()</span></code></a></li>

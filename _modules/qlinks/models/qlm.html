@@ -307,7 +307,8 @@
   <h1>Source code for qlinks.models.qlm</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -338,6 +339,7 @@
     <span class="n">TriangularLattice</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BasisSolverName</span><span class="p">,</span>
     <span class="n">HamiltonianBuilderName</span><span class="p">,</span>
     <span class="n">HamiltonianModelBase</span><span class="p">,</span>
     <span class="n">HamiltonianTermSpec</span><span class="p">,</span>
@@ -813,6 +815,34 @@
         <span class="p">}</span></div>
 
 
+<div class="viewcode-block" id="SquareQLMModel.nonempty_sector_labels">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qlm.SquareQLMModel.nonempty_sector_labels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nonempty_sector_labels</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">solver</span><span class="p">:</span> <span class="n">BasisSolverName</span> <span class="o">=</span> <span class="s2">&quot;dfs&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">!=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="n">allowed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_sector_labels</span><span class="p">()</span>
+        <span class="n">nonempty</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">winding_x</span><span class="p">,</span> <span class="n">winding_y</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span>
+            <span class="n">allowed</span><span class="p">[</span><span class="s2">&quot;winding_x&quot;</span><span class="p">],</span>
+            <span class="n">allowed</span><span class="p">[</span><span class="s2">&quot;winding_y&quot;</span><span class="p">],</span>
+        <span class="p">):</span>
+            <span class="n">trial_model</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">winding_x</span><span class="o">=</span><span class="n">winding_x</span><span class="p">,</span>
+                <span class="n">winding_y</span><span class="o">=</span><span class="n">winding_y</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">trial_model</span><span class="o">.</span><span class="n">has_basis_state</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">):</span>
+                <span class="n">nonempty</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">winding_x</span><span class="p">,</span> <span class="n">winding_y</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;winding&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nonempty</span><span class="p">)}</span></div>
+
+
 <div class="viewcode-block" id="SquareQLMModel.make_sectors">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qlm.SquareQLMModel.make_sectors">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">make_sectors</span><span class="p">(</span>
@@ -1117,6 +1147,34 @@
         <span class="p">}</span></div>
 
 
+<div class="viewcode-block" id="TriangularQLMModel.nonempty_sector_labels">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qlm.TriangularQLMModel.nonempty_sector_labels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nonempty_sector_labels</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">solver</span><span class="p">:</span> <span class="n">BasisSolverName</span> <span class="o">=</span> <span class="s2">&quot;dfs&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">!=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="n">allowed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_sector_labels</span><span class="p">()</span>
+        <span class="n">nonempty</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">winding_a</span><span class="p">,</span> <span class="n">winding_b</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span>
+            <span class="n">allowed</span><span class="p">[</span><span class="s2">&quot;winding_a&quot;</span><span class="p">],</span>
+            <span class="n">allowed</span><span class="p">[</span><span class="s2">&quot;winding_b&quot;</span><span class="p">],</span>
+        <span class="p">):</span>
+            <span class="n">trial_model</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">winding_a</span><span class="o">=</span><span class="n">winding_a</span><span class="p">,</span>
+                <span class="n">winding_b</span><span class="o">=</span><span class="n">winding_b</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">trial_model</span><span class="o">.</span><span class="n">has_basis_state</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">):</span>
+                <span class="n">nonempty</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">winding_a</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">winding_b</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;z2_winding&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nonempty</span><span class="p">)}</span></div>
+
+
 <div class="viewcode-block" id="TriangularQLMModel.make_sectors">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qlm.TriangularQLMModel.make_sectors">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">make_sectors</span><span class="p">(</span>
@@ -1309,6 +1367,34 @@
                 <span class="n">flux_normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">charge_normalization</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="HoneycombQLMModel.nonempty_sector_labels">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qlm.HoneycombQLMModel.nonempty_sector_labels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nonempty_sector_labels</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">solver</span><span class="p">:</span> <span class="n">BasisSolverName</span> <span class="o">=</span> <span class="s2">&quot;dfs&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">!=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="n">allowed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_sector_labels</span><span class="p">()</span>
+        <span class="n">nonempty</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">winding_x</span><span class="p">,</span> <span class="n">winding_y</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span>
+            <span class="n">allowed</span><span class="p">[</span><span class="s2">&quot;winding_x&quot;</span><span class="p">],</span>
+            <span class="n">allowed</span><span class="p">[</span><span class="s2">&quot;winding_y&quot;</span><span class="p">],</span>
+        <span class="p">):</span>
+            <span class="n">trial_model</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">winding_x</span><span class="o">=</span><span class="n">winding_x</span><span class="p">,</span>
+                <span class="n">winding_y</span><span class="o">=</span><span class="n">winding_y</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">trial_model</span><span class="o">.</span><span class="n">has_basis_state</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">):</span>
+                <span class="n">nonempty</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">winding_x</span><span class="p">,</span> <span class="n">winding_y</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;winding&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nonempty</span><span class="p">)}</span></div>
 
 
 <div class="viewcode-block" id="HoneycombQLMModel.make_sectors">

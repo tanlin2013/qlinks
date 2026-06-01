@@ -379,6 +379,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.make_sectors"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.make_terms"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_terms()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.prepare_builder_basis"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.prepare_builder_basis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.has_basis_state"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.has_basis_state()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build_basis"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_basis()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build_hamiltonian"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_hamiltonian()</span></code></a></li>
@@ -433,6 +434,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.winding_convention"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.winding_convention</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_potential_operators()</span></code></a></li>
@@ -447,6 +449,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.winding_b"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.winding_b</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.__init__()</span></code></a></li>
 </ul>
@@ -459,6 +462,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.winding_y"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.winding_y</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.__init__"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.__init__()</span></code></a></li>
 </ul>
@@ -497,6 +501,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.winding_y"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.winding_y</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_potential_operators()</span></code></a></li>
@@ -512,6 +517,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.winding_b"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.winding_b</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.__init__()</span></code></a></li>
 </ul>
@@ -526,6 +532,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.from_staggered_background"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.from_staggered_background()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.__init__()</span></code></a></li>
 </ul>
@@ -567,6 +574,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.make_sectors"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.make_terms"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_terms()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.prepare_builder_basis"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.prepare_builder_basis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.has_basis_state"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.has_basis_state()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build_basis"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_basis()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build_hamiltonian"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_hamiltonian()</span></code></a></li>
@@ -652,6 +660,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.winding_convention"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.winding_convention</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_potential_operators()</span></code></a></li>
@@ -666,6 +675,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.winding_y"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.winding_y</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_potential_operators()</span></code></a></li>
@@ -681,6 +691,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.winding_y"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.winding_y</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.__init__"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.__init__()</span></code></a></li>
 </ul>
@@ -693,6 +704,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.winding_b"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.winding_b</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.__init__()</span></code></a></li>
 </ul>
@@ -758,6 +770,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.winding_b"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.winding_b</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.__init__()</span></code></a></li>
 </ul>
@@ -772,6 +785,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.from_staggered_background"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.from_staggered_background()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.__init__()</span></code></a></li>
 </ul>
@@ -1128,7 +1142,7 @@ basis = result.basis</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="qlinks.models.base.solve_basis">
-<span class="sig-prename descclassname"><span class="pre">qlinks.models.base.</span></span><span class="sig-name descname"><span class="pre">solve_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#solve_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.base.solve_basis" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">qlinks.models.base.</span></span><span class="sig-name descname"><span class="pre">solve_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#solve_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.base.solve_basis" title="Link to this definition">#</a></dt>
 <dd><p>Common array-basis solver dispatch.</p>
 <p>If no constraints/sectors are present, use a direct Cartesian-product
 construction instead of DFS/CP-SAT/brute force.</p>
@@ -1140,6 +1154,7 @@ construction instead of DFS/CP-SAT/brute force.</p>
 <li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
 <li><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p></li>
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1347,13 +1362,27 @@ because they need the flux-to-binary encoding convention.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.base.HamiltonianModelBase.has_basis_state">
+<span class="sig-name descname"><span class="pre">has_basis_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#HamiltonianModelBase.has_basis_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.base.HamiltonianModelBase.has_basis_state" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.base.HamiltonianModelBase.build_basis">
-<span class="sig-name descname"><span class="pre">build_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#HamiltonianModelBase.build_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.base.HamiltonianModelBase.build_basis" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#HamiltonianModelBase.build_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.base.HamiltonianModelBase.build_basis" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p></li>
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1448,12 +1477,13 @@ once and using result.kinetic/result.potential.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.base.GenericModelBuilder.build_basis">
-<span class="sig-name descname"><span class="pre">build_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#GenericModelBuilder.build_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.base.GenericModelBuilder.build_basis" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#GenericModelBuilder.build_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.base.GenericModelBuilder.build_basis" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p></li>
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1930,6 +1960,19 @@ Geometry-specific subclasses should override this method.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.qdm.SquareQDMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#SquareQDMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qdm.SquareQDMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[object, object], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.qdm.SquareQDMModel.make_sectors">
 <span class="sig-name descname"><span class="pre">make_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#SquareQDMModel.make_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qdm.SquareQDMModel.make_sectors" title="Link to this definition">#</a></dt>
 <dd><p>Default QDM sector list.</p>
@@ -2087,6 +2130,19 @@ Geometry-specific subclasses should override this method.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.qdm.TriangularQDMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#TriangularQDMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qdm.TriangularQDMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[int, int], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.qdm.TriangularQDMModel.make_sectors">
 <span class="sig-name descname"><span class="pre">make_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#TriangularQDMModel.make_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qdm.TriangularQDMModel.make_sectors" title="Link to this definition">#</a></dt>
 <dd><p>Default QDM sector list.</p>
@@ -2201,6 +2257,19 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, tuple[object, …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.qdm.HoneycombQDMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#HoneycombQDMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qdm.HoneycombQDMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[object, object], …]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2619,6 +2688,19 @@ Geometry-specific subclasses should override this method.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.qlm.SquareQLMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#SquareQLMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qlm.SquareQLMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[object, object], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.qlm.SquareQLMModel.make_sectors">
 <span class="sig-name descname"><span class="pre">make_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#SquareQLMModel.make_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qlm.SquareQLMModel.make_sectors" title="Link to this definition">#</a></dt>
 <dd><p>Default QLM sectors.</p>
@@ -2792,6 +2874,19 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, tuple[object, …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.qlm.TriangularQLMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#TriangularQLMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qlm.TriangularQLMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[int, int], …]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2975,6 +3070,19 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, tuple[object, …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.qlm.HoneycombQLMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#HoneycombQLMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.qlm.HoneycombQLMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[object, object], …]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3192,12 +3300,13 @@ HoneycombQLMModel</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.GenericModelBuilder.build_basis">
-<span class="sig-name descname"><span class="pre">build_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#GenericModelBuilder.build_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.GenericModelBuilder.build_basis" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#GenericModelBuilder.build_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.GenericModelBuilder.build_basis" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p></li>
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3434,13 +3543,27 @@ because they need the flux-to-binary encoding convention.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.HamiltonianModelBase.has_basis_state">
+<span class="sig-name descname"><span class="pre">has_basis_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#HamiltonianModelBase.has_basis_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.HamiltonianModelBase.has_basis_state" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.HamiltonianModelBase.build_basis">
-<span class="sig-name descname"><span class="pre">build_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#HamiltonianModelBase.build_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.HamiltonianModelBase.build_basis" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#HamiltonianModelBase.build_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.HamiltonianModelBase.build_basis" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p></li>
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3800,7 +3923,7 @@ basis = result.basis</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="qlinks.models.solve_basis">
-<span class="sig-prename descclassname"><span class="pre">qlinks.models.</span></span><span class="sig-name descname"><span class="pre">solve_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#solve_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.solve_basis" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">qlinks.models.</span></span><span class="sig-name descname"><span class="pre">solve_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#solve_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.solve_basis" title="Link to this definition">#</a></dt>
 <dd><p>Common array-basis solver dispatch.</p>
 <p>If no constraints/sectors are present, use a direct Cartesian-product
 construction instead of DFS/CP-SAT/brute force.</p>
@@ -3812,6 +3935,7 @@ construction instead of DFS/CP-SAT/brute force.</p>
 <li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
 <li><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p></li>
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -4323,6 +4447,19 @@ Geometry-specific subclasses should override this method.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.SquareQDMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#SquareQDMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.SquareQDMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[object, object], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.SquareQDMModel.make_sectors">
 <span class="sig-name descname"><span class="pre">make_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#SquareQDMModel.make_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.SquareQDMModel.make_sectors" title="Link to this definition">#</a></dt>
 <dd><p>Default QDM sector list.</p>
@@ -4483,6 +4620,19 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, tuple[object, …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.SquareQLMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#SquareQLMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.SquareQLMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[object, object], …]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4664,6 +4814,19 @@ Geometry-specific subclasses should override this method.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.HoneycombQDMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#HoneycombQDMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.HoneycombQDMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[object, object], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.HoneycombQDMModel.make_sectors">
 <span class="sig-name descname"><span class="pre">make_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#HoneycombQDMModel.make_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.HoneycombQDMModel.make_sectors" title="Link to this definition">#</a></dt>
 <dd><p>Default QDM sector list.</p>
@@ -4778,6 +4941,19 @@ Geometry-specific subclasses should override this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, tuple[object, …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.TriangularQDMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qdm.html#TriangularQDMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.TriangularQDMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[int, int], …]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -5502,6 +5678,19 @@ Geometry-specific subclasses should override this method.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.TriangularQLMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#TriangularQLMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.TriangularQLMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[int, int], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.TriangularQLMModel.make_sectors">
 <span class="sig-name descname"><span class="pre">make_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#TriangularQLMModel.make_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.TriangularQLMModel.make_sectors" title="Link to this definition">#</a></dt>
 <dd><p>Default QLM sectors.</p>
@@ -5685,6 +5874,19 @@ Geometry-specific subclasses should override this method.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.HoneycombQLMModel.nonempty_sector_labels">
+<span class="sig-name descname"><span class="pre">nonempty_sector_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dfs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#HoneycombQLMModel.nonempty_sector_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.HoneycombQLMModel.nonempty_sector_labels" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>solver</strong> (<em>Literal</em><em>[</em><em>'brute_force'</em><em>, </em><em>'dfs'</em><em>, </em><em>'cpsat'</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, tuple[tuple[object, object], …]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.models.HoneycombQLMModel.make_sectors">
 <span class="sig-name descname"><span class="pre">make_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/qlm.html#HoneycombQLMModel.make_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.HoneycombQLMModel.make_sectors" title="Link to this definition">#</a></dt>
 <dd><p>Default QLM sectors.</p>
@@ -5830,6 +6032,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.make_sectors"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.make_terms"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_terms()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.prepare_builder_basis"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.prepare_builder_basis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.has_basis_state"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.has_basis_state()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build_basis"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_basis()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build_hamiltonian"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_hamiltonian()</span></code></a></li>
@@ -5884,6 +6087,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.winding_convention"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.winding_convention</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.SquareQDMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_potential_operators()</span></code></a></li>
@@ -5898,6 +6102,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.winding_b"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.winding_b</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.TriangularQDMModel.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.__init__()</span></code></a></li>
 </ul>
@@ -5910,6 +6115,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.winding_y"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.winding_y</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qdm.HoneycombQDMModel.__init__"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.__init__()</span></code></a></li>
 </ul>
@@ -5948,6 +6154,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.winding_y"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.winding_y</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.SquareQLMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_potential_operators()</span></code></a></li>
@@ -5963,6 +6170,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.winding_b"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.winding_b</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.TriangularQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.__init__()</span></code></a></li>
 </ul>
@@ -5977,6 +6185,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.from_staggered_background"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.from_staggered_background()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.qlm.HoneycombQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.__init__()</span></code></a></li>
 </ul>
@@ -6018,6 +6227,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.make_sectors"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.make_terms"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_terms()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.prepare_builder_basis"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.prepare_builder_basis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.has_basis_state"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.has_basis_state()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build_basis"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_basis()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build_hamiltonian"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_hamiltonian()</span></code></a></li>
@@ -6103,6 +6313,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.winding_convention"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.winding_convention</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQDMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQDMModel.make_potential_operators()</span></code></a></li>
@@ -6117,6 +6328,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.winding_y"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.winding_y</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.make_kinetic_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_kinetic_operators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.SquareQLMModel.make_potential_operators"><code class="docutils literal notranslate"><span class="pre">SquareQLMModel.make_potential_operators()</span></code></a></li>
@@ -6132,6 +6344,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.winding_y"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.winding_y</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQDMModel.__init__"><code class="docutils literal notranslate"><span class="pre">HoneycombQDMModel.__init__()</span></code></a></li>
 </ul>
@@ -6144,6 +6357,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.winding_b"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.winding_b</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQDMModel.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularQDMModel.__init__()</span></code></a></li>
 </ul>
@@ -6209,6 +6423,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.winding_b"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.winding_b</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.TriangularQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularQLMModel.__init__()</span></code></a></li>
 </ul>
@@ -6223,6 +6438,7 @@ Geometry-specific subclasses should override this method.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.from_staggered_background"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.from_staggered_background()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.plaquette_ids"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.plaquette_ids()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.allowed_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.allowed_sector_labels()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.nonempty_sector_labels"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.nonempty_sector_labels()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.make_sectors"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.make_sectors()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HoneycombQLMModel.__init__"><code class="docutils literal notranslate"><span class="pre">HoneycombQLMModel.__init__()</span></code></a></li>
 </ul>

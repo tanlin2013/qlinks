@@ -519,7 +519,7 @@
 <span id="qlinks-basis-basis-module"></span><h2>qlinks.basis.basis module<a class="headerlink" href="#module-qlinks.basis.basis" title="Link to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="qlinks.basis.basis.full_basis_from_layout">
-<span class="sig-prename descclassname"><span class="pre">qlinks.basis.basis.</span></span><span class="sig-name descname"><span class="pre">full_basis_from_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#full_basis_from_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.full_basis_from_layout" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.basis.</span></span><span class="sig-name descname"><span class="pre">full_basis_from_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#full_basis_from_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.full_basis_from_layout" title="Link to this definition">#</a></dt>
 <dd><p>Generate the full Cartesian-product basis for an unconstrained layout.</p>
 <p>This is faster and simpler than DFS when there are no constraints/sectors.</p>
 <p>The output states have shape:</p>
@@ -532,6 +532,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -905,13 +906,14 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.BruteForceBasisSolver.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/brute_force.html#BruteForceBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.BruteForceBasisSolver.solve" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/brute_force.html#BruteForceBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.BruteForceBasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
 <li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
 <li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -986,13 +988,14 @@ SquareWindingSector</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.CPSATBasisSolver.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/cpsat.html#CPSATBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.solve" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/cpsat.html#CPSATBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
 <li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
 <li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1051,13 +1054,14 @@ SquareWindingSector</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.DFSBasisSolver.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.solve" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
 <li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
 <li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1167,7 +1171,7 @@ SquareWindingSector</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="qlinks.basis.full_basis_from_layout">
-<span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">full_basis_from_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#full_basis_from_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.full_basis_from_layout" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">full_basis_from_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#full_basis_from_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.full_basis_from_layout" title="Link to this definition">#</a></dt>
 <dd><p>Generate the full Cartesian-product basis for an unconstrained layout.</p>
 <p>This is faster and simpler than DFS when there are no constraints/sectors.</p>
 <p>The output states have shape:</p>
@@ -1180,6 +1184,7 @@ SquareWindingSector</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
