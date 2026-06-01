@@ -198,6 +198,32 @@ def _signed_direction_links_annihilating_plaquettes(
     return ordered_link_ids, signs
 
 
+def _square_global_cut_repetition_count(
+    *,
+    lattice: SquareLattice,
+    direction: Direction,
+) -> int:
+    """Number of parallel elementary cuts included in the global square covector."""
+    if direction == "x":
+        return int(lattice.lx)
+    if direction == "y":
+        return int(lattice.ly)
+    raise ValueError("direction must be 'x' or 'y'.")
+
+
+def _square_transverse_cut_size(
+    *,
+    lattice: SquareLattice,
+    direction: Direction,
+) -> int:
+    """Number of links in one elementary transverse cut."""
+    if direction == "x":
+        return int(lattice.ly)
+    if direction == "y":
+        return int(lattice.lx)
+    raise ValueError("direction must be 'x' or 'y'.")
+
+
 def allowed_signed_sum_targets(
     *,
     layout: VariableLayout,
@@ -402,22 +428,28 @@ class SquareWindingSector(BaseSectorCondition):
 
     def internal_target(self) -> int:
         values_seen: set[int] = set()
-
         for variable_index in self._variable_indices:
             values_seen.update(
                 int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
             )
 
+        repetition_count = _square_global_cut_repetition_count(
+            lattice=self.lattice,
+            direction=self.direction,
+        )
+
         if values_seen <= {-1, 1}:
-            return internal_flux_winding_value(
+            elementary_target = internal_flux_winding_value(
                 self.target,
                 flux_normalization=self.flux_normalization,
             )
+        else:
+            elementary_target = internal_flux_winding_value(
+                self.target,
+                flux_normalization="integer_flux",
+            )
 
-        return internal_flux_winding_value(
-            self.target,
-            flux_normalization="integer_flux",
-        )
+        return repetition_count * elementary_target
 
     def check(self, config: npt.ArrayLike) -> ConstraintResult:
         actual = self.value(config)
@@ -513,21 +545,19 @@ class SquareWindingSector(BaseSectorCondition):
             direction=direction,
         )
 
-        raw_targets = allowed_signed_sum_targets(
-            layout=layout,
-            variable_indices=cut.variable_indices,
-            signs=cut.signs,
-        )
-
         values_seen: set[int] = set()
         for variable_index in cut.variable_indices:
             values_seen.update(
                 int(v) for v in layout.local_space(int(variable_index)).values.tolist()
             )
 
-        # QLM flux sector: stored values {-1,+1}.
-        # Convert raw stored-flux labels to user-facing labels.
+        transverse_size = _square_transverse_cut_size(
+            lattice=lattice,
+            direction=direction,
+        )
+
         if values_seen <= {-1, 1}:
+            raw_targets = tuple(range(-transverse_size, transverse_size + 1, 2))
             return tuple(
                 user_winding_value_from_internal(
                     raw_target,
@@ -536,7 +566,7 @@ class SquareWindingSector(BaseSectorCondition):
                 for raw_target in raw_targets
             )
 
-        # QDM/count-like sector: target is raw integer count-like label.
+        raw_targets = tuple(range(-transverse_size, transverse_size + 1, 2))
         return tuple(Fraction(raw_target, 1) for raw_target in raw_targets)
 
     @classmethod
@@ -677,6 +707,29 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         n = arr[self._variable_indices]
         return int(np.sum(self._signs * (2 * n - 1)))
 
+    def internal_target(self) -> int:
+        repetition_count = _square_global_cut_repetition_count(
+            lattice=self.lattice,
+            direction=self.direction,
+        )
+        return repetition_count * int(self.target)
+
+    def check(self, configuration: npt.ArrayLike) -> ConstraintResult:
+        actual = self.value(configuration)
+        target = self.internal_target()
+        residual = actual - target
+        satisfied = residual == 0
+        return ConstraintResult(
+            satisfied=satisfied,
+            name=self.name,
+            residual=residual,
+            message=(
+                f"{self.name}(direction={self.direction}): "
+                f"value={actual}, target={self.target}, "
+                f"internal_target={target}, residual={residual}"
+            ),
+        )
+
     def partial_check(
         self,
         config: npt.ArrayLike,
@@ -701,7 +754,7 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         min_remaining = -int(np.sum(np.abs(remaining_signs)))
         max_remaining = int(np.sum(np.abs(remaining_signs)))
 
-        target = int(self.target)
+        target = self.internal_target()
 
         if target < current + min_remaining:
             return False
@@ -722,18 +775,11 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         lattice: SquareLattice,
         direction: Direction,
     ) -> tuple[int, ...]:
-        cut = cls.cut_data(
-            layout=layout,
+        transverse_size = _square_transverse_cut_size(
             lattice=lattice,
             direction=direction,
         )
-
-        return allowed_signed_sum_targets(
-            layout=layout,
-            variable_indices=cut.variable_indices,
-            signs=cut.signs,
-            value_transform=lambda values: 2 * values - 1,
-        )
+        return tuple(range(-transverse_size, transverse_size + 1, 2))
 
     @classmethod
     def validate_target(

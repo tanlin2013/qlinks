@@ -8,9 +8,12 @@ from qlinks.constraints import (
     SquareQDMElectricWindingSector,
     SquareWindingSector,
 )
-from qlinks.constraints.winding import raw_targets_from_user_targets
+from qlinks.constraints.winding import (
+    _square_global_cut_repetition_count,
+    raw_targets_from_user_targets,
+)
 from qlinks.lattice import HoneycombLattice, SquareLattice
-from qlinks.models import SquareQDMModel
+from qlinks.models import SquareQDMModel, SquareQLMModel
 from qlinks.variables import LocalSpace, VariableLayout
 
 
@@ -542,17 +545,25 @@ def test_square_winding_sector_spin_half_target() -> None:
     config[probe_sector.variable_indices] = probe_sector.signs
 
     raw_value = probe_sector.value(config)
-    assert raw_value % 2 == 0
+
+    repetition_count = _square_global_cut_repetition_count(
+        lattice=lattice,
+        direction="x",
+    )
+    assert raw_value % repetition_count == 0
+
+    elementary_raw_value = raw_value // repetition_count
+    assert elementary_raw_value % 2 == 0
 
     matching_sector = SquareWindingSector(
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=raw_value // 2,
+        target=elementary_raw_value // 2,
         flux_normalization="spin_half",
     )
 
-    assert matching_sector.is_satisfied(config)
+    assert matching_sector.check(config).satisfied
 
 
 def _winding_covector(
@@ -745,3 +756,66 @@ def test_honeycomb_electric_winding_allowed_targets() -> None:
     )
 
     assert isinstance(allowed, tuple)
+
+
+def test_square_qdm_electric_allowed_sector_labels_rectangular_pbc() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        winding_convention="electric",
+    )
+
+    assert model.allowed_sector_labels() == {
+        "winding_x": (-2, 0, 2),
+        "winding_y": (-4, -2, 0, 2, 4),
+    }
+
+
+def test_square_qlm_allowed_sector_labels_rectangular_pbc_integer_flux() -> None:
+    model = SquareQLMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        charge_normalization="integer_flux",
+    )
+
+    assert model.allowed_sector_labels() == {
+        "winding_x": (-2, 0, 2),
+        "winding_y": (-4, -2, 0, 2, 4),
+    }
+
+
+def test_square_qlm_allowed_sector_labels_rectangular_pbc_spin_half() -> None:
+    model = SquareQLMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        charge_normalization="spin_half",
+    )
+
+    assert model.allowed_sector_labels() == {
+        "winding_x": (-1, 0, 1),
+        "winding_y": (-2, -1, 0, 1, 2),
+    }
+
+
+def test_square_winding_cut_annihilates_plaquette_boundaries_2x2_pbc() -> None:
+    model = SquareQLMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="periodic",
+        charge_normalization="integer_flux",
+        winding_x=0,
+        winding_y=0,
+    )
+
+    result = model.build(
+        basis_solver="dfs",
+        builder="sparse",
+        backend="scipy",
+        on_missing="raise",
+        sort_basis=True,
+    )
+
+    assert result.hamiltonian.shape[0] == result.basis.n_states
