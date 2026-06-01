@@ -54,7 +54,21 @@ class CPSATBasisSolver:
         layout: VariableLayout,
         constraints: Sequence[Constraint] = (),
         sectors: Sequence[SectorCondition] = (),
+        *,
+        max_states: int | None = None,
     ) -> Basis:
+        if max_states is not None and max_states < 0:
+            raise ValueError("max_states must be non-negative or None.")
+        if max_states == 0:
+            return Basis.empty(layout)
+
+        max_solutions = self.max_solutions
+        if max_states is not None:
+            if max_solutions is None:
+                max_solutions = max_states
+            else:
+                max_solutions = min(max_solutions, max_states)
+
         model = cp_model.CpModel()
 
         variables = []
@@ -72,7 +86,7 @@ class CPSATBasisSolver:
         collector = _BasisSolutionCollector(
             variables=variables,
             n_variables=layout.n_variables,
-            max_solutions=self.max_solutions,
+            max_solutions=max_solutions,
         )
 
         solver = cp_model.CpSolver()

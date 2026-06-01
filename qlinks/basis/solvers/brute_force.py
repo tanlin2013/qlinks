@@ -30,16 +30,24 @@ class BruteForceBasisSolver:
         layout: VariableLayout,
         constraints: Sequence[Constraint] = (),
         sectors: Sequence[SectorCondition] = (),
+        *,
+        max_states: int | None = None,
     ) -> Basis:
-        domains = [layout.local_space(i).values.tolist() for i in range(layout.n_variables)]
+        if max_states is not None and max_states < 0:
+            raise ValueError("max_states must be non-negative or None.")
+        if max_states == 0:
+            return Basis.empty(layout)
 
+        domains = [layout.local_space(i).values.tolist() for i in range(layout.n_variables)]
         states: list[np.ndarray] = []
 
         for values in product(*domains):
             config = np.asarray(values, dtype=np.int64)
-
             if all_satisfied(config, constraints=constraints, sectors=sectors):
                 states.append(config.copy())
+
+                if max_states is not None and len(states) >= max_states:
+                    break
 
         if len(states) == 0:
             return Basis.empty(layout)

@@ -1,3 +1,6 @@
+from dataclasses import replace
+from itertools import product
+
 import numpy as np
 import pytest
 from scipy import sparse
@@ -365,3 +368,72 @@ def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
     ).build(builder="bitmask", sort_basis=False)
 
     _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
+
+
+def test_square_qdm_nonempty_sector_labels_rectangular_pbc() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        winding_convention="electric",
+    )
+
+    labels = model.nonempty_sector_labels(solver="dfs")
+
+    assert set(labels) == {"winding"}
+    assert all(len(pair) == 2 for pair in labels["winding"])
+
+    allowed = model.allowed_sector_labels()
+    allowed_pairs = set(product(allowed["winding_x"], allowed["winding_y"]))
+
+    assert set(labels["winding"]) <= allowed_pairs
+    assert len(labels["winding"]) > 0
+
+
+def test_square_qdm_nonempty_sector_labels_are_buildable() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        winding_convention="electric",
+    )
+
+    for winding_x, winding_y in model.nonempty_sector_labels()["winding"]:
+        sector_model = replace(
+            model,
+            winding_x=winding_x,
+            winding_y=winding_y,
+        )
+        assert sector_model.has_basis_state()
+
+
+def test_model_build_basis_respects_max_states() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        winding_convention="electric",
+        winding_x=0,
+        winding_y=0,
+    )
+
+    basis = model.build_basis(
+        solver="dfs",
+        sort=False,
+        max_states=1,
+    )
+
+    assert basis.n_states <= 1
+
+
+def test_model_has_basis_state_returns_bool() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        winding_convention="electric",
+        winding_x=0,
+        winding_y=0,
+    )
+
+    assert isinstance(model.has_basis_state(solver="dfs"), bool)

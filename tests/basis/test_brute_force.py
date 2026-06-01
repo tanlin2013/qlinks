@@ -6,7 +6,7 @@ from qlinks.constraints import (
     NearestNeighborBlockadeConstraint,
     TotalValueSector,
 )
-from qlinks.lattice import ChainLattice
+from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.variables import LocalSpace, VariableLayout
 
 
@@ -57,3 +57,18 @@ def test_brute_force_pxp_chain_length_4() -> None:
 
     for state in basis.states:
         assert not any(state[i] == 1 and state[i + 1] == 1 for i in range(3))
+
+
+def test_brute_force_basis_solver_respects_max_states() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    basis = BruteForceBasisSolver(sort=False).solve(
+        layout,
+        max_states=1,
+    )
+
+    assert basis.n_states == 1

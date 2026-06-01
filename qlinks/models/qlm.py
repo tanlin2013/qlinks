@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from itertools import product
 from typing import Sequence
 
 import numpy as np
@@ -31,6 +32,7 @@ from qlinks.lattice import (
     TriangularLattice,
 )
 from qlinks.models.base import (
+    BasisSolverName,
     HamiltonianBuilderName,
     HamiltonianModelBase,
     HamiltonianTermSpec,
@@ -471,6 +473,31 @@ class SquareQLMModel(QLMBase):
             ),
         }
 
+    def nonempty_sector_labels(
+        self,
+        *,
+        solver: BasisSolverName = "dfs",
+    ) -> dict[str, tuple[tuple[object, object], ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        allowed = self.allowed_sector_labels()
+        nonempty: list[tuple[object, object]] = []
+
+        for winding_x, winding_y in product(
+            allowed["winding_x"],
+            allowed["winding_y"],
+        ):
+            trial_model = replace(
+                self,
+                winding_x=winding_x,
+                winding_y=winding_y,
+            )
+            if trial_model.has_basis_state(solver=solver):
+                nonempty.append((winding_x, winding_y))
+
+        return {"winding": tuple(nonempty)}
+
     def make_sectors(
         self,
         layout: VariableLayout | None = None,
@@ -754,6 +781,31 @@ class TriangularQLMModel(QLMBase):
             ),
         }
 
+    def nonempty_sector_labels(
+        self,
+        *,
+        solver: BasisSolverName = "dfs",
+    ) -> dict[str, tuple[tuple[int, int], ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        allowed = self.allowed_sector_labels()
+        nonempty: list[tuple[int, int]] = []
+
+        for winding_a, winding_b in product(
+            allowed["winding_a"],
+            allowed["winding_b"],
+        ):
+            trial_model = replace(
+                self,
+                winding_a=winding_a,
+                winding_b=winding_b,
+            )
+            if trial_model.has_basis_state(solver=solver):
+                nonempty.append((int(winding_a), int(winding_b)))
+
+        return {"z2_winding": tuple(nonempty)}
+
     def make_sectors(
         self,
         layout: VariableLayout | None = None,
@@ -929,6 +981,31 @@ class HoneycombQLMModel(QLMBase):
                 flux_normalization=self.charge_normalization,
             ),
         }
+
+    def nonempty_sector_labels(
+        self,
+        *,
+        solver: BasisSolverName = "dfs",
+    ) -> dict[str, tuple[tuple[object, object], ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        allowed = self.allowed_sector_labels()
+        nonempty: list[tuple[object, object]] = []
+
+        for winding_x, winding_y in product(
+            allowed["winding_x"],
+            allowed["winding_y"],
+        ):
+            trial_model = replace(
+                self,
+                winding_x=winding_x,
+                winding_y=winding_y,
+            )
+            if trial_model.has_basis_state(solver=solver):
+                nonempty.append((winding_x, winding_y))
+
+        return {"winding": tuple(nonempty)}
 
     def make_sectors(self, layout: VariableLayout | None = None):
         if layout is None:

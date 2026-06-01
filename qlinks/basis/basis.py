@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import product
 from typing import Iterable
 
 import numpy as np
@@ -13,6 +14,7 @@ def full_basis_from_layout(
     layout: VariableLayout,
     *,
     sort: bool = True,
+    max_states: int | None = None,
 ) -> Basis:
     """
     Generate the full Cartesian-product basis for an unconstrained layout.
@@ -25,6 +27,11 @@ def full_basis_from_layout(
 
     where dim_i is the local-space dimension of variable i.
     """
+    if max_states is not None and max_states < 0:
+        raise ValueError("max_states must be non-negative or None.")
+    if max_states == 0:
+        return Basis.empty(layout)
+
     spaces = [
         np.asarray(layout.local_space(i).values, dtype=np.int64) for i in range(layout.n_variables)
     ]
@@ -33,22 +40,34 @@ def full_basis_from_layout(
         states = np.empty((1, 0), dtype=np.int64)
         return Basis.from_states(layout, states, sort=sort)
 
-    n_states = int(np.prod([space.size for space in spaces], dtype=np.int64))
-    states = np.empty((n_states, layout.n_variables), dtype=np.int64)
+    if max_states is not None:
+        n_states_total = int(np.prod([space.size for space in spaces], dtype=np.int64))
+        n_states = min(n_states_total, max_states)
+        states = np.empty((n_states, layout.n_variables), dtype=np.int64)
 
-    # Vectorized Cartesian product.
-    # For variable i, values repeat in blocks of size repeat,
-    # and the whole pattern is tiled to fill n_states.
-    repeat = n_states
+        # Simpler and safe for truncated generation.
+        for row_index, values in enumerate(product(*[space.tolist() for space in spaces])):
+            if row_index >= n_states:
+                break
+            states[row_index, :] = np.asarray(values, dtype=np.int64)
 
-    for variable_index, values in enumerate(spaces):
-        repeat //= int(values.size)
-        tile = n_states // (int(values.size) * repeat)
+    else:
+        n_states = int(np.prod([space.size for space in spaces], dtype=np.int64))
+        states = np.empty((n_states, layout.n_variables), dtype=np.int64)
 
-        states[:, variable_index] = np.tile(
-            np.repeat(values, repeat),
-            tile,
-        )
+        # Vectorized Cartesian product.
+        # For variable i, values repeat in blocks of size repeat,
+        # and the whole pattern is tiled to fill n_states.
+        repeat = n_states
+
+        for variable_index, values in enumerate(spaces):
+            repeat //= int(values.size)
+            tile = n_states // (int(values.size) * repeat)
+
+            states[:, variable_index] = np.tile(
+                np.repeat(values, repeat),
+                tile,
+            )
 
     return Basis.from_states(
         layout,

@@ -626,3 +626,16 @@ def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
     ).build(builder="bitmask", sort_basis=False)
 
     _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
+
+
+def test_honeycomb_qlm_zero_charge_nonempty_sector_labels_empty() -> None:
+    model = HoneycombQLMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="periodic",
+        charges=0,
+    )
+
+    labels = model.nonempty_sector_labels()
+
+    assert labels == {"winding": ()}

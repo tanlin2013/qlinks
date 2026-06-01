@@ -16,7 +16,7 @@ from qlinks.constraints import (
     NearestNeighborBlockadeConstraint,
     TotalValueSector,
 )
-from qlinks.lattice import ChainLattice
+from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.models import PXPModel, SquareQDMModel
 from qlinks.variables import LocalSpace, VariableKind, VariableLayout, VariableSpec
 
@@ -618,3 +618,18 @@ def test_dfs_variable_order_can_affect_unsorted_basis() -> None:
     assert basis_a.n_states == basis_b.n_states
     assert set(map(tuple, basis_a.states)) == set(map(tuple, basis_b.states))
     assert not np.array_equal(basis_a.states, basis_b.states)
+
+
+def test_dfs_basis_solver_respects_max_states() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    basis = DFSBasisSolver(sort=False).solve(
+        layout,
+        max_states=1,
+    )
+
+    assert basis.n_states == 1

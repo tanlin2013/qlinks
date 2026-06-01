@@ -37,11 +37,17 @@ class DFSBasisSolver:
         layout: VariableLayout,
         constraints: Sequence[Constraint] = (),
         sectors: Sequence[SectorCondition] = (),
+        *,
+        max_states: int | None = None,
     ) -> Basis:
+        if max_states is not None and max_states < 0:
+            raise ValueError("max_states must be non-negative or None.")
+        if max_states == 0:
+            return Basis.empty(layout)
+
         n = layout.n_variables
         config = layout.default_config()
         assigned_mask = np.zeros(n, dtype=bool)
-
         states: list[npt.NDArray[np.int64]] = []
 
         all_conditions: tuple[ConditionLike, ...] = tuple(constraints) + tuple(sectors)
@@ -50,7 +56,6 @@ class DFSBasisSolver:
             n_variables=n,
             conditions=all_conditions,
         )
-
         condition_indices_by_variable = self._build_condition_lookup(
             n_variables=n,
             condition_infos=condition_infos,
@@ -78,6 +83,9 @@ class DFSBasisSolver:
             )
 
         def dfs(depth: int) -> None:
+            if max_states is not None and len(states) >= max_states:
+                return
+
             if depth == n:
                 if self._full_check(config, all_conditions):
                     states.append(config.copy())
@@ -87,6 +95,9 @@ class DFSBasisSolver:
             local_space = layout.local_space(variable_index)
 
             for value in local_space.values:
+                if max_states is not None and len(states) >= max_states:
+                    return
+
                 config[variable_index] = int(value)
                 assigned_mask[variable_index] = True
 
@@ -107,7 +118,6 @@ class DFSBasisSolver:
             return Basis.empty(layout)
 
         arr = np.asarray(states, dtype=np.int64)
-
         if self.sort:
             order = np.lexsort(arr.T[::-1])
             arr = arr[order]

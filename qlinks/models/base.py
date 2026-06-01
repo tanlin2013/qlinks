@@ -167,6 +167,7 @@ def solve_basis(
     *,
     solver: BasisSolverName = "dfs",
     sort: bool = True,
+    max_states: int | None = None,
 ) -> Basis:
     """
     Common array-basis solver dispatch.
@@ -174,10 +175,14 @@ def solve_basis(
     If no constraints/sectors are present, use a direct Cartesian-product
     construction instead of DFS/CP-SAT/brute force.
     """
+    if max_states is not None and max_states < 0:
+        raise ValueError("max_states must be non-negative or None.")
+
     if len(constraints) == 0 and len(sectors) == 0:
         return full_basis_from_layout(
             layout,
             sort=sort,
+            max_states=max_states,
         )
 
     if solver == "brute_force":
@@ -185,6 +190,7 @@ def solve_basis(
             layout,
             constraints=constraints,
             sectors=sectors,
+            max_states=max_states,
         )
 
     if solver == "dfs":
@@ -192,6 +198,7 @@ def solve_basis(
             layout,
             constraints=constraints,
             sectors=sectors,
+            max_states=max_states,
         )
 
     if solver == "cpsat":
@@ -199,6 +206,7 @@ def solve_basis(
             layout,
             constraints=constraints,
             sectors=sectors,
+            max_states=max_states,
         )
 
     raise ValueError("solver must be one of 'brute_force', 'dfs', or 'cpsat'.")
@@ -374,15 +382,29 @@ class HamiltonianModelBase:
 
         return physical_layout, array_basis
 
+    def has_basis_state(
+        self,
+        *,
+        solver: BasisSolverName = "dfs",
+    ) -> bool:
+        basis = self.build_basis(
+            solver=solver,
+            sort=False,
+            max_states=1,
+        )
+        return basis.n_states > 0
+
     def build_basis(
         self,
         *,
         solver: BasisSolverName = "dfs",
         sort: bool = True,
+        max_states: int | None = None,
     ) -> Basis:
         return self.model_builder.build_basis(
             solver=solver,
             sort=sort,
+            max_states=max_states,
         )
 
     def build(
@@ -473,6 +495,7 @@ class GenericModelBuilder:
         *,
         solver: BasisSolverName = "dfs",
         sort: bool = True,
+        max_states: int | None = None,
     ) -> Basis:
         layout = self.model.layout
         constraints = tuple(self.model.make_constraints(layout))
@@ -484,6 +507,7 @@ class GenericModelBuilder:
             sectors=sectors,
             solver=solver,
             sort=sort,
+            max_states=max_states,
         )
 
     def build(
