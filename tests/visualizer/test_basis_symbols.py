@@ -849,110 +849,25 @@ def test_generic_plaquette_primitives_have_midpoints_on_small_torus() -> None:
         assert len(draw_plaquette.link_orientations) == len(draw_plaquette.link_ids)
 
 
-def test_generic_plaquette_primitives_use_physical_link_order_on_small_square_torus() -> None:
+def test_small_torus_generic_plaquette_symbols_use_local_visual_links() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
-    layout = VariableLayout.from_lattice_links(
-        lattice,
-        LocalSpace.binary(),
-    )
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
 
     visualizer = BasisConfigurationVisualizer(
         lattice=lattice,
         layout=layout,
         periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
     )
 
     draw_plaquettes = visualizer._draw_plaquette_primitives()
 
-    by_id = {int(draw_plaquette.plaquette_id): draw_plaquette for draw_plaquette in draw_plaquettes}
+    assert draw_plaquettes
 
-    for plaquette in lattice.plaquettes:
-        if len(plaquette.links) not in (4, 6):
-            continue
-
-        draw_plaquette = by_id[int(plaquette.id)]
-
-        assert draw_plaquette.link_ids == tuple(int(link_id) for link_id in plaquette.links)
-        assert draw_plaquette.link_orientations == tuple(
-            int(orientation) for orientation in plaquette.orientations
-        )
-        assert len(draw_plaquette.link_midpoints) == len(draw_plaquette.link_ids)
-
-
-def test_generic_resonance_symbol_matches_physical_plaquette_order_on_small_square_torus() -> None:
-    lattice = SquareLattice(2, 2, boundary_condition="periodic")
-    layout = VariableLayout.from_lattice_links(
-        lattice,
-        LocalSpace.binary(),
-    )
-
-    visualizer = BasisConfigurationVisualizer(
-        lattice=lattice,
-        layout=layout,
-        periodic_image_mode="positive_patch",
-    )
-
-    draw_plaquette = next(
-        draw_plaquette
-        for draw_plaquette in visualizer._draw_plaquette_primitives()
-        if len(draw_plaquette.link_ids) == 4
-    )
-
-    config = np.zeros(layout.n_variables, dtype=np.int64)
-
-    # Alternating occupation in physical plaquette order.
-    values = [1, 0, 1, 0]
-
-    for link_id, value in zip(draw_plaquette.link_ids, values, strict=True):
-        config[int(link_id)] = value
-
-    observed_values = [
-        visualizer.link_value(config, int(link_id)) for link_id in draw_plaquette.link_ids
-    ]
-
-    assert observed_values == values
-    assert visualizer._qdm_resonance_symbol(observed_values) is not None
-
-
-def test_generic_resonance_vulnerable_arrow_uses_physical_link_order_on_small_square_torus() -> (
-    None
-):
-    lattice = SquareLattice(2, 2, boundary_condition="periodic")
-    layout = VariableLayout.from_lattice_links(
-        lattice,
-        LocalSpace.binary(),
-    )
-
-    visualizer = BasisConfigurationVisualizer(
-        lattice=lattice,
-        layout=layout,
-        periodic_image_mode="positive_patch",
-    )
-
-    draw_plaquette = next(
-        draw_plaquette
-        for draw_plaquette in visualizer._draw_plaquette_primitives()
-        if len(draw_plaquette.link_ids) == 4
-    )
-
-    config = np.zeros(layout.n_variables, dtype=np.int64)
-
-    # One link away from 1010 in physical plaquette order.
-    values = [1, 0, 1, 1]
-
-    for link_id, value in zip(draw_plaquette.link_ids, values, strict=True):
-        config[int(link_id)] = value
-
-    observed_values = [
-        visualizer.link_value(config, int(link_id)) for link_id in draw_plaquette.link_ids
-    ]
-
-    vulnerable = visualizer._qdm_one_vulnerable_link(observed_values)
-
-    assert vulnerable is not None
-
-    vulnerable_index, _color = vulnerable
-    assert 0 <= vulnerable_index < len(draw_plaquette.link_midpoints)
+    for draw_plaquette in draw_plaquettes:
+        assert len(draw_plaquette.link_ids) == len(draw_plaquette.link_midpoints)
+        assert len(draw_plaquette.link_ids) == len(draw_plaquette.link_orientations)
+        assert len(set(draw_plaquette.link_ids)) == len(draw_plaquette.link_ids)
 
 
 def test_plaquette_link_midpoints_match_actual_drawn_links_on_small_torus() -> None:
@@ -999,3 +914,95 @@ def test_plaquette_link_midpoints_match_actual_drawn_links_on_small_torus() -> N
                 "plaquette_midpoint": rounded,
                 "actual_midpoints": sorted(actual_midpoints_by_link_id[int(link_id)]),
             }
+
+
+def test_small_square_torus_natural_plaquette_centers_have_two_rows() -> None:
+    lattice = SquareLattice(4, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    centers = [
+        visualizer._natural_plaquette_center(plaquette_id=int(plaquette.id))
+        for plaquette in lattice.plaquettes
+        if len(plaquette.links) == 4
+    ]
+
+    y_values = sorted({round(float(center[1]), 6) for center in centers if center is not None})
+
+    assert len(y_values) == 2
+    assert y_values == [0.5, 1.5]
+
+
+def test_small_square_torus_generic_plaquette_primitives_keep_top_row() -> None:
+    lattice = SquareLattice(4, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    draw_plaquettes = [
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    ]
+
+    y_values = sorted(
+        {round(float(draw_plaquette.center[1]), 6) for draw_plaquette in draw_plaquettes}
+    )
+
+    assert y_values == [0.5, 1.5]
+
+
+def test_small_square_torus_generic_plaquette_primitives_draw_all_plaquettes() -> None:
+    lattice = SquareLattice(4, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    drawn_ids = {
+        int(draw_plaquette.plaquette_id)
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+    }
+
+    expected_ids = {
+        int(plaquette.id) for plaquette in lattice.plaquettes if len(plaquette.links) == 4
+    }
+
+    assert drawn_ids == expected_ids
+
+
+def test_small_square_torus_generic_plaquette_centers_are_in_positive_patch() -> None:
+    lattice = SquareLattice(4, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    draw_plaquettes = [
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    ]
+
+    assert draw_plaquettes
+
+    for draw_plaquette in draw_plaquettes:
+        assert 0.0 <= float(draw_plaquette.center[1]) <= 2.0

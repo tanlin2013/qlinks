@@ -146,6 +146,215 @@ class BasisConfigurationVisualizer:
     coordinate_transform: npt.NDArray[np.float64] | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
 
+    def debug_plaquette_symbol_table(
+        self,
+        config: npt.ArrayLike,
+        *,
+        style: PlaquetteSymbolStyle = "resonance",
+    ) -> list[dict[str, object]]:
+        """Return per-plaquette debug info for generic plaquette symbols.
+
+        This is intended for diagnosing mismatches between visible dimers/arrows
+        and plaquette symbols, especially on small tori.
+        """
+        arr = self._as_config(config)
+        draw_plaquettes = self._draw_plaquette_primitives()
+
+        rows: list[dict[str, object]] = []
+
+        for draw_plaquette in draw_plaquettes:
+            plaquette = self.lattice.plaquettes[int(draw_plaquette.plaquette_id)]
+
+            physical_link_ids = tuple(int(link_id) for link_id in plaquette.links)
+            physical_orientations = tuple(
+                int(orientation) for orientation in plaquette.orientations
+            )
+
+            drawn_link_ids = tuple(int(link_id) for link_id in draw_plaquette.link_ids)
+            drawn_orientations = tuple(
+                int(orientation) for orientation in draw_plaquette.link_orientations
+            )
+
+            physical_values = tuple(self.link_value(arr, link_id) for link_id in physical_link_ids)
+            drawn_values = tuple(self.link_value(arr, link_id) for link_id in drawn_link_ids)
+
+            qdm_symbol = self._qdm_resonance_symbol(drawn_values)
+            qdm_vulnerable = self._qdm_one_vulnerable_link(drawn_values)
+
+            qlm_symbol = self._flux_circulation_symbol(
+                drawn_values,
+                drawn_orientations,
+            )
+            qlm_vulnerable = self._flux_one_vulnerable_link(
+                drawn_values,
+                drawn_orientations,
+            )
+
+            rows.append(
+                {
+                    "plaquette_id": int(draw_plaquette.plaquette_id),
+                    "center": tuple(float(x) for x in draw_plaquette.center),
+                    "physical_link_ids": physical_link_ids,
+                    "drawn_link_ids": drawn_link_ids,
+                    "physical_orientations": physical_orientations,
+                    "drawn_orientations": drawn_orientations,
+                    "physical_values": physical_values,
+                    "drawn_values": drawn_values,
+                    "link_midpoints": tuple(draw_plaquette.link_midpoints),
+                    "qdm_symbol_from_drawn_values": qdm_symbol,
+                    "qdm_vulnerable_from_drawn_values": qdm_vulnerable,
+                    "qlm_symbol_from_drawn_values": qlm_symbol,
+                    "qlm_vulnerable_from_drawn_values": qlm_vulnerable,
+                    "link_order_matches_physical": drawn_link_ids == physical_link_ids,
+                    "values_match_physical_order": drawn_values == physical_values,
+                }
+            )
+
+        return rows
+
+    def debug_draw_link_table(self) -> list[dict[str, object]]:
+        """Return actual drawn visual links and their positions."""
+        _nodes, draw_links = self._draw_primitives()
+
+        rows: list[dict[str, object]] = []
+
+        for draw_link in draw_links:
+            rows.append(
+                {
+                    "link_id": int(draw_link.link_id),
+                    "source_key": draw_link.source_key,
+                    "target_key": draw_link.target_key,
+                    "source_position": tuple(float(x) for x in draw_link.source_position),
+                    "target_position": tuple(float(x) for x in draw_link.target_position),
+                    "midpoint": (
+                        0.5
+                        * (
+                            float(draw_link.source_position[0])
+                            + float(draw_link.target_position[0])
+                        ),
+                        0.5
+                        * (
+                            float(draw_link.source_position[1])
+                            + float(draw_link.target_position[1])
+                        ),
+                    ),
+                }
+            )
+
+        return rows
+
+    def debug_overlapping_visual_links(self) -> list[dict[str, object]]:
+        """Return visual link segments occupied by more than one physical link id."""
+        _nodes, draw_links = self._draw_primitives()
+
+        groups: dict[
+            tuple[tuple[float, float], tuple[float, float]],
+            list[_DrawLink],
+        ] = {}
+
+        def rounded_position(position: tuple[float, float]) -> tuple[float, float]:
+            return (
+                round(float(position[0]), 10),
+                round(float(position[1]), 10),
+            )
+
+        for draw_link in draw_links:
+            source = rounded_position(draw_link.source_position)
+            target = rounded_position(draw_link.target_position)
+
+            key = tuple(sorted((source, target)))
+            groups.setdefault(key, []).append(draw_link)
+
+        rows: list[dict[str, object]] = []
+
+        for segment, links in groups.items():
+            link_ids = sorted({int(link.link_id) for link in links})
+
+            if len(link_ids) <= 1:
+                continue
+
+            rows.append(
+                {
+                    "segment": segment,
+                    "link_ids": link_ids,
+                    "n_draw_links": len(links),
+                }
+            )
+
+        return rows
+
+    def debug_draw_link_table_with_values(
+        self,
+        config: npt.ArrayLike,
+    ) -> list[dict[str, object]]:
+        """Return actual drawn links together with resolved link values."""
+        arr = self._as_config(config)
+        _nodes, draw_links = self._draw_primitives()
+
+        rows: list[dict[str, object]] = []
+
+        for draw_link in draw_links:
+            value = self.link_value(arr, int(draw_link.link_id))
+
+            rows.append(
+                {
+                    "link_id": int(draw_link.link_id),
+                    "value": int(value),
+                    "occupied": bool(value != 0),
+                    "source_key": draw_link.source_key,
+                    "target_key": draw_link.target_key,
+                    "source_position": tuple(float(x) for x in draw_link.source_position),
+                    "target_position": tuple(float(x) for x in draw_link.target_position),
+                    "midpoint": (
+                        0.5
+                        * (
+                            float(draw_link.source_position[0])
+                            + float(draw_link.target_position[0])
+                        ),
+                        0.5
+                        * (
+                            float(draw_link.source_position[1])
+                            + float(draw_link.target_position[1])
+                        ),
+                    ),
+                }
+            )
+
+        return rows
+
+    def debug_draw_link_ids(
+        self,
+        *,
+        ax,
+        draw_links: list[_DrawLink] | None = None,
+    ) -> None:
+        """Overlay physical link ids at drawn-link midpoints."""
+        if draw_links is None:
+            _nodes, draw_links = self._draw_primitives()
+
+        for draw_link in draw_links:
+            sx, sy = self._xy(draw_link.source_position)
+            tx, ty = self._xy(draw_link.target_position)
+            x = 0.5 * (sx + tx)
+            y = 0.5 * (sy + ty)
+
+            ax.text(
+                x,
+                y,
+                str(int(draw_link.link_id)),
+                ha="center",
+                va="center",
+                fontsize=7,
+                color="purple",
+                zorder=20,
+                bbox={
+                    "boxstyle": "round,pad=0.1",
+                    "fc": "white",
+                    "ec": "none",
+                    "alpha": 0.7,
+                },
+            )
+
     def _as_config(self, config: npt.ArrayLike) -> npt.NDArray[np.int64]:
         arr = np.asarray(config, dtype=np.int64)
 
@@ -1470,12 +1679,19 @@ class BasisConfigurationVisualizer:
             selected: tuple[_DrawLink, ...] | None = None
 
             if not any(len(candidates) == 0 for candidates in candidate_lists):
-                selected = self._select_closed_visual_plaquette(candidate_lists)
+                preferred_center = self._natural_plaquette_center(
+                    plaquette_id=int(plaquette.id),
+                )
+                selected = self._select_closed_visual_plaquette(
+                    candidate_lists,
+                    preferred_center=preferred_center,
+                )
 
             if selected is None:
                 fallback = self._fallback_draw_plaquette_primitive(
                     plaquette_id=int(plaquette.id),
                     draw_links=draw_links,
+                    preferred_center=preferred_center,
                 )
                 if fallback is not None:
                     draw_plaquettes.append(fallback)
@@ -1483,19 +1699,14 @@ class BasisConfigurationVisualizer:
 
             center = self._closed_visual_plaquette_center(selected)
 
-            physical_link_ids = self._plaquette_physical_link_ids(
-                plaquette_id=int(plaquette.id),
+            canonical_draw_links = self._canonical_visual_cycle_draw_links(selected)
+            canonical_link_ids = tuple(int(draw_link.link_id) for draw_link in canonical_draw_links)
+            canonical_orientations = self._canonical_visual_cycle_orientations_from_draw_links(
+                center=center,
+                canonical_draw_links=canonical_draw_links,
             )
-            physical_orientations = self._plaquette_physical_orientations(
-                plaquette_id=int(plaquette.id),
-            )
-            midpoint_by_link_id = {
-                int(draw_link.link_id): self._draw_link_midpoint(draw_link)
-                for draw_link in selected
-            }
-
-            physical_link_midpoints = tuple(
-                midpoint_by_link_id[int(link_id)] for link_id in physical_link_ids
+            canonical_link_midpoints = tuple(
+                self._draw_link_midpoint(draw_link) for draw_link in canonical_draw_links
             )
 
             draw_plaquettes.append(
@@ -1504,9 +1715,9 @@ class BasisConfigurationVisualizer:
                     image_shift=tuple(0 for _ in range(self.lattice.ndim)),
                     visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
                     center=(float(center[0]), float(center[1])),
-                    link_ids=physical_link_ids,
-                    link_orientations=physical_orientations,
-                    link_midpoints=physical_link_midpoints,
+                    link_ids=canonical_link_ids,
+                    link_orientations=canonical_orientations,
+                    link_midpoints=canonical_link_midpoints,
                 )
             )
 
@@ -1517,6 +1728,7 @@ class BasisConfigurationVisualizer:
         *,
         plaquette_id: int,
         draw_links: list[_DrawLink],
+        preferred_center: npt.NDArray[np.float64] | None = None,
     ) -> _DrawPlaquette | None:
         """Build a plaquette primitive without requiring drawn links to form a cycle.
 
@@ -1549,19 +1761,25 @@ class BasisConfigurationVisualizer:
         if len(site_ids) == 0:
             return None
 
-        site_positions = [
-            self._apply_visual_transform(self._xy(self._site_plot_position(site_id)))
-            for site_id in site_ids
-        ]
+        # site_positions = [
+        #     self._apply_visual_transform(self._xy(self._site_plot_position(site_id)))
+        #     for site_id in site_ids
+        # ]
 
         # Unwrap all sites near the first site by full torus periods.
-        reference = np.asarray(site_positions[0], dtype=float)
-        unwrapped_site_positions = [
-            self._nearest_periodic_image(np.asarray(position, dtype=float), reference)
-            for position in site_positions
-        ]
+        unwrapped_site_positions = self._local_plaquette_vertices(
+            plaquette_id=plaquette_id,
+        )
 
-        center = np.mean(np.asarray(unwrapped_site_positions, dtype=float), axis=0)
+        if len(unwrapped_site_positions) != len(plaquette.links):
+            return None
+
+        center = preferred_center
+        if center is None:
+            center = np.mean(
+                np.asarray(unwrapped_site_positions, dtype=float),
+                axis=0,
+            )
 
         link_midpoints_by_id: dict[int, tuple[float, float]] = {}
 
@@ -1622,37 +1840,291 @@ class BasisConfigurationVisualizer:
 
         records = records[start:] + records[:start]
 
-        physical_link_ids = self._plaquette_physical_link_ids(
-            plaquette_id=plaquette_id,
-        )
-        physical_orientations = self._plaquette_physical_orientations(
-            plaquette_id=plaquette_id,
-        )
+        local_link_ids: list[int] = []
+        local_orientations: list[int] = []
+        local_midpoints: list[tuple[float, float]] = []
+        local_segments: list[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]] = []
 
-        actual_midpoints_by_id = self._actual_draw_link_midpoints_by_id(draw_links)
-        physical_link_midpoints: list[tuple[float, float]] = []
-        for link_id in physical_link_ids:
-            candidates = actual_midpoints_by_id.get(int(link_id), [])
+        n_sites = len(unwrapped_site_positions)
 
-            if not candidates:
+        if n_sites != len(plaquette.links):
+            return None
+
+        for i in range(n_sites):
+            source = np.asarray(unwrapped_site_positions[i], dtype=np.float64)
+            target = np.asarray(
+                unwrapped_site_positions[(i + 1) % n_sites],
+                dtype=np.float64,
+            )
+            local_segments.append((source, target))
+
+        for source, target in local_segments:
+            draw_link = self._nearest_draw_link_to_local_segment(
+                draw_links=draw_links,
+                source=source,
+                target=target,
+            )
+
+            if draw_link is None:
                 return None
 
-            physical_link_midpoints.append(
-                self._nearest_midpoint_to_center(
-                    candidates,
-                    center,
+            midpoint = 0.5 * (source + target)
+
+            local_link_ids.append(int(draw_link.link_id))
+            local_orientations.append(
+                self._draw_link_orientation_against_local_segment(
+                    draw_link=draw_link,
+                    source=source,
+                    target=target,
                 )
             )
+            local_midpoints.append((float(midpoint[0]), float(midpoint[1])))
 
         return _DrawPlaquette(
             plaquette_id=int(plaquette.id),
             image_shift=tuple(0 for _ in range(self.lattice.ndim)),
             visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
             center=(float(center[0]), float(center[1])),
-            link_ids=physical_link_ids,
-            link_orientations=physical_orientations,
-            link_midpoints=tuple(physical_link_midpoints),
+            link_ids=tuple(local_link_ids),
+            link_orientations=tuple(local_orientations),
+            link_midpoints=tuple(local_midpoints),
         )
+
+    def _canonical_visual_cycle_orientations_from_draw_links(
+        self,
+        *,
+        center: Sequence[float],
+        canonical_draw_links: tuple[_DrawLink, ...],
+    ) -> tuple[int, ...]:
+        """Return orientations of drawn links relative to the local visual cycle.
+
+        +1 means the stored draw-link direction agrees with the local cyclic
+        boundary direction. -1 means it opposes it.
+        """
+        center_array = np.asarray(center, dtype=float)
+
+        orientations: list[int] = []
+
+        for draw_link in canonical_draw_links:
+            source = np.asarray(draw_link.source_position, dtype=float)
+            target = np.asarray(draw_link.target_position, dtype=float)
+            midpoint = 0.5 * (source + target)
+
+            radial = midpoint - center_array
+            tangent_ccw = np.asarray([-radial[1], radial[0]], dtype=float)
+
+            link_vector = target - source
+
+            orientation = 1 if float(np.dot(link_vector, tangent_ccw)) >= 0.0 else -1
+            orientations.append(orientation)
+
+        return tuple(orientations)
+
+    def _positive_patch_position_bounds(
+        self,
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+        """Return approximate plotting-coordinate bounds of the positive patch."""
+        base_positions = [
+            np.asarray(
+                self._apply_visual_transform(self._xy(self._site_plot_position(int(site.id)))),
+                dtype=float,
+            )
+            for site in self.lattice.sites
+        ]
+
+        if len(base_positions) == 0:
+            zero = np.zeros(2, dtype=float)
+            return zero, zero
+
+        periods = [np.asarray(vector, dtype=float) for vector in self._torus_translation_vectors()]
+
+        positions: list[np.ndarray] = []
+
+        if len(periods) == 0:
+            positions = base_positions
+        else:
+            for base in base_positions:
+                for shift in product((0, 1), repeat=len(periods)):
+                    position = np.array(base, dtype=float, copy=True)
+
+                    for coefficient, period in zip(shift, periods, strict=True):
+                        position = position + int(coefficient) * period
+
+                    positions.append(position)
+
+        xy = np.asarray(positions, dtype=float)
+        return np.min(xy, axis=0), np.max(xy, axis=0)
+
+    def _positive_patch_image_shift_for_point(
+        self,
+        point: npt.NDArray[np.float64],
+    ) -> npt.NDArray[np.float64]:
+        """Return a torus-period shift that places a point in the positive patch."""
+        if self.periodic_image_mode != "positive_patch":
+            return np.zeros(2, dtype=float)
+
+        periods = [np.asarray(vector, dtype=float) for vector in self._torus_translation_vectors()]
+
+        if len(periods) == 0:
+            return np.zeros(2, dtype=float)
+
+        lower, upper = self._positive_patch_position_bounds()
+
+        best_shift = np.zeros(2, dtype=float)
+        best_score: tuple[float, float, float, float] | None = None
+
+        # One period in either direction is enough for the current positive patch
+        # construction. Use a slightly wider range if you later support larger
+        # halo conventions.
+        for coefficients in product((-1, 0, 1), repeat=len(periods)):
+            shift_vector = np.zeros(2, dtype=float)
+
+            for coefficient, period in zip(coefficients, periods, strict=True):
+                shift_vector = shift_vector + int(coefficient) * period
+
+            candidate = np.asarray(point, dtype=float) + shift_vector
+
+            below = np.maximum(lower - candidate, 0.0)
+            above = np.maximum(candidate - upper, 0.0)
+            outside_distance = float(np.linalg.norm(below + above))
+
+            period_count = float(sum(abs(int(c)) for c in coefficients))
+
+            score = (
+                outside_distance,
+                period_count,
+                float(candidate[1]),
+                float(candidate[0]),
+            )
+
+            if best_score is None or score < best_score:
+                best_score = score
+                best_shift = shift_vector
+
+        return best_shift
+
+    def _shift_local_plaquette_vertices_to_positive_patch(
+        self,
+        vertices: list[npt.NDArray[np.float64]],
+    ) -> list[npt.NDArray[np.float64]]:
+        """Shift local plaquette vertices into the positive-patch image."""
+        if len(vertices) == 0:
+            return vertices
+
+        center = np.mean(np.asarray(vertices, dtype=float), axis=0)
+        shift = self._positive_patch_image_shift_for_point(center)
+
+        return [np.asarray(vertex, dtype=float) + shift for vertex in vertices]
+
+    def _nearest_draw_link_to_local_segment(
+        self,
+        *,
+        draw_links: list[_DrawLink],
+        source: npt.NDArray[np.float64],
+        target: npt.NDArray[np.float64],
+    ) -> _DrawLink | None:
+        """Find the actual drawn link that best matches a local plaquette edge."""
+        local_midpoint = 0.5 * (source + target)
+        local_vector = target - source
+        local_length = float(np.linalg.norm(local_vector))
+
+        if local_length <= 1e-12:
+            return None
+
+        best: _DrawLink | None = None
+        best_score: tuple[float, float, float] | None = None
+
+        for draw_link in draw_links:
+            draw_source = np.asarray(draw_link.source_position, dtype=float)
+            draw_target = np.asarray(draw_link.target_position, dtype=float)
+            draw_midpoint = 0.5 * (draw_source + draw_target)
+            draw_vector = draw_target - draw_source
+            draw_length = float(np.linalg.norm(draw_vector))
+
+            if draw_length <= 1e-12:
+                continue
+
+            midpoint_distance = float(np.linalg.norm(draw_midpoint - local_midpoint))
+
+            cosine = abs(float(np.dot(local_vector, draw_vector)) / (local_length * draw_length))
+            direction_penalty = 1.0 - cosine
+            length_penalty = abs(draw_length - local_length)
+
+            score = (
+                midpoint_distance,
+                direction_penalty,
+                length_penalty,
+            )
+
+            if best_score is None or score < best_score:
+                best = draw_link
+                best_score = score
+
+        return best
+
+    @staticmethod
+    def _draw_link_orientation_against_local_segment(
+        *,
+        draw_link: _DrawLink,
+        source: npt.NDArray[np.float64],
+        target: npt.NDArray[np.float64],
+    ) -> int:
+        """Return whether draw-link direction agrees with a local edge segment."""
+        draw_source = np.asarray(draw_link.source_position, dtype=float)
+        draw_target = np.asarray(draw_link.target_position, dtype=float)
+
+        draw_vector = draw_target - draw_source
+        local_vector = target - source
+
+        return 1 if float(np.dot(draw_vector, local_vector)) >= 0.0 else -1
+
+    def _local_plaquette_vertices(
+        self,
+        *,
+        plaquette_id: int,
+    ) -> list[np.ndarray]:
+        """Return local unwrapped visual vertices for a plaquette."""
+        plaquette = self.lattice.plaquettes[plaquette_id]
+
+        site_ids = tuple(int(site_id) for site_id in getattr(plaquette, "sites", ()))
+        if len(site_ids) == 0:
+            return []
+
+        positions = [
+            np.asarray(
+                self._apply_visual_transform(self._xy(self._site_plot_position(site_id))),
+                dtype=float,
+            )
+            for site_id in site_ids
+        ]
+
+        if len(positions) == 0:
+            return []
+
+        unwrapped = [positions[0]]
+
+        for position in positions[1:]:
+            unwrapped.append(
+                self._nearest_periodic_image(
+                    position,
+                    unwrapped[-1],
+                )
+            )
+
+        return self._shift_local_plaquette_vertices_to_positive_patch(unwrapped)
+
+    def _natural_plaquette_center(
+        self,
+        *,
+        plaquette_id: int,
+    ) -> np.ndarray | None:
+        """Return the natural local visual center of a plaquette."""
+        vertices = self._local_plaquette_vertices(plaquette_id=plaquette_id)
+
+        if len(vertices) == 0:
+            return None
+
+        return np.mean(np.asarray(vertices, dtype=float), axis=0)
 
     def _plaquette_physical_link_ids(
         self,
@@ -1724,10 +2196,12 @@ class BasisConfigurationVisualizer:
     def _select_closed_visual_plaquette(
         self,
         candidate_lists: list[list[_DrawLink]],
+        *,
+        preferred_center: npt.NDArray[np.float64] | None = None,
     ) -> tuple[_DrawLink, ...] | None:
         """Choose the preferred closed visual representative of a plaquette."""
         best: tuple[_DrawLink, ...] | None = None
-        best_score: tuple[float, float, float] | None = None
+        best_score: tuple[float, float, float, float] | None = None
 
         for candidate_tuple in product(*candidate_lists):
             selected = tuple(candidate_tuple)
@@ -1735,7 +2209,10 @@ class BasisConfigurationVisualizer:
             if not self._draw_links_form_closed_cycle(selected):
                 continue
 
-            score = self._visual_plaquette_representative_score(selected)
+            score = self._visual_plaquette_representative_score(
+                selected,
+                preferred_center=preferred_center,
+            )
 
             if best_score is None or score < best_score:
                 best = selected
@@ -1746,24 +2223,38 @@ class BasisConfigurationVisualizer:
     def _visual_plaquette_representative_score(
         self,
         draw_links: tuple[_DrawLink, ...],
-    ) -> tuple[float, float, float]:
+        *,
+        preferred_center: npt.NDArray[np.float64] | None = None,
+    ) -> tuple[float, float, float, float]:
         """Score visual plaquette representatives.
 
         Lower score is preferred:
-            1. lower visual center;
-            2. left visual center;
-            3. compact closed polygon.
+            1. closeness to the plaquette's natural local center;
+            2. compactness;
+            3. lower visual center;
+            4. left visual center.
 
-        This makes the positive-patch plaquette-symbol convention prefer the
-        lower-left representative whenever several closed representatives exist.
+        This avoids moving actual top-row small-torus plaquettes down to the
+        bottom row while still choosing deterministic representatives among
+        duplicate PBC images.
         """
         center = self._closed_visual_plaquette_center(draw_links)
         compactness = self._visual_plaquette_compactness_score(draw_links)
 
+        if preferred_center is None:
+            center_distance = 0.0
+        else:
+            center_distance = float(
+                np.linalg.norm(
+                    np.asarray(center, dtype=float) - np.asarray(preferred_center, dtype=float)
+                )
+            )
+
         return (
-            float(center[1]),  # prefer bottom
-            float(center[0]),  # then prefer left
-            float(compactness),  # only then prefer compactness
+            center_distance,
+            float(compactness),
+            float(center[1]),
+            float(center[0]),
         )
 
     def _draw_links_form_closed_cycle(
