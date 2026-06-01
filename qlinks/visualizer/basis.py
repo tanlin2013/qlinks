@@ -1442,13 +1442,11 @@ class BasisConfigurationVisualizer:
         return tuple(record[3] for record in rotated)
 
     def _draw_plaquette_primitives(self) -> list[_DrawPlaquette]:
-        """Build visual plaquette centers from actually drawn closed cycles.
+        """Build visual plaquette primitives for generic plaquette symbols.
 
-        Generic circulation symbols should only be attached to a visual plaquette
-        representative that is a single closed polygon. This is especially
-        important for triangular and honeycomb PBC positive patches, where a
-        physical plaquette may have several drawn images and a greedy nearest-link
-        choice can assemble a broken or displaced representative.
+        This method is intentionally style-independent. The same primitives are
+        used by QLM circulation symbols, QDM resonance symbols, and one-vulnerable
+        link arrows.
         """
         if self.lattice.num_plaquettes == 0:
             return []
@@ -1469,26 +1467,35 @@ class BasisConfigurationVisualizer:
 
             candidate_lists = [draw_links_by_link_id.get(link_id, []) for link_id in link_ids]
 
-            if any(len(candidates) == 0 for candidates in candidate_lists):
-                continue
+            selected: tuple[_DrawLink, ...] | None = None
 
-            selected = self._select_closed_visual_plaquette(candidate_lists)
+            if not any(len(candidates) == 0 for candidates in candidate_lists):
+                selected = self._select_closed_visual_plaquette(candidate_lists)
+
             if selected is None:
+                fallback = self._fallback_draw_plaquette_primitive(
+                    plaquette_id=int(plaquette.id),
+                    draw_links=draw_links,
+                )
+                if fallback is not None:
+                    draw_plaquettes.append(fallback)
                 continue
 
             center = self._closed_visual_plaquette_center(selected)
 
-            canonical_draw_links = self._canonical_visual_cycle_draw_links(selected)
-
-            canonical_link_ids = tuple(int(draw_link.link_id) for draw_link in canonical_draw_links)
-
-            canonical_orientations = self._canonical_visual_cycle_orientations(
+            physical_link_ids = self._plaquette_physical_link_ids(
                 plaquette_id=int(plaquette.id),
-                canonical_link_ids=canonical_link_ids,
             )
+            physical_orientations = self._plaquette_physical_orientations(
+                plaquette_id=int(plaquette.id),
+            )
+            midpoint_by_link_id = {
+                int(draw_link.link_id): self._draw_link_midpoint(draw_link)
+                for draw_link in selected
+            }
 
-            canonical_link_midpoints = tuple(
-                self._draw_link_midpoint(draw_link) for draw_link in canonical_draw_links
+            physical_link_midpoints = tuple(
+                midpoint_by_link_id[int(link_id)] for link_id in physical_link_ids
             )
 
             draw_plaquettes.append(
@@ -1497,13 +1504,201 @@ class BasisConfigurationVisualizer:
                     image_shift=tuple(0 for _ in range(self.lattice.ndim)),
                     visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
                     center=(float(center[0]), float(center[1])),
-                    link_ids=canonical_link_ids,
-                    link_orientations=canonical_orientations,
-                    link_midpoints=canonical_link_midpoints,
+                    link_ids=physical_link_ids,
+                    link_orientations=physical_orientations,
+                    link_midpoints=physical_link_midpoints,
                 )
             )
 
         return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
+
+    def _fallback_draw_plaquette_primitive(
+        self,
+        *,
+        plaquette_id: int,
+        draw_links: list[_DrawLink],
+    ) -> _DrawPlaquette | None:
+        """Build a plaquette primitive without requiring drawn links to form a cycle.
+
+        This is needed for small tori, where a physical plaquette may be visually
+        degenerate or may fail the simple closed-cycle test. The fallback uses
+        plaquette site/link metadata and nearest torus images to construct a
+        local visual representative.
+        """
+        plaquette = self.lattice.plaquettes[plaquette_id]
+
+        link_ids = tuple(int(link_id) for link_id in plaquette.links)
+
+        if not self._is_supported_circulation_plaquette(link_ids):
+            return None
+
+        if len(link_ids) == 0:
+            return None
+
+        # Prefer plaquette.sites if available, because it is the actual polygon
+        # boundary. Fall back to link endpoints otherwise.
+        site_ids = tuple(int(site_id) for site_id in getattr(plaquette, "sites", ()))
+
+        if len(site_ids) == 0:
+            collected_sites: list[int] = []
+            for link_id in link_ids:
+                link = self.lattice.links[link_id]
+                collected_sites.extend([int(link.source), int(link.target)])
+            site_ids = tuple(dict.fromkeys(collected_sites))
+
+        if len(site_ids) == 0:
+            return None
+
+        site_positions = [
+            self._apply_visual_transform(self._xy(self._site_plot_position(site_id)))
+            for site_id in site_ids
+        ]
+
+        # Unwrap all sites near the first site by full torus periods.
+        reference = np.asarray(site_positions[0], dtype=float)
+        unwrapped_site_positions = [
+            self._nearest_periodic_image(np.asarray(position, dtype=float), reference)
+            for position in site_positions
+        ]
+
+        center = np.mean(np.asarray(unwrapped_site_positions, dtype=float), axis=0)
+
+        link_midpoints_by_id: dict[int, tuple[float, float]] = {}
+
+        for link_id in link_ids:
+            link = self.lattice.links[link_id]
+
+            source = self._apply_visual_transform(
+                self._xy(self._site_plot_position(int(link.source)))
+            )
+            target = self._apply_visual_transform(
+                self._xy(self._site_plot_position(int(link.target)))
+            )
+
+            source = self._nearest_periodic_image(source, center)
+            target = self._nearest_periodic_image(target, source)
+
+            # If the link midpoint is closer in another torus image, move both
+            # endpoints together toward the plaquette center.
+            midpoint = 0.5 * (source + target)
+            shifted_midpoint = self._nearest_periodic_image(midpoint, center)
+            shift = shifted_midpoint - midpoint
+
+            source = source + shift
+            target = target + shift
+
+            midpoint = 0.5 * (source + target)
+
+            link_midpoints_by_id[int(link_id)] = (
+                float(midpoint[0]),
+                float(midpoint[1]),
+            )
+
+        # Canonical visual order using link midpoints around the fallback center.
+        records: list[tuple[float, float, float, int]] = []
+        for link_id in link_ids:
+            midpoint = np.asarray(link_midpoints_by_id[int(link_id)], dtype=float)
+
+            angle = math.atan2(
+                float(midpoint[1] - center[1]),
+                float(midpoint[0] - center[0]),
+            )
+
+            records.append(
+                (
+                    angle,
+                    float(midpoint[1]),
+                    float(midpoint[0]),
+                    int(link_id),
+                )
+            )
+
+        records.sort(key=lambda item: item[0])
+
+        start = min(
+            range(len(records)),
+            key=lambda i: (records[i][1], records[i][2]),
+        )
+
+        records = records[start:] + records[:start]
+
+        physical_link_ids = self._plaquette_physical_link_ids(
+            plaquette_id=plaquette_id,
+        )
+        physical_orientations = self._plaquette_physical_orientations(
+            plaquette_id=plaquette_id,
+        )
+
+        actual_midpoints_by_id = self._actual_draw_link_midpoints_by_id(draw_links)
+        physical_link_midpoints: list[tuple[float, float]] = []
+        for link_id in physical_link_ids:
+            candidates = actual_midpoints_by_id.get(int(link_id), [])
+
+            if not candidates:
+                return None
+
+            physical_link_midpoints.append(
+                self._nearest_midpoint_to_center(
+                    candidates,
+                    center,
+                )
+            )
+
+        return _DrawPlaquette(
+            plaquette_id=int(plaquette.id),
+            image_shift=tuple(0 for _ in range(self.lattice.ndim)),
+            visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
+            center=(float(center[0]), float(center[1])),
+            link_ids=physical_link_ids,
+            link_orientations=physical_orientations,
+            link_midpoints=tuple(physical_link_midpoints),
+        )
+
+    def _plaquette_physical_link_ids(
+        self,
+        *,
+        plaquette_id: int,
+    ) -> tuple[int, ...]:
+        """Return the physical boundary link order of a plaquette."""
+        plaquette = self.lattice.plaquettes[plaquette_id]
+        return tuple(int(link_id) for link_id in plaquette.links)
+
+    def _plaquette_physical_orientations(
+        self,
+        *,
+        plaquette_id: int,
+    ) -> tuple[int, ...]:
+        """Return plaquette link orientations in physical boundary order."""
+        plaquette = self.lattice.plaquettes[plaquette_id]
+        return tuple(int(orientation) for orientation in plaquette.orientations)
+
+    def _actual_draw_link_midpoints_by_id(
+        self,
+        draw_links: list[_DrawLink],
+    ) -> dict[int, list[tuple[float, float]]]:
+        """Return actual drawn midpoints grouped by physical link id."""
+        out: dict[int, list[tuple[float, float]]] = {}
+
+        for draw_link in draw_links:
+            midpoint = self._draw_link_midpoint(draw_link)
+            out.setdefault(int(draw_link.link_id), []).append(midpoint)
+
+        return out
+
+    @staticmethod
+    def _nearest_midpoint_to_center(
+        midpoints: list[tuple[float, float]],
+        center: Sequence[float],
+    ) -> tuple[float, float]:
+        """Choose the actual drawn midpoint closest to a plaquette center."""
+        center_array = np.asarray(center, dtype=float)
+
+        return min(
+            midpoints,
+            key=lambda midpoint: float(
+                np.linalg.norm(np.asarray(midpoint, dtype=float) - center_array)
+            ),
+        )
 
     def _is_supported_circulation_plaquette(
         self,
@@ -1782,27 +1977,35 @@ class BasisConfigurationVisualizer:
     def _collapse_duplicate_draw_plaquettes(
         self,
         draw_plaquettes: list[_DrawPlaquette],
-        *,
-        atol: float = 1e-9,
     ) -> list[_DrawPlaquette]:
-        seen: set[tuple[int, int]] = set()
-        out: list[_DrawPlaquette] = []
-
-        def quantize(pos: tuple[float, float]) -> tuple[int, int]:
-            return tuple(int(round(float(x) / atol)) for x in pos)
+        """Collapse multiple representatives of the same physical plaquette."""
+        by_plaquette_id: dict[int, _DrawPlaquette] = {}
 
         for draw_plaquette in draw_plaquettes:
-            # Collapse by visual center, not by plaquette_id. This avoids duplicate
-            # symbols on tiny tori.
-            key = quantize(draw_plaquette.center)
+            plaquette_id = int(draw_plaquette.plaquette_id)
 
-            if key in seen:
+            existing = by_plaquette_id.get(plaquette_id)
+            if existing is None:
+                by_plaquette_id[plaquette_id] = draw_plaquette
                 continue
 
-            seen.add(key)
-            out.append(draw_plaquette)
+            if self._draw_plaquette_position_score(
+                draw_plaquette
+            ) < self._draw_plaquette_position_score(existing):
+                by_plaquette_id[plaquette_id] = draw_plaquette
 
-        return out
+        return list(by_plaquette_id.values())
+
+    @staticmethod
+    def _draw_plaquette_position_score(
+        draw_plaquette: _DrawPlaquette,
+    ) -> tuple[float, float]:
+        """Lower-left preference for duplicate plaquette representatives."""
+        center = tuple(float(value) for value in draw_plaquette.center)
+        return (
+            float(center[1]),
+            float(center[0]),
+        )
 
     def _draw_plaquette_symbols(
         self,

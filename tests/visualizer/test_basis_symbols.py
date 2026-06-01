@@ -530,3 +530,472 @@ def test_circulation_style_draws_one_vulnerable_link_arrow() -> None:
     assert not any(text.get_text() in {"↺", "↻"} for text in ax.texts)
 
     plt.close(fig)
+
+
+def test_generic_plaquette_primitives_exist_on_small_square_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquettes = visualizer._draw_plaquette_primitives()
+
+    assert {int(draw_plaquette.plaquette_id) for draw_plaquette in draw_plaquettes} == {
+        int(plaquette.id) for plaquette in lattice.plaquettes if len(plaquette.links) == 4
+    }
+
+
+def test_generic_circulation_symbols_draw_on_small_square_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    )
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+
+    for link_id, orientation in zip(
+        draw_plaquette.link_ids,
+        draw_plaquette.link_orientations,
+        strict=True,
+    ):
+        config[int(link_id)] = int(orientation)
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="arrows",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="circulation",
+    )
+
+    assert any(text.get_text() in {"↺", "↻"} for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_generic_resonance_symbols_draw_on_small_square_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    )
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    for i, link_id in enumerate(draw_plaquette.link_ids):
+        config[int(link_id)] = 1 if i % 2 == 0 else 0
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    assert any(text.get_text() in {"◆", "◇"} for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_honeycomb_resonance_symbols_draw_on_small_torus() -> None:
+    lattice = HoneycombLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquettes = [
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 6
+    ]
+
+    assert draw_plaquettes
+
+    draw_plaquette = draw_plaquettes[0]
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+    for i, link_id in enumerate(draw_plaquette.link_ids):
+        config[int(link_id)] = 1 if i % 2 == 0 else 0
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    assert any(text.get_text() in {"◆", "◇"} for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_generic_resonance_vulnerable_arrow_draws_on_small_square_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    )
+
+    assert len(draw_plaquette.link_midpoints) == len(draw_plaquette.link_ids)
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    # One flip from 1010.
+    values = [1, 0, 1, 1]
+
+    for link_id, value in zip(draw_plaquette.link_ids, values, strict=True):
+        config[int(link_id)] = value
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    # Vulnerable-link arrow is drawn as FancyArrowPatch.
+    assert len(ax.patches) >= 1
+    assert not any(text.get_text() in {"◆", "◇"} for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_generic_circulation_vulnerable_arrow_draws_on_small_square_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    )
+
+    assert len(draw_plaquette.link_midpoints) == len(draw_plaquette.link_ids)
+
+    config = np.ones(layout.n_variables, dtype=np.int64)
+
+    # Start from positive circulation.
+    for link_id, orientation in zip(
+        draw_plaquette.link_ids,
+        draw_plaquette.link_orientations,
+        strict=True,
+    ):
+        config[int(link_id)] = int(orientation)
+
+    # Break exactly one link.
+    vulnerable_link = int(draw_plaquette.link_ids[-1])
+    config[vulnerable_link] *= -1
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="arrows",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="circulation",
+    )
+
+    assert len(ax.patches) > lattice.num_links
+    assert not any(text.get_text() in {"↺", "↻"} for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_honeycomb_vulnerable_resonance_arrow_draws_on_small_torus() -> None:
+    lattice = HoneycombLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquettes = [
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 6
+    ]
+
+    assert draw_plaquettes
+
+    draw_plaquette = draw_plaquettes[0]
+    assert len(draw_plaquette.link_midpoints) == 6
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    # One flip from 101010.
+    values = [1, 0, 1, 0, 1, 1]
+
+    for link_id, value in zip(draw_plaquette.link_ids, values, strict=True):
+        config[int(link_id)] = value
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    assert len(ax.patches) >= 1
+    assert not any(text.get_text() in {"◆", "◇"} for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_generic_plaquette_primitives_have_midpoints_on_small_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquettes = visualizer._draw_plaquette_primitives()
+
+    assert draw_plaquettes
+
+    for draw_plaquette in draw_plaquettes:
+        assert len(draw_plaquette.link_midpoints) == len(draw_plaquette.link_ids)
+        assert len(draw_plaquette.link_orientations) == len(draw_plaquette.link_ids)
+
+
+def test_generic_plaquette_primitives_use_physical_link_order_on_small_square_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquettes = visualizer._draw_plaquette_primitives()
+
+    by_id = {int(draw_plaquette.plaquette_id): draw_plaquette for draw_plaquette in draw_plaquettes}
+
+    for plaquette in lattice.plaquettes:
+        if len(plaquette.links) not in (4, 6):
+            continue
+
+        draw_plaquette = by_id[int(plaquette.id)]
+
+        assert draw_plaquette.link_ids == tuple(int(link_id) for link_id in plaquette.links)
+        assert draw_plaquette.link_orientations == tuple(
+            int(orientation) for orientation in plaquette.orientations
+        )
+        assert len(draw_plaquette.link_midpoints) == len(draw_plaquette.link_ids)
+
+
+def test_generic_resonance_symbol_matches_physical_plaquette_order_on_small_square_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    )
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    # Alternating occupation in physical plaquette order.
+    values = [1, 0, 1, 0]
+
+    for link_id, value in zip(draw_plaquette.link_ids, values, strict=True):
+        config[int(link_id)] = value
+
+    observed_values = [
+        visualizer.link_value(config, int(link_id)) for link_id in draw_plaquette.link_ids
+    ]
+
+    assert observed_values == values
+    assert visualizer._qdm_resonance_symbol(observed_values) is not None
+
+
+def test_generic_resonance_vulnerable_arrow_uses_physical_link_order_on_small_square_torus() -> (
+    None
+):
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+    )
+
+    draw_plaquette = next(
+        draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+        if len(draw_plaquette.link_ids) == 4
+    )
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    # One link away from 1010 in physical plaquette order.
+    values = [1, 0, 1, 1]
+
+    for link_id, value in zip(draw_plaquette.link_ids, values, strict=True):
+        config[int(link_id)] = value
+
+    observed_values = [
+        visualizer.link_value(config, int(link_id)) for link_id in draw_plaquette.link_ids
+    ]
+
+    vulnerable = visualizer._qdm_one_vulnerable_link(observed_values)
+
+    assert vulnerable is not None
+
+    vulnerable_index, _color = vulnerable
+    assert 0 <= vulnerable_index < len(draw_plaquette.link_midpoints)
+
+
+def test_plaquette_link_midpoints_match_actual_drawn_links_on_small_torus() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    _nodes, draw_links = visualizer._draw_primitives()
+    draw_plaquettes = visualizer._draw_plaquette_primitives()
+
+    actual_midpoints_by_link_id: dict[int, set[tuple[float, float]]] = {}
+
+    for draw_link in draw_links:
+        midpoint = visualizer._draw_link_midpoint(draw_link)
+        rounded = (
+            round(float(midpoint[0]), 10),
+            round(float(midpoint[1]), 10),
+        )
+        actual_midpoints_by_link_id.setdefault(
+            int(draw_link.link_id),
+            set(),
+        ).add(rounded)
+
+    for draw_plaquette in draw_plaquettes:
+        for link_id, midpoint in zip(
+            draw_plaquette.link_ids,
+            draw_plaquette.link_midpoints,
+            strict=True,
+        ):
+            rounded = (
+                round(float(midpoint[0]), 10),
+                round(float(midpoint[1]), 10),
+            )
+
+            assert rounded in actual_midpoints_by_link_id[int(link_id)], {
+                "plaquette_id": draw_plaquette.plaquette_id,
+                "link_id": link_id,
+                "plaquette_midpoint": rounded,
+                "actual_midpoints": sorted(actual_midpoints_by_link_id[int(link_id)]),
+            }
