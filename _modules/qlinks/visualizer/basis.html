@@ -1769,13 +1769,11 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">rotated</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_draw_plaquette_primitives</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_DrawPlaquette</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build visual plaquette centers from actually drawn closed cycles.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build visual plaquette primitives for generic plaquette symbols.</span>
 
-<span class="sd">        Generic circulation symbols should only be attached to a visual plaquette</span>
-<span class="sd">        representative that is a single closed polygon. This is especially</span>
-<span class="sd">        important for triangular and honeycomb PBC positive patches, where a</span>
-<span class="sd">        physical plaquette may have several drawn images and a greedy nearest-link</span>
-<span class="sd">        choice can assemble a broken or displaced representative.</span>
+<span class="sd">        This method is intentionally style-independent. The same primitives are</span>
+<span class="sd">        used by QLM circulation symbols, QDM resonance symbols, and one-vulnerable</span>
+<span class="sd">        link arrows.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_plaquettes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
@@ -1796,26 +1794,35 @@
 
             <span class="n">candidate_lists</span> <span class="o">=</span> <span class="p">[</span><span class="n">draw_links_by_link_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">link_id</span><span class="p">,</span> <span class="p">[])</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">]</span>
 
-            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">candidates</span> <span class="ow">in</span> <span class="n">candidate_lists</span><span class="p">):</span>
-                <span class="k">continue</span>
+            <span class="n">selected</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">_DrawLink</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="n">selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_closed_visual_plaquette</span><span class="p">(</span><span class="n">candidate_lists</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">candidates</span> <span class="ow">in</span> <span class="n">candidate_lists</span><span class="p">):</span>
+                <span class="n">selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_closed_visual_plaquette</span><span class="p">(</span><span class="n">candidate_lists</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="n">selected</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">fallback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fallback_draw_plaquette_primitive</span><span class="p">(</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                    <span class="n">draw_links</span><span class="o">=</span><span class="n">draw_links</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">fallback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">draw_plaquettes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fallback</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="n">center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed_visual_plaquette_center</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
 
-            <span class="n">canonical_draw_links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canonical_visual_cycle_draw_links</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
-
-            <span class="n">canonical_link_ids</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">draw_link</span><span class="o">.</span><span class="n">link_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">draw_link</span> <span class="ow">in</span> <span class="n">canonical_draw_links</span><span class="p">)</span>
-
-            <span class="n">canonical_orientations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canonical_visual_cycle_orientations</span><span class="p">(</span>
+            <span class="n">physical_link_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plaquette_physical_link_ids</span><span class="p">(</span>
                 <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
-                <span class="n">canonical_link_ids</span><span class="o">=</span><span class="n">canonical_link_ids</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="n">physical_orientations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plaquette_physical_orientations</span><span class="p">(</span>
+                <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">midpoint_by_link_id</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">draw_link</span><span class="o">.</span><span class="n">link_id</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw_link_midpoint</span><span class="p">(</span><span class="n">draw_link</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">draw_link</span> <span class="ow">in</span> <span class="n">selected</span>
+            <span class="p">}</span>
 
-            <span class="n">canonical_link_midpoints</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_draw_link_midpoint</span><span class="p">(</span><span class="n">draw_link</span><span class="p">)</span> <span class="k">for</span> <span class="n">draw_link</span> <span class="ow">in</span> <span class="n">canonical_draw_links</span>
+            <span class="n">physical_link_midpoints</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">midpoint_by_link_id</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">physical_link_ids</span>
             <span class="p">)</span>
 
             <span class="n">draw_plaquettes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -1824,13 +1831,201 @@
                     <span class="n">image_shift</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">ndim</span><span class="p">)),</span>
                     <span class="n">visual_cell</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">ndim</span><span class="p">)),</span>
                     <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
-                    <span class="n">link_ids</span><span class="o">=</span><span class="n">canonical_link_ids</span><span class="p">,</span>
-                    <span class="n">link_orientations</span><span class="o">=</span><span class="n">canonical_orientations</span><span class="p">,</span>
-                    <span class="n">link_midpoints</span><span class="o">=</span><span class="n">canonical_link_midpoints</span><span class="p">,</span>
+                    <span class="n">link_ids</span><span class="o">=</span><span class="n">physical_link_ids</span><span class="p">,</span>
+                    <span class="n">link_orientations</span><span class="o">=</span><span class="n">physical_orientations</span><span class="p">,</span>
+                    <span class="n">link_midpoints</span><span class="o">=</span><span class="n">physical_link_midpoints</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collapse_duplicate_draw_plaquettes</span><span class="p">(</span><span class="n">draw_plaquettes</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fallback_draw_plaquette_primitive</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">draw_links</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_DrawLink</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_DrawPlaquette</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a plaquette primitive without requiring drawn links to form a cycle.</span>
+
+<span class="sd">        This is needed for small tori, where a physical plaquette may be visually</span>
+<span class="sd">        degenerate or may fail the simple closed-cycle test. The fallback uses</span>
+<span class="sd">        plaquette site/link metadata and nearest torus images to construct a</span>
+<span class="sd">        local visual representative.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">plaquette</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquettes</span><span class="p">[</span><span class="n">plaquette_id</span><span class="p">]</span>
+
+        <span class="n">link_ids</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">plaquette</span><span class="o">.</span><span class="n">links</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_supported_circulation_plaquette</span><span class="p">(</span><span class="n">link_ids</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">link_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Prefer plaquette.sites if available, because it is the actual polygon</span>
+        <span class="c1"># boundary. Fall back to link endpoints otherwise.</span>
+        <span class="n">site_ids</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">plaquette</span><span class="p">,</span> <span class="s2">&quot;sites&quot;</span><span class="p">,</span> <span class="p">()))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">site_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">collected_sites</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">:</span>
+                <span class="n">link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="n">link_id</span><span class="p">]</span>
+                <span class="n">collected_sites</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">target</span><span class="p">)])</span>
+            <span class="n">site_ids</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">collected_sites</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">site_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">site_positions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_visual_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_plot_position</span><span class="p">(</span><span class="n">site_id</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="n">site_ids</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Unwrap all sites near the first site by full torus periods.</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">site_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">unwrapped_site_positions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nearest_periodic_image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">reference</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">position</span> <span class="ow">in</span> <span class="n">site_positions</span>
+        <span class="p">]</span>
+
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">unwrapped_site_positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">link_midpoints_by_id</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">:</span>
+            <span class="n">link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="n">link_id</span><span class="p">]</span>
+
+            <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_visual_transform</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_plot_position</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source</span><span class="p">)))</span>
+            <span class="p">)</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_visual_transform</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_plot_position</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">target</span><span class="p">)))</span>
+            <span class="p">)</span>
+
+            <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nearest_periodic_image</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nearest_periodic_image</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+
+            <span class="c1"># If the link midpoint is closer in another torus image, move both</span>
+            <span class="c1"># endpoints together toward the plaquette center.</span>
+            <span class="n">midpoint</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">source</span> <span class="o">+</span> <span class="n">target</span><span class="p">)</span>
+            <span class="n">shifted_midpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nearest_periodic_image</span><span class="p">(</span><span class="n">midpoint</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
+            <span class="n">shift</span> <span class="o">=</span> <span class="n">shifted_midpoint</span> <span class="o">-</span> <span class="n">midpoint</span>
+
+            <span class="n">source</span> <span class="o">=</span> <span class="n">source</span> <span class="o">+</span> <span class="n">shift</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="n">shift</span>
+
+            <span class="n">midpoint</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">source</span> <span class="o">+</span> <span class="n">target</span><span class="p">)</span>
+
+            <span class="n">link_midpoints_by_id</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">midpoint</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">midpoint</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Canonical visual order using link midpoints around the fallback center.</span>
+        <span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">:</span>
+            <span class="n">midpoint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">link_midpoints_by_id</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">midpoint</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">midpoint</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="p">)</span>
+
+            <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">angle</span><span class="p">,</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">midpoint</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">midpoint</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">records</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">records</span><span class="p">)),</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="n">records</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">records</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]),</span>
+        <span class="p">)</span>
+
+        <span class="n">records</span> <span class="o">=</span> <span class="n">records</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span> <span class="o">+</span> <span class="n">records</span><span class="p">[:</span><span class="n">start</span><span class="p">]</span>
+
+        <span class="n">physical_link_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plaquette_physical_link_ids</span><span class="p">(</span>
+            <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">physical_orientations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plaquette_physical_orientations</span><span class="p">(</span>
+            <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">actual_midpoints_by_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_actual_draw_link_midpoints_by_id</span><span class="p">(</span><span class="n">draw_links</span><span class="p">)</span>
+        <span class="n">physical_link_midpoints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">physical_link_ids</span><span class="p">:</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="n">actual_midpoints_by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">),</span> <span class="p">[])</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">candidates</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="n">physical_link_midpoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nearest_midpoint_to_center</span><span class="p">(</span>
+                    <span class="n">candidates</span><span class="p">,</span>
+                    <span class="n">center</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_DrawPlaquette</span><span class="p">(</span>
+            <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">image_shift</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">ndim</span><span class="p">)),</span>
+            <span class="n">visual_cell</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">ndim</span><span class="p">)),</span>
+            <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+            <span class="n">link_ids</span><span class="o">=</span><span class="n">physical_link_ids</span><span class="p">,</span>
+            <span class="n">link_orientations</span><span class="o">=</span><span class="n">physical_orientations</span><span class="p">,</span>
+            <span class="n">link_midpoints</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">physical_link_midpoints</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_physical_link_ids</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the physical boundary link order of a plaquette.&quot;&quot;&quot;</span>
+        <span class="n">plaquette</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquettes</span><span class="p">[</span><span class="n">plaquette_id</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">plaquette</span><span class="o">.</span><span class="n">links</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_physical_orientations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return plaquette link orientations in physical boundary order.&quot;&quot;&quot;</span>
+        <span class="n">plaquette</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquettes</span><span class="p">[</span><span class="n">plaquette_id</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">orientation</span><span class="p">)</span> <span class="k">for</span> <span class="n">orientation</span> <span class="ow">in</span> <span class="n">plaquette</span><span class="o">.</span><span class="n">orientations</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_actual_draw_link_midpoints_by_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">draw_links</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_DrawLink</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return actual drawn midpoints grouped by physical link id.&quot;&quot;&quot;</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">draw_link</span> <span class="ow">in</span> <span class="n">draw_links</span><span class="p">:</span>
+            <span class="n">midpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw_link_midpoint</span><span class="p">(</span><span class="n">draw_link</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">draw_link</span><span class="o">.</span><span class="n">link_id</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">midpoint</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_nearest_midpoint_to_center</span><span class="p">(</span>
+        <span class="n">midpoints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+        <span class="n">center</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Choose the actual drawn midpoint closest to a plaquette center.&quot;&quot;&quot;</span>
+        <span class="n">center_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">midpoints</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">midpoint</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">midpoint</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">center_array</span><span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_is_supported_circulation_plaquette</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -2109,27 +2304,35 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_collapse_duplicate_draw_plaquettes</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">draw_plaquettes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_DrawPlaquette</span><span class="p">],</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_DrawPlaquette</span><span class="p">]:</span>
-        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_DrawPlaquette</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">quantize</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">atol</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collapse multiple representatives of the same physical plaquette.&quot;&quot;&quot;</span>
+        <span class="n">by_plaquette_id</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">_DrawPlaquette</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">draw_plaquette</span> <span class="ow">in</span> <span class="n">draw_plaquettes</span><span class="p">:</span>
-            <span class="c1"># Collapse by visual center, not by plaquette_id. This avoids duplicate</span>
-            <span class="c1"># symbols on tiny tori.</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">draw_plaquette</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
+            <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">draw_plaquette</span><span class="o">.</span><span class="n">plaquette_id</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">existing</span> <span class="o">=</span> <span class="n">by_plaquette_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">by_plaquette_id</span><span class="p">[</span><span class="n">plaquette_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">draw_plaquette</span>
                 <span class="k">continue</span>
 
-            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">draw_plaquette</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw_plaquette_position_score</span><span class="p">(</span>
+                <span class="n">draw_plaquette</span>
+            <span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw_plaquette_position_score</span><span class="p">(</span><span class="n">existing</span><span class="p">):</span>
+                <span class="n">by_plaquette_id</span><span class="p">[</span><span class="n">plaquette_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">draw_plaquette</span>
 
-        <span class="k">return</span> <span class="n">out</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">by_plaquette_id</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw_plaquette_position_score</span><span class="p">(</span>
+        <span class="n">draw_plaquette</span><span class="p">:</span> <span class="n">_DrawPlaquette</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lower-left preference for duplicate plaquette representatives.&quot;&quot;&quot;</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">draw_plaquette</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_draw_plaquette_symbols</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
