@@ -4,7 +4,7 @@ import math
 from dataclasses import dataclass, field
 from itertools import product
 from pathlib import Path
-from typing import Literal, Sequence
+from typing import Literal, Mapping, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -145,6 +145,97 @@ class BasisConfigurationVisualizer:
     coordinate_scale: float = 1.0
     coordinate_transform: npt.NDArray[np.float64] | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
+
+    def debug_physical_qdm_resonance_table(
+        self,
+        config: npt.ArrayLike,
+    ) -> list[dict[str, object]]:
+        """Return physical QDM plaquette resonance diagnostics."""
+        arr = self._as_config(config)
+
+        rows: list[dict[str, object]] = []
+
+        for plaquette in self.lattice.plaquettes:
+            link_ids = tuple(int(link_id) for link_id in plaquette.links)
+
+            if len(link_ids) < 4 or len(link_ids) % 2 != 0:
+                continue
+
+            values = tuple(self.link_value(arr, int(link_id)) for link_id in link_ids)
+
+            resonance = self._qdm_resonance_symbol(values)
+            vulnerable = self._qdm_one_vulnerable_link(values)
+
+            rows.append(
+                {
+                    "plaquette_id": int(plaquette.id),
+                    "link_ids": link_ids,
+                    "values": values,
+                    "resonance": resonance,
+                    "vulnerable": vulnerable,
+                }
+            )
+
+        return rows
+
+    def debug_draw_qdm_plaquette_local_edges(
+        self,
+        config: npt.ArrayLike,
+        *,
+        ax,
+        only_resonant: bool = True,
+    ) -> None:
+        """Overlay local plaquette-edge dimers used for QDM resonance tests.
+
+        This is a diagnostic for small tori: it shows the local physical plaquette
+        boundary even when the global dimer drawing splits the PBC image.
+        """
+        arr = self._as_config(config)
+        draw_plaquettes = self._draw_plaquette_primitives()
+
+        for draw_plaquette in draw_plaquettes:
+            values = tuple(
+                self.link_value(arr, int(link_id)) for link_id in draw_plaquette.link_ids
+            )
+
+            resonance = self._qdm_resonance_symbol(values)
+
+            if only_resonant and resonance is None:
+                continue
+
+            center = np.asarray(draw_plaquette.center, dtype=float)
+
+            for link_id, value, midpoint in zip(
+                draw_plaquette.link_ids,
+                values,
+                draw_plaquette.link_midpoints,
+                strict=True,
+            ):
+                midpoint_array = np.asarray(midpoint, dtype=float)
+
+                if int(value) == 0:
+                    continue
+
+                # Draw a short local mark centered at the local plaquette edge.
+                direction = midpoint_array - center
+                if np.linalg.norm(direction) <= 1e-12:
+                    continue
+
+                tangent = np.asarray([-direction[1], direction[0]], dtype=float)
+                tangent = tangent / np.linalg.norm(tangent)
+
+                half_length = 0.22
+                start = midpoint_array - half_length * tangent
+                end = midpoint_array + half_length * tangent
+
+                ax.plot(
+                    [float(start[0]), float(end[0])],
+                    [float(start[1]), float(end[1])],
+                    color="purple",
+                    linewidth=2.0,
+                    alpha=0.8,
+                    zorder=8,
+                )
 
     def debug_plaquette_symbol_table(
         self,
@@ -412,6 +503,7 @@ class BasisConfigurationVisualizer:
         with_link_values: bool = False,
         with_plaquette_symbols: bool = True,
         plaquette_symbol_style: PlaquetteSymbolStyle = "auto",
+        plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
         title: str | None = None,
     ):
         """
@@ -471,6 +563,7 @@ class BasisConfigurationVisualizer:
             with_link_values=with_link_values,
             with_plaquette_symbols=with_plaquette_symbols,
             plaquette_symbol_style=resolved_plaquette_symbol_style,
+            plaquette_symbol_values=plaquette_symbol_values,
             title=title,
         )
 
@@ -519,6 +612,7 @@ class BasisConfigurationVisualizer:
         with_link_values: bool = False,
         with_plaquette_symbols: bool = True,
         plaquette_symbol_style: PlaquetteSymbolStyle = "square_qlm",
+        plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
         title: str | None = None,
     ):
         import matplotlib.pyplot as plt
@@ -557,6 +651,7 @@ class BasisConfigurationVisualizer:
                     config=arr,
                     style=plaquette_symbol_style,
                     draw_plaquettes=draw_plaquettes or [],
+                    plaquette_symbol_values=plaquette_symbol_values,
                 )
         else:
             # Keep current path for now, or refactor similarly later.
@@ -1674,52 +1769,59 @@ class BasisConfigurationVisualizer:
             if not self._is_supported_circulation_plaquette(link_ids):
                 continue
 
+            preferred_center = self._natural_plaquette_center(
+                plaquette_id=int(plaquette.id),
+            )
+
             candidate_lists = [draw_links_by_link_id.get(link_id, []) for link_id in link_ids]
 
             selected: tuple[_DrawLink, ...] | None = None
 
             if not any(len(candidates) == 0 for candidates in candidate_lists):
-                preferred_center = self._natural_plaquette_center(
-                    plaquette_id=int(plaquette.id),
-                )
                 selected = self._select_closed_visual_plaquette(
                     candidate_lists,
+                    physical_link_ids=link_ids,
                     preferred_center=preferred_center,
                 )
 
-            if selected is None:
-                fallback = self._fallback_draw_plaquette_primitive(
-                    plaquette_id=int(plaquette.id),
-                    draw_links=draw_links,
-                    preferred_center=preferred_center,
+            if selected is not None:
+                center = self._closed_visual_plaquette_center(selected)
+                canonical_draw_links = self._canonical_visual_cycle_draw_links(selected)
+
+                canonical_link_ids = tuple(
+                    int(draw_link.link_id) for draw_link in canonical_draw_links
                 )
-                if fallback is not None:
-                    draw_plaquettes.append(fallback)
+
+                canonical_orientations = self._canonical_visual_cycle_orientations_from_draw_links(
+                    center=center,
+                    canonical_draw_links=canonical_draw_links,
+                )
+
+                canonical_midpoints = tuple(
+                    self._draw_link_midpoint(draw_link) for draw_link in canonical_draw_links
+                )
+
+                draw_plaquettes.append(
+                    _DrawPlaquette(
+                        plaquette_id=int(plaquette.id),
+                        image_shift=tuple(0 for _ in range(self.lattice.ndim)),
+                        visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
+                        center=(float(center[0]), float(center[1])),
+                        link_ids=canonical_link_ids,
+                        link_orientations=canonical_orientations,
+                        link_midpoints=canonical_midpoints,
+                    )
+                )
                 continue
 
-            center = self._closed_visual_plaquette_center(selected)
-
-            canonical_draw_links = self._canonical_visual_cycle_draw_links(selected)
-            canonical_link_ids = tuple(int(draw_link.link_id) for draw_link in canonical_draw_links)
-            canonical_orientations = self._canonical_visual_cycle_orientations_from_draw_links(
-                center=center,
-                canonical_draw_links=canonical_draw_links,
-            )
-            canonical_link_midpoints = tuple(
-                self._draw_link_midpoint(draw_link) for draw_link in canonical_draw_links
+            # Only now use the local site fallback.
+            local_primitive = self._local_draw_plaquette_primitive(
+                plaquette_id=int(plaquette.id),
+                draw_links=draw_links,
             )
 
-            draw_plaquettes.append(
-                _DrawPlaquette(
-                    plaquette_id=int(plaquette.id),
-                    image_shift=tuple(0 for _ in range(self.lattice.ndim)),
-                    visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
-                    center=(float(center[0]), float(center[1])),
-                    link_ids=canonical_link_ids,
-                    link_orientations=canonical_orientations,
-                    link_midpoints=canonical_link_midpoints,
-                )
-            )
+            if local_primitive is not None:
+                draw_plaquettes.append(local_primitive)
 
         return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
 
@@ -1730,143 +1832,73 @@ class BasisConfigurationVisualizer:
         draw_links: list[_DrawLink],
         preferred_center: npt.NDArray[np.float64] | None = None,
     ) -> _DrawPlaquette | None:
-        """Build a plaquette primitive without requiring drawn links to form a cycle.
+        """Fallback for small/degenerate tori.
 
-        This is needed for small tori, where a physical plaquette may be visually
-        degenerate or may fail the simple closed-cycle test. The fallback uses
-        plaquette site/link metadata and nearest torus images to construct a
-        local visual representative.
+        The generic fallback is the same as the local visual primitive.
+        """
+        return self._local_draw_plaquette_primitive(
+            plaquette_id=plaquette_id,
+            draw_links=draw_links,
+        )
+
+    def _local_draw_plaquette_primitive(
+        self,
+        *,
+        plaquette_id: int,
+        draw_links: list[_DrawLink],
+    ) -> _DrawPlaquette | None:
+        """Build a generic plaquette primitive from the local visual patch.
+
+        This is the preferred generic path for circulation/resonance symbols.
+        It makes the symbol describe the visible local plaquette, which is
+        essential on small tori.
         """
         plaquette = self.lattice.plaquettes[plaquette_id]
-
         link_ids = tuple(int(link_id) for link_id in plaquette.links)
 
         if not self._is_supported_circulation_plaquette(link_ids):
             return None
 
-        if len(link_ids) == 0:
+        vertices = self._local_plaquette_vertices(plaquette_id=plaquette_id)
+
+        if len(vertices) != len(link_ids):
             return None
 
-        # Prefer plaquette.sites if available, because it is the actual polygon
-        # boundary. Fall back to link endpoints otherwise.
-        site_ids = tuple(int(site_id) for site_id in getattr(plaquette, "sites", ()))
+        center = np.mean(np.asarray(vertices, dtype=float), axis=0)
 
-        if len(site_ids) == 0:
-            collected_sites: list[int] = []
-            for link_id in link_ids:
-                link = self.lattice.links[link_id]
-                collected_sites.extend([int(link.source), int(link.target)])
-            site_ids = tuple(dict.fromkeys(collected_sites))
+        local_segments: list[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]] = []
 
-        if len(site_ids) == 0:
-            return None
-
-        # site_positions = [
-        #     self._apply_visual_transform(self._xy(self._site_plot_position(site_id)))
-        #     for site_id in site_ids
-        # ]
-
-        # Unwrap all sites near the first site by full torus periods.
-        unwrapped_site_positions = self._local_plaquette_vertices(
-            plaquette_id=plaquette_id,
-        )
-
-        if len(unwrapped_site_positions) != len(plaquette.links):
-            return None
-
-        center = preferred_center
-        if center is None:
-            center = np.mean(
-                np.asarray(unwrapped_site_positions, dtype=float),
-                axis=0,
-            )
-
-        link_midpoints_by_id: dict[int, tuple[float, float]] = {}
-
-        for link_id in link_ids:
-            link = self.lattice.links[link_id]
-
-            source = self._apply_visual_transform(
-                self._xy(self._site_plot_position(int(link.source)))
-            )
-            target = self._apply_visual_transform(
-                self._xy(self._site_plot_position(int(link.target)))
-            )
-
-            source = self._nearest_periodic_image(source, center)
-            target = self._nearest_periodic_image(target, source)
-
-            # If the link midpoint is closer in another torus image, move both
-            # endpoints together toward the plaquette center.
-            midpoint = 0.5 * (source + target)
-            shifted_midpoint = self._nearest_periodic_image(midpoint, center)
-            shift = shifted_midpoint - midpoint
-
-            source = source + shift
-            target = target + shift
-
-            midpoint = 0.5 * (source + target)
-
-            link_midpoints_by_id[int(link_id)] = (
-                float(midpoint[0]),
-                float(midpoint[1]),
-            )
-
-        # Canonical visual order using link midpoints around the fallback center.
-        records: list[tuple[float, float, float, int]] = []
-        for link_id in link_ids:
-            midpoint = np.asarray(link_midpoints_by_id[int(link_id)], dtype=float)
-
-            angle = math.atan2(
-                float(midpoint[1] - center[1]),
-                float(midpoint[0] - center[0]),
-            )
-
-            records.append(
-                (
-                    angle,
-                    float(midpoint[1]),
-                    float(midpoint[0]),
-                    int(link_id),
-                )
-            )
-
-        records.sort(key=lambda item: item[0])
-
-        start = min(
-            range(len(records)),
-            key=lambda i: (records[i][1], records[i][2]),
-        )
-
-        records = records[start:] + records[:start]
+        for i in range(len(vertices)):
+            source = np.asarray(vertices[i], dtype=np.float64)
+            target = np.asarray(vertices[(i + 1) % len(vertices)], dtype=np.float64)
+            local_segments.append((source, target))
 
         local_link_ids: list[int] = []
         local_orientations: list[int] = []
         local_midpoints: list[tuple[float, float]] = []
-        local_segments: list[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]] = []
 
-        n_sites = len(unwrapped_site_positions)
-
-        if n_sites != len(plaquette.links):
-            return None
-
-        for i in range(n_sites):
-            source = np.asarray(unwrapped_site_positions[i], dtype=np.float64)
-            target = np.asarray(
-                unwrapped_site_positions[(i + 1) % n_sites],
-                dtype=np.float64,
-            )
-            local_segments.append((source, target))
+        used_draw_link_keys: set[
+            tuple[int, tuple[int, tuple[int, ...]], tuple[int, tuple[int, ...]]]
+        ] = set()
 
         for source, target in local_segments:
             draw_link = self._nearest_draw_link_to_local_segment(
                 draw_links=draw_links,
                 source=source,
                 target=target,
+                excluded_keys=used_draw_link_keys,
             )
 
             if draw_link is None:
                 return None
+
+            used_draw_link_keys.add(
+                (
+                    int(draw_link.link_id),
+                    draw_link.source_key,
+                    draw_link.target_key,
+                )
+            )
 
             midpoint = 0.5 * (source + target)
 
@@ -1879,6 +1911,11 @@ class BasisConfigurationVisualizer:
                 )
             )
             local_midpoints.append((float(midpoint[0]), float(midpoint[1])))
+
+        if len(set(local_link_ids)) != len(local_link_ids):
+            # A local plaquette boundary should not reuse the same physical link
+            # twice. If this happens, fall back to the closed-cycle machinery.
+            return None
 
         return _DrawPlaquette(
             plaquette_id=int(plaquette.id),
@@ -2022,8 +2059,13 @@ class BasisConfigurationVisualizer:
         draw_links: list[_DrawLink],
         source: npt.NDArray[np.float64],
         target: npt.NDArray[np.float64],
+        excluded_keys: (
+            set[tuple[int, tuple[int, tuple[int, ...]], tuple[int, tuple[int, ...]]]] | None
+        ) = None,
     ) -> _DrawLink | None:
         """Find the actual drawn link that best matches a local plaquette edge."""
+        if excluded_keys is None:
+            excluded_keys = set()
         local_midpoint = 0.5 * (source + target)
         local_vector = target - source
         local_length = float(np.linalg.norm(local_vector))
@@ -2035,6 +2077,15 @@ class BasisConfigurationVisualizer:
         best_score: tuple[float, float, float] | None = None
 
         for draw_link in draw_links:
+            draw_key = (
+                int(draw_link.link_id),
+                draw_link.source_key,
+                draw_link.target_key,
+            )
+
+            if draw_key in excluded_keys:
+                continue
+
             draw_source = np.asarray(draw_link.source_position, dtype=float)
             draw_target = np.asarray(draw_link.target_position, dtype=float)
             draw_midpoint = 0.5 * (draw_source + draw_target)
@@ -2197,11 +2248,12 @@ class BasisConfigurationVisualizer:
         self,
         candidate_lists: list[list[_DrawLink]],
         *,
+        physical_link_ids: tuple[int, ...],
         preferred_center: npt.NDArray[np.float64] | None = None,
     ) -> tuple[_DrawLink, ...] | None:
         """Choose the preferred closed visual representative of a plaquette."""
         best: tuple[_DrawLink, ...] | None = None
-        best_score: tuple[float, float, float, float] | None = None
+        best_score: tuple[int, int, float, float, float, float] | None = None
 
         for candidate_tuple in product(*candidate_lists):
             selected = tuple(candidate_tuple)
@@ -2209,8 +2261,9 @@ class BasisConfigurationVisualizer:
             if not self._draw_links_form_closed_cycle(selected):
                 continue
 
-            score = self._visual_plaquette_representative_score(
+            score = self._visual_plaquette_representative_score_for_physical_links(
                 selected,
+                physical_link_ids=physical_link_ids,
                 preferred_center=preferred_center,
             )
 
@@ -2505,6 +2558,7 @@ class BasisConfigurationVisualizer:
         config: npt.NDArray[np.int64],
         style: PlaquetteSymbolStyle,
         draw_plaquettes: list[_DrawPlaquette],
+        plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
     ) -> None:
         if style == "auto":
             raise ValueError("plaquette_symbol_style='auto' must be resolved before drawing.")
@@ -2533,6 +2587,7 @@ class BasisConfigurationVisualizer:
                 ax=ax,
                 config=config,
                 draw_plaquettes=draw_plaquettes,
+                plaquette_symbol_values=plaquette_symbol_values,
             )
             return
 
@@ -2818,8 +2873,34 @@ class BasisConfigurationVisualizer:
         ax,
         config: npt.NDArray[np.int64],
         draw_plaquettes: list[_DrawPlaquette],
+        plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
     ) -> None:
         for draw_plaquette in draw_plaquettes:
+            plaquette_id = int(draw_plaquette.plaquette_id)
+
+            if plaquette_symbol_values is not None:
+                symbol_info = plaquette_symbol_values.get(plaquette_id)
+
+                if symbol_info is None:
+                    continue
+
+                symbol, color = symbol_info
+                center = draw_plaquette.center
+
+                ax.annotate(
+                    symbol,
+                    xy=(center[0], center[1]),
+                    xytext=self.style.plaquette_symbol_offset,
+                    textcoords="offset points",
+                    fontsize=self.style.plaquette_symbol_fontsize,
+                    color=color,
+                    ha="center",
+                    va="center",
+                    zorder=6,
+                )
+                continue
+
+            # existing visualizer-inferred fallback
             link_ids = tuple(int(link_id) for link_id in draw_plaquette.link_ids)
 
             if len(link_ids) == 0:
@@ -3032,6 +3113,81 @@ class BasisConfigurationVisualizer:
             self.link_value(config, right_link),
             self.link_value(config, top_link),
         ]
+
+    @staticmethod
+    def _cyclic_order_score(
+        candidate_link_ids: Sequence[int],
+        physical_link_ids: Sequence[int],
+    ) -> tuple[int, int]:
+        """Score how well a visual cyclic order matches a physical link order.
+
+        Lower is better.
+
+        Returns
+        -------
+        tuple[int, int]
+            (mismatch_count, reversed_flag)
+        """
+        candidate = tuple(int(x) for x in candidate_link_ids)
+        physical = tuple(int(x) for x in physical_link_ids)
+
+        if len(candidate) != len(physical):
+            return (10**9, 1)
+
+        n = len(physical)
+        best = (10**9, 1)
+
+        for reversed_flag, order in enumerate((physical, tuple(reversed(physical)))):
+            for shift in range(n):
+                rotated = order[shift:] + order[:shift]
+                mismatches = sum(int(a != b) for a, b in zip(candidate, rotated, strict=True))
+                best = min(best, (mismatches, reversed_flag))
+
+        return best
+
+    def _visual_plaquette_representative_score_for_physical_links(
+        self,
+        draw_links: tuple[_DrawLink, ...],
+        *,
+        physical_link_ids: tuple[int, ...],
+        preferred_center: npt.NDArray[np.float64] | None = None,
+    ) -> tuple[int, int, float, float, float, float]:
+        """Score a closed visual representative for a physical plaquette.
+
+        Lower is preferred:
+            1. visual cyclic link order matches physical plaquette link order;
+            2. center is close to preferred/natural center;
+            3. compactness;
+            4. lower-left tie break.
+        """
+        center = self._closed_visual_plaquette_center(draw_links)
+        canonical_draw_links = self._canonical_visual_cycle_draw_links(draw_links)
+        candidate_link_ids = tuple(int(draw_link.link_id) for draw_link in canonical_draw_links)
+
+        order_score = self._cyclic_order_score(
+            candidate_link_ids,
+            physical_link_ids,
+        )
+
+        if preferred_center is None:
+            center_distance = 0.0
+        else:
+            center_distance = float(
+                np.linalg.norm(
+                    np.asarray(center, dtype=float) - np.asarray(preferred_center, dtype=float)
+                )
+            )
+
+        compactness = self._visual_plaquette_compactness_score(draw_links)
+
+        return (
+            int(order_score[0]),
+            int(order_score[1]),
+            center_distance,
+            float(compactness),
+            float(center[1]),
+            float(center[0]),
+        )
 
     @staticmethod
     def _plaquette_key(values: list[int]) -> str:
