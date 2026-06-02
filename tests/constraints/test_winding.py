@@ -9,8 +9,8 @@ from qlinks.constraints import (
     SquareWindingSector,
 )
 from qlinks.constraints.winding import (
-    _square_global_cut_repetition_count,
     raw_targets_from_user_targets,
+    user_winding_value_from_internal,
 )
 from qlinks.lattice import HoneycombLattice, SquareLattice
 from qlinks.models import SquareQDMModel, SquareQLMModel
@@ -72,11 +72,18 @@ def test_square_winding_sector_target_satisfaction() -> None:
         target=actual_value,
         flux_normalization="integer_flux",
     )
+    allowed_targets = SquareWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        flux_normalization="integer_flux",
+    )
+    nonmatching_target = next(target for target in allowed_targets if target != actual_value)
     nonmatching_sector = SquareWindingSector(
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=actual_value + 2,
+        target=nonmatching_target,
         flux_normalization="integer_flux",
     )
 
@@ -533,6 +540,7 @@ def test_square_winding_sector_spin_half_target() -> None:
         lattice,
         LocalSpace.spin_half_flux(),
     )
+
     probe_sector = SquareWindingSector(
         layout=layout,
         lattice=lattice,
@@ -546,24 +554,31 @@ def test_square_winding_sector_spin_half_target() -> None:
 
     raw_value = probe_sector.value(config)
 
-    repetition_count = _square_global_cut_repetition_count(
+    actual_target = user_winding_value_from_internal(
+        raw_value,
+        flux_normalization="spin_half",
+    )
+
+    allowed_targets = SquareWindingSector.allowed_targets(
+        layout=layout,
         lattice=lattice,
         direction="x",
+        flux_normalization="spin_half",
     )
-    assert raw_value % repetition_count == 0
 
-    elementary_raw_value = raw_value // repetition_count
-    assert elementary_raw_value % 2 == 0
+    assert raw_value == 2
+    assert actual_target == Fraction(1, 1)
+    assert actual_target in allowed_targets
 
     matching_sector = SquareWindingSector(
         layout=layout,
         lattice=lattice,
         direction="x",
-        target=elementary_raw_value // 2,
+        target=actual_target,
         flux_normalization="spin_half",
     )
 
-    assert matching_sector.check(config).satisfied
+    assert matching_sector.is_satisfied(config)
 
 
 def _winding_covector(
@@ -819,3 +834,56 @@ def test_square_winding_cut_annihilates_plaquette_boundaries_2x2_pbc() -> None:
     )
 
     assert result.hamiltonian.shape[0] == result.basis.n_states
+
+
+def test_square_winding_sector_all_ones_value_is_allowed() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    sector = SquareWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        flux_normalization="integer_flux",
+    )
+
+    config = np.ones(lattice.num_links, dtype=np.int64)
+    actual_value = sector.value(config)
+
+    assert actual_value == 2
+
+    allowed = SquareWindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        flux_normalization="integer_flux",
+    )
+
+    assert actual_value in allowed
+
+
+def test_square_winding_sector_uses_wrapping_links_only() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    sector = SquareWindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="x",
+        target=0,
+        flux_normalization="integer_flux",
+    )
+
+    assert len(sector.link_ids) == lattice.ly
+
+    for link_id in sector.link_ids:
+        link = lattice.links[int(link_id)]
+        assert link.kind == "x"
+        assert link.wrap

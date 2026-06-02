@@ -198,19 +198,6 @@ def _signed_direction_links_annihilating_plaquettes(
     return ordered_link_ids, signs
 
 
-def _square_global_cut_repetition_count(
-    *,
-    lattice: SquareLattice,
-    direction: Direction,
-) -> int:
-    """Number of parallel elementary cuts included in the global square covector."""
-    if direction == "x":
-        return int(lattice.lx)
-    if direction == "y":
-        return int(lattice.ly)
-    raise ValueError("direction must be 'x' or 'y'.")
-
-
 def _square_transverse_cut_size(
     *,
     lattice: SquareLattice,
@@ -222,6 +209,41 @@ def _square_transverse_cut_size(
     if direction == "y":
         return int(lattice.lx)
     raise ValueError("direction must be 'x' or 'y'.")
+
+
+def _square_winding_cut_links(
+    *,
+    lattice: SquareLattice,
+    direction: Direction,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return one square-lattice non-contractible winding cut.
+
+    direction="x":
+        sum x-oriented links crossing one vertical cut, chosen as the
+        x-wrapping links.
+
+    direction="y":
+        sum y-oriented links crossing one horizontal cut, chosen as the
+        y-wrapping links.
+    """
+    if direction == "x":
+        kind = "x"
+    elif direction == "y":
+        kind = "y"
+    else:
+        raise ValueError("direction must be 'x' or 'y'.")
+
+    link_ids = [int(link.id) for link in lattice.links if link.kind == kind and bool(link.wrap)]
+
+    if len(link_ids) == 0:
+        raise ValueError(f"No wrapping {kind}-links found.")
+
+    signs = np.ones(len(link_ids), dtype=np.int64)
+
+    return (
+        np.asarray(link_ids, dtype=np.int64),
+        signs,
+    )
 
 
 def allowed_signed_sum_targets(
@@ -390,7 +412,7 @@ class SquareWindingSector(BaseSectorCondition):
         if direction not in ("x", "y"):
             raise ValueError("direction must be 'x' or 'y'.")
 
-        link_ids, signs = _signed_direction_links_annihilating_plaquettes(
+        link_ids, signs = _square_winding_cut_links(
             lattice=lattice,
             direction=direction,
         )
@@ -428,28 +450,22 @@ class SquareWindingSector(BaseSectorCondition):
 
     def internal_target(self) -> int:
         values_seen: set[int] = set()
+
         for variable_index in self._variable_indices:
             values_seen.update(
                 int(v) for v in self.layout.local_space(int(variable_index)).values.tolist()
             )
 
-        repetition_count = _square_global_cut_repetition_count(
-            lattice=self.lattice,
-            direction=self.direction,
-        )
-
         if values_seen <= {-1, 1}:
-            elementary_target = internal_flux_winding_value(
+            return internal_flux_winding_value(
                 self.target,
                 flux_normalization=self.flux_normalization,
             )
-        else:
-            elementary_target = internal_flux_winding_value(
-                self.target,
-                flux_normalization="integer_flux",
-            )
 
-        return repetition_count * elementary_target
+        return internal_flux_winding_value(
+            self.target,
+            flux_normalization="integer_flux",
+        )
 
     def check(self, config: npt.ArrayLike) -> ConstraintResult:
         actual = self.value(config)
@@ -659,7 +675,7 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         if direction not in ("x", "y"):
             raise ValueError("direction must be 'x' or 'y'.")
 
-        base_link_ids, base_signs = _signed_direction_links_annihilating_plaquettes(
+        base_link_ids, base_signs = _square_winding_cut_links(
             lattice=lattice,
             direction=direction,
         )
@@ -708,11 +724,7 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         return int(np.sum(self._signs * (2 * n - 1)))
 
     def internal_target(self) -> int:
-        repetition_count = _square_global_cut_repetition_count(
-            lattice=self.lattice,
-            direction=self.direction,
-        )
-        return repetition_count * int(self.target)
+        return int(self.target)
 
     def check(self, configuration: npt.ArrayLike) -> ConstraintResult:
         actual = self.value(configuration)
