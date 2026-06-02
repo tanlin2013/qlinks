@@ -1716,9 +1716,9 @@ class BasisConfigurationVisualizer:
 
         Lower score is preferred:
             1. closeness to the plaquette's natural local center;
-            2. compactness;
-            3. lower visual center;
-            4. left visual center.
+            2. lower visual center;
+            3. left visual center.
+            4. compactness;
 
         This avoids moving actual top-row small-torus plaquettes down to the
         bottom row while still choosing deterministic representatives among
@@ -1738,9 +1738,9 @@ class BasisConfigurationVisualizer:
 
         return (
             center_distance,
-            float(compactness),
             float(center[1]),
             float(center[0]),
+            float(compactness),
         )
 
     def _draw_links_form_closed_cycle(
@@ -2647,9 +2647,10 @@ class BasisConfigurationVisualizer:
 
         Lower is preferred:
             1. visual cyclic link order matches physical plaquette link order;
-            2. center is close to preferred/natural center;
-            3. compactness;
-            4. lower-left tie break.
+            2. optional closeness to a preferred center;
+            3. lower visual center;
+            4. left visual center;
+            5. compactness.
         """
         center = self._closed_visual_plaquette_center(draw_links)
         canonical_draw_links = self._canonical_visual_cycle_draw_links(draw_links)
@@ -2675,9 +2676,9 @@ class BasisConfigurationVisualizer:
             int(order_score[0]),
             int(order_score[1]),
             center_distance,
-            float(compactness),
             float(center[1]),
             float(center[0]),
+            float(compactness),
         )
 
     @staticmethod

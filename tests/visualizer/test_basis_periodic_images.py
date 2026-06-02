@@ -2,6 +2,7 @@ from itertools import product
 
 import matplotlib
 import numpy as np
+import pytest
 
 from qlinks.lattice import (
     ChainLattice,
@@ -462,6 +463,8 @@ def test_triangular_closed_plaquette_representative_minimizes_score() -> None:
     for draw_link in draw_links:
         draw_links_by_link_id.setdefault(int(draw_link.link_id), []).append(draw_link)
 
+    found_multi_representative = False
+
     for plaquette in lattice.plaquettes:
         if len(plaquette.links) != 4:
             continue
@@ -507,3 +510,32 @@ def test_triangular_closed_plaquette_representative_minimizes_score() -> None:
         ]
 
         assert selected_score == min(all_scores)
+
+        # Additional regression: among equal order/center-distance classes,
+        # the selected representative should be bottom-left.
+        best_prefix = selected_score[:3]
+        tied = [
+            representative
+            for representative, score in zip(closed_representatives, all_scores, strict=True)
+            if score[:3] == best_prefix
+        ]
+
+        tied_centers = [
+            visualizer._closed_visual_plaquette_center(representative) for representative in tied
+        ]
+
+        selected_center = visualizer._closed_visual_plaquette_center(selected)
+
+        min_y = min(float(center[1]) for center in tied_centers)
+        assert float(selected_center[1]) == pytest.approx(min_y)
+
+        tol = 1e-9
+        min_x_at_min_y = min(
+            float(center[0]) for center in tied_centers if abs(float(center[1]) - min_y) <= tol
+        )
+        assert float(selected_center[0]) == pytest.approx(min_x_at_min_y)
+
+        found_multi_representative = True
+        break
+
+    assert found_multi_representative
