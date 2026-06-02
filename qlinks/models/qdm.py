@@ -30,6 +30,7 @@ from qlinks.models.base import (
     HamiltonianBuilderName,
     HamiltonianModelBase,
     HamiltonianTermSpec,
+    normalize_sector_labels_for_display,
     validate_builder_name,
 )
 from qlinks.models.couplings import (
@@ -72,6 +73,12 @@ class QDMBase(HamiltonianModelBase):
     coup_kin: DirectedPlaquetteCouplingLike = -1.0
     coup_pot: PlaquetteCoupling = 0.0
     required_count: int = 1
+
+    def allowed_sector_labels(self):
+        return normalize_sector_labels_for_display(self._allowed_sector_labels())
+
+    def nonempty_sector_labels(self, *args, **kwargs):
+        return normalize_sector_labels_for_display(self._nonempty_sector_labels(*args, **kwargs))
 
     def _coup_kin_at(self, plaquette_id: int) -> DirectedPlaquetteCoupling:
         return directed_plaquette_coupling_value(
@@ -328,7 +335,7 @@ class SquareQDMModel(QDMBase):
     def plaquette_ids(self) -> list[int]:
         return [int(p) for p in self.lattice.plaquette_ids]
 
-    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+    def _allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
         if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
             return {}
 
@@ -356,7 +363,7 @@ class SquareQDMModel(QDMBase):
             ),
         }
 
-    def nonempty_sector_labels(
+    def _nonempty_sector_labels(
         self,
         *,
         solver: BasisSolverName = "dfs",
@@ -586,7 +593,7 @@ class TriangularQDMModel(QDMBase):
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qdm_plaquette_ids())
 
-    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+    def _allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
         if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
             return {}
 
@@ -605,7 +612,7 @@ class TriangularQDMModel(QDMBase):
             ),
         }
 
-    def nonempty_sector_labels(
+    def _nonempty_sector_labels(
         self,
         *,
         solver: BasisSolverName = "dfs",
@@ -688,7 +695,7 @@ class HoneycombQDMModel(QDMBase):
     def plaquette_ids(self) -> list[int]:
         return list(self.lattice.qdm_plaquette_ids())
 
-    def allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+    def _allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
         if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
             return {}
 
@@ -707,7 +714,7 @@ class HoneycombQDMModel(QDMBase):
             ),
         }
 
-    def nonempty_sector_labels(
+    def _nonempty_sector_labels(
         self,
         *,
         solver: BasisSolverName = "dfs",

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 from functools import cached_property
-from typing import Any, Literal, Sequence
+from typing import Any, Literal, Mapping, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -27,6 +28,40 @@ from qlinks.variables import VariableLayout
 BasisSolverName = Literal["brute_force", "dfs", "cpsat"]
 HamiltonianBuilderName = Literal["sparse", "optimized", "bitmask"]
 TermKind = Literal["kinetic", "potential", "other"]
+
+
+def normalize_sector_label_for_display(label: Any) -> Any:
+    """Normalize sector labels exposed by model-level APIs.
+
+    Fractions with denominator 1 are converted to ints recursively.
+    Other Fractions are kept exact.
+    """
+    if isinstance(label, Fraction):
+        if label.denominator == 1:
+            return int(label.numerator)
+        return label
+
+    if isinstance(label, tuple):
+        return tuple(normalize_sector_label_for_display(value) for value in label)
+
+    if isinstance(label, list):
+        return [normalize_sector_label_for_display(value) for value in label]
+
+    if isinstance(label, Mapping):
+        return {key: normalize_sector_label_for_display(value) for key, value in label.items()}
+
+    return label
+
+
+def normalize_sector_labels_for_display(labels: Any) -> Any:
+    """Normalize a collection of model-facing sector labels."""
+    if isinstance(labels, tuple):
+        return tuple(normalize_sector_label_for_display(label) for label in labels)
+
+    if isinstance(labels, list):
+        return [normalize_sector_label_for_display(label) for label in labels]
+
+    return normalize_sector_label_for_display(labels)
 
 
 @dataclass(frozen=True, slots=True)
@@ -302,6 +337,14 @@ class HamiltonianModelBase:
             }
         """
         return {}
+
+    def _allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        raise NotImplementedError
+
+    def _nonempty_sector_labels(
+        self, *, solver: BasisSolverName = "dfs"
+    ) -> dict[str, tuple[object, ...]]:
+        raise NotImplementedError
 
     def _make_lattice(self) -> object:
         raise NotImplementedError

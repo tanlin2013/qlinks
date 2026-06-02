@@ -9,6 +9,8 @@ from qlinks.models.base import (
     SparseBuildOptions,
     TermKind,
     combine_hamiltonian_terms,
+    normalize_sector_label_for_display,
+    normalize_sector_labels_for_display,
     solve_basis,
     validate_builder_name,
 )
@@ -41,6 +43,8 @@ __all__ = [
     "SparseBuildOptions",
     "TermKind",
     "combine_hamiltonian_terms",
+    "normalize_sector_label_for_display",
+    "normalize_sector_labels_for_display",
     "solve_basis",
     "validate_builder_name",
 ]
