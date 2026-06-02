@@ -514,19 +514,6 @@
     <span class="k">return</span> <span class="n">ordered_link_ids</span><span class="p">,</span> <span class="n">signs</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_square_global_cut_repetition_count</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">lattice</span><span class="p">:</span> <span class="n">SquareLattice</span><span class="p">,</span>
-    <span class="n">direction</span><span class="p">:</span> <span class="n">Direction</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of parallel elementary cuts included in the global square covector.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">lattice</span><span class="o">.</span><span class="n">lx</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">lattice</span><span class="o">.</span><span class="n">ly</span><span class="p">)</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;direction must be &#39;x&#39; or &#39;y&#39;.&quot;</span><span class="p">)</span>
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_square_transverse_cut_size</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">lattice</span><span class="p">:</span> <span class="n">SquareLattice</span><span class="p">,</span>
@@ -538,6 +525,41 @@
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">lattice</span><span class="o">.</span><span class="n">lx</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;direction must be &#39;x&#39; or &#39;y&#39;.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_square_winding_cut_links</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">lattice</span><span class="p">:</span> <span class="n">SquareLattice</span><span class="p">,</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="n">Direction</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return one square-lattice non-contractible winding cut.</span>
+
+<span class="sd">    direction=&quot;x&quot;:</span>
+<span class="sd">        sum x-oriented links crossing one vertical cut, chosen as the</span>
+<span class="sd">        x-wrapping links.</span>
+
+<span class="sd">    direction=&quot;y&quot;:</span>
+<span class="sd">        sum y-oriented links crossing one horizontal cut, chosen as the</span>
+<span class="sd">        y-wrapping links.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
+    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;direction must be &#39;x&#39; or &#39;y&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="n">link_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">lattice</span><span class="o">.</span><span class="n">links</span> <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">kind</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">wrap</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">link_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No wrapping </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">-links found.&quot;</span><span class="p">)</span>
+
+    <span class="n">signs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">link_ids</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">link_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="n">signs</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <div class="viewcode-block" id="allowed_signed_sum_targets">
@@ -722,7 +744,7 @@
         <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;direction must be &#39;x&#39; or &#39;y&#39;.&quot;</span><span class="p">)</span>
 
-        <span class="n">link_ids</span><span class="p">,</span> <span class="n">signs</span> <span class="o">=</span> <span class="n">_signed_direction_links_annihilating_plaquettes</span><span class="p">(</span>
+        <span class="n">link_ids</span><span class="p">,</span> <span class="n">signs</span> <span class="o">=</span> <span class="n">_square_winding_cut_links</span><span class="p">(</span>
             <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
             <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
         <span class="p">)</span>
@@ -769,28 +791,22 @@
 <a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.internal_target">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">internal_target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="n">values_seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
         <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">:</span>
             <span class="n">values_seen</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
                 <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
             <span class="p">)</span>
 
-        <span class="n">repetition_count</span> <span class="o">=</span> <span class="n">_square_global_cut_repetition_count</span><span class="p">(</span>
-            <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-            <span class="n">direction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span>
-        <span class="p">)</span>
-
         <span class="k">if</span> <span class="n">values_seen</span> <span class="o">&lt;=</span> <span class="p">{</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">}:</span>
-            <span class="n">elementary_target</span> <span class="o">=</span> <span class="n">internal_flux_winding_value</span><span class="p">(</span>
+            <span class="k">return</span> <span class="n">internal_flux_winding_value</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
                 <span class="n">flux_normalization</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flux_normalization</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">elementary_target</span> <span class="o">=</span> <span class="n">internal_flux_winding_value</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
-                <span class="n">flux_normalization</span><span class="o">=</span><span class="s2">&quot;integer_flux&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">repetition_count</span> <span class="o">*</span> <span class="n">elementary_target</span></div>
+        <span class="k">return</span> <span class="n">internal_flux_winding_value</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">flux_normalization</span><span class="o">=</span><span class="s2">&quot;integer_flux&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SquareWindingSector.check">
@@ -1021,7 +1037,7 @@
         <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;direction must be &#39;x&#39; or &#39;y&#39;.&quot;</span><span class="p">)</span>
 
-        <span class="n">base_link_ids</span><span class="p">,</span> <span class="n">base_signs</span> <span class="o">=</span> <span class="n">_signed_direction_links_annihilating_plaquettes</span><span class="p">(</span>
+        <span class="n">base_link_ids</span><span class="p">,</span> <span class="n">base_signs</span> <span class="o">=</span> <span class="n">_square_winding_cut_links</span><span class="p">(</span>
             <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
             <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1079,11 +1095,7 @@
 <div class="viewcode-block" id="SquareQDMElectricWindingSector.internal_target">
 <a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.winding.SquareQDMElectricWindingSector.internal_target">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">internal_target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="n">repetition_count</span> <span class="o">=</span> <span class="n">_square_global_cut_repetition_count</span><span class="p">(</span>
-            <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-            <span class="n">direction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">repetition_count</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SquareQDMElectricWindingSector.check">
