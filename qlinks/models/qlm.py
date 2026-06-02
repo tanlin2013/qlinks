@@ -174,14 +174,14 @@ class QLMBase(HamiltonianModelBase):
         if input_basis is None:
             encoded_basis = binary_encoded_basis_from_flux_basis(
                 array_basis,
-                sort=sort_basis,
+                sort=False,
             )
         elif isinstance(input_basis, BinaryEncodedBasis):
             encoded_basis = input_basis
         elif isinstance(input_basis, Basis):
             encoded_basis = binary_encoded_basis_from_flux_basis(
                 input_basis,
-                sort=sort_basis,
+                sort=False,
             )
         else:
             raise TypeError("basis must be Basis, BinaryEncodedBasis, or None.")

@@ -45,6 +45,15 @@ def _assert_sparse_allclose(
     assert max_abs < atol
 
 
+def _assert_same_physical_basis_order(sparse_result, bitmask_result) -> None:
+    sparse_states = sparse_result.basis.states
+
+    bitmask_binary_states = bitmask_result.basis.to_array_basis().states
+    bitmask_flux_states = 2 * bitmask_binary_states - 1
+
+    np.testing.assert_array_equal(bitmask_flux_states, sparse_states)
+
+
 def test_square_qlm_manual_single_plaquette_sparse() -> None:
     model = SquareQLMModel(
         lx=2,
@@ -639,3 +648,45 @@ def test_honeycomb_qlm_zero_charge_nonempty_sector_labels_empty() -> None:
     labels = model.nonempty_sector_labels()
 
     assert labels == {"winding": ()}
+
+
+def test_qlm_bitmask_basis_preserves_sorted_physical_flux_order() -> None:
+    model = SquareQLMModel(
+        coup_kin=-1.0,
+        coup_pot=0.0,
+    )
+
+    sparse_result = model.build(builder="sparse", sort_basis=True)
+    bitmask_result = model.build(builder="bitmask", sort_basis=True)
+
+    sparse_states = sparse_result.basis.states
+    bitmask_binary_states = bitmask_result.basis.to_array_basis().states
+    bitmask_flux_states = 2 * bitmask_binary_states - 1
+
+    np.testing.assert_array_equal(bitmask_flux_states, sparse_states)
+
+
+def test_square_qlm_sparse_and_bitmask_match_sorted_basis() -> None:
+    reference_model = SquareQLMModel(
+        coup_kin=-1.0,
+        coup_pot=0.0,
+    )
+
+    coup_kin = {
+        int(p): (-1.0 + 0.1j * index) for index, p in enumerate(reference_model.plaquette_ids())
+    }
+
+    sparse_model = SquareQLMModel(
+        coup_kin=coup_kin,
+        coup_pot=0.0,
+    )
+    bitmask_model = SquareQLMModel(
+        coup_kin=coup_kin,
+        coup_pot=0.0,
+    )
+
+    sparse_result = sparse_model.build(builder="sparse", sort_basis=True)
+    bitmask_result = bitmask_model.build(builder="bitmask", sort_basis=True)
+
+    _assert_same_physical_basis_order(sparse_result, bitmask_result)
+    _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)

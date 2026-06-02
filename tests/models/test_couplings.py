@@ -27,6 +27,15 @@ def _assert_sparse_allclose(
     assert max_abs < atol
 
 
+def _assert_same_physical_basis_order(sparse_result, bitmask_result) -> None:
+    sparse_states = sparse_result.basis.states
+
+    bitmask_binary_states = bitmask_result.basis.to_array_basis().states
+    bitmask_flux_states = 2 * bitmask_binary_states - 1
+
+    np.testing.assert_array_equal(bitmask_flux_states, sparse_states)
+
+
 def _plaquette_coupling_dict(model, values: list[complex]) -> dict[int, complex]:
     plaquette_ids = [int(p) for p in model.plaquette_ids()]
     assert len(plaquette_ids) >= len(values)
@@ -132,9 +141,10 @@ def test_square_qdm_sparse_and_bitmask_match_with_plaquette_coup_kin() -> None:
         coup_pot=0.0,
     )
 
-    sparse_result = sparse_model.build(builder="sparse")
+    sparse_result = sparse_model.build(builder="sparse", sort_basis=False)
     bitmask_result = bitmask_model.build(builder="bitmask", sort_basis=False)
 
+    _assert_same_physical_basis_order(sparse_result, bitmask_result)
     _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
     _assert_sparse_allclose(bitmask_result.hamiltonian, sparse_result.hamiltonian)
 
@@ -266,9 +276,10 @@ def test_square_qlm_sparse_and_bitmask_match_with_plaquette_coup_kin() -> None:
         coup_pot=0.0,
     )
 
-    sparse_result = sparse_model.build(builder="sparse")
-    bitmask_result = bitmask_model.build(builder="bitmask", sort_basis=False)
+    sparse_result = sparse_model.build(builder="sparse", sort_basis=True)
+    bitmask_result = bitmask_model.build(builder="bitmask", sort_basis=True)
 
+    _assert_same_physical_basis_order(sparse_result, bitmask_result)
     _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
     _assert_sparse_allclose(bitmask_result.hamiltonian, sparse_result.hamiltonian)
 
