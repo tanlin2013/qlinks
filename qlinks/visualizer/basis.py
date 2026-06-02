@@ -2435,6 +2435,19 @@ class BasisConfigurationVisualizer:
                 color=color,
             )
 
+        for _plaquette_id, center, symbol, color in text_items:
+            ax.annotate(
+                symbol,
+                xy=(center[0], center[1]),
+                xytext=self.style.plaquette_symbol_offset,
+                textcoords="offset points",
+                fontsize=self.style.plaquette_symbol_fontsize,
+                color=color,
+                ha="center",
+                va="center",
+                zorder=6,
+            )
+
     def _square_qlm_symbol_info(
         self,
         *,
@@ -2443,17 +2456,42 @@ class BasisConfigurationVisualizer:
     ) -> tuple[str, str] | None:
         """Return the legacy square QLM glyph for a square plaquette.
 
-        This keeps _SQUARE_QLM_PLAQUETTE_SYMBOLS, but hides it behind the
-        generic 'circulation' style.
+        The legacy _SQUARE_QLM_PLAQUETTE_SYMBOLS table uses the visual key
+        convention
+
+            bottom, left, right, top
+
+        not the generic square primitive order
+
+            bottom, right, top, left.
+
+        Therefore we must adapt the current visual plaquette cell back to the
+        legacy key convention before looking up the table.
         """
+        if not isinstance(self.lattice, SquareLattice):
+            return None
+
         if len(draw_plaquette.link_ids) != 4:
             return None
 
-        values = tuple(self.link_value(config, int(link_id)) for link_id in draw_plaquette.link_ids)
+        if len(draw_plaquette.visual_cell) >= 2 and all(
+            int(value) >= 0 for value in draw_plaquette.visual_cell[:2]
+        ):
+            visual_cell = (
+                int(draw_plaquette.visual_cell[0]),
+                int(draw_plaquette.visual_cell[1]),
+            )
+        else:
+            visual_cell = self._square_visual_cell_from_center(
+                draw_plaquette.center,
+            )
 
-        # Convert flux-like values to binary sign bits in plaquette order.
-        # Positive -> 1, non-positive -> 0.
-        key = "".join("1" if int(value) > 0 else "0" for value in values)
+        values = self._square_visual_qlm_symbol_link_values(
+            config,
+            visual_cell,
+        )
+
+        key = self._plaquette_key(values)
 
         payload = _SQUARE_QLM_PLAQUETTE_SYMBOLS.get(key)
 
@@ -3445,10 +3483,6 @@ class BasisGridVisualizer:
             "none":
                 draw no plaquette symbols.
 
-            "square_qlm":
-                use the old 16-symbol square-QLM dictionary. This is only
-                meaningful for SquareLattice four-link plaquettes.
-
             "circulation":
                 generic QLM-like circulation marker. Draws circular arrows when
                 all link variables circulate consistently around a plaquette.
@@ -3506,6 +3540,30 @@ class BasisGridVisualizer:
         if single_plot_kwargs is None:
             single_plot_kwargs = {}
 
+        plot_kwargs = dict(single_plot_kwargs)
+        with_site_labels = bool(plot_kwargs.pop("with_site_labels", True))
+        with_site_values = bool(plot_kwargs.pop("with_site_values", False))
+        with_link_values = bool(plot_kwargs.pop("with_link_values", False))
+        with_link_ids = bool(plot_kwargs.pop("with_link_ids", False))
+        with_plaquette_symbols = bool(plot_kwargs.pop("with_plaquette_symbols", True))
+        plaquette_symbol_values = plot_kwargs.pop(
+            "plaquette_symbol_values",
+            None,
+        )
+        plot_kwargs.pop("title", None)
+        plot_kwargs.pop("show", None)
+        plot_kwargs.pop("backend", None)
+        plot_kwargs.pop("ax", None)
+        plot_kwargs.pop("mode", None)
+
+        # Constructor-only options; do not pass to BasisConfigurationVisualizer.plot().
+        plot_kwargs.pop("style", None)
+        plot_kwargs.pop("periodic_image_mode", None)
+        plot_kwargs.pop("collapse_duplicate_visual_links", None)
+        plot_kwargs.pop("coordinate_scale", None)
+        plot_kwargs.pop("coordinate_transform", None)
+        plot_kwargs.pop("site_label_style", None)
+
         for k in range(rows * cols):
             ax = axes.flat[k]
 
@@ -3529,23 +3587,6 @@ class BasisGridVisualizer:
                 if config_text:
                     title = f"{title}\n{config_text}"
 
-            plot_kwargs = dict(single_plot_kwargs)
-            plot_kwargs.pop("with_plaquette_symbols", None)
-            plot_kwargs.pop("plaquette_symbol_style", None)
-            plot_kwargs.pop("title", None)
-            plot_kwargs.pop("show", None)
-            plot_kwargs.pop("backend", None)
-            plot_kwargs.pop("ax", None)
-            plot_kwargs.pop("mode", None)
-
-            # Constructor-only options; do not pass to BasisConfigurationVisualizer.plot().
-            plot_kwargs.pop("style", None)
-            plot_kwargs.pop("periodic_image_mode", None)
-            plot_kwargs.pop("collapse_duplicate_visual_links", None)
-            plot_kwargs.pop("coordinate_scale", None)
-            plot_kwargs.pop("coordinate_transform", None)
-            plot_kwargs.pop("site_label_style", None)
-
             single_visualizer._plot_with_primitives(
                 config,
                 ax=ax,
@@ -3555,12 +3596,14 @@ class BasisGridVisualizer:
                 show=False,
                 backend=backend,
                 mode=resolved_mode,
-                with_site_labels=single_plot_kwargs.get("with_site_labels", True),
-                with_site_values=single_plot_kwargs.get("with_site_values", False),
-                with_link_values=single_plot_kwargs.get("with_link_values", False),
-                with_link_ids=single_plot_kwargs.get("with_link_ids", False),
-                with_plaquette_symbols=(resolved_plaquette_symbols != "none"),
+                with_site_labels=with_site_labels,
+                with_site_values=with_site_values,
+                with_link_values=with_link_values,
+                with_link_ids=with_link_ids,
+                with_plaquette_symbols=with_plaquette_symbols
+                and resolved_plaquette_symbols != "none",
                 plaquette_symbol_style=resolved_plaquette_symbols,
+                plaquette_symbol_values=plaquette_symbol_values,
                 title=title,
                 **plot_kwargs,
             )
