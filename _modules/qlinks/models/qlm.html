@@ -500,14 +500,14 @@
         <span class="k">if</span> <span class="n">input_basis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">encoded_basis</span> <span class="o">=</span> <span class="n">binary_encoded_basis_from_flux_basis</span><span class="p">(</span>
                 <span class="n">array_basis</span><span class="p">,</span>
-                <span class="n">sort</span><span class="o">=</span><span class="n">sort_basis</span><span class="p">,</span>
+                <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_basis</span><span class="p">,</span> <span class="n">BinaryEncodedBasis</span><span class="p">):</span>
             <span class="n">encoded_basis</span> <span class="o">=</span> <span class="n">input_basis</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_basis</span><span class="p">,</span> <span class="n">Basis</span><span class="p">):</span>
             <span class="n">encoded_basis</span> <span class="o">=</span> <span class="n">binary_encoded_basis_from_flux_basis</span><span class="p">(</span>
                 <span class="n">input_basis</span><span class="p">,</span>
-                <span class="n">sort</span><span class="o">=</span><span class="n">sort_basis</span><span class="p">,</span>
+                <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;basis must be Basis, BinaryEncodedBasis, or None.&quot;</span><span class="p">)</span>

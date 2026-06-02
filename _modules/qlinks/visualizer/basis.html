@@ -2043,9 +2043,9 @@
 
 <span class="sd">        Lower score is preferred:</span>
 <span class="sd">            1. closeness to the plaquette&#39;s natural local center;</span>
-<span class="sd">            2. compactness;</span>
-<span class="sd">            3. lower visual center;</span>
-<span class="sd">            4. left visual center.</span>
+<span class="sd">            2. lower visual center;</span>
+<span class="sd">            3. left visual center.</span>
+<span class="sd">            4. compactness;</span>
 
 <span class="sd">        This avoids moving actual top-row small-torus plaquettes down to the</span>
 <span class="sd">        bottom row while still choosing deterministic representatives among</span>
@@ -2065,9 +2065,9 @@
 
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">center_distance</span><span class="p">,</span>
-            <span class="nb">float</span><span class="p">(</span><span class="n">compactness</span><span class="p">),</span>
             <span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
             <span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">compactness</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_draw_links_form_closed_cycle</span><span class="p">(</span>
@@ -2974,9 +2974,10 @@
 
 <span class="sd">        Lower is preferred:</span>
 <span class="sd">            1. visual cyclic link order matches physical plaquette link order;</span>
-<span class="sd">            2. center is close to preferred/natural center;</span>
-<span class="sd">            3. compactness;</span>
-<span class="sd">            4. lower-left tie break.</span>
+<span class="sd">            2. optional closeness to a preferred center;</span>
+<span class="sd">            3. lower visual center;</span>
+<span class="sd">            4. left visual center;</span>
+<span class="sd">            5. compactness.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed_visual_plaquette_center</span><span class="p">(</span><span class="n">draw_links</span><span class="p">)</span>
         <span class="n">canonical_draw_links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canonical_visual_cycle_draw_links</span><span class="p">(</span><span class="n">draw_links</span><span class="p">)</span>
@@ -3002,9 +3003,9 @@
             <span class="nb">int</span><span class="p">(</span><span class="n">order_score</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">order_score</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
             <span class="n">center_distance</span><span class="p">,</span>
-            <span class="nb">float</span><span class="p">(</span><span class="n">compactness</span><span class="p">),</span>
             <span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
             <span class="nb">float</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">compactness</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
