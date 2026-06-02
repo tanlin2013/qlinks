@@ -32,7 +32,6 @@ def test_square_qlm_symbols_draw_one_symbol_per_open_square_plaquette() -> None:
         mode="arrows",
         with_site_labels=False,
         with_plaquette_symbols=True,
-        plaquette_symbol_style="square_qlm",
     )
 
     assert len(ax.texts) == lattice.num_plaquettes
@@ -78,7 +77,7 @@ def test_square_2_by_2_positive_patch_draws_four_plaquette_visual_cells() -> Non
         periodic_image_mode="positive_patch",
     )
 
-    draw_plaquettes = visualizer._draw_square_qlm_plaquette_primitives()
+    draw_plaquettes = visualizer._draw_square_generic_plaquette_primitives()
 
     visual_cells = {p.visual_cell for p in draw_plaquettes}
 
@@ -554,7 +553,7 @@ def test_generic_plaquette_primitives_exist_on_small_square_torus() -> None:
     }
 
 
-def test_generic_circulation_symbols_draw_on_small_square_torus() -> None:
+def test_square_circulation_uses_square_qlm_symbol_table_on_small_torus() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="periodic")
     layout = VariableLayout.from_lattice_links(
         lattice,
@@ -594,7 +593,9 @@ def test_generic_circulation_symbols_draw_on_small_square_torus() -> None:
         plaquette_symbol_style="circulation",
     )
 
-    assert any(text.get_text() in {"↺", "↻"} for text in ax.texts)
+    square_qlm_symbols = {payload["s"] for payload in _SQUARE_QLM_PLAQUETTE_SYMBOLS.values()}
+
+    assert any(text.get_text() in square_qlm_symbols for text in ax.texts)
 
     plt.close(fig)
 
@@ -710,16 +711,22 @@ def test_generic_resonance_vulnerable_arrow_draws_on_small_square_torus() -> Non
     for link_id, value in zip(draw_plaquette.link_ids, values, strict=True):
         config[int(link_id)] = value
 
+    draw_nodes, draw_links = visualizer._draw_primitives()
+
     fig, ax = plt.subplots()
 
-    visualizer.plot(
+    visualizer._plot_with_primitives(
         config,
         ax=ax,
+        draw_nodes=draw_nodes,
+        draw_links=draw_links,
+        draw_plaquettes=[draw_plaquette],
         show=False,
         mode="dimers",
         with_site_labels=False,
         with_plaquette_symbols=True,
         plaquette_symbol_style="resonance",
+        title=None,
     )
 
     # Vulnerable-link arrow is drawn as FancyArrowPatch.
