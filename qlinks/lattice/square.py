@@ -84,9 +84,18 @@ class SquareLattice(LatticeGraph):
 
         links: list[Link] = []
         directed_link_lookup: dict[tuple[int, int], int] = {}
+        cell_link_lookup: dict[tuple[int, int, str], int] = {}
 
-        def add_link(source: int, target: int, kind: str, wrap: bool) -> None:
+        def add_link(
+            source: int,
+            target: int,
+            *,
+            cell: tuple[int, int],
+            kind: str,
+            wrap: bool,
+        ) -> None:
             link_id = len(links)
+
             links.append(
                 Link(
                     id=link_id,
@@ -96,25 +105,39 @@ class SquareLattice(LatticeGraph):
                     wrap=wrap,
                 )
             )
+
             directed_link_lookup[(source, target)] = link_id
+            cell_link_lookup[(int(cell[0]), int(cell[1]), kind)] = link_id
 
         for x in range(lx):
             for y in range(ly):
                 source = site_id(x, y)
 
-                # +x link
+                # +x link anchored at cell (x, y)
                 target_x = maybe_site_id(x + 1, y)
                 if target_x is not None and target_x != source:
                     crosses = x + 1 >= lx
                     if bc == BoundaryCondition.PERIODIC or not crosses:
-                        add_link(source, target_x, kind="x", wrap=crosses)
+                        add_link(
+                            source,
+                            target_x,
+                            cell=(x, y),
+                            kind="x",
+                            wrap=crosses,
+                        )
 
-                # +y link
+                # +y link anchored at cell (x, y)
                 target_y = maybe_site_id(x, y + 1)
                 if target_y is not None and target_y != source:
                     crosses = y + 1 >= ly
                     if bc == BoundaryCondition.PERIODIC or not crosses:
-                        add_link(source, target_y, kind="y", wrap=crosses)
+                        add_link(
+                            source,
+                            target_y,
+                            cell=(x, y),
+                            kind="y",
+                            wrap=crosses,
+                        )
 
         def oriented_link_between(source: int, target: int) -> tuple[int, int]:
             direct = directed_link_lookup.get((source, target))
@@ -126,6 +149,19 @@ class SquareLattice(LatticeGraph):
                 return reverse, -1
 
             raise KeyError(f"No link between {source} and {target}.")
+
+        def canonical_link_cell(x: int, y: int) -> tuple[int, int]:
+            if bc == BoundaryCondition.PERIODIC:
+                return x % lx, y % ly
+            return x, y
+
+        def link_at(x: int, y: int, kind: str) -> int | None:
+            cell = canonical_link_cell(x, y)
+
+            if bc != BoundaryCondition.PERIODIC and not in_bounds(cell[0], cell[1]):
+                return None
+
+            return cell_link_lookup.get((cell[0], cell[1], kind))
 
         plaquettes: list[Plaquette] = []
 
@@ -150,16 +186,29 @@ class SquareLattice(LatticeGraph):
 
                     loop_sites = (s00, s10, s11, s01)
 
-                    l0, o0 = oriented_link_between(s00, s10)
-                    l1, o1 = oriented_link_between(s10, s11)
-                    l2, o2 = oriented_link_between(s11, s01)
-                    l3, o3 = oriented_link_between(s01, s00)
+                    bottom = link_at(x, y, "x")
+                    right = link_at(x + 1, y, "y")
+                    top = link_at(x, y + 1, "x")
+                    left = link_at(x, y, "y")
+
+                    if None in (bottom, right, top, left):
+                        continue
+
+                    assert bottom is not None
+                    assert right is not None
+                    assert top is not None
+                    assert left is not None
 
                     plaquettes.append(
                         Plaquette(
                             id=len(plaquettes),
-                            links=(l0, l1, l2, l3),
-                            orientations=(o0, o1, o2, o3),
+                            links=(
+                                int(bottom),
+                                int(right),
+                                int(top),
+                                int(left),
+                            ),
+                            orientations=(+1, +1, -1, -1),
                             sites=loop_sites,
                             kind="square",
                             anchor_cell=(x, y),

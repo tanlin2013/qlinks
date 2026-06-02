@@ -142,3 +142,37 @@ def test_qdm_flippability_projectors() -> None:
 
     assert projectors[0].apply(config_other) == ()
     assert projectors[1].apply(config_other) == ()
+
+
+def test_qdm_flip_uses_local_visual_square_plaquette_on_thin_torus() -> None:
+    lattice = SquareLattice(4, 2, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    plaquette_id = lattice.plaquette_id_from_cell(1, 1)
+
+    operator = PlaquettePatternOperator.qdm_flip(
+        layout=layout,
+        lattice=lattice,
+        plaquette_id=plaquette_id,
+    )
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    # Pattern 1010 on links (6, 11, 4, 7).
+    for link_id, value in zip((6, 11, 4, 7), (1, 0, 1, 0), strict=True):
+        config[layout.link_variable_index(link_id)] = value
+
+    actions = operator.apply(config)
+
+    assert len(actions) == 1
+
+    new_config = actions[0].config
+
+    for link_id, expected in zip((6, 11, 4, 7), (0, 1, 0, 1), strict=True):
+        assert new_config[layout.link_variable_index(link_id)] == expected
+
+    # The old wrong edge should not have been touched.
+    assert new_config[layout.link_variable_index(5)] == config[layout.link_variable_index(5)]

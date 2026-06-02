@@ -227,3 +227,20 @@ def test_square_lattice_2x2_pbc_boundary_of_boundary_is_zero() -> None:
             dtype=np.int8,
         ),
     )
+
+
+def test_square_lattice_thin_pbc_plaquette_uses_wrapping_left_edge() -> None:
+    lattice = SquareLattice(4, 2, boundary_condition="periodic")
+
+    plaquette_id = lattice.plaquette_id_from_cell(1, 1)
+
+    assert tuple(int(link_id) for link_id in lattice.plaquette_links(plaquette_id)) == (
+        6,
+        11,
+        4,
+        7,
+    )
+
+    assert tuple(
+        int(orientation) for orientation in lattice.plaquette_orientations(plaquette_id)
+    ) == (1, 1, -1, -1)
