@@ -87,6 +87,6 @@ jobs:
 
       - name: Report Coverage
         if: github.ref_name == 'main' && matrix.os == 'ubuntu-latest' && matrix.python-version == needs.versions.outputs.default-python
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
