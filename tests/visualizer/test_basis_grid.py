@@ -236,7 +236,7 @@ def test_basis_grid_reuses_plaquette_primitives(monkeypatch) -> None:
     states = np.ones((3, layout.n_variables), dtype=np.int64)
 
     call_count = 0
-    original = BasisConfigurationVisualizer._draw_square_qlm_plaquette_primitives
+    original = BasisConfigurationVisualizer._draw_square_generic_plaquette_primitives
 
     def counted_draw_square_plaquettes(self):
         nonlocal call_count
@@ -245,7 +245,7 @@ def test_basis_grid_reuses_plaquette_primitives(monkeypatch) -> None:
 
     monkeypatch.setattr(
         BasisConfigurationVisualizer,
-        "_draw_square_qlm_plaquette_primitives",
+        "_draw_square_generic_plaquette_primitives",
         counted_draw_square_plaquettes,
     )
 
@@ -256,7 +256,6 @@ def test_basis_grid_reuses_plaquette_primitives(monkeypatch) -> None:
         ncols=3,
         mode="arrows",
         show=False,
-        plaquette_symbols="square_qlm",
         periodic_image_mode="positive_patch",
     )
 

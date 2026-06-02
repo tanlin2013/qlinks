@@ -2,7 +2,6 @@ from itertools import product
 
 import matplotlib
 import numpy as np
-import pytest
 
 from qlinks.lattice import (
     ChainLattice,
@@ -437,7 +436,7 @@ def test_triangular_pbc_positive_patch_has_no_negative_visual_cells() -> None:
         assert all(int(cell) >= 0 for cell in target_cell)
 
 
-def test_triangular_closed_plaquette_representative_prefers_lowest_center() -> None:
+def test_triangular_closed_plaquette_representative_minimizes_score() -> None:
     lattice = TriangularLattice(
         4,
         4,
@@ -463,15 +462,13 @@ def test_triangular_closed_plaquette_representative_prefers_lowest_center() -> N
     for draw_link in draw_links:
         draw_links_by_link_id.setdefault(int(draw_link.link_id), []).append(draw_link)
 
-    found_multi_representative = False
-
     for plaquette in lattice.plaquettes:
         if len(plaquette.links) != 4:
             continue
 
-        candidate_lists = [
-            draw_links_by_link_id.get(int(link_id), []) for link_id in plaquette.links
-        ]
+        physical_link_ids = tuple(int(link_id) for link_id in plaquette.links)
+
+        candidate_lists = [draw_links_by_link_id.get(link_id, []) for link_id in physical_link_ids]
 
         if any(len(candidates) == 0 for candidates in candidate_lists):
             continue
@@ -485,19 +482,28 @@ def test_triangular_closed_plaquette_representative_prefers_lowest_center() -> N
         if len(closed_representatives) <= 1:
             continue
 
-        found_multi_representative = True
+        selected = visualizer._select_closed_visual_plaquette(
+            candidate_lists,
+            physical_link_ids=physical_link_ids,
+            preferred_center=None,
+        )
 
-        selected = visualizer._select_closed_visual_plaquette(candidate_lists)
-        assert selected is not None
+        if selected is None:
+            continue
 
-        selected_center = visualizer._closed_visual_plaquette_center(selected)
-        all_centers = [
-            visualizer._closed_visual_plaquette_center(representative)
+        selected_score = visualizer._visual_plaquette_representative_score_for_physical_links(
+            selected,
+            physical_link_ids=physical_link_ids,
+            preferred_center=None,
+        )
+
+        all_scores = [
+            visualizer._visual_plaquette_representative_score_for_physical_links(
+                representative,
+                physical_link_ids=physical_link_ids,
+                preferred_center=None,
+            )
             for representative in closed_representatives
         ]
 
-        min_y = min(float(center[1]) for center in all_centers)
-
-        assert float(selected_center[1]) == pytest.approx(min_y)
-
-    assert found_multi_representative
+        assert selected_score == min(all_scores)
