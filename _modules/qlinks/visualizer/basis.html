@@ -2762,6 +2762,19 @@
                 <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="k">for</span> <span class="n">_plaquette_id</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">text_items</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+                <span class="n">symbol</span><span class="p">,</span>
+                <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="n">xytext</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">plaquette_symbol_offset</span><span class="p">,</span>
+                <span class="n">textcoords</span><span class="o">=</span><span class="s2">&quot;offset points&quot;</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">plaquette_symbol_fontsize</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">zorder</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_square_qlm_symbol_info</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
@@ -2770,17 +2783,42 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the legacy square QLM glyph for a square plaquette.</span>
 
-<span class="sd">        This keeps _SQUARE_QLM_PLAQUETTE_SYMBOLS, but hides it behind the</span>
-<span class="sd">        generic &#39;circulation&#39; style.</span>
+<span class="sd">        The legacy _SQUARE_QLM_PLAQUETTE_SYMBOLS table uses the visual key</span>
+<span class="sd">        convention</span>
+
+<span class="sd">            bottom, left, right, top</span>
+
+<span class="sd">        not the generic square primitive order</span>
+
+<span class="sd">            bottom, right, top, left.</span>
+
+<span class="sd">        Therefore we must adapt the current visual plaquette cell back to the</span>
+<span class="sd">        legacy key convention before looking up the table.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="n">SquareLattice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">draw_plaquette</span><span class="o">.</span><span class="n">link_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_value</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">))</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">draw_plaquette</span><span class="o">.</span><span class="n">link_ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">draw_plaquette</span><span class="o">.</span><span class="n">visual_cell</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">draw_plaquette</span><span class="o">.</span><span class="n">visual_cell</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">visual_cell</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">draw_plaquette</span><span class="o">.</span><span class="n">visual_cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">draw_plaquette</span><span class="o">.</span><span class="n">visual_cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">visual_cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_square_visual_cell_from_center</span><span class="p">(</span>
+                <span class="n">draw_plaquette</span><span class="o">.</span><span class="n">center</span><span class="p">,</span>
+            <span class="p">)</span>
 
-        <span class="c1"># Convert flux-like values to binary sign bits in plaquette order.</span>
-        <span class="c1"># Positive -&gt; 1, non-positive -&gt; 0.</span>
-        <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;1&quot;</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;0&quot;</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_square_visual_qlm_symbol_link_values</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span>
+            <span class="n">visual_cell</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plaquette_key</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
         <span class="n">payload</span> <span class="o">=</span> <span class="n">_SQUARE_QLM_PLAQUETTE_SYMBOLS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
@@ -3786,10 +3824,6 @@
 <span class="sd">            &quot;none&quot;:</span>
 <span class="sd">                draw no plaquette symbols.</span>
 
-<span class="sd">            &quot;square_qlm&quot;:</span>
-<span class="sd">                use the old 16-symbol square-QLM dictionary. This is only</span>
-<span class="sd">                meaningful for SquareLattice four-link plaquettes.</span>
-
 <span class="sd">            &quot;circulation&quot;:</span>
 <span class="sd">                generic QLM-like circulation marker. Draws circular arrows when</span>
 <span class="sd">                all link variables circulate consistently around a plaquette.</span>
@@ -3847,6 +3881,30 @@
         <span class="k">if</span> <span class="n">single_plot_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">single_plot_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
 
+        <span class="n">plot_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">single_plot_kwargs</span><span class="p">)</span>
+        <span class="n">with_site_labels</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;with_site_labels&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="n">with_site_values</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;with_site_values&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="n">with_link_values</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;with_link_values&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="n">with_link_ids</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;with_link_ids&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="n">with_plaquette_symbols</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;with_plaquette_symbols&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="n">plaquette_symbol_values</span> <span class="o">=</span> <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
+            <span class="s2">&quot;plaquette_symbol_values&quot;</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;backend&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;ax&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;mode&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Constructor-only options; do not pass to BasisConfigurationVisualizer.plot().</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;style&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;periodic_image_mode&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;collapse_duplicate_visual_links&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;coordinate_scale&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;coordinate_transform&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;site_label_style&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span> <span class="o">*</span> <span class="n">cols</span><span class="p">):</span>
             <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
@@ -3870,23 +3928,6 @@
                 <span class="k">if</span> <span class="n">config_text</span><span class="p">:</span>
                     <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">config_text</span><span class="si">}</span><span class="s2">&quot;</span>
 
-            <span class="n">plot_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">single_plot_kwargs</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;with_plaquette_symbols&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;plaquette_symbol_style&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;backend&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;ax&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;mode&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
-            <span class="c1"># Constructor-only options; do not pass to BasisConfigurationVisualizer.plot().</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;style&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;periodic_image_mode&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;collapse_duplicate_visual_links&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;coordinate_scale&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;coordinate_transform&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;site_label_style&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
             <span class="n">single_visualizer</span><span class="o">.</span><span class="n">_plot_with_primitives</span><span class="p">(</span>
                 <span class="n">config</span><span class="p">,</span>
                 <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
@@ -3896,12 +3937,14 @@
                 <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
                 <span class="n">mode</span><span class="o">=</span><span class="n">resolved_mode</span><span class="p">,</span>
-                <span class="n">with_site_labels</span><span class="o">=</span><span class="n">single_plot_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;with_site_labels&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
-                <span class="n">with_site_values</span><span class="o">=</span><span class="n">single_plot_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;with_site_values&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-                <span class="n">with_link_values</span><span class="o">=</span><span class="n">single_plot_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;with_link_values&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-                <span class="n">with_link_ids</span><span class="o">=</span><span class="n">single_plot_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;with_link_ids&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-                <span class="n">with_plaquette_symbols</span><span class="o">=</span><span class="p">(</span><span class="n">resolved_plaquette_symbols</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+                <span class="n">with_site_labels</span><span class="o">=</span><span class="n">with_site_labels</span><span class="p">,</span>
+                <span class="n">with_site_values</span><span class="o">=</span><span class="n">with_site_values</span><span class="p">,</span>
+                <span class="n">with_link_values</span><span class="o">=</span><span class="n">with_link_values</span><span class="p">,</span>
+                <span class="n">with_link_ids</span><span class="o">=</span><span class="n">with_link_ids</span><span class="p">,</span>
+                <span class="n">with_plaquette_symbols</span><span class="o">=</span><span class="n">with_plaquette_symbols</span>
+                <span class="ow">and</span> <span class="n">resolved_plaquette_symbols</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
                 <span class="n">plaquette_symbol_style</span><span class="o">=</span><span class="n">resolved_plaquette_symbols</span><span class="p">,</span>
+                <span class="n">plaquette_symbol_values</span><span class="o">=</span><span class="n">plaquette_symbol_values</span><span class="p">,</span>
                 <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
             <span class="p">)</span>
