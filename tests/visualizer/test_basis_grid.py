@@ -287,3 +287,58 @@ def test_zero_indices_for_mechanism_extended_group():
     indices = _zero_indices_for_mechanism(report, "extended")
 
     assert indices.tolist() == [5]
+
+
+def test_basis_grid_auto_mode_resolves_before_plaquette_symbols() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    states = [
+        np.zeros(layout.n_variables, dtype=np.int64),
+        np.ones(layout.n_variables, dtype=np.int64),
+    ]
+
+    grid = BasisGridVisualizer(
+        lattice=lattice,
+        layout=layout,
+    )
+
+    fig, axes = grid.plot(
+        states,
+        mode="auto",
+        plaquette_symbols="auto",
+        show=False,
+    )
+
+    assert fig is not None
+    plt.close(fig)
+
+
+def test_basis_grid_auto_mode_resolves_flux_layout() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    states = [
+        np.ones(layout.n_variables, dtype=np.int64),
+    ]
+
+    grid = BasisGridVisualizer(
+        lattice=lattice,
+        layout=layout,
+    )
+
+    fig, axes = grid.plot(
+        states,
+        mode="auto",
+        plaquette_symbols="auto",
+        show=False,
+    )
+
+    assert fig is not None
+    plt.close(fig)

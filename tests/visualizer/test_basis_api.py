@@ -239,3 +239,97 @@ def test_non_square_open_lattice_visualizer_runs(lattice) -> None:
     assert len(ax.collections) > 0
 
     plt.close(fig)
+
+
+def test_auto_mode_uses_dimers_for_binary_link_layout() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+    )
+
+    config = layout.default_config()
+
+    assert (
+        visualizer._resolve_link_plot_mode(
+            config=config,
+            mode="auto",
+        )
+        == "dimers"
+    )
+
+
+def test_auto_mode_uses_arrows_for_spin_half_flux_link_layout() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+    )
+
+    config = layout.default_config()
+
+    assert (
+        visualizer._resolve_link_plot_mode(
+            config=config,
+            mode="auto",
+        )
+        == "arrows"
+    )
+
+
+def test_auto_symbols_follow_inferred_mode_for_binary_layout() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+    )
+
+    assert (
+        visualizer._resolve_plaquette_symbol_style(
+            mode=visualizer._resolve_link_plot_mode(
+                config=layout.default_config(),
+                mode="auto",
+            ),
+            plaquette_symbol_style="auto",
+        )
+        == "resonance"
+    )
+
+
+def test_auto_symbols_follow_inferred_mode_for_flux_layout() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+    )
+
+    assert (
+        visualizer._resolve_plaquette_symbol_style(
+            mode=visualizer._resolve_link_plot_mode(
+                config=layout.default_config(),
+                mode="auto",
+            ),
+            plaquette_symbol_style="auto",
+        )
+        == "circulation"
+    )

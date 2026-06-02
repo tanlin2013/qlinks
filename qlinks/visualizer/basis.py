@@ -6,6 +6,7 @@ from itertools import product
 from pathlib import Path
 from typing import Literal, Mapping, Sequence
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 from matplotlib.collections import LineCollection
@@ -22,10 +23,10 @@ from qlinks.lattice import (
 from qlinks.variables import VariableKind, VariableLayout
 
 BasisConfigLabelStyle = Literal["none", "compact", "array"]
-LinkPlotMode = Literal["arrows", "dimers", "values"]
+LinkPlotMode = Literal["auto", "arrows", "dimers", "values"]
 PeriodicImageMode = Literal["none", "positive_patch"]
 PlaquetteSymbolMode = Literal["binary", "flux"]
-PlaquetteSymbolStyle = Literal["auto", "none", "square_qlm", "circulation", "resonance"]
+PlaquetteSymbolStyle = Literal["auto", "none", "circulation", "resonance"]
 SiteLabelStyle = Literal["cell", "cell_sublattice", "sublattice_cell", "site_id"]
 VisualizerBackend = Literal["matplotlib", "networkx"]
 
@@ -146,305 +147,72 @@ class BasisConfigurationVisualizer:
     coordinate_transform: npt.NDArray[np.float64] | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
 
-    def debug_physical_qdm_resonance_table(
+    def _infer_link_plot_mode(
         self,
-        config: npt.ArrayLike,
-    ) -> list[dict[str, object]]:
-        """Return physical QDM plaquette resonance diagnostics."""
-        arr = self._as_config(config)
+        config: npt.ArrayLike | None = None,
+    ) -> Literal["arrows", "dimers", "values"]:
+        """Infer a plotting mode from the layout, falling back to config values.
 
-        rows: list[dict[str, object]] = []
-
-        for plaquette in self.lattice.plaquettes:
-            link_ids = tuple(int(link_id) for link_id in plaquette.links)
-
-            if len(link_ids) < 4 or len(link_ids) % 2 != 0:
-                continue
-
-            values = tuple(self.link_value(arr, int(link_id)) for link_id in link_ids)
-
-            resonance = self._qdm_resonance_symbol(values)
-            vulnerable = self._qdm_one_vulnerable_link(values)
-
-            rows.append(
-                {
-                    "plaquette_id": int(plaquette.id),
-                    "link_ids": link_ids,
-                    "values": values,
-                    "resonance": resonance,
-                    "vulnerable": vulnerable,
-                }
-            )
-
-        return rows
-
-    def debug_draw_qdm_plaquette_local_edges(
-        self,
-        config: npt.ArrayLike,
-        *,
-        ax,
-        only_resonant: bool = True,
-    ) -> None:
-        """Overlay local plaquette-edge dimers used for QDM resonance tests.
-
-        This is a diagnostic for small tori: it shows the local physical plaquette
-        boundary even when the global dimer drawing splits the PBC image.
+        Convention:
+            {-1, +1} or {-1, 0, +1} -> QLM-like arrows
+            {0, 1}                   -> QDM-like dimers
+            site-only layout          -> values
         """
-        arr = self._as_config(config)
-        draw_plaquettes = self._draw_plaquette_primitives()
+        if not self.has_link_variables():
+            return "values"
 
-        for draw_plaquette in draw_plaquettes:
-            values = tuple(
-                self.link_value(arr, int(link_id)) for link_id in draw_plaquette.link_ids
-            )
+        if self.layout is not None:
+            link_variable_indices = self.layout.link_variable_indices()
 
-            resonance = self._qdm_resonance_symbol(values)
+            if link_variable_indices.size == 0:
+                return "values"
 
-            if only_resonant and resonance is None:
-                continue
+            link_spaces = [
+                tuple(int(value) for value in self.layout.local_space(int(index)).values)
+                for index in link_variable_indices
+            ]
 
-            center = np.asarray(draw_plaquette.center, dtype=float)
+            unique_spaces = set(link_spaces)
 
-            for link_id, value, midpoint in zip(
-                draw_plaquette.link_ids,
-                values,
-                draw_plaquette.link_midpoints,
-                strict=True,
-            ):
-                midpoint_array = np.asarray(midpoint, dtype=float)
+            if unique_spaces == {(-1, 1)}:
+                return "arrows"
 
-                if int(value) == 0:
-                    continue
+            if unique_spaces == {(-1, 0, 1)}:
+                return "arrows"
 
-                # Draw a short local mark centered at the local plaquette edge.
-                direction = midpoint_array - center
-                if np.linalg.norm(direction) <= 1e-12:
-                    continue
+            if unique_spaces == {(0, 1)}:
+                return "dimers"
 
-                tangent = np.asarray([-direction[1], direction[0]], dtype=float)
-                tangent = tangent / np.linalg.norm(tangent)
+            # Conservative fallback for mixed/unknown link spaces.
+            return "values"
 
-                half_length = 0.22
-                start = midpoint_array - half_length * tangent
-                end = midpoint_array + half_length * tangent
+        if config is not None:
+            arr = np.asarray(config, dtype=np.int64)
 
-                ax.plot(
-                    [float(start[0]), float(end[0])],
-                    [float(start[1]), float(end[1])],
-                    color="purple",
-                    linewidth=2.0,
-                    alpha=0.8,
-                    zorder=8,
-                )
+            if arr.size >= self.lattice.num_links:
+                link_values = set(int(value) for value in arr[: self.lattice.num_links])
 
-    def debug_plaquette_symbol_table(
-        self,
-        config: npt.ArrayLike,
-        *,
-        style: PlaquetteSymbolStyle = "resonance",
-    ) -> list[dict[str, object]]:
-        """Return per-plaquette debug info for generic plaquette symbols.
+                if link_values <= {-1, 1}:
+                    return "arrows"
 
-        This is intended for diagnosing mismatches between visible dimers/arrows
-        and plaquette symbols, especially on small tori.
-        """
-        arr = self._as_config(config)
-        draw_plaquettes = self._draw_plaquette_primitives()
+                if link_values <= {-1, 0, 1} and any(value < 0 for value in link_values):
+                    return "arrows"
 
-        rows: list[dict[str, object]] = []
+                if link_values <= {0, 1}:
+                    return "dimers"
 
-        for draw_plaquette in draw_plaquettes:
-            plaquette = self.lattice.plaquettes[int(draw_plaquette.plaquette_id)]
+        return "arrows"
 
-            physical_link_ids = tuple(int(link_id) for link_id in plaquette.links)
-            physical_orientations = tuple(
-                int(orientation) for orientation in plaquette.orientations
-            )
-
-            drawn_link_ids = tuple(int(link_id) for link_id in draw_plaquette.link_ids)
-            drawn_orientations = tuple(
-                int(orientation) for orientation in draw_plaquette.link_orientations
-            )
-
-            physical_values = tuple(self.link_value(arr, link_id) for link_id in physical_link_ids)
-            drawn_values = tuple(self.link_value(arr, link_id) for link_id in drawn_link_ids)
-
-            qdm_symbol = self._qdm_resonance_symbol(drawn_values)
-            qdm_vulnerable = self._qdm_one_vulnerable_link(drawn_values)
-
-            qlm_symbol = self._flux_circulation_symbol(
-                drawn_values,
-                drawn_orientations,
-            )
-            qlm_vulnerable = self._flux_one_vulnerable_link(
-                drawn_values,
-                drawn_orientations,
-            )
-
-            rows.append(
-                {
-                    "plaquette_id": int(draw_plaquette.plaquette_id),
-                    "center": tuple(float(x) for x in draw_plaquette.center),
-                    "physical_link_ids": physical_link_ids,
-                    "drawn_link_ids": drawn_link_ids,
-                    "physical_orientations": physical_orientations,
-                    "drawn_orientations": drawn_orientations,
-                    "physical_values": physical_values,
-                    "drawn_values": drawn_values,
-                    "link_midpoints": tuple(draw_plaquette.link_midpoints),
-                    "qdm_symbol_from_drawn_values": qdm_symbol,
-                    "qdm_vulnerable_from_drawn_values": qdm_vulnerable,
-                    "qlm_symbol_from_drawn_values": qlm_symbol,
-                    "qlm_vulnerable_from_drawn_values": qlm_vulnerable,
-                    "link_order_matches_physical": drawn_link_ids == physical_link_ids,
-                    "values_match_physical_order": drawn_values == physical_values,
-                }
-            )
-
-        return rows
-
-    def debug_draw_link_table(self) -> list[dict[str, object]]:
-        """Return actual drawn visual links and their positions."""
-        _nodes, draw_links = self._draw_primitives()
-
-        rows: list[dict[str, object]] = []
-
-        for draw_link in draw_links:
-            rows.append(
-                {
-                    "link_id": int(draw_link.link_id),
-                    "source_key": draw_link.source_key,
-                    "target_key": draw_link.target_key,
-                    "source_position": tuple(float(x) for x in draw_link.source_position),
-                    "target_position": tuple(float(x) for x in draw_link.target_position),
-                    "midpoint": (
-                        0.5
-                        * (
-                            float(draw_link.source_position[0])
-                            + float(draw_link.target_position[0])
-                        ),
-                        0.5
-                        * (
-                            float(draw_link.source_position[1])
-                            + float(draw_link.target_position[1])
-                        ),
-                    ),
-                }
-            )
-
-        return rows
-
-    def debug_overlapping_visual_links(self) -> list[dict[str, object]]:
-        """Return visual link segments occupied by more than one physical link id."""
-        _nodes, draw_links = self._draw_primitives()
-
-        groups: dict[
-            tuple[tuple[float, float], tuple[float, float]],
-            list[_DrawLink],
-        ] = {}
-
-        def rounded_position(position: tuple[float, float]) -> tuple[float, float]:
-            return (
-                round(float(position[0]), 10),
-                round(float(position[1]), 10),
-            )
-
-        for draw_link in draw_links:
-            source = rounded_position(draw_link.source_position)
-            target = rounded_position(draw_link.target_position)
-
-            key = tuple(sorted((source, target)))
-            groups.setdefault(key, []).append(draw_link)
-
-        rows: list[dict[str, object]] = []
-
-        for segment, links in groups.items():
-            link_ids = sorted({int(link.link_id) for link in links})
-
-            if len(link_ids) <= 1:
-                continue
-
-            rows.append(
-                {
-                    "segment": segment,
-                    "link_ids": link_ids,
-                    "n_draw_links": len(links),
-                }
-            )
-
-        return rows
-
-    def debug_draw_link_table_with_values(
-        self,
-        config: npt.ArrayLike,
-    ) -> list[dict[str, object]]:
-        """Return actual drawn links together with resolved link values."""
-        arr = self._as_config(config)
-        _nodes, draw_links = self._draw_primitives()
-
-        rows: list[dict[str, object]] = []
-
-        for draw_link in draw_links:
-            value = self.link_value(arr, int(draw_link.link_id))
-
-            rows.append(
-                {
-                    "link_id": int(draw_link.link_id),
-                    "value": int(value),
-                    "occupied": bool(value != 0),
-                    "source_key": draw_link.source_key,
-                    "target_key": draw_link.target_key,
-                    "source_position": tuple(float(x) for x in draw_link.source_position),
-                    "target_position": tuple(float(x) for x in draw_link.target_position),
-                    "midpoint": (
-                        0.5
-                        * (
-                            float(draw_link.source_position[0])
-                            + float(draw_link.target_position[0])
-                        ),
-                        0.5
-                        * (
-                            float(draw_link.source_position[1])
-                            + float(draw_link.target_position[1])
-                        ),
-                    ),
-                }
-            )
-
-        return rows
-
-    def debug_draw_link_ids(
+    def _resolve_link_plot_mode(
         self,
         *,
-        ax,
-        draw_links: list[_DrawLink] | None = None,
-    ) -> None:
-        """Overlay physical link ids at drawn-link midpoints."""
-        if draw_links is None:
-            _nodes, draw_links = self._draw_primitives()
+        config: npt.ArrayLike,
+        mode: LinkPlotMode,
+    ) -> Literal["arrows", "dimers", "values"]:
+        if mode != "auto":
+            return mode
 
-        for draw_link in draw_links:
-            sx, sy = self._xy(draw_link.source_position)
-            tx, ty = self._xy(draw_link.target_position)
-            x = 0.5 * (sx + tx)
-            y = 0.5 * (sy + ty)
-
-            ax.text(
-                x,
-                y,
-                str(int(draw_link.link_id)),
-                ha="center",
-                va="center",
-                fontsize=7,
-                color="purple",
-                zorder=20,
-                bbox={
-                    "boxstyle": "round,pad=0.1",
-                    "fc": "white",
-                    "ec": "none",
-                    "alpha": 0.7,
-                },
-            )
+        return self._infer_link_plot_mode(config)
 
     def _as_config(self, config: npt.ArrayLike) -> npt.NDArray[np.int64]:
         arr = np.asarray(config, dtype=np.int64)
@@ -497,10 +265,11 @@ class BasisConfigurationVisualizer:
         ax=None,
         show: bool = True,
         backend: VisualizerBackend = "matplotlib",
-        mode: LinkPlotMode = "arrows",
+        mode: LinkPlotMode = "auto",
         with_site_labels: bool = True,
         with_site_values: bool = False,
         with_link_values: bool = False,
+        with_link_ids: bool = False,
         with_plaquette_symbols: bool = True,
         plaquette_symbol_style: PlaquetteSymbolStyle = "auto",
         plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
@@ -531,23 +300,23 @@ class BasisConfigurationVisualizer:
             "resonance": QDM-like binary resonance marker.
             Draws a marker when binary dimer occupations alternate around an even-length plaquette.
         """
-        import matplotlib.pyplot as plt
-
         if ax is None:
             _, ax = plt.subplots()
 
-        draw_nodes, draw_links = self._draw_primitives()
-        resolved_plaquette_symbol_style = self._resolve_plaquette_symbol_style(
+        resolved_mode = self._resolve_link_plot_mode(
+            config=config,
             mode=mode,
+        )
+        resolved_plaquette_symbol_style = self._resolve_plaquette_symbol_style(
+            mode=resolved_mode,
             plaquette_symbol_style=plaquette_symbol_style,
         )
 
+        draw_nodes, draw_links = self._draw_primitives()
+
         draw_plaquettes = None
         if with_plaquette_symbols and resolved_plaquette_symbol_style != "none":
-            if resolved_plaquette_symbol_style == "square_qlm":
-                draw_plaquettes = self._draw_square_qlm_plaquette_primitives()
-            else:
-                draw_plaquettes = self._draw_plaquette_primitives()
+            draw_plaquettes = self._draw_plaquette_primitives()
 
         return self._plot_with_primitives(
             config,
@@ -557,10 +326,11 @@ class BasisConfigurationVisualizer:
             draw_plaquettes=draw_plaquettes,
             show=show,
             backend=backend,
-            mode=mode,
+            mode=resolved_mode,
             with_site_labels=with_site_labels,
             with_site_values=with_site_values,
             with_link_values=with_link_values,
+            with_link_ids=with_link_ids,
             with_plaquette_symbols=with_plaquette_symbols,
             plaquette_symbol_style=resolved_plaquette_symbol_style,
             plaquette_symbol_values=plaquette_symbol_values,
@@ -584,8 +354,6 @@ class BasisConfigurationVisualizer:
             return plaquette_symbol_style
 
         if mode == "arrows":
-            if isinstance(self.lattice, SquareLattice):
-                return "square_qlm"
             return "circulation"
 
         if mode == "dimers":
@@ -606,17 +374,16 @@ class BasisConfigurationVisualizer:
         draw_plaquettes: list[_DrawPlaquette] | None,
         show: bool = True,
         backend: VisualizerBackend = "matplotlib",
-        mode: LinkPlotMode = "arrows",
+        mode: LinkPlotMode = "auto",
         with_site_labels: bool = True,
         with_site_values: bool = False,
         with_link_values: bool = False,
+        with_link_ids: bool = False,
         with_plaquette_symbols: bool = True,
-        plaquette_symbol_style: PlaquetteSymbolStyle = "square_qlm",
+        plaquette_symbol_style: PlaquetteSymbolStyle = "auto",
         plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
         title: str | None = None,
     ):
-        import matplotlib.pyplot as plt
-
         arr = self._as_config(config)
 
         if mode in ("arrows", "dimers") and not self.has_link_variables():
@@ -643,6 +410,11 @@ class BasisConfigurationVisualizer:
                 self._draw_link_values(
                     ax=ax,
                     config=arr,
+                    draw_links=draw_links,
+                )
+            if with_link_ids:
+                self._draw_link_ids(
+                    ax=ax,
                     draw_links=draw_links,
                 )
             if with_plaquette_symbols and plaquette_symbol_style != "none":
@@ -689,9 +461,6 @@ class BasisConfigurationVisualizer:
         """
         Save a visualization to disk.
         """
-
-        import matplotlib.pyplot as plt
-
         fig, ax = plt.subplots()
         self.plot(config, ax=ax, show=show, **plot_kwargs)
         fig.savefig(path, dpi=dpi, bbox_inches="tight")
@@ -1328,6 +1097,37 @@ class BasisConfigurationVisualizer:
                 )
             )
 
+    def _draw_link_ids(
+        self,
+        *,
+        ax,
+        draw_links: list[_DrawLink],
+    ) -> None:
+        """Overlay physical link ids at drawn-link midpoints."""
+        for draw_link in draw_links:
+            sx, sy = self._xy(draw_link.source_position)
+            tx, ty = self._xy(draw_link.target_position)
+
+            x = 0.5 * (sx + tx)
+            y = 0.5 * (sy + ty)
+
+            ax.text(
+                x,
+                y,
+                str(int(draw_link.link_id)),
+                ha="center",
+                va="center",
+                fontsize=self._resolved_link_label_fontsize(),
+                color="purple",
+                zorder=20,
+                bbox={
+                    "boxstyle": "round,pad=0.1",
+                    "fc": "white",
+                    "ec": "none",
+                    "alpha": 0.7,
+                },
+            )
+
     def _draw_value_backbone(
         self,
         *,
@@ -1421,27 +1221,15 @@ class BasisConfigurationVisualizer:
                 zorder=5,
             )
 
-    def _draw_square_qlm_plaquette_primitives(self) -> list[_DrawPlaquette]:
-        """
-        Build visual plaquette centers for square-QLM plaquette symbols.
+    def _draw_square_generic_plaquette_primitives(self) -> list[_DrawPlaquette]:
+        """Build square plaquette primitives for generic resonance/circulation.
 
-        For PBC positive_patch, this draws one visual plaquette per cell in the
-        enlarged positive patch:
-
-            0 <= x < Lx
-            0 <= y < Ly
-
-        with centers at:
-
-            (x + 1/2, y + 1/2)
-
-        The physical plaquette value is taken from the plaquette associated with
-        the base cell (x mod Lx, y mod Ly).
+        Unlike the old generic fallback, this is cell based. On a square PBC
+        positive patch, each visual cell gets its own plaquette center and local
+        boundary links. This prevents distinct plaquettes on a small torus from
+        collapsing to the same visual center.
         """
         if not isinstance(self.lattice, SquareLattice):
-            return []
-
-        if self.lattice.num_plaquettes == 0:
             return []
 
         if self.lattice.ndim != 2:
@@ -1452,7 +1240,6 @@ class BasisConfigurationVisualizer:
         ly = int(spans[1])
 
         period_vectors = self._period_vectors_2d()
-
         unit_vectors = np.zeros_like(period_vectors)
         unit_vectors[0] = period_vectors[0] / float(lx)
         unit_vectors[1] = period_vectors[1] / float(ly)
@@ -1461,7 +1248,6 @@ class BasisConfigurationVisualizer:
 
         draw_plaquettes: list[_DrawPlaquette] = []
 
-        # Open boundary: use physical plaquette centers only.
         if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
             for plaquette in self.lattice.plaquettes:
                 if len(plaquette.links) != 4:
@@ -1472,20 +1258,22 @@ class BasisConfigurationVisualizer:
                 draw_plaquettes.append(
                     _DrawPlaquette(
                         plaquette_id=int(plaquette.id),
-                        image_shift=(0, 0),
-                        visual_cell=(-1, -1),
+                        image_shift=tuple(0 for _ in range(self.lattice.ndim)),
+                        visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
                         center=center,
+                        link_ids=tuple(int(link_id) for link_id in plaquette.links),
+                        link_orientations=tuple(
+                            int(orientation) for orientation in plaquette.orientations
+                        ),
+                        link_midpoints=self._square_generic_link_midpoints_from_center(
+                            center=center,
+                            unit_vectors=unit_vectors,
+                        ),
                     )
                 )
 
             return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
 
-        # PBC positive patch: draw one symbol per visual plaquette cell.
-        #
-        # For a 2x2 torus, this gives cells:
-        #   (0,0), (1,0), (0,1), (1,1)
-        #
-        # For a 4x4 torus, this gives 16 cells.
         for x in range(lx):
             for y in range(ly):
                 visual_cell = (x, y)
@@ -1494,8 +1282,6 @@ class BasisConfigurationVisualizer:
                 plaquette_id = plaquette_by_cell.get(base_cell)
 
                 if plaquette_id is None:
-                    # Last-resort fallback:
-                    # if plaquettes are ordered by cell, use row-major order.
                     flat_index = x * ly + y
                     if flat_index < self.lattice.num_plaquettes:
                         plaquette_id = int(self.lattice.plaquettes[flat_index].id)
@@ -1503,7 +1289,6 @@ class BasisConfigurationVisualizer:
                 if plaquette_id is None:
                     continue
 
-                # For square coordinates, site at base_cell should exist.
                 lower_left_site_id = self._site_id_from_cell(base_cell)
                 if lower_left_site_id is None:
                     continue
@@ -1512,7 +1297,6 @@ class BasisConfigurationVisualizer:
                     site_id=lower_left_site_id,
                     visual_cell=visual_cell,
                 )
-
                 if image_shift is None:
                     continue
 
@@ -1526,6 +1310,7 @@ class BasisConfigurationVisualizer:
                 )
 
                 center_arr = lower_left_position + 0.5 * unit_vectors[0] + 0.5 * unit_vectors[1]
+                center = (float(center_arr[0]), float(center_arr[1]))
 
                 bottom_link = self._square_visual_link_id(
                     cell=visual_cell,
@@ -1549,7 +1334,7 @@ class BasisConfigurationVisualizer:
                         plaquette_id=int(plaquette_id),
                         image_shift=image_shift,
                         visual_cell=visual_cell,
-                        center=(float(center_arr[0]), float(center_arr[1])),
+                        center=center,
                         link_ids=(
                             int(bottom_link),
                             int(right_link),
@@ -1557,10 +1342,35 @@ class BasisConfigurationVisualizer:
                             int(left_link),
                         ),
                         link_orientations=(1, 1, -1, -1),
+                        link_midpoints=self._square_generic_link_midpoints_from_center(
+                            center=center,
+                            unit_vectors=unit_vectors,
+                        ),
                     )
                 )
 
         return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
+
+    @staticmethod
+    def _square_generic_link_midpoints_from_center(
+        *,
+        center: tuple[float, float],
+        unit_vectors: npt.NDArray[np.float64],
+    ) -> tuple[tuple[float, float], ...]:
+        """Return bottom/right/top/left local edge midpoints for a square cell."""
+        center_arr = np.asarray(center, dtype=float)
+
+        bottom = center_arr - 0.5 * unit_vectors[1]
+        right = center_arr + 0.5 * unit_vectors[0]
+        top = center_arr + 0.5 * unit_vectors[1]
+        left = center_arr - 0.5 * unit_vectors[0]
+
+        return (
+            (float(bottom[0]), float(bottom[1])),
+            (float(right[0]), float(right[1])),
+            (float(top[0]), float(top[1])),
+            (float(left[0]), float(left[1])),
+        )
 
     def _site_id_from_cell(
         self,
@@ -1755,6 +1565,13 @@ class BasisConfigurationVisualizer:
         if self.lattice.num_plaquettes == 0:
             return []
 
+        if isinstance(self.lattice, SquareLattice):
+            return self._draw_square_generic_plaquette_primitives()
+
+        return self._draw_generic_non_square_plaquette_primitives()
+
+    def _draw_generic_non_square_plaquette_primitives(self) -> list[_DrawPlaquette]:
+        """Build generic non-square plaquette primitives."""
         _draw_nodes, draw_links = self._draw_primitives()
 
         draw_links_by_link_id: dict[int, list[_DrawLink]] = {}
@@ -1769,163 +1586,45 @@ class BasisConfigurationVisualizer:
             if not self._is_supported_circulation_plaquette(link_ids):
                 continue
 
-            preferred_center = self._natural_plaquette_center(
-                plaquette_id=int(plaquette.id),
-            )
-
             candidate_lists = [draw_links_by_link_id.get(link_id, []) for link_id in link_ids]
 
-            selected: tuple[_DrawLink, ...] | None = None
-
-            if not any(len(candidates) == 0 for candidates in candidate_lists):
-                selected = self._select_closed_visual_plaquette(
-                    candidate_lists,
-                    physical_link_ids=link_ids,
-                    preferred_center=preferred_center,
-                )
-
-            if selected is not None:
-                center = self._closed_visual_plaquette_center(selected)
-                canonical_draw_links = self._canonical_visual_cycle_draw_links(selected)
-
-                canonical_link_ids = tuple(
-                    int(draw_link.link_id) for draw_link in canonical_draw_links
-                )
-
-                canonical_orientations = self._canonical_visual_cycle_orientations_from_draw_links(
-                    center=center,
-                    canonical_draw_links=canonical_draw_links,
-                )
-
-                canonical_midpoints = tuple(
-                    self._draw_link_midpoint(draw_link) for draw_link in canonical_draw_links
-                )
-
-                draw_plaquettes.append(
-                    _DrawPlaquette(
-                        plaquette_id=int(plaquette.id),
-                        image_shift=tuple(0 for _ in range(self.lattice.ndim)),
-                        visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
-                        center=(float(center[0]), float(center[1])),
-                        link_ids=canonical_link_ids,
-                        link_orientations=canonical_orientations,
-                        link_midpoints=canonical_midpoints,
-                    )
-                )
+            if any(len(candidates) == 0 for candidates in candidate_lists):
                 continue
 
-            # Only now use the local site fallback.
-            local_primitive = self._local_draw_plaquette_primitive(
-                plaquette_id=int(plaquette.id),
-                draw_links=draw_links,
+            selected = self._select_closed_visual_plaquette(
+                candidate_lists,
+                physical_link_ids=link_ids,
+                preferred_center=None,
             )
 
-            if local_primitive is not None:
-                draw_plaquettes.append(local_primitive)
+            if selected is None:
+                continue
+
+            center = self._closed_visual_plaquette_center(selected)
+            canonical_draw_links = self._canonical_visual_cycle_draw_links(selected)
+
+            canonical_link_ids = tuple(int(draw_link.link_id) for draw_link in canonical_draw_links)
+            canonical_orientations = self._canonical_visual_cycle_orientations_from_draw_links(
+                center=center,
+                canonical_draw_links=canonical_draw_links,
+            )
+            canonical_midpoints = tuple(
+                self._draw_link_midpoint(draw_link) for draw_link in canonical_draw_links
+            )
+
+            draw_plaquettes.append(
+                _DrawPlaquette(
+                    plaquette_id=int(plaquette.id),
+                    image_shift=tuple(0 for _ in range(self.lattice.ndim)),
+                    visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
+                    center=(float(center[0]), float(center[1])),
+                    link_ids=canonical_link_ids,
+                    link_orientations=canonical_orientations,
+                    link_midpoints=canonical_midpoints,
+                )
+            )
 
         return self._collapse_duplicate_draw_plaquettes(draw_plaquettes)
-
-    def _fallback_draw_plaquette_primitive(
-        self,
-        *,
-        plaquette_id: int,
-        draw_links: list[_DrawLink],
-        preferred_center: npt.NDArray[np.float64] | None = None,
-    ) -> _DrawPlaquette | None:
-        """Fallback for small/degenerate tori.
-
-        The generic fallback is the same as the local visual primitive.
-        """
-        return self._local_draw_plaquette_primitive(
-            plaquette_id=plaquette_id,
-            draw_links=draw_links,
-        )
-
-    def _local_draw_plaquette_primitive(
-        self,
-        *,
-        plaquette_id: int,
-        draw_links: list[_DrawLink],
-    ) -> _DrawPlaquette | None:
-        """Build a generic plaquette primitive from the local visual patch.
-
-        This is the preferred generic path for circulation/resonance symbols.
-        It makes the symbol describe the visible local plaquette, which is
-        essential on small tori.
-        """
-        plaquette = self.lattice.plaquettes[plaquette_id]
-        link_ids = tuple(int(link_id) for link_id in plaquette.links)
-
-        if not self._is_supported_circulation_plaquette(link_ids):
-            return None
-
-        vertices = self._local_plaquette_vertices(plaquette_id=plaquette_id)
-
-        if len(vertices) != len(link_ids):
-            return None
-
-        center = np.mean(np.asarray(vertices, dtype=float), axis=0)
-
-        local_segments: list[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]] = []
-
-        for i in range(len(vertices)):
-            source = np.asarray(vertices[i], dtype=np.float64)
-            target = np.asarray(vertices[(i + 1) % len(vertices)], dtype=np.float64)
-            local_segments.append((source, target))
-
-        local_link_ids: list[int] = []
-        local_orientations: list[int] = []
-        local_midpoints: list[tuple[float, float]] = []
-
-        used_draw_link_keys: set[
-            tuple[int, tuple[int, tuple[int, ...]], tuple[int, tuple[int, ...]]]
-        ] = set()
-
-        for source, target in local_segments:
-            draw_link = self._nearest_draw_link_to_local_segment(
-                draw_links=draw_links,
-                source=source,
-                target=target,
-                excluded_keys=used_draw_link_keys,
-            )
-
-            if draw_link is None:
-                return None
-
-            used_draw_link_keys.add(
-                (
-                    int(draw_link.link_id),
-                    draw_link.source_key,
-                    draw_link.target_key,
-                )
-            )
-
-            midpoint = 0.5 * (source + target)
-
-            local_link_ids.append(int(draw_link.link_id))
-            local_orientations.append(
-                self._draw_link_orientation_against_local_segment(
-                    draw_link=draw_link,
-                    source=source,
-                    target=target,
-                )
-            )
-            local_midpoints.append((float(midpoint[0]), float(midpoint[1])))
-
-        if len(set(local_link_ids)) != len(local_link_ids):
-            # A local plaquette boundary should not reuse the same physical link
-            # twice. If this happens, fall back to the closed-cycle machinery.
-            return None
-
-        return _DrawPlaquette(
-            plaquette_id=int(plaquette.id),
-            image_shift=tuple(0 for _ in range(self.lattice.ndim)),
-            visual_cell=tuple(-1 for _ in range(self.lattice.ndim)),
-            center=(float(center[0]), float(center[1])),
-            link_ids=tuple(local_link_ids),
-            link_orientations=tuple(local_orientations),
-            link_midpoints=tuple(local_midpoints),
-        )
 
     def _canonical_visual_cycle_orientations_from_draw_links(
         self,
@@ -1956,272 +1655,6 @@ class BasisConfigurationVisualizer:
             orientations.append(orientation)
 
         return tuple(orientations)
-
-    def _positive_patch_position_bounds(
-        self,
-    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
-        """Return approximate plotting-coordinate bounds of the positive patch."""
-        base_positions = [
-            np.asarray(
-                self._apply_visual_transform(self._xy(self._site_plot_position(int(site.id)))),
-                dtype=float,
-            )
-            for site in self.lattice.sites
-        ]
-
-        if len(base_positions) == 0:
-            zero = np.zeros(2, dtype=float)
-            return zero, zero
-
-        periods = [np.asarray(vector, dtype=float) for vector in self._torus_translation_vectors()]
-
-        positions: list[np.ndarray] = []
-
-        if len(periods) == 0:
-            positions = base_positions
-        else:
-            for base in base_positions:
-                for shift in product((0, 1), repeat=len(periods)):
-                    position = np.array(base, dtype=float, copy=True)
-
-                    for coefficient, period in zip(shift, periods, strict=True):
-                        position = position + int(coefficient) * period
-
-                    positions.append(position)
-
-        xy = np.asarray(positions, dtype=float)
-        return np.min(xy, axis=0), np.max(xy, axis=0)
-
-    def _positive_patch_image_shift_for_point(
-        self,
-        point: npt.NDArray[np.float64],
-    ) -> npt.NDArray[np.float64]:
-        """Return a torus-period shift that places a point in the positive patch."""
-        if self.periodic_image_mode != "positive_patch":
-            return np.zeros(2, dtype=float)
-
-        periods = [np.asarray(vector, dtype=float) for vector in self._torus_translation_vectors()]
-
-        if len(periods) == 0:
-            return np.zeros(2, dtype=float)
-
-        lower, upper = self._positive_patch_position_bounds()
-
-        best_shift = np.zeros(2, dtype=float)
-        best_score: tuple[float, float, float, float] | None = None
-
-        # One period in either direction is enough for the current positive patch
-        # construction. Use a slightly wider range if you later support larger
-        # halo conventions.
-        for coefficients in product((-1, 0, 1), repeat=len(periods)):
-            shift_vector = np.zeros(2, dtype=float)
-
-            for coefficient, period in zip(coefficients, periods, strict=True):
-                shift_vector = shift_vector + int(coefficient) * period
-
-            candidate = np.asarray(point, dtype=float) + shift_vector
-
-            below = np.maximum(lower - candidate, 0.0)
-            above = np.maximum(candidate - upper, 0.0)
-            outside_distance = float(np.linalg.norm(below + above))
-
-            period_count = float(sum(abs(int(c)) for c in coefficients))
-
-            score = (
-                outside_distance,
-                period_count,
-                float(candidate[1]),
-                float(candidate[0]),
-            )
-
-            if best_score is None or score < best_score:
-                best_score = score
-                best_shift = shift_vector
-
-        return best_shift
-
-    def _shift_local_plaquette_vertices_to_positive_patch(
-        self,
-        vertices: list[npt.NDArray[np.float64]],
-    ) -> list[npt.NDArray[np.float64]]:
-        """Shift local plaquette vertices into the positive-patch image."""
-        if len(vertices) == 0:
-            return vertices
-
-        center = np.mean(np.asarray(vertices, dtype=float), axis=0)
-        shift = self._positive_patch_image_shift_for_point(center)
-
-        return [np.asarray(vertex, dtype=float) + shift for vertex in vertices]
-
-    def _nearest_draw_link_to_local_segment(
-        self,
-        *,
-        draw_links: list[_DrawLink],
-        source: npt.NDArray[np.float64],
-        target: npt.NDArray[np.float64],
-        excluded_keys: (
-            set[tuple[int, tuple[int, tuple[int, ...]], tuple[int, tuple[int, ...]]]] | None
-        ) = None,
-    ) -> _DrawLink | None:
-        """Find the actual drawn link that best matches a local plaquette edge."""
-        if excluded_keys is None:
-            excluded_keys = set()
-        local_midpoint = 0.5 * (source + target)
-        local_vector = target - source
-        local_length = float(np.linalg.norm(local_vector))
-
-        if local_length <= 1e-12:
-            return None
-
-        best: _DrawLink | None = None
-        best_score: tuple[float, float, float] | None = None
-
-        for draw_link in draw_links:
-            draw_key = (
-                int(draw_link.link_id),
-                draw_link.source_key,
-                draw_link.target_key,
-            )
-
-            if draw_key in excluded_keys:
-                continue
-
-            draw_source = np.asarray(draw_link.source_position, dtype=float)
-            draw_target = np.asarray(draw_link.target_position, dtype=float)
-            draw_midpoint = 0.5 * (draw_source + draw_target)
-            draw_vector = draw_target - draw_source
-            draw_length = float(np.linalg.norm(draw_vector))
-
-            if draw_length <= 1e-12:
-                continue
-
-            midpoint_distance = float(np.linalg.norm(draw_midpoint - local_midpoint))
-
-            cosine = abs(float(np.dot(local_vector, draw_vector)) / (local_length * draw_length))
-            direction_penalty = 1.0 - cosine
-            length_penalty = abs(draw_length - local_length)
-
-            score = (
-                midpoint_distance,
-                direction_penalty,
-                length_penalty,
-            )
-
-            if best_score is None or score < best_score:
-                best = draw_link
-                best_score = score
-
-        return best
-
-    @staticmethod
-    def _draw_link_orientation_against_local_segment(
-        *,
-        draw_link: _DrawLink,
-        source: npt.NDArray[np.float64],
-        target: npt.NDArray[np.float64],
-    ) -> int:
-        """Return whether draw-link direction agrees with a local edge segment."""
-        draw_source = np.asarray(draw_link.source_position, dtype=float)
-        draw_target = np.asarray(draw_link.target_position, dtype=float)
-
-        draw_vector = draw_target - draw_source
-        local_vector = target - source
-
-        return 1 if float(np.dot(draw_vector, local_vector)) >= 0.0 else -1
-
-    def _local_plaquette_vertices(
-        self,
-        *,
-        plaquette_id: int,
-    ) -> list[np.ndarray]:
-        """Return local unwrapped visual vertices for a plaquette."""
-        plaquette = self.lattice.plaquettes[plaquette_id]
-
-        site_ids = tuple(int(site_id) for site_id in getattr(plaquette, "sites", ()))
-        if len(site_ids) == 0:
-            return []
-
-        positions = [
-            np.asarray(
-                self._apply_visual_transform(self._xy(self._site_plot_position(site_id))),
-                dtype=float,
-            )
-            for site_id in site_ids
-        ]
-
-        if len(positions) == 0:
-            return []
-
-        unwrapped = [positions[0]]
-
-        for position in positions[1:]:
-            unwrapped.append(
-                self._nearest_periodic_image(
-                    position,
-                    unwrapped[-1],
-                )
-            )
-
-        return self._shift_local_plaquette_vertices_to_positive_patch(unwrapped)
-
-    def _natural_plaquette_center(
-        self,
-        *,
-        plaquette_id: int,
-    ) -> np.ndarray | None:
-        """Return the natural local visual center of a plaquette."""
-        vertices = self._local_plaquette_vertices(plaquette_id=plaquette_id)
-
-        if len(vertices) == 0:
-            return None
-
-        return np.mean(np.asarray(vertices, dtype=float), axis=0)
-
-    def _plaquette_physical_link_ids(
-        self,
-        *,
-        plaquette_id: int,
-    ) -> tuple[int, ...]:
-        """Return the physical boundary link order of a plaquette."""
-        plaquette = self.lattice.plaquettes[plaquette_id]
-        return tuple(int(link_id) for link_id in plaquette.links)
-
-    def _plaquette_physical_orientations(
-        self,
-        *,
-        plaquette_id: int,
-    ) -> tuple[int, ...]:
-        """Return plaquette link orientations in physical boundary order."""
-        plaquette = self.lattice.plaquettes[plaquette_id]
-        return tuple(int(orientation) for orientation in plaquette.orientations)
-
-    def _actual_draw_link_midpoints_by_id(
-        self,
-        draw_links: list[_DrawLink],
-    ) -> dict[int, list[tuple[float, float]]]:
-        """Return actual drawn midpoints grouped by physical link id."""
-        out: dict[int, list[tuple[float, float]]] = {}
-
-        for draw_link in draw_links:
-            midpoint = self._draw_link_midpoint(draw_link)
-            out.setdefault(int(draw_link.link_id), []).append(midpoint)
-
-        return out
-
-    @staticmethod
-    def _nearest_midpoint_to_center(
-        midpoints: list[tuple[float, float]],
-        center: Sequence[float],
-    ) -> tuple[float, float]:
-        """Choose the actual drawn midpoint closest to a plaquette center."""
-        center_array = np.asarray(center, dtype=float)
-
-        return min(
-            midpoints,
-            key=lambda midpoint: float(
-                np.linalg.norm(np.asarray(midpoint, dtype=float) - center_array)
-            ),
-        )
 
     def _is_supported_circulation_plaquette(
         self,
@@ -2560,18 +1993,7 @@ class BasisConfigurationVisualizer:
         draw_plaquettes: list[_DrawPlaquette],
         plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
     ) -> None:
-        if style == "auto":
-            raise ValueError("plaquette_symbol_style='auto' must be resolved before drawing.")
-
         if style == "none":
-            return
-
-        if style == "square_qlm":
-            self._draw_square_qlm_plaquette_symbols(
-                ax=ax,
-                config=config,
-                draw_plaquettes=draw_plaquettes,
-            )
             return
 
         if style == "circulation":
@@ -2591,7 +2013,9 @@ class BasisConfigurationVisualizer:
             )
             return
 
-        raise ValueError(f"Unsupported plaquette symbol style: {style!r}")
+        raise ValueError(
+            "plaquette_symbol_style must be 'auto', 'none', 'circulation', or 'resonance'."
+        )
 
     def _draw_square_qlm_plaquette_symbols(
         self,
@@ -2952,47 +2376,49 @@ class BasisConfigurationVisualizer:
         config: npt.NDArray[np.int64],
         draw_plaquettes: list[_DrawPlaquette],
     ) -> None:
-        for draw_plaquette in draw_plaquettes:
-            link_ids = tuple(int(link_id) for link_id in draw_plaquette.link_ids)
-            link_orientations = tuple(
-                int(orientation) for orientation in draw_plaquette.link_orientations
-            )
+        text_items: list[tuple[int, Sequence[float], str, str]] = []
 
-            if len(link_ids) == 0:
-                plaquette = self.lattice.plaquettes[draw_plaquette.plaquette_id]
-                link_ids = tuple(int(link_id) for link_id in plaquette.links)
-                link_orientations = tuple(
-                    int(orientation) for orientation in plaquette.orientations
+        for draw_plaquette in draw_plaquettes:
+            if isinstance(self.lattice, SquareLattice) and len(draw_plaquette.link_ids) == 4:
+                symbol_info = self._square_qlm_symbol_info(
+                    config=config,
+                    draw_plaquette=draw_plaquette,
                 )
 
-            values = [self.link_value(config, int(link_id)) for link_id in link_ids]
+                if symbol_info is None:
+                    continue
 
-            symbol_info = self._flux_circulation_symbol(
-                values,
-                link_orientations,
-            )
-
-            if symbol_info is not None:
                 symbol, color = symbol_info
-                center = draw_plaquette.center
-
-                ax.annotate(
-                    symbol,
-                    xy=(center[0], center[1]),
-                    xytext=self.style.plaquette_symbol_offset,
-                    textcoords="offset points",
-                    fontsize=self.style.plaquette_symbol_fontsize,
-                    color=color,
-                    ha="center",
-                    va="center",
-                    zorder=6,
+                text_items.append(
+                    (
+                        int(draw_plaquette.plaquette_id),
+                        draw_plaquette.center,
+                        symbol,
+                        color,
+                    )
                 )
                 continue
 
-            vulnerable_info = self._flux_one_vulnerable_link(
-                values,
-                link_orientations,
+            values = tuple(
+                self.link_value(config, int(link_id)) for link_id in draw_plaquette.link_ids
             )
+            orientations = tuple(int(x) for x in draw_plaquette.link_orientations)
+
+            symbol_info = self._flux_circulation_symbol(values, orientations)
+
+            if symbol_info is not None:
+                symbol, color = symbol_info
+                text_items.append(
+                    (
+                        int(draw_plaquette.plaquette_id),
+                        draw_plaquette.center,
+                        symbol,
+                        color,
+                    )
+                )
+                continue
+
+            vulnerable_info = self._flux_one_vulnerable_link(values, orientations)
 
             if vulnerable_info is None:
                 continue
@@ -3008,6 +2434,33 @@ class BasisConfigurationVisualizer:
                 link_midpoint=draw_plaquette.link_midpoints[vulnerable_index],
                 color=color,
             )
+
+    def _square_qlm_symbol_info(
+        self,
+        *,
+        config: npt.NDArray[np.int64],
+        draw_plaquette: _DrawPlaquette,
+    ) -> tuple[str, str] | None:
+        """Return the legacy square QLM glyph for a square plaquette.
+
+        This keeps _SQUARE_QLM_PLAQUETTE_SYMBOLS, but hides it behind the
+        generic 'circulation' style.
+        """
+        if len(draw_plaquette.link_ids) != 4:
+            return None
+
+        values = tuple(self.link_value(config, int(link_id)) for link_id in draw_plaquette.link_ids)
+
+        # Convert flux-like values to binary sign bits in plaquette order.
+        # Positive -> 1, non-positive -> 0.
+        key = "".join("1" if int(value) > 0 else "0" for value in values)
+
+        payload = _SQUARE_QLM_PLAQUETTE_SYMBOLS.get(key)
+
+        if payload is None:
+            return None
+
+        return payload["s"], payload["color"]
 
     def _plaquette_center_2d(
         self,
@@ -3701,12 +3154,13 @@ def plot_basis_config(
     ax=None,
     show: bool = True,
     backend: VisualizerBackend = "matplotlib",
-    mode: LinkPlotMode = "arrows",
+    mode: LinkPlotMode = "auto",
     with_site_labels: bool = True,
     with_site_values: bool = False,
     with_link_values: bool = False,
+    with_link_ids: bool = False,
     with_plaquette_symbols: bool = True,
-    plaquette_symbol_style: PlaquetteSymbolStyle = "square_qlm",
+    plaquette_symbol_style: PlaquetteSymbolStyle = "auto",
     title: str | None = None,
     periodic_image_mode: PeriodicImageMode = "positive_patch",
     collapse_duplicate_visual_links: bool = True,
@@ -3739,6 +3193,7 @@ def plot_basis_config(
         with_site_labels=with_site_labels,
         with_site_values=with_site_values,
         with_link_values=with_link_values,
+        with_link_ids=with_link_ids,
         with_plaquette_symbols=with_plaquette_symbols,
         plaquette_symbol_style=plaquette_symbol_style,
         title=title,
@@ -3949,7 +3404,7 @@ class BasisGridVisualizer:
         show_config_label: bool = False,
         config_label_style: BasisConfigLabelStyle = "compact",
         config_label_max_length: int = 48,
-        mode: str = "arrows",
+        mode: str = "auto",
         plaquette_symbols: PlaquetteSymbolStyle = "auto",
         figsize: tuple[float, float] | None = None,
         show: bool = True,
@@ -3998,8 +3453,6 @@ class BasisGridVisualizer:
                 generic QLM-like circulation marker. Draws circular arrows when
                 all link variables circulate consistently around a plaquette.
         """
-        import matplotlib.pyplot as plt
-
         arr = np.asarray(states, dtype=np.int64)
 
         if arr.ndim == 1:
@@ -4030,16 +3483,23 @@ class BasisGridVisualizer:
             site_label_style=self.site_label_style,
         )
 
-        resolved_plaquette_symbols = single_visualizer._resolve_plaquette_symbol_style(
+        if len(states) == 0:
+            raise ValueError("states must contain at least one configuration.")
+
+        first_state = np.asarray(states[0], dtype=np.int64)
+        resolved_mode = single_visualizer._resolve_link_plot_mode(
+            config=first_state,
             mode=mode,
+        )
+        resolved_plaquette_symbols = single_visualizer._resolve_plaquette_symbol_style(
+            mode=resolved_mode,
             plaquette_symbol_style=plaquette_symbols,
         )
+
         draw_nodes, draw_links = single_visualizer._draw_primitives()
 
         if resolved_plaquette_symbols == "none":
             draw_plaquettes = None
-        elif resolved_plaquette_symbols == "square_qlm":
-            draw_plaquettes = single_visualizer._draw_square_qlm_plaquette_primitives()
         else:
             draw_plaquettes = single_visualizer._draw_plaquette_primitives()
 
@@ -4094,7 +3554,11 @@ class BasisGridVisualizer:
                 draw_plaquettes=draw_plaquettes,
                 show=False,
                 backend=backend,
-                mode=mode,
+                mode=resolved_mode,
+                with_site_labels=single_plot_kwargs.get("with_site_labels", True),
+                with_site_values=single_plot_kwargs.get("with_site_values", False),
+                with_link_values=single_plot_kwargs.get("with_link_values", False),
+                with_link_ids=single_plot_kwargs.get("with_link_ids", False),
                 with_plaquette_symbols=(resolved_plaquette_symbols != "none"),
                 plaquette_symbol_style=resolved_plaquette_symbols,
                 title=title,
@@ -4272,7 +3736,7 @@ def plot_basis_grid(
     config_label_style: BasisConfigLabelStyle = "compact",
     config_label_max_length: int = 48,
     backend: VisualizerBackend = "matplotlib",
-    mode: LinkPlotMode = "arrows",
+    mode: LinkPlotMode = "auto",
     plaquette_symbols: PlaquetteSymbolStyle = "auto",
     periodic_image_mode: PeriodicImageMode = "positive_patch",
     collapse_duplicate_visual_links: bool = True,
