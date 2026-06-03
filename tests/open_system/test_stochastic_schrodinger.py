@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from qlinks.open_sys.stochastic_schrodinger import (
+from qlinks.open_system.stochastic_schrodinger import (
     ArrayC,
     EnsembleResult,
     TrajectoryResult,

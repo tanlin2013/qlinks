@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 
-from qlinks.open_sys.lindbladian import (
+from qlinks.open_system.lindbladian import (
     build_liouvillian,
     dark_state_residual,
     evolve_liouvillian_krylov,
