@@ -70,6 +70,15 @@ from qlinks.caging.solver import (
     solve_candidate,
     solve_candidates,
 )
+from qlinks.caging.support import (
+    CageRegionSupport,
+    CageSupportExtractionPolicy,
+    ReducedIZPatternSupport,
+    ReducedIZProbeSupport,
+    distinct_reduced_iz_pattern_supports,
+    extract_cage_region_support,
+    reduced_iz_probe_support_from_report,
+)
 from qlinks.caging.types import CageSolverConfig
 
 __all__ = [
@@ -130,4 +139,11 @@ __all__ = [
     "classify_full_state",
     "sector_mask_from_build_result",
     "sector_mask_from_sectors",
+    "CageRegionSupport",
+    "CageSupportExtractionPolicy",
+    "ReducedIZPatternSupport",
+    "ReducedIZProbeSupport",
+    "distinct_reduced_iz_pattern_supports",
+    "extract_cage_region_support",
+    "reduced_iz_probe_support_from_report",
 ]
