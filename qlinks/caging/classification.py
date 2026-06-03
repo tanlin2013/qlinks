@@ -29,6 +29,7 @@ IZProbeMechanismLabel: TypeAlias = Literal[
     "q_empty",
     "closed_by_known_zeros",
     "projector_like",
+    "collective_cancellation",
     "unexplained_leakage",
 ]
 IZTargetExplanationLabel: TypeAlias = Literal[
@@ -36,6 +37,11 @@ IZTargetExplanationLabel: TypeAlias = Literal[
     "destructive_iz",
     "projector_like_iz",
     "unexpected",
+]
+CollectiveCancellationMode: TypeAlias = Literal[
+    "disabled",
+    "same_local_support_sum",
+    "same_local_support_nullspace",
 ]
 SectorPolicy = Literal[
     "raise_if_disconnected",
@@ -52,6 +58,10 @@ class CageClassificationConfig:
     cancellation_tolerance: float = 1e-9
     action_tolerance: float = 1e-9
     sector_policy: SectorPolicy = "raise_if_disconnected"
+
+    collective_cancellation_mode: CollectiveCancellationMode = "same_local_support_sum"
+    collective_min_group_size: int = 2
+    collective_relation_tolerance: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,6 +130,14 @@ class InterferenceZeroReport:
     # Final source-probe label.
     probe_mechanism_label: IZProbeMechanismLabel
 
+    # Collective-cancellation diagnostics.
+    collective_cancellation_group_id: int | None = None
+    collective_cancellation_partner_zero_indices: NDArray[np.int64] = field(
+        default_factory=lambda: np.array([], dtype=np.int64)
+    )
+    collective_cancellation_coefficient: complex = 0.0 + 0.0j
+    collective_cancellation_norm: float = np.inf
+
     @property
     def local_region_size(self) -> int:
         return int(np.count_nonzero(self.local_mask))
@@ -147,6 +165,10 @@ class InterferenceZeroReport:
     @property
     def is_projector_like(self) -> bool:
         return self.probe_mechanism_label == "projector_like"
+
+    @property
+    def is_collective_cancellation(self) -> bool:
+        return self.probe_mechanism_label == "collective_cancellation"
 
     @property
     def is_invalid_probe(self) -> bool:
@@ -190,6 +212,25 @@ class InterferenceZeroReport:
 
 
 @dataclass(frozen=True, slots=True)
+class CollectiveCancellationReport:
+    """A group of reduced IZ probes whose complement leakages cancel together."""
+
+    group_id: int
+    source_zero_indices: NDArray[np.int64]
+    coefficients: NDArray[np.complex128]
+    individual_complement_action_norms: NDArray[np.float64]
+    collective_action_norm: float
+    collective_target_indices: NDArray[np.int64]
+    local_mask: NDArray[np.bool_]
+    local_region_size: int
+    relation_kind: Literal["unit_sum", "nullspace"]
+
+    @property
+    def group_size(self) -> int:
+        return int(self.source_zero_indices.size)
+
+
+@dataclass(frozen=True, slots=True)
 class CageClassificationReport:
     """Regional/extended diagnostic report for one cage state."""
 
@@ -214,6 +255,8 @@ class CageClassificationReport:
     n_projector_like_source_probes: int
     n_invalid_source_probes: int
     n_regional_source_probes: int
+    n_collective_cancellation_source_probes: int
+    collective_cancellation_source_zero_indices: NDArray[np.int64]
 
     # Source-zero index groups.
     q_empty_source_zero_indices: NDArray[np.int64]
@@ -252,6 +295,7 @@ class CageClassificationReport:
 
     # Details.
     zero_reports: tuple[InterferenceZeroReport, ...]
+    collective_cancellation_reports: tuple[CollectiveCancellationReport, ...]
     metadata: dict[str, object] = field(default_factory=dict)
 
     def __repr__(self) -> str:
@@ -354,6 +398,20 @@ class CageClassificationReport:
                     (
                         "unexplained-leakage source probes",
                         self.n_invalid_source_probes,
+                    ),
+                    (
+                        "collective-cancellation source probes",
+                        self.n_collective_cancellation_source_probes,
+                    ),
+                ],
+            ),
+            _rich_key_value_section(
+                "Collective cancellation",
+                [
+                    ("collective groups", len(self.collective_cancellation_reports)),
+                    (
+                        "collectively cancelled source zeros",
+                        _format_index_preview(self.collective_cancellation_source_zero_indices),
                     ),
                 ],
             ),
@@ -495,6 +553,9 @@ class CageClassificationReport:
                     self.n_closed_by_known_zero_network_source_probes
                 ),
                 "projector-like source probes": self.n_projector_like_source_probes,
+                "collective-cancellation source probes": (
+                    self.n_collective_cancellation_source_probes
+                ),
                 "unexplained-leakage source probes": (self.n_invalid_source_probes),
             },
             "Invalid probe reasons": {
@@ -628,6 +689,15 @@ def classify_full_state(
         config=config,
     )
 
+    zero_reports, collective_cancellation_reports = _annotate_collective_cancellations(
+        zero_reports,
+        full_state=full_state,
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+        domain_mask=domain_mask,
+        config=config,
+    )
+
     label = _classify_from_zero_reports(
         zero_reports=zero_reports,
         config=config,
@@ -679,6 +749,10 @@ def classify_full_state(
     projector_like_source_zero_indices = _zero_indices_with_mechanism(
         zero_reports,
         "projector_like",
+    )
+    collective_cancellation_source_zero_indices = _zero_indices_with_mechanism(
+        zero_reports,
+        "collective_cancellation",
     )
     invalid_source_zero_indices = _zero_indices_with_mechanism(
         zero_reports,
@@ -733,6 +807,11 @@ def classify_full_state(
             closed_by_known_zero_network_source_zero_indices
         ),
         projector_like_source_zero_indices=projector_like_source_zero_indices,
+        n_collective_cancellation_source_probes=int(
+            collective_cancellation_source_zero_indices.size
+        ),
+        collective_cancellation_source_zero_indices=(collective_cancellation_source_zero_indices),
+        collective_cancellation_reports=collective_cancellation_reports,
         invalid_source_zero_indices=invalid_source_zero_indices,
         regional_source_zero_indices=regional_source_zero_indices,
         n_trivial_targets=n_trivial_targets,
@@ -1144,6 +1223,106 @@ def _annotate_probe_mechanisms(
     return annotated_reports
 
 
+def _annotate_collective_cancellations(
+    zero_reports: list[InterferenceZeroReport],
+    *,
+    full_state: NDArray[np.complex128],
+    basis_configs: NDArray[np.integer],
+    config_to_index: dict[tuple[int, ...], int],
+    domain_mask: NDArray[np.bool_],
+    config: CageClassificationConfig,
+) -> tuple[list[InterferenceZeroReport], tuple[CollectiveCancellationReport, ...]]:
+    if config.collective_cancellation_mode == "disabled":
+        return zero_reports, ()
+
+    candidates = [
+        report
+        for report in zero_reports
+        if (
+            report.probe_mechanism_label == "unexplained_leakage"
+            and report.has_nonzero_complement_action
+            and not report.has_unexpected_targets
+        )
+    ]
+
+    if len(candidates) < config.collective_min_group_size:
+        return zero_reports, ()
+
+    groups = _group_reports_by_local_support(candidates)
+
+    collective_reports: list[CollectiveCancellationReport] = []
+    replacement_by_zero: dict[int, InterferenceZeroReport] = {}
+    next_group_id = 0
+
+    for grouped_reports in groups:
+        if len(grouped_reports) < config.collective_min_group_size:
+            continue
+
+        if config.collective_cancellation_mode == "same_local_support_sum":
+            collective = _find_unit_sum_collective_cancellation(
+                grouped_reports,
+                group_id=next_group_id,
+                full_state=full_state,
+                basis_configs=basis_configs,
+                config_to_index=config_to_index,
+                domain_mask=domain_mask,
+                config=config,
+            )
+        elif config.collective_cancellation_mode == "same_local_support_nullspace":
+            collective = _find_nullspace_collective_cancellation(
+                grouped_reports,
+                group_id=next_group_id,
+                full_state=full_state,
+                basis_configs=basis_configs,
+                config_to_index=config_to_index,
+                domain_mask=domain_mask,
+                config=config,
+            )
+        else:
+            raise ValueError(
+                "Unknown collective_cancellation_mode: " f"{config.collective_cancellation_mode!r}"
+            )
+
+        if collective is None:
+            continue
+
+        collective_reports.append(collective)
+
+        partners = collective.source_zero_indices
+        for source_zero, coefficient in zip(
+            collective.source_zero_indices,
+            collective.coefficients,
+            strict=True,
+        ):
+            original = next(
+                report for report in grouped_reports if int(report.zero_index) == int(source_zero)
+            )
+
+            replacement_by_zero[int(source_zero)] = _replace_interference_zero_report(
+                original,
+                probe_mechanism_label="collective_cancellation",
+                collective_cancellation_group_id=collective.group_id,
+                collective_cancellation_partner_zero_indices=partners,
+                collective_cancellation_coefficient=complex(coefficient),
+                collective_cancellation_norm=collective.collective_action_norm,
+                has_nonzero_complement_action=False,
+                nonzero_complement_action_target_indices=np.array([], dtype=np.int64),
+                explained_complement_target_indices=(original.complement_target_indices),
+                unexplained_complement_target_indices=np.array([], dtype=np.int64),
+            )
+
+        next_group_id += 1
+
+    if not replacement_by_zero:
+        return zero_reports, ()
+
+    annotated_reports = [
+        replacement_by_zero.get(int(report.zero_index), report) for report in zero_reports
+    ]
+
+    return annotated_reports, tuple(collective_reports)
+
+
 def _replace_interference_zero_report(
     report: InterferenceZeroReport,
     **updates: object,
@@ -1182,11 +1361,197 @@ def _replace_interference_zero_report(
             report.nonzero_complement_action_target_indices
         ),
         "probe_mechanism_label": report.probe_mechanism_label,
+        "collective_cancellation_group_id": report.collective_cancellation_group_id,
+        "collective_cancellation_partner_zero_indices": (
+            report.collective_cancellation_partner_zero_indices
+        ),
+        "collective_cancellation_coefficient": (report.collective_cancellation_coefficient),
+        "collective_cancellation_norm": report.collective_cancellation_norm,
     }
 
     values.update(updates)
 
     return InterferenceZeroReport(**values)
+
+
+def _complement_action_for_report(
+    report: InterferenceZeroReport,
+    *,
+    full_state: NDArray[np.complex128],
+    basis_configs: NDArray[np.integer],
+    config_to_index: dict[tuple[int, ...], int],
+    domain_mask: NDArray[np.bool_],
+    config: CageClassificationConfig,
+) -> tuple[NDArray[np.complex128], NDArray[np.int64]]:
+    action, target_indices, _input_indices = _apply_reduced_local_operator(
+        full_state,
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+        domain_mask=domain_mask,
+        common_mask=report.common_mask,
+        reference_config=basis_configs[int(report.zero_index)],
+        local_mask=report.local_mask,
+        local_transitions=report.local_transitions,
+        use_complement_common_sector=True,
+        amplitude_tolerance=config.amplitude_tolerance,
+    )
+
+    return action, target_indices
+
+
+def _find_unit_sum_collective_cancellation_from_actions(
+    reports: list[InterferenceZeroReport],
+    actions: list[NDArray[np.complex128]],
+    target_indices: list[NDArray[np.int64]],
+    *,
+    group_id: int,
+    config: CageClassificationConfig,
+) -> CollectiveCancellationReport | None:
+    if len(reports) < config.collective_min_group_size:
+        return None
+
+    if len(reports) != len(actions) or len(reports) != len(target_indices):
+        raise ValueError("reports, actions, and target_indices must have the same length.")
+
+    collective_action = np.sum(actions, axis=0)
+    collective_norm = float(np.linalg.norm(collective_action))
+
+    if collective_norm > _collective_tolerance(config):
+        return None
+
+    source_zero_indices = np.array(
+        [int(report.zero_index) for report in reports],
+        dtype=np.int64,
+    )
+    individual_norms = np.array(
+        [float(np.linalg.norm(action)) for action in actions],
+        dtype=np.float64,
+    )
+    collective_targets = np.array(
+        sorted({int(target) for targets in target_indices for target in targets}),
+        dtype=np.int64,
+    )
+
+    local_mask = np.array(reports[0].local_mask, dtype=np.bool_, copy=True)
+
+    return CollectiveCancellationReport(
+        group_id=group_id,
+        source_zero_indices=source_zero_indices,
+        coefficients=np.ones(len(reports), dtype=np.complex128),
+        individual_complement_action_norms=individual_norms,
+        collective_action_norm=collective_norm,
+        collective_target_indices=collective_targets,
+        local_mask=local_mask,
+        local_region_size=int(np.count_nonzero(local_mask)),
+        relation_kind="unit_sum",
+    )
+
+
+def _find_unit_sum_collective_cancellation(
+    reports: list[InterferenceZeroReport],
+    *,
+    group_id: int,
+    full_state: NDArray[np.complex128],
+    basis_configs: NDArray[np.integer],
+    config_to_index: dict[tuple[int, ...], int],
+    domain_mask: NDArray[np.bool_],
+    config: CageClassificationConfig,
+) -> CollectiveCancellationReport | None:
+    actions: list[NDArray[np.complex128]] = []
+    target_indices: list[NDArray[np.int64]] = []
+
+    for report in reports:
+        action, targets = _complement_action_for_report(
+            report,
+            full_state=full_state,
+            basis_configs=basis_configs,
+            config_to_index=config_to_index,
+            domain_mask=domain_mask,
+            config=config,
+        )
+        actions.append(action)
+        target_indices.append(targets)
+
+    return _find_unit_sum_collective_cancellation_from_actions(
+        reports,
+        actions,
+        target_indices,
+        group_id=group_id,
+        config=config,
+    )
+
+
+def _find_nullspace_collective_cancellation(
+    reports: list[InterferenceZeroReport],
+    *,
+    group_id: int,
+    full_state: NDArray[np.complex128],
+    basis_configs: NDArray[np.integer],
+    config_to_index: dict[tuple[int, ...], int],
+    domain_mask: NDArray[np.bool_],
+    config: CageClassificationConfig,
+) -> CollectiveCancellationReport | None:
+    actions: list[NDArray[np.complex128]] = []
+    target_sets: list[set[int]] = []
+
+    for report in reports:
+        action, targets = _complement_action_for_report(
+            report,
+            full_state=full_state,
+            basis_configs=basis_configs,
+            config_to_index=config_to_index,
+            domain_mask=domain_mask,
+            config=config,
+        )
+        actions.append(action)
+        target_sets.append({int(target) for target in targets})
+
+    leakage_matrix = np.column_stack(actions)
+
+    if leakage_matrix.shape[1] < config.collective_min_group_size:
+        return None
+
+    _u, singular_values, vh = np.linalg.svd(
+        leakage_matrix,
+        full_matrices=False,
+    )
+
+    smallest = float(singular_values[-1]) if singular_values.size else 0.0
+    if smallest > _collective_tolerance(config):
+        return None
+
+    coefficients = np.conjugate(vh[-1, :]).astype(np.complex128, copy=False)
+    collective_action = leakage_matrix @ coefficients
+    collective_norm = float(np.linalg.norm(collective_action))
+
+    if collective_norm > _collective_tolerance(config):
+        return None
+
+    source_zero_indices = np.array(
+        [int(report.zero_index) for report in reports],
+        dtype=np.int64,
+    )
+    individual_norms = np.array(
+        [float(np.linalg.norm(action)) for action in actions],
+        dtype=np.float64,
+    )
+
+    local_mask = np.array(reports[0].local_mask, dtype=np.bool_, copy=True)
+
+    return CollectiveCancellationReport(
+        group_id=group_id,
+        source_zero_indices=source_zero_indices,
+        coefficients=coefficients,
+        individual_complement_action_norms=individual_norms,
+        collective_action_norm=collective_norm,
+        collective_target_indices=np.array(
+            sorted(set().union(*target_sets)),
+            dtype=np.int64,
+        ),
+        local_mask=local_mask,
+        local_region_size=int(np.count_nonzero(local_mask)),
+        relation_kind="nullspace",
+    )
 
 
 def _common_mask(
@@ -1199,6 +1564,18 @@ def _common_mask(
     """
     reference = configs[0]
     return np.all(configs == reference[None, :], axis=0)
+
+
+def _group_reports_by_local_support(
+    reports: list[InterferenceZeroReport],
+) -> list[list[InterferenceZeroReport]]:
+    grouped: dict[tuple[int, ...], list[InterferenceZeroReport]] = {}
+
+    for report in reports:
+        key = tuple(int(index) for index in np.flatnonzero(report.local_mask))
+        grouped.setdefault(key, []).append(report)
+
+    return list(grouped.values())
 
 
 def _q_sector_weight(
@@ -1420,6 +1797,12 @@ def _complex_key(value: complex, *, digits: int = 12) -> tuple[float, float]:
     return round(float(np.real(value)), digits), round(float(np.imag(value)), digits)
 
 
+def _collective_tolerance(config: CageClassificationConfig) -> float:
+    if config.collective_relation_tolerance is not None:
+        return float(config.collective_relation_tolerance)
+    return float(config.action_tolerance)
+
+
 def _classify_from_zero_reports(
     *,
     zero_reports: list[InterferenceZeroReport],
@@ -1447,7 +1830,9 @@ def _classify_from_zero_reports(
     if any(report.is_invalid_probe for report in zero_reports):
         return "invalid_or_inconsistent"
 
-    if any(report.is_projector_like for report in zero_reports):
+    if any(
+        report.is_projector_like or report.is_collective_cancellation for report in zero_reports
+    ):
         return "extended_candidate"
 
     if all(
@@ -1578,6 +1963,19 @@ def _rich_zero_reports_section(
             (
                 "projector-annihilated inputs",
                 zero_report.projector_like_annihilated_input_indices.tolist(),
+            ),
+            ("collective group id", zero_report.collective_cancellation_group_id),
+            (
+                "collective partners",
+                zero_report.collective_cancellation_partner_zero_indices.tolist(),
+            ),
+            (
+                "collective coefficient",
+                zero_report.collective_cancellation_coefficient,
+            ),
+            (
+                "collective cancellation norm",
+                _format_float(zero_report.collective_cancellation_norm),
             ),
         ]
 

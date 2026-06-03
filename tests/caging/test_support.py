@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+from dataclasses import fields
 
 import numpy as np
 import pytest
@@ -8,12 +9,15 @@ import scipy.sparse as scipy_sparse
 
 from qlinks.caging.classification import (
     CageClassificationConfig,
+    CageClassificationReport,
     classify_full_state,
 )
 from qlinks.caging.support import (
     distinct_reduced_iz_pattern_supports,
     extract_cage_region_support,
 )
+
+from .test_collective_cancellation import _fake_zero_report
 
 
 def _binary_basis(n_variables: int) -> np.ndarray:
@@ -253,3 +257,196 @@ def test_extract_cage_region_support_can_ignore_unexplained_leakage():
 
     assert region.has_unexplained_leakage
     assert region.n_unexplained_leakage_probes > 0
+
+
+def _fake_classification_report(
+    zero_reports,
+) -> CageClassificationReport:
+    zero_reports = tuple(zero_reports)
+
+    empty_i64 = np.array([], dtype=np.int64)
+
+    collective_indices = np.array(
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if report.probe_mechanism_label == "collective_cancellation"
+        ],
+        dtype=np.int64,
+    )
+
+    unexplained_indices = np.array(
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if report.probe_mechanism_label == "unexplained_leakage"
+        ],
+        dtype=np.int64,
+    )
+
+    q_empty_indices = np.array(
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if report.probe_mechanism_label == "q_empty"
+        ],
+        dtype=np.int64,
+    )
+
+    closed_indices = np.array(
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if report.probe_mechanism_label == "closed_by_known_zeros"
+        ],
+        dtype=np.int64,
+    )
+
+    projector_indices = np.array(
+        [
+            int(report.zero_index)
+            for report in zero_reports
+            if report.probe_mechanism_label == "projector_like"
+        ],
+        dtype=np.int64,
+    )
+
+    regional_indices = np.concatenate([q_empty_indices, closed_indices]).astype(
+        np.int64, copy=False
+    )
+
+    extended_indices = np.concatenate([projector_indices, collective_indices]).astype(
+        np.int64, copy=False
+    )
+
+    n_complement_targets = sum(
+        int(report.complement_target_indices.size) for report in zero_reports
+    )
+    n_unexplained_complement_targets = sum(
+        int(report.unexplained_complement_target_indices.size) for report in zero_reports
+    )
+
+    kwargs = {
+        # High-level label and dimensions.
+        "label": "extended_candidate",
+        "hilbert_size": 8,
+        "support_size": 2,
+        "support_fraction": 2.0 / 8.0,
+        # Main zero-report payload.
+        "zero_reports": zero_reports,
+        "n_nontrivial_zeros": len(zero_reports),
+        "n_distinct_local_patterns": len(zero_reports),
+        # Complement target summaries.
+        "n_complement_targets": int(n_complement_targets),
+        "n_unexplained_complement_targets": int(n_unexplained_complement_targets),
+        "fraction_zeros_with_closed_complement_targets": 0.0,
+        # Mechanism counts / index arrays.
+        "n_q_empty_source_probes": int(q_empty_indices.size),
+        "q_empty_source_zero_indices": q_empty_indices,
+        "n_closed_by_known_zero_network_source_probes": int(closed_indices.size),
+        "closed_by_known_zero_network_source_zero_indices": closed_indices,
+        "n_projector_like_source_probes": int(projector_indices.size),
+        "projector_like_source_zero_indices": projector_indices,
+        "n_collective_cancellation_source_probes": int(collective_indices.size),
+        "collective_cancellation_source_zero_indices": collective_indices,
+        "n_invalid_source_probes": int(unexplained_indices.size),
+        "invalid_source_zero_indices": unexplained_indices,
+        # Regional / extended source summaries.
+        "n_regional_source_probes": int(regional_indices.size),
+        "regional_source_zero_indices": regional_indices,
+        "extended_source_zero_indices": extended_indices,
+        # Target-explanation summaries.
+        "n_trivial_targets": 0,
+        "n_known_nonprojector_iz_targets": 0,
+        "n_projector_like_iz_targets": 0,
+        "n_unexpected_targets": 0,
+        # Probe-failure summaries.
+        "n_unexpected_target_probe_failures": 0,
+        "n_nonzero_complement_action_probe_failures": int(unexplained_indices.size),
+        "unexpected_target_probe_failure_indices": empty_i64,
+        "nonzero_complement_action_probe_failure_indices": (unexplained_indices),
+        # Projector-like summaries.
+        "n_source_projector_like_probes": int(projector_indices.size),
+        "n_indirect_projector_like_probes": 0,
+        "n_projector_like_annihilated_inputs": 0,
+        "source_projector_like_probe_indices": projector_indices,
+        "indirect_projector_like_probe_indices": empty_i64,
+        "projector_like_annihilated_input_indices": empty_i64,
+        # Collective reports can be empty here. The support extractor only
+        # needs zero_reports and their mechanism labels/local masks.
+        "collective_cancellation_reports": tuple(),
+        # Norm summaries.
+        "mean_q_sector_weight": 0.0,
+        "min_q_sector_weight": 0.0,
+        "max_q_sector_weight": 0.0,
+        "mean_reduced_action_norm": 0.0,
+        "max_reduced_action_norm": 0.0,
+        "mean_complement_action_norm": 1.0,
+        "max_complement_action_norm": 1.0,
+    }
+
+    valid_fields = {field.name for field in fields(CageClassificationReport)}
+    filtered_kwargs = {key: value for key, value in kwargs.items() if key in valid_fields}
+
+    return CageClassificationReport(**filtered_kwargs)
+
+
+def test_extract_region_support_includes_collective_cancellation_probes():
+    local_mask_0 = np.array([False, True, True, False], dtype=np.bool_)
+    local_mask_1 = np.array([False, False, True, True], dtype=np.bool_)
+
+    report = _fake_classification_report(
+        [
+            _fake_zero_report(
+                zero_index=0,
+                local_mask=local_mask_0,
+                mechanism_label="collective_cancellation",
+                complement_action_norm=1.0,
+            ),
+            _fake_zero_report(
+                zero_index=4,
+                local_mask=local_mask_1,
+                mechanism_label="collective_cancellation",
+                complement_action_norm=1.0,
+            ),
+        ]
+    )
+
+    region = extract_cage_region_support(report)
+
+    assert region.variable_indices == (1, 2, 3)
+    assert region.region_size == 3
+    assert region.n_total_probes == 2
+    assert region.n_used_probes == 2
+    assert region.n_ignored_probes == 0
+    assert region.n_unexplained_leakage_probes == 0
+    assert not region.has_unexplained_leakage
+
+    assert {probe.mechanism_label for probe in region.probe_supports} == {"collective_cancellation"}
+
+
+def test_extract_region_support_can_exclude_collective_cancellation_probes():
+    local_mask = np.array([False, True, True, False], dtype=np.bool_)
+
+    report = _fake_classification_report(
+        [
+            _fake_zero_report(
+                zero_index=0,
+                local_mask=local_mask,
+                mechanism_label="collective_cancellation",
+                complement_action_norm=1.0,
+            )
+        ]
+    )
+
+    region = extract_cage_region_support(
+        report,
+        include_collective_cancellation=False,
+    )
+
+    assert region.variable_indices == ()
+    assert region.region_size == 0
+    assert region.n_total_probes == 1
+    assert region.n_used_probes == 0
+    assert region.n_ignored_probes == 1
+    assert region.n_unexplained_leakage_probes == 0

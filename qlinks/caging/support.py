@@ -74,6 +74,7 @@ def extract_cage_region_support(
     include_q_empty: bool = True,
     include_closed_by_known_zeros: bool = True,
     include_projector_like: bool = True,
+    include_collective_cancellation: bool = True,
     complement_action_tolerance: float | None = None,
 ) -> CageRegionSupport:
     """Extract the union support R from trusted reduced IZ probes.
@@ -96,6 +97,7 @@ def extract_cage_region_support(
             include_q_empty=include_q_empty,
             include_closed_by_known_zeros=include_closed_by_known_zeros,
             include_projector_like=include_projector_like,
+            include_collective_cancellation=include_collective_cancellation,
             complement_action_tolerance=complement_action_tolerance,
         )
 
@@ -168,6 +170,7 @@ def _should_use_probe_support(
     include_q_empty: bool,
     include_closed_by_known_zeros: bool,
     include_projector_like: bool,
+    include_collective_cancellation: bool = True,
     complement_action_tolerance: float | None,
 ) -> bool:
     if complement_action_tolerance is not None:
@@ -182,6 +185,9 @@ def _should_use_probe_support(
 
     if probe_support.mechanism_label == "projector_like":
         return include_projector_like
+
+    if probe_support.mechanism_label == "collective_cancellation":
+        return include_collective_cancellation
 
     if probe_support.mechanism_label == "unexplained_leakage":
         return False
