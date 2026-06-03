@@ -146,8 +146,6 @@ grid_visualizer.plot_cage_support(
     signature=signature,
     record_index=record_index,
     ncols=4,
-    mode="dimers",
-    plaquette_symbols="resonance",
     show_config_label=False,
 )
 ```
