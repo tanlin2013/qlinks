@@ -674,3 +674,124 @@ def test_networkx_orbit_colors_are_transparent() -> None:
     assert np.allclose(facecolors[:, 3], 0.4)
 
     plt.close(fig)
+
+
+def test_hamiltonian_graph_cage_subgraph_selects_support_and_zeros() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0, 1, 0, 0, 0],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+                [0, 0, 1, 0, 1],
+                [0, 0, 0, 1, 0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    vector = np.zeros(5, dtype=np.complex128)
+    vector[[1, 2]] = [1.0, -1.0]
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    subgraph = visualizer.subgraph_for_cage_state(
+        vector,
+        zero_indices=[0, 3],
+    )
+
+    np.testing.assert_array_equal(
+        subgraph.graph_data.original_indices,
+        np.asarray([0, 1, 2, 3], dtype=np.int64),
+    )
+
+    assert subgraph.graph_data.adjacency.shape == (4, 4)
+
+
+def test_hamiltonian_graph_cage_subgraph_can_drop_zero_zero_edges() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0, 1, 0, 0],
+                [1, 0, 1, 0],
+                [0, 1, 0, 1],
+                [0, 0, 1, 0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    vector = np.zeros(4, dtype=np.complex128)
+    vector[1] = 1.0
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    subgraph = visualizer.subgraph_for_cage_state(
+        vector,
+        zero_indices=[0, 2, 3],
+        include_zero_edges=False,
+    )
+
+    adjacency = subgraph.graph_data.adjacency.toarray()
+
+    # Keep 0-1 and 1-2, drop 2-3 because it is zero-zero.
+    assert adjacency[0, 1] != 0
+    assert adjacency[1, 2] != 0
+    assert adjacency[2, 3] == 0
+
+
+def test_cage_subgraph_keeps_projected_state_vector_for_coloring() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0, 1, 0, 0],
+                [1, 0, 1, 0],
+                [0, 1, 0, 1],
+                [0, 0, 1, 0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    vector = np.zeros(4, dtype=np.complex128)
+    vector[1] = 1.0
+    vector[2] = -0.5
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    subgraph = visualizer.subgraph_for_cage_state(
+        vector,
+        zero_indices=[0, 3],
+    )
+
+    np.testing.assert_array_equal(
+        subgraph.graph_data.original_indices,
+        np.asarray([0, 1, 2, 3], dtype=np.int64),
+    )
+
+    np.testing.assert_allclose(
+        subgraph.graph_data.state_vector,
+        vector,
+    )
+
+    values = subgraph.node_values(color_by="state_weight")
+
+    np.testing.assert_allclose(
+        values,
+        np.asarray([0.0, 1.0, 0.25, 0.0]),
+    )
+
+    subgraph = visualizer.subgraph_for_cage_state(
+        vector,
+        zero_indices=[0],
+    )
+
+    np.testing.assert_array_equal(
+        subgraph.graph_data.original_indices,
+        np.asarray([0, 1, 2], dtype=np.int64),
+    )
+
+    np.testing.assert_allclose(
+        subgraph.graph_data.state_vector,
+        vector[[0, 1, 2]],
+    )

@@ -60,6 +60,8 @@ class HamiltonianGraphData:
 
     adjacency: scipy_sparse.csr_array
     self_loop_values: npt.NDArray[np.complex128]
+    original_indices: npt.NDArray[np.int64] | None = None
+    state_vector: npt.NDArray[np.complex128] | None = None
 
     @property
     def n_vertices(self) -> int:
@@ -124,11 +126,13 @@ class HamiltonianGraphVisualizer:
 
         # For visualization, treat the graph as undirected.
         adjacency = _symmetrized_adjacency(adjacency)
+        n_vertices = int(adjacency.shape[0])
 
         return cls(
             graph_data=HamiltonianGraphData(
                 adjacency=adjacency,
                 self_loop_values=self_loop_values,
+                original_indices=np.arange(n_vertices, dtype=np.int64),
             ),
             style=HamiltonianGraphStyle() if style is None else style,
         )
@@ -180,14 +184,10 @@ class HamiltonianGraphVisualizer:
             "state_amplitude_abs",
             "state_phase",
         ):
-            if state_vector is None:
-                raise ValueError(f"state_vector is required for color_by={color_by!r}.")
-
-            vector = np.asarray(state_vector, dtype=np.complex128)
-            _validate_node_values(vector, self.graph_data.n_vertices)
+            vector = self._resolve_state_vector(state_vector)
 
             if color_by == "state_weight":
-                return np.abs(vector) ** 2
+                return (np.abs(vector) ** 2).astype(np.float64)
 
             if color_by == "state_amplitude_real":
                 return np.real(vector).astype(np.float64)
@@ -578,7 +578,21 @@ class HamiltonianGraphVisualizer:
 
         adjacency = self.graph_data.adjacency.tocoo()
         graph = nx.Graph()
-        graph.add_nodes_from(range(self.graph_data.n_vertices))
+        original_indices = self.graph_data.original_indices
+        state_vector = self.graph_data.state_vector
+
+        for node in range(self.graph_data.n_vertices):
+            graph.add_node(node)
+            graph.nodes[node]["local_index"] = int(node)
+
+            if original_indices is not None:
+                graph.nodes[node]["original_index"] = int(original_indices[node])
+
+            if state_vector is not None:
+                amplitude = complex(state_vector[node])
+                graph.nodes[node]["state_amplitude_real"] = float(amplitude.real)
+                graph.nodes[node]["state_amplitude_imag"] = float(amplitude.imag)
+                graph.nodes[node]["state_weight"] = float(abs(amplitude) ** 2)
 
         for row, col, value in zip(
             adjacency.row,
@@ -698,6 +712,7 @@ class HamiltonianGraphVisualizer:
             if color_by == "automorphism_orbit"
             else None
         )
+        original_indices = self.graph_data.original_indices
 
         for node in graph.nodes:
             position = np.asarray(positions[node], dtype=float)
@@ -710,6 +725,8 @@ class HamiltonianGraphVisualizer:
             graph.nodes[node]["self_loop_imag"] = float(np.imag(self_loops[node]))
             if orbit_labels is not None:
                 graph.nodes[node]["automorphism_orbit"] = int(orbit_labels[node])
+            if original_indices is not None:
+                graph.nodes[node]["original_index"] = int(original_indices[node])
 
             # Gephi GEXF reads this "viz" block as actual node position.
             graph.nodes[node]["viz"] = {
@@ -768,6 +785,10 @@ class HamiltonianGraphVisualizer:
             graph.vs[vertex_index]["degree"] = int(degrees[vertex_index])
             graph.vs[vertex_index]["self_loop_real"] = float(np.real(self_loops[vertex_index]))
             graph.vs[vertex_index]["self_loop_imag"] = float(np.imag(self_loops[vertex_index]))
+            if self.graph_data.original_indices is not None:
+                graph.vs[vertex_index]["original_index"] = int(
+                    self.graph_data.original_indices[vertex_index]
+                )
 
         # Attach edge weights from adjacency.
         weight_by_edge = {}
@@ -990,6 +1011,184 @@ class HamiltonianGraphVisualizer:
         raw_orbits = np.asarray([find(i) for i in range(n_vertices)], dtype=np.int64)
         return self._dense_orbit_labels(raw_orbits)
 
+    def _resolve_state_vector(
+        self,
+        state_vector: npt.ArrayLike | None,
+    ) -> npt.NDArray[np.complex128]:
+        if state_vector is not None:
+            vector = np.asarray(state_vector, dtype=np.complex128)
+        elif self.graph_data.state_vector is not None:
+            vector = np.asarray(self.graph_data.state_vector, dtype=np.complex128)
+        else:
+            raise ValueError("A state_vector is required for state-based node coloring.")
+
+        _validate_node_values(vector, self.graph_data.n_vertices)
+        return vector
+
+    @classmethod
+    def cage_subgraph_from_sparse_matrix(
+        cls,
+        matrix,
+        state_vector: npt.ArrayLike,
+        *,
+        zero_indices: Sequence[int] | None = None,
+        classification_report=None,
+        support_tolerance: float = 1.0e-10,
+        include_zero_edges: bool = True,
+        include_self_loops: bool = False,
+        weight_tolerance: float = 0.0,
+        style: HamiltonianGraphStyle | None = None,
+    ) -> HamiltonianGraphVisualizer:
+        """Build a cage-support-plus-zero subgraph visualizer from a sparse matrix."""
+        full = cls.from_sparse_matrix(
+            matrix,
+            include_self_loops=include_self_loops,
+            weight_tolerance=weight_tolerance,
+            style=style,
+        )
+
+        return full.subgraph_for_cage_state(
+            state_vector,
+            zero_indices=zero_indices,
+            classification_report=classification_report,
+            support_tolerance=support_tolerance,
+            include_zero_edges=include_zero_edges,
+        )
+
+    def subgraph_for_cage_state(
+        self,
+        state_vector: npt.ArrayLike,
+        *,
+        zero_indices: Sequence[int] | None = None,
+        classification_report=None,
+        support_tolerance: float = 1.0e-10,
+        include_zero_edges: bool = True,
+    ) -> HamiltonianGraphVisualizer:
+        """Return the graph induced by a cage support plus nontrivial zeros.
+
+        Parameters
+        ----------
+        state_vector:
+            Full Hilbert-space vector in the same basis as this graph.
+        zero_indices:
+            Optional explicit nontrivial-zero node indices.
+        classification_report:
+            Optional caging classification report. If supplied, this method tries
+            to extract zero indices from common report fields.
+        support_tolerance:
+            Nodes with |psi_i| > support_tolerance are included as cage support.
+        include_zero_edges:
+            If True, keep all induced edges among support and zero nodes.
+            If False, keep only edges incident to at least one support node.
+        """
+        vector = np.asarray(state_vector, dtype=np.complex128)
+        _validate_node_values(vector, self.graph_data.n_vertices)
+
+        support_indices = np.flatnonzero(np.abs(vector) > support_tolerance).astype(
+            np.int64,
+        )
+
+        extracted_zero_indices = self._extract_cage_zero_indices(
+            zero_indices=zero_indices,
+            classification_report=classification_report,
+        )
+
+        selected_indices = np.unique(
+            np.concatenate(
+                [
+                    support_indices,
+                    extracted_zero_indices,
+                ]
+            )
+        ).astype(np.int64)
+
+        if selected_indices.size == 0:
+            raise ValueError("No cage support or zero indices were selected.")
+
+        adjacency = self.graph_data.adjacency.tocsr()
+        sub_adjacency = adjacency[selected_indices, :][:, selected_indices].copy()
+
+        if not include_zero_edges:
+            support_mask = np.isin(selected_indices, support_indices)
+            edge_coo = sub_adjacency.tocoo()
+
+            keep = support_mask[edge_coo.row] | support_mask[edge_coo.col]
+
+            sub_adjacency = scipy_sparse.csr_array(
+                (
+                    edge_coo.data[keep],
+                    (edge_coo.row[keep], edge_coo.col[keep]),
+                ),
+                shape=sub_adjacency.shape,
+            )
+
+        sub_self_loops = self.graph_data.self_loop_values[selected_indices]
+        sub_state_vector = vector[selected_indices]
+
+        region_labels = np.zeros(selected_indices.size, dtype=np.int64)
+        region_labels[np.isin(selected_indices, support_indices)] = 1
+        region_labels[np.isin(selected_indices, extracted_zero_indices)] = 2
+
+        # If a node is both in support and zero_indices, support wins.
+        region_labels[np.isin(selected_indices, support_indices)] = 1
+
+        return HamiltonianGraphVisualizer(
+            graph_data=HamiltonianGraphData(
+                adjacency=scipy_sparse.csr_array(sub_adjacency),
+                self_loop_values=np.asarray(sub_self_loops, dtype=np.complex128),
+                original_indices=selected_indices,
+                state_vector=np.asarray(sub_state_vector, dtype=np.complex128),
+            ),
+            style=self.style,
+        )
+
+    @staticmethod
+    def _extract_cage_zero_indices(
+        *,
+        zero_indices: Sequence[int] | None,
+        classification_report,
+    ) -> npt.NDArray[np.int64]:
+        """Extract nontrivial-zero node indices from explicit input or report."""
+        indices: list[int] = []
+
+        if zero_indices is not None:
+            indices.extend(int(index) for index in zero_indices)
+
+        if classification_report is not None:
+            candidate_field_names = (
+                "nontrivial_zero_indices",
+                "zero_indices",
+                "known_zero_indices",
+                "q_empty_zero_indices",
+                "closed_by_known_zeros_indices",
+                "projector_like_zero_indices",
+                "collective_cancellation_zero_indices",
+            )
+
+            for field_name in candidate_field_names:
+                if not hasattr(classification_report, field_name):
+                    continue
+
+                value = getattr(classification_report, field_name)
+
+                if value is None:
+                    continue
+
+                indices.extend(_flatten_int_indices(value))
+
+            # Fallback for report.zero_reports, if present.
+            zero_reports = getattr(classification_report, "zero_reports", None)
+            if zero_reports is not None:
+                for zero_report in zero_reports:
+                    zero_index = getattr(zero_report, "zero_index", None)
+                    if zero_index is not None:
+                        indices.append(int(zero_index))
+
+        if len(indices) == 0:
+            return np.asarray([], dtype=np.int64)
+
+        return np.unique(np.asarray(indices, dtype=np.int64))
+
 
 def _as_csr_array(matrix) -> scipy_sparse.csr_array:
     """Convert dense or sparse input to ``csr_array``."""
@@ -1022,6 +1221,32 @@ def _validate_node_values(
 
     if values_array.shape[0] != n_vertices:
         raise ValueError(f"Expected {n_vertices} node values, got {values_array.shape[0]}.")
+
+
+def _flatten_int_indices(value) -> list[int]:
+    """Flatten nested integer-like containers into a list of ints."""
+    if value is None:
+        return []
+
+    if isinstance(value, (int, np.integer)):
+        return [int(value)]
+
+    if isinstance(value, np.ndarray):
+        return [int(x) for x in value.ravel().tolist()]
+
+    if isinstance(value, dict):
+        out: list[int] = []
+        for item in value.values():
+            out.extend(_flatten_int_indices(item))
+        return out
+
+    if isinstance(value, (list, tuple, set, frozenset)):
+        out: list[int] = []
+        for item in value:
+            out.extend(_flatten_int_indices(item))
+        return out
+
+    return []
 
 
 def bipartition_labels(
