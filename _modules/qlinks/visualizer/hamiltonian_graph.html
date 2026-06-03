@@ -372,6 +372,8 @@
 
     <span class="n">adjacency</span><span class="p">:</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_array</span>
     <span class="n">self_loop_values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">original_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">state_vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">n_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -441,11 +443,13 @@
 
         <span class="c1"># For visualization, treat the graph as undirected.</span>
         <span class="n">adjacency</span> <span class="o">=</span> <span class="n">_symmetrized_adjacency</span><span class="p">(</span><span class="n">adjacency</span><span class="p">)</span>
+        <span class="n">n_vertices</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">adjacency</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">graph_data</span><span class="o">=</span><span class="n">HamiltonianGraphData</span><span class="p">(</span>
                 <span class="n">adjacency</span><span class="o">=</span><span class="n">adjacency</span><span class="p">,</span>
                 <span class="n">self_loop_values</span><span class="o">=</span><span class="n">self_loop_values</span><span class="p">,</span>
+                <span class="n">original_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
             <span class="p">),</span>
             <span class="n">style</span><span class="o">=</span><span class="n">HamiltonianGraphStyle</span><span class="p">()</span> <span class="k">if</span> <span class="n">style</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">style</span><span class="p">,</span>
         <span class="p">)</span></div>
@@ -503,14 +507,10 @@
             <span class="s2">&quot;state_amplitude_abs&quot;</span><span class="p">,</span>
             <span class="s2">&quot;state_phase&quot;</span><span class="p">,</span>
         <span class="p">):</span>
-            <span class="k">if</span> <span class="n">state_vector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;state_vector is required for color_by=</span><span class="si">{</span><span class="n">color_by</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-            <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-            <span class="n">_validate_node_values</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">n_vertices</span><span class="p">)</span>
+            <span class="n">vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_state_vector</span><span class="p">(</span><span class="n">state_vector</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;state_weight&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;state_amplitude_real&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
@@ -910,7 +910,21 @@
 
         <span class="n">adjacency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">adjacency</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">n_vertices</span><span class="p">))</span>
+        <span class="n">original_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">original_indices</span>
+        <span class="n">state_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">state_vector</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">n_vertices</span><span class="p">):</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;local_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">original_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;original_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">original_indices</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">state_vector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">amplitude</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">state_vector</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;state_amplitude_real&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">amplitude</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;state_amplitude_imag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">amplitude</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;state_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">amplitude</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
             <span class="n">adjacency</span><span class="o">.</span><span class="n">row</span><span class="p">,</span>
@@ -1036,6 +1050,7 @@
             <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">&quot;automorphism_orbit&quot;</span>
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
+        <span class="n">original_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">original_indices</span>
 
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
             <span class="n">position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -1048,6 +1063,8 @@
             <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;self_loop_imag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">self_loops</span><span class="p">[</span><span class="n">node</span><span class="p">]))</span>
             <span class="k">if</span> <span class="n">orbit_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;automorphism_orbit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">orbit_labels</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">original_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;original_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">original_indices</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
 
             <span class="c1"># Gephi GEXF reads this &quot;viz&quot; block as actual node position.</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;viz&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -1109,6 +1126,10 @@
             <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">][</span><span class="s2">&quot;degree&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">degrees</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">])</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">][</span><span class="s2">&quot;self_loop_real&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">self_loops</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">]))</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">][</span><span class="s2">&quot;self_loop_imag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">self_loops</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">original_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">][</span><span class="s2">&quot;original_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">original_indices</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">]</span>
+                <span class="p">)</span>
 
         <span class="c1"># Attach edge weights from adjacency.</span>
         <span class="n">weight_by_edge</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1339,7 +1360,191 @@
                 <span class="n">union</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
 
         <span class="n">raw_orbits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">find</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dense_orbit_labels</span><span class="p">(</span><span class="n">raw_orbits</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dense_orbit_labels</span><span class="p">(</span><span class="n">raw_orbits</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_state_vector</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state_vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">state_vector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">state_vector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">state_vector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A state_vector is required for state-based node coloring.&quot;</span><span class="p">)</span>
+
+        <span class="n">_validate_node_values</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">n_vertices</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vector</span>
+
+<div class="viewcode-block" id="HamiltonianGraphVisualizer.cage_subgraph_from_sparse_matrix">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphVisualizer.cage_subgraph_from_sparse_matrix">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cage_subgraph_from_sparse_matrix</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">matrix</span><span class="p">,</span>
+        <span class="n">state_vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">zero_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">classification_report</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">support_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+        <span class="n">include_zero_edges</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_self_loops</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">weight_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">HamiltonianGraphStyle</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HamiltonianGraphVisualizer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a cage-support-plus-zero subgraph visualizer from a sparse matrix.&quot;&quot;&quot;</span>
+        <span class="n">full</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_sparse_matrix</span><span class="p">(</span>
+            <span class="n">matrix</span><span class="p">,</span>
+            <span class="n">include_self_loops</span><span class="o">=</span><span class="n">include_self_loops</span><span class="p">,</span>
+            <span class="n">weight_tolerance</span><span class="o">=</span><span class="n">weight_tolerance</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">full</span><span class="o">.</span><span class="n">subgraph_for_cage_state</span><span class="p">(</span>
+            <span class="n">state_vector</span><span class="p">,</span>
+            <span class="n">zero_indices</span><span class="o">=</span><span class="n">zero_indices</span><span class="p">,</span>
+            <span class="n">classification_report</span><span class="o">=</span><span class="n">classification_report</span><span class="p">,</span>
+            <span class="n">support_tolerance</span><span class="o">=</span><span class="n">support_tolerance</span><span class="p">,</span>
+            <span class="n">include_zero_edges</span><span class="o">=</span><span class="n">include_zero_edges</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HamiltonianGraphVisualizer.subgraph_for_cage_state">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphVisualizer.subgraph_for_cage_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">subgraph_for_cage_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state_vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">zero_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">classification_report</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">support_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+        <span class="n">include_zero_edges</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HamiltonianGraphVisualizer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the graph induced by a cage support plus nontrivial zeros.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state_vector:</span>
+<span class="sd">            Full Hilbert-space vector in the same basis as this graph.</span>
+<span class="sd">        zero_indices:</span>
+<span class="sd">            Optional explicit nontrivial-zero node indices.</span>
+<span class="sd">        classification_report:</span>
+<span class="sd">            Optional caging classification report. If supplied, this method tries</span>
+<span class="sd">            to extract zero indices from common report fields.</span>
+<span class="sd">        support_tolerance:</span>
+<span class="sd">            Nodes with |psi_i| &gt; support_tolerance are included as cage support.</span>
+<span class="sd">        include_zero_edges:</span>
+<span class="sd">            If True, keep all induced edges among support and zero nodes.</span>
+<span class="sd">            If False, keep only edges incident to at least one support node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">_validate_node_values</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">n_vertices</span><span class="p">)</span>
+
+        <span class="n">support_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">support_tolerance</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">extracted_zero_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_cage_zero_indices</span><span class="p">(</span>
+            <span class="n">zero_indices</span><span class="o">=</span><span class="n">zero_indices</span><span class="p">,</span>
+            <span class="n">classification_report</span><span class="o">=</span><span class="n">classification_report</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">selected_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">support_indices</span><span class="p">,</span>
+                    <span class="n">extracted_zero_indices</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">selected_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No cage support or zero indices were selected.&quot;</span><span class="p">)</span>
+
+        <span class="n">adjacency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">adjacency</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        <span class="n">sub_adjacency</span> <span class="o">=</span> <span class="n">adjacency</span><span class="p">[</span><span class="n">selected_indices</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">selected_indices</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">include_zero_edges</span><span class="p">:</span>
+            <span class="n">support_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">,</span> <span class="n">support_indices</span><span class="p">)</span>
+            <span class="n">edge_coo</span> <span class="o">=</span> <span class="n">sub_adjacency</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+
+            <span class="n">keep</span> <span class="o">=</span> <span class="n">support_mask</span><span class="p">[</span><span class="n">edge_coo</span><span class="o">.</span><span class="n">row</span><span class="p">]</span> <span class="o">|</span> <span class="n">support_mask</span><span class="p">[</span><span class="n">edge_coo</span><span class="o">.</span><span class="n">col</span><span class="p">]</span>
+
+            <span class="n">sub_adjacency</span> <span class="o">=</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">edge_coo</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span>
+                    <span class="p">(</span><span class="n">edge_coo</span><span class="o">.</span><span class="n">row</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span> <span class="n">edge_coo</span><span class="o">.</span><span class="n">col</span><span class="p">[</span><span class="n">keep</span><span class="p">]),</span>
+                <span class="p">),</span>
+                <span class="n">shape</span><span class="o">=</span><span class="n">sub_adjacency</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">sub_self_loops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_data</span><span class="o">.</span><span class="n">self_loop_values</span><span class="p">[</span><span class="n">selected_indices</span><span class="p">]</span>
+        <span class="n">sub_state_vector</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="n">selected_indices</span><span class="p">]</span>
+
+        <span class="n">region_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">selected_indices</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">region_labels</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">,</span> <span class="n">support_indices</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">region_labels</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">,</span> <span class="n">extracted_zero_indices</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="c1"># If a node is both in support and zero_indices, support wins.</span>
+        <span class="n">region_labels</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">,</span> <span class="n">support_indices</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">HamiltonianGraphVisualizer</span><span class="p">(</span>
+            <span class="n">graph_data</span><span class="o">=</span><span class="n">HamiltonianGraphData</span><span class="p">(</span>
+                <span class="n">adjacency</span><span class="o">=</span><span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">sub_adjacency</span><span class="p">),</span>
+                <span class="n">self_loop_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sub_self_loops</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+                <span class="n">original_indices</span><span class="o">=</span><span class="n">selected_indices</span><span class="p">,</span>
+                <span class="n">state_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sub_state_vector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">style</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_cage_zero_indices</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">zero_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">classification_report</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract nontrivial-zero node indices from explicit input or report.&quot;&quot;&quot;</span>
+        <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">zero_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">indices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">zero_indices</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">classification_report</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">candidate_field_names</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;nontrivial_zero_indices&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;zero_indices&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;known_zero_indices&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;q_empty_zero_indices&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;closed_by_known_zeros_indices&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;projector_like_zero_indices&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;collective_cancellation_zero_indices&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="n">candidate_field_names</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">classification_report</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+                    <span class="k">continue</span>
+
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">classification_report</span><span class="p">,</span> <span class="n">field_name</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">indices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_flatten_int_indices</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+            <span class="c1"># Fallback for report.zero_reports, if present.</span>
+            <span class="n">zero_reports</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">classification_report</span><span class="p">,</span> <span class="s2">&quot;zero_reports&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">zero_reports</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">zero_report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">:</span>
+                    <span class="n">zero_index</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">zero_report</span><span class="p">,</span> <span class="s2">&quot;zero_index&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">zero_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">zero_index</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span></div>
 
 
 
@@ -1374,6 +1579,32 @@
 
     <span class="k">if</span> <span class="n">values_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">n_vertices</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected </span><span class="si">{</span><span class="n">n_vertices</span><span class="si">}</span><span class="s2"> node values, got </span><span class="si">{</span><span class="n">values_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_flatten_int_indices</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flatten nested integer-like containers into a list of ints.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_flatten_int_indices</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">set</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">)):</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_flatten_int_indices</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">return</span> <span class="p">[]</span>
 
 
 <div class="viewcode-block" id="bipartition_labels">

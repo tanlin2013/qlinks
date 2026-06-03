@@ -348,6 +348,11 @@
     <span class="n">is_zero_coupling</span><span class="p">,</span>
     <span class="n">plaquette_coupling_value</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.local_terms</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LocalOperatorKind</span><span class="p">,</span>
+    <span class="n">LocalTermDescriptor</span><span class="p">,</span>
+    <span class="n">LocalTermKind</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.operators</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">PlaquettePatternOperator</span><span class="p">,</span>
     <span class="n">UpdatePlaquettePatternOperator</span><span class="p">,</span>
@@ -476,48 +481,16 @@
             <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
 
         <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coupling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
-
-                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">PlaquettePatternOperator</span><span class="o">.</span><span class="n">alternating_binary_flip</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
-                        <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
-                    <span class="p">)</span>
+        <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+            <span class="n">operators</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_make_single_kinetic_operator</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+                    <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">,</span>
                 <span class="p">)</span>
-
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coupling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
-
-                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">BitmaskAlternatingPlaquetteFlipOperator</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
-                        <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="s2">&quot;Generic optimized QDM operators are not implemented yet. &quot;</span>
-                <span class="s2">&quot;Use builder=&#39;sparse&#39; or builder=&#39;bitmask&#39;.&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="QDMBase.make_potential_operators">
@@ -537,52 +510,16 @@
             <span class="k">return</span> <span class="p">()</span>
 
         <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">continue</span>
-
-                <span class="n">operators</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                    <span class="n">alternating_binary_flippability_projectors</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
-                    <span class="p">)</span>
+        <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+            <span class="n">operators</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_make_single_potential_operators</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+                    <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">,</span>
                 <span class="p">)</span>
-
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">continue</span>
-
-                <span class="n">operators</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                    <span class="n">bitmask_alternating_flippability_projectors</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="s2">&quot;Generic optimized QDM potential is not implemented yet. &quot;</span>
-                <span class="s2">&quot;Use builder=&#39;sparse&#39; or builder=&#39;bitmask&#39;.&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="QDMBase.make_operators">
@@ -634,6 +571,174 @@
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_single_kinetic_operator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+        <span class="n">coupling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">PlaquettePatternOperator</span><span class="o">.</span><span class="n">alternating_binary_flip</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
+                    <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">BitmaskAlternatingPlaquetteFlipOperator</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
+                    <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Generic optimized QDM operators are not implemented yet. &quot;</span>
+                <span class="s2">&quot;Use builder=&#39;sparse&#39; or builder=&#39;bitmask&#39;.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_single_potential_operators</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+        <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">alternating_binary_flippability_projectors</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">bitmask_alternating_flippability_projectors</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Generic optimized QDM potential is not implemented yet. &quot;</span>
+                <span class="s2">&quot;Use builder=&#39;sparse&#39; or builder=&#39;bitmask&#39;.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QDMBase.local_term_descriptors">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.QDMBase.local_term_descriptors">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">local_term_descriptors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">operator_kind</span><span class="p">:</span> <span class="n">LocalOperatorKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">term_kind</span><span class="p">:</span> <span class="n">LocalTermKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">term_kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;plaquette&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">()</span>
+
+        <span class="n">descriptors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+            <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+            <span class="n">support_links</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_links</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">operator_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">,</span> <span class="s2">&quot;hamiltonian&quot;</span><span class="p">):</span>
+                <span class="n">descriptors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">LocalTermDescriptor</span><span class="p">(</span>
+                        <span class="n">term_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                        <span class="n">term_kind</span><span class="o">=</span><span class="s2">&quot;plaquette&quot;</span><span class="p">,</span>
+                        <span class="n">operator_kind</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
+                        <span class="n">support_links</span><span class="o">=</span><span class="n">support_links</span><span class="p">,</span>
+                        <span class="n">support_plaquettes</span><span class="o">=</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">,),</span>
+                        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;K_</span><span class="si">{</span><span class="n">plaquette_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">operator_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;potential&quot;</span><span class="p">,</span> <span class="s2">&quot;hamiltonian&quot;</span><span class="p">):</span>
+                <span class="n">descriptors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">LocalTermDescriptor</span><span class="p">(</span>
+                        <span class="n">term_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                        <span class="n">term_kind</span><span class="o">=</span><span class="s2">&quot;plaquette&quot;</span><span class="p">,</span>
+                        <span class="n">operator_kind</span><span class="o">=</span><span class="s2">&quot;potential&quot;</span><span class="p">,</span>
+                        <span class="n">support_links</span><span class="o">=</span><span class="n">support_links</span><span class="p">,</span>
+                        <span class="n">support_plaquettes</span><span class="o">=</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">,),</span>
+                        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;V_</span><span class="si">{</span><span class="n">plaquette_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">descriptors</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QDMBase.make_local_term">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.QDMBase.make_local_term">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_local_term</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">descriptor</span><span class="p">:</span> <span class="n">LocalTermDescriptor</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HamiltonianTermSpec</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">term_kind</span> <span class="o">!=</span> <span class="s2">&quot;plaquette&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;QDM local terms currently only support plaquette terms.&quot;</span><span class="p">)</span>
+
+        <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">term_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">:</span>
+            <span class="n">operators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_single_kinetic_operator</span><span class="p">(</span>
+                <span class="n">layout</span><span class="p">,</span>
+                <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">HamiltonianTermSpec</span><span class="o">.</span><span class="n">from_operators</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;kinetic_</span><span class="si">{</span><span class="n">plaquette_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">operators</span><span class="o">=</span><span class="n">operators</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;potential&quot;</span><span class="p">:</span>
+            <span class="n">operators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_single_potential_operators</span><span class="p">(</span>
+                <span class="n">layout</span><span class="p">,</span>
+                <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">HamiltonianTermSpec</span><span class="o">.</span><span class="n">from_operators</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;potential_</span><span class="si">{</span><span class="n">plaquette_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">operators</span><span class="o">=</span><span class="n">operators</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;potential&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;descriptor.operator_kind must be &#39;kinetic&#39; or &#39;potential&#39; for QDM.&quot;</span><span class="p">)</span></div>
 </div>
 
 
@@ -771,12 +876,11 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sectors</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SquareQDMModel.make_kinetic_operators">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.SquareQDMModel.make_kinetic_operators">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">make_kinetic_operators</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_single_kinetic_operator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
+        <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -786,127 +890,79 @@
 <span class="sd">        plaquettes, but the specialized operator preserves the old API and</span>
 <span class="sd">        square-QDM convention explicitly.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
-
-        <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">coupling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coupling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
-
-                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">PlaquettePatternOperator</span><span class="o">.</span><span class="n">qdm_flip</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
-                        <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">PlaquettePatternOperator</span><span class="o">.</span><span class="n">qdm_flip</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
+                    <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coupling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
-
-                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">UpdatePlaquettePatternOperator</span><span class="o">.</span><span class="n">qdm_flip</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
-                        <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">UpdatePlaquettePatternOperator</span><span class="o">.</span><span class="n">qdm_flip</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
+                    <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coupling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_kin_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">BitmaskQDMFlipOperator</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
+                    <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
 
-                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">BitmaskQDMFlipOperator</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_forward</span><span class="p">(),</span>
-                        <span class="n">reverse_coefficient</span><span class="o">=</span><span class="n">coupling</span><span class="o">.</span><span class="n">resolved_backward</span><span class="p">(),</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
-
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="SquareQDMModel.make_potential_operators">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.SquareQDMModel.make_potential_operators">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">make_potential_operators</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_single_potential_operators</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
+        <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Square QDM keeps the specialized 1010/0101 flippability projectors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+        <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
-
-        <span class="k">if</span> <span class="n">is_zero_coupling</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_pot</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">()</span>
 
-        <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">continue</span>
-
-                <span class="n">operators</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                    <span class="n">qdm_flippability_projectors</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
-                    <span class="p">)</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">qdm_flippability_projectors</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
                 <span class="p">)</span>
-
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
-                <span class="n">plaquette_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coup_pot_at</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">continue</span>
-
-                <span class="n">operators</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                    <span class="n">bitmask_qdm_flippability_projectors</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                        <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
-                    <span class="p">)</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">bitmask_qdm_flippability_projectors</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">plaquette_id</span><span class="o">=</span><span class="n">plaquette_id</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
                 <span class="p">)</span>
-
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
@@ -915,7 +971,6 @@
             <span class="p">)</span>
 
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported builder: </span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-</div>
 
 
 
