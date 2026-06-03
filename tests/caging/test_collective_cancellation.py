@@ -8,6 +8,7 @@ import numpy as np
 from qlinks.caging.classification import (
     CageClassificationConfig,
     InterferenceZeroReport,
+    _find_nullspace_collective_cancellation_from_actions,
     _find_unit_sum_collective_cancellation_from_actions,
 )
 
@@ -201,6 +202,120 @@ def test_unit_sum_collective_cancellation_from_actions_rejects_nonzero_sum():
         ],
         group_id=0,
         config=config,
+        grouping_kind="same_local_support",
     )
 
     assert collective is None
+
+
+def test_all_problematic_unit_sum_collective_cancellation_from_actions():
+    config = CageClassificationConfig(
+        amplitude_tolerance=1e-12,
+        cancellation_tolerance=1e-12,
+        action_tolerance=1e-12,
+        collective_cancellation_mode="all_problematic_sum",
+    )
+
+    reports = [
+        _fake_zero_report(
+            zero_index=0,
+            local_mask=np.array([True, False, False], dtype=np.bool_),
+            complement_action_norm=1.0,
+        ),
+        _fake_zero_report(
+            zero_index=4,
+            local_mask=np.array([False, True, False], dtype=np.bool_),
+            complement_action_norm=1.0,
+        ),
+        _fake_zero_report(
+            zero_index=6,
+            local_mask=np.array([False, False, True], dtype=np.bool_),
+            complement_action_norm=2.0,
+        ),
+    ]
+
+    action_0 = np.array([1.0, 0.0, 0.0], dtype=np.complex128)
+    action_1 = np.array([0.0, 2.0, 0.0], dtype=np.complex128)
+    action_2 = np.array([-1.0, -2.0, 0.0], dtype=np.complex128)
+
+    collective = _find_unit_sum_collective_cancellation_from_actions(
+        reports,
+        [action_0, action_1, action_2],
+        [
+            np.array([7], dtype=np.int64),
+            np.array([8], dtype=np.int64),
+            np.array([7, 8], dtype=np.int64),
+        ],
+        group_id=0,
+        config=config,
+        grouping_kind="all_problematic",
+    )
+
+    assert collective is not None
+    assert collective.group_size == 3
+    assert collective.relation_kind == "unit_sum"
+    assert collective.grouping_kind == "all_problematic"
+    assert collective.collective_action_norm <= 1e-12
+    assert collective.source_zero_indices.tolist() == [0, 4, 6]
+    assert collective.collective_target_indices.tolist() == [7, 8]
+    assert collective.local_mask.tolist() == [True, True, True]
+
+
+def test_all_problematic_nullspace_collective_cancellation_from_actions():
+    config = CageClassificationConfig(
+        amplitude_tolerance=1e-12,
+        cancellation_tolerance=1e-12,
+        action_tolerance=1e-12,
+        collective_cancellation_mode="all_problematic_nullspace",
+    )
+
+    reports = [
+        _fake_zero_report(
+            zero_index=0,
+            local_mask=np.array([True, False, False], dtype=np.bool_),
+            complement_action_norm=1.0,
+        ),
+        _fake_zero_report(
+            zero_index=4,
+            local_mask=np.array([False, True, False], dtype=np.bool_),
+            complement_action_norm=1.0,
+        ),
+        _fake_zero_report(
+            zero_index=6,
+            local_mask=np.array([False, False, True], dtype=np.bool_),
+            complement_action_norm=1.0,
+        ),
+    ]
+
+    # Columns are linearly dependent, but not equal-weight cancelling.
+    action_0 = np.array([1.0, 0.0], dtype=np.complex128)
+    action_1 = np.array([0.0, 1.0], dtype=np.complex128)
+    action_2 = np.array([1.0, 1.0], dtype=np.complex128)
+
+    collective = _find_nullspace_collective_cancellation_from_actions(
+        reports,
+        [action_0, action_1, action_2],
+        [
+            np.array([7], dtype=np.int64),
+            np.array([8], dtype=np.int64),
+            np.array([7, 8], dtype=np.int64),
+        ],
+        group_id=0,
+        config=config,
+        grouping_kind="all_problematic",
+    )
+
+    assert collective is not None
+    assert collective.group_size == 3
+    assert collective.relation_kind == "nullspace"
+    assert collective.grouping_kind == "all_problematic"
+    assert collective.collective_action_norm <= 1e-12
+    assert collective.local_mask.tolist() == [True, True, True]
+
+    residual = (
+        action_0 * collective.coefficients[0]
+        + action_1 * collective.coefficients[1]
+        + action_2 * collective.coefficients[2]
+    )
+
+    np.testing.assert_allclose(residual, 0.0, atol=1e-12)

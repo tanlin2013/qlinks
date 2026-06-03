@@ -42,6 +42,8 @@ CollectiveCancellationMode: TypeAlias = Literal[
     "disabled",
     "same_local_support_sum",
     "same_local_support_nullspace",
+    "all_problematic_sum",
+    "all_problematic_nullspace",
 ]
 SectorPolicy = Literal[
     "raise_if_disconnected",
@@ -59,7 +61,7 @@ class CageClassificationConfig:
     action_tolerance: float = 1e-9
     sector_policy: SectorPolicy = "raise_if_disconnected"
 
-    collective_cancellation_mode: CollectiveCancellationMode = "same_local_support_sum"
+    collective_cancellation_mode: CollectiveCancellationMode = "same_local_support_nullspace"
     collective_min_group_size: int = 2
     collective_relation_tolerance: float | None = None
 
@@ -224,6 +226,7 @@ class CollectiveCancellationReport:
     local_mask: NDArray[np.bool_]
     local_region_size: int
     relation_kind: Literal["unit_sum", "nullspace"]
+    grouping_kind: Literal["same_local_support", "all_problematic"]
 
     @property
     def group_size(self) -> int:
@@ -1248,7 +1251,20 @@ def _annotate_collective_cancellations(
     if len(candidates) < config.collective_min_group_size:
         return zero_reports, ()
 
-    groups = _group_reports_by_local_support(candidates)
+    if config.collective_cancellation_mode in {
+        "same_local_support_sum",
+        "same_local_support_nullspace",
+    }:
+        groups = _group_reports_by_local_support(candidates)
+    elif config.collective_cancellation_mode in {
+        "all_problematic_sum",
+        "all_problematic_nullspace",
+    }:
+        groups = _group_all_problematic_reports(candidates)
+    else:
+        raise ValueError(
+            "Unknown collective_cancellation_mode: " f"{config.collective_cancellation_mode!r}"
+        )
 
     collective_reports: list[CollectiveCancellationReport] = []
     replacement_by_zero: dict[int, InterferenceZeroReport] = {}
@@ -1258,7 +1274,16 @@ def _annotate_collective_cancellations(
         if len(grouped_reports) < config.collective_min_group_size:
             continue
 
-        if config.collective_cancellation_mode == "same_local_support_sum":
+        grouping_kind = (
+            "same_local_support"
+            if config.collective_cancellation_mode == "same_local_support_nullspace"
+            else "all_problematic"
+        )
+
+        if config.collective_cancellation_mode in {
+            "same_local_support_sum",
+            "all_problematic_sum",
+        }:
             collective = _find_unit_sum_collective_cancellation(
                 grouped_reports,
                 group_id=next_group_id,
@@ -1267,8 +1292,12 @@ def _annotate_collective_cancellations(
                 config_to_index=config_to_index,
                 domain_mask=domain_mask,
                 config=config,
+                grouping_kind=grouping_kind,
             )
-        elif config.collective_cancellation_mode == "same_local_support_nullspace":
+        elif config.collective_cancellation_mode in {
+            "same_local_support_nullspace",
+            "all_problematic_nullspace",
+        }:
             collective = _find_nullspace_collective_cancellation(
                 grouped_reports,
                 group_id=next_group_id,
@@ -1277,6 +1306,7 @@ def _annotate_collective_cancellations(
                 config_to_index=config_to_index,
                 domain_mask=domain_mask,
                 config=config,
+                grouping_kind=grouping_kind,
             )
         else:
             raise ValueError(
@@ -1406,6 +1436,7 @@ def _find_unit_sum_collective_cancellation_from_actions(
     *,
     group_id: int,
     config: CageClassificationConfig,
+    grouping_kind: Literal["same_local_support", "all_problematic"],
 ) -> CollectiveCancellationReport | None:
     if len(reports) < config.collective_min_group_size:
         return None
@@ -1432,7 +1463,7 @@ def _find_unit_sum_collective_cancellation_from_actions(
         dtype=np.int64,
     )
 
-    local_mask = np.array(reports[0].local_mask, dtype=np.bool_, copy=True)
+    local_mask = _union_local_mask(reports)
 
     return CollectiveCancellationReport(
         group_id=group_id,
@@ -1444,6 +1475,88 @@ def _find_unit_sum_collective_cancellation_from_actions(
         local_mask=local_mask,
         local_region_size=int(np.count_nonzero(local_mask)),
         relation_kind="unit_sum",
+        grouping_kind=grouping_kind,
+    )
+
+
+def _find_nullspace_collective_cancellation_from_actions(
+    reports: list[InterferenceZeroReport],
+    actions: list[NDArray[np.complex128]],
+    target_indices: list[NDArray[np.int64]],
+    *,
+    group_id: int,
+    config: CageClassificationConfig,
+    grouping_kind: Literal[
+        "same_local_support",
+        "all_problematic",
+    ],
+) -> CollectiveCancellationReport | None:
+    """Find a nontrivial linear relation among complement leakage vectors.
+
+    The input actions are columns l_h = Zbar_h |psi>.  This helper checks
+    whether there is a nonzero coefficient vector c such that L c ~= 0.
+    """
+    if len(reports) < config.collective_min_group_size:
+        return None
+
+    if len(reports) != len(actions) or len(reports) != len(target_indices):
+        raise ValueError("reports, actions, and target_indices must have the same length.")
+
+    if len(actions) == 0:
+        return None
+
+    leakage_matrix = np.column_stack(actions)
+    n_columns = leakage_matrix.shape[1]
+
+    if n_columns < config.collective_min_group_size:
+        return None
+
+    _u, singular_values, vh = np.linalg.svd(
+        leakage_matrix,
+        full_matrices=True,
+    )
+
+    tolerance = _collective_tolerance(config)
+    rank = int(np.count_nonzero(singular_values > tolerance))
+
+    if rank >= n_columns:
+        return None
+
+    coefficients = np.conjugate(vh[rank, :]).astype(
+        np.complex128,
+        copy=False,
+    )
+
+    collective_action = leakage_matrix @ coefficients
+    collective_norm = float(np.linalg.norm(collective_action))
+
+    if collective_norm > tolerance:
+        return None
+
+    local_mask = _union_local_mask(reports)
+
+    collective_targets = np.array(
+        sorted({int(target) for targets in target_indices for target in targets}),
+        dtype=np.int64,
+    )
+
+    return CollectiveCancellationReport(
+        group_id=int(group_id),
+        source_zero_indices=np.array(
+            [int(report.zero_index) for report in reports],
+            dtype=np.int64,
+        ),
+        coefficients=coefficients,
+        individual_complement_action_norms=np.array(
+            [float(np.linalg.norm(action)) for action in actions],
+            dtype=np.float64,
+        ),
+        collective_action_norm=collective_norm,
+        collective_target_indices=collective_targets,
+        local_mask=local_mask,
+        local_region_size=int(np.count_nonzero(local_mask)),
+        relation_kind="nullspace",
+        grouping_kind=grouping_kind,
     )
 
 
@@ -1456,6 +1569,7 @@ def _find_unit_sum_collective_cancellation(
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
     config: CageClassificationConfig,
+    grouping_kind: Literal["same_local_support", "all_problematic"],
 ) -> CollectiveCancellationReport | None:
     actions: list[NDArray[np.complex128]] = []
     target_indices: list[NDArray[np.int64]] = []
@@ -1478,6 +1592,7 @@ def _find_unit_sum_collective_cancellation(
         target_indices,
         group_id=group_id,
         config=config,
+        grouping_kind=grouping_kind,
     )
 
 
@@ -1490,9 +1605,10 @@ def _find_nullspace_collective_cancellation(
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
     config: CageClassificationConfig,
+    grouping_kind: Literal["same_local_support", "all_problematic"],
 ) -> CollectiveCancellationReport | None:
     actions: list[NDArray[np.complex128]] = []
-    target_sets: list[set[int]] = []
+    target_indices: list[NDArray[np.int64]] = []
 
     for report in reports:
         action, targets = _complement_action_for_report(
@@ -1504,54 +1620,30 @@ def _find_nullspace_collective_cancellation(
             config=config,
         )
         actions.append(action)
-        target_sets.append({int(target) for target in targets})
+        target_indices.append(targets)
 
-    leakage_matrix = np.column_stack(actions)
-
-    if leakage_matrix.shape[1] < config.collective_min_group_size:
-        return None
-
-    _u, singular_values, vh = np.linalg.svd(
-        leakage_matrix,
-        full_matrices=False,
-    )
-
-    smallest = float(singular_values[-1]) if singular_values.size else 0.0
-    if smallest > _collective_tolerance(config):
-        return None
-
-    coefficients = np.conjugate(vh[-1, :]).astype(np.complex128, copy=False)
-    collective_action = leakage_matrix @ coefficients
-    collective_norm = float(np.linalg.norm(collective_action))
-
-    if collective_norm > _collective_tolerance(config):
-        return None
-
-    source_zero_indices = np.array(
-        [int(report.zero_index) for report in reports],
-        dtype=np.int64,
-    )
-    individual_norms = np.array(
-        [float(np.linalg.norm(action)) for action in actions],
-        dtype=np.float64,
-    )
-
-    local_mask = np.array(reports[0].local_mask, dtype=np.bool_, copy=True)
-
-    return CollectiveCancellationReport(
+    return _find_nullspace_collective_cancellation_from_actions(
+        reports,
+        actions,
+        target_indices,
         group_id=group_id,
-        source_zero_indices=source_zero_indices,
-        coefficients=coefficients,
-        individual_complement_action_norms=individual_norms,
-        collective_action_norm=collective_norm,
-        collective_target_indices=np.array(
-            sorted(set().union(*target_sets)),
-            dtype=np.int64,
-        ),
-        local_mask=local_mask,
-        local_region_size=int(np.count_nonzero(local_mask)),
-        relation_kind="nullspace",
+        config=config,
+        grouping_kind=grouping_kind,
     )
+
+
+def _union_local_mask(
+    reports: list[InterferenceZeroReport],
+) -> NDArray[np.bool_]:
+    if not reports:
+        return np.array([], dtype=np.bool_)
+
+    local_mask = np.zeros_like(reports[0].local_mask, dtype=np.bool_)
+
+    for report in reports:
+        local_mask |= report.local_mask
+
+    return local_mask
 
 
 def _common_mask(
@@ -1576,6 +1668,14 @@ def _group_reports_by_local_support(
         grouped.setdefault(key, []).append(report)
 
     return list(grouped.values())
+
+
+def _group_all_problematic_reports(
+    reports: list[InterferenceZeroReport],
+) -> list[list[InterferenceZeroReport]]:
+    if len(reports) == 0:
+        return []
+    return [reports]
 
 
 def _q_sector_weight(
