@@ -14,6 +14,11 @@ from qlinks.models.base import (
     solve_basis,
     validate_builder_name,
 )
+from qlinks.models.local_terms import (
+    LocalOperatorKind,
+    LocalTermDescriptor,
+    LocalTermKind,
+)
 from qlinks.models.pxp import PXPModel
 from qlinks.models.qdm import (
     HoneycombQDMModel,
@@ -39,6 +44,9 @@ __all__ = [
     "HamiltonianBuilderName",
     "HamiltonianModelBase",
     "HamiltonianTermSpec",
+    "LocalOperatorKind",
+    "LocalTermDescriptor",
+    "LocalTermKind",
     "ModelBuildResult",
     "SparseBuildOptions",
     "TermKind",

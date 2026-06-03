@@ -22,6 +22,11 @@ from qlinks.builders import (
 )
 from qlinks.constraints import Constraint, SectorCondition
 from qlinks.encoded import BinaryEncodedBasis, BitmaskSparseHamiltonianBuilder
+from qlinks.models.local_terms import (
+    LocalOperatorKind,
+    LocalTermDescriptor,
+    LocalTermKind,
+)
 from qlinks.operators import BasisOperator
 from qlinks.variables import VariableLayout
 
@@ -510,6 +515,64 @@ class HamiltonianModelBase:
             backend=backend,
             dtype=dtype,
             sort_basis=sort_basis,
+            on_missing=on_missing,
+            drop_zero_atol=drop_zero_atol,
+        )
+
+    def local_term_descriptors(
+        self,
+        *,
+        operator_kind: LocalOperatorKind | None = None,
+        term_kind: LocalTermKind | None = None,
+    ) -> tuple[LocalTermDescriptor, ...]:
+        """Return matrix-free descriptors for local Hamiltonian pieces.
+
+        The default is empty because not every model exposes local terms yet.
+        Geometry-specific models should override this.
+        """
+        return ()
+
+    def make_local_term(
+        self,
+        descriptor: LocalTermDescriptor,
+        layout: VariableLayout,
+        *,
+        builder: HamiltonianBuilderName = "sparse",
+    ) -> HamiltonianTermSpec:
+        """Return the operator spec for one local term.
+
+        Subclasses implementing local_term_descriptors() should also implement this.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support local term assembly yet."
+        )
+
+    def build_local_term(
+        self,
+        descriptor: LocalTermDescriptor,
+        build_result: ModelBuildResult,
+        *,
+        builder: HamiltonianBuilderName = "sparse",
+        backend: SparseBackendName | SparseBackend = "scipy",
+        dtype: npt.DTypeLike = np.complex128,
+        on_missing: Literal["skip", "raise"] = "raise",
+        drop_zero_atol: float = 0.0,
+    ) -> Any:
+        """Build one local sparse matrix in the basis of an existing build result."""
+        validate_builder_name(builder)
+
+        term = self.make_local_term(
+            descriptor,
+            build_result.layout,
+            builder=builder,
+        )
+
+        return self.model_builder._build_term_matrix(
+            basis=build_result.basis,
+            term=term,
+            builder=builder,
+            backend=backend,
+            dtype=dtype,
             on_missing=on_missing,
             drop_zero_atol=drop_zero_atol,
         )

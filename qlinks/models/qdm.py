@@ -41,6 +41,11 @@ from qlinks.models.couplings import (
     is_zero_coupling,
     plaquette_coupling_value,
 )
+from qlinks.models.local_terms import (
+    LocalOperatorKind,
+    LocalTermDescriptor,
+    LocalTermKind,
+)
 from qlinks.operators import (
     PlaquettePatternOperator,
     UpdatePlaquettePatternOperator,
@@ -150,48 +155,16 @@ class QDMBase(HamiltonianModelBase):
             layout = self.layout
 
         operators: list[object] = []
-
-        if builder == "sparse":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coupling = self._coup_kin_at(plaquette_id)
-
-                operators.append(
-                    PlaquettePatternOperator.alternating_binary_flip(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coupling.resolved_forward(),
-                        reverse_coefficient=coupling.resolved_backward(),
-                    )
+        for plaquette_id in self.plaquette_ids():
+            operators.extend(
+                self._make_single_kinetic_operator(
+                    layout,
+                    plaquette_id=int(plaquette_id),
+                    builder=builder,
                 )
-
-            return tuple(operators)
-
-        if builder == "bitmask":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coupling = self._coup_kin_at(plaquette_id)
-
-                operators.append(
-                    BitmaskAlternatingPlaquetteFlipOperator(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coupling.resolved_forward(),
-                        reverse_coefficient=coupling.resolved_backward(),
-                    )
-                )
-
-            return tuple(operators)
-
-        if builder == "optimized":
-            raise NotImplementedError(
-                "Generic optimized QDM operators are not implemented yet. "
-                "Use builder='sparse' or builder='bitmask'."
             )
 
-        raise ValueError(f"Unsupported builder: {builder}")
+        return tuple(operators)
 
     def make_potential_operators(
         self,
@@ -208,52 +181,16 @@ class QDMBase(HamiltonianModelBase):
             return ()
 
         operators: list[object] = []
-
-        if builder == "sparse":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coefficient = self._coup_pot_at(plaquette_id)
-
-                if coefficient == 0:
-                    continue
-
-                operators.extend(
-                    alternating_binary_flippability_projectors(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coefficient,
-                    )
+        for plaquette_id in self.plaquette_ids():
+            operators.extend(
+                self._make_single_potential_operators(
+                    layout,
+                    plaquette_id=int(plaquette_id),
+                    builder=builder,
                 )
-
-            return tuple(operators)
-
-        if builder == "bitmask":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coefficient = self._coup_pot_at(plaquette_id)
-
-                if coefficient == 0:
-                    continue
-
-                operators.extend(
-                    bitmask_alternating_flippability_projectors(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coefficient,
-                    )
-                )
-
-            return tuple(operators)
-
-        if builder == "optimized":
-            raise NotImplementedError(
-                "Generic optimized QDM potential is not implemented yet. "
-                "Use builder='sparse' or builder='bitmask'."
             )
 
-        raise ValueError(f"Unsupported builder: {builder}")
+        return tuple(operators)
 
     def make_operators(
         self,
@@ -299,6 +236,168 @@ class QDMBase(HamiltonianModelBase):
             )
 
         return tuple(terms)
+
+    def _make_single_kinetic_operator(
+        self,
+        layout: VariableLayout,
+        *,
+        plaquette_id: int,
+        builder: HamiltonianBuilderName = "sparse",
+    ) -> tuple[object, ...]:
+        validate_builder_name(builder)
+        coupling = self._coup_kin_at(plaquette_id)
+
+        if builder == "sparse":
+            return (
+                PlaquettePatternOperator.alternating_binary_flip(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coupling.resolved_forward(),
+                    reverse_coefficient=coupling.resolved_backward(),
+                ),
+            )
+
+        if builder == "bitmask":
+            return (
+                BitmaskAlternatingPlaquetteFlipOperator(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coupling.resolved_forward(),
+                    reverse_coefficient=coupling.resolved_backward(),
+                ),
+            )
+
+        if builder == "optimized":
+            raise NotImplementedError(
+                "Generic optimized QDM operators are not implemented yet. "
+                "Use builder='sparse' or builder='bitmask'."
+            )
+
+        raise ValueError(f"Unsupported builder: {builder}")
+
+    def _make_single_potential_operators(
+        self,
+        layout: VariableLayout,
+        *,
+        plaquette_id: int,
+        builder: HamiltonianBuilderName = "sparse",
+    ) -> tuple[object, ...]:
+        validate_builder_name(builder)
+        coefficient = self._coup_pot_at(plaquette_id)
+
+        if coefficient == 0:
+            return ()
+
+        if builder == "sparse":
+            return tuple(
+                alternating_binary_flippability_projectors(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coefficient,
+                )
+            )
+
+        if builder == "bitmask":
+            return tuple(
+                bitmask_alternating_flippability_projectors(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coefficient,
+                )
+            )
+
+        if builder == "optimized":
+            raise NotImplementedError(
+                "Generic optimized QDM potential is not implemented yet. "
+                "Use builder='sparse' or builder='bitmask'."
+            )
+
+        raise ValueError(f"Unsupported builder: {builder}")
+
+    def local_term_descriptors(
+        self,
+        *,
+        operator_kind: LocalOperatorKind | None = None,
+        term_kind: LocalTermKind | None = None,
+    ) -> tuple[LocalTermDescriptor, ...]:
+        if term_kind not in (None, "plaquette"):
+            return ()
+
+        descriptors: list[LocalTermDescriptor] = []
+
+        for plaquette_id in self.plaquette_ids():
+            plaquette_id = int(plaquette_id)
+            support_links = tuple(
+                int(link_id) for link_id in self.lattice.plaquette_links(plaquette_id)
+            )
+
+            if operator_kind in (None, "kinetic", "hamiltonian"):
+                descriptors.append(
+                    LocalTermDescriptor(
+                        term_id=plaquette_id,
+                        term_kind="plaquette",
+                        operator_kind="kinetic",
+                        support_links=support_links,
+                        support_plaquettes=(plaquette_id,),
+                        label=f"K_{plaquette_id}",
+                    )
+                )
+
+            if operator_kind in (None, "potential", "hamiltonian"):
+                descriptors.append(
+                    LocalTermDescriptor(
+                        term_id=plaquette_id,
+                        term_kind="plaquette",
+                        operator_kind="potential",
+                        support_links=support_links,
+                        support_plaquettes=(plaquette_id,),
+                        label=f"V_{plaquette_id}",
+                    )
+                )
+
+        return tuple(descriptors)
+
+    def make_local_term(
+        self,
+        descriptor: LocalTermDescriptor,
+        layout: VariableLayout,
+        *,
+        builder: HamiltonianBuilderName = "sparse",
+    ) -> HamiltonianTermSpec:
+        if descriptor.term_kind != "plaquette":
+            raise ValueError("QDM local terms currently only support plaquette terms.")
+
+        plaquette_id = int(descriptor.term_id)
+
+        if descriptor.operator_kind == "kinetic":
+            operators = self._make_single_kinetic_operator(
+                layout,
+                plaquette_id=plaquette_id,
+                builder=builder,
+            )
+            return HamiltonianTermSpec.from_operators(
+                name=f"kinetic_{plaquette_id}",
+                operators=operators,
+                kind="kinetic",
+            )
+
+        if descriptor.operator_kind == "potential":
+            operators = self._make_single_potential_operators(
+                layout,
+                plaquette_id=plaquette_id,
+                builder=builder,
+            )
+            return HamiltonianTermSpec.from_operators(
+                name=f"potential_{plaquette_id}",
+                operators=operators,
+                kind="potential",
+            )
+
+        raise ValueError("descriptor.operator_kind must be 'kinetic' or 'potential' for QDM.")
 
 
 @dataclass(frozen=True)
@@ -426,10 +525,11 @@ class SquareQDMModel(QDMBase):
 
         return tuple(sectors)
 
-    def make_kinetic_operators(
+    def _make_single_kinetic_operator(
         self,
-        layout: VariableLayout | None = None,
+        layout: VariableLayout,
         *,
+        plaquette_id: int,
         builder: HamiltonianBuilderName = "sparse",
     ) -> tuple[object, ...]:
         """
@@ -439,124 +539,79 @@ class SquareQDMModel(QDMBase):
         plaquettes, but the specialized operator preserves the old API and
         square-QDM convention explicitly.
         """
-
         validate_builder_name(builder)
-
-        if layout is None:
-            layout = self.layout
-
-        operators: list[object] = []
+        coupling = self._coup_kin_at(plaquette_id)
 
         if builder == "sparse":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coupling = self._coup_kin_at(plaquette_id)
-
-                operators.append(
-                    PlaquettePatternOperator.qdm_flip(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coupling.resolved_forward(),
-                        reverse_coefficient=coupling.resolved_backward(),
-                    )
-                )
-
-            return tuple(operators)
+            return (
+                PlaquettePatternOperator.qdm_flip(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coupling.resolved_forward(),
+                    reverse_coefficient=coupling.resolved_backward(),
+                ),
+            )
 
         if builder == "optimized":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coupling = self._coup_kin_at(plaquette_id)
-
-                operators.append(
-                    UpdatePlaquettePatternOperator.qdm_flip(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coupling.resolved_forward(),
-                        reverse_coefficient=coupling.resolved_backward(),
-                    )
-                )
-
-            return tuple(operators)
+            return (
+                UpdatePlaquettePatternOperator.qdm_flip(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coupling.resolved_forward(),
+                    reverse_coefficient=coupling.resolved_backward(),
+                ),
+            )
 
         if builder == "bitmask":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coupling = self._coup_kin_at(plaquette_id)
-
-                operators.append(
-                    BitmaskQDMFlipOperator(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coupling.resolved_forward(),
-                        reverse_coefficient=coupling.resolved_backward(),
-                    )
-                )
-
-            return tuple(operators)
+            return (
+                BitmaskQDMFlipOperator(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coupling.resolved_forward(),
+                    reverse_coefficient=coupling.resolved_backward(),
+                ),
+            )
 
         raise ValueError(f"Unsupported builder: {builder}")
 
-    def make_potential_operators(
+    def _make_single_potential_operators(
         self,
-        layout: VariableLayout | None = None,
+        layout: VariableLayout,
         *,
+        plaquette_id: int,
         builder: HamiltonianBuilderName = "sparse",
     ) -> tuple[object, ...]:
         """
         Square QDM keeps the specialized 1010/0101 flippability projectors.
         """
-
         validate_builder_name(builder)
+        coefficient = self._coup_pot_at(plaquette_id)
 
-        if layout is None:
-            layout = self.layout
-
-        if is_zero_coupling(self.coup_pot, self.plaquette_ids()):
+        if coefficient == 0:
             return ()
 
-        operators: list[object] = []
-
         if builder == "sparse":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coefficient = self._coup_pot_at(plaquette_id)
-
-                if coefficient == 0:
-                    continue
-
-                operators.extend(
-                    qdm_flippability_projectors(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coefficient,
-                    )
+            return tuple(
+                qdm_flippability_projectors(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coefficient,
                 )
-
-            return tuple(operators)
+            )
 
         if builder == "bitmask":
-            for p in self.plaquette_ids():
-                plaquette_id = int(p)
-                coefficient = self._coup_pot_at(plaquette_id)
-
-                if coefficient == 0:
-                    continue
-
-                operators.extend(
-                    bitmask_qdm_flippability_projectors(
-                        layout=layout,
-                        lattice=self.lattice,
-                        plaquette_id=plaquette_id,
-                        coefficient=coefficient,
-                    )
+            return tuple(
+                bitmask_qdm_flippability_projectors(
+                    layout=layout,
+                    lattice=self.lattice,
+                    plaquette_id=plaquette_id,
+                    coefficient=coefficient,
                 )
-
-            return tuple(operators)
+            )
 
         if builder == "optimized":
             raise NotImplementedError(
