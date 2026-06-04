@@ -93,15 +93,21 @@ class TriangularLattice(LatticeGraph):
 
         links: list[Link] = []
         directed_link_lookup: dict[tuple[int, int], int] = {}
+        cell_link_lookup: dict[tuple[int, int, str], int] = {}
 
-        def add_link(source: int, target: int, kind: str, wrap: bool) -> None:
+        def add_link(
+            source: int,
+            target: int,
+            *,
+            cell: tuple[int, int],
+            kind: str,
+            wrap: bool,
+        ) -> None:
             if source == target:
                 return
 
-            if (source, target) in directed_link_lookup:
-                return
-
             link_id = len(links)
+
             links.append(
                 Link(
                     id=link_id,
@@ -111,7 +117,9 @@ class TriangularLattice(LatticeGraph):
                     wrap=wrap,
                 )
             )
+
             directed_link_lookup[(source, target)] = link_id
+            cell_link_lookup[(int(cell[0]), int(cell[1]), kind)] = link_id
 
         # Directions in cell coordinates.
         directions = {
@@ -132,8 +140,28 @@ class TriangularLattice(LatticeGraph):
                         continue
 
                     crosses = not in_bounds(tx, ty)
+
                     if bc == BoundaryCondition.PERIODIC or not crosses:
-                        add_link(source, target, kind=kind, wrap=crosses)
+                        add_link(
+                            source,
+                            target,
+                            cell=(x, y),
+                            kind=kind,
+                            wrap=crosses,
+                        )
+
+        def canonical_link_cell(x: int, y: int) -> tuple[int, int]:
+            if bc == BoundaryCondition.PERIODIC:
+                return x % lx, y % ly
+            return x, y
+
+        def link_at(x: int, y: int, kind: str) -> int | None:
+            cell = canonical_link_cell(x, y)
+
+            if bc != BoundaryCondition.PERIODIC and not in_bounds(cell[0], cell[1]):
+                return None
+
+            return cell_link_lookup.get((cell[0], cell[1], kind))
 
         def oriented_link_between(source: int, target: int) -> tuple[int, int]:
             direct = directed_link_lookup.get((source, target))
@@ -148,18 +176,21 @@ class TriangularLattice(LatticeGraph):
 
         plaquettes: list[Plaquette] = []
 
-        def add_loop(
+        def add_cell_loop(
             kind: str,
-            coords: list[tuple[int, int]],
             *,
-            anchor_cell: tuple[int, int],
+            anchor: tuple[int, int],
+            site_coords: list[tuple[int, int]],
+            boundary: list[tuple[int, int, str, int]],
         ) -> None:
             site_ids: list[int] = []
 
-            for x, y in coords:
-                sid = maybe_site_id(x, y)
+            for sx, sy in site_coords:
+                sid = maybe_site_id(sx, sy)
+
                 if sid is None:
                     return
+
                 site_ids.append(sid)
 
             if len(set(site_ids)) != len(site_ids):
@@ -168,17 +199,14 @@ class TriangularLattice(LatticeGraph):
             loop_links: list[int] = []
             orientations: list[int] = []
 
-            for i in range(len(site_ids)):
-                s0 = site_ids[i]
-                s1 = site_ids[(i + 1) % len(site_ids)]
+            for lx0, ly0, link_kind, orientation in boundary:
+                link_id = link_at(lx0, ly0, link_kind)
 
-                try:
-                    link_id, orientation = oriented_link_between(s0, s1)
-                except KeyError:
+                if link_id is None:
                     return
 
-                loop_links.append(link_id)
-                orientations.append(orientation)
+                loop_links.append(int(link_id))
+                orientations.append(int(orientation))
 
             plaquettes.append(
                 Plaquette(
@@ -187,7 +215,6 @@ class TriangularLattice(LatticeGraph):
                     orientations=tuple(orientations),
                     sites=tuple(site_ids),
                     kind=kind,
-                    anchor_cell=anchor_cell,
                 )
             )
 
@@ -198,54 +225,95 @@ class TriangularLattice(LatticeGraph):
             for x in range(max_x):
                 for y in range(max_y):
                     # Up triangle:
-                    # (x,y) -> (x+1,y) -> (x,y+1)
-                    add_loop(
+                    # (x,y) -> (x+1,y) -> (x,y+1) -> (x,y)
+                    add_cell_loop(
                         "triangle_up",
-                        [
+                        anchor=(x, y),
+                        site_coords=[
                             (x, y),
                             (x + 1, y),
                             (x, y + 1),
                         ],
-                        anchor_cell=(x, y),
+                        boundary=[
+                            (x, y, "a", +1),
+                            (x + 1, y, "c", +1),
+                            (x, y, "b", -1),
+                        ],
                     )
 
                     # Down triangle:
-                    # (x,y) -> (x+1,y-1) -> (x+1,y)
-                    add_loop(
+                    # (x,y) -> (x+1,y-1) -> (x+1,y) -> (x,y)
+                    add_cell_loop(
                         "triangle_down",
-                        [
+                        anchor=(x, y),
+                        site_coords=[
                             (x, y),
                             (x + 1, y - 1),
                             (x + 1, y),
                         ],
-                        anchor_cell=(x, y),
+                        boundary=[
+                            (x + 1, y - 1, "c", -1),
+                            (x + 1, y - 1, "b", +1),
+                            (x, y, "a", -1),
+                        ],
                     )
 
         if include_rhombi:
-            rhombus_pairs = {
-                "rhombus_ab": ((1, 0), (0, 1)),
-                "rhombus_bc": ((0, 1), (-1, 1)),
-                "rhombus_ca": ((-1, 1), (-1, 0)),
-            }
-
             for x in range(max_x):
                 for y in range(max_y):
-                    for kind, (d1, d2) in rhombus_pairs.items():
-                        x0, y0 = x, y
-                        x1, y1 = x0 + d1[0], y0 + d1[1]
-                        x2, y2 = x1 + d2[0], y1 + d2[1]
-                        x3, y3 = x0 + d2[0], y0 + d2[1]
+                    # Rhombus ab:
+                    add_cell_loop(
+                        "rhombus_ab",
+                        anchor=(x, y),
+                        site_coords=[
+                            (x, y),
+                            (x + 1, y),
+                            (x + 1, y + 1),
+                            (x, y + 1),
+                        ],
+                        boundary=[
+                            (x, y, "a", +1),
+                            (x + 1, y, "b", +1),
+                            (x, y + 1, "a", -1),
+                            (x, y, "b", -1),
+                        ],
+                    )
 
-                        add_loop(
-                            kind,
-                            [
-                                (x0, y0),
-                                (x1, y1),
-                                (x2, y2),
-                                (x3, y3),
-                            ],
-                            anchor_cell=(x0, y0),
-                        )
+                    # Rhombus bc:
+                    add_cell_loop(
+                        "rhombus_bc",
+                        anchor=(x, y),
+                        site_coords=[
+                            (x, y),
+                            (x, y + 1),
+                            (x - 1, y + 2),
+                            (x - 1, y + 1),
+                        ],
+                        boundary=[
+                            (x, y, "b", +1),
+                            (x, y + 1, "c", +1),
+                            (x - 1, y + 1, "b", -1),
+                            (x, y, "c", -1),
+                        ],
+                    )
+
+                    # Rhombus ca:
+                    add_cell_loop(
+                        "rhombus_ca",
+                        anchor=(x, y),
+                        site_coords=[
+                            (x, y),
+                            (x - 1, y + 1),
+                            (x - 2, y + 1),
+                            (x - 1, y),
+                        ],
+                        boundary=[
+                            (x, y, "c", +1),
+                            (x - 2, y + 1, "a", -1),
+                            (x - 1, y, "c", -1),
+                            (x - 1, y, "a", +1),
+                        ],
+                    )
 
         translations: dict[tuple[int, tuple[int, int]], int] = {}
 
