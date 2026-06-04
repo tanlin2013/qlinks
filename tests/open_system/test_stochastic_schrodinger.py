@@ -59,7 +59,7 @@ def test_normalize_state_returns_unit_norm():
 
 def test_normalize_state_raises_for_zero_vector():
     psi = np.zeros(4, dtype=np.complex128)
-    with pytest.raises(ValueError, match="cannot normalize"):
+    with pytest.raises(ValueError, match="Cannot normalize a zero-norm state."):
         normalize_state(psi)
 
 
