@@ -50,3 +50,54 @@ def test_honeycomb_embedding_primitive_vectors_are_nondegenerate() -> None:
 
     assert vectors.shape == (2, 2)
     assert abs(np.linalg.det(vectors)) > 1e-12
+
+
+def test_honeycomb_small_torus_keeps_cell_anchored_links() -> None:
+    lattice = HoneycombLattice(
+        2,
+        2,
+        boundary_condition="periodic",
+    )
+
+    # Each unit cell has one A site and three outgoing A-B links.
+    assert lattice.num_links == 3 * lattice.lx * lattice.ly
+
+    seen = {
+        (
+            tuple(int(v) for v in lattice.sites[int(link.source)].cell),
+            str(link.kind),
+        )
+        for link in lattice.links
+    }
+
+    assert len(seen) == lattice.num_links
+
+
+def test_honeycomb_small_torus_hexagons_have_six_distinct_links() -> None:
+    lattice = HoneycombLattice(
+        2,
+        2,
+        boundary_condition="periodic",
+    )
+
+    assert lattice.num_plaquettes == lattice.lx * lattice.ly
+
+    for plaquette in lattice.plaquettes:
+        assert plaquette.kind == "hexagon"
+        assert len(plaquette.links) == 6
+        assert len(set(int(link_id) for link_id in plaquette.links)) == 6
+
+
+def test_honeycomb_small_torus_hexagon_links_are_unique_across_all_plaquettes() -> None:
+    lattice = HoneycombLattice(
+        2,
+        2,
+        boundary_condition="periodic",
+    )
+
+    for plaquette in lattice.plaquettes:
+        assert plaquette.kind == "hexagon"
+        assert len(plaquette.links) == 6
+        assert len(set(int(link_id) for link_id in plaquette.links)) == 6
+        assert len(plaquette.orientations) == 6
+        assert set(int(o) for o in plaquette.orientations) <= {-1, 1}

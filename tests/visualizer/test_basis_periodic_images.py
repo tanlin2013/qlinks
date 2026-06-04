@@ -539,3 +539,33 @@ def test_triangular_closed_plaquette_representative_minimizes_score() -> None:
         break
 
     assert found_multi_representative
+
+
+def test_honeycomb_small_torus_visual_plaquettes_match_lattice_links() -> None:
+    lattice = HoneycombLattice(
+        2,
+        2,
+        boundary_condition="periodic",
+    )
+    layout = VariableLayout.from_lattice_links(
+        lattice,
+        LocalSpace.spin_half_flux(),
+    )
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        periodic_image_mode="positive_patch",
+        collapse_duplicate_visual_links=True,
+    )
+
+    by_id = {
+        int(draw_plaquette.plaquette_id): draw_plaquette
+        for draw_plaquette in visualizer._draw_plaquette_primitives()
+    }
+
+    for plaquette in lattice.plaquettes:
+        plaquette_id = int(plaquette.id)
+
+        assert plaquette_id in by_id
+        assert set(by_id[plaquette_id].link_ids) == {int(link_id) for link_id in plaquette.links}
