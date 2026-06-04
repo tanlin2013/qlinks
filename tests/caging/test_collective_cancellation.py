@@ -148,6 +148,7 @@ def test_unit_sum_collective_cancellation_from_actions():
         ],
         group_id=0,
         config=config,
+        grouping_kind="same_local_support",
     )
 
     assert collective is not None
