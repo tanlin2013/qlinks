@@ -404,15 +404,21 @@
 
         <span class="n">links</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Link</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">directed_link_lookup</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">cell_link_lookup</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">add_link</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wrap</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_link</span><span class="p">(</span>
+            <span class="n">source</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="n">target</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="o">*</span><span class="p">,</span>
+            <span class="n">cell</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+            <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">wrap</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="n">target</span><span class="p">:</span>
                 <span class="k">return</span>
 
-            <span class="k">if</span> <span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="ow">in</span> <span class="n">directed_link_lookup</span><span class="p">:</span>
-                <span class="k">return</span>
-
             <span class="n">link_id</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
             <span class="n">links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">Link</span><span class="p">(</span>
                     <span class="nb">id</span><span class="o">=</span><span class="n">link_id</span><span class="p">,</span>
@@ -422,7 +428,9 @@
                     <span class="n">wrap</span><span class="o">=</span><span class="n">wrap</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
+
             <span class="n">directed_link_lookup</span><span class="p">[(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)]</span> <span class="o">=</span> <span class="n">link_id</span>
+            <span class="n">cell_link_lookup</span><span class="p">[(</span><span class="nb">int</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">kind</span><span class="p">)]</span> <span class="o">=</span> <span class="n">link_id</span>
 
         <span class="c1"># Directions in cell coordinates.</span>
         <span class="n">directions</span> <span class="o">=</span> <span class="p">{</span>
@@ -443,8 +451,28 @@
                         <span class="k">continue</span>
 
                     <span class="n">crosses</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">in_bounds</span><span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">)</span>
+
                     <span class="k">if</span> <span class="n">bc</span> <span class="o">==</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">crosses</span><span class="p">:</span>
-                        <span class="n">add_link</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span> <span class="n">wrap</span><span class="o">=</span><span class="n">crosses</span><span class="p">)</span>
+                        <span class="n">add_link</span><span class="p">(</span>
+                            <span class="n">source</span><span class="p">,</span>
+                            <span class="n">target</span><span class="p">,</span>
+                            <span class="n">cell</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                            <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span>
+                            <span class="n">wrap</span><span class="o">=</span><span class="n">crosses</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">canonical_link_cell</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">bc</span> <span class="o">==</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">x</span> <span class="o">%</span> <span class="n">lx</span><span class="p">,</span> <span class="n">y</span> <span class="o">%</span> <span class="n">ly</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">link_at</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="n">canonical_link_cell</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">bc</span> <span class="o">!=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">in_bounds</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="n">cell_link_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">kind</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">oriented_link_between</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
             <span class="n">direct</span> <span class="o">=</span> <span class="n">directed_link_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">))</span>
@@ -459,18 +487,21 @@
 
         <span class="n">plaquettes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Plaquette</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">add_loop</span><span class="p">(</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_cell_loop</span><span class="p">(</span>
             <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">coords</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
             <span class="o">*</span><span class="p">,</span>
-            <span class="n">anchor_cell</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+            <span class="n">anchor</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+            <span class="n">site_coords</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+            <span class="n">boundary</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">site_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">:</span>
-                <span class="n">sid</span> <span class="o">=</span> <span class="n">maybe_site_id</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="ow">in</span> <span class="n">site_coords</span><span class="p">:</span>
+                <span class="n">sid</span> <span class="o">=</span> <span class="n">maybe_site_id</span><span class="p">(</span><span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">)</span>
+
                 <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">return</span>
+
                 <span class="n">site_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">site_ids</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">site_ids</span><span class="p">):</span>
@@ -479,17 +510,14 @@
             <span class="n">loop_links</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">orientations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">site_ids</span><span class="p">)):</span>
-                <span class="n">s0</span> <span class="o">=</span> <span class="n">site_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="n">s1</span> <span class="o">=</span> <span class="n">site_ids</span><span class="p">[(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">site_ids</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">lx0</span><span class="p">,</span> <span class="n">ly0</span><span class="p">,</span> <span class="n">link_kind</span><span class="p">,</span> <span class="n">orientation</span> <span class="ow">in</span> <span class="n">boundary</span><span class="p">:</span>
+                <span class="n">link_id</span> <span class="o">=</span> <span class="n">link_at</span><span class="p">(</span><span class="n">lx0</span><span class="p">,</span> <span class="n">ly0</span><span class="p">,</span> <span class="n">link_kind</span><span class="p">)</span>
 
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">link_id</span><span class="p">,</span> <span class="n">orientation</span> <span class="o">=</span> <span class="n">oriented_link_between</span><span class="p">(</span><span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">link_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">return</span>
 
-                <span class="n">loop_links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span>
-                <span class="n">orientations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">orientation</span><span class="p">)</span>
+                <span class="n">loop_links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">))</span>
+                <span class="n">orientations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">orientation</span><span class="p">))</span>
 
             <span class="n">plaquettes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">Plaquette</span><span class="p">(</span>
@@ -498,7 +526,6 @@
                     <span class="n">orientations</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">orientations</span><span class="p">),</span>
                     <span class="n">sites</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">site_ids</span><span class="p">),</span>
                     <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span>
-                    <span class="n">anchor_cell</span><span class="o">=</span><span class="n">anchor_cell</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
@@ -509,54 +536,95 @@
             <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_x</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_y</span><span class="p">):</span>
                     <span class="c1"># Up triangle:</span>
-                    <span class="c1"># (x,y) -&gt; (x+1,y) -&gt; (x,y+1)</span>
-                    <span class="n">add_loop</span><span class="p">(</span>
+                    <span class="c1"># (x,y) -&gt; (x+1,y) -&gt; (x,y+1) -&gt; (x,y)</span>
+                    <span class="n">add_cell_loop</span><span class="p">(</span>
                         <span class="s2">&quot;triangle_up&quot;</span><span class="p">,</span>
-                        <span class="p">[</span>
+                        <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">site_coords</span><span class="o">=</span><span class="p">[</span>
                             <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
                             <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
                             <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
                         <span class="p">],</span>
-                        <span class="n">anchor_cell</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">boundary</span><span class="o">=</span><span class="p">[</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                        <span class="p">],</span>
                     <span class="p">)</span>
 
                     <span class="c1"># Down triangle:</span>
-                    <span class="c1"># (x,y) -&gt; (x+1,y-1) -&gt; (x+1,y)</span>
-                    <span class="n">add_loop</span><span class="p">(</span>
+                    <span class="c1"># (x,y) -&gt; (x+1,y-1) -&gt; (x+1,y) -&gt; (x,y)</span>
+                    <span class="n">add_cell_loop</span><span class="p">(</span>
                         <span class="s2">&quot;triangle_down&quot;</span><span class="p">,</span>
-                        <span class="p">[</span>
+                        <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">site_coords</span><span class="o">=</span><span class="p">[</span>
                             <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
                             <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
                             <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
                         <span class="p">],</span>
-                        <span class="n">anchor_cell</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">boundary</span><span class="o">=</span><span class="p">[</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                        <span class="p">],</span>
                     <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">include_rhombi</span><span class="p">:</span>
-            <span class="n">rhombus_pairs</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;rhombus_ab&quot;</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
-                <span class="s2">&quot;rhombus_bc&quot;</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
-                <span class="s2">&quot;rhombus_ca&quot;</span><span class="p">:</span> <span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
-            <span class="p">}</span>
-
             <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_x</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_y</span><span class="p">):</span>
-                    <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">rhombus_pairs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
-                        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">d1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">d1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                        <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">d2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y1</span> <span class="o">+</span> <span class="n">d2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                        <span class="n">x3</span><span class="p">,</span> <span class="n">y3</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">d2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">d2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="c1"># Rhombus ab:</span>
+                    <span class="n">add_cell_loop</span><span class="p">(</span>
+                        <span class="s2">&quot;rhombus_ab&quot;</span><span class="p">,</span>
+                        <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">site_coords</span><span class="o">=</span><span class="p">[</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                        <span class="p">],</span>
+                        <span class="n">boundary</span><span class="o">=</span><span class="p">[</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
 
-                        <span class="n">add_loop</span><span class="p">(</span>
-                            <span class="n">kind</span><span class="p">,</span>
-                            <span class="p">[</span>
-                                <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-                                <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span>
-                                <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">),</span>
-                                <span class="p">(</span><span class="n">x3</span><span class="p">,</span> <span class="n">y3</span><span class="p">),</span>
-                            <span class="p">],</span>
-                            <span class="n">anchor_cell</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-                        <span class="p">)</span>
+                    <span class="c1"># Rhombus bc:</span>
+                    <span class="n">add_cell_loop</span><span class="p">(</span>
+                        <span class="s2">&quot;rhombus_bc&quot;</span><span class="p">,</span>
+                        <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">site_coords</span><span class="o">=</span><span class="p">[</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">2</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                        <span class="p">],</span>
+                        <span class="n">boundary</span><span class="o">=</span><span class="p">[</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Rhombus ca:</span>
+                    <span class="n">add_cell_loop</span><span class="p">(</span>
+                        <span class="s2">&quot;rhombus_ca&quot;</span><span class="p">,</span>
+                        <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">site_coords</span><span class="o">=</span><span class="p">[</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="p">],</span>
+                        <span class="n">boundary</span><span class="o">=</span><span class="p">[</span>
+                            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
 
         <span class="n">translations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
