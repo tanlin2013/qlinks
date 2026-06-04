@@ -92,7 +92,7 @@ def build_liouvillian(
 
 def lindblad_rhs_matrix(
     rho: np.ndarray,
-    H,
+    hamiltonian,
     jumps,
 ) -> np.ndarray:
     """
@@ -100,8 +100,8 @@ def lindblad_rhs_matrix(
 
     H and jumps may be sparse or dense; rho is dense.
     """
-    Hrho = H @ rho
-    rhoH = rho @ H
+    Hrho = hamiltonian @ rho
+    rhoH = rho @ hamiltonian
     drho = -1j * (Hrho - rhoH)
 
     for J in jumps:
@@ -241,7 +241,7 @@ def rk4_step_matrix(rho: np.ndarray, dt: float, H, jumps) -> np.ndarray:
 
 def evolve_matrix_rk4(
     rho0: np.ndarray,
-    H,
+    hamiltonian,
     jumps,
     times: np.ndarray,
     *,
@@ -256,7 +256,7 @@ def evolve_matrix_rk4(
 
     for n in range(len(times) - 1):
         dt = times[n + 1] - times[n]
-        rho = rk4_step_matrix(rho, dt, H, jumps)
+        rho = rk4_step_matrix(rho, dt, hamiltonian, jumps)
 
         if enforce_hermiticity:
             rho = 0.5 * (rho + rho.conj().T)
