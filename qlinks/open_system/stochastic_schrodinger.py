@@ -4,6 +4,8 @@ from typing import Callable, Iterable
 import numpy as np
 from numpy.typing import NDArray
 
+from qlinks.open_system.states import normalize_state
+
 ArrayC = NDArray[np.complex128]
 ArrayF = NDArray[np.float64]
 
@@ -24,13 +26,6 @@ class EnsembleResult:
 
 def _as_complex_array(x: ArrayC) -> ArrayC:
     return np.asarray(x, dtype=np.complex128)
-
-
-def normalize_state(psi: ArrayC, tol: float = 1e-14) -> ArrayC:
-    norm = np.linalg.norm(psi)
-    if norm < tol:
-        raise ValueError("State norm is too small; cannot normalize.")
-    return psi / norm
 
 
 def projector(psi: ArrayC) -> ArrayC:
