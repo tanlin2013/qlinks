@@ -385,6 +385,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.bipartition_labels"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.bipartition_labels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.node_values"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.node_values()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.plot"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.vertex_display_labels"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.vertex_display_labels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_igraph()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_networkx()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save_graph"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.save_graph()</span></code></a></li>
@@ -1081,6 +1082,19 @@ graph edges. Diagonal entries are stored as self-loop values.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.vertex_display_labels">
+<span class="sig-name descname"><span class="pre">vertex_display_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.vertex_display_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.vertex_display_labels" title="Link to this definition">#</a></dt>
+<dd><p>Return vertex labels for plotting.</p>
+<p>For a full graph, these are 0, 1, 2, …
+For a subgraph, these are the original parent-graph basis indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph">
 <span class="sig-name descname"><span class="pre">to_igraph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/visualizer/hamiltonian_graph.html#HamiltonianGraphVisualizer.to_igraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph" title="Link to this definition">#</a></dt>
 <dd><p>Convert to an igraph.Graph.</p>
@@ -1656,6 +1670,7 @@ other configs are printed like 1,-1,1,-1.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.bipartition_labels"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.bipartition_labels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.node_values"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.node_values()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.plot"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.vertex_display_labels"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.vertex_display_labels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_igraph"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_igraph()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.to_networkx"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.to_networkx()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.visualizer.HamiltonianGraphVisualizer.save_graph"><code class="docutils literal notranslate"><span class="pre">HamiltonianGraphVisualizer.save_graph()</span></code></a></li>
