@@ -1,3 +1,9 @@
+from qlinks.open_system.diagnostics import (
+    DensityMatrixVerification,
+    LindbladFinalStateVerification,
+    verify_density_matrix,
+    verify_lindblad_final_state,
+)
 from qlinks.open_system.lindbladian import (
     build_liouvillian,
     dark_state_residual,
@@ -54,4 +60,8 @@ __all__ = [
     "random_mixed_density_matrix",
     "random_pure_density_matrix",
     "random_pure_state",
+    "DensityMatrixVerification",
+    "LindbladFinalStateVerification",
+    "verify_density_matrix",
+    "verify_lindblad_final_state",
 ]
