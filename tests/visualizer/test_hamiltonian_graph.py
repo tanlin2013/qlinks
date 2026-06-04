@@ -795,3 +795,96 @@ def test_cage_subgraph_keeps_projected_state_vector_for_coloring() -> None:
         subgraph.graph_data.state_vector,
         vector[[0, 1, 2]],
     )
+
+
+def test_cage_subgraph_vertex_display_labels_use_original_indices() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0, 1, 0, 0, 0],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+                [0, 0, 1, 0, 1],
+                [0, 0, 0, 1, 0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    vector = np.zeros(5, dtype=np.complex128)
+    vector[[2, 3]] = [1.0, -1.0]
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    subgraph = visualizer.subgraph_for_cage_state(
+        vector,
+        zero_indices=[1, 4],
+    )
+
+    np.testing.assert_array_equal(
+        subgraph.graph_data.original_indices,
+        np.asarray([1, 2, 3, 4], dtype=np.int64),
+    )
+
+    assert subgraph.vertex_display_labels() == ["1", "2", "3", "4"]
+
+
+def test_cage_subgraph_networkx_nodes_have_original_indices() -> None:
+    matrix = scipy_sparse.identity(5, format="csr")
+    vector = np.zeros(5, dtype=np.complex128)
+    vector[3] = 1.0
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    subgraph = visualizer.subgraph_for_cage_state(
+        vector,
+        zero_indices=[1],
+    )
+
+    graph = subgraph.to_networkx()
+
+    assert graph.nodes[0]["original_index"] == 1
+    assert graph.nodes[1]["original_index"] == 3
+    assert graph.nodes[0]["label"] == "1"
+    assert graph.nodes[1]["label"] == "3"
+
+
+def test_cage_subgraph_plot_labels_show_original_indices() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0, 1, 0],
+                [1, 0, 1],
+                [0, 1, 0],
+            ],
+            dtype=np.float64,
+        )
+    )
+
+    vector = np.zeros(3, dtype=np.complex128)
+    vector[2] = 1.0
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(
+        matrix,
+        style=HamiltonianGraphStyle(label_vertices=True),
+    )
+
+    subgraph = visualizer.subgraph_for_cage_state(
+        vector,
+        zero_indices=[1],
+    )
+
+    fig, ax = plt.subplots()
+
+    subgraph.plot(
+        backend="networkx",
+        ax=ax,
+        show=False,
+        layout="spring",
+    )
+
+    labels = {text.get_text() for text in ax.texts}
+
+    assert {"1", "2"} <= labels
+
+    plt.close(fig)

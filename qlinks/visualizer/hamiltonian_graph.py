@@ -322,11 +322,7 @@ class HamiltonianGraphVisualizer:
             layout=layout_object,
             vertex_size=self.style.vertex_size,
             vertex_color=vertex_colors,
-            vertex_label=(
-                [str(index) for index in range(graph.vcount())]
-                if self.style.label_vertices
-                else None
-            ),
+            vertex_label=(self.vertex_display_labels() if self.style.label_vertices else None),
             vertex_label_size=self.style.vertex_label_size,
             edge_width=self.style.edge_width,
             edge_color=self.style.edge_color,
@@ -415,9 +411,7 @@ class HamiltonianGraphVisualizer:
 
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
 
-        vertex_labels = (
-            [str(index) for index in range(graph.vcount())] if self.style.label_vertices else None
-        )
+        vertex_labels = self.vertex_display_labels() if self.style.label_vertices else None
 
         visual_style = {
             "layout": layout_object,
@@ -516,9 +510,14 @@ class HamiltonianGraphVisualizer:
         )
 
         if self.style.label_vertices:
+            labels = {
+                local_index: label for local_index, label in enumerate(self.vertex_display_labels())
+            }
+
             nx.draw_networkx_labels(
                 graph,
                 positions,
+                labels=labels,
                 font_size=self.style.vertex_label_size,
                 ax=ax,
             )
@@ -548,6 +547,22 @@ class HamiltonianGraphVisualizer:
 
         return ax
 
+    def vertex_display_labels(self) -> list[str]:
+        """Return vertex labels for plotting.
+
+        For a full graph, these are 0, 1, 2, ...
+        For a subgraph, these are the original parent-graph basis indices.
+        """
+        original_indices = self.graph_data.original_indices
+
+        if original_indices is None:
+            return [str(index) for index in range(self.graph_data.n_vertices)]
+
+        if len(original_indices) != self.graph_data.n_vertices:
+            raise ValueError("graph_data.original_indices must have length n_vertices.")
+
+        return [str(int(index)) for index in original_indices]
+
     def to_igraph(self):
         """Convert to an igraph.Graph."""
         try:
@@ -556,6 +571,7 @@ class HamiltonianGraphVisualizer:
             raise ImportError("python-igraph is required for to_igraph().") from error
 
         adjacency = self.graph_data.adjacency.tocoo()
+
         edges = [
             (int(row), int(col))
             for row, col in zip(adjacency.row, adjacency.col, strict=True)
@@ -567,6 +583,22 @@ class HamiltonianGraphVisualizer:
             edges=edges,
             directed=False,
         )
+
+        labels = self.vertex_display_labels()
+
+        graph.vs["local_index"] = list(range(self.graph_data.n_vertices))
+        graph.vs["label"] = labels
+        graph.vs["name"] = labels
+
+        if self.graph_data.original_indices is not None:
+            graph.vs["original_index"] = [int(index) for index in self.graph_data.original_indices]
+
+        if self.graph_data.state_vector is not None:
+            state_vector = np.asarray(self.graph_data.state_vector, dtype=np.complex128)
+            graph.vs["state_amplitude_real"] = [float(value.real) for value in state_vector]
+            graph.vs["state_amplitude_imag"] = [float(value.imag) for value in state_vector]
+            graph.vs["state_weight"] = [float(abs(value) ** 2) for value in state_vector]
+
         return graph
 
     def to_networkx(self):
@@ -578,15 +610,26 @@ class HamiltonianGraphVisualizer:
 
         adjacency = self.graph_data.adjacency.tocoo()
         graph = nx.Graph()
+
         original_indices = self.graph_data.original_indices
         state_vector = self.graph_data.state_vector
+
+        if original_indices is not None and len(original_indices) != self.graph_data.n_vertices:
+            raise ValueError("graph_data.original_indices must have length n_vertices.")
+
+        if state_vector is not None and len(state_vector) != self.graph_data.n_vertices:
+            raise ValueError("graph_data.state_vector must have length n_vertices.")
 
         for node in range(self.graph_data.n_vertices):
             graph.add_node(node)
             graph.nodes[node]["local_index"] = int(node)
 
             if original_indices is not None:
-                graph.nodes[node]["original_index"] = int(original_indices[node])
+                original_index = int(original_indices[node])
+                graph.nodes[node]["original_index"] = original_index
+                graph.nodes[node]["label"] = str(original_index)
+            else:
+                graph.nodes[node]["label"] = str(node)
 
             if state_vector is not None:
                 amplitude = complex(state_vector[node])
@@ -1136,7 +1179,7 @@ class HamiltonianGraphVisualizer:
             graph_data=HamiltonianGraphData(
                 adjacency=scipy_sparse.csr_array(sub_adjacency),
                 self_loop_values=np.asarray(sub_self_loops, dtype=np.complex128),
-                original_indices=selected_indices,
+                original_indices=selected_indices.astype(np.int64),
                 state_vector=np.asarray(sub_state_vector, dtype=np.complex128),
             ),
             style=self.style,
