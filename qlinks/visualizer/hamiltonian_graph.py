@@ -24,6 +24,14 @@ NodeColorRule = Literal[
     "state_amplitude_abs",
     "state_phase",
 ]
+EdgeColorRule = Literal[
+    "constant",
+    "weight_abs",
+    "weight_real",
+    "weight_imag",
+    "weight_phase",
+    "weight_complex",
+]
 LayoutName = Literal[
     "auto",
     "fr",
@@ -40,16 +48,36 @@ AutomorphismBackend = Literal["auto", "pynauty", "igraph"]
 class HamiltonianGraphStyle:
     """Style options for drawing Hamiltonian/Fock-space graphs."""
 
+    # Figure / canvas
+    figure_size: tuple[float, float] = (7.0, 7.0)
+
+    # Vertices
     vertex_size: float = 14.0
+    default_vertex_color: str = "lightgray"
+
+    # Edges
     edge_width: float = 0.8
     edge_alpha: float = 0.45
+    edge_color: str = "gray"
+
+    # Labels
     label_vertices: bool = False
     vertex_label_size: float = 8.0
-    colorbar: bool = True
+
+    # Vertex colormap / colorbar
     cmap: str = "viridis"
-    default_vertex_color: str = "lightgray"
-    edge_color: str = "gray"
-    figure_size: tuple[float, float] = (7.0, 7.0)
+    colorbar: bool = True
+
+    # Edge colormap / colorbar
+    edge_cmap: str = "coolwarm"
+    edge_phase_cmap: str = "twilight"
+    edge_colorbar: bool = True
+
+    # Complex edge coloring
+    edge_complex_min_alpha: float = 0.20
+    edge_complex_max_alpha: float = 0.95
+
+    # Automorphism-orbit coloring
     orbit_alpha: float = 0.65
     orbit_lightness_boost: float = 0.15
 
@@ -125,7 +153,7 @@ class HamiltonianGraphVisualizer:
         adjacency.eliminate_zeros()
 
         # For visualization, treat the graph as undirected.
-        adjacency = _symmetrized_adjacency(adjacency)
+        adjacency = _symmetrized_weighted_adjacency(adjacency)
         n_vertices = int(adjacency.shape[0])
 
         return cls(
@@ -203,11 +231,40 @@ class HamiltonianGraphVisualizer:
 
         raise ValueError(f"Unsupported color_by rule: {color_by!r}")
 
+    def edge_values(
+        self,
+        *,
+        color_by: EdgeColorRule,
+    ) -> npt.NDArray[np.float64] | npt.NDArray[np.complex128]:
+        """Return edge values in the same order as plotted graph edges."""
+        if color_by == "constant":
+            return np.zeros(self.n_edges(), dtype=np.float64)
+
+        weights = self.edge_weights()
+
+        if color_by == "weight_abs":
+            return np.abs(weights).astype(np.float64)
+
+        if color_by == "weight_real":
+            return np.real(weights).astype(np.float64)
+
+        if color_by == "weight_imag":
+            return np.imag(weights).astype(np.float64)
+
+        if color_by == "weight_phase":
+            return np.angle(weights).astype(np.float64)
+
+        if color_by == "weight_complex":
+            return weights.astype(np.complex128)
+
+        raise ValueError(f"Unsupported edge_color_by rule: {color_by!r}")
+
     def plot(
         self,
         *,
         backend: GraphBackend = "igraph",
         color_by: NodeColorRule = "constant",
+        edge_color_by: EdgeColorRule = "constant",
         layout: LayoutName = "auto",
         self_loop_values: npt.ArrayLike | None = None,
         state_vector: npt.ArrayLike | None = None,
@@ -226,6 +283,7 @@ class HamiltonianGraphVisualizer:
         if normalized_backend == "igraph-mpl":
             return self._plot_igraph_matplotlib(
                 color_by=color_by,
+                edge_color_by=edge_color_by,
                 layout=layout,
                 self_loop_values=self_loop_values,
                 state_vector=state_vector,
@@ -239,6 +297,7 @@ class HamiltonianGraphVisualizer:
         if normalized_backend == "igraph-cairo":
             return self._plot_igraph_cairo(
                 color_by=color_by,
+                edge_color_by=edge_color_by,
                 layout=layout,
                 self_loop_values=self_loop_values,
                 state_vector=state_vector,
@@ -255,6 +314,7 @@ class HamiltonianGraphVisualizer:
         if normalized_backend == "networkx":
             return self._plot_networkx(
                 color_by=color_by,
+                edge_color_by=edge_color_by,
                 layout=layout,
                 self_loop_values=self_loop_values,
                 state_vector=state_vector,
@@ -278,6 +338,7 @@ class HamiltonianGraphVisualizer:
         ax,
         show: bool,
         save_path: str | Path | None,
+        edge_color_by: EdgeColorRule = "constant",
         automorphism_backend: AutomorphismBackend = "auto",
         **layout_kwargs,
     ):
@@ -309,6 +370,8 @@ class HamiltonianGraphVisualizer:
                 color_by=color_by,
             )
 
+        edge_colors = self._edge_colors_for_matplotlib(edge_color_by=edge_color_by)
+
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
 
         if ax is None:
@@ -325,7 +388,7 @@ class HamiltonianGraphVisualizer:
             vertex_label=(self.vertex_display_labels() if self.style.label_vertices else None),
             vertex_label_size=self.style.vertex_label_size,
             edge_width=self.style.edge_width,
-            edge_color=self.style.edge_color,
+            edge_color=edge_colors,
         )
 
         if title is not None:
@@ -338,6 +401,22 @@ class HamiltonianGraphVisualizer:
                 cmap=self.style.cmap,
                 label=color_by,
                 color_by=color_by,
+            )
+
+        if self.style.edge_colorbar and edge_color_by not in ("constant", "weight_complex"):
+            edge_values = self.edge_values(color_by=edge_color_by)
+            edge_cmap = (
+                self.style.edge_phase_cmap
+                if edge_color_by == "weight_phase"
+                else self.style.edge_cmap
+            )
+
+            _add_edge_colorbar(
+                ax=ax,
+                values=edge_values,
+                cmap=edge_cmap,
+                label=edge_color_by,
+                color_by=edge_color_by,
             )
 
         if save_path is not None:
@@ -362,6 +441,7 @@ class HamiltonianGraphVisualizer:
         target: str | Path | None,
         bbox: tuple[int, int],
         margin: int,
+        edge_color_by: EdgeColorRule = "constant",
         automorphism_backend: AutomorphismBackend = "auto",
         **layout_kwargs,
     ):
@@ -422,7 +502,9 @@ class HamiltonianGraphVisualizer:
             "vertex_label": vertex_labels,
             "vertex_label_size": self.style.vertex_label_size,
             "edge_width": self.style.edge_width,
-            "edge_color": self.style.edge_color,
+            "edge_color": self._edge_colors_for_igraph_cairo(
+                edge_color_by=edge_color_by,
+            ),
         }
 
         # Optional graph title. Cairo plots do not have a Matplotlib Axes title,
@@ -458,6 +540,7 @@ class HamiltonianGraphVisualizer:
         ax,
         show: bool,
         save_path: str | Path | None,
+        edge_color_by: EdgeColorRule = "constant",
         automorphism_backend: AutomorphismBackend = "auto",
         **layout_kwargs,
     ):
@@ -493,6 +576,9 @@ class HamiltonianGraphVisualizer:
                 color_by=color_by,
             )
 
+        edge_colors = self._edge_colors_for_matplotlib(edge_color_by=edge_color_by)
+        edge_alpha = None if edge_color_by == "weight_complex" else self.style.edge_alpha
+
         nx.draw_networkx_nodes(
             graph,
             positions,
@@ -504,8 +590,8 @@ class HamiltonianGraphVisualizer:
             graph,
             positions,
             width=self.style.edge_width,
-            edge_color=self.style.edge_color,
-            alpha=self.style.edge_alpha,
+            edge_color=edge_colors,
+            alpha=edge_alpha,
             ax=ax,
         )
 
@@ -534,6 +620,22 @@ class HamiltonianGraphVisualizer:
                 cmap=self.style.cmap,
                 label=color_by,
                 color_by=color_by,
+            )
+
+        if self.style.edge_colorbar and edge_color_by not in ("constant", "weight_complex"):
+            edge_values = self.edge_values(color_by=edge_color_by)
+            edge_cmap = (
+                self.style.edge_phase_cmap
+                if edge_color_by == "weight_phase"
+                else self.style.edge_cmap
+            )
+
+            _add_edge_colorbar(
+                ax=ax,
+                values=edge_values,
+                cmap=edge_cmap,
+                label=edge_color_by,
+                color_by=edge_color_by,
             )
 
         if color_by == "automorphism_orbit":
@@ -1054,6 +1156,79 @@ class HamiltonianGraphVisualizer:
         raw_orbits = np.asarray([find(i) for i in range(n_vertices)], dtype=np.int64)
         return self._dense_orbit_labels(raw_orbits)
 
+    def _edge_colors_for_matplotlib(
+        self,
+        *,
+        edge_color_by: EdgeColorRule,
+    ) -> str | list:
+        if edge_color_by == "constant":
+            return self.style.edge_color
+
+        edge_values = self.edge_values(color_by=edge_color_by)
+
+        if edge_color_by == "weight_complex":
+            return _complex_edge_weights_to_rgba(
+                edge_values,
+                min_alpha=self.style.edge_complex_min_alpha,
+                max_alpha=self.style.edge_complex_max_alpha,
+            )
+
+        cmap = (
+            self.style.edge_phase_cmap if edge_color_by == "weight_phase" else self.style.edge_cmap
+        )
+
+        return _edge_scalar_values_to_colors(
+            edge_values,
+            cmap=cmap,
+            color_by=edge_color_by,
+        )
+
+    def _edge_colors_for_igraph_cairo(
+        self,
+        *,
+        edge_color_by: EdgeColorRule,
+    ) -> str | list[str]:
+        if edge_color_by == "constant":
+            return self.style.edge_color
+
+        edge_values = self.edge_values(color_by=edge_color_by)
+
+        if edge_color_by == "weight_complex":
+            return _complex_edge_weights_to_hex_colors(edge_values)
+
+        cmap = (
+            self.style.edge_phase_cmap if edge_color_by == "weight_phase" else self.style.edge_cmap
+        )
+
+        return _edge_scalar_values_to_hex_colors(
+            edge_values,
+            cmap=cmap,
+            color_by=edge_color_by,
+        )
+
+    def edge_weights(self) -> npt.NDArray[np.complex128]:
+        """Return upper-triangular edge weights in plotting edge order."""
+        adjacency = scipy_sparse.triu(
+            self.graph_data.adjacency,
+            k=1,
+            format="coo",
+        )
+
+        return np.asarray(adjacency.data, dtype=np.complex128)
+
+    def edge_pairs(self) -> list[tuple[int, int]]:
+        """Return upper-triangular edge pairs in plotting edge order."""
+        adjacency = scipy_sparse.triu(
+            self.graph_data.adjacency,
+            k=1,
+            format="coo",
+        )
+
+        return [(int(row), int(col)) for row, col in zip(adjacency.row, adjacency.col, strict=True)]
+
+    def n_edges(self) -> int:
+        return len(self.edge_pairs())
+
     def _resolve_state_vector(
         self,
         state_vector: npt.ArrayLike | None,
@@ -1253,6 +1428,35 @@ def _symmetrized_adjacency(
     return adjacency.tocsr()
 
 
+def _symmetrized_weighted_adjacency(
+    matrix: scipy_sparse.csr_array,
+) -> scipy_sparse.csr_array:
+    """Return weighted undirected adjacency preserving complex edge weights.
+
+    For Hermitian matrices, the upper/lower entries are conjugates. We keep
+    the upper-triangular representative and mirror it, so each undirected
+    edge has one stable complex orientation convention.
+    """
+    matrix = scipy_sparse.csr_array(matrix.copy())
+    matrix.setdiag(0)
+    matrix.eliminate_zeros()
+
+    upper = scipy_sparse.triu(matrix, k=1, format="csr")
+    lower = scipy_sparse.tril(matrix, k=-1, format="csr")
+
+    # Prefer upper-triangular entries. If an edge exists only in lower,
+    # use its conjugate as the upper-oriented value.
+    upper_from_lower = lower.T.conjugate()
+    upper_bool = upper.astype(bool)
+    missing_from_upper = upper_from_lower.multiply((upper_bool.astype(np.int8) == 0))
+
+    upper_combined = upper + missing_from_upper
+    adjacency = upper_combined + upper_combined.T.conjugate()
+
+    adjacency.eliminate_zeros()
+    return scipy_sparse.csr_array(adjacency)
+
+
 def _validate_node_values(
     values: npt.ArrayLike,
     n_vertices: int,
@@ -1370,6 +1574,27 @@ def _scalar_values_to_hex_colors(
     return [to_hex(colormap(float(norm(value)))) for value in values]
 
 
+def _edge_scalar_values_to_hex_colors(
+    values: npt.ArrayLike,
+    *,
+    cmap: str,
+    color_by: EdgeColorRule,
+) -> list[str]:
+    """Convert scalar edge values to hex color strings."""
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import to_hex
+
+    values = np.asarray(values, dtype=np.float64)
+
+    if values.size == 0:
+        return []
+
+    norm = _edge_color_norm(values, color_by=color_by)
+    colormap = plt.get_cmap(cmap)
+
+    return [to_hex(colormap(float(norm(value)))) for value in values]
+
+
 def _add_colorbar(
     *,
     ax,
@@ -1388,6 +1613,39 @@ def _add_colorbar(
         return
 
     norm = _node_color_norm(values, color_by=color_by)
+
+    scalar_mappable = ScalarMappable(
+        cmap=plt.get_cmap(cmap),
+        norm=norm,
+    )
+    scalar_mappable.set_array([])
+
+    ax.figure.colorbar(
+        scalar_mappable,
+        ax=ax,
+        label=label,
+        shrink=0.8,
+    )
+
+
+def _add_edge_colorbar(
+    *,
+    ax,
+    values: npt.ArrayLike,
+    cmap: str,
+    label: str,
+    color_by: EdgeColorRule,
+) -> None:
+    """Attach a scalar edge-color colorbar to an axis."""
+    import matplotlib.pyplot as plt
+    from matplotlib.cm import ScalarMappable
+
+    values = np.asarray(values, dtype=np.float64)
+
+    if values.size == 0 or np.allclose(values, values[0]):
+        return
+
+    norm = _edge_color_norm(values, color_by=color_by)
 
     scalar_mappable = ScalarMappable(
         cmap=plt.get_cmap(cmap),
@@ -1445,6 +1703,14 @@ def _uses_zero_centered_colormap(color_by: NodeColorRule) -> bool:
     }
 
 
+def _uses_zero_centered_edge_colormap(color_by: EdgeColorRule) -> bool:
+    """Return whether edge colors should be centered at zero."""
+    return color_by in {
+        "weight_real",
+        "weight_imag",
+    }
+
+
 def _node_color_norm(
     values: npt.ArrayLike,
     *,
@@ -1487,6 +1753,119 @@ def _node_color_norm(
         vmin=float(np.min(values)),
         vmax=float(np.max(values)),
     )
+
+
+def _edge_color_norm(
+    values: npt.ArrayLike,
+    *,
+    color_by: EdgeColorRule,
+):
+    """Return a Matplotlib norm for edge colors."""
+    from matplotlib.colors import Normalize, TwoSlopeNorm
+
+    values = np.asarray(values, dtype=np.float64)
+
+    if values.size == 0:
+        return Normalize(vmin=0.0, vmax=1.0)
+
+    if color_by == "weight_phase":
+        return Normalize(vmin=-np.pi, vmax=np.pi)
+
+    if np.allclose(values, values[0]):
+        value = float(values[0])
+
+        if _uses_zero_centered_edge_colormap(color_by):
+            scale = max(abs(value), 1.0)
+            return TwoSlopeNorm(
+                vmin=-scale,
+                vcenter=0.0,
+                vmax=scale,
+            )
+
+        return Normalize(vmin=value - 0.5, vmax=value + 0.5)
+
+    if _uses_zero_centered_edge_colormap(color_by):
+        scale = float(np.max(np.abs(values)))
+        if scale == 0.0:
+            scale = 1.0
+
+        return TwoSlopeNorm(
+            vmin=-scale,
+            vcenter=0.0,
+            vmax=scale,
+        )
+
+    return Normalize(
+        vmin=float(np.min(values)),
+        vmax=float(np.max(values)),
+    )
+
+
+def _complex_edge_weights_to_rgba(
+    weights: npt.ArrayLike,
+    *,
+    min_alpha: float = 0.20,
+    max_alpha: float = 0.95,
+) -> list[tuple[float, float, float, float]]:
+    """Map complex edge weights to RGBA.
+
+    phase -> hue
+    relative magnitude -> alpha
+    """
+    import colorsys
+
+    weights = np.asarray(weights, dtype=np.complex128)
+
+    if weights.size == 0:
+        return []
+
+    magnitudes = np.abs(weights)
+    max_magnitude = float(np.max(magnitudes))
+
+    if max_magnitude <= 0.0:
+        relative = np.zeros_like(magnitudes, dtype=np.float64)
+    else:
+        relative = magnitudes / max_magnitude
+
+    colors: list[tuple[float, float, float, float]] = []
+
+    for weight, magnitude_ratio in zip(weights, relative, strict=True):
+        phase = float(np.angle(weight))
+        hue = (phase + np.pi) / (2.0 * np.pi)
+
+        red, green, blue = colorsys.hsv_to_rgb(hue, 0.85, 0.90)
+
+        alpha = min_alpha + (max_alpha - min_alpha) * float(magnitude_ratio)
+        colors.append((red, green, blue, alpha))
+
+    return colors
+
+
+def _edge_scalar_values_to_colors(
+    values: npt.ArrayLike,
+    *,
+    cmap: str,
+    color_by: EdgeColorRule,
+) -> list:
+    import matplotlib.pyplot as plt
+
+    values = np.asarray(values, dtype=np.float64)
+
+    if values.size == 0:
+        return []
+
+    norm = _edge_color_norm(values, color_by=color_by)
+    colormap = plt.get_cmap(cmap)
+
+    return [colormap(float(norm(value))) for value in values]
+
+
+def _complex_edge_weights_to_hex_colors(
+    weights: npt.ArrayLike,
+) -> list[str]:
+    from matplotlib.colors import to_hex
+
+    return [to_hex(color, keep_alpha=False) for color in _complex_edge_weights_to_rgba(weights)]
 
 
 def _orbit_labels_to_hex_colors(

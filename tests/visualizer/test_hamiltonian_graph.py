@@ -888,3 +888,77 @@ def test_cage_subgraph_plot_labels_show_original_indices() -> None:
     assert {"1", "2"} <= labels
 
     plt.close(fig)
+
+
+def test_hamiltonian_graph_preserves_complex_edge_weights() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0 + 2.0j],
+                [1.0 - 2.0j, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    weights = visualizer.edge_weights()
+
+    np.testing.assert_allclose(weights, np.asarray([1.0 + 2.0j]))
+
+
+def test_hamiltonian_graph_edge_values_real_imag_abs_phase() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0 + 1.0j, 2.0],
+                [1.0 - 1.0j, 0.0, -1.0j],
+                [2.0, 1.0j, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    np.testing.assert_allclose(
+        visualizer.edge_values(color_by="weight_real"),
+        np.asarray([1.0, 2.0, 0.0]),
+    )
+    np.testing.assert_allclose(
+        visualizer.edge_values(color_by="weight_imag"),
+        np.asarray([1.0, 0.0, -1.0]),
+    )
+    np.testing.assert_allclose(
+        visualizer.edge_values(color_by="weight_abs"),
+        np.asarray([np.sqrt(2.0), 2.0, 1.0]),
+    )
+
+
+def test_hamiltonian_graph_networkx_edge_coloring_complex_runs() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 1.0j],
+                [1.0, 0.0, -1.0],
+                [-1.0j, -1.0, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    fig, ax = plt.subplots()
+
+    visualizer.plot(
+        backend="networkx",
+        ax=ax,
+        show=False,
+        edge_color_by="weight_complex",
+    )
+
+    assert ax.collections
+
+    plt.close(fig)
