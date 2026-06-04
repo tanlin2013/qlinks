@@ -27,6 +27,10 @@ from qlinks.caging.nullspace import (
     as_dense_array,
     nullspace_svd,
 )
+from qlinks.caging.open_system import (
+    CageLindbladConstruction,
+    build_type1_cage_lindblad_construction,
+)
 from qlinks.caging.partition import (
     VertexSignature,
     group_vertices_by_signature,
@@ -150,4 +154,6 @@ __all__ = [
     "distinct_reduced_iz_pattern_supports",
     "extract_cage_region_support",
     "reduced_iz_probe_support_from_report",
+    "CageLindbladConstruction",
+    "build_type1_cage_lindblad_construction",
 ]
