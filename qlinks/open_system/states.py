@@ -1,0 +1,162 @@
+from __future__ import annotations
+
+from typing import Literal
+
+import numpy as np
+import numpy.typing as npt
+
+DensityMatrixKind = Literal["pure", "mixed"]
+
+
+def _rng_from_seed(
+    rng: np.random.Generator | int | None,
+) -> np.random.Generator:
+    if isinstance(rng, np.random.Generator):
+        return rng
+    return np.random.default_rng(rng)
+
+
+def normalize_state(
+    state: npt.ArrayLike,
+    *,
+    atol: float = 0.0,
+) -> npt.NDArray[np.complex128]:
+    """Return a normalized complex state vector."""
+    vector = np.asarray(state, dtype=np.complex128)
+    norm = float(np.linalg.norm(vector))
+
+    if norm <= atol:
+        raise ValueError("Cannot normalize a zero-norm state.")
+
+    return vector / norm
+
+
+def random_pure_state(
+    dim: int,
+    *,
+    rng: np.random.Generator | int | None = None,
+) -> npt.NDArray[np.complex128]:
+    """Draw a Haar-like random complex state vector."""
+    if dim <= 0:
+        raise ValueError("dim must be positive.")
+
+    generator = _rng_from_seed(rng)
+
+    real = generator.normal(size=dim)
+    imag = generator.normal(size=dim)
+    state = real + 1j * imag
+
+    return normalize_state(state)
+
+
+def pure_density_matrix(
+    state: npt.ArrayLike,
+    *,
+    normalize: bool = True,
+) -> npt.NDArray[np.complex128]:
+    """Return |psi><psi|."""
+    vector = np.asarray(state, dtype=np.complex128)
+
+    if vector.ndim != 1:
+        raise ValueError("state must be a one-dimensional vector.")
+
+    if normalize:
+        vector = normalize_state(vector)
+
+    return np.outer(vector, np.conjugate(vector)).astype(
+        np.complex128,
+        copy=False,
+    )
+
+
+def random_pure_density_matrix(
+    dim: int,
+    *,
+    rng: np.random.Generator | int | None = None,
+) -> npt.NDArray[np.complex128]:
+    """Draw a random pure density matrix |psi><psi|."""
+    state = random_pure_state(dim, rng=rng)
+    return pure_density_matrix(state, normalize=False)
+
+
+def random_mixed_density_matrix(
+    dim: int,
+    *,
+    rank: int | None = None,
+    rng: np.random.Generator | int | None = None,
+) -> npt.NDArray[np.complex128]:
+    r"""Draw a random mixed density matrix using a Ginibre ensemble.
+
+    Parameters
+    ----------
+    dim:
+        Hilbert-space dimension.
+    rank:
+        Optional effective rank. If None, use full rank ``dim``.
+        The state is generated as rho = X X^\dagger / Tr(X X^\dagger),
+        where X has shape ``(dim, rank)``.
+    rng:
+        NumPy random generator or seed.
+
+    Returns
+    -------
+    rho:
+        Hermitian, positive-semidefinite density matrix with trace one.
+    """
+    if dim <= 0:
+        raise ValueError("dim must be positive.")
+
+    if rank is None:
+        rank = dim
+
+    if rank <= 0:
+        raise ValueError("rank must be positive.")
+
+    if rank > dim:
+        raise ValueError("rank must be less than or equal to dim.")
+
+    generator = _rng_from_seed(rng)
+
+    real = generator.normal(size=(dim, rank))
+    imag = generator.normal(size=(dim, rank))
+    ginibre = real + 1j * imag
+
+    rho = ginibre @ np.conjugate(ginibre).T
+    trace = np.trace(rho)
+
+    if abs(trace) == 0:
+        raise RuntimeError("Generated a zero-trace random density matrix.")
+
+    rho = rho / trace
+
+    # Symmetrize to remove tiny numerical anti-Hermitian noise.
+    rho = 0.5 * (rho + np.conjugate(rho).T)
+
+    # Re-normalize after symmetrization.
+    rho = rho / np.trace(rho)
+
+    return rho.astype(np.complex128, copy=False)
+
+
+def random_density_matrix(
+    dim: int,
+    *,
+    kind: DensityMatrixKind = "mixed",
+    rank: int | None = None,
+    rng: np.random.Generator | int | None = None,
+) -> npt.NDArray[np.complex128]:
+    r"""Draw a random density matrix.
+
+    ``kind="pure"`` returns |psi><psi|.
+
+    ``kind="mixed"`` returns X X^\dagger / Tr(X X^\dagger).
+    """
+    if kind == "pure":
+        if rank is not None and rank != 1:
+            raise ValueError("rank is only meaningful for kind='mixed'.")
+        return random_pure_density_matrix(dim, rng=rng)
+
+    if kind == "mixed":
+        return random_mixed_density_matrix(dim, rank=rank, rng=rng)
+
+    raise ValueError(f"Unsupported density-matrix kind: {kind!r}")
