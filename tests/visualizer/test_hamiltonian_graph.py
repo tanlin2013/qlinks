@@ -180,7 +180,10 @@ def test_to_networkx_uses_real_layout_weight_for_complex_matrix() -> None:
 
     assert isinstance(edge_data["weight"], float)
     assert edge_data["weight"] == pytest.approx(1.0)
-    assert isinstance(edge_data["hamiltonian_weight"], complex)
+    assert edge_data["hamiltonian_weight_real"] == pytest.approx(1.0)
+    assert edge_data["hamiltonian_weight_imag"] == pytest.approx(2.0)
+    assert edge_data["hamiltonian_weight_abs"] == pytest.approx(np.sqrt(5.0))
+    assert edge_data["hamiltonian_weight_phase"] == pytest.approx(np.angle(1.0 + 2.0j))
 
 
 @pytest.mark.skipif(not igraph_available, reason="python-igraph is not installed.")

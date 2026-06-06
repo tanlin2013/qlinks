@@ -746,11 +746,18 @@ class HamiltonianGraphVisualizer:
             strict=True,
         ):
             if int(row) < int(col):
+                weight = complex(value)
+
                 graph.add_edge(
                     int(row),
                     int(col),
-                    weight=float(abs(value)),
-                    hamiltonian_weight=complex(value),
+                    # Keep NetworkX layout/generic graph weight real and backward-compatible.
+                    weight=1.0,
+                    # Store Hamiltonian matrix element explicitly.
+                    hamiltonian_weight_real=float(weight.real),
+                    hamiltonian_weight_imag=float(weight.imag),
+                    hamiltonian_weight_abs=float(abs(weight)),
+                    hamiltonian_weight_phase=float(np.angle(weight)),
                 )
 
         return graph
