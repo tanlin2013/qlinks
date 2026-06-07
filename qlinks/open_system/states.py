@@ -5,7 +5,11 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 
-DensityMatrixKind = Literal["pure", "mixed"]
+DensityMatrixKind = Literal[
+    "pure",
+    "mixed",
+    "maximally_mixed",
+]
 
 
 def _rng_from_seed(
@@ -47,6 +51,14 @@ def random_pure_state(
     state = real + 1j * imag
 
     return normalize_state(state)
+
+
+def density_matrix_from_state(
+    state: npt.ArrayLike,
+    *,
+    normalize: bool = True,
+) -> npt.NDArray[np.complex128]:
+    return pure_density_matrix(state, normalize=normalize)
 
 
 def pure_density_matrix(
@@ -160,3 +172,30 @@ def random_density_matrix(
         return random_mixed_density_matrix(dim, rank=rank, rng=rng)
 
     raise ValueError(f"Unsupported density-matrix kind: {kind!r}")
+
+
+def initial_density_matrix(
+    dim: int,
+    *,
+    kind: DensityMatrixKind = "mixed",
+    rank: int | None = None,
+    rng: np.random.Generator | int | None = None,
+) -> npt.NDArray[np.complex128]:
+    """Create a convenient initial density matrix."""
+    if dim <= 0:
+        raise ValueError("dim must be positive.")
+
+    if kind == "maximally_mixed":
+        if rank is not None:
+            raise ValueError("rank is not meaningful for kind='maximally_mixed'.")
+        return np.eye(dim, dtype=np.complex128) / dim
+
+    if kind == "pure":
+        if rank is not None and rank != 1:
+            raise ValueError("rank is not meaningful for kind='pure'.")
+        return random_pure_density_matrix(dim, rng=rng)
+
+    if kind == "mixed":
+        return random_mixed_density_matrix(dim, rank=rank, rng=rng)
+
+    raise ValueError(f"Unsupported initial density matrix kind: {kind!r}")

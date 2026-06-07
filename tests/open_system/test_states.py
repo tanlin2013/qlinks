@@ -4,11 +4,13 @@ import numpy as np
 import pytest
 
 from qlinks.open_system import (
+    initial_density_matrix,
     pure_density_matrix,
     random_density_matrix,
     random_mixed_density_matrix,
     random_pure_density_matrix,
     random_pure_state,
+    verify_density_matrix,
 )
 
 
@@ -95,3 +97,29 @@ def test_random_mixed_density_matrix_rejects_bad_rank() -> None:
 
     with pytest.raises(ValueError, match="rank"):
         random_mixed_density_matrix(4, rank=5, rng=123)
+
+
+def test_initial_density_matrix_mixed_is_valid():
+    density_matrix = initial_density_matrix(5, kind="mixed", rng=0)
+    verification = verify_density_matrix(density_matrix)
+    assert verification.is_density_matrix
+
+
+def test_initial_density_matrix_pure_is_projector():
+    density_matrix = initial_density_matrix(5, kind="pure", rng=0)
+    verification = verify_density_matrix(density_matrix)
+    assert verification.is_density_matrix
+    assert verification.purity == pytest.approx(1.0)
+
+
+def test_initial_density_matrix_maximally_mixed():
+    density_matrix = initial_density_matrix(4, kind="maximally_mixed")
+    np.testing.assert_allclose(
+        density_matrix,
+        np.eye(4, dtype=np.complex128) / 4,
+    )
+
+
+def test_initial_density_matrix_rejects_rank_for_maximally_mixed():
+    with pytest.raises(ValueError, match="rank"):
+        initial_density_matrix(4, kind="maximally_mixed", rank=2)
