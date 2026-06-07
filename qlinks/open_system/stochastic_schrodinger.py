@@ -12,7 +12,7 @@ from qlinks.open_system.backend import (
     as_backend_dense_array,
     get_open_system_backend,
 )
-from qlinks.open_system.states import pure_density_matrix, random_pure_state
+from qlinks.open_system.states import random_pure_state
 
 ArrayC = NDArray[np.complex128]
 ArrayF = NDArray[np.float64]
@@ -394,15 +394,6 @@ def observable_vs_time(
     values = [np.real_if_close(np.trace(density_matrix @ observable)) for density_matrix in rho_t]
 
     return np.asarray(values, dtype=np.float64)
-
-
-def density_matrix_from_state(
-    state: Any,
-    *,
-    normalize: bool = True,
-) -> ArrayC:
-    """Compatibility helper for |state><state|."""
-    return pure_density_matrix(state, normalize=normalize)
 
 
 def _validate_times_for_mcwf(times: NDArray[np.float64]) -> None:
