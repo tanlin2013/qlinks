@@ -64,7 +64,7 @@ class CageLindbladConstruction:
     jumps: tuple[Any, ...]
     n_jumps: int
 
-    open_system_backend: str
+    open_system_backend: OpenSystemBackendName
 
     monitor_source: MonitorSource
     n_reduced_iz_monitor_terms: int
