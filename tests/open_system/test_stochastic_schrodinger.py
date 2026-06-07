@@ -3,13 +3,12 @@ import os
 import numpy as np
 import pytest
 
-from qlinks.open_system.states import normalize_state
+from qlinks.open_system.states import density_matrix_from_state, normalize_state
 from qlinks.open_system.stochastic_schrodinger import (
     EnsembleResult,
     McwfOptions,
     TrajectoryResult,
     choose_jump,
-    density_matrix_from_state,
     effective_hamiltonian,
     evolve_no_jump_first_order,
     expectation,
