@@ -306,6 +306,13 @@ def _evolve_rk4_matrix(
     diagnostics = []
     substeps_used: list[int] = []
 
+    if options.check_density_matrix:
+        diagnostics.append(
+            verify_density_matrix(
+                backend.to_numpy(density_matrix),
+            )
+        )
+
     scale = estimate_lindblad_scale(
         hamiltonian=problem.hamiltonian,
         jumps=problem.jumps,
@@ -359,6 +366,15 @@ def _evolve_rk4_matrix(
     )
 
 
+def _validate_uniform_times_for_krylov(times: np.ndarray) -> None:
+    step_sizes = np.diff(times)
+    if not np.allclose(step_sizes, step_sizes[0]):
+        raise ValueError(
+            "method='krylov' currently requires a uniform time grid because "
+            "scipy.sparse.linalg.expm_multiply is called with start/stop/num."
+        )
+
+
 def _evolve_krylov(
     *,
     problem: LindbladProblem,
@@ -368,6 +384,8 @@ def _evolve_krylov(
 ) -> LindbladEvolutionResult:
     if not problem.backend.supports_expm_multiply:
         raise ValueError(f"backend={problem.backend.name!r} does not support Krylov/expm_multiply.")
+
+    _validate_uniform_times_for_krylov(times)
 
     liouvillian = problem.build_liouvillian(sparse_format="csc")
     dim = problem.dim
@@ -488,6 +506,13 @@ def _evolve_rk4_liouville(
     density_matrices = [density_matrix.copy()]
     diagnostics = []
     substeps_used: list[int] = []
+
+    if options.check_density_matrix:
+        diagnostics.append(
+            verify_density_matrix(
+                backend.to_numpy(density_matrix),
+            )
+        )
 
     scale = estimate_lindblad_scale(
         hamiltonian=problem.hamiltonian,
