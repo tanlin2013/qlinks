@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 import pytest
 
@@ -709,10 +707,7 @@ def test_run_quantum_jump_trajectory_cupy_backend_optional(qubit_ops):
         assert isinstance(state, np.ndarray)
 
 
-@pytest.mark.skipif(
-    os.environ.get("QLINKS_SHOW_PLOTS") != "1",
-    reason="Manual visual tests. Run with QLINKS_SHOW_PLOTS=1.",
-)
+@pytest.mark.manual
 def test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
     import matplotlib.pyplot as plt
 
