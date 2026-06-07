@@ -1,7 +1,12 @@
 import numpy as np
 import pytest
 
-from qlinks.open_system import verify_density_matrix, verify_lindblad_final_state
+from qlinks.open_system import (
+    analyze_lindblad_evolution,
+    density_matrix_from_state,
+    verify_density_matrix,
+    verify_lindblad_final_state,
+)
 
 
 def test_verify_density_matrix_for_target_pure_state():
@@ -47,3 +52,16 @@ def test_verify_lindblad_final_state_accepts_hamiltonian_eigenstate():
 
     assert result.lindblad_residual < 1e-12
     assert result.density_matrix.fidelity_with_target == pytest.approx(1.0)
+
+
+def test_analyze_lindblad_evolution_reports_fidelity():
+    state = np.array([1.0, 0.0], dtype=np.complex128)
+    density_matrix = density_matrix_from_state(state)
+
+    diagnostics = analyze_lindblad_evolution(
+        [density_matrix, density_matrix],
+        target_state=state,
+    )
+
+    np.testing.assert_allclose(diagnostics.fidelities, [1.0, 1.0])
+    np.testing.assert_allclose(diagnostics.purities, [1.0, 1.0])

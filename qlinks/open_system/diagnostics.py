@@ -5,6 +5,68 @@ from dataclasses import dataclass
 import numpy as np
 import numpy.typing as npt
 
+from qlinks.open_system.operators import lindblad_rhs_density_matrix
+
+
+@dataclass(frozen=True, slots=True)
+class EvolutionDiagnostics:
+    trace_errors: np.ndarray
+    hermiticity_errors: np.ndarray
+    min_eigenvalues: np.ndarray
+    purities: np.ndarray
+    fidelities: np.ndarray | None
+    lindblad_residuals: np.ndarray | None
+
+
+def analyze_lindblad_evolution(
+    density_matrices: list[np.ndarray],
+    *,
+    target_state: np.ndarray | None = None,
+    hamiltonian=None,
+    jumps=None,
+    atol: float = 1e-10,
+) -> EvolutionDiagnostics:
+    density_diagnostics = [
+        verify_density_matrix(
+            density_matrix,
+            target_state=target_state,
+            atol=atol,
+        )
+        for density_matrix in density_matrices
+    ]
+
+    lindblad_residuals = None
+    if hamiltonian is not None and jumps is not None:
+        lindblad_residuals = np.array(
+            [
+                np.linalg.norm(
+                    lindblad_rhs_density_matrix(
+                        density_matrix,
+                        hamiltonian=hamiltonian,
+                        jumps=jumps,
+                    )
+                )
+                for density_matrix in density_matrices
+            ],
+            dtype=np.float64,
+        )
+
+    fidelities = None
+    if target_state is not None:
+        fidelities = np.array(
+            [diagnostic.fidelity_with_target for diagnostic in density_diagnostics],
+            dtype=np.float64,
+        )
+
+    return EvolutionDiagnostics(
+        trace_errors=np.array([d.trace_error for d in density_diagnostics]),
+        hermiticity_errors=np.array([d.hermiticity_error for d in density_diagnostics]),
+        min_eigenvalues=np.array([d.min_eigenvalue for d in density_diagnostics]),
+        purities=np.array([d.purity for d in density_diagnostics]),
+        fidelities=fidelities,
+        lindblad_residuals=lindblad_residuals,
+    )
+
 
 @dataclass(frozen=True, slots=True)
 class DensityMatrixVerification:
@@ -89,8 +151,6 @@ def verify_lindblad_final_state(
     target_state: npt.ArrayLike | None = None,
     atol: float = 1e-10,
 ) -> LindbladFinalStateVerification:
-    from qlinks.open_system.lindbladian import lindblad_rhs_matrix
-
     rho_array = np.asarray(rho, dtype=np.complex128)
 
     density = verify_density_matrix(
@@ -99,7 +159,7 @@ def verify_lindblad_final_state(
         atol=atol,
     )
 
-    rhs = lindblad_rhs_matrix(
+    rhs = lindblad_rhs_density_matrix(
         rho_array,
         hamiltonian=hamiltonian,
         jumps=jumps,
