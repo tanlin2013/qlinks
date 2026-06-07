@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Literal, TypeAlias
 
 import numpy as np
-import scipy.sparse as scipy_sparse
+import scipy.sparse as sp
 from numpy.typing import NDArray
 from rich.console import Console, Group
 from rich.panel import Panel
@@ -579,7 +579,7 @@ class CageClassificationReport:
 def classify_cage_state(
     cage_state: CageState,
     *,
-    kinetic_matrix: scipy_sparse.spmatrix | scipy_sparse.sparray | NDArray,
+    kinetic_matrix: sp.spmatrix | sp.sparray | NDArray,
     basis_configs: NDArray[np.integer],
     hilbert_size: int | None = None,
     sector_mask: NDArray[np.bool_] | None = None,
@@ -634,7 +634,7 @@ def classify_cage_state(
 def classify_full_state(
     full_state: NDArray[np.complex128],
     *,
-    kinetic_matrix: scipy_sparse.spmatrix | scipy_sparse.sparray | NDArray,
+    kinetic_matrix: sp.spmatrix | sp.sparray | NDArray,
     basis_configs: NDArray[np.integer],
     sector_mask: NDArray[np.bool_] | None = None,
     config: CageClassificationConfig | None = None,
@@ -654,7 +654,7 @@ def classify_full_state(
     if basis_configs.shape[0] != hilbert_size:
         raise ValueError("basis_configs.shape[0] must match full_state.size.")
 
-    kinetic_csr = scipy_sparse.csr_array(kinetic_matrix)
+    kinetic_csr = sp.csr_array(kinetic_matrix)
 
     support_mask = np.abs(full_state) > config.amplitude_tolerance
     support_size = int(np.count_nonzero(support_mask))
@@ -848,7 +848,7 @@ def classify_full_state(
 
 def _find_trivial_zero_indices(
     full_state: NDArray[np.complex128],
-    kinetic_matrix: scipy_sparse.csr_array,
+    kinetic_matrix: sp.csr_array,
     *,
     support_mask: NDArray[np.bool_],
     domain_mask: NDArray[np.bool_],
@@ -879,7 +879,7 @@ def _find_trivial_zero_indices(
 
 def _find_nontrivial_interference_zeros(
     full_state: NDArray[np.complex128],
-    kinetic_matrix: scipy_sparse.csr_array,
+    kinetic_matrix: sp.csr_array,
     *,
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
@@ -2163,7 +2163,7 @@ def _union_projector_like_annihilated_inputs(
 
 
 def _resolve_classification_domain_mask(
-    kinetic_matrix: scipy_sparse.csr_array,
+    kinetic_matrix: sp.csr_array,
     *,
     support_mask: NDArray[np.bool_],
     sector_mask: NDArray[np.bool_] | None,
@@ -2195,7 +2195,7 @@ def _resolve_classification_domain_mask(
     graph.data = np.ones_like(graph.data, dtype=np.int8)
     graph = graph.maximum(graph.T)
 
-    n_components, component_labels = scipy_sparse.csgraph.connected_components(
+    n_components, component_labels = sp.csgraph.connected_components(
         graph,
         directed=False,
         return_labels=True,
