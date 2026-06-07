@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
 
+from qlinks.open_system.backend import OpenSystemBackend, OpenSystemBackendName
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
 
 
@@ -25,6 +27,7 @@ def analyze_lindblad_evolution(
     hamiltonian=None,
     jumps=None,
     atol: float = 1e-10,
+    backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
 ) -> EvolutionDiagnostics:
     density_diagnostics = [
         verify_density_matrix(
@@ -44,6 +47,7 @@ def analyze_lindblad_evolution(
                         density_matrix,
                         hamiltonian=hamiltonian,
                         jumps=jumps,
+                        backend=backend,
                     )
                 )
                 for density_matrix in density_matrices
@@ -146,10 +150,11 @@ class LindbladFinalStateVerification:
 def verify_lindblad_final_state(
     rho: npt.ArrayLike,
     *,
-    hamiltonian,
-    jumps: list,
+    hamiltonian: Any,
+    jumps: list[Any] | tuple[Any, ...],
     target_state: npt.ArrayLike | None = None,
     atol: float = 1e-10,
+    backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
 ) -> LindbladFinalStateVerification:
     rho_array = np.asarray(rho, dtype=np.complex128)
 
@@ -163,6 +168,7 @@ def verify_lindblad_final_state(
         rho_array,
         hamiltonian=hamiltonian,
         jumps=jumps,
+        backend=backend,
     )
 
     residual = float(np.linalg.norm(rhs))
