@@ -8,7 +8,7 @@ from typing import Literal, Sequence, cast
 
 import numpy as np
 import numpy.typing as npt
-import scipy.sparse as scipy_sparse
+import scipy.sparse as sp
 
 GraphBackend = Literal["igraph", "igraph-mpl", "igraph-cairo", "networkx"]
 NormalizedGraphBackend = Literal["igraph-mpl", "igraph-cairo", "networkx"]
@@ -86,10 +86,12 @@ class HamiltonianGraphStyle:
 class HamiltonianGraphData:
     """Graph data extracted from a sparse Hamiltonian matrix."""
 
-    adjacency: scipy_sparse.csr_array
+    adjacency: sp.csr_array
     self_loop_values: npt.NDArray[np.complex128]
     original_indices: npt.NDArray[np.int64] | None = None
     state_vector: npt.NDArray[np.complex128] | None = None
+    vertex_labels: Sequence[str] | None = None
+    directed: bool = False
 
     @property
     def n_vertices(self) -> int:
@@ -120,6 +122,7 @@ class HamiltonianGraphVisualizer:
         *,
         include_self_loops: bool = False,
         weight_tolerance: float = 0.0,
+        directed: bool = False,
         style: HamiltonianGraphStyle | None = None,
     ) -> HamiltonianGraphVisualizer:
         """Construct a visualizer from a sparse or dense Hamiltonian matrix.
@@ -133,6 +136,11 @@ class HamiltonianGraphVisualizer:
             Whether to keep diagonal graph edges. Usually False for drawing.
         weight_tolerance:
             Entries with absolute value <= this threshold are removed.
+        directed:
+            Whether to treat the matrix as directed (asymmetric) or undirected
+            (symmetrized). For an undirected graph, the adjacency is symmetrized
+            by A + A^T, which preserves edge weights but may introduce new edges
+            if the input matrix is asymmetric.
         style:
             Optional drawing style.
         """
@@ -152,8 +160,11 @@ class HamiltonianGraphVisualizer:
 
         adjacency.eliminate_zeros()
 
-        # For visualization, treat the graph as undirected.
-        adjacency = _symmetrized_weighted_adjacency(adjacency)
+        if not directed:
+            adjacency = _symmetrized_weighted_adjacency(adjacency)
+        else:
+            adjacency = sp.csr_array(adjacency)
+
         n_vertices = int(adjacency.shape[0])
 
         return cls(
@@ -161,8 +172,27 @@ class HamiltonianGraphVisualizer:
                 adjacency=adjacency,
                 self_loop_values=self_loop_values,
                 original_indices=np.arange(n_vertices, dtype=np.int64),
+                directed=directed,
             ),
             style=HamiltonianGraphStyle() if style is None else style,
+        )
+
+    @classmethod
+    def from_directed_sparse_matrix(
+        cls,
+        matrix,
+        *,
+        include_self_loops: bool = False,
+        weight_tolerance: float = 0.0,
+        style: HamiltonianGraphStyle | None = None,
+    ) -> HamiltonianGraphVisualizer:
+        """Construct a directed graph visualizer from a sparse matrix."""
+        return cls.from_sparse_matrix(
+            matrix,
+            include_self_loops=include_self_loops,
+            weight_tolerance=weight_tolerance,
+            directed=True,
+            style=style,
         )
 
     def bipartition_labels(self) -> npt.NDArray[np.int64]:
@@ -655,6 +685,13 @@ class HamiltonianGraphVisualizer:
         For a full graph, these are 0, 1, 2, ...
         For a subgraph, these are the original parent-graph basis indices.
         """
+        vertex_labels = self.graph_data.vertex_labels
+
+        if vertex_labels is not None:
+            if len(vertex_labels) != self.graph_data.n_vertices:
+                raise ValueError("graph_data.vertex_labels must have length n_vertices.")
+            return [str(label) for label in vertex_labels]
+
         original_indices = self.graph_data.original_indices
 
         if original_indices is None:
@@ -674,16 +711,25 @@ class HamiltonianGraphVisualizer:
 
         adjacency = self.graph_data.adjacency.tocoo()
 
-        edges = [
-            (int(row), int(col))
-            for row, col in zip(adjacency.row, adjacency.col, strict=True)
-            if int(row) < int(col)
-        ]
+        edges: list[tuple[int, int]] = []
+        edge_weights: list[complex] = []
+
+        for row, col, value in zip(
+            adjacency.row,
+            adjacency.col,
+            adjacency.data,
+            strict=True,
+        ):
+            if not self.graph_data.directed and int(row) >= int(col):
+                continue
+
+            edges.append((int(row), int(col)))
+            edge_weights.append(complex(value))
 
         graph = ig.Graph(
             n=self.graph_data.n_vertices,
             edges=edges,
-            directed=False,
+            directed=self.graph_data.directed,
         )
 
         labels = self.vertex_display_labels()
@@ -696,10 +742,18 @@ class HamiltonianGraphVisualizer:
             graph.vs["original_index"] = [int(index) for index in self.graph_data.original_indices]
 
         if self.graph_data.state_vector is not None:
-            state_vector = np.asarray(self.graph_data.state_vector, dtype=np.complex128)
+            state_vector = np.asarray(
+                self.graph_data.state_vector,
+                dtype=np.complex128,
+            )
             graph.vs["state_amplitude_real"] = [float(value.real) for value in state_vector]
             graph.vs["state_amplitude_imag"] = [float(value.imag) for value in state_vector]
             graph.vs["state_weight"] = [float(abs(value) ** 2) for value in state_vector]
+
+        graph.es["hamiltonian_weight_real"] = [float(value.real) for value in edge_weights]
+        graph.es["hamiltonian_weight_imag"] = [float(value.imag) for value in edge_weights]
+        graph.es["hamiltonian_weight_abs"] = [float(abs(value)) for value in edge_weights]
+        graph.es["hamiltonian_weight_phase"] = [float(np.angle(value)) for value in edge_weights]
 
         return graph
 
@@ -711,10 +765,11 @@ class HamiltonianGraphVisualizer:
             raise ImportError("networkx is required for to_networkx().") from error
 
         adjacency = self.graph_data.adjacency.tocoo()
-        graph = nx.Graph()
+        graph = nx.DiGraph() if self.graph_data.directed else nx.Graph()
 
         original_indices = self.graph_data.original_indices
         state_vector = self.graph_data.state_vector
+        labels = self.vertex_display_labels()
 
         if original_indices is not None and len(original_indices) != self.graph_data.n_vertices:
             raise ValueError("graph_data.original_indices must have length n_vertices.")
@@ -725,13 +780,10 @@ class HamiltonianGraphVisualizer:
         for node in range(self.graph_data.n_vertices):
             graph.add_node(node)
             graph.nodes[node]["local_index"] = int(node)
+            graph.nodes[node]["label"] = labels[node]
 
             if original_indices is not None:
-                original_index = int(original_indices[node])
-                graph.nodes[node]["original_index"] = original_index
-                graph.nodes[node]["label"] = str(original_index)
-            else:
-                graph.nodes[node]["label"] = str(node)
+                graph.nodes[node]["original_index"] = int(original_indices[node])
 
             if state_vector is not None:
                 amplitude = complex(state_vector[node])
@@ -745,20 +797,20 @@ class HamiltonianGraphVisualizer:
             adjacency.data,
             strict=True,
         ):
-            if int(row) < int(col):
-                weight = complex(value)
+            if not self.graph_data.directed and int(row) >= int(col):
+                continue
 
-                graph.add_edge(
-                    int(row),
-                    int(col),
-                    # Keep NetworkX layout/generic graph weight real and backward-compatible.
-                    weight=1.0,
-                    # Store Hamiltonian matrix element explicitly.
-                    hamiltonian_weight_real=float(weight.real),
-                    hamiltonian_weight_imag=float(weight.imag),
-                    hamiltonian_weight_abs=float(abs(weight)),
-                    hamiltonian_weight_phase=float(np.angle(weight)),
-                )
+            weight = complex(value)
+
+            graph.add_edge(
+                int(row),
+                int(col),
+                weight=1.0,
+                hamiltonian_weight_real=float(weight.real),
+                hamiltonian_weight_imag=float(weight.imag),
+                hamiltonian_weight_abs=float(abs(weight)),
+                hamiltonian_weight_phase=float(np.angle(weight)),
+            )
 
         return graph
 
@@ -1213,23 +1265,24 @@ class HamiltonianGraphVisualizer:
             color_by=edge_color_by,
         )
 
-    def edge_weights(self) -> npt.NDArray[np.complex128]:
-        """Return upper-triangular edge weights in plotting edge order."""
-        adjacency = scipy_sparse.triu(
+    def _edge_adjacency_coo(self):
+        if self.graph_data.directed:
+            return self.graph_data.adjacency.tocoo()
+
+        return sp.triu(
             self.graph_data.adjacency,
             k=1,
             format="coo",
         )
 
+    def edge_weights(self) -> npt.NDArray[np.complex128]:
+        """Return edge weights in plotting edge order."""
+        adjacency = self._edge_adjacency_coo()
         return np.asarray(adjacency.data, dtype=np.complex128)
 
     def edge_pairs(self) -> list[tuple[int, int]]:
-        """Return upper-triangular edge pairs in plotting edge order."""
-        adjacency = scipy_sparse.triu(
-            self.graph_data.adjacency,
-            k=1,
-            format="coo",
-        )
+        """Return edge pairs in plotting edge order."""
+        adjacency = self._edge_adjacency_coo()
 
         return [(int(row), int(col)) for row, col in zip(adjacency.row, adjacency.col, strict=True)]
 
@@ -1339,7 +1392,7 @@ class HamiltonianGraphVisualizer:
 
             keep = support_mask[edge_coo.row] | support_mask[edge_coo.col]
 
-            sub_adjacency = scipy_sparse.csr_array(
+            sub_adjacency = sp.csr_array(
                 (
                     edge_coo.data[keep],
                     (edge_coo.row[keep], edge_coo.col[keep]),
@@ -1359,7 +1412,7 @@ class HamiltonianGraphVisualizer:
 
         return HamiltonianGraphVisualizer(
             graph_data=HamiltonianGraphData(
-                adjacency=scipy_sparse.csr_array(sub_adjacency),
+                adjacency=sp.csr_array(sub_adjacency),
                 self_loop_values=np.asarray(sub_self_loops, dtype=np.complex128),
                 original_indices=selected_indices.astype(np.int64),
                 state_vector=np.asarray(sub_state_vector, dtype=np.complex128),
@@ -1415,19 +1468,19 @@ class HamiltonianGraphVisualizer:
         return np.unique(np.asarray(indices, dtype=np.int64))
 
 
-def _as_csr_array(matrix) -> scipy_sparse.csr_array:
+def _as_csr_array(matrix) -> sp.csr_array:
     """Convert dense or sparse input to ``csr_array``."""
-    if scipy_sparse.issparse(matrix):
-        return scipy_sparse.csr_array(matrix)
+    if sp.issparse(matrix):
+        return sp.csr_array(matrix)
 
-    return scipy_sparse.csr_array(np.asarray(matrix, dtype=np.complex128))
+    return sp.csr_array(np.asarray(matrix, dtype=np.complex128))
 
 
 def _symmetrized_adjacency(
-    matrix: scipy_sparse.csr_array,
-) -> scipy_sparse.csr_array:
+    matrix: sp.csr_array,
+) -> sp.csr_array:
     """Return an unweighted undirected adjacency matrix."""
-    adjacency = scipy_sparse.csr_array(matrix.copy())
+    adjacency = sp.csr_array(matrix.copy())
     adjacency.data = np.ones_like(adjacency.data, dtype=np.int8)
     adjacency = adjacency.maximum(adjacency.T)
     adjacency.setdiag(0)
@@ -1436,20 +1489,20 @@ def _symmetrized_adjacency(
 
 
 def _symmetrized_weighted_adjacency(
-    matrix: scipy_sparse.csr_array,
-) -> scipy_sparse.csr_array:
+    matrix: sp.csr_array,
+) -> sp.csr_array:
     """Return weighted undirected adjacency preserving complex edge weights.
 
     For Hermitian matrices, the upper/lower entries are conjugates. We keep
     the upper-triangular representative and mirror it, so each undirected
     edge has one stable complex orientation convention.
     """
-    matrix = scipy_sparse.csr_array(matrix.copy())
+    matrix = sp.csr_array(matrix.copy())
     matrix.setdiag(0)
     matrix.eliminate_zeros()
 
-    upper = scipy_sparse.triu(matrix, k=1, format="csr")
-    lower = scipy_sparse.tril(matrix, k=-1, format="csr")
+    upper = sp.triu(matrix, k=1, format="csr")
+    lower = sp.tril(matrix, k=-1, format="csr")
 
     # Prefer upper-triangular entries. If an edge exists only in lower,
     # use its conjugate as the upper-oriented value.
@@ -1461,7 +1514,7 @@ def _symmetrized_weighted_adjacency(
     adjacency = upper_combined + upper_combined.T.conjugate()
 
     adjacency.eliminate_zeros()
-    return scipy_sparse.csr_array(adjacency)
+    return sp.csr_array(adjacency)
 
 
 def _validate_node_values(
