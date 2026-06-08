@@ -32,6 +32,32 @@ class McwfOptions:
     normalize_each_step: bool = True
     max_jump_probability: float = 0.1
 
+    adaptive_time_step: bool = False
+    adaptive_safety_factor: float = 0.8
+    min_step_size: float = 1.0e-12
+    max_substeps_per_interval: int = 100_000
+
+    def validate(self) -> None:
+        """Validate MCWF time-step control options."""
+        if self.n_trajectories <= 0:
+            raise ValueError("options.n_trajectories must be positive.")
+
+        if self.max_jump_probability <= 0.0:
+            raise ValueError("max_jump_probability must be positive.")
+
+        if not (0.0 < self.adaptive_safety_factor <= 1.0):
+            raise ValueError("adaptive_safety_factor must be in (0, 1].")
+
+        if self.min_step_size <= 0.0:
+            raise ValueError("min_step_size must be positive.")
+
+        if self.max_substeps_per_interval <= 0:
+            raise ValueError("max_substeps_per_interval must be positive.")
+
+        if not self.adaptive_time_step and self.max_substeps_per_interval != 100_000:
+            # Optional: probably do not need this check.
+            pass
+
 
 @dataclass(frozen=True, slots=True)
 class TrajectoryResult:
@@ -133,6 +159,10 @@ def run_quantum_jump_trajectory(
     store_states: bool = True,
     normalize_each_step: bool = True,
     max_jump_probability: float = 0.1,
+    adaptive_time_step: bool = False,
+    adaptive_safety_factor: float = 0.8,
+    min_step_size: float = 1.0e-12,
+    max_substeps_per_interval: int = 100_000,
 ) -> TrajectoryResult:
     """Run one Monte Carlo wave-function trajectory.
 
@@ -181,45 +211,94 @@ def run_quantum_jump_trajectory(
     norm_errors: list[float] = []
 
     for time_index in range(times.size - 1):
-        step_size = float(times[time_index + 1] - times[time_index])
+        interval_start = float(times[time_index])
+        interval_stop = float(times[time_index + 1])
+        current_time = interval_start
+        substeps = 0
 
-        probabilities = jump_probabilities(
-            state,
-            jump_operators,
-            step_size,
-            backend=backend_obj,
-        )
-        total_jump_probability = float(np.sum(probabilities))
+        while current_time < interval_stop:
+            remaining_step = interval_stop - current_time
+            step_size = remaining_step
 
-        if total_jump_probability > max_jump_probability:
-            raise RuntimeError(
-                "Time step is too large for first-order MCWF: "
-                f"total jump probability={total_jump_probability:.6e}, "
-                f"allowed maximum={max_jump_probability:.6e}. "
-                "Use a finer time grid or increase max_jump_probability "
-                "only if you know this is acceptable."
-            )
-
-        if generator.random() < total_jump_probability:
-            jump_index = choose_jump(probabilities, generator)
-            state = jump_operators[jump_index] @ state
-
-            jump_times.append(float(times[time_index + 1]))
-            jump_indices.append(jump_index)
-        else:
-            state = evolve_no_jump_first_order(
+            probabilities = jump_probabilities(
                 state,
-                effective_hamiltonian_matrix,
+                jump_operators,
                 step_size,
+                backend=backend_obj,
             )
+            total_jump_probability = float(np.sum(probabilities))
 
-        state_norm = _backend_state_norm(state, backend=backend_obj)
-        norm_errors.append(abs(state_norm - 1.0))
+            if total_jump_probability > max_jump_probability:
+                if not adaptive_time_step:
+                    raise RuntimeError(
+                        "Time step is too large for first-order MCWF: "
+                        f"total jump probability={total_jump_probability:.6e}, "
+                        f"allowed maximum={max_jump_probability:.6e}. "
+                        "Use a finer time grid, enable adaptive_time_step=True, "
+                        "or increase max_jump_probability only if you know this is "
+                        "acceptable."
+                    )
 
-        if normalize_each_step:
-            if state_norm == 0.0:
-                raise RuntimeError("The MCWF state reached zero norm. " "Try a smaller time step.")
-            state = state / state_norm
+                scale = adaptive_safety_factor * max_jump_probability / total_jump_probability
+                step_size = max(remaining_step * scale, min_step_size)
+
+                if step_size >= remaining_step:
+                    # Should only happen from roundoff, but keep the branch safe.
+                    step_size = remaining_step
+
+                probabilities = jump_probabilities(
+                    state,
+                    jump_operators,
+                    step_size,
+                    backend=backend_obj,
+                )
+                total_jump_probability = float(np.sum(probabilities))
+
+                if total_jump_probability > max_jump_probability:
+                    raise RuntimeError(
+                        "Adaptive MCWF failed to reduce the step enough: "
+                        f"total jump probability={total_jump_probability:.6e}, "
+                        f"allowed maximum={max_jump_probability:.6e}. "
+                        "Try a smaller min_step_size or max_jump_probability."
+                    )
+
+            if step_size < min_step_size and remaining_step > min_step_size:
+                raise RuntimeError(
+                    "Adaptive MCWF reached min_step_size before completing "
+                    "the requested time interval."
+                )
+
+            if generator.random() < total_jump_probability:
+                jump_index = choose_jump(probabilities, generator)
+                state = jump_operators[jump_index] @ state
+                jump_times.append(float(current_time + step_size))
+                jump_indices.append(jump_index)
+            else:
+                state = evolve_no_jump_first_order(
+                    state,
+                    effective_hamiltonian_matrix,
+                    step_size,
+                )
+
+            state_norm = _backend_state_norm(state, backend=backend_obj)
+            norm_errors.append(abs(state_norm - 1.0))
+
+            if normalize_each_step:
+                if state_norm == 0.0:
+                    raise RuntimeError(
+                        "The MCWF state reached zero norm. " "Try a smaller time step."
+                    )
+                state = state / state_norm
+
+            current_time += step_size
+            substeps += 1
+
+            if substeps > max_substeps_per_interval:
+                raise RuntimeError(
+                    "Adaptive MCWF exceeded max_substeps_per_interval. "
+                    "Try increasing max_jump_probability, increasing "
+                    "max_substeps_per_interval, or checking jump rates."
+                )
 
         if store_states:
             states.append(
@@ -284,8 +363,7 @@ def sample_lindblad_mcwf(
     if options is None:
         options = McwfOptions()
 
-    if options.n_trajectories <= 0:
-        raise ValueError("options.n_trajectories must be positive.")
+    options.validate()
 
     if state_initial is not None and state_sampler is not None:
         raise ValueError("Pass only one of state_initial or state_sampler.")
@@ -355,6 +433,10 @@ def sample_lindblad_mcwf(
             store_states=True,
             normalize_each_step=options.normalize_each_step,
             max_jump_probability=options.max_jump_probability,
+            adaptive_time_step=options.adaptive_time_step,
+            adaptive_safety_factor=options.adaptive_safety_factor,
+            min_step_size=options.min_step_size,
+            max_substeps_per_interval=options.max_substeps_per_interval,
         )
 
         for time_index, state in enumerate(trajectory.states):
@@ -397,8 +479,14 @@ def observable_vs_time(
 
 
 def _validate_times_for_mcwf(times: NDArray[np.float64]) -> None:
-    if times.ndim != 1 or times.size < 2:
-        raise ValueError("times must be a one-dimensional array with at least two entries.")
+    if times.ndim != 1:
+        raise ValueError("times must be a 1D array.")
+
+    if times.size < 2:
+        raise ValueError("times must contain at least two points.")
+
+    if not np.all(np.isfinite(times)):
+        raise ValueError("times must be finite.")
 
     if not np.all(np.diff(times) > 0.0):
         raise ValueError("times must be strictly increasing.")

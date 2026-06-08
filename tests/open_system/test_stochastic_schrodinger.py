@@ -707,6 +707,73 @@ def test_run_quantum_jump_trajectory_cupy_backend_optional(qubit_ops):
         assert isinstance(state, np.ndarray)
 
 
+def test_quantum_jump_trajectory_raises_without_adaptive_step() -> None:
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(10.0) * np.eye(2, dtype=np.complex128)
+    state_initial = np.asarray([1.0, 0.0], dtype=np.complex128)
+    times = np.asarray([0.0, 0.05], dtype=np.float64)
+
+    with pytest.raises(RuntimeError, match="Time step is too large"):
+        run_quantum_jump_trajectory(
+            hamiltonian=hamiltonian,
+            jumps=[jump],
+            state_initial=state_initial,
+            times=times,
+            rng=1234,
+            max_jump_probability=0.1,
+            adaptive_time_step=False,
+        )
+
+
+def test_quantum_jump_trajectory_adaptive_step_succeeds() -> None:
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(10.0) * np.eye(2, dtype=np.complex128)
+    state_initial = np.asarray([1.0, 0.0], dtype=np.complex128)
+    times = np.asarray([0.0, 0.05], dtype=np.float64)
+
+    trajectory = run_quantum_jump_trajectory(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        state_initial=state_initial,
+        times=times,
+        rng=1234,
+        max_jump_probability=0.1,
+        adaptive_time_step=True,
+        adaptive_safety_factor=0.8,
+    )
+
+    assert trajectory.times.shape == times.shape
+    assert len(trajectory.states) == len(times)
+    assert np.all(trajectory.jump_times >= times[0])
+    assert np.all(trajectory.jump_times <= times[-1])
+
+
+def test_sample_lindblad_mcwf_forwards_adaptive_options() -> None:
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(10.0) * np.eye(2, dtype=np.complex128)
+    state_initial = np.asarray([1.0, 0.0], dtype=np.complex128)
+    times = np.asarray([0.0, 0.05], dtype=np.float64)
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=state_initial,
+        options=McwfOptions(
+            n_trajectories=2,
+            seed=1234,
+            store_trajectories=True,
+            store_states=True,
+            max_jump_probability=0.1,
+            adaptive_time_step=True,
+        ),
+    )
+
+    assert len(result.rho_t) == len(times)
+    assert result.trajectories is not None
+    assert len(result.trajectories) == 2
+
+
 @pytest.mark.manual
 def test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
     import matplotlib.pyplot as plt
