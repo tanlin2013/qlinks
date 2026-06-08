@@ -25,6 +25,12 @@ from qlinks.visualizer.lindbladian_graph import (
     operator_space_labels,
     unflatten_operator_index,
 )
+from qlinks.visualizer.stochastic_schrodinger_graph import (
+    StochasticSchrodingerGraphVisualizer,
+    StochasticSchrodingerTrajectory,
+    TrajectoryNodeColorRule,
+    as_stochastic_trajectory,
+)
 
 __all__ = [
     "BasisConfigurationVisualizer",
@@ -48,4 +54,8 @@ __all__ = [
     "flatten_density_matrix",
     "operator_space_labels",
     "unflatten_operator_index",
+    "StochasticSchrodingerGraphVisualizer",
+    "StochasticSchrodingerTrajectory",
+    "TrajectoryNodeColorRule",
+    "as_stochastic_trajectory",
 ]
