@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.typing as npt
 
 from qlinks.constraints import (
     GaussLawConstraint,
@@ -10,40 +9,10 @@ from qlinks.constraints import (
 from qlinks.lattice import HoneycombLattice, SquareLattice
 from qlinks.models import SquareQLMModel
 from qlinks.variables import LocalSpace, VariableLayout
-
-
-def assert_partial_check_matches_full_check(
-    condition,
-    configs: npt.ArrayLike,
-) -> None:
-    states = np.asarray(configs, dtype=np.int64)
-
-    if states.ndim == 1:
-        states = states.reshape(1, -1)
-
-    for config in states:
-        assigned_mask = np.ones(config.shape, dtype=bool)
-
-        partial = condition.partial_check(config, assigned_mask)
-        full = condition.is_satisfied(config)
-
-        assert partial == full, (
-            f"{condition.name}: partial_check disagrees with is_satisfied "
-            f"on complete config {config}. "
-            f"partial={partial}, full={full}"
-        )
-
-
-def _first_allowed_target(sector_cls, **kwargs):
-    allowed = sector_cls.allowed_targets(**kwargs)
-
-    assert len(allowed) > 0
-
-    # Prefer zero when it exists, otherwise use the first legal sector.
-    if 0 in allowed:
-        return 0
-
-    return allowed[0]
+from tests.helpers.constraints import (
+    assert_partial_check_matches_full_check_on_complete_configs,
+    first_allowed_target,
+)
 
 
 def test_gauss_law_partial_check_matches_full_check_on_complete_configs() -> None:
@@ -70,7 +39,7 @@ def test_gauss_law_partial_check_matches_full_check_on_complete_configs() -> Non
     )
 
     for constraint in constraints:
-        assert_partial_check_matches_full_check(
+        assert_partial_check_matches_full_check_on_complete_configs(
             constraint,
             configs,
         )
@@ -110,7 +79,7 @@ def test_square_winding_partial_check_matches_full_check_on_complete_configs() -
     )
 
     for sector in sectors:
-        assert_partial_check_matches_full_check(
+        assert_partial_check_matches_full_check_on_complete_configs(
             sector,
             configs,
         )
@@ -148,7 +117,7 @@ def test_square_qdm_electric_winding_partial_check_matches_full_check_on_complet
     )
 
     for sector in sectors:
-        assert_partial_check_matches_full_check(
+        assert_partial_check_matches_full_check_on_complete_configs(
             sector,
             configs,
         )
@@ -165,7 +134,7 @@ def test_honeycomb_electric_winding_partial_check_matches_full_check_on_complete
         LocalSpace.spin_half_flux(),
     )
 
-    target_x = _first_allowed_target(
+    target_x = first_allowed_target(
         HoneycombElectricWindingSector,
         layout=layout,
         lattice=lattice,
@@ -173,7 +142,7 @@ def test_honeycomb_electric_winding_partial_check_matches_full_check_on_complete
         value_convention="flux_pm",
         flux_normalization="spin_half",
     )
-    target_y = _first_allowed_target(
+    target_y = first_allowed_target(
         HoneycombElectricWindingSector,
         layout=layout,
         lattice=lattice,
@@ -210,7 +179,7 @@ def test_honeycomb_electric_winding_partial_check_matches_full_check_on_complete
     )
 
     for sector in sectors:
-        assert_partial_check_matches_full_check(
+        assert_partial_check_matches_full_check_on_complete_configs(
             sector,
             configs,
         )

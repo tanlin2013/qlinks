@@ -15,3 +15,15 @@ def assert_partial_check_matches_full_check_on_complete_configs(
     for config in states:
         assigned_mask = np.ones(config.shape, dtype=bool)
         assert condition.partial_check(config, assigned_mask) == condition.is_satisfied(config)
+
+
+def first_allowed_target(sector_cls, **kwargs):
+    allowed = sector_cls.allowed_targets(**kwargs)
+
+    assert len(allowed) > 0
+
+    # Prefer zero when it exists, otherwise use the first legal sector.
+    if 0 in allowed:
+        return 0
+
+    return allowed[0]

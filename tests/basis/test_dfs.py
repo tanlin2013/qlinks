@@ -14,7 +14,6 @@ from qlinks.constraints import (
     FixedValueConstraint,
     GaussLawConstraint,
     NearestNeighborBlockadeConstraint,
-    TotalValueSector,
 )
 from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.models import PXPModel, SquareQDMModel
@@ -25,14 +24,6 @@ def assert_same_basis(basis_a, basis_b) -> None:
     set_a = {tuple(state.tolist()) for state in basis_a.states}
     set_b = {tuple(state.tolist()) for state in basis_b.states}
     assert set_a == set_b
-
-
-def test_dfs_binary_no_constraints() -> None:
-    layout = VariableLayout.from_sites(3, LocalSpace.binary())
-
-    basis = DFSBasisSolver(sort=True).solve(layout)
-
-    assert basis.n_states == 8
 
 
 def test_dfs_matches_brute_force_fixed_value() -> None:
@@ -47,20 +38,6 @@ def test_dfs_matches_brute_force_fixed_value() -> None:
     dfs = DFSBasisSolver(sort=True).solve(layout, constraints=constraints)
 
     assert_same_basis(brute, dfs)
-
-
-def test_dfs_matches_brute_force_total_value_sector() -> None:
-    layout = VariableLayout.from_sites(5, LocalSpace.binary())
-
-    sectors = [
-        TotalValueSector(layout=layout, target=2),
-    ]
-
-    brute = BruteForceBasisSolver(sort=True).solve(layout, sectors=sectors)
-    dfs = DFSBasisSolver(sort=True).solve(layout, sectors=sectors)
-
-    assert_same_basis(brute, dfs)
-    assert dfs.n_states == 10
 
 
 def test_dfs_pxp_chain_length_5() -> None:

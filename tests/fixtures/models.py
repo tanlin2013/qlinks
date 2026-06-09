@@ -35,6 +35,19 @@ def square_qlm_2x2_open_zero_charge() -> SquareQLMModel:
 
 
 @pytest.fixture
+def square_qlm_4x2_staggered_pbc_w00() -> SquareQLMModel:
+    return SquareQLMModel.from_staggered_background(
+        lx=4,
+        ly=2,
+        boundary_condition="periodic",
+        coup_kin=-1.0,
+        coup_pot=0.0,
+        winding_x=0,
+        winding_y=0,
+    )
+
+
+@pytest.fixture
 def triangular_qdm_3x3_pbc_z2() -> TriangularQDMModel:
     return TriangularQDMModel(
         lx=3,

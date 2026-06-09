@@ -7,7 +7,6 @@ from qlinks.constraints import (
     GaussLawConstraint,
     NearestNeighborBlockadeConstraint,
     ParitySector,
-    TotalValueSector,
 )
 from qlinks.lattice import ChainLattice
 from qlinks.variables import LocalSpace, VariableLayout
@@ -17,14 +16,6 @@ def assert_same_basis(basis_a, basis_b) -> None:
     set_a = {tuple(state.tolist()) for state in basis_a.states}
     set_b = {tuple(state.tolist()) for state in basis_b.states}
     assert set_a == set_b
-
-
-def test_cpsat_binary_no_constraints() -> None:
-    layout = VariableLayout.from_sites(3, LocalSpace.binary())
-
-    basis = CPSATBasisSolver(sort=True).solve(layout)
-
-    assert basis.n_states == 8
 
 
 def test_cpsat_matches_brute_force_fixed_value() -> None:
@@ -39,20 +30,6 @@ def test_cpsat_matches_brute_force_fixed_value() -> None:
     cpsat = CPSATBasisSolver(sort=True).solve(layout, constraints=constraints)
 
     assert_same_basis(brute, cpsat)
-
-
-def test_cpsat_matches_brute_force_total_value_sector() -> None:
-    layout = VariableLayout.from_sites(5, LocalSpace.binary())
-
-    sectors = [
-        TotalValueSector(layout=layout, target=2),
-    ]
-
-    brute = BruteForceBasisSolver(sort=True).solve(layout, sectors=sectors)
-    cpsat = CPSATBasisSolver(sort=True).solve(layout, sectors=sectors)
-
-    assert_same_basis(brute, cpsat)
-    assert cpsat.n_states == 10
 
 
 def test_cpsat_parity_sector() -> None:

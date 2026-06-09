@@ -21,6 +21,24 @@ def pairwise_interference_system() -> tuple[
     scipy_sparse.csr_array,
     dict[str, int],
 ]:
+    """
+    Build a kinetic matrix with one interference zero.
+
+    The local structure is
+
+        |h>  = |000>
+        |v1> = |010>
+        |v2> = |001>
+
+    with H0[h, v1] = H0[h, v2] = 1.
+
+    Therefore, a state with amplitudes
+
+        c[v1] = +1/sqrt(2)
+        c[v2] = -1/sqrt(2)
+
+    has destructive interference at |h>.
+    """
     basis_configs = binary_product_states(n_variables=3)
 
     h = config_index(basis_configs, (0, 0, 0))
@@ -45,6 +63,24 @@ def two_zero_closed_interference_system() -> tuple[
     scipy_sparse.csr_array,
     dict[str, int],
 ]:
+    """
+    Build a kinetic matrix with two related nontrivial zeros.
+
+    First zero:
+
+        h0 = |000>
+        v1 = |010>
+        v2 = |001>
+
+    Second zero:
+
+        h1 = |100>
+        w1 = |110>
+        w2 = |101>
+
+    The same local transition pattern on the last two variables
+    generates both interference zeros.
+    """
     basis_configs = binary_product_states(n_variables=3)
 
     h0 = config_index(basis_configs, (0, 0, 0))

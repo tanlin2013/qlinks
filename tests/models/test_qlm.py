@@ -13,6 +13,7 @@ from qlinks.models import (
 )
 from tests.helpers.assertions import (
     assert_hermitian_sparse,
+    assert_same_sparse_matrix,
     assert_sparse_allclose,
 )
 
@@ -191,8 +192,6 @@ def test_square_qlm_potential_rejects_optimized() -> None:
             dtype=np.int64,
         ),
     )
-
-    import pytest
 
     with pytest.raises(NotImplementedError, match="potential"):
         model.build(
@@ -519,10 +518,7 @@ def test_square_qlm_2x2_sparse_and_bitmask_match(
         on_missing="raise",
     )
 
-    difference_matrix = sparse_result.hamiltonian - bitmask_result.hamiltonian
-    difference_matrix.eliminate_zeros()
-
-    assert difference_matrix.nnz == 0
+    assert_same_sparse_matrix(bitmask_result.hamiltonian, sparse_result.hamiltonian)
 
 
 @pytest.mark.parametrize("builder", ["sparse", "bitmask"])

@@ -2,17 +2,12 @@ import numpy as np
 import pytest
 
 from qlinks.constraints import DimerCoveringConstraint
-from qlinks.lattice import ChainLattice, SquareLattice
-from qlinks.variables import LocalSpace, VariableLayout
 
 
-def test_dimer_constraint_open_chain_middle_site() -> None:
-    lattice = ChainLattice(3, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
-
+def test_dimer_constraint_open_chain_middle_site(chain_3_open, binary_chain_3_link_layout) -> None:
     constraint = DimerCoveringConstraint.from_lattice_site(
-        lattice=lattice,
-        layout=layout,
+        lattice=chain_3_open,
+        layout=binary_chain_3_link_layout,
         site_id=1,
         required_count=1,
     )
@@ -25,13 +20,12 @@ def test_dimer_constraint_open_chain_middle_site() -> None:
     assert not constraint.is_satisfied(np.array([0, 0]))
 
 
-def test_dimer_constraint_all_sites_chain_perfect_matching() -> None:
-    lattice = ChainLattice(4, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
-
+def test_dimer_constraint_all_sites_chain_perfect_matching(
+    chain_4_open, binary_chain_4_link_layout
+) -> None:
     constraints = DimerCoveringConstraint.all_sites(
-        lattice=lattice,
-        layout=layout,
+        lattice=chain_4_open,
+        layout=binary_chain_4_link_layout,
         required_counts=1,
     )
 
@@ -42,13 +36,10 @@ def test_dimer_constraint_all_sites_chain_perfect_matching() -> None:
     assert all(c.is_satisfied(config) for c in constraints)
 
 
-def test_dimer_constraint_square_site() -> None:
-    lattice = SquareLattice(2, 2, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
-
+def test_dimer_constraint_square_site(square_2x2_open, square_2x2_open_binary_link_layout) -> None:
     constraint = DimerCoveringConstraint.from_lattice_site(
-        lattice=lattice,
-        layout=layout,
+        lattice=square_2x2_open,
+        layout=square_2x2_open_binary_link_layout,
         site_id=0,
         required_count=1,
     )
@@ -58,13 +49,10 @@ def test_dimer_constraint_square_site() -> None:
     assert not constraint.is_satisfied(np.array([1, 1, 0, 0]))
 
 
-def test_dimer_all_sites_rejects_bad_shape() -> None:
-    lattice = ChainLattice(3, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
-
+def test_dimer_all_sites_rejects_bad_shape(chain_3_open, binary_chain_3_link_layout) -> None:
     with pytest.raises(ValueError, match="required_counts must have shape"):
         DimerCoveringConstraint.all_sites(
-            lattice=lattice,
-            layout=layout,
+            lattice=chain_3_open,
+            layout=binary_chain_3_link_layout,
             required_counts=np.array([1, 1]),
         )

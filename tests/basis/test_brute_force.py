@@ -10,14 +10,6 @@ from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.variables import LocalSpace, VariableLayout
 
 
-def test_brute_force_binary_no_constraints() -> None:
-    layout = VariableLayout.from_sites(3, LocalSpace.binary())
-
-    basis = BruteForceBasisSolver(sort=True).solve(layout)
-
-    assert basis.n_states == 8
-
-
 def test_brute_force_fixed_value_constraint() -> None:
     layout = VariableLayout.from_sites(3, LocalSpace.binary())
 

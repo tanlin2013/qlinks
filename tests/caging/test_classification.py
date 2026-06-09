@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import itertools
-
 import numpy as np
 import pytest
-import scipy.sparse as scipy_sparse
 
 from qlinks.caging.classification import (
     CageClassificationConfig,
@@ -16,51 +13,15 @@ from qlinks.caging.classification import (
     classify_full_state,
 )
 from qlinks.caging.results import CageState
-
-
-def _binary_basis(n_variables: int) -> np.ndarray:
-    """Return all binary product-state configurations."""
-    return np.array(
-        list(itertools.product([0, 1], repeat=n_variables)),
-        dtype=np.int64,
-    )
-
-
-def _basis_index(
-    basis_configs: np.ndarray,
-    config: tuple[int, ...],
-) -> int:
-    matches = np.all(
-        basis_configs == np.array(config, dtype=np.int64)[None, :],
-        axis=1,
-    )
-    indices = np.flatnonzero(matches)
-
-    if indices.size != 1:
-        raise ValueError(f"Configuration {config} not found uniquely.")
-
-    return int(indices[0])
-
-
-def _base_classification_config() -> CageClassificationConfig:
-    return CageClassificationConfig(
-        amplitude_tolerance=1e-12,
-        cancellation_tolerance=1e-12,
-        action_tolerance=1e-12,
-        sector_policy="ignore",
-    )
+from tests.helpers.states import (
+    config_index,
+    empty_complex_array,
+    empty_int_array,
+)
 
 
 def _zero_indices(indices: np.ndarray) -> set[int]:
     return {int(index) for index in indices}
-
-
-def _empty_int_array() -> np.ndarray:
-    return np.array([], dtype=np.int64)
-
-
-def _empty_complex_array() -> np.ndarray:
-    return np.array([], dtype=np.complex128)
 
 
 def _minimal_zero_report(
@@ -82,14 +43,14 @@ def _minimal_zero_report(
 
     has_nonzero_complement_action = complement_action_norm > 0.0
     nonzero_complement_action_target_indices = (
-        complement_target_indices.copy() if has_nonzero_complement_action else _empty_int_array()
+        complement_target_indices.copy() if has_nonzero_complement_action else empty_int_array()
     )
 
     return InterferenceZeroReport(
         zero_index=zero_index,
-        active_neighbors=_empty_int_array(),
-        active_matrix_elements=_empty_complex_array(),
-        active_amplitudes=_empty_complex_array(),
+        active_neighbors=empty_int_array(),
+        active_matrix_elements=empty_complex_array(),
+        active_amplitudes=empty_complex_array(),
         cancellation_residual=0.0,
         common_mask=np.array([True], dtype=np.bool_),
         local_mask=np.array([False], dtype=np.bool_),
@@ -97,16 +58,16 @@ def _minimal_zero_report(
         reduced_action_norm=0.0,
         complement_action_norm=complement_action_norm,
         complement_target_indices=complement_target_indices,
-        explained_complement_target_indices=_empty_int_array(),
+        explained_complement_target_indices=empty_int_array(),
         unexplained_complement_target_indices=complement_target_indices,
         complement_targets_are_known_zeros=False,
-        trivial_target_indices=_empty_int_array(),
-        known_nonprojector_iz_target_indices=_empty_int_array(),
-        projector_like_iz_target_indices=_empty_int_array(),
-        unexpected_target_indices=_empty_int_array(),
+        trivial_target_indices=empty_int_array(),
+        known_nonprojector_iz_target_indices=empty_int_array(),
+        projector_like_iz_target_indices=empty_int_array(),
+        unexpected_target_indices=empty_int_array(),
         has_unexpected_targets=False,
         has_nonzero_complement_action=has_nonzero_complement_action,
-        unexpected_target_probe_failure_indices=_empty_int_array(),
+        unexpected_target_probe_failure_indices=empty_int_array(),
         nonzero_complement_action_target_indices=(nonzero_complement_action_target_indices),
         source_projector_like=source_projector_like,
         probe_mechanism_label="unexplained_leakage",
@@ -126,133 +87,16 @@ def _minimal_zero_report(
     )
 
 
-def _make_pairwise_interference_kinetic(
-    basis_configs: np.ndarray,
-) -> tuple[scipy_sparse.csr_array, dict[str, int]]:
-    """
-    Build a kinetic matrix with one interference zero.
-
-    The local structure is
-
-        |h>  = |000>
-        |v1> = |010>
-        |v2> = |001>
-
-    with H0[h, v1] = H0[h, v2] = 1.
-
-    Therefore a state with amplitudes
-
-        c[v1] = +1/sqrt(2)
-        c[v2] = -1/sqrt(2)
-
-    has destructive interference at |h>.
-    """
-    h = _basis_index(basis_configs, (0, 0, 0))
-    v1 = _basis_index(basis_configs, (0, 1, 0))
-    v2 = _basis_index(basis_configs, (0, 0, 1))
-
-    n_basis = basis_configs.shape[0]
-
-    rows = [h, h, v1, v2]
-    cols = [v1, v2, h, h]
-    data = [1.0, 1.0, 1.0, 1.0]
-
-    kinetic = scipy_sparse.csr_array(
-        (data, (rows, cols)),
-        shape=(n_basis, n_basis),
-        dtype=np.complex128,
-    )
-
-    return kinetic, {"h": h, "v1": v1, "v2": v2}
-
-
-def _make_two_zero_closed_interference_kinetic(
-    basis_configs: np.ndarray,
-) -> tuple[scipy_sparse.csr_array, dict[str, int]]:
-    """
-    Build a kinetic matrix with two related nontrivial zeros.
-
-    First zero:
-
-        h0 = |000>
-        v1 = |010>
-        v2 = |001>
-
-    Second zero:
-
-        h1 = |100>
-        w1 = |110>
-        w2 = |101>
-
-    The same local transition pattern on the last two variables
-    generates both interference zeros.
-    """
-    h0 = _basis_index(basis_configs, (0, 0, 0))
-    v1 = _basis_index(basis_configs, (0, 1, 0))
-    v2 = _basis_index(basis_configs, (0, 0, 1))
-
-    h1 = _basis_index(basis_configs, (1, 0, 0))
-    w1 = _basis_index(basis_configs, (1, 1, 0))
-    w2 = _basis_index(basis_configs, (1, 0, 1))
-
-    n_basis = basis_configs.shape[0]
-
-    rows = [
-        h0,
-        h0,
-        v1,
-        v2,
-        h1,
-        h1,
-        w1,
-        w2,
-    ]
-    cols = [
-        v1,
-        v2,
-        h0,
-        h0,
-        w1,
-        w2,
-        h1,
-        h1,
-    ]
-    data = [
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-    ]
-
-    kinetic = scipy_sparse.csr_array(
-        (data, (rows, cols)),
-        shape=(n_basis, n_basis),
-        dtype=np.complex128,
-    )
-
-    return kinetic, {
-        "h0": h0,
-        "v1": v1,
-        "v2": v2,
-        "h1": h1,
-        "w1": w1,
-        "w2": w2,
-    }
-
-
-def test_classify_full_state_finds_regional_candidate():
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+def test_classify_full_state_finds_regional_candidate(
+    classification_config, pairwise_interference_case
+):
+    basis_configs, kinetic, indices = pairwise_interference_case
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
     state[indices["v1"]] = 1.0 / np.sqrt(2.0)
     state[indices["v2"]] = -1.0 / np.sqrt(2.0)
 
-    config = _base_classification_config()
+    config = classification_config
 
     report = classify_full_state(
         state,
@@ -335,15 +179,16 @@ def test_classify_full_state_finds_regional_candidate():
     assert report.n_nonzero_complement_action_probe_failures == 0
 
 
-def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
+def test_classify_full_state_regional_when_complement_targets_are_known_zeros(
+    classification_config, two_zero_closed_interference_case
+):
     """
     Q-sector weight is nonzero, but the complement action of each zero
     lands only on the other known nontrivial interference zero.
 
     This is the model-free closure criterion for regional_candidate.
     """
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_two_zero_closed_interference_kinetic(basis_configs)
+    basis_configs, kinetic, indices = two_zero_closed_interference_case
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
 
@@ -352,7 +197,7 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
     state[indices["w1"]] = 0.5
     state[indices["w2"]] = -0.5
 
-    config = _base_classification_config()
+    config = classification_config
 
     report = classify_full_state(
         state,
@@ -431,7 +276,9 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros():
     assert report.n_unexpected_targets == 0
 
 
-def test_classify_full_state_treats_trivial_target_cancellation_as_regional():
+def test_classify_full_state_treats_trivial_target_cancellation_as_regional(
+    classification_config, pairwise_interference_case
+):
     """
     Add amplitudes in the Q_beta sector.
 
@@ -445,12 +292,11 @@ def test_classify_full_state_treats_trivial_target_cancellation_as_regional():
     Because the complement action cancels there, this is regional closure
     through a trivial target.
     """
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+    basis_configs, kinetic, indices = pairwise_interference_case
 
-    w1 = _basis_index(basis_configs, (1, 1, 0))
-    w2 = _basis_index(basis_configs, (1, 0, 1))
-    trivial_target = _basis_index(basis_configs, (1, 0, 0))
+    w1 = config_index(basis_configs, (1, 1, 0))
+    w2 = config_index(basis_configs, (1, 0, 1))
+    trivial_target = config_index(basis_configs, (1, 0, 0))
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
     state[indices["v1"]] = 0.5
@@ -458,7 +304,7 @@ def test_classify_full_state_treats_trivial_target_cancellation_as_regional():
     state[w1] = 0.5
     state[w2] = -0.5
 
-    config = _base_classification_config()
+    config = classification_config
 
     report = classify_full_state(
         state,
@@ -522,24 +368,25 @@ def test_classify_full_state_treats_trivial_target_cancellation_as_regional():
     assert _zero_indices(zero_report.nonzero_complement_action_target_indices) == set()
 
 
-def test_classify_full_state_marks_nonzero_unexplained_leakage_invalid():
+def test_classify_full_state_marks_nonzero_unexplained_leakage_invalid(
+    classification_config, pairwise_interference_case
+):
     """
     Add Q-sector weight without the partner needed for cancellation.
 
     Then the complement action of the same local Z pattern is nonzero,
     so the classification should not be regional or extended.
     """
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+    basis_configs, kinetic, indices = pairwise_interference_case
 
-    w1 = _basis_index(basis_configs, (1, 1, 0))
+    w1 = config_index(basis_configs, (1, 1, 0))
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
     state[indices["v1"]] = 1.0 / np.sqrt(3.0)
     state[indices["v2"]] = -1.0 / np.sqrt(3.0)
     state[w1] = 1.0 / np.sqrt(3.0)
 
-    config = _base_classification_config()
+    config = classification_config
 
     report = classify_full_state(
         state,
@@ -551,7 +398,7 @@ def test_classify_full_state_marks_nonzero_unexplained_leakage_invalid():
     assert report.label == "invalid_or_inconsistent"
     assert report.n_nontrivial_zeros == 1
 
-    trivial_target = _basis_index(basis_configs, (1, 0, 0))
+    trivial_target = config_index(basis_configs, (1, 0, 0))
 
     zero_report = report.zero_reports[0]
 
@@ -584,9 +431,10 @@ def test_classify_full_state_marks_nonzero_unexplained_leakage_invalid():
     assert report.n_unexpected_targets == 0
 
 
-def test_classify_cage_state_lifts_compact_state_and_preserves_metadata():
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+def test_classify_cage_state_lifts_compact_state_and_preserves_metadata(
+    classification_config, pairwise_interference_case
+):
+    basis_configs, kinetic, indices = pairwise_interference_case
 
     cage_state = CageState(
         energy=0.0 + 0.0j,
@@ -603,14 +451,12 @@ def test_classify_cage_state_lifts_compact_state_and_preserves_metadata():
         full_residual=0.0,
     )
 
-    config = _base_classification_config()
-
     report = classify_cage_state(
         cage_state,
         kinetic_matrix=kinetic,
         basis_configs=basis_configs,
         hilbert_size=basis_configs.shape[0],
-        config=config,
+        config=classification_config,
     )
 
     assert report.label == "regional_candidate"
@@ -655,21 +501,20 @@ def test_classify_cage_state_lifts_compact_state_and_preserves_metadata():
     assert report.n_nonzero_complement_action_probe_failures == 0
 
 
-def test_classify_full_state_ignores_trivial_zeros_without_active_neighbors():
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+def test_classify_full_state_ignores_trivial_zeros_without_active_neighbors(
+    classification_config, pairwise_interference_case
+):
+    basis_configs, kinetic, indices = pairwise_interference_case
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
     state[indices["v1"]] = 1.0 / np.sqrt(2.0)
     state[indices["v2"]] = -1.0 / np.sqrt(2.0)
 
-    config = _base_classification_config()
-
     report = classify_full_state(
         state,
         kinetic_matrix=kinetic,
         basis_configs=basis_configs,
-        config=config,
+        config=classification_config,
     )
 
     zero_indices = {int(zero_report.zero_index) for zero_report in report.zero_reports}
@@ -685,9 +530,8 @@ def test_classify_full_state_ignores_trivial_zeros_without_active_neighbors():
     assert report.n_invalid_source_probes == 0
 
 
-def test_classify_full_state_rejects_wrong_basis_shape():
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, _indices = _make_pairwise_interference_kinetic(basis_configs)
+def test_classify_full_state_rejects_wrong_basis_shape(pairwise_interference_case):
+    basis_configs, kinetic, _indices = pairwise_interference_case
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
 
     bad_basis_configs = np.zeros(8, dtype=np.int64)
@@ -703,9 +547,8 @@ def test_classify_full_state_rejects_wrong_basis_shape():
         )
 
 
-def test_classify_full_state_rejects_mismatched_basis_size():
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, _indices = _make_pairwise_interference_kinetic(basis_configs)
+def test_classify_full_state_rejects_mismatched_basis_size(pairwise_interference_case):
+    basis_configs, kinetic, _indices = pairwise_interference_case
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
 
     bad_basis_configs = basis_configs[:-1]
@@ -721,7 +564,9 @@ def test_classify_full_state_rejects_mismatched_basis_size():
         )
 
 
-def test_classify_full_state_detects_projector_like_extended_mechanism():
+def test_classify_full_state_detects_projector_like_extended_mechanism(
+    classification_config, pairwise_interference_case
+):
     """Finite Q-sector weight with no complement targets is extended-like.
 
     The active interference zero is still |000>, with active neighbors
@@ -730,17 +575,16 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     reduced interference-zero operator. Therefore the complement operator
     has no raw target vertices.
     """
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+    basis_configs, kinetic, indices = pairwise_interference_case
 
-    q_sector_state = _basis_index(basis_configs, (1, 1, 1))
+    q_sector_state = config_index(basis_configs, (1, 1, 1))
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
     state[indices["v1"]] = 1.0 / np.sqrt(3.0)
     state[indices["v2"]] = -1.0 / np.sqrt(3.0)
     state[q_sector_state] = 1.0 / np.sqrt(3.0)
 
-    config = _base_classification_config()
+    config = classification_config
 
     report = classify_full_state(
         state,
@@ -802,9 +646,10 @@ def test_classify_full_state_detects_projector_like_extended_mechanism():
     assert _zero_indices(zero_report.nonzero_complement_action_target_indices) == set()
 
 
-def test_classification_report_summary_dict_is_stable():
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+def test_classification_report_summary_dict_is_stable(
+    classification_config, pairwise_interference_case
+):
+    basis_configs, kinetic, indices = pairwise_interference_case
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
     state[indices["v1"]] = 1.0 / np.sqrt(2.0)
@@ -814,7 +659,7 @@ def test_classification_report_summary_dict_is_stable():
         state,
         kinetic_matrix=kinetic,
         basis_configs=basis_configs,
-        config=_base_classification_config(),
+        config=classification_config,
     )
 
     summary = report.to_summary_dict()
@@ -825,9 +670,9 @@ def test_classification_report_summary_dict_is_stable():
     assert summary["Invalid probe reasons"]["nonzero-complement-action source probes"] == 0
 
 
-def test_probe_mechanism_propagates_projector_like_target_dependence():
+def test_probe_mechanism_propagates_projector_like_target_dependence(classification_config):
     """A probe closing onto a projector-like IZ target is extended-like."""
-    config = _base_classification_config()
+    config = classification_config
 
     source_zero = 10
     projector_target_zero = 20
@@ -878,9 +723,9 @@ def test_probe_mechanism_propagates_projector_like_target_dependence():
     assert label == "extended_candidate"
 
 
-def test_probe_mechanism_keeps_trivial_and_destructive_closure_regional():
+def test_probe_mechanism_keeps_trivial_and_destructive_closure_regional(classification_config):
     """Closure onto trivial zeros and non-projector IZs is regional."""
-    config = _base_classification_config()
+    config = classification_config
 
     source_zero = 10
     destructive_target_zero = 20
@@ -936,8 +781,8 @@ def test_probe_mechanism_keeps_trivial_and_destructive_closure_regional():
     assert label == "regional_candidate"
 
 
-def test_probe_mechanism_marks_unexpected_target_invalid():
-    config = _base_classification_config()
+def test_probe_mechanism_marks_unexpected_target_invalid(classification_config):
+    config = classification_config
 
     source_zero = 10
     unexpected_target = 77
@@ -975,9 +820,10 @@ def test_probe_mechanism_marks_unexpected_target_invalid():
     assert _zero_indices(report.unexpected_target_indices) == {unexpected_target}
 
 
-def test_classify_full_state_raises_without_sector_on_disconnected_graph():
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+def test_classify_full_state_raises_without_sector_on_disconnected_graph(
+    pairwise_interference_case,
+):
+    basis_configs, kinetic, indices = pairwise_interference_case
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
     state[indices["v1"]] = 1.0 / np.sqrt(2.0)
@@ -999,9 +845,10 @@ def test_classify_full_state_raises_without_sector_on_disconnected_graph():
         )
 
 
-def test_classify_full_state_ignores_complement_targets_outside_sector_mask():
-    basis_configs = _binary_basis(n_variables=3)
-    kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
+def test_classify_full_state_ignores_complement_targets_outside_sector_mask(
+    pairwise_interference_case,
+):
+    basis_configs, kinetic, indices = pairwise_interference_case
 
     state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
     state[indices["v1"]] = 1.0 / np.sqrt(2.0)
@@ -1055,7 +902,7 @@ def test_basis_configs_from_basis_uses_to_array_basis():
     )
 
 
-def test_mixed_projected_and_locally_cancelled_inputs_are_projector_like():
+def test_mixed_projected_and_locally_cancelled_inputs_are_projector_like(classification_config):
     report = _minimal_zero_report(
         zero_index=14,
         q_sector_weight=2.0 / 3.0,
@@ -1070,7 +917,7 @@ def test_mixed_projected_and_locally_cancelled_inputs_are_projector_like():
     annotated = _annotate_probe_mechanisms(
         [report],
         trivial_zero_indices={66},
-        config=_base_classification_config(),
+        config=classification_config,
     )
 
     assert annotated[0].probe_mechanism_label == "projector_like"

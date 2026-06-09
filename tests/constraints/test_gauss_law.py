@@ -6,10 +6,7 @@ from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.variables import LocalSpace, VariableLayout
 
 
-def test_gauss_law_open_chain_site_1() -> None:
-    lattice = ChainLattice(3, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
-
+def test_gauss_law_open_chain_site_1(chain_3_open, spin_half_chain_3_link_layout) -> None:
     # Links:
     #   0: 0 -> 1
     #   1: 1 -> 2
@@ -18,8 +15,8 @@ def test_gauss_law_open_chain_site_1() -> None:
     #   incoming link 0 has sign +1
     #   outgoing link 1 has sign -1
     constraint = GaussLawConstraint.from_lattice_site(
-        lattice=lattice,
-        layout=layout,
+        lattice=chain_3_open,
+        layout=spin_half_chain_3_link_layout,
         site_id=1,
         charge=0,
     )
@@ -34,13 +31,10 @@ def test_gauss_law_open_chain_site_1() -> None:
     assert not constraint.is_satisfied(np.array([1, -1]))
 
 
-def test_gauss_law_boundary_site() -> None:
-    lattice = ChainLattice(3, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
-
+def test_gauss_law_boundary_site(chain_3_open, spin_half_chain_3_link_layout) -> None:
     constraint = GaussLawConstraint.from_lattice_site(
-        lattice=lattice,
-        layout=layout,
+        lattice=chain_3_open,
+        layout=spin_half_chain_3_link_layout,
         site_id=0,
         charge=-1,
         charge_normalization="integer_flux",
@@ -50,13 +44,10 @@ def test_gauss_law_boundary_site() -> None:
     assert constraint.is_satisfied(np.array([1, 1]))
 
 
-def test_gauss_law_all_sites() -> None:
-    lattice = ChainLattice(3, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
-
+def test_gauss_law_all_sites(chain_3_open, spin_half_chain_3_link_layout) -> None:
     constraints = GaussLawConstraint.all_sites(
-        lattice=lattice,
-        layout=layout,
+        lattice=chain_3_open,
+        layout=spin_half_chain_3_link_layout,
         charges=np.array([-1, 0, 1]),
         charge_normalization="integer_flux",
     )
@@ -67,12 +58,13 @@ def test_gauss_law_all_sites() -> None:
     assert all(c.is_satisfied(config) for c in constraints)
 
 
-def test_gauss_law_all_sites_rejects_bad_charge_shape() -> None:
-    lattice = ChainLattice(3, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.spin_half_flux())
-
+def test_gauss_law_all_sites_rejects_bad_charge_shape(
+    chain_3_open, spin_half_chain_3_link_layout
+) -> None:
     with pytest.raises(ValueError, match="charges must have shape"):
-        GaussLawConstraint.all_sites(lattice, layout, charges=np.array([0, 0]))
+        GaussLawConstraint.all_sites(
+            chain_3_open, spin_half_chain_3_link_layout, charges=np.array([0, 0])
+        )
 
 
 def test_gauss_law_square_lattice_site() -> None:
@@ -129,15 +121,9 @@ def test_gauss_law_spin_half_boundary_site() -> None:
     assert not constraint.is_satisfied(np.array([1], dtype=np.int64))
 
 
-def test_gauss_law_spin_half_two_links() -> None:
-    lattice = ChainLattice(3, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(
-        lattice,
-        LocalSpace.spin_half_flux(),
-    )
-
+def test_gauss_law_spin_half_two_links(spin_half_chain_3_link_layout) -> None:
     constraint = GaussLawConstraint(
-        layout=layout,
+        layout=spin_half_chain_3_link_layout,
         site_id=1,
         link_ids=np.array([0, 1]),
         signs=np.array([1, -1]),
@@ -151,15 +137,9 @@ def test_gauss_law_spin_half_two_links() -> None:
     assert constraint.is_satisfied(config)
 
 
-def test_gauss_law_spin_half_residual() -> None:
-    lattice = ChainLattice(3, boundary_condition="open")
-    layout = VariableLayout.from_lattice_links(
-        lattice,
-        LocalSpace.spin_half_flux(),
-    )
-
+def test_gauss_law_spin_half_residual(spin_half_chain_3_link_layout) -> None:
     constraint = GaussLawConstraint(
-        layout=layout,
+        layout=spin_half_chain_3_link_layout,
         site_id=1,
         link_ids=np.array([0, 1]),
         signs=np.array([1, -1]),

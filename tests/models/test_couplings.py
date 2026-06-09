@@ -2,29 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from scipy import sparse
 
-from qlinks.models.qdm import SquareQDMModel
-from qlinks.models.qlm import SquareQLMModel
-
-
-def _as_csr(matrix: sparse.spmatrix | sparse.sparray) -> sparse.csr_array:
-    return sparse.csr_array(matrix)
-
-
-def _assert_sparse_allclose(
-    actual: sparse.spmatrix | sparse.sparray,
-    expected: sparse.spmatrix | sparse.sparray,
-    *,
-    atol: float = 1.0e-12,
-) -> None:
-    difference = _as_csr(actual) - _as_csr(expected)
-
-    if difference.nnz == 0:
-        return
-
-    max_abs = np.max(np.abs(difference.data))
-    assert max_abs < atol
+from qlinks.models import SquareQDMModel, SquareQLMModel
+from tests.helpers.assertions import assert_sparse_allclose
 
 
 def _assert_same_physical_basis_order(sparse_result, bitmask_result) -> None:
@@ -70,8 +50,8 @@ def test_square_qdm_constant_plaquette_coup_kin_matches_scalar(builder: str) -> 
     scalar_result = scalar_model.build(builder=builder)
     mapped_result = mapped_model.build(builder=builder)
 
-    _assert_sparse_allclose(mapped_result.kinetic, scalar_result.kinetic)
-    _assert_sparse_allclose(mapped_result.hamiltonian, scalar_result.hamiltonian)
+    assert_sparse_allclose(mapped_result.kinetic, scalar_result.kinetic)
+    assert_sparse_allclose(mapped_result.hamiltonian, scalar_result.hamiltonian)
 
 
 @pytest.mark.parametrize("builder", ["sparse", "bitmask"])
@@ -109,8 +89,8 @@ def test_square_qdm_dict_and_callable_coup_kin_match(builder: str) -> None:
     dict_result = dict_model.build(builder=builder)
     callable_result = callable_model.build(builder=builder)
 
-    _assert_sparse_allclose(callable_result.kinetic, dict_result.kinetic)
-    _assert_sparse_allclose(callable_result.hamiltonian, dict_result.hamiltonian)
+    assert_sparse_allclose(callable_result.kinetic, dict_result.kinetic)
+    assert_sparse_allclose(callable_result.hamiltonian, dict_result.hamiltonian)
 
 
 def test_square_qdm_sparse_and_bitmask_match_with_plaquette_coup_kin() -> None:
@@ -145,8 +125,8 @@ def test_square_qdm_sparse_and_bitmask_match_with_plaquette_coup_kin() -> None:
     bitmask_result = bitmask_model.build(builder="bitmask", sort_basis=False)
 
     _assert_same_physical_basis_order(sparse_result, bitmask_result)
-    _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
-    _assert_sparse_allclose(bitmask_result.hamiltonian, sparse_result.hamiltonian)
+    assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
+    assert_sparse_allclose(bitmask_result.hamiltonian, sparse_result.hamiltonian)
 
 
 @pytest.mark.parametrize("builder", ["sparse", "bitmask"])
@@ -184,8 +164,8 @@ def test_square_qdm_dict_and_callable_coup_pot_match(builder: str) -> None:
     dict_result = dict_model.build(builder=builder)
     callable_result = callable_model.build(builder=builder)
 
-    _assert_sparse_allclose(callable_result.potential, dict_result.potential)
-    _assert_sparse_allclose(callable_result.hamiltonian, dict_result.hamiltonian)
+    assert_sparse_allclose(callable_result.potential, dict_result.potential)
+    assert_sparse_allclose(callable_result.hamiltonian, dict_result.hamiltonian)
 
 
 def _square_qlm_model(
@@ -223,8 +203,8 @@ def test_square_qlm_constant_plaquette_coup_kin_matches_scalar(builder: str) -> 
     scalar_result = scalar_model.build(builder=builder)
     mapped_result = mapped_model.build(builder=builder)
 
-    _assert_sparse_allclose(mapped_result.kinetic, scalar_result.kinetic)
-    _assert_sparse_allclose(mapped_result.hamiltonian, scalar_result.hamiltonian)
+    assert_sparse_allclose(mapped_result.kinetic, scalar_result.kinetic)
+    assert_sparse_allclose(mapped_result.hamiltonian, scalar_result.hamiltonian)
 
 
 @pytest.mark.parametrize("builder", ["sparse", "bitmask"])
@@ -253,8 +233,8 @@ def test_square_qlm_dict_and_callable_coup_kin_match(builder: str) -> None:
     dict_result = dict_model.build(builder=builder)
     callable_result = callable_model.build(builder=builder)
 
-    _assert_sparse_allclose(callable_result.kinetic, dict_result.kinetic)
-    _assert_sparse_allclose(callable_result.hamiltonian, dict_result.hamiltonian)
+    assert_sparse_allclose(callable_result.kinetic, dict_result.kinetic)
+    assert_sparse_allclose(callable_result.hamiltonian, dict_result.hamiltonian)
 
 
 def test_square_qlm_sparse_and_bitmask_match_with_plaquette_coup_kin() -> None:
@@ -280,8 +260,8 @@ def test_square_qlm_sparse_and_bitmask_match_with_plaquette_coup_kin() -> None:
     bitmask_result = bitmask_model.build(builder="bitmask", sort_basis=True)
 
     _assert_same_physical_basis_order(sparse_result, bitmask_result)
-    _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
-    _assert_sparse_allclose(bitmask_result.hamiltonian, sparse_result.hamiltonian)
+    assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
+    assert_sparse_allclose(bitmask_result.hamiltonian, sparse_result.hamiltonian)
 
 
 @pytest.mark.parametrize("builder", ["sparse", "bitmask"])
@@ -310,8 +290,8 @@ def test_square_qlm_dict_and_callable_coup_pot_match(builder: str) -> None:
     dict_result = dict_model.build(builder=builder)
     callable_result = callable_model.build(builder=builder)
 
-    _assert_sparse_allclose(callable_result.potential, dict_result.potential)
-    _assert_sparse_allclose(callable_result.hamiltonian, dict_result.hamiltonian)
+    assert_sparse_allclose(callable_result.potential, dict_result.potential)
+    assert_sparse_allclose(callable_result.hamiltonian, dict_result.hamiltonian)
 
 
 @pytest.mark.parametrize("model_factory", [SquareQDMModel, _square_qlm_model])

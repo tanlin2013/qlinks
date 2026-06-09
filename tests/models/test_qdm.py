@@ -13,6 +13,7 @@ from qlinks.models import (
 )
 from tests.helpers.assertions import (
     assert_hermitian_sparse,
+    assert_same_sparse_matrix,
     assert_sparse_allclose,
 )
 
@@ -240,10 +241,7 @@ def test_square_qdm_2x2_sparse_and_bitmask_match_in_electric_winding_sector(
         on_missing="raise",
     )
 
-    difference_matrix = sparse_result.hamiltonian - bitmask_result.hamiltonian
-    difference_matrix.eliminate_zeros()
-
-    assert difference_matrix.nnz == 0
+    assert_same_sparse_matrix(bitmask_result.hamiltonian, sparse_result.hamiltonian)
 
 
 @pytest.mark.parametrize("builder", ["sparse", "bitmask"])
