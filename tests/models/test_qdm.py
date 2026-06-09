@@ -3,7 +3,6 @@ from itertools import product
 
 import numpy as np
 import pytest
-from scipy import sparse
 
 from qlinks.builders import is_hermitian_sparse
 from qlinks.models import (
@@ -12,49 +11,14 @@ from qlinks.models import (
     SquareQDMModel,
     TriangularQDMModel,
 )
+from tests.helpers.assertions import (
+    assert_hermitian_sparse,
+    assert_sparse_allclose,
+)
 
 
-def _assert_hermitian(matrix, *, atol: float = 1.0e-12) -> None:
-    diff = matrix - matrix.conj().T
-
-    if diff.nnz == 0:
-        return
-
-    assert np.max(np.abs(diff.data)) < atol
-
-
-def _as_csr(matrix: sparse.spmatrix | sparse.sparray) -> sparse.csr_array:
-    return sparse.csr_array(matrix)
-
-
-def _assert_sparse_allclose(
-    actual: sparse.spmatrix | sparse.sparray,
-    expected: sparse.spmatrix | sparse.sparray,
-    *,
-    atol: float = 1.0e-12,
-) -> None:
-    actual_csr = _as_csr(actual)
-    expected_csr = _as_csr(expected)
-
-    difference = actual_csr - expected_csr
-
-    if difference.nnz == 0:
-        return
-
-    max_abs = np.max(np.abs(difference.data))
-    assert max_abs < atol
-
-
-def test_square_qdm_single_plaquette_sparse() -> None:
-    model = SquareQDMModel(
-        lx=2,
-        ly=2,
-        boundary_condition="open",
-        coup_kin=-1.0,
-        coup_pot=2.0,
-    )
-
-    result = model.build(
+def test_square_qdm_single_plaquette_sparse(square_qdm_2x2_open) -> None:
+    result = square_qdm_2x2_open.build(
         basis_solver="dfs",
         builder="sparse",
         sort_basis=True,
@@ -74,22 +38,14 @@ def test_square_qdm_single_plaquette_sparse() -> None:
     np.testing.assert_allclose(result.hamiltonian.toarray(), expected)
 
 
-def test_square_qdm_bitmask_matches_sparse() -> None:
-    model = SquareQDMModel(
-        lx=2,
-        ly=2,
-        boundary_condition="open",
-        coup_kin=-1.0,
-        coup_pot=2.0,
-    )
-
-    sparse_result = model.build(
+def test_square_qdm_bitmask_matches_sparse(square_qdm_2x2_open) -> None:
+    sparse_result = square_qdm_2x2_open.build(
         basis_solver="dfs",
         builder="sparse",
         sort_basis=True,
     )
 
-    bitmask_result = model.build(
+    bitmask_result = square_qdm_2x2_open.build(
         basis=sparse_result.basis,
         builder="bitmask",
     )
@@ -127,10 +83,6 @@ def test_square_qdm_total_4x4_known_count() -> None:
         required_count=1,
     )
 
-    # No sector restriction.
-    object.__setattr__(model, "winding_x", None)
-    object.__setattr__(model, "winding_y", None)
-
     basis = model.build_basis(
         solver="dfs",
         sort=True,
@@ -157,16 +109,8 @@ def test_triangular_qdm_smoke() -> None:
     assert len(model.plaquette_ids()) > 0
 
 
-def test_honeycomb_qdm_single_hexagon_sparse() -> None:
-    model = HoneycombQDMModel(
-        lx=2,
-        ly=2,
-        boundary_condition="open",
-        coup_kin=-1.0,
-        coup_pot=1.0,
-    )
-
-    result = model.build(
+def test_honeycomb_qdm_single_hexagon_sparse(honeycomb_qdm_2x2_open) -> None:
+    result = honeycomb_qdm_2x2_open.build(
         basis_solver="dfs",
         builder="sparse",
         sort_basis=True,
@@ -179,22 +123,14 @@ def test_honeycomb_qdm_single_hexagon_sparse() -> None:
     assert is_hermitian_sparse(result.hamiltonian)
 
 
-def test_honeycomb_qdm_bitmask_matches_sparse() -> None:
-    model = HoneycombQDMModel(
-        lx=2,
-        ly=2,
-        boundary_condition="open",
-        coup_kin=-1.0,
-        coup_pot=1.0,
-    )
-
-    sparse_result = model.build(
+def test_honeycomb_qdm_bitmask_matches_sparse(honeycomb_qdm_2x2_open) -> None:
+    sparse_result = honeycomb_qdm_2x2_open.build(
         basis_solver="dfs",
         builder="sparse",
         sort_basis=True,
     )
 
-    bitmask_result = model.build(
+    bitmask_result = honeycomb_qdm_2x2_open.build(
         basis=sparse_result.basis,
         builder="bitmask",
     )
@@ -334,8 +270,8 @@ def test_square_qdm_peierls_coup_kin_is_hermitian(builder: str) -> None:
 
     result = model.build(builder=builder)
 
-    _assert_hermitian(result.kinetic)
-    _assert_hermitian(result.hamiltonian)
+    assert_hermitian_sparse(result.kinetic)
+    assert_hermitian_sparse(result.hamiltonian)
 
 
 def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
@@ -367,7 +303,7 @@ def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
         coup_pot=0.0,
     ).build(builder="bitmask", sort_basis=False)
 
-    _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
+    assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
 
 
 def test_square_qdm_nonempty_sector_labels_rectangular_pbc() -> None:

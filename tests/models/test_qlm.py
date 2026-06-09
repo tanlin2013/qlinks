@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from scipy import sparse
 
 from qlinks.basis import Basis
 from qlinks.builders import is_hermitian_sparse
@@ -12,37 +11,10 @@ from qlinks.models import (
     SquareQLMModel,
     TriangularQLMModel,
 )
-
-
-def _assert_hermitian(matrix, *, atol: float = 1.0e-12) -> None:
-    diff = matrix - matrix.conj().T
-
-    if diff.nnz == 0:
-        return
-
-    assert np.max(np.abs(diff.data)) < atol
-
-
-def _as_csr(matrix: sparse.spmatrix | sparse.sparray) -> sparse.csr_array:
-    return sparse.csr_array(matrix)
-
-
-def _assert_sparse_allclose(
-    actual: sparse.spmatrix | sparse.sparray,
-    expected: sparse.spmatrix | sparse.sparray,
-    *,
-    atol: float = 1.0e-12,
-) -> None:
-    actual_csr = _as_csr(actual)
-    expected_csr = _as_csr(expected)
-
-    difference = actual_csr - expected_csr
-
-    if difference.nnz == 0:
-        return
-
-    max_abs = np.max(np.abs(difference.data))
-    assert max_abs < atol
+from tests.helpers.assertions import (
+    assert_hermitian_sparse,
+    assert_sparse_allclose,
+)
 
 
 def _assert_same_physical_basis_order(sparse_result, bitmask_result) -> None:
@@ -458,30 +430,6 @@ def test_square_qlm_2x2_pbc_kinetic_preserves_gauss_law(
     assert build_result.kinetic.nnz > 0
 
 
-def _debug_config_against_model(model, config: np.ndarray) -> None:
-    print("config =", config.tolist())
-
-    for constraint_index, constraint in enumerate(model.make_constraints(model.layout)):
-        result = constraint.check(config)
-        print(
-            "constraint",
-            constraint_index,
-            type(constraint).__name__,
-            result.satisfied,
-            result.message,
-        )
-
-    for sector_index, sector in enumerate(model.make_sectors(model.layout)):
-        result = sector.check(config)
-        print(
-            "sector",
-            sector_index,
-            type(sector).__name__,
-            result.satisfied,
-            result.message,
-        )
-
-
 @pytest.mark.parametrize("builder_name", ["sparse", "bitmask"])
 def test_square_qlm_2x2_pbc_w00_kinetic_preserves_basis(
     builder_name: str,
@@ -601,8 +549,8 @@ def test_square_qlm_peierls_coup_kin_is_hermitian(builder: str) -> None:
 
     result = model.build(builder=builder)
 
-    _assert_hermitian(result.kinetic)
-    _assert_hermitian(result.hamiltonian)
+    assert_hermitian_sparse(result.kinetic)
+    assert_hermitian_sparse(result.hamiltonian)
 
 
 def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
@@ -634,7 +582,7 @@ def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
         coup_pot=0.0,
     ).build(builder="bitmask", sort_basis=False)
 
-    _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
+    assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
 
 
 def test_honeycomb_qlm_zero_charge_nonempty_sector_labels_empty() -> None:
@@ -689,4 +637,4 @@ def test_square_qlm_sparse_and_bitmask_match_sorted_basis() -> None:
     bitmask_result = bitmask_model.build(builder="bitmask", sort_basis=True)
 
     _assert_same_physical_basis_order(sparse_result, bitmask_result)
-    _assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
+    assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
