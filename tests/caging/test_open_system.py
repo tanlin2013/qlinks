@@ -6,6 +6,8 @@ import scipy.sparse as sp
 
 from qlinks.caging.open_system import (
     CageLindbladConstruction,
+    _build_component_decomposition_jump_operators,
+    _infer_sharp_potential_value,
     _select_jump_terms,
     _select_monitor_terms,
 )
@@ -153,3 +155,141 @@ def test_cage_lindblad_construction_evolve_uses_new_api():
     )
 
     assert len(result.density_matrices) == len(times)
+
+
+def test_infer_sharp_potential_value_accepts_eigenstate():
+    state = np.array([1.0, 0.0], dtype=np.complex128)
+    potential = sp.csr_array(np.array([[2.0, 0.0], [0.0, 3.0]], dtype=np.complex128))
+
+    value = _infer_sharp_potential_value(
+        potential_matrix=potential,
+        state=state,
+        residual_tolerance=1e-12,
+        label="test",
+    )
+
+    assert value == pytest.approx(2.0)
+
+
+def test_infer_sharp_potential_value_rejects_non_eigenstate():
+    state = np.array([1.0, 1.0], dtype=np.complex128) / np.sqrt(2)
+    potential = sp.csr_array(np.array([[2.0, 0.0], [0.0, 3.0]], dtype=np.complex128))
+
+    with pytest.raises(ValueError, match="Could not infer"):
+        _infer_sharp_potential_value(
+            potential_matrix=potential,
+            state=state,
+            residual_tolerance=1e-12,
+            label="test",
+        )
+
+
+def test_component_decomposition_kinetic_times_monitor_uses_only_component_jumps():
+    component_jump_0 = sp.csr_array(np.eye(2, dtype=np.complex128))
+    component_jump_1 = sp.csr_array(2.0 * np.eye(2, dtype=np.complex128))
+
+    jumps = _build_component_decomposition_jump_operators(
+        model=None,
+        build_result=None,
+        component_jumps=(component_jump_0, component_jump_1),
+        jump_kinetic_terms=(),
+        potential_terms_by_plaquette_id={},
+        builder="sparse",
+        backend="scipy",
+        jump_operator_design="kinetic_times_monitor",
+    )
+
+    assert len(jumps) == 2
+    np.testing.assert_allclose(jumps[0].toarray(), component_jump_0.toarray())
+    np.testing.assert_allclose(jumps[1].toarray(), component_jump_1.toarray())
+
+
+@dataclass(frozen=True)
+class _FakeTerm:
+    term_id: int
+
+    @property
+    def support_link_set(self):
+        return frozenset()
+
+
+class _FakeModel:
+    def build_local_term(self, term, build_result, *, builder, backend):
+        del build_result, builder, backend
+        return sp.csr_array(
+            np.array(
+                [[float(term.term_id), 0.0], [0.0, float(term.term_id)]],
+                dtype=np.complex128,
+            )
+        )
+
+
+def test_component_decomposition_kinetic_outside_appends_bare_kinetic():
+    component_jump = sp.csr_array(np.eye(2, dtype=np.complex128))
+    model = _FakeModel()
+
+    jumps = _build_component_decomposition_jump_operators(
+        model=model,
+        build_result=None,
+        component_jumps=(component_jump,),
+        jump_kinetic_terms=(_FakeTerm(3), _FakeTerm(5)),
+        potential_terms_by_plaquette_id={},
+        builder="sparse",
+        backend="scipy",
+        jump_operator_design="kinetic_outside_monitor_inside",
+    )
+
+    assert len(jumps) == 3
+    np.testing.assert_allclose(jumps[0].toarray(), np.eye(2))
+    np.testing.assert_allclose(jumps[1].toarray(), 3.0 * np.eye(2))
+    np.testing.assert_allclose(jumps[2].toarray(), 5.0 * np.eye(2))
+
+
+class _FakeHamiltonianModel:
+    def build_local_term(self, term, build_result, *, builder, backend):
+        del build_result, builder, backend
+
+        if term.operator_kind == "kinetic":
+            value = float(term.term_id)
+
+        elif term.operator_kind == "potential":
+            value = 10.0 * float(term.term_id)
+
+        else:
+            raise AssertionError(term.operator_kind)
+
+        return sp.csr_array(value * np.eye(2, dtype=np.complex128))
+
+
+def test_component_decomposition_hamiltonian_outside_appends_kinetic_plus_potential():
+    component_jump = sp.csr_array(np.eye(2, dtype=np.complex128))
+    model = _FakeHamiltonianModel()
+
+    kinetic_term = LocalTermDescriptor(
+        term_id=3,
+        term_kind="plaquette",
+        operator_kind="kinetic",
+        support_links=(0, 1),
+    )
+    potential_term = LocalTermDescriptor(
+        term_id=3,
+        term_kind="plaquette",
+        operator_kind="potential",
+        support_links=(0, 1),
+    )
+
+    jumps = _build_component_decomposition_jump_operators(
+        model=model,
+        build_result=None,
+        component_jumps=(component_jump,),
+        jump_kinetic_terms=(kinetic_term,),
+        potential_terms_by_plaquette_id={3: potential_term},
+        builder="sparse",
+        backend="scipy",
+        jump_operator_design="hamiltonian_outside_monitor_inside",
+    )
+
+    assert len(jumps) == 2
+
+    expected_outside = 33.0 * np.eye(2, dtype=np.complex128)
+    np.testing.assert_allclose(jumps[1].toarray(), expected_outside)
