@@ -4,10 +4,15 @@ from qlinks.open_system.backend import (
     get_open_system_backend,
 )
 from qlinks.open_system.diagnostics import (
+    AbsorbingProjectorJumpDiagnostics,
+    AbsorbingProjectorSymmetryDiagnostics,
+    DarkSubspaceDiagnostics,
     DensityMatrixVerification,
     EvolutionDiagnostics,
     LindbladFinalStateVerification,
     analyze_lindblad_evolution,
+    diagnose_absorbing_projector_symmetry,
+    diagnose_dark_subspace,
     verify_density_matrix,
     verify_lindblad_final_state,
 )
@@ -80,6 +85,11 @@ __all__ = [
     "analyze_lindblad_evolution",
     "verify_density_matrix",
     "verify_lindblad_final_state",
+    "DarkSubspaceDiagnostics",
+    "diagnose_dark_subspace",
+    "AbsorbingProjectorJumpDiagnostics",
+    "AbsorbingProjectorSymmetryDiagnostics",
+    "diagnose_absorbing_projector_symmetry",
     "EnsembleResult",
     "McwfOptions",
     "TrajectoryResult",
