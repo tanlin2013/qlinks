@@ -16,6 +16,15 @@ from qlinks.open_system.diagnostics import (
     verify_density_matrix,
     verify_lindblad_final_state,
 )
+from qlinks.open_system.local_recycling import (
+    LocalRecyclingCandidate,
+    LocalRecyclingScanResult,
+    LocalReducedDensityMatrix,
+    embed_local_pattern_operator,
+    local_reduced_density_matrix_from_state,
+    scan_local_recycling_candidates,
+    score_recycling_jump,
+)
 from qlinks.open_system.operators import (
     build_liouvillian,
     estimate_lindblad_scale,
@@ -100,4 +109,11 @@ __all__ = [
     "projector",
     "run_quantum_jump_trajectory",
     "sample_lindblad_mcwf",
+    "LocalReducedDensityMatrix",
+    "LocalRecyclingCandidate",
+    "LocalRecyclingScanResult",
+    "embed_local_pattern_operator",
+    "local_reduced_density_matrix_from_state",
+    "scan_local_recycling_candidates",
+    "score_recycling_jump",
 ]
