@@ -7,10 +7,10 @@ import numpy as np
 import scipy.sparse as sp
 from numpy.typing import NDArray
 
+from qlinks.basis import basis_configs_from_build_result
 from qlinks.caging.classification import (
     CageClassificationReport,
     InterferenceZeroReport,
-    basis_configs_from_build_result,
 )
 from qlinks.caging.support import CageRegionSupport, extract_cage_region_support
 from qlinks.models.base import (

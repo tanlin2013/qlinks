@@ -3,12 +3,12 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from qlinks.basis import basis_configs_from_basis
 from qlinks.caging.classification import (
     CageClassificationConfig,
     InterferenceZeroReport,
     _annotate_probe_mechanisms,
     _classify_from_zero_reports,
-    basis_configs_from_basis,
     classify_cage_state,
     classify_full_state,
 )
