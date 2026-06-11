@@ -974,6 +974,7 @@ def _build_zero_report(
         basis_configs=basis_configs,
         local_mask=local_mask,
     )
+    local_transition_lookup = _group_local_transitions_by_source(local_transitions)
 
     reduced_action, _reduced_targets, _reduced_inputs = _apply_reduced_local_operator(
         full_state,
@@ -984,6 +985,7 @@ def _build_zero_report(
         reference_config=None,
         local_mask=local_mask,
         local_transitions=local_transitions,
+        local_transition_lookup=local_transition_lookup,
         amplitude_tolerance=config.amplitude_tolerance,
     )
 
@@ -997,6 +999,7 @@ def _build_zero_report(
             reference_config=basis_configs[zero_index],
             local_mask=local_mask,
             local_transitions=local_transitions,
+            local_transition_lookup=local_transition_lookup,
             use_complement_common_sector=True,
             amplitude_tolerance=config.amplitude_tolerance,
         )
@@ -1783,6 +1786,9 @@ def _apply_reduced_local_operator(
     local_mask: NDArray[np.bool_],
     local_transitions: tuple[LocalTransitionPattern, ...] | list[LocalTransitionPattern],
     domain_mask: NDArray[np.bool_],
+    local_transition_lookup: (
+        dict[tuple[int, ...], tuple[LocalTransitionPattern, ...]] | None
+    ) = None,
     common_mask: NDArray[np.bool_] | None = None,
     reference_config: NDArray[np.integer] | None = None,
     use_complement_common_sector: bool = False,
@@ -1806,6 +1812,11 @@ def _apply_reduced_local_operator(
     output = np.zeros_like(full_state)
     target_indices: set[int] = set()
     contributing_input_indices: set[int] = set()
+    transitions_by_source = (
+        _group_local_transitions_by_source(local_transitions)
+        if local_transition_lookup is None
+        else local_transition_lookup
+    )
 
     for source_index, source_config in enumerate(basis_configs):
         if not domain_mask[source_index]:
@@ -1829,11 +1840,12 @@ def _apply_reduced_local_operator(
                 continue
 
         source_local = _config_key(source_config[local_mask])
+        matching_transitions = transitions_by_source.get(source_local)
 
-        for transition in local_transitions:
-            if source_local != transition.source_local:
-                continue
+        if matching_transitions is None:
+            continue
 
+        for transition in matching_transitions:
             target_config = np.array(source_config, copy=True)
             target_config[local_mask] = np.array(
                 transition.target_local,
@@ -1861,6 +1873,20 @@ def _apply_reduced_local_operator(
         np.array(sorted(target_indices), dtype=np.int64),
         np.array(sorted(contributing_input_indices), dtype=np.int64),
     )
+
+
+def _group_local_transitions_by_source(
+    local_transitions: tuple[LocalTransitionPattern, ...] | list[LocalTransitionPattern],
+) -> dict[tuple[int, ...], tuple[LocalTransitionPattern, ...]]:
+    """Group local transitions by source pattern for fast local-operator application."""
+    transition_groups: dict[tuple[int, ...], list[LocalTransitionPattern]] = {}
+
+    for transition in local_transitions:
+        transition_groups.setdefault(transition.source_local, []).append(transition)
+
+    return {
+        source_local: tuple(transitions) for source_local, transitions in transition_groups.items()
+    }
 
 
 def _build_config_to_index(

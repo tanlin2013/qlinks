@@ -7,8 +7,12 @@ from qlinks.basis import basis_configs_from_basis
 from qlinks.caging.classification import (
     CageClassificationConfig,
     InterferenceZeroReport,
+    LocalTransitionPattern,
     _annotate_probe_mechanisms,
+    _apply_reduced_local_operator,
+    _build_config_to_index,
     _classify_from_zero_reports,
+    _group_local_transitions_by_source,
     classify_cage_state,
     classify_full_state,
 )
@@ -85,6 +89,45 @@ def _minimal_zero_report(
             dtype=np.int64,
         ),
     )
+
+
+def test_apply_reduced_local_operator_accepts_grouped_transitions() -> None:
+    basis_configs = np.array(
+        [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [1, 1],
+        ],
+        dtype=np.int64,
+    )
+    full_state = np.array([3.0, 0.0, 5.0, 0.0], dtype=np.complex128)
+    local_mask = np.array([False, True], dtype=np.bool_)
+    domain_mask = np.ones(basis_configs.shape[0], dtype=np.bool_)
+    transitions = (
+        LocalTransitionPattern(
+            source_local=(0,),
+            target_local=(1,),
+            matrix_element=2.0,
+        ),
+    )
+    transition_lookup = _group_local_transitions_by_source(transitions)
+
+    output, target_indices, input_indices = _apply_reduced_local_operator(
+        full_state,
+        basis_configs=basis_configs,
+        config_to_index=_build_config_to_index(basis_configs),
+        local_mask=local_mask,
+        local_transitions=transitions,
+        local_transition_lookup=transition_lookup,
+        domain_mask=domain_mask,
+    )
+
+    expected_output = np.array([0.0, 6.0, 0.0, 10.0], dtype=np.complex128)
+
+    np.testing.assert_allclose(output, expected_output)
+    np.testing.assert_array_equal(target_indices, np.array([1, 3], dtype=np.int64))
+    np.testing.assert_array_equal(input_indices, np.array([0, 2], dtype=np.int64))
 
 
 def test_classify_full_state_finds_regional_candidate(
