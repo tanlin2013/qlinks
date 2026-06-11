@@ -18,7 +18,7 @@ from qlinks.models.qdm import SquareQDMModel
 from qlinks.models.qlm import SquareQLMModel
 
 BuilderName = Literal["sparse", "optimized", "bitmask"]
-SearchTypeName = Literal["type1", "type2", "qdm", "qlm", "custom"]
+SearchTypeName = Literal["type1", "type2", "type1_and_type2", "custom"]
 
 
 @dataclass(frozen=True)
@@ -100,7 +100,7 @@ def make_benchmark_cases() -> list[CageBenchmarkCase]:
                 coup_pot=1.0,
             ),
             builder="sparse",
-            search_type="qdm",
+            search_type="type1",
         ),
         CageBenchmarkCase(
             name="square_qlm_4x4_pbc_w00",
@@ -115,7 +115,7 @@ def make_benchmark_cases() -> list[CageBenchmarkCase]:
                 coup_pot=1.0,
             ),
             builder="bitmask",
-            search_type="qlm",
+            search_type="type1_and_type2",
         ),
     ]
 
@@ -420,7 +420,7 @@ def main() -> None:
     parser.add_argument(
         "--search-type",
         default="auto",
-        choices=["auto", "type1", "type2", "qdm", "qlm", "custom"],
+        choices=["auto", "type1", "type2", "type1_and_type2", "custom"],
         help="Cage search type. 'auto' uses the default search type for each case.",
     )
     parser.add_argument("--tolerance", type=float, default=1.0e-10)

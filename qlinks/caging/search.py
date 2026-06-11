@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from collections.abc import Iterator, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from numbers import Integral
 from typing import Literal, overload
 
@@ -24,14 +24,14 @@ from qlinks.caging.solver import (
     solve_candidate_for_kinetic_targets,
 )
 
-CageSearchType = Literal["type1", "type2", "qdm", "qlm", "custom"]
+CageSearchType = Literal["type1", "type2", "type1_and_type2", "custom"]
 
 
 @dataclass(frozen=True, slots=True)
 class CageSearchConfig:
     """Configuration for the high-level cage-search workflow."""
 
-    search_type: CageSearchType = "qlm"
+    search_type: CageSearchType = "type1_and_type2"
     tolerance: float = 1e-10
     min_component_size: int = 2
     validate_full_residual: bool = True
@@ -49,9 +49,21 @@ class CageSearchConfig:
     deduplicate_by_rank: bool = True
     rank_tolerance_factor: float = 100.0
     signature_tolerance_factor: float = 10.0
+    potential_signature_unit: complex = 1.0
 
     include_type1: bool | None = None
     include_type2: bool | None = None
+
+    def __post_init__(self) -> None:
+        if self.search_type not in {
+            "type1",
+            "type2",
+            "type1_and_type2",
+            "custom",
+        }:
+            raise ValueError(
+                "search_type must be 'type1', 'type2', " "'type1_and_type2', or 'custom'."
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,11 +306,17 @@ class CageSearcher:
         if build_result.potential is None:
             raise ValueError("build_result.potential is required for cage search.")
 
+        search_config = CageSearchConfig() if config is None else config
+        search_config = _with_inferred_potential_signature_unit(
+            search_config,
+            build_result,
+        )
+
         return cls(
             hamiltonian_matrix=build_result.hamiltonian,
             kinetic_matrix=build_result.kinetic,
             self_loop_values=diagonal_values(build_result.potential),
-            config=CageSearchConfig() if config is None else config,
+            config=search_config,
         )
 
     def run(
@@ -350,8 +368,7 @@ class CageSearcher:
         else:
             include_type1 = self.config.search_type in {
                 "type1",
-                "qdm",
-                "qlm",
+                "type1_and_type2",
                 "custom",
             }
 
@@ -360,7 +377,7 @@ class CageSearcher:
         else:
             include_type2 = self.config.search_type in {
                 "type2",
-                "qlm",
+                "type1_and_type2",
                 "custom",
             }
 
@@ -418,6 +435,7 @@ class CageSearcher:
                     cage_state.energy,
                     self_loop_value,
                     tolerance=(self.config.signature_tolerance_factor * self.config.tolerance),
+                    potential_unit=self.config.potential_signature_unit,
                 )
 
                 if signature is None:
@@ -513,29 +531,90 @@ def signature_from_energy_and_self_loop(
     self_loop_value: complex,
     *,
     tolerance: float,
+    potential_unit: complex = 1.0,
 ) -> tuple[int, int] | None:
-    """Infer integer ``(kappa, Z)`` signature from energy and self-loop value."""
-    potential_value = int(round(float(np.real(self_loop_value))))
-    kinetic_value = float(np.real(energy_value - self_loop_value))
-    kinetic_integer = int(round(kinetic_value))
+    """Infer integer ``(kappa, Z)`` signature from energy and self-loop value.
+
+    ``self_loop_value`` is the actual diagonal potential value, including any
+    scalar potential coupling.  ``potential_unit`` is the unit used to report
+    the potential signature.  For example, if ``V = lambda * V_tilde`` and
+    ``self_loop_value = lambda * Z``, then ``potential_unit=lambda`` reports
+    the lazy-index signature as ``(kappa, Z)`` while all internal residuals use
+    the coupled Hamiltonian.
+    """
+    potential_unit = complex(potential_unit)
+
+    if abs(potential_unit) <= tolerance:
+        raise ValueError("potential_unit must be nonzero.")
+
+    potential_value = _integer_from_nearly_real(
+        complex(self_loop_value) / potential_unit,
+        tolerance=tolerance,
+    )
+    kinetic_value = _integer_from_nearly_real(
+        complex(energy_value) - complex(self_loop_value),
+        tolerance=tolerance,
+    )
+
+    if potential_value is None or kinetic_value is None:
+        return None
+
+    return kinetic_value, potential_value
+
+
+def _integer_from_nearly_real(
+    value: complex,
+    *,
+    tolerance: float,
+) -> int | None:
+    """Return nearest integer if ``value`` is real/integer within tolerance."""
+    value = complex(value)
 
     if not np.isclose(
-        float(np.real(self_loop_value)),
-        potential_value,
+        float(np.imag(value)),
+        0.0,
         atol=tolerance,
         rtol=0.0,
     ):
         return None
 
+    real_value = float(np.real(value))
+    integer_value = int(round(real_value))
+
     if not np.isclose(
-        kinetic_value,
-        kinetic_integer,
+        real_value,
+        integer_value,
         atol=tolerance,
         rtol=0.0,
     ):
         return None
 
-    return kinetic_integer, potential_value
+    return integer_value
+
+
+def _with_inferred_potential_signature_unit(
+    config: CageSearchConfig,
+    build_result,
+) -> CageSearchConfig:
+    """Infer scalar potential-coupling unit from a model build result."""
+    if complex(config.potential_signature_unit) != complex(1.0):
+        return config
+
+    model = getattr(build_result, "model", None)
+    coupling = getattr(model, "coup_pot", None)
+
+    if coupling is None or callable(coupling) or isinstance(coupling, dict):
+        return config
+
+    try:
+        potential_unit = complex(coupling)
+    except (TypeError, ValueError):
+        return config
+
+    if potential_unit == 0:
+        return config
+
+    return replace(config, potential_signature_unit=potential_unit)
 
 
 def bipartition_labels(matrix) -> npt.NDArray[np.int64]:

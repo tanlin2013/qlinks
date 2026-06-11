@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from qlinks.caging import (
     CageRecord,
@@ -7,6 +8,7 @@ from qlinks.caging import (
     CageSearchResult,
     CageState,
     CandidateSubgraph,
+    signature_from_energy_and_self_loop,
 )
 
 
@@ -67,6 +69,113 @@ def test_cage_search_result_indexes_by_signature():
 
     assert result.by_signature((0, 6))[0] is records[1]
     assert result[(0, 6)].first() is records[1]
+
+
+def test_cage_search_config_rejects_legacy_model_named_search_types() -> None:
+    with pytest.raises(ValueError, match="search_type"):
+        CageSearchConfig(search_type="qdm")  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match="search_type"):
+        CageSearchConfig(search_type="qlm")  # type: ignore[arg-type]
+
+
+def test_cage_search_config_candidate_type_presets() -> None:
+    assert CageSearcher(
+        hamiltonian_matrix=np.zeros((0, 0), dtype=np.complex128),
+        kinetic_matrix=np.zeros((0, 0), dtype=np.complex128),
+        self_loop_values=np.array([], dtype=np.complex128),
+        config=CageSearchConfig(search_type="type1"),
+    )._enabled_candidate_types() == (True, False)
+
+    assert CageSearcher(
+        hamiltonian_matrix=np.zeros((0, 0), dtype=np.complex128),
+        kinetic_matrix=np.zeros((0, 0), dtype=np.complex128),
+        self_loop_values=np.array([], dtype=np.complex128),
+        config=CageSearchConfig(search_type="type2"),
+    )._enabled_candidate_types() == (False, True)
+
+    assert CageSearcher(
+        hamiltonian_matrix=np.zeros((0, 0), dtype=np.complex128),
+        kinetic_matrix=np.zeros((0, 0), dtype=np.complex128),
+        self_loop_values=np.array([], dtype=np.complex128),
+        config=CageSearchConfig(search_type="type1_and_type2"),
+    )._enabled_candidate_types() == (True, True)
+
+
+def test_signature_from_energy_and_self_loop_normalizes_potential_unit() -> None:
+    assert signature_from_energy_and_self_loop(
+        4.0,
+        5.0,
+        tolerance=1.0e-12,
+        potential_unit=2.5,
+    ) == (-1, 2)
+
+
+def test_signature_from_energy_and_self_loop_rejects_noninteger_normalized_potential() -> None:
+    assert (
+        signature_from_energy_and_self_loop(
+            4.0,
+            5.0,
+            tolerance=1.0e-12,
+            potential_unit=2.0,
+        )
+        is None
+    )
+
+
+def test_cage_searcher_from_model_build_result_infers_scalar_potential_unit() -> None:
+    class DummyModel:
+        coup_pot = 2.5
+
+    class DummyBuildResult:
+        model = DummyModel()
+        kinetic = np.zeros((1, 1), dtype=np.complex128)
+        potential = np.array([[5.0]], dtype=np.complex128)
+        hamiltonian = np.array([[5.0]], dtype=np.complex128)
+
+    searcher = CageSearcher.from_model_build_result(
+        DummyBuildResult(),
+        config=CageSearchConfig(search_type="type1"),
+    )
+
+    assert searcher.config.potential_signature_unit == 2.5
+    np.testing.assert_array_equal(
+        searcher.self_loop_values,
+        np.array([5.0], dtype=np.complex128),
+    )
+
+
+def test_cage_searcher_uses_potential_signature_unit_for_lazy_index() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.full(3, 5.0, dtype=np.complex128)
+    hamiltonian = kinetic_matrix + np.diag(self_loop_values)
+    candidate = CandidateSubgraph(vertices=np.array([0, 1], dtype=np.int64))
+
+    searcher = CageSearcher(
+        hamiltonian_matrix=hamiltonian,
+        kinetic_matrix=kinetic_matrix,
+        self_loop_values=self_loop_values,
+        config=CageSearchConfig(
+            search_type="custom",
+            include_type1=True,
+            include_type2=False,
+            type1_kappas=(-1,),
+            potential_signature_unit=2.5,
+            tolerance=1e-12,
+        ),
+    )
+
+    result = searcher.run(type1_candidates=[candidate])
+
+    assert result.counts_by_signature == {(-1, 2): 1}
+    assert result[(-1, 2)].first().signature == (-1, 2)
 
 
 def test_cage_searcher_uses_fixed_kappa_solver_for_supplied_candidates() -> None:

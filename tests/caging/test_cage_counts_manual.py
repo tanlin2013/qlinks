@@ -116,7 +116,7 @@ def test_square_qdm_qlm_cage_counts_by_signature(
 ) -> None:
     build_result = _build_square_model_result(square_case)
 
-    search_type = "qdm" if square_case.model_name == "qdm" else "qlm"
+    search_type = "type1" if square_case.model_name == "qdm" else "type1_and_type2"
 
     searcher = CageSearcher.from_model_build_result(
         build_result,

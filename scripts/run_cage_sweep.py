@@ -82,7 +82,7 @@ class CageSweepJob:
     charge_normalization: str | None = None
 
     # Search metadata.
-    search_type: Literal["qdm", "qlm", "type1", "type2", "custom"] = "custom"
+    search_type: Literal["type1", "type2", "type1_and_type2", "custom"] = "custom"
     ipr_random_seed: int | None = None
 
 
@@ -983,7 +983,7 @@ def make_jobs(
                         f"{boundary_condition}_{sector_label}{charge_label}"
                     )
 
-                    search_type = "qdm" if model_kind == "qdm" else "qlm"
+                    search_type = "type1" if model_kind == "qdm" else "type1_and_type2"
 
                     jobs.append(
                         CageSweepJob(

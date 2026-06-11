@@ -105,7 +105,7 @@ basis = build_result.basis
 from qlinks.caging import CageSearchConfig, CageSearcher
 
 config = CageSearchConfig(
-    search_type="qdm",
+    search_type="type1",
     type1_kappas=(0,),
     tolerance=1e-10,
     degenerate_basis_strategy="ipr",
