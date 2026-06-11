@@ -397,6 +397,11 @@
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.full_basis_from_layout"><code class="docutils literal notranslate"><span class="pre">full_basis_from_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis_configs_from_basis"><code class="docutils literal notranslate"><span class="pre">basis_configs_from_basis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis_configs_from_build_result"><code class="docutils literal notranslate"><span class="pre">basis_configs_from_build_result()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.decode_basis_configs_with_layout"><code class="docutils literal notranslate"><span class="pre">decode_basis_configs_with_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.sector_mask_from_build_result"><code class="docutils literal notranslate"><span class="pre">sector_mask_from_build_result()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.sector_mask_from_sectors"><code class="docutils literal notranslate"><span class="pre">sector_mask_from_sectors()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1193,6 +1198,96 @@ SquareWindingSector</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.basis_configs_from_basis">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">basis_configs_from_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/configs.html#basis_configs_from_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis_configs_from_basis" title="Link to this definition">#</a></dt>
+<dd><p>Return explicit basis configurations for ArrayBasis or BinaryEncodedBasis.</p>
+<p>Sparse/array builders usually expose this as <code class="docutils literal notranslate"><span class="pre">basis.states</span></code>. Bitmask
+builders may use BinaryEncodedBasis, which stores compact integer codes and
+exposes <code class="docutils literal notranslate"><span class="pre">to_array_basis()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>basis</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.basis_configs_from_build_result">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">basis_configs_from_build_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build_result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/configs.html#basis_configs_from_build_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis_configs_from_build_result" title="Link to this definition">#</a></dt>
+<dd><p>Return physical basis configurations from a ModelBuildResult.</p>
+<p>Bitmask builders may store basis states as local integer codes, e.g.
+0/1 for a two-state local space. The classifier and visualizers need the
+physical variable values declared by build_result.layout, e.g. -1/+1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>build_result</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.decode_basis_configs_with_layout">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">decode_basis_configs_with_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/configs.html#decode_basis_configs_with_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.decode_basis_configs_with_layout" title="Link to this definition">#</a></dt>
+<dd><p>Decode local integer codes into physical values using a VariableLayout.</p>
+<p>If the configs already contain valid physical values, they are returned
+unchanged. Otherwise, values 0, 1, …, d-1 are interpreted as indices into
+each variable’s local space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>basis_configs</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>layout</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.sector_mask_from_build_result">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">sector_mask_from_build_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/sectors.html#sector_mask_from_build_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.sector_mask_from_build_result" title="Link to this definition">#</a></dt>
+<dd><p>Return a boolean mask for configs in a build result.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">sectors</span></code> is provided, use those sectors. Otherwise, try common
+build-result fields and fall back to selecting all basis states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>build_result</strong> (<em>Any</em>)</p></li>
+<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.bool" title="(in NumPy v2.4)"><em>bool</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.sector_mask_from_sectors">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">sector_mask_from_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/sectors.html#sector_mask_from_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.sector_mask_from_sectors" title="Link to this definition">#</a></dt>
+<dd><p>Return a boolean mask selecting configs satisfying all sectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>basis_configs</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.bool" title="(in NumPy v2.4)"><em>bool</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
@@ -1320,6 +1415,11 @@ SquareWindingSector</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.full_basis_from_layout"><code class="docutils literal notranslate"><span class="pre">full_basis_from_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis_configs_from_basis"><code class="docutils literal notranslate"><span class="pre">basis_configs_from_basis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis_configs_from_build_result"><code class="docutils literal notranslate"><span class="pre">basis_configs_from_build_result()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.decode_basis_configs_with_layout"><code class="docutils literal notranslate"><span class="pre">decode_basis_configs_with_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.sector_mask_from_build_result"><code class="docutils literal notranslate"><span class="pre">sector_mask_from_build_result()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.sector_mask_from_sectors"><code class="docutils literal notranslate"><span class="pre">sector_mask_from_sectors()</span></code></a></li>
 </ul>
 </li>
 </ul>
