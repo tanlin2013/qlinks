@@ -15,9 +15,20 @@ from qlinks.caging.results import CageState
 from qlinks.caging.types import CageSolverConfig
 
 
-def _apply_matrix(matrix: object, vector: np.ndarray) -> np.ndarray:
-    """Apply a dense or sparse matrix to a vector."""
-    return matrix @ vector
+def _full_residual_from_column_block(
+    hamiltonian_column_block: object,
+    parent_vertices: np.ndarray,
+    local_state: np.ndarray,
+    energy_value: complex,
+) -> float:
+    """Return ||H[:, S] psi - E psi_S|| without forming a full state."""
+    residual = np.asarray(
+        hamiltonian_column_block @ local_state,
+        dtype=np.complex128,
+    ).reshape(-1)
+    residual[parent_vertices] -= complex(energy_value) * local_state
+
+    return float(scipy_linalg.norm(residual))
 
 
 def _boundary_residual_from_overlap(
@@ -122,6 +133,7 @@ def _build_validated_cage_state(
     config: CageSolverConfig,
     metadata: dict[str, object],
     dense_boundary_overlap_matrix: np.ndarray | None = None,
+    hamiltonian_column_block: object | None = None,
 ) -> CageState | None:
     """Validate and build a CageState, trimming support if possible."""
     if config.normalize_states:
@@ -157,13 +169,14 @@ def _build_validated_cage_state(
 
     full_residual: float | None = None
     if config.validate_full_residual:
-        full_state = np.zeros(
-            hamiltonian.shape[0],
-            dtype=np.complex128,
-        )
-        full_state[parent_vertices] = local_state_on_parent
-        full_residual = float(
-            scipy_linalg.norm(_apply_matrix(hamiltonian, full_state) - energy_value * full_state)
+        if hamiltonian_column_block is None:
+            hamiltonian_column_block = hamiltonian[:, parent_vertices]
+
+        full_residual = _full_residual_from_column_block(
+            hamiltonian_column_block,
+            parent_vertices,
+            local_state_on_parent,
+            energy_value,
         )
 
     if boundary_residual > config.tolerance:
@@ -258,6 +271,9 @@ def solve_candidate_for_kinetic_targets(
 
     dense_kinetic_internal = as_dense_array(internal_kinetic_matrix)
     dense_hamiltonian_internal = dense_kinetic_internal + z_value * dense_identity_matrix
+    hamiltonian_column_block = (
+        hamiltonian[:, candidate.vertices] if config.validate_full_residual else None
+    )
 
     cage_states: list[CageState] = []
 
@@ -312,6 +328,7 @@ def solve_candidate_for_kinetic_targets(
                     "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
                 },
                 dense_boundary_overlap_matrix=dense_boundary_overlap,
+                hamiltonian_column_block=hamiltonian_column_block,
             )
 
             if cage_state is not None:
@@ -348,6 +365,9 @@ def solve_candidate(
 
     dense_internal_matrix = as_dense_array(internal_matrix)
     dense_boundary_matrix = as_dense_array(boundary_matrix)
+    hamiltonian_column_block = (
+        hamiltonian[:, candidate.vertices] if config.validate_full_residual else None
+    )
 
     projected_matrix = subspace_basis.conj().T @ dense_internal_matrix @ subspace_basis
 
@@ -406,6 +426,7 @@ def solve_candidate(
                     "degenerate_group_size": len(state_indices),
                     "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
                 },
+                hamiltonian_column_block=hamiltonian_column_block,
             )
 
             if cage_state is not None:

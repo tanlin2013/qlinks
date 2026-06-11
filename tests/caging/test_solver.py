@@ -115,6 +115,35 @@ def test_solve_candidate_for_kinetic_targets_matches_generic_solver() -> None:
     assert target_states[0].metadata["fixed_kappa_solver"] is True
 
 
+def test_solve_candidate_for_kinetic_targets_exact_full_residual_rejects_mismatch() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.full(3, 2.0, dtype=np.complex128)
+    hamiltonian = kinetic_matrix + np.diag(self_loop_values)
+    hamiltonian[2, 0] += 0.5
+    candidate = CandidateSubgraph(vertices=np.array([0, 1]))
+
+    cage_states = solve_candidate_for_kinetic_targets(
+        hamiltonian,
+        kinetic_matrix,
+        self_loop_values,
+        candidate,
+        target_kappas=(-1.0,),
+        config=CageSolverConfig(
+            tolerance=1e-12,
+            validate_full_residual=True,
+        ),
+    )
+
+    assert cage_states == []
+
+
 def test_solve_candidate_for_kinetic_targets_rejects_nonuniform_self_loops() -> None:
     kinetic_matrix = np.array(
         [
