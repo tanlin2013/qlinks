@@ -3,6 +3,7 @@ import numpy as np
 from qlinks.caging import (
     CageRecord,
     CageSearchConfig,
+    CageSearcher,
     CageSearchResult,
     CageState,
     CandidateSubgraph,
@@ -66,6 +67,40 @@ def test_cage_search_result_indexes_by_signature():
 
     assert result.by_signature((0, 6))[0] is records[1]
     assert result[(0, 6)].first() is records[1]
+
+
+def test_cage_searcher_uses_fixed_kappa_solver_for_supplied_candidates() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.full(3, 2.0, dtype=np.complex128)
+    hamiltonian = kinetic_matrix + np.diag(self_loop_values)
+    candidate = CandidateSubgraph(vertices=np.array([0, 1], dtype=np.int64))
+
+    searcher = CageSearcher(
+        hamiltonian_matrix=hamiltonian,
+        kinetic_matrix=kinetic_matrix,
+        self_loop_values=self_loop_values,
+        config=CageSearchConfig(
+            search_type="custom",
+            include_type1=True,
+            include_type2=False,
+            type1_kappas=(-1,),
+            tolerance=1e-12,
+        ),
+    )
+
+    result = searcher.run(type1_candidates=[candidate])
+
+    assert len(result.records) == 1
+    record = result.records[0]
+    assert record.signature == (-1, 2)
+    assert record.cage_state.metadata["fixed_kappa_solver"] is True
 
 
 def _dummy_candidate(index: int) -> CandidateSubgraph:

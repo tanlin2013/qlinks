@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import scipy.linalg as scipy_linalg
+import scipy.sparse as scipy_sparse
 
 from qlinks.caging.candidate import CandidateSubgraph
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
@@ -9,7 +10,7 @@ from qlinks.caging.localization import (
     IPRLocalizationConfig,
     localized_basis_by_many_start_ipr,
 )
-from qlinks.caging.nullspace import as_dense_array
+from qlinks.caging.nullspace import as_dense_array, nullspace_svd
 from qlinks.caging.prefilters import extract_subblocks
 from qlinks.caging.results import CageState
 from qlinks.caging.types import CageSolverConfig
@@ -23,6 +24,14 @@ def _apply_matrix(matrix: object, vector: np.ndarray) -> np.ndarray:
 def _is_hermitian(matrix: np.ndarray, *, tolerance: float) -> bool:
     """Check whether a dense matrix is numerically Hermitian."""
     return bool(np.allclose(matrix, matrix.conj().T, atol=tolerance, rtol=0.0))
+
+
+def _vertical_stack(matrix_blocks: list[object]) -> object:
+    """Vertically stack dense or sparse matrix blocks."""
+    if any(scipy_sparse.issparse(block) for block in matrix_blocks):
+        return scipy_sparse.vstack(matrix_blocks, format="csr")
+
+    return np.vstack([as_dense_array(block) for block in matrix_blocks])
 
 
 def _energy_groups(
@@ -140,6 +149,150 @@ def _build_validated_cage_state(
             **metadata,
         },
     )
+
+
+def _identity_like_internal_matrix(internal_matrix: object, support_size: int) -> object:
+    if scipy_sparse.issparse(internal_matrix):
+        return scipy_sparse.identity(
+            support_size,
+            dtype=np.complex128,
+            format="csr",
+        )
+
+    return np.eye(support_size, dtype=np.complex128)
+
+
+def _uniform_self_loop_value(
+    self_loop_values: np.ndarray,
+    vertices: np.ndarray,
+    *,
+    tolerance: float,
+) -> complex | None:
+    selected_values = np.asarray(self_loop_values[vertices], dtype=np.complex128)
+
+    if selected_values.size == 0:
+        return None
+
+    reference_value = complex(selected_values[0])
+
+    if not np.allclose(selected_values, reference_value, atol=tolerance, rtol=0.0):
+        return None
+
+    return reference_value
+
+
+def solve_candidate_for_kinetic_targets(
+    hamiltonian: object,
+    kinetic_matrix: object,
+    self_loop_values: np.ndarray,
+    candidate: CandidateSubgraph,
+    *,
+    target_kappas: tuple[complex, ...],
+    config: CageSolverConfig | None = None,
+) -> list[CageState]:
+    """
+    Solve cage states with fixed kinetic eigenvalues.
+
+    This is the fast path used by the high-level cage searcher for QDM/QLM
+    Type-1 and Type-2 searches.  For candidates with a uniform diagonal
+    potential value ``z`` on the support, a cage with kinetic eigenvalue
+    ``kappa`` has full Hamiltonian energy ``kappa + z``.  We can therefore
+    solve the fixed-kappa linear system directly,
+
+        K_out,S psi = 0,
+        (K_S - kappa I) psi = 0,
+
+    instead of first computing the whole invariant boundary subspace and then
+    diagonalizing the projected Hamiltonian.
+    """
+    if config is None:
+        config = CageSolverConfig()
+
+    if len(target_kappas) == 0:
+        return []
+
+    z_value = _uniform_self_loop_value(
+        np.asarray(self_loop_values, dtype=np.complex128),
+        candidate.vertices,
+        tolerance=config.tolerance,
+    )
+
+    if z_value is None:
+        return []
+
+    internal_kinetic_matrix, boundary_matrix, _outside_indices = extract_subblocks(
+        kinetic_matrix,
+        candidate.vertices,
+    )
+
+    support_size = candidate.size
+    identity_matrix = _identity_like_internal_matrix(internal_kinetic_matrix, support_size)
+
+    dense_kinetic_internal = as_dense_array(internal_kinetic_matrix)
+    dense_hamiltonian_internal = dense_kinetic_internal + z_value * np.eye(
+        support_size,
+        dtype=np.complex128,
+    )
+    dense_boundary_matrix = as_dense_array(boundary_matrix)
+
+    cage_states: list[CageState] = []
+
+    for target_kappa in target_kappas:
+        shifted_matrix = internal_kinetic_matrix - target_kappa * identity_matrix
+        combined_matrix = _vertical_stack([boundary_matrix, shifted_matrix])
+        local_basis = nullspace_svd(combined_matrix, tolerance=config.tolerance)
+
+        if local_basis.shape[1] == 0:
+            continue
+
+        fixed_kappa_subspace_dim = local_basis.shape[1]
+        used_ipr = False
+
+        if local_basis.shape[1] > 1 and config.degenerate_basis_strategy == "ipr":
+            ipr_config = IPRLocalizationConfig(
+                n_restarts=config.ipr_n_restarts,
+                max_iter=config.ipr_max_iter,
+                step_size=config.ipr_step_size,
+                convergence_tolerance=config.ipr_convergence_tolerance,
+                candidate_count=config.ipr_candidate_count,
+                amplitude_tolerance=(config.ipr_support_tolerance_factor * config.tolerance),
+                rank_tolerance=(config.ipr_rank_tolerance_factor * config.tolerance),
+                random_seed=config.ipr_random_seed,
+            )
+            local_basis = localized_basis_by_many_start_ipr(
+                local_basis.astype(np.complex128, copy=False),
+                config=ipr_config,
+            )
+            used_ipr = True
+
+        energy_value = complex(target_kappa) + z_value
+
+        for localized_index in range(local_basis.shape[1]):
+            local_state = local_basis[:, localized_index]
+            cage_state = _build_validated_cage_state(
+                hamiltonian,
+                candidate.vertices,
+                local_state,
+                energy_value,
+                candidate=candidate,
+                dense_internal_matrix=dense_hamiltonian_internal,
+                dense_boundary_matrix=dense_boundary_matrix,
+                config=config,
+                metadata={
+                    "fixed_kappa_solver": True,
+                    "target_kappa": complex(target_kappa),
+                    "self_loop_value": z_value,
+                    "invariant_subspace_dim": fixed_kappa_subspace_dim,
+                    "degenerate_group_index": 0,
+                    "degenerate_group_size": fixed_kappa_subspace_dim,
+                    "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
+                },
+            )
+
+            if cage_state is not None:
+                cage_states.append(cage_state)
+
+    return cage_states
 
 
 def solve_candidate(

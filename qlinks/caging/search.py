@@ -18,15 +18,10 @@ from qlinks.caging.partition import (
     type1_candidates_from_bipartite_self_loops,
     type2_candidates_from_self_loops,
 )
-from qlinks.caging.prefilters import (
-    CandidateFilterContext,
-    CombinedBoundaryKineticTargetNullityFilter,
-    run_candidate_filters,
-)
 from qlinks.caging.solver import (
     CageSolverConfig,
     CageState,
-    solve_candidate,
+    solve_candidate_for_kinetic_targets,
 )
 
 CageSearchType = Literal["type1", "type2", "qdm", "qlm", "custom"]
@@ -405,34 +400,15 @@ class CageSearcher:
             ipr_random_seed=self.config.ipr_random_seed,
         )
 
-        filter_context = CandidateFilterContext(
-            kinetic_matrix=self.kinetic_matrix,
-            self_loop_values=self.self_loop_values,
-        )
-
-        candidate_filters = [
-            CombinedBoundaryKineticTargetNullityFilter(
-                target_kappas=tuple(float(kappa_value) for kappa_value in allowed_kappas),
-                tolerance=self.config.tolerance,
-                require_nonzero_kappa=False,
-            ),
-        ]
-
         records: list[CageRecord] = []
 
         for candidate in candidates:
-            filter_result = run_candidate_filters(
-                filter_context,
-                candidate,
-                candidate_filters,
-            )
-
-            if not filter_result.accepted:
-                continue
-
-            cage_states = solve_candidate(
+            cage_states = solve_candidate_for_kinetic_targets(
                 self.hamiltonian_matrix,
+                self.kinetic_matrix,
+                self.self_loop_values,
                 candidate,
+                target_kappas=tuple(complex(kappa) for kappa in allowed_kappas),
                 config=solver_config,
             )
 

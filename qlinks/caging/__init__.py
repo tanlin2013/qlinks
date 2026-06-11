@@ -70,6 +70,7 @@ from qlinks.caging.search import (
 )
 from qlinks.caging.solver import (
     solve_candidate,
+    solve_candidate_for_kinetic_targets,
     solve_candidates,
 )
 from qlinks.caging.support import (
@@ -113,6 +114,7 @@ __all__ = [
     "nullspace_svd",
     "run_candidate_filters",
     "solve_candidate",
+    "solve_candidate_for_kinetic_targets",
     "solve_candidates",
     "VertexSignature",
     "group_vertices_by_signature",

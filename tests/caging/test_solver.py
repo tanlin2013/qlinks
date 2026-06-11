@@ -5,6 +5,7 @@ from qlinks.caging import (
     CageSolverConfig,
     CandidateSubgraph,
     solve_candidate,
+    solve_candidate_for_kinetic_targets,
     solve_candidates,
 )
 
@@ -73,6 +74,70 @@ def test_solve_candidate_handles_sparse_hamiltonian() -> None:
 
     assert len(cage_states) == 1
     np.testing.assert_allclose(cage_states[0].energy, -1.0, atol=1e-12)
+
+
+def test_solve_candidate_for_kinetic_targets_matches_generic_solver() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.full(3, 2.0, dtype=np.complex128)
+    hamiltonian = kinetic_matrix + np.diag(self_loop_values)
+    candidate = CandidateSubgraph(vertices=np.array([0, 1]))
+
+    config = CageSolverConfig(tolerance=1e-12)
+    generic_states = solve_candidate(hamiltonian, candidate, config=config)
+    target_states = solve_candidate_for_kinetic_targets(
+        hamiltonian,
+        kinetic_matrix,
+        self_loop_values,
+        candidate,
+        target_kappas=(-1.0,),
+        config=config,
+    )
+
+    assert len(generic_states) == 1
+    assert len(target_states) == 1
+
+    np.testing.assert_allclose(target_states[0].energy, 1.0, atol=1e-12)
+    np.testing.assert_allclose(
+        target_states[0].energy,
+        generic_states[0].energy,
+        atol=1e-12,
+    )
+
+    overlap = abs(np.vdot(generic_states[0].local_state, target_states[0].local_state))
+    np.testing.assert_allclose(overlap, 1.0, atol=1e-12)
+    assert target_states[0].metadata["fixed_kappa_solver"] is True
+
+
+def test_solve_candidate_for_kinetic_targets_rejects_nonuniform_self_loops() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.array([2.0, 3.0, 2.0], dtype=np.complex128)
+    hamiltonian = kinetic_matrix + np.diag(self_loop_values)
+    candidate = CandidateSubgraph(vertices=np.array([0, 1]))
+
+    cage_states = solve_candidate_for_kinetic_targets(
+        hamiltonian,
+        kinetic_matrix,
+        self_loop_values,
+        candidate,
+        target_kappas=(-1.0,),
+        config=CageSolverConfig(tolerance=1e-12),
+    )
+
+    assert cage_states == []
 
 
 def test_solve_candidates_combines_results() -> None:
