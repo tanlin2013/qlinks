@@ -77,11 +77,25 @@ class SparseHamiltonianBuilder:
 
         for col, config in enumerate(basis.iter_states(copy=False)):
             column_actions: list[OperatorAction] = []
+            diagonal_coefficient = 0.0 + 0.0j
 
             for operator in operators:
+                diagonal_value = _diagonal_value_if_supported(operator, config)
+
+                if diagonal_value is not None:
+                    n_raw_actions += 1
+                    diagonal_coefficient += complex(diagonal_value)
+                    continue
+
                 actions = operator.apply(config)
                 n_raw_actions += len(actions)
                 column_actions.extend(actions)
+
+            if abs(diagonal_coefficient) > self.drop_zero_atol:
+                rows.append(col)
+                cols.append(col)
+                data.append(diagonal_coefficient)
+                n_kept_actions += 1
 
             if self.combine_duplicates:
                 actions_to_insert = combine_duplicate_actions(
@@ -167,3 +181,18 @@ def is_hermitian_sparse(
 
     sparse_backend = get_sparse_backend(backend)
     return sparse_backend.max_abs_data(diff) <= atol
+
+
+def _diagonal_value_if_supported(
+    operator: LocalOperator,
+    config: npt.ArrayLike,
+) -> complex | None:
+    diagonal_value = getattr(operator, "diagonal_value", None)
+
+    if diagonal_value is None:
+        return None
+
+    if not callable(diagonal_value):
+        return None
+
+    return diagonal_value(config)

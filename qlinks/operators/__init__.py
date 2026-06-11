@@ -1,5 +1,6 @@
 from qlinks.operators.base import (
     BaseLocalOperator,
+    DiagonalLocalOperator,
     LocalOperator,
     OperatorAction,
     OperatorSum,
@@ -61,6 +62,7 @@ __all__ = [
     "BasisOperator",
     "BinaryFlipOperator",
     "ConstantDiagonalOperator",
+    "DiagonalLocalOperator",
     "LocalOperator",
     "LocalSquareValueDiagonalOperator",
     "LocalSumDiagonalOperator",

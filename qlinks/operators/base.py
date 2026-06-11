@@ -48,6 +48,17 @@ class LocalOperator(Protocol):
     def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]: ...
 
 
+class DiagonalLocalOperator(LocalOperator, Protocol):
+    """Configuration-space diagonal operator.
+
+    Returning ``None`` means the operator gives no action on this config.
+    Returning a complex number means the operator contributes that diagonal
+    matrix element.
+    """
+
+    def diagonal_value(self, config: npt.ArrayLike) -> complex | None: ...
+
+
 class BaseLocalOperator:
     """
     Convenience base class for configuration-space local operators.

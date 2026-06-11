@@ -12,9 +12,11 @@ from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.operators import (
     BinaryFlipOperator,
     ConstantDiagonalOperator,
+    LocalSquareValueDiagonalOperator,
     LocalValueDiagonalOperator,
     OperatorAction,
     OperatorSum,
+    PatternDiagonalOperator,
     PlaquettePatternOperator,
     PXPSpinFlipOperator,
     qdm_flippability_projectors,
@@ -406,3 +408,99 @@ def test_sparse_builder_backend_cupy() -> None:
 
     np.testing.assert_allclose(cp.asnumpy(H.toarray()), expected)
     assert is_hermitian_sparse(H, backend="cupy")
+
+
+def test_sparse_builder_uses_constant_diagonal_fast_path_stats() -> None:
+    layout = VariableLayout.from_sites(2, LocalSpace.binary())
+    basis = BruteForceBasisSolver(sort=True).solve(layout)
+
+    op = ConstantDiagonalOperator(layout=layout, coefficient=3.0)
+    result = SparseHamiltonianBuilder().build_with_stats(basis, [op])
+
+    expected = 3.0 * np.eye(4, dtype=np.complex128)
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert result.stats.n_raw_actions == 4
+    assert result.stats.n_kept_actions == 4
+    assert result.stats.n_missing_actions == 0
+    assert result.stats.nnz == 4
+
+
+def test_sparse_builder_uses_local_square_diagonal_fast_path_stats() -> None:
+    layout = VariableLayout.from_sites(2, LocalSpace.spin_one())
+    basis = BruteForceBasisSolver(sort=True).solve(layout)
+
+    op = LocalSquareValueDiagonalOperator(
+        layout=layout,
+        variable_index=0,
+        coefficient=2.0,
+    )
+
+    result = SparseHamiltonianBuilder().build_with_stats(basis, [op])
+
+    expected_diag = [
+        2.0 * int(config[0]) * int(config[0]) for config in basis.iter_states(copy=False)
+    ]
+    expected = np.diag(expected_diag).astype(np.complex128)
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert result.stats.n_raw_actions == basis.n_states
+    assert result.stats.n_kept_actions == 6
+    assert result.stats.n_missing_actions == 0
+    assert result.stats.nnz == 6
+
+
+def test_sparse_builder_uses_pattern_diagonal_fast_path_stats() -> None:
+    layout = VariableLayout.from_links(2, LocalSpace.binary())
+    basis = Basis.from_states(
+        layout,
+        np.array(
+            [
+                [1, 0],
+                [0, 1],
+                [1, 1],
+            ],
+            dtype=np.int64,
+        ),
+    )
+
+    op = PatternDiagonalOperator(
+        layout=layout,
+        variable_indices=np.array([0, 1], dtype=np.int64),
+        pattern=np.array([1, 0], dtype=np.int64),
+        coefficient=2.5,
+    )
+
+    result = SparseHamiltonianBuilder().build_with_stats(basis, [op])
+
+    expected = np.diag([2.5, 0.0, 0.0]).astype(np.complex128)
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert result.stats.n_raw_actions == 1
+    assert result.stats.n_kept_actions == 1
+    assert result.stats.n_missing_actions == 0
+    assert result.stats.nnz == 1
+
+
+def test_diagonal_fast_path_sums_multiple_diagonal_terms() -> None:
+    layout = VariableLayout.from_sites(1, LocalSpace.binary())
+    basis = BruteForceBasisSolver(sort=True).solve(layout)
+
+    operators = [
+        ConstantDiagonalOperator(layout=layout, coefficient=1.0),
+        LocalValueDiagonalOperator(
+            layout=layout,
+            variable_index=0,
+            coefficient=2.0,
+        ),
+    ]
+
+    result = SparseHamiltonianBuilder().build_with_stats(basis, operators)
+
+    expected = np.diag([1.0, 3.0]).astype(np.complex128)
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert result.stats.n_raw_actions == 4
+    assert result.stats.n_kept_actions == 2
+    assert result.stats.n_missing_actions == 0
+    assert result.stats.nnz == 2

@@ -19,6 +19,10 @@ class ConstantDiagonalOperator(BaseLocalOperator):
     coefficient: complex
     name: str = "constant_diagonal"
 
+    def diagonal_value(self, config: npt.ArrayLike) -> complex | None:
+        self._as_config(config)
+        return complex(self.coefficient)
+
     def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
         arr = self._as_config(config)
         return (OperatorAction(self.coefficient, arr.copy()),)
@@ -42,6 +46,11 @@ class LocalValueDiagonalOperator(BaseLocalOperator):
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return np.asarray([self.variable_index], dtype=np.int64)
+
+    def diagonal_value(self, config: npt.ArrayLike) -> complex | None:
+        arr = self._as_config(config)
+        value = int(arr[self.variable_index])
+        return complex(self.coefficient) * value
 
     def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
         arr = self._as_config(config)
@@ -70,6 +79,11 @@ class LocalSquareValueDiagonalOperator(BaseLocalOperator):
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return np.asarray([self.variable_index], dtype=np.int64)
+
+    def diagonal_value(self, config: npt.ArrayLike) -> complex | None:
+        arr = self._as_config(config)
+        value = int(arr[self.variable_index])
+        return complex(self.coefficient) * value * value
 
     def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
         arr = self._as_config(config)
@@ -121,6 +135,11 @@ class LocalSumDiagonalOperator(BaseLocalOperator):
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self.variable_indices.copy()
 
+    def diagonal_value(self, config: npt.ArrayLike) -> complex | None:
+        arr = self._as_config(config)
+        value = int(np.dot(self.weights, arr[self.variable_indices]))
+        return complex(self.coefficient) * value
+
     def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
         arr = self._as_config(config)
         value = int(np.dot(self.weights, arr[self.variable_indices]))
@@ -171,6 +190,14 @@ class PatternDiagonalOperator(BaseLocalOperator):
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self.variable_indices.copy()
+
+    def diagonal_value(self, config: npt.ArrayLike) -> complex | None:
+        arr = self._as_config(config)
+
+        if np.array_equal(arr[self.variable_indices], self.pattern):
+            return complex(self.coefficient)
+
+        return None
 
     def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
         arr = self._as_config(config)

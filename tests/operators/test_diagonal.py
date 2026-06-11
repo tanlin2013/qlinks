@@ -3,6 +3,7 @@ import pytest
 
 from qlinks.operators import (
     ConstantDiagonalOperator,
+    LocalSquareValueDiagonalOperator,
     LocalSumDiagonalOperator,
     LocalValueDiagonalOperator,
     PatternDiagonalOperator,
@@ -45,6 +46,22 @@ def test_local_sum_diagonal_operator() -> None:
 
     # 2 * (-1 - 1 + 1) = -2
     assert actions[0].coefficient == -2.0 + 0j
+
+
+def test_local_square_value_diagonal_value_matches_apply() -> None:
+    layout = VariableLayout.from_sites(1, LocalSpace.spin_one())
+    op = LocalSquareValueDiagonalOperator(
+        layout=layout,
+        variable_index=0,
+        coefficient=3.0,
+    )
+
+    config = np.array([-1], dtype=np.int64)
+
+    actions = op.apply(config)
+
+    assert op.diagonal_value(config) == actions[0].coefficient
+    np.testing.assert_array_equal(actions[0].config, config)
 
 
 def test_pattern_diagonal_operator_matches() -> None:
