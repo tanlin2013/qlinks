@@ -367,6 +367,23 @@
 
 
 
+<div class="viewcode-block" id="DiagonalLocalOperator">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.base.DiagonalLocalOperator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DiagonalLocalOperator</span><span class="p">(</span><span class="n">LocalOperator</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration-space diagonal operator.</span>
+
+<span class="sd">    Returning ``None`` means the operator gives no action on this config.</span>
+<span class="sd">    Returning a complex number means the operator contributes that diagonal</span>
+<span class="sd">    matrix element.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DiagonalLocalOperator.diagonal_value">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.base.DiagonalLocalOperator.diagonal_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="BaseLocalOperator">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.base.BaseLocalOperator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BaseLocalOperator</span><span class="p">:</span>

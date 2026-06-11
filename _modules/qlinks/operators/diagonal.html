@@ -328,6 +328,13 @@
     <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;constant_diagonal&quot;</span>
 
+<div class="viewcode-block" id="ConstantDiagonalOperator.diagonal_value">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.ConstantDiagonalOperator.diagonal_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="ConstantDiagonalOperator.apply">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.ConstantDiagonalOperator.apply">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">OperatorAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -359,6 +366,14 @@
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalValueDiagonalOperator.affected_variables">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">affected_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LocalValueDiagonalOperator.diagonal_value">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalValueDiagonalOperator.diagonal_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">value</span></div>
 
 
 <div class="viewcode-block" id="LocalValueDiagonalOperator.apply">
@@ -396,6 +411,14 @@
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalSquareValueDiagonalOperator.affected_variables">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">affected_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LocalSquareValueDiagonalOperator.diagonal_value">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalSquareValueDiagonalOperator.diagonal_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">value</span> <span class="o">*</span> <span class="n">value</span></div>
 
 
 <div class="viewcode-block" id="LocalSquareValueDiagonalOperator.apply">
@@ -457,6 +480,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
 
+<div class="viewcode-block" id="LocalSumDiagonalOperator.diagonal_value">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalSumDiagonalOperator.diagonal_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">value</span></div>
+
+
 <div class="viewcode-block" id="LocalSumDiagonalOperator.apply">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.LocalSumDiagonalOperator.apply">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">OperatorAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -515,6 +546,17 @@
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.affected_variables">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">affected_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PatternDiagonalOperator.diagonal_value">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.diagonal_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="PatternDiagonalOperator.apply">
