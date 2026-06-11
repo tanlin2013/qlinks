@@ -13,18 +13,10 @@ from qlinks.models import (
 )
 from tests.helpers.assertions import (
     assert_hermitian_sparse,
+    assert_same_physical_flux_basis_order,
     assert_same_sparse_matrix,
     assert_sparse_allclose,
 )
-
-
-def _assert_same_physical_basis_order(sparse_result, bitmask_result) -> None:
-    sparse_states = sparse_result.basis.states
-
-    bitmask_binary_states = bitmask_result.basis.to_array_basis().states
-    bitmask_flux_states = 2 * bitmask_binary_states - 1
-
-    np.testing.assert_array_equal(bitmask_flux_states, sparse_states)
 
 
 def test_square_qlm_manual_single_plaquette_sparse() -> None:
@@ -603,11 +595,7 @@ def test_qlm_bitmask_basis_preserves_sorted_physical_flux_order() -> None:
     sparse_result = model.build(builder="sparse", sort_basis=True)
     bitmask_result = model.build(builder="bitmask", sort_basis=True)
 
-    sparse_states = sparse_result.basis.states
-    bitmask_binary_states = bitmask_result.basis.to_array_basis().states
-    bitmask_flux_states = 2 * bitmask_binary_states - 1
-
-    np.testing.assert_array_equal(bitmask_flux_states, sparse_states)
+    assert_same_physical_flux_basis_order(sparse_result, bitmask_result)
 
 
 def test_square_qlm_sparse_and_bitmask_match_sorted_basis() -> None:
@@ -632,5 +620,5 @@ def test_square_qlm_sparse_and_bitmask_match_sorted_basis() -> None:
     sparse_result = sparse_model.build(builder="sparse", sort_basis=True)
     bitmask_result = bitmask_model.build(builder="bitmask", sort_basis=True)
 
-    _assert_same_physical_basis_order(sparse_result, bitmask_result)
+    assert_same_physical_flux_basis_order(sparse_result, bitmask_result)
     assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)

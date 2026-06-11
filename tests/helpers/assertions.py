@@ -51,3 +51,18 @@ def assert_same_sparse_matrix(
     difference = actual_csr - expected_csr
     difference.eliminate_zeros()
     assert difference.nnz == 0
+
+
+def assert_same_physical_flux_basis_order(sparse_result, bitmask_result) -> None:
+    """
+    Assert that a binary bitmask basis matches a physical flux basis order.
+
+    Bitmask QLM builders internally encode physical flux values {-1, +1}
+    as binary values {0, 1}. This helper converts the bitmask basis back to
+    physical flux values and compares it against the sparse-builder basis.
+    """
+    sparse_states = sparse_result.basis.states
+    bitmask_binary_states = bitmask_result.basis.to_array_basis().states
+    bitmask_flux_states = 2 * bitmask_binary_states - 1
+
+    np.testing.assert_array_equal(bitmask_flux_states, sparse_states)
