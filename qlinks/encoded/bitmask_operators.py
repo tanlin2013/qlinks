@@ -33,6 +33,17 @@ class BitmaskOperator(Protocol):
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]: ...
 
 
+class BitmaskDiagonalOperator(BitmaskOperator, Protocol):
+    """Configuration-space diagonal operator in binary bitmask encoding.
+
+    Returning ``None`` means the operator gives no diagonal contribution for
+    this code. Returning a complex number means the operator contributes that
+    diagonal matrix element.
+    """
+
+    def diagonal_value_code(self, code: int) -> complex | None: ...
+
+
 @dataclass(frozen=True, slots=True)
 class BitmaskOperatorSum:
     terms: tuple[BitmaskOperator, ...]
@@ -67,6 +78,13 @@ class BitmaskConstantDiagonalOperator:
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return np.asarray([], dtype=np.int64)
+
+    def diagonal_value_code(self, code: int) -> complex | None:
+        code = int(code)
+        if code < 0:
+            raise ValueError("code must be non-negative.")
+
+        return complex(self.coefficient)
 
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
         return (BitmaskAction(self.coefficient, code),)
@@ -429,6 +447,14 @@ class BitmaskPatternDiagonalOperator:
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self.variable_indices.copy()
+
+    def diagonal_value_code(self, code: int) -> complex | None:
+        code = int(code)
+
+        if (code & self._mask) != self._pattern_bits:
+            return None
+
+        return complex(self.coefficient)
 
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
         code = int(code)

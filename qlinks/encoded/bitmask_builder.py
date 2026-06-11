@@ -13,6 +13,21 @@ from qlinks.encoded.bitmask_operators import BitmaskOperator
 MissingActionPolicy = Literal["skip", "raise"]
 
 
+def _diagonal_value_code_if_supported(
+    operator: BitmaskOperator,
+    code: int,
+) -> complex | None:
+    diagonal_value_code = getattr(operator, "diagonal_value_code", None)
+
+    if diagonal_value_code is None:
+        return None
+
+    if not callable(diagonal_value_code):
+        return None
+
+    return diagonal_value_code(code)
+
+
 @dataclass(frozen=True, slots=True)
 class BitmaskSparseBuildStats:
     n_basis: int
@@ -82,8 +97,16 @@ class BitmaskSparseHamiltonianBuilder:
 
         for col in range(basis.n_states):
             code = basis.code(col)
+            diagonal_coefficient = 0.0 + 0.0j
 
             for operator in operators:
+                diagonal_value = _diagonal_value_code_if_supported(operator, code)
+
+                if diagonal_value is not None:
+                    n_raw_actions += 1
+                    diagonal_coefficient += complex(diagonal_value)
+                    continue
+
                 actions = operator.apply_code(code)
                 n_raw_actions += len(actions)
 
@@ -108,6 +131,12 @@ class BitmaskSparseHamiltonianBuilder:
                     cols.append(col)
                     data.append(action.coefficient)
                     n_kept_actions += 1
+
+            if abs(diagonal_coefficient) > self.drop_zero_atol:
+                rows.append(col)
+                cols.append(col)
+                data.append(diagonal_coefficient)
+                n_kept_actions += 1
 
         matrix = sparse_backend.coo_matrix(
             data=sparse_backend.as_data_array(data, dtype=self.dtype),
