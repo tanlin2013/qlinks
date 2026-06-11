@@ -21,7 +21,10 @@ from qlinks.models.base import (
 from qlinks.models.local_terms import LocalTermDescriptor
 from qlinks.open_system import (
     LindbladProblem,
+    LocalRecyclingBuildResult,
     OpenSystemBackendName,
+    RecyclingJumpSource,
+    build_local_recycling_jumps_from_regions,
     density_matrix_from_state,
     diagnose_absorbing_projector_symmetry,
     diagnose_dark_subspace,
@@ -127,6 +130,13 @@ class CageLindbladConstruction:
     potential_terms_monitor: tuple[LocalTermDescriptor, ...]
     kinetic_terms_jump: tuple[LocalTermDescriptor, ...]
 
+    recycling_jump_source: RecyclingJumpSource
+    n_recycling_jumps: int
+    recycling_jump_variable_indices: tuple[tuple[int, ...], ...]
+    recycling_jump_alpha_beta_indices: tuple[tuple[int, int], ...]
+    recycling_two_pattern_count: int
+    recycling_build_result: LocalRecyclingBuildResult | None
+
     monitor_residual: float
     max_jump_residual: float
     jump_residuals: tuple[float, ...]
@@ -142,6 +152,7 @@ class CageLindbladConstruction:
             f"n_jumps={self.n_jumps}, "
             f"n_component_jumps={self.n_component_jumps}, "
             f"n_global_jump_terms={self.n_global_jump_terms}, "
+            f"n_recycling_jumps={self.n_recycling_jumps}, "
             f"monitor_residual={self.monitor_residual:.3e}, "
             f"max_jump_residual={self.max_jump_residual:.3e}, "
             f"liouvillian_residual={self.liouvillian_residual!r}"
@@ -185,6 +196,11 @@ class CageLindbladConstruction:
             "n_global_jump_terms": self.n_global_jump_terms,
             "n_reduced_iz_monitor_terms": self.n_reduced_iz_monitor_terms,
             "z_value": self.z_value,
+            "recycling_jump_source": self.recycling_jump_source,
+            "n_recycling_jumps": self.n_recycling_jumps,
+            "recycling_jump_variable_indices": self.recycling_jump_variable_indices,
+            "recycling_jump_alpha_beta_indices": self.recycling_jump_alpha_beta_indices,
+            "recycling_two_pattern_count": self.recycling_two_pattern_count,
             "monitor_residual": self.monitor_residual,
             "max_jump_residual": self.max_jump_residual,
             "liouvillian_residual": self.liouvillian_residual,
@@ -276,6 +292,17 @@ class CageLindbladConstruction:
             _format_index_tuple(self.reduced_iz_monitor_zero_indices),
         )
 
+        recycling = Table(title="Local RDM recycling")
+        recycling.add_column("quantity", style="bold")
+        recycling.add_column("value", justify="right")
+        recycling.add_row("source", str(self.recycling_jump_source))
+        recycling.add_row("n jumps", str(self.n_recycling_jumps))
+        recycling.add_row("two-pattern jumps", str(self.recycling_two_pattern_count))
+        recycling.add_row(
+            "alpha/beta",
+            _format_tuple_of_pairs(self.recycling_jump_alpha_beta_indices),
+        )
+
         plaquette_ids = Table(title="Plaquette ids")
         plaquette_ids.add_column("group", style="bold")
         plaquette_ids.add_column("ids")
@@ -331,6 +358,7 @@ class CageLindbladConstruction:
                 geometry,
                 diagnostics,
                 reduced_iz,
+                recycling,
                 plaquette_ids,
                 components,
             ),
@@ -449,6 +477,13 @@ def build_type1_cage_lindblad_construction(
     monitor_plaquette_policy: MonitorPlaquettePolicy = "strict_inside",
     jump_plaquette_policy: JumpPlaquettePolicy = "outside_or_crossing",
     jump_operator_design: JumpOperatorDesign = "kinetic_outside_monitor_inside",
+    recycling_jump_source: RecyclingJumpSource = "none",
+    max_recycling_jumps_per_region: int = 1,
+    recycling_rdm_tolerance: float = 1e-10,
+    recycling_dark_tolerance: float = 1e-10,
+    recycling_inflow_tolerance: float = 1e-12,
+    recycling_prefer_sparse: bool = True,
+    recycling_two_pattern_tolerance: float = 1e-8,
     include_q_empty: bool = True,
     include_closed_by_known_zeros: bool = True,
     include_projector_like: bool = True,
@@ -719,6 +754,32 @@ def build_type1_cage_lindblad_construction(
             jump_operator_design=jump_operator_design,
         )
 
+    recycling_build_result = None
+    recycling_jumps: tuple[Any, ...] = ()
+    recycling_regions = _recycling_regions_from_construction_context(
+        region=region,
+        monitor_components=monitor_components,
+    )
+
+    if recycling_jump_source != "none":
+        basis_configs = basis_configs_from_build_result(build_result)
+
+        recycling_build_result = build_local_recycling_jumps_from_regions(
+            basis_configs=basis_configs,
+            target_state=psi,
+            regions=recycling_regions,
+            source=recycling_jump_source,
+            max_jumps_per_region=max_recycling_jumps_per_region,
+            rdm_tolerance=recycling_rdm_tolerance,
+            dark_tolerance=recycling_dark_tolerance,
+            inflow_tolerance=recycling_inflow_tolerance,
+            prefer_sparse=recycling_prefer_sparse,
+            two_pattern_tolerance=recycling_two_pattern_tolerance,
+        )
+
+        recycling_jumps = recycling_build_result.jumps
+        jumps = tuple(jumps) + tuple(recycling_jumps)
+
     monitor_residual = float(np.linalg.norm(monitor @ psi))
     jump_residuals = _jump_residuals(
         state=psi,
@@ -738,6 +799,20 @@ def build_type1_cage_lindblad_construction(
         )
         raise ValueError(
             "The reduced-IZ monitor decomposition is not frustration-free: " f"{summary}."
+        )
+
+    if recycling_build_result is None:
+        n_recycling_jumps = 0
+        recycling_jump_variable_indices = ()
+        recycling_jump_alpha_beta_indices = ()
+        recycling_two_pattern_count = 0
+    else:
+        n_recycling_jumps = recycling_build_result.n_jumps
+        recycling_jump_variable_indices = recycling_build_result.variable_indices
+        recycling_jump_alpha_beta_indices = recycling_build_result.alpha_beta_indices
+        recycling_two_pattern_count = sum(
+            selection.two_pattern_structure is not None
+            for selection in recycling_build_result.selections
         )
 
     liouvillian_residual = None
@@ -808,6 +883,12 @@ def build_type1_cage_lindblad_construction(
         jump_operator_design=jump_operator_design,
         monitor_plaquette_policy=monitor_plaquette_policy,
         jump_plaquette_policy=jump_plaquette_policy,
+        recycling_jump_source=recycling_jump_source,
+        n_recycling_jumps=n_recycling_jumps,
+        recycling_jump_variable_indices=recycling_jump_variable_indices,
+        recycling_jump_alpha_beta_indices=recycling_jump_alpha_beta_indices,
+        recycling_two_pattern_count=int(recycling_two_pattern_count),
+        recycling_build_result=recycling_build_result,
         monitor_residual=monitor_residual,
         max_jump_residual=max_jump_residual,
         jump_residuals=jump_residuals,
@@ -996,6 +1077,20 @@ def _build_local_kinetic_plus_potential(
     ).tocsr()
 
     return (kinetic + potential).tocsr()
+
+
+def _recycling_regions_from_construction_context(
+    *,
+    region: CageRegionSupport,
+    monitor_components: tuple[Any, ...] | None = None,
+) -> tuple[tuple[int, ...], ...]:
+    if monitor_components is not None and len(monitor_components) > 0:
+        return tuple(
+            tuple(int(index) for index in component.support_variables)
+            for component in monitor_components
+        )
+
+    return (tuple(sorted(int(index) for index in region.variable_index_set)),)
 
 
 def _partition_plaquette_terms_by_region(
@@ -1648,3 +1743,9 @@ def _format_index_tuple(
 
     head = ", ".join(str(value) for value in values[:max_items])
     return f"{head}, ... ({len(values)} total)"
+
+
+def _format_tuple_of_pairs(values: tuple[tuple[int, int], ...]) -> str:
+    if len(values) == 0:
+        return "()"
+    return "(" + ", ".join(f"{left}/{right}" for left, right in values) + ")"
