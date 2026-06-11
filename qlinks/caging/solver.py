@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 import scipy.linalg as scipy_linalg
-import scipy.sparse as scipy_sparse
 
 from qlinks.caging.candidate import CandidateSubgraph
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
@@ -10,7 +9,7 @@ from qlinks.caging.localization import (
     IPRLocalizationConfig,
     localized_basis_by_many_start_ipr,
 )
-from qlinks.caging.nullspace import as_dense_array, nullspace_svd
+from qlinks.caging.nullspace import as_dense_array, nullspace_from_gram
 from qlinks.caging.prefilters import extract_subblocks
 from qlinks.caging.results import CageState
 from qlinks.caging.types import CageSolverConfig
@@ -24,14 +23,6 @@ def _apply_matrix(matrix: object, vector: np.ndarray) -> np.ndarray:
 def _is_hermitian(matrix: np.ndarray, *, tolerance: float) -> bool:
     """Check whether a dense matrix is numerically Hermitian."""
     return bool(np.allclose(matrix, matrix.conj().T, atol=tolerance, rtol=0.0))
-
-
-def _vertical_stack(matrix_blocks: list[object]) -> object:
-    """Vertically stack dense or sparse matrix blocks."""
-    if any(scipy_sparse.issparse(block) for block in matrix_blocks):
-        return scipy_sparse.vstack(matrix_blocks, format="csr")
-
-    return np.vstack([as_dense_array(block) for block in matrix_blocks])
 
 
 def _energy_groups(
@@ -151,17 +142,6 @@ def _build_validated_cage_state(
     )
 
 
-def _identity_like_internal_matrix(internal_matrix: object, support_size: int) -> object:
-    if scipy_sparse.issparse(internal_matrix):
-        return scipy_sparse.identity(
-            support_size,
-            dtype=np.complex128,
-            format="csr",
-        )
-
-    return np.eye(support_size, dtype=np.complex128)
-
-
 def _uniform_self_loop_value(
     self_loop_values: np.ndarray,
     vertices: np.ndarray,
@@ -226,21 +206,19 @@ def solve_candidate_for_kinetic_targets(
     )
 
     support_size = candidate.size
-    identity_matrix = _identity_like_internal_matrix(internal_kinetic_matrix, support_size)
+    dense_identity_matrix = np.eye(support_size, dtype=np.complex128)
 
     dense_kinetic_internal = as_dense_array(internal_kinetic_matrix)
-    dense_hamiltonian_internal = dense_kinetic_internal + z_value * np.eye(
-        support_size,
-        dtype=np.complex128,
-    )
+    dense_hamiltonian_internal = dense_kinetic_internal + z_value * dense_identity_matrix
     dense_boundary_matrix = as_dense_array(boundary_matrix)
+    dense_boundary_overlap = as_dense_array(boundary_matrix.conj().T @ boundary_matrix)
 
     cage_states: list[CageState] = []
 
     for target_kappa in target_kappas:
-        shifted_matrix = internal_kinetic_matrix - target_kappa * identity_matrix
-        combined_matrix = _vertical_stack([boundary_matrix, shifted_matrix])
-        local_basis = nullspace_svd(combined_matrix, tolerance=config.tolerance)
+        shifted_matrix = dense_kinetic_internal - target_kappa * dense_identity_matrix
+        gram_matrix = dense_boundary_overlap + shifted_matrix.conj().T @ shifted_matrix
+        local_basis = nullspace_from_gram(gram_matrix, tolerance=config.tolerance)
 
         if local_basis.shape[1] == 0:
             continue

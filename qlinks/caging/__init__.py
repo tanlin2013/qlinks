@@ -21,6 +21,7 @@ from qlinks.caging.localization import (
 )
 from qlinks.caging.nullspace import (
     as_dense_array,
+    nullspace_from_gram,
     nullspace_svd,
 )
 from qlinks.caging.open_system import (
@@ -111,6 +112,7 @@ __all__ = [
     "make_type1_bipartite_prefilters",
     "make_type2_integer_kappa_prefilters",
     "matrix_nullity",
+    "nullspace_from_gram",
     "nullspace_svd",
     "run_candidate_filters",
     "solve_candidate",

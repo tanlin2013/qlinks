@@ -49,3 +49,38 @@ def nullspace_svd(
         return np.zeros((column_count, 0), dtype=np.complex128)
 
     return right_vectors_h.conj().T[:, rank:]
+
+
+def nullspace_from_gram(
+    gram_matrix: object,
+    *,
+    tolerance: float = 1e-10,
+) -> NDArray[np.complex128]:
+    """Return the nullspace of a positive-semidefinite Gram matrix.
+
+    ``gram_matrix`` is expected to be ``A.conj().T @ A`` for some matrix ``A``.
+    The returned basis spans the same right nullspace as ``A``, but requires
+    diagonalizing only the small square Gram matrix. The tolerance is applied to
+    the Gram-matrix eigenvalues. This is intentionally conservative: final cage
+    states are still checked with direct boundary/eigen residuals.
+    """
+    dense_matrix = as_dense_array(gram_matrix)
+
+    if dense_matrix.ndim != 2:
+        raise ValueError("gram_matrix must be 2D.")
+
+    row_count, column_count = dense_matrix.shape
+
+    if row_count != column_count:
+        raise ValueError("gram_matrix must be square.")
+
+    if column_count == 0:
+        return np.zeros((0, 0), dtype=np.complex128)
+
+    eigenvalues, eigenvectors = scipy_linalg.eigh(dense_matrix)
+    null_mask = np.abs(eigenvalues) <= tolerance
+
+    if not np.any(null_mask):
+        return np.zeros((column_count, 0), dtype=np.complex128)
+
+    return eigenvectors[:, null_mask].astype(np.complex128, copy=False)
