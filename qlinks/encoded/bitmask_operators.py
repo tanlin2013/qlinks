@@ -55,6 +55,39 @@ class BitmaskSingleActionOperator(BitmaskOperator, Protocol):
     def single_action_code(self, code: int) -> tuple[complex, int] | None: ...
 
 
+def _bits_from_binary_pattern(
+    *,
+    variable_indices: npt.NDArray[np.int64],
+    pattern: npt.NDArray[np.int64],
+) -> int:
+    """Return encoded bits for a binary local pattern on variable_indices."""
+    bits = 0
+
+    for variable_index, value in zip(variable_indices, pattern, strict=True):
+        if int(value) == 1:
+            bits |= 1 << int(variable_index)
+
+    return int(bits)
+
+
+def _single_pattern_action_code(
+    *,
+    code: int,
+    mask: int,
+    initial_bits: int,
+    final_bits: int,
+    coefficient: complex,
+) -> tuple[complex, int] | None:
+    code = int(code)
+
+    if (code & mask) != initial_bits:
+        return None
+
+    new_code = (code & ~mask) | final_bits
+
+    return complex(coefficient), int(new_code)
+
+
 @dataclass(frozen=True, slots=True)
 class BitmaskOperatorSum:
     terms: tuple[BitmaskOperator, ...]
@@ -357,8 +390,11 @@ class BitmaskQDMFlipOperator:
     name: str = "bitmask_qdm_flip"
 
     _variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False)
-    _op_1010_to_0101: BitmaskPatternFlipOperator = field(init=False, repr=False)
-    _op_0101_to_1010: BitmaskPatternFlipOperator = field(init=False, repr=False)
+    _mask: int = field(init=False, repr=False)
+    _forward_initial_bits: int = field(init=False, repr=False)
+    _forward_final_bits: int = field(init=False, repr=False)
+    _reverse_initial_bits: int = field(init=False, repr=False)
+    _reverse_final_bits: int = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         link_ids = self.lattice.plaquette_links(self.plaquette_id)
@@ -378,40 +414,60 @@ class BitmaskQDMFlipOperator:
                 complex(self.coefficient).conjugate(),
             )
 
-        op_1010_to_0101 = BitmaskPatternFlipOperator(
-            layout=self.layout,
-            variable_indices=variable_indices,
-            initial_values=np.asarray([1, 0, 1, 0], dtype=np.int64),
-            final_values=np.asarray([0, 1, 0, 1], dtype=np.int64),
-            coefficient=self.coefficient,
-        )
-
-        op_0101_to_1010 = BitmaskPatternFlipOperator(
-            layout=self.layout,
-            variable_indices=variable_indices,
-            initial_values=np.asarray([0, 1, 0, 1], dtype=np.int64),
-            final_values=np.asarray([1, 0, 1, 0], dtype=np.int64),
-            coefficient=self.reverse_coefficient,
-        )
+        forward_initial = np.asarray([1, 0, 1, 0], dtype=np.int64)
+        forward_final = np.asarray([0, 1, 0, 1], dtype=np.int64)
 
         object.__setattr__(self, "_variable_indices", variable_indices)
-        object.__setattr__(self, "_op_1010_to_0101", op_1010_to_0101)
-        object.__setattr__(self, "_op_0101_to_1010", op_0101_to_1010)
+        object.__setattr__(self, "_mask", bitmask_from_indices(int(i) for i in variable_indices))
+        object.__setattr__(
+            self,
+            "_forward_initial_bits",
+            _bits_from_binary_pattern(
+                variable_indices=variable_indices,
+                pattern=forward_initial,
+            ),
+        )
+        object.__setattr__(
+            self,
+            "_forward_final_bits",
+            _bits_from_binary_pattern(
+                variable_indices=variable_indices,
+                pattern=forward_final,
+            ),
+        )
+        object.__setattr__(self, "_reverse_initial_bits", self._forward_final_bits)
+        object.__setattr__(self, "_reverse_final_bits", self._forward_initial_bits)
 
     @property
     def variable_indices(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
+    @property
+    def mask(self) -> int:
+        return int(self._mask)
+
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
     def single_action_code(self, code: int) -> tuple[complex, int] | None:
-        action = self._op_1010_to_0101.single_action_code(code)
+        action = _single_pattern_action_code(
+            code=code,
+            mask=self._mask,
+            initial_bits=self._forward_initial_bits,
+            final_bits=self._forward_final_bits,
+            coefficient=self.coefficient,
+        )
 
         if action is not None:
             return action
 
-        return self._op_0101_to_1010.single_action_code(code)
+        return _single_pattern_action_code(
+            code=code,
+            mask=self._mask,
+            initial_bits=self._reverse_initial_bits,
+            final_bits=self._reverse_final_bits,
+            coefficient=complex(self.reverse_coefficient),
+        )
 
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
         action = self.single_action_code(code)
@@ -638,14 +694,9 @@ class BitmaskQLMFluxFlipOperator:
     name: str = "bitmask_qlm_flux_flip"
 
     _variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False)
-    _op_oriented_to_reversed: BitmaskPatternFlipOperator = field(
-        init=False,
-        repr=False,
-    )
-    _op_reversed_to_oriented: BitmaskPatternFlipOperator = field(
-        init=False,
-        repr=False,
-    )
+    _mask: int = field(init=False, repr=False)
+    _oriented_bits: int = field(init=False, repr=False)
+    _reversed_bits: int = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         link_ids = self.lattice.plaquette_links(self.plaquette_id)
@@ -672,49 +723,55 @@ class BitmaskQLMFluxFlipOperator:
         binary_pattern = binary_pattern_from_flux_pattern(orientation_pattern)
         reversed_binary_pattern = 1 - binary_pattern
 
-        op_oriented_to_reversed = BitmaskPatternFlipOperator(
-            layout=self.layout,
-            variable_indices=variable_indices,
-            initial_values=binary_pattern,
-            final_values=reversed_binary_pattern,
-            coefficient=self.coefficient,
-            name="bitmask_qlm_flux_flip_oriented_to_reversed",
-        )
-        op_reversed_to_oriented = BitmaskPatternFlipOperator(
-            layout=self.layout,
-            variable_indices=variable_indices,
-            initial_values=reversed_binary_pattern,
-            final_values=binary_pattern,
-            coefficient=self.reverse_coefficient,
-            name="bitmask_qlm_flux_flip_reversed_to_oriented",
-        )
-
         object.__setattr__(self, "_variable_indices", variable_indices)
+        object.__setattr__(self, "_mask", bitmask_from_indices(int(i) for i in variable_indices))
         object.__setattr__(
             self,
-            "_op_oriented_to_reversed",
-            op_oriented_to_reversed,
+            "_oriented_bits",
+            _bits_from_binary_pattern(
+                variable_indices=variable_indices,
+                pattern=binary_pattern,
+            ),
         )
         object.__setattr__(
             self,
-            "_op_reversed_to_oriented",
-            op_reversed_to_oriented,
+            "_reversed_bits",
+            _bits_from_binary_pattern(
+                variable_indices=variable_indices,
+                pattern=reversed_binary_pattern,
+            ),
         )
 
     @property
     def variable_indices(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
+    @property
+    def mask(self) -> int:
+        return int(self._mask)
+
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
     def single_action_code(self, code: int) -> tuple[complex, int] | None:
-        action = self._op_oriented_to_reversed.single_action_code(code)
+        action = _single_pattern_action_code(
+            code=code,
+            mask=self._mask,
+            initial_bits=self._oriented_bits,
+            final_bits=self._reversed_bits,
+            coefficient=self.coefficient,
+        )
 
         if action is not None:
             return action
 
-        return self._op_reversed_to_oriented.single_action_code(code)
+        return _single_pattern_action_code(
+            code=code,
+            mask=self._mask,
+            initial_bits=self._reversed_bits,
+            final_bits=self._oriented_bits,
+            coefficient=complex(self.reverse_coefficient),
+        )
 
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
         action = self.single_action_code(code)
@@ -783,8 +840,9 @@ class BitmaskAlternatingPlaquetteFlipOperator:
     name: str = "bitmask_alternating_plaquette_flip"
 
     _variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False)
-    _op_0_to_1: BitmaskPatternFlipOperator = field(init=False, repr=False)
-    _op_1_to_0: BitmaskPatternFlipOperator = field(init=False, repr=False)
+    _mask: int = field(init=False, repr=False)
+    _p0_bits: int = field(init=False, repr=False)
+    _p1_bits: int = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         link_ids = self.lattice.plaquette_links(self.plaquette_id)
@@ -809,40 +867,55 @@ class BitmaskAlternatingPlaquetteFlipOperator:
         p0 = np.asarray([1 if i % 2 == 0 else 0 for i in range(length)], dtype=np.int64)
         p1 = 1 - p0
 
-        op_0_to_1 = BitmaskPatternFlipOperator(
-            layout=self.layout,
-            variable_indices=variable_indices,
-            initial_values=p0,
-            final_values=p1,
-            coefficient=self.coefficient,
-        )
-
-        op_1_to_0 = BitmaskPatternFlipOperator(
-            layout=self.layout,
-            variable_indices=variable_indices,
-            initial_values=p1,
-            final_values=p0,
-            coefficient=self.reverse_coefficient,
-        )
-
         object.__setattr__(self, "_variable_indices", variable_indices)
-        object.__setattr__(self, "_op_0_to_1", op_0_to_1)
-        object.__setattr__(self, "_op_1_to_0", op_1_to_0)
+        object.__setattr__(self, "_mask", bitmask_from_indices(int(i) for i in variable_indices))
+        object.__setattr__(
+            self,
+            "_p0_bits",
+            _bits_from_binary_pattern(
+                variable_indices=variable_indices,
+                pattern=p0,
+            ),
+        )
+        object.__setattr__(
+            self,
+            "_p1_bits",
+            _bits_from_binary_pattern(
+                variable_indices=variable_indices,
+                pattern=p1,
+            ),
+        )
 
     @property
     def variable_indices(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
+    @property
+    def mask(self) -> int:
+        return int(self._mask)
+
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
     def single_action_code(self, code: int) -> tuple[complex, int] | None:
-        action = self._op_0_to_1.single_action_code(code)
+        action = _single_pattern_action_code(
+            code=code,
+            mask=self._mask,
+            initial_bits=self._p0_bits,
+            final_bits=self._p1_bits,
+            coefficient=self.coefficient,
+        )
 
         if action is not None:
             return action
 
-        return self._op_1_to_0.single_action_code(code)
+        return _single_pattern_action_code(
+            code=code,
+            mask=self._mask,
+            initial_bits=self._p1_bits,
+            final_bits=self._p0_bits,
+            coefficient=complex(self.reverse_coefficient),
+        )
 
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
         action = self.single_action_code(code)

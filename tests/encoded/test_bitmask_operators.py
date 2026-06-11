@@ -1,6 +1,7 @@
 import numpy as np
 
 from qlinks.encoded import (
+    BitmaskAlternatingPlaquetteFlipOperator,
     BitmaskBinaryFlipOperator,
     BitmaskConstantDiagonalOperator,
     BitmaskOperatorSum,
@@ -8,10 +9,16 @@ from qlinks.encoded import (
     BitmaskPatternFlipOperator,
     BitmaskPXPSpinFlipOperator,
     BitmaskQDMFlipOperator,
+    BitmaskQLMFluxFlipOperator,
     bitmask_qdm_flippability_projectors,
     encode_binary_config,
 )
-from qlinks.lattice import ChainLattice, SquareLattice
+from qlinks.lattice import (
+    ChainLattice,
+    HoneycombLattice,
+    SquareLattice,
+    TriangularLattice,
+)
 from qlinks.variables import LocalSpace, VariableLayout
 
 
@@ -198,3 +205,73 @@ def test_bitmask_qdm_flippability_projectors() -> None:
 
     assert projectors[0].apply_code(code_other) == ()
     assert projectors[1].apply_code(code_other) == ()
+
+
+def _code_with_local_pattern(
+    *,
+    n_variables: int,
+    variable_indices: np.ndarray,
+    pattern: np.ndarray,
+) -> int:
+    config = np.zeros(n_variables, dtype=np.int64)
+    config[variable_indices] = pattern
+    return encode_binary_config(config)
+
+
+def test_bitmask_alternating_plaquette_flip_single_action_matches_apply_code() -> None:
+    lattice = TriangularLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    plaquette_id = lattice.qdm_plaquette_ids()[0]
+
+    op = BitmaskAlternatingPlaquetteFlipOperator(
+        layout=layout,
+        lattice=lattice,
+        plaquette_id=int(plaquette_id),
+        coefficient=-2.0,
+    )
+
+    pattern = np.asarray([1 if i % 2 == 0 else 0 for i in range(op.variable_indices.size)])
+    code = _code_with_local_pattern(
+        n_variables=layout.n_variables,
+        variable_indices=op.variable_indices,
+        pattern=pattern,
+    )
+
+    single_action = op.single_action_code(code)
+    assert single_action is not None
+
+    apply_action = op.apply_code(code)[0]
+    coefficient, new_code = single_action
+
+    assert coefficient == apply_action.coefficient
+    assert new_code == apply_action.code
+
+
+def test_bitmask_qlm_flux_flip_single_action_matches_apply_code_on_hexagon() -> None:
+    lattice = HoneycombLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    plaquette_id = lattice.qlm_plaquette_ids()[0]
+
+    op = BitmaskQLMFluxFlipOperator(
+        layout=layout,
+        lattice=lattice,
+        plaquette_id=int(plaquette_id),
+        coefficient=-1.5,
+    )
+
+    orientation_pattern = np.asarray(lattice.plaquette_orientations(int(plaquette_id)))
+    binary_pattern = ((orientation_pattern + 1) // 2).astype(np.int64)
+    code = _code_with_local_pattern(
+        n_variables=layout.n_variables,
+        variable_indices=op.variable_indices,
+        pattern=binary_pattern,
+    )
+
+    single_action = op.single_action_code(code)
+    assert single_action is not None
+
+    apply_action = op.apply_code(code)[0]
+    coefficient, new_code = single_action
+
+    assert coefficient == apply_action.coefficient
+    assert new_code == apply_action.code
