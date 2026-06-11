@@ -13,6 +13,7 @@ import numpy.typing as npt
 import scipy.sparse as scipy_sparse
 
 from qlinks.caging.candidate import CandidateSubgraph
+from qlinks.caging.linear_independence import IndependentColumnSelector
 from qlinks.caging.partition import (
     type1_candidates_from_bipartite_self_loops,
     type2_candidates_from_self_loops,
@@ -475,12 +476,15 @@ class CageSearcher:
             return records
 
         grouped_records: dict[tuple[int, int], list[CageRecord]] = defaultdict(list)
-        grouped_states: dict[tuple[int, int], list[np.ndarray]] = defaultdict(list)
+        grouped_selectors: dict[tuple[int, int], IndependentColumnSelector] = {}
 
         rank_tolerance = self.config.rank_tolerance_factor * self.config.tolerance
 
         for record in records:
-            states = grouped_states[record.signature]
+            selector = grouped_selectors.setdefault(
+                record.signature,
+                IndependentColumnSelector(tolerance=rank_tolerance),
+            )
             full_state = (
                 record.full_state
                 if record.full_state is not None
@@ -490,12 +494,7 @@ class CageSearcher:
                 )
             )
 
-            if _is_independent_state(
-                states,
-                full_state,
-                tolerance=rank_tolerance,
-            ):
-                states.append(full_state)
+            if selector.add(full_state):
                 grouped_records[record.signature].append(record)
 
         deduplicated: list[CageRecord] = []
@@ -561,32 +560,6 @@ def signature_from_energy_and_self_loop(
         return None
 
     return kinetic_integer, potential_value
-
-
-def _is_independent_state(
-    independent_states: list[npt.NDArray[np.complex128]],
-    candidate_state: npt.NDArray[np.complex128],
-    *,
-    tolerance: float,
-) -> bool:
-    """Return whether candidate_state increases the span."""
-    normalized_candidate = candidate_state / np.linalg.norm(candidate_state)
-
-    if len(independent_states) == 0:
-        return True
-
-    existing_matrix = np.column_stack(independent_states)
-    old_rank = np.linalg.matrix_rank(existing_matrix, tol=tolerance)
-
-    extended_matrix = np.column_stack(
-        [
-            existing_matrix,
-            normalized_candidate,
-        ]
-    )
-    new_rank = np.linalg.matrix_rank(extended_matrix, tol=tolerance)
-
-    return bool(new_rank > old_rank)
 
 
 def bipartition_labels(matrix) -> npt.NDArray[np.int64]:

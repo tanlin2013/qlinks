@@ -6,6 +6,7 @@ import numpy as np
 import scipy.linalg as scipy_linalg
 from numpy.typing import NDArray
 
+from qlinks.caging.linear_independence import IndependentColumnSelector
 from qlinks.caging.nullspace import nullspace_svd
 
 
@@ -239,29 +240,6 @@ def exact_compact_states_from_support(
     return np.asarray(compact_states, dtype=np.complex128)
 
 
-def _is_independent_column(
-    selected_states: list[NDArray[np.complex128]],
-    candidate_state: NDArray[np.complex128],
-    *,
-    tolerance: float,
-) -> bool:
-    candidate_state = _normalize_vector(
-        candidate_state,
-        tolerance=tolerance,
-    )
-
-    if len(selected_states) == 0:
-        return True
-
-    old_matrix = np.column_stack(selected_states)
-    old_rank = np.linalg.matrix_rank(old_matrix, tol=tolerance)
-
-    new_matrix = np.column_stack([old_matrix, candidate_state])
-    new_rank = np.linalg.matrix_rank(new_matrix, tol=tolerance)
-
-    return bool(new_rank > old_rank)
-
-
 def localized_basis_by_many_start_ipr(
     eigenspace_basis: NDArray[np.complex128],
     *,
@@ -304,7 +282,7 @@ def localized_basis_by_many_start_ipr(
         if old_state is None or localized_state.ipr_value > old_state.ipr_value:
             best_by_support[key] = localized_state
 
-    selected_states: list[NDArray[np.complex128]] = []
+    selected_selector = IndependentColumnSelector(tolerance=config.rank_tolerance)
 
     candidates = sorted(
         best_by_support.values(),
@@ -322,23 +300,18 @@ def localized_basis_by_many_start_ipr(
         for state_index in range(compact_states.shape[1]):
             candidate_state = compact_states[:, state_index]
 
-            if _is_independent_column(
-                selected_states,
-                candidate_state,
-                tolerance=config.rank_tolerance,
-            ):
-                selected_states.append(candidate_state)
+            selected_selector.add(candidate_state)
 
-            if len(selected_states) == target_dimension:
+            if selected_selector.rank == target_dimension:
                 break
 
-        if len(selected_states) == target_dimension:
+        if selected_selector.rank == target_dimension:
             break
 
-    if len(selected_states) == 0:
+    if selected_selector.rank == 0:
         return basis
 
-    localized_basis = np.column_stack(selected_states)
+    localized_basis = np.column_stack(selected_selector.columns)
 
     # If IPR did not recover the full degenerate space, return the localized
     # states plus a completion basis, rather than silently dropping states.
