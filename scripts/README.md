@@ -19,6 +19,21 @@ python scripts/benchmark_hamiltonian.py --only qdm --split-basis-timing
 python scripts/benchmark_hamiltonian.py --json hamiltonian_benchmark.json
 ```
 
+## Cage search
+
+```bash
+python scripts/benchmark_cage_search.py
+python scripts/benchmark_cage_search.py --only qdm --split-basis-timing
+python scripts/benchmark_cage_search.py \
+  --only qlm \
+  --degenerate-basis-strategy ipr \
+  --ipr-n-restarts 32
+python scripts/benchmark_cage_search.py --json cage_search_benchmark.json
+```
+
+The cage-search benchmark reports separate timings for candidate generation,
+candidate solving, rank deduplication, and total search time.
+
 ---
 
 # Grid search for cages
