@@ -44,6 +44,17 @@ class BitmaskDiagonalOperator(BitmaskOperator, Protocol):
     def diagonal_value_code(self, code: int) -> complex | None: ...
 
 
+class BitmaskSingleActionOperator(BitmaskOperator, Protocol):
+    """Operator that produces at most one non-diagonal action per input code.
+
+    Returning ``None`` means the operator has no action on this code. Returning
+    ``(coefficient, new_code)`` means the operator contributes one matrix
+    element without allocating a :class:`BitmaskAction`.
+    """
+
+    def single_action_code(self, code: int) -> tuple[complex, int] | None: ...
+
+
 @dataclass(frozen=True, slots=True)
 class BitmaskOperatorSum:
     terms: tuple[BitmaskOperator, ...]
@@ -118,8 +129,14 @@ class BitmaskBinaryFlipOperator:
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return np.asarray([self.variable_index], dtype=np.int64)
 
+    def single_action_code(self, code: int) -> tuple[complex, int] | None:
+        return complex(self.coefficient), int(code) ^ self._flip_mask
+
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
-        return (BitmaskAction(self.coefficient, int(code) ^ self._flip_mask),)
+        action = self.single_action_code(code)
+        assert action is not None
+        coefficient, new_code = action
+        return (BitmaskAction(coefficient, new_code),)
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,13 +200,22 @@ class BitmaskPXPSpinFlipOperator:
             dtype=np.int64,
         )
 
-    def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
+    def single_action_code(self, code: int) -> tuple[complex, int] | None:
         code = int(code)
 
         if code & self._neighbor_mask:
+            return None
+
+        return complex(self.coefficient), code ^ self._flip_mask
+
+    def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
+        action = self.single_action_code(code)
+
+        if action is None:
             return ()
 
-        return (BitmaskAction(self.coefficient, code ^ self._flip_mask),)
+        coefficient, new_code = action
+        return (BitmaskAction(coefficient, new_code),)
 
 
 @dataclass(frozen=True, slots=True)
@@ -293,15 +319,24 @@ class BitmaskPatternFlipOperator:
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self.variable_indices.copy()
 
-    def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
+    def single_action_code(self, code: int) -> tuple[complex, int] | None:
         code = int(code)
 
         if (code & self._mask) != self._initial_bits:
-            return ()
+            return None
 
         new_code = (code & ~self._mask) | self._final_bits
 
-        return (BitmaskAction(self.coefficient, new_code),)
+        return complex(self.coefficient), new_code
+
+    def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
+        action = self.single_action_code(code)
+
+        if action is None:
+            return ()
+
+        coefficient, new_code = action
+        return (BitmaskAction(coefficient, new_code),)
 
 
 @dataclass(frozen=True, slots=True)
@@ -370,8 +405,22 @@ class BitmaskQDMFlipOperator:
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
+    def single_action_code(self, code: int) -> tuple[complex, int] | None:
+        action = self._op_1010_to_0101.single_action_code(code)
+
+        if action is not None:
+            return action
+
+        return self._op_0101_to_1010.single_action_code(code)
+
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
-        return self._op_1010_to_0101.apply_code(code) + self._op_0101_to_1010.apply_code(code)
+        action = self.single_action_code(code)
+
+        if action is None:
+            return ()
+
+        coefficient, new_code = action
+        return (BitmaskAction(coefficient, new_code),)
 
 
 @dataclass(frozen=True, slots=True)
@@ -659,10 +708,22 @@ class BitmaskQLMFluxFlipOperator:
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
+    def single_action_code(self, code: int) -> tuple[complex, int] | None:
+        action = self._op_oriented_to_reversed.single_action_code(code)
+
+        if action is not None:
+            return action
+
+        return self._op_reversed_to_oriented.single_action_code(code)
+
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
-        return self._op_oriented_to_reversed.apply_code(
-            code
-        ) + self._op_reversed_to_oriented.apply_code(code)
+        action = self.single_action_code(code)
+
+        if action is None:
+            return ()
+
+        coefficient, new_code = action
+        return (BitmaskAction(coefficient, new_code),)
 
 
 def bitmask_alternating_flippability_projectors(
@@ -775,5 +836,19 @@ class BitmaskAlternatingPlaquetteFlipOperator:
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
 
+    def single_action_code(self, code: int) -> tuple[complex, int] | None:
+        action = self._op_0_to_1.single_action_code(code)
+
+        if action is not None:
+            return action
+
+        return self._op_1_to_0.single_action_code(code)
+
     def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
-        return self._op_0_to_1.apply_code(code) + self._op_1_to_0.apply_code(code)
+        action = self.single_action_code(code)
+
+        if action is None:
+            return ()
+
+        coefficient, new_code = action
+        return (BitmaskAction(coefficient, new_code),)

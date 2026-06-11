@@ -28,6 +28,21 @@ def _diagonal_value_code_if_supported(
     return diagonal_value_code(code)
 
 
+def _single_action_code_if_supported(
+    operator: BitmaskOperator,
+    code: int,
+) -> tuple[complex, int] | None:
+    single_action_code = getattr(operator, "single_action_code", None)
+
+    if single_action_code is None:
+        return None
+
+    if not callable(single_action_code):
+        return None
+
+    return single_action_code(code)
+
+
 @dataclass(frozen=True, slots=True)
 class BitmaskSparseBuildStats:
     n_basis: int
@@ -105,6 +120,33 @@ class BitmaskSparseHamiltonianBuilder:
                 if diagonal_value is not None:
                     n_raw_actions += 1
                     diagonal_coefficient += complex(diagonal_value)
+                    continue
+
+                single_action = _single_action_code_if_supported(operator, code)
+
+                if single_action is not None:
+                    n_raw_actions += 1
+                    coefficient, new_code = single_action
+
+                    if abs(coefficient) <= self.drop_zero_atol:
+                        continue
+
+                    row = basis.get_index(new_code)
+
+                    if row is None:
+                        n_missing_actions += 1
+
+                        if self.on_missing == "raise":
+                            raise KeyError(
+                                "Bitmask operator produced a code outside the basis: " f"{new_code}"
+                            )
+
+                        continue
+
+                    rows.append(row)
+                    cols.append(col)
+                    data.append(coefficient)
+                    n_kept_actions += 1
                     continue
 
                 actions = operator.apply_code(code)
