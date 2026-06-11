@@ -20,6 +20,42 @@ def _apply_matrix(matrix: object, vector: np.ndarray) -> np.ndarray:
     return matrix @ vector
 
 
+def _boundary_residual_from_overlap(
+    boundary_overlap_matrix: np.ndarray,
+    local_state: np.ndarray,
+) -> float:
+    """Return ||B psi|| from the boundary-overlap matrix B^† B."""
+    residual_squared = complex(
+        np.vdot(
+            local_state,
+            boundary_overlap_matrix @ local_state,
+        )
+    )
+
+    # Numerical roundoff can leave a tiny imaginary or negative-real part for a
+    # positive-semidefinite Gram expectation value.
+    residual_squared_real = max(float(np.real(residual_squared)), 0.0)
+    return float(np.sqrt(residual_squared_real))
+
+
+def _candidate_kinetic_blocks_for_fixed_kappa(
+    kinetic_matrix: object,
+    vertices: np.ndarray,
+) -> tuple[object, np.ndarray]:
+    """Return K[S,S] and the dense boundary overlap K[out,S]^† K[out,S]."""
+    internal_matrix = kinetic_matrix[vertices, :][:, vertices]
+    column_block = kinetic_matrix[:, vertices]
+
+    # Avoid constructing the explicit outside-complement block. Since
+    # K[:,S]^†K[:,S] = K[S,S]^†K[S,S] + K[out,S]^†K[out,S], the boundary
+    # overlap can be obtained by subtracting the internal contribution.
+    full_overlap = column_block.conj().T @ column_block
+    internal_overlap = internal_matrix.conj().T @ internal_matrix
+    boundary_overlap = as_dense_array(full_overlap - internal_overlap)
+
+    return internal_matrix, boundary_overlap
+
+
 def _is_hermitian(matrix: np.ndarray, *, tolerance: float) -> bool:
     """Check whether a dense matrix is numerically Hermitian."""
     return bool(np.allclose(matrix, matrix.conj().T, atol=tolerance, rtol=0.0))
@@ -82,9 +118,10 @@ def _build_validated_cage_state(
     *,
     candidate: CandidateSubgraph,
     dense_internal_matrix: np.ndarray,
-    dense_boundary_matrix: np.ndarray,
+    dense_boundary_matrix: np.ndarray | None,
     config: CageSolverConfig,
     metadata: dict[str, object],
+    dense_boundary_overlap_matrix: np.ndarray | None = None,
 ) -> CageState | None:
     """Validate and build a CageState, trimming support if possible."""
     if config.normalize_states:
@@ -100,7 +137,18 @@ def _build_validated_cage_state(
     )
 
     # Validate against the parent candidate first.
-    boundary_residual = float(scipy_linalg.norm(dense_boundary_matrix @ local_state_on_parent))
+    if dense_boundary_matrix is not None:
+        boundary_residual = float(scipy_linalg.norm(dense_boundary_matrix @ local_state_on_parent))
+    elif dense_boundary_overlap_matrix is not None:
+        boundary_residual = _boundary_residual_from_overlap(
+            dense_boundary_overlap_matrix,
+            local_state_on_parent,
+        )
+    else:
+        raise ValueError(
+            "Either dense_boundary_matrix or dense_boundary_overlap_matrix " "is required."
+        )
+
     eigen_residual = float(
         scipy_linalg.norm(
             dense_internal_matrix @ local_state_on_parent - energy_value * local_state_on_parent
@@ -200,7 +248,7 @@ def solve_candidate_for_kinetic_targets(
     if z_value is None:
         return []
 
-    internal_kinetic_matrix, boundary_matrix, _outside_indices = extract_subblocks(
+    internal_kinetic_matrix, dense_boundary_overlap = _candidate_kinetic_blocks_for_fixed_kappa(
         kinetic_matrix,
         candidate.vertices,
     )
@@ -210,8 +258,6 @@ def solve_candidate_for_kinetic_targets(
 
     dense_kinetic_internal = as_dense_array(internal_kinetic_matrix)
     dense_hamiltonian_internal = dense_kinetic_internal + z_value * dense_identity_matrix
-    dense_boundary_matrix = as_dense_array(boundary_matrix)
-    dense_boundary_overlap = as_dense_array(boundary_matrix.conj().T @ boundary_matrix)
 
     cage_states: list[CageState] = []
 
@@ -254,7 +300,7 @@ def solve_candidate_for_kinetic_targets(
                 energy_value,
                 candidate=candidate,
                 dense_internal_matrix=dense_hamiltonian_internal,
-                dense_boundary_matrix=dense_boundary_matrix,
+                dense_boundary_matrix=None,
                 config=config,
                 metadata={
                     "fixed_kappa_solver": True,
@@ -265,6 +311,7 @@ def solve_candidate_for_kinetic_targets(
                     "degenerate_group_size": fixed_kappa_subspace_dim,
                     "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
                 },
+                dense_boundary_overlap_matrix=dense_boundary_overlap,
             )
 
             if cage_state is not None:

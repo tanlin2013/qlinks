@@ -140,6 +140,35 @@ def test_solve_candidate_for_kinetic_targets_rejects_nonuniform_self_loops() -> 
     assert cage_states == []
 
 
+def test_solve_candidate_for_kinetic_targets_rejects_boundary_leakage_without_full_residual() -> (
+    None
+):
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0],
+            [1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.zeros(2, dtype=np.complex128)
+    hamiltonian = kinetic_matrix.copy()
+    candidate = CandidateSubgraph(vertices=np.array([0]))
+
+    cage_states = solve_candidate_for_kinetic_targets(
+        hamiltonian,
+        kinetic_matrix,
+        self_loop_values,
+        candidate,
+        target_kappas=(0.0,),
+        config=CageSolverConfig(
+            tolerance=1e-12,
+            validate_full_residual=False,
+        ),
+    )
+
+    assert cage_states == []
+
+
 def test_solve_candidates_combines_results() -> None:
     hamiltonian = np.array(
         [
