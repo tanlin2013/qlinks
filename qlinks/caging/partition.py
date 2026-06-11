@@ -9,7 +9,11 @@ import scipy.sparse as scipy_sparse
 from numpy.typing import NDArray
 from scipy.sparse.csgraph import connected_components
 
-from qlinks.caging.candidate import CandidateSubgraph
+from qlinks.caging.candidate import (
+    BOUNDARY_OVERLAP_MATRIX_METADATA_KEY,
+    INTERNAL_KINETIC_MATRIX_METADATA_KEY,
+    CandidateSubgraph,
+)
 
 
 @dataclass(frozen=True)
@@ -111,6 +115,21 @@ def _column_block(
     return matrix[:, column_indices]
 
 
+def _local_indices_for_vertices(
+    group_vertices: NDArray[np.int_],
+    candidate_vertices: NDArray[np.int_],
+) -> NDArray[np.int64]:
+    """Return positions of candidate vertices within a parent vertex group."""
+    local_index_by_vertex = {
+        int(vertex_index): local_index for local_index, vertex_index in enumerate(group_vertices)
+    }
+
+    return np.asarray(
+        [local_index_by_vertex[int(vertex_index)] for vertex_index in candidate_vertices],
+        dtype=np.int64,
+    )
+
+
 def group_vertices_by_signature(
     *,
     self_loop_values: NDArray[np.complex128],
@@ -194,12 +213,28 @@ def type1_candidates_from_bipartite_self_loops(
         )
 
         for group_candidate in group_candidates:
+            local_indices = _local_indices_for_vertices(
+                group_vertices,
+                group_candidate.vertices,
+            )
+            candidate_boundary_overlap = _submatrix(
+                boundary_overlap_matrix,
+                local_indices,
+                local_indices,
+            )
+            candidate_internal_kinetic = np.zeros(
+                (group_candidate.size, group_candidate.size),
+                dtype=np.complex128,
+            )
+
             candidate_subgraphs.append(
                 CandidateSubgraph(
                     vertices=group_candidate.vertices,
                     metadata={
                         "candidate_type": "type1",
                         "signature": vertex_signature.values,
+                        INTERNAL_KINETIC_MATRIX_METADATA_KEY: candidate_internal_kinetic,
+                        BOUNDARY_OVERLAP_MATRIX_METADATA_KEY: candidate_boundary_overlap,
                     },
                 )
             )
@@ -243,12 +278,23 @@ def type2_candidates_from_self_loops(
         )
 
         for group_candidate in group_candidates:
+            local_indices = _local_indices_for_vertices(
+                group_vertices,
+                group_candidate.vertices,
+            )
+            candidate_internal_kinetic = _submatrix(
+                internal_matrix,
+                local_indices,
+                local_indices,
+            )
+
             candidate_subgraphs.append(
                 CandidateSubgraph(
                     vertices=group_candidate.vertices,
                     metadata={
                         "candidate_type": "type2",
                         "signature": vertex_signature.values,
+                        INTERNAL_KINETIC_MATRIX_METADATA_KEY: candidate_internal_kinetic,
                     },
                 )
             )

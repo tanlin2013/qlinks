@@ -3,7 +3,11 @@ from __future__ import annotations
 import numpy as np
 import scipy.linalg as scipy_linalg
 
-from qlinks.caging.candidate import CandidateSubgraph
+from qlinks.caging.candidate import (
+    BOUNDARY_OVERLAP_MATRIX_METADATA_KEY,
+    INTERNAL_KINETIC_MATRIX_METADATA_KEY,
+    CandidateSubgraph,
+)
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
 from qlinks.caging.localization import (
     IPRLocalizationConfig,
@@ -51,11 +55,20 @@ def _boundary_residual_from_overlap(
 
 def _candidate_kinetic_blocks_for_fixed_kappa(
     kinetic_matrix: object,
-    vertices: np.ndarray,
+    candidate: CandidateSubgraph,
 ) -> tuple[object, np.ndarray]:
     """Return K[S,S] and the dense boundary overlap K[out,S]^† K[out,S]."""
-    internal_matrix = kinetic_matrix[vertices, :][:, vertices]
-    column_block = kinetic_matrix[:, vertices]
+    cached_internal_matrix = candidate.metadata.get(INTERNAL_KINETIC_MATRIX_METADATA_KEY)
+    if cached_internal_matrix is None:
+        internal_matrix = kinetic_matrix[candidate.vertices, :][:, candidate.vertices]
+    else:
+        internal_matrix = cached_internal_matrix
+
+    cached_boundary_overlap = candidate.metadata.get(BOUNDARY_OVERLAP_MATRIX_METADATA_KEY)
+    if cached_boundary_overlap is not None:
+        return internal_matrix, as_dense_array(cached_boundary_overlap)
+
+    column_block = kinetic_matrix[:, candidate.vertices]
 
     # Avoid constructing the explicit outside-complement block. Since
     # K[:,S]^†K[:,S] = K[S,S]^†K[S,S] + K[out,S]^†K[out,S], the boundary
@@ -263,7 +276,7 @@ def solve_candidate_for_kinetic_targets(
 
     internal_kinetic_matrix, dense_boundary_overlap = _candidate_kinetic_blocks_for_fixed_kappa(
         kinetic_matrix,
-        candidate.vertices,
+        candidate,
     )
 
     support_size = candidate.size

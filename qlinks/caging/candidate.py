@@ -5,6 +5,9 @@ from dataclasses import dataclass, field
 import numpy as np
 from numpy.typing import NDArray
 
+INTERNAL_KINETIC_MATRIX_METADATA_KEY = "_cage_internal_kinetic_matrix"
+BOUNDARY_OVERLAP_MATRIX_METADATA_KEY = "_cage_boundary_overlap_matrix"
+
 
 @dataclass(frozen=True)
 class CandidateSubgraph:

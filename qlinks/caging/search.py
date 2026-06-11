@@ -446,17 +446,11 @@ class CageSearcher:
                 if kinetic_value not in allowed_kappas:
                     continue
 
-                full_state = embed_cage_state(
-                    cage_state,
-                    hilbert_size=int(self.hamiltonian_matrix.shape[0]),
-                )
-
                 records.append(
                     CageRecord(
                         cage_state=cage_state,
                         signature=signature,
                         candidate=candidate,
-                        full_state=full_state,
                     )
                 )
 

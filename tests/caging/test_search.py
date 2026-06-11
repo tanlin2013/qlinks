@@ -212,6 +212,45 @@ def test_cage_searcher_uses_fixed_kappa_solver_for_supplied_candidates() -> None
     assert record.cage_state.metadata["fixed_kappa_solver"] is True
 
 
+def test_cage_searcher_keeps_records_compact_after_rank_deduplication() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.full(3, 2.0, dtype=np.complex128)
+    hamiltonian = kinetic_matrix + np.diag(self_loop_values)
+    candidate = CandidateSubgraph(vertices=np.array([0, 1], dtype=np.int64))
+
+    searcher = CageSearcher(
+        hamiltonian_matrix=hamiltonian,
+        kinetic_matrix=kinetic_matrix,
+        self_loop_values=self_loop_values,
+        config=CageSearchConfig(
+            search_type="custom",
+            include_type1=True,
+            include_type2=False,
+            type1_kappas=(-1,),
+            tolerance=1e-12,
+        ),
+    )
+
+    result = searcher.run(type1_candidates=[candidate])
+
+    assert len(result.records) == 1
+    assert result.records[0].full_state is None
+
+    full_state_matrix = result.full_state_matrix()
+    assert full_state_matrix.shape == (1, 3)
+    np.testing.assert_allclose(
+        np.linalg.norm(full_state_matrix[0]),
+        1.0,
+    )
+
+
 def _dummy_candidate(index: int) -> CandidateSubgraph:
     return CandidateSubgraph(
         vertices=np.array([index], dtype=np.int64),

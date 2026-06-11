@@ -6,6 +6,10 @@ from qlinks.caging import (
     type1_candidates_from_bipartite_self_loops,
     type2_candidates_from_self_loops,
 )
+from qlinks.caging.candidate import (
+    BOUNDARY_OVERLAP_MATRIX_METADATA_KEY,
+    INTERNAL_KINETIC_MATRIX_METADATA_KEY,
+)
 
 
 def test_group_vertices_by_signature_uses_bipartition_and_self_loop() -> None:
@@ -123,3 +127,75 @@ def test_type2_candidates_accept_sparse_kinetic_matrix() -> None:
     )
 
     assert observed_supports == [(0, 1), (2, 3)]
+
+
+def test_type1_candidates_cache_fixed_kappa_solver_blocks() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [1.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.array([4.0, 4.0, 0.0, 4.0], dtype=np.complex128)
+    bipartition_labels = np.array([0, 0, 1, 0], dtype=np.int64)
+
+    candidate = type1_candidates_from_bipartite_self_loops(
+        kinetic_matrix,
+        self_loop_values,
+        bipartition_labels,
+        min_component_size=2,
+    )[0]
+
+    internal_matrix = candidate.metadata[INTERNAL_KINETIC_MATRIX_METADATA_KEY]
+    boundary_overlap_matrix = candidate.metadata[BOUNDARY_OVERLAP_MATRIX_METADATA_KEY]
+
+    np.testing.assert_allclose(
+        internal_matrix,
+        np.zeros((2, 2), dtype=np.complex128),
+    )
+    np.testing.assert_allclose(
+        boundary_overlap_matrix,
+        np.array(
+            [
+                [1.0, 1.0],
+                [1.0, 1.0],
+            ],
+            dtype=np.complex128,
+        ),
+    )
+
+
+def test_type2_candidates_cache_internal_kinetic_block() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.array([4.0, 4.0, 4.0, 4.0], dtype=np.complex128)
+
+    candidates = type2_candidates_from_self_loops(
+        kinetic_matrix,
+        self_loop_values,
+        min_component_size=2,
+    )
+    first_candidate = candidates[0]
+
+    internal_matrix = first_candidate.metadata[INTERNAL_KINETIC_MATRIX_METADATA_KEY]
+
+    np.testing.assert_allclose(
+        internal_matrix,
+        np.array(
+            [
+                [0.0, 1.0],
+                [1.0, 0.0],
+            ],
+            dtype=np.complex128,
+        ),
+    )
