@@ -393,6 +393,11 @@
                 <span class="n">n_variables</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="n">ordered_local_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ordered_local_values</span><span class="p">(</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">variable_order</span><span class="o">=</span><span class="n">variable_order</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
                 <span class="k">return</span>
@@ -403,9 +408,8 @@
                 <span class="k">return</span>
 
             <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_order</span><span class="p">[</span><span class="n">depth</span><span class="p">])</span>
-            <span class="n">local_space</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">local_space</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ordered_local_values</span><span class="p">[</span><span class="n">depth</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
                     <span class="k">return</span>
 
@@ -521,30 +525,26 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">),</span> <span class="o">-</span><span class="n">scores</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_normalize_affected_variables</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ordered_local_values</span><span class="p">(</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">n_variables</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">condition</span><span class="p">:</span> <span class="n">ConditionLike</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
-        <span class="n">affected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">affected_variables</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">variable_order</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return local-space values in DFS traversal order.</span>
 
-        <span class="k">if</span> <span class="n">affected</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">condition</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.affected_variables() must return a 1D array.&quot;</span><span class="p">)</span>
+<span class="sd">        This avoids repeatedly looking up each variable&#39;s local space inside the</span>
+<span class="sd">        recursive DFS hot path. The returned arrays are defensive copies, so</span>
+<span class="sd">        the solver cannot accidentally mutate layout-owned arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">variable_order</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">affected</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">affected</span>
-
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">affected</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">affected</span> <span class="o">&gt;=</span> <span class="n">n_variables</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">condition</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.affected_variables() contains indices outside &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;[0, </span><span class="si">{</span><span class="n">n_variables</span><span class="si">}</span><span class="s2">).&quot;</span>
-            <span class="p">)</span>
-
-        <span class="c1"># Remove duplicates while preserving deterministic order.</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">first_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">affected</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">affected</span> <span class="o">=</span> <span class="n">affected</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">first_indices</span><span class="p">)]</span>
-
-        <span class="k">return</span> <span class="n">affected</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">order</span>
+        <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_condition_infos</span><span class="p">(</span>

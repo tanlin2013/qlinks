@@ -386,6 +386,21 @@
 
 
 
+<div class="viewcode-block" id="SingleLocalUpdateOperator">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.SingleLocalUpdateOperator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SingleLocalUpdateOperator</span><span class="p">(</span><span class="n">LocalUpdateOperator</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Local update operator with at most one action per input config.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SingleLocalUpdateOperator.single_update">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.SingleLocalUpdateOperator.single_update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">single_update</span><span class="p">(</span></div>
+
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span></div>
+
+
+
 <div class="viewcode-block" id="BaseLocalUpdateOperator">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.BaseLocalUpdateOperator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BaseLocalUpdateOperator</span><span class="p">:</span>
@@ -515,19 +530,35 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="UpdateSetVariablesOperator.apply_update">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdateSetVariablesOperator.apply_update">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalUpdateAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<div class="viewcode-block" id="UpdateSetVariablesOperator.single_update">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdateSetVariablesOperator.single_update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">single_update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_values</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UpdateSetVariablesOperator.apply_update">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdateSetVariablesOperator.apply_update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalUpdateAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_update</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">update</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">()</span>
+
+        <span class="n">coefficient</span><span class="p">,</span> <span class="n">variable_indices</span><span class="p">,</span> <span class="n">new_values</span> <span class="o">=</span> <span class="n">update</span>
 
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">LocalUpdateAction</span><span class="p">(</span>
-                <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span>
-                <span class="n">variable_indices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span>
-                <span class="n">new_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">final_values</span><span class="p">,</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+                <span class="n">new_values</span><span class="o">=</span><span class="n">new_values</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">)</span></div>
 </div>
@@ -551,6 +582,22 @@
         <span class="n">values</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">values</span> <span class="o">!=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">}:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UpdateBinaryFlipOperator requires local values {0, 1}.&quot;</span><span class="p">)</span>
+
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;_variable_indices&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;_value_if_zero&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;_value_if_one&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="UpdateBinaryFlipOperator.on_site">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdateBinaryFlipOperator.on_site">[docs]</a>
@@ -587,20 +634,32 @@
 <div class="viewcode-block" id="UpdateBinaryFlipOperator.affected_variables">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdateBinaryFlipOperator.affected_variables">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">affected_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="UpdateBinaryFlipOperator.single_update">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdateBinaryFlipOperator.single_update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">single_update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">])</span>
+        <span class="n">new_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_if_zero</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_if_one</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">,</span> <span class="n">new_values</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="UpdateBinaryFlipOperator.apply_update">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdateBinaryFlipOperator.apply_update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">apply_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalUpdateAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-        <span class="n">new_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">])</span>
+        <span class="n">coefficient</span><span class="p">,</span> <span class="n">variable_indices</span><span class="p">,</span> <span class="n">new_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_update</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">LocalUpdateAction</span><span class="p">(</span>
-                <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span>
-                <span class="n">variable_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
-                <span class="n">new_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">new_value</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+                <span class="n">new_values</span><span class="o">=</span><span class="n">new_values</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">)</span></div>
 </div>
@@ -775,11 +834,19 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UpdatePlaquettePatternOperator needs at least one transition.&quot;</span><span class="p">)</span>
 
+        <span class="n">initial_patterns</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">has_unique_initial_patterns</span> <span class="o">=</span> <span class="kc">True</span>
+
         <span class="k">for</span> <span class="n">transition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">transition</span><span class="o">.</span><span class="n">initial</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">variable_indices</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Transition initial pattern has wrong length.&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">transition</span><span class="o">.</span><span class="n">final</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">variable_indices</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Transition final pattern has wrong length.&quot;</span><span class="p">)</span>
+
+            <span class="n">initial_key</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">transition</span><span class="o">.</span><span class="n">initial</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">initial_key</span> <span class="ow">in</span> <span class="n">initial_patterns</span><span class="p">:</span>
+                <span class="n">has_unique_initial_patterns</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">initial_patterns</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">initial_key</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">final</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
                 <span class="n">variable_indices</span><span class="p">,</span>
@@ -793,6 +860,7 @@
 
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_link_ids&quot;</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">)</span>
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_variable_indices&quot;</span><span class="p">,</span> <span class="n">variable_indices</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_supports_single_update&quot;</span><span class="p">,</span> <span class="n">has_unique_initial_patterns</span><span class="p">)</span>
 
 <div class="viewcode-block" id="UpdatePlaquettePatternOperator.qdm_flip">
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdatePlaquettePatternOperator.qdm_flip">[docs]</a>
@@ -842,6 +910,29 @@
 <a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdatePlaquettePatternOperator.affected_variables">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">affected_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">supports_single_update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_supports_single_update</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UpdatePlaquettePatternOperator.single_update">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdatePlaquettePatternOperator.single_update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">single_update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supports_single_update</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">local_values</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">transition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">local_values</span><span class="p">,</span> <span class="n">transition</span><span class="o">.</span><span class="n">initial</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">transition</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">,</span> <span class="n">transition</span><span class="o">.</span><span class="n">final</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="UpdatePlaquettePatternOperator.apply_update">
@@ -905,6 +996,21 @@
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_site_variable&quot;</span><span class="p">,</span> <span class="n">site_variable</span><span class="p">)</span>
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_neighbor_sites&quot;</span><span class="p">,</span> <span class="n">neighbor_sites</span><span class="p">)</span>
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_neighbor_variables&quot;</span><span class="p">,</span> <span class="n">neighbor_variables</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;_variable_indices&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">site_variable</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;_value_if_zero&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;_value_if_one&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">site_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -927,21 +1033,38 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="UpdatePXPSpinFlipOperator.apply_update">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdatePXPSpinFlipOperator.apply_update">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalUpdateAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<div class="viewcode-block" id="UpdatePXPSpinFlipOperator.single_update">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdatePXPSpinFlipOperator.single_update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">single_update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbor_variables</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">occupied_value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_variable</span><span class="p">])</span>
+        <span class="n">new_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_if_zero</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_if_one</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">,</span> <span class="n">new_values</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UpdatePXPSpinFlipOperator.apply_update">
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.updates.UpdatePXPSpinFlipOperator.apply_update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalUpdateAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_update</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">update</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">()</span>
 
-        <span class="n">new_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_variable</span><span class="p">])</span>
+        <span class="n">coefficient</span><span class="p">,</span> <span class="n">variable_indices</span><span class="p">,</span> <span class="n">new_values</span> <span class="o">=</span> <span class="n">update</span>
 
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">LocalUpdateAction</span><span class="p">(</span>
-                <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span>
-                <span class="n">variable_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_variable</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
-                <span class="n">new_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">new_value</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+                <span class="n">new_values</span><span class="o">=</span><span class="n">new_values</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">)</span></div>
 </div>

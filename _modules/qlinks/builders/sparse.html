@@ -308,7 +308,7 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
@@ -340,6 +340,34 @@
     <span class="n">matrix</span><span class="p">:</span> <span class="n">Any</span>
     <span class="n">stats</span><span class="p">:</span> <span class="n">SparseBuildStats</span></div>
 
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_PreparedLocalOperators</span><span class="p">:</span>
+    <span class="n">diagonal_value_functions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">fallback_operators</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalOperator</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_local_operators</span><span class="p">(</span>
+    <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalOperator</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_PreparedLocalOperators</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Classify local operators once before entering the sparse-builder hot loop.&quot;&quot;&quot;</span>
+    <span class="n">diagonal_value_functions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fallback_operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalOperator</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">operators</span><span class="p">:</span>
+        <span class="n">diagonal_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="s2">&quot;diagonal_value&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">diagonal_value</span><span class="p">):</span>
+            <span class="n">diagonal_value_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diagonal_value</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">fallback_operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_PreparedLocalOperators</span><span class="p">(</span>
+        <span class="n">diagonal_value_functions</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">diagonal_value_functions</span><span class="p">),</span>
+        <span class="n">fallback_operators</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">fallback_operators</span><span class="p">),</span>
+    <span class="p">)</span>
 
 
 <div class="viewcode-block" id="SparseHamiltonianBuilder">
@@ -395,18 +423,23 @@
         <span class="n">n_kept_actions</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">n_missing_actions</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">iter_states</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">states</span>
+        <span class="n">encode_config</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">encode</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">prepared_operators</span> <span class="o">=</span> <span class="n">_prepare_local_operators</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
             <span class="n">column_actions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OperatorAction</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">diagonal_coefficient</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span>
 
-            <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">operators</span><span class="p">:</span>
-                <span class="n">diagonal_value</span> <span class="o">=</span> <span class="n">_diagonal_value_if_supported</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">diagonal_value</span> <span class="ow">in</span> <span class="n">prepared_operators</span><span class="o">.</span><span class="n">diagonal_value_functions</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">diagonal_value</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="n">diagonal_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">n_raw_actions</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="n">diagonal_coefficient</span> <span class="o">+=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">diagonal_value</span><span class="p">)</span>
-                    <span class="k">continue</span>
+                    <span class="n">diagonal_coefficient</span> <span class="o">+=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
+            <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">prepared_operators</span><span class="o">.</span><span class="n">fallback_operators</span><span class="p">:</span>
                 <span class="n">actions</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
                 <span class="n">n_raw_actions</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
                 <span class="n">column_actions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
@@ -429,7 +462,7 @@
                 <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_zero_atol</span><span class="p">:</span>
                     <span class="k">continue</span>
 
-                <span class="n">row</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">encode_config</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">config</span><span class="p">))</span>
 
                 <span class="k">if</span> <span class="n">row</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">n_missing_actions</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -509,21 +542,6 @@
     <span class="n">sparse_backend</span> <span class="o">=</span> <span class="n">get_sparse_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">sparse_backend</span><span class="o">.</span><span class="n">max_abs_data</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">atol</span></div>
 
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_diagonal_value_if_supported</span><span class="p">(</span>
-    <span class="n">operator</span><span class="p">:</span> <span class="n">LocalOperator</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">diagonal_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="s2">&quot;diagonal_value&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">diagonal_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">diagonal_value</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="k">return</span> <span class="n">diagonal_value</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 </pre></div>
 
                 </article>
