@@ -504,3 +504,40 @@ def test_diagonal_fast_path_sums_multiple_diagonal_terms() -> None:
     assert result.stats.n_kept_actions == 2
     assert result.stats.n_missing_actions == 0
     assert result.stats.nnz == 2
+
+
+class _PropertyCountingDiagonalOperator:
+    def __init__(self, layout: VariableLayout) -> None:
+        self.layout = layout
+        self.name = "property_counting_diagonal"
+        self.diagonal_value_property_reads = 0
+
+    def affected_variables(self) -> np.ndarray:
+        return np.array([], dtype=np.int64)
+
+    @property
+    def diagonal_value(self):
+        self.diagonal_value_property_reads += 1
+
+        def _diagonal_value(config) -> complex:
+            return 1.0
+
+        return _diagonal_value
+
+    def apply(self, config):
+        raise AssertionError("diagonal fast path should avoid apply().")
+
+
+def test_sparse_builder_classifies_diagonal_operators_once() -> None:
+    layout = VariableLayout.from_sites(3, LocalSpace.binary())
+    basis = BruteForceBasisSolver(sort=True).solve(layout)
+    op = _PropertyCountingDiagonalOperator(layout)
+
+    result = SparseHamiltonianBuilder().build_with_stats(basis, [op])
+
+    expected = np.eye(basis.n_states, dtype=np.complex128)
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert op.diagonal_value_property_reads == 1
+    assert result.stats.n_raw_actions == basis.n_states
+    assert result.stats.n_kept_actions == basis.n_states

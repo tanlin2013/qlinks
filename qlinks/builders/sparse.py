@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal, Sequence
+from typing import Any, Callable, Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -27,6 +27,34 @@ class SparseBuildStats:
 class SparseBuildResult:
     matrix: Any
     stats: SparseBuildStats
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedLocalOperators:
+    diagonal_value_functions: tuple[Callable[[npt.ArrayLike], complex | None], ...]
+    fallback_operators: tuple[LocalOperator, ...]
+
+
+def _prepare_local_operators(
+    operators: Sequence[LocalOperator],
+) -> _PreparedLocalOperators:
+    """Classify local operators once before entering the sparse-builder hot loop."""
+    diagonal_value_functions: list[Callable[[npt.ArrayLike], complex | None]] = []
+    fallback_operators: list[LocalOperator] = []
+
+    for operator in operators:
+        diagonal_value = getattr(operator, "diagonal_value", None)
+
+        if callable(diagonal_value):
+            diagonal_value_functions.append(diagonal_value)
+            continue
+
+        fallback_operators.append(operator)
+
+    return _PreparedLocalOperators(
+        diagonal_value_functions=tuple(diagonal_value_functions),
+        fallback_operators=tuple(fallback_operators),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,18 +103,23 @@ class SparseHamiltonianBuilder:
         n_kept_actions = 0
         n_missing_actions = 0
 
-        for col, config in enumerate(basis.iter_states(copy=False)):
+        states = basis.states
+        encode_config = basis.encoder.encode
+        index = basis.index
+        prepared_operators = _prepare_local_operators(operators)
+
+        for col, config in enumerate(states):
             column_actions: list[OperatorAction] = []
             diagonal_coefficient = 0.0 + 0.0j
 
-            for operator in operators:
-                diagonal_value = _diagonal_value_if_supported(operator, config)
+            for diagonal_value in prepared_operators.diagonal_value_functions:
+                value = diagonal_value(config)
 
-                if diagonal_value is not None:
+                if value is not None:
                     n_raw_actions += 1
-                    diagonal_coefficient += complex(diagonal_value)
-                    continue
+                    diagonal_coefficient += complex(value)
 
+            for operator in prepared_operators.fallback_operators:
                 actions = operator.apply(config)
                 n_raw_actions += len(actions)
                 column_actions.extend(actions)
@@ -109,7 +142,7 @@ class SparseHamiltonianBuilder:
                 if abs(action.coefficient) <= self.drop_zero_atol:
                     continue
 
-                row = basis.get_index(action.config)
+                row = index.get(encode_config(action.config))
 
                 if row is None:
                     n_missing_actions += 1
@@ -181,18 +214,3 @@ def is_hermitian_sparse(
 
     sparse_backend = get_sparse_backend(backend)
     return sparse_backend.max_abs_data(diff) <= atol
-
-
-def _diagonal_value_if_supported(
-    operator: LocalOperator,
-    config: npt.ArrayLike,
-) -> complex | None:
-    diagonal_value = getattr(operator, "diagonal_value", None)
-
-    if diagonal_value is None:
-        return None
-
-    if not callable(diagonal_value):
-        return None
-
-    return diagonal_value(config)
