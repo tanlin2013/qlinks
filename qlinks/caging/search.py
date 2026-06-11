@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import defaultdict, deque
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from numbers import Integral
@@ -606,10 +606,10 @@ def bipartition_labels(matrix) -> npt.NDArray[np.int64]:
             continue
 
         labels[start_index] = 0
-        queue = [start_index]
+        queue: deque[int] = deque([start_index])
 
         while queue:
-            vertex_index = queue.pop(0)
+            vertex_index = queue.popleft()
             neighbors = adjacency.indices[
                 adjacency.indptr[vertex_index] : adjacency.indptr[vertex_index + 1]
             ]
