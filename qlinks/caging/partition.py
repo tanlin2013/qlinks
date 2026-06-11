@@ -10,7 +10,6 @@ from numpy.typing import NDArray
 from scipy.sparse.csgraph import connected_components
 
 from qlinks.caging.candidate import CandidateSubgraph
-from qlinks.caging.prefilters import extract_subblocks
 
 
 @dataclass(frozen=True)
@@ -95,6 +94,23 @@ def _components_from_adjacency(
     return candidate_subgraphs
 
 
+def _submatrix(
+    matrix: object,
+    row_indices: NDArray[np.int_],
+    column_indices: NDArray[np.int_],
+) -> object:
+    """Return ``matrix[row_indices, column_indices]`` for dense or sparse matrices."""
+    return matrix[row_indices, :][:, column_indices]
+
+
+def _column_block(
+    matrix: object,
+    column_indices: NDArray[np.int_],
+) -> object:
+    """Return ``matrix[:, column_indices]`` for dense or sparse matrices."""
+    return matrix[:, column_indices]
+
+
 def group_vertices_by_signature(
     *,
     self_loop_values: NDArray[np.complex128],
@@ -165,11 +181,12 @@ def type1_candidates_from_bipartite_self_loops(
         if group_vertices.size < min_component_size:
             continue
 
-        _internal_matrix, boundary_matrix, _outside_indices = extract_subblocks(
-            kinetic_matrix,
-            group_vertices,
-        )
-        boundary_overlap_matrix = boundary_matrix.conj().T @ boundary_matrix
+        # Type-1 candidates are grouped by one bipartition side and uniform
+        # self-loop value. The relevant connectivity is the boundary-overlap
+        # graph K[:, S]^\dagger K[:, S]. Using the full column block avoids
+        # constructing the explicit outside-complement mask for every group.
+        column_block = _column_block(kinetic_matrix, group_vertices)
+        boundary_overlap_matrix = column_block.conj().T @ column_block
         group_candidates = _components_from_adjacency(
             boundary_overlap_matrix,
             group_vertices,
@@ -214,8 +231,9 @@ def type2_candidates_from_self_loops(
         if group_vertices.size < min_component_size:
             continue
 
-        internal_matrix, _boundary_matrix, _outside_indices = extract_subblocks(
+        internal_matrix = _submatrix(
             kinetic_matrix,
+            group_vertices,
             group_vertices,
         )
         group_candidates = _components_from_adjacency(

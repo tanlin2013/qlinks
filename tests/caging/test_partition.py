@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.sparse as scipy_sparse
 
 from qlinks.caging import (
     group_vertices_by_signature,
@@ -55,6 +56,59 @@ def test_type2_candidates_use_internal_kinetic_components() -> None:
             [0.0, 0.0, 1.0, 0.0],
         ],
         dtype=np.complex128,
+    )
+    self_loop_values = np.array([4.0, 4.0, 4.0, 4.0], dtype=np.complex128)
+
+    candidate_subgraphs = type2_candidates_from_self_loops(
+        kinetic_matrix,
+        self_loop_values,
+        min_component_size=2,
+    )
+
+    observed_supports = sorted(
+        tuple(candidate_subgraph.vertices.tolist()) for candidate_subgraph in candidate_subgraphs
+    )
+
+    assert observed_supports == [(0, 1), (2, 3)]
+
+
+def test_type1_candidates_accept_sparse_kinetic_matrix() -> None:
+    kinetic_matrix = scipy_sparse.csr_array(
+        np.array(
+            [
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [1.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+    self_loop_values = np.array([4.0, 4.0, 0.0, 4.0], dtype=np.complex128)
+    bipartition_labels = np.array([0, 0, 1, 0], dtype=np.int64)
+
+    candidate_subgraphs = type1_candidates_from_bipartite_self_loops(
+        kinetic_matrix,
+        self_loop_values,
+        bipartition_labels,
+        min_component_size=2,
+    )
+
+    assert len(candidate_subgraphs) == 1
+    np.testing.assert_array_equal(candidate_subgraphs[0].vertices, np.array([0, 1]))
+
+
+def test_type2_candidates_accept_sparse_kinetic_matrix() -> None:
+    kinetic_matrix = scipy_sparse.csr_array(
+        np.array(
+            [
+                [0.0, 1.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 1.0, 0.0],
+            ],
+            dtype=np.complex128,
+        )
     )
     self_loop_values = np.array([4.0, 4.0, 4.0, 4.0], dtype=np.complex128)
 
