@@ -53,6 +53,27 @@ def assert_same_sparse_matrix(
     assert difference.nnz == 0
 
 
+def assert_optional_sparse_allclose(
+    actual: sparse.spmatrix | sparse.sparray | None,
+    expected: sparse.spmatrix | sparse.sparray | None,
+    *,
+    atol: float = 1.0e-12,
+) -> None:
+    if actual is None or expected is None:
+        assert actual is None and expected is None
+        return
+
+    assert_sparse_allclose(actual, expected, atol=atol)
+
+
+def assert_same_binary_basis_order(sparse_result, bitmask_result) -> None:
+    """Assert that a binary bitmask basis preserves array-basis order."""
+    sparse_states = sparse_result.basis.states
+    bitmask_states = bitmask_result.basis.to_array_basis().states
+
+    np.testing.assert_array_equal(bitmask_states, sparse_states)
+
+
 def assert_same_physical_flux_basis_order(sparse_result, bitmask_result) -> None:
     """
     Assert that a binary bitmask basis matches a physical flux basis order.
