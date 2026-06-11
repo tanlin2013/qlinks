@@ -23,7 +23,7 @@ BasisEncoding = Literal["binary", "flux_pm"]
 
 
 @dataclass(frozen=True)
-class BitmaskParityCase:
+class SparseBitmaskEquivalenceCase:
     name: str
     factory: Callable[[], object]
     basis_encoding: BasisEncoding
@@ -86,8 +86,8 @@ def _first_nonempty_honeycomb_qlm_pbc() -> HoneycombQLMModel:
     return replace(seed, winding_x=winding_x, winding_y=winding_y)
 
 
-GEOMETRY_BITMASK_PARITY_CASES = [
-    BitmaskParityCase(
+SPARSE_BITMASK_EQUIVALENCE_CASES = [
+    SparseBitmaskEquivalenceCase(
         name="triangular_qdm_open",
         factory=lambda: TriangularQDMModel(
             lx=2,
@@ -98,7 +98,7 @@ GEOMETRY_BITMASK_PARITY_CASES = [
         ),
         basis_encoding="binary",
     ),
-    BitmaskParityCase(
+    SparseBitmaskEquivalenceCase(
         name="honeycomb_qdm_open",
         factory=lambda: HoneycombQDMModel(
             lx=2,
@@ -109,7 +109,7 @@ GEOMETRY_BITMASK_PARITY_CASES = [
         ),
         basis_encoding="binary",
     ),
-    BitmaskParityCase(
+    SparseBitmaskEquivalenceCase(
         name="triangular_qlm_open",
         factory=lambda: TriangularQLMModel(
             lx=2,
@@ -122,7 +122,7 @@ GEOMETRY_BITMASK_PARITY_CASES = [
         ),
         basis_encoding="flux_pm",
     ),
-    BitmaskParityCase(
+    SparseBitmaskEquivalenceCase(
         name="honeycomb_qlm_open_nonempty",
         factory=lambda: HoneycombQLMModel(
             lx=2,
@@ -138,22 +138,22 @@ GEOMETRY_BITMASK_PARITY_CASES = [
         ),
         basis_encoding="flux_pm",
     ),
-    BitmaskParityCase(
+    SparseBitmaskEquivalenceCase(
         name="triangular_qdm_pbc_z2",
         factory=_first_nonempty_triangular_qdm_pbc,
         basis_encoding="binary",
     ),
-    BitmaskParityCase(
+    SparseBitmaskEquivalenceCase(
         name="honeycomb_qdm_pbc_winding",
         factory=_first_nonempty_honeycomb_qdm_pbc,
         basis_encoding="binary",
     ),
-    BitmaskParityCase(
+    SparseBitmaskEquivalenceCase(
         name="triangular_qlm_pbc_z2",
         factory=_first_nonempty_triangular_qlm_pbc,
         basis_encoding="flux_pm",
     ),
-    BitmaskParityCase(
+    SparseBitmaskEquivalenceCase(
         name="honeycomb_qlm_pbc_staggered_winding",
         factory=_first_nonempty_honeycomb_qlm_pbc,
         basis_encoding="flux_pm",
@@ -188,9 +188,9 @@ def test_triangular_qdm_bitmask_matches_sparse_by_term(
     )
 
 
-@pytest.mark.parametrize("case", GEOMETRY_BITMASK_PARITY_CASES, ids=lambda case: case.name)
-def test_triangular_honeycomb_qdm_qlm_bitmask_matches_sparse(
-    case: BitmaskParityCase,
+@pytest.mark.parametrize("case", SPARSE_BITMASK_EQUIVALENCE_CASES, ids=lambda case: case.name)
+def test_qdm_qlm_sparse_and_bitmask_builds_match(
+    case: SparseBitmaskEquivalenceCase,
 ) -> None:
     model = case.factory()
 
