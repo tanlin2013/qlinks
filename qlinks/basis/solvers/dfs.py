@@ -82,6 +82,11 @@ class DFSBasisSolver:
                 n_variables=n,
             )
 
+        ordered_local_values = self._ordered_local_values(
+            layout=layout,
+            variable_order=variable_order,
+        )
+
         def dfs(depth: int) -> None:
             if max_states is not None and len(states) >= max_states:
                 return
@@ -92,9 +97,8 @@ class DFSBasisSolver:
                 return
 
             variable_index = int(variable_order[depth])
-            local_space = layout.local_space(variable_index)
 
-            for value in local_space.values:
+            for value in ordered_local_values[depth]:
                 if max_states is not None and len(states) >= max_states:
                     return
 
@@ -209,30 +213,26 @@ class DFSBasisSolver:
         return np.lexsort((np.arange(layout.n_variables), -scores)).astype(np.int64)
 
     @staticmethod
-    def _normalize_affected_variables(
+    def _ordered_local_values(
         *,
-        n_variables: int,
-        condition: ConditionLike,
-    ) -> npt.NDArray[np.int64]:
-        affected = np.asarray(condition.affected_variables(), dtype=np.int64)
+        layout: VariableLayout,
+        variable_order: npt.ArrayLike,
+    ) -> tuple[npt.NDArray[np.int64], ...]:
+        """Return local-space values in DFS traversal order.
 
-        if affected.ndim != 1:
-            raise ValueError(f"{condition.name}.affected_variables() must return a 1D array.")
+        This avoids repeatedly looking up each variable's local space inside the
+        recursive DFS hot path. The returned arrays are defensive copies, so
+        the solver cannot accidentally mutate layout-owned arrays.
+        """
+        order = np.asarray(variable_order, dtype=np.int64)
 
-        if affected.size == 0:
-            return affected
-
-        if np.any(affected < 0) or np.any(affected >= n_variables):
-            raise ValueError(
-                f"{condition.name}.affected_variables() contains indices outside "
-                f"[0, {n_variables})."
-            )
-
-        # Remove duplicates while preserving deterministic order.
-        _, first_indices = np.unique(affected, return_index=True)
-        affected = affected[np.sort(first_indices)]
-
-        return affected.astype(np.int64, copy=False)
+        return tuple(
+            np.asarray(
+                layout.local_space(int(variable_index)).values,
+                dtype=np.int64,
+            ).copy()
+            for variable_index in order
+        )
 
     @classmethod
     def _build_condition_infos(

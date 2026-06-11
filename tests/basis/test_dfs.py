@@ -511,6 +511,47 @@ def test_dfs_explicit_variable_order_overrides_strategy() -> None:
     )
 
 
+def test_dfs_ordered_local_values_follow_variable_order() -> None:
+    layout = VariableLayout(
+        specs=(
+            VariableSpec(
+                kind=VariableKind.SITE,
+                geometry_index=0,
+                local_space=LocalSpace.from_values([0, 1]),
+            ),
+            VariableSpec(
+                kind=VariableKind.SITE,
+                geometry_index=1,
+                local_space=LocalSpace.from_values([-1, 0, 1]),
+            ),
+            VariableSpec(
+                kind=VariableKind.SITE,
+                geometry_index=2,
+                local_space=LocalSpace.from_values([2, 4]),
+            ),
+        )
+    )
+
+    ordered_values = DFSBasisSolver._ordered_local_values(
+        layout=layout,
+        variable_order=np.array([2, 0, 1], dtype=np.int64),
+    )
+
+    assert len(ordered_values) == 3
+    np.testing.assert_array_equal(
+        ordered_values[0],
+        np.array([2, 4], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        ordered_values[1],
+        np.array([0, 1], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        ordered_values[2],
+        np.array([-1, 0, 1], dtype=np.int64),
+    )
+
+
 def test_dfs_invalid_variable_order_strategy_raises() -> None:
     layout = _binary_site_layout(2)
     solver = DFSBasisSolver()
