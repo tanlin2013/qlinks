@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal, Sequence
+from typing import Any, Callable, Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -11,36 +11,6 @@ from qlinks.encoded.binary_basis import BinaryEncodedBasis
 from qlinks.encoded.bitmask_operators import BitmaskOperator
 
 MissingActionPolicy = Literal["skip", "raise"]
-
-
-def _diagonal_value_code_if_supported(
-    operator: BitmaskOperator,
-    code: int,
-) -> complex | None:
-    diagonal_value_code = getattr(operator, "diagonal_value_code", None)
-
-    if diagonal_value_code is None:
-        return None
-
-    if not callable(diagonal_value_code):
-        return None
-
-    return diagonal_value_code(code)
-
-
-def _single_action_code_if_supported(
-    operator: BitmaskOperator,
-    code: int,
-) -> tuple[complex, int] | None:
-    single_action_code = getattr(operator, "single_action_code", None)
-
-    if single_action_code is None:
-        return None
-
-    if not callable(single_action_code):
-        return None
-
-    return single_action_code(code)
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +27,43 @@ class BitmaskSparseBuildStats:
 class BitmaskSparseBuildResult:
     matrix: Any
     stats: BitmaskSparseBuildStats
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedBitmaskOperators:
+    diagonal_value_code_functions: tuple[Callable[[int], complex | None], ...]
+    single_action_code_functions: tuple[Callable[[int], tuple[complex, int] | None], ...]
+    fallback_operators: tuple[BitmaskOperator, ...]
+
+
+def _prepare_bitmask_operators(
+    operators: Sequence[BitmaskOperator],
+) -> _PreparedBitmaskOperators:
+    """Classify bitmask operators once before entering the hot loop."""
+    diagonal_value_code_functions: list[Callable[[int], complex | None]] = []
+    single_action_code_functions: list[Callable[[int], tuple[complex, int] | None]] = []
+    fallback_operators: list[BitmaskOperator] = []
+
+    for operator in operators:
+        diagonal_value_code = getattr(operator, "diagonal_value_code", None)
+
+        if callable(diagonal_value_code):
+            diagonal_value_code_functions.append(diagonal_value_code)
+            continue
+
+        single_action_code = getattr(operator, "single_action_code", None)
+
+        if callable(single_action_code):
+            single_action_code_functions.append(single_action_code)
+            continue
+
+        fallback_operators.append(operator)
+
+    return _PreparedBitmaskOperators(
+        diagonal_value_code_functions=tuple(diagonal_value_code_functions),
+        single_action_code_functions=tuple(single_action_code_functions),
+        fallback_operators=tuple(fallback_operators),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,46 +119,49 @@ class BitmaskSparseHamiltonianBuilder:
 
         codes = basis.codes
         index = basis.index
+        prepared_operators = _prepare_bitmask_operators(operators)
 
         for col, code_obj in enumerate(codes):
             code = int(code_obj)
             diagonal_coefficient = 0.0 + 0.0j
 
-            for operator in operators:
-                diagonal_value = _diagonal_value_code_if_supported(operator, code)
+            for diagonal_value_code in prepared_operators.diagonal_value_code_functions:
+                diagonal_value = diagonal_value_code(code)
 
                 if diagonal_value is not None:
                     n_raw_actions += 1
                     diagonal_coefficient += complex(diagonal_value)
+
+            for single_action_code in prepared_operators.single_action_code_functions:
+                single_action = single_action_code(code)
+
+                if single_action is None:
                     continue
 
-                single_action = _single_action_code_if_supported(operator, code)
+                n_raw_actions += 1
+                coefficient, new_code = single_action
 
-                if single_action is not None:
-                    n_raw_actions += 1
-                    coefficient, new_code = single_action
-
-                    if abs(coefficient) <= self.drop_zero_atol:
-                        continue
-
-                    row = index.get(int(new_code))
-
-                    if row is None:
-                        n_missing_actions += 1
-
-                        if self.on_missing == "raise":
-                            raise KeyError(
-                                "Bitmask operator produced a code outside the basis: " f"{new_code}"
-                            )
-
-                        continue
-
-                    rows.append(row)
-                    cols.append(col)
-                    data.append(coefficient)
-                    n_kept_actions += 1
+                if abs(coefficient) <= self.drop_zero_atol:
                     continue
 
+                row = index.get(int(new_code))
+
+                if row is None:
+                    n_missing_actions += 1
+
+                    if self.on_missing == "raise":
+                        raise KeyError(
+                            "Bitmask operator produced a code outside the basis: " f"{new_code}"
+                        )
+
+                    continue
+
+                rows.append(row)
+                cols.append(col)
+                data.append(coefficient)
+                n_kept_actions += 1
+
+            for operator in prepared_operators.fallback_operators:
                 actions = operator.apply_code(code)
                 n_raw_actions += len(actions)
 

@@ -31,6 +31,31 @@ class SingleActionOnlyOperator:
         raise AssertionError("builder should use single_action_code fast path")
 
 
+class PropertyCountingSingleActionOperator:
+    layout: VariableLayout
+    name = "property_counting_single_action"
+
+    def __init__(self, layout: VariableLayout, coefficient: complex = 1.0) -> None:
+        self.layout = layout
+        self.coefficient = complex(coefficient)
+        self.n_single_action_code_lookups = 0
+
+    def affected_variables(self) -> np.ndarray:
+        return np.asarray([0], dtype=np.int64)
+
+    @property
+    def single_action_code(self):
+        self.n_single_action_code_lookups += 1
+
+        def _single_action_code(code: int) -> tuple[complex, int] | None:
+            return self.coefficient, int(code) ^ 1
+
+        return _single_action_code
+
+    def apply_code(self, code: int) -> tuple[BitmaskAction, ...]:
+        raise AssertionError("builder should use cached single_action_code fast path")
+
+
 def test_bitmask_builder_uses_constant_diagonal_fast_path_stats() -> None:
     layout = VariableLayout.from_sites(2, LocalSpace.binary())
     basis = BinaryEncodedBasis.full(layout)
@@ -169,6 +194,31 @@ def test_bitmask_builder_uses_single_action_fast_path_without_apply_code() -> No
     assert result.stats.n_kept_actions == 2
     assert result.stats.n_missing_actions == 0
     assert result.stats.nnz == 2
+
+
+def test_bitmask_builder_caches_fast_path_operator_accessors() -> None:
+    layout = VariableLayout.from_sites(2, LocalSpace.binary())
+    basis = BinaryEncodedBasis.full(layout)
+
+    op = PropertyCountingSingleActionOperator(layout=layout, coefficient=1.0)
+
+    result = BitmaskSparseHamiltonianBuilder().build_with_stats(basis, [op])
+
+    expected = np.array(
+        [
+            [0.0, 1.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert op.n_single_action_code_lookups == 1
+    assert result.stats.n_raw_actions == basis.n_states
+    assert result.stats.n_kept_actions == basis.n_states
+    assert result.stats.n_missing_actions == 0
 
 
 def test_bitmask_pattern_flip_single_action_matches_apply_code() -> None:
