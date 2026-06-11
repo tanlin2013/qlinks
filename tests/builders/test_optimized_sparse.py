@@ -18,6 +18,7 @@ from qlinks.operators import (
     UpdateBinaryFlipOperator,
     UpdateOperatorSum,
     UpdatePlaquettePatternOperator,
+    UpdatePlaquettePatternTransition,
     UpdatePXPSpinFlipOperator,
 )
 from qlinks.variables import LocalSpace, VariableLayout
@@ -255,3 +256,99 @@ def test_optimized_empty_basis() -> None:
     assert result.matrix.nnz == 0
     assert result.stats.n_basis == 0
     assert result.stats.n_scratch_arrays == 0
+
+
+def test_optimized_builder_uses_single_update_fast_path() -> None:
+    layout = VariableLayout.from_sites(1, LocalSpace.binary())
+    basis = BruteForceBasisSolver(sort=True).solve(layout)
+
+    class SingleUpdateOnlyOperator:
+        def __init__(self, layout: VariableLayout) -> None:
+            self.layout = layout
+            self.name = "single_update_only"
+            self.single_update_access_count = 0
+
+        def affected_variables(self):
+            return np.array([0], dtype=np.int64)
+
+        @property
+        def single_update(self):
+            self.single_update_access_count += 1
+
+            def _single_update(config):
+                value = int(config[0])
+                return (
+                    2.0,
+                    np.asarray([0], dtype=np.int64),
+                    np.asarray([1 - value], dtype=np.int64),
+                )
+
+            return _single_update
+
+        def apply_update(self, config):
+            raise AssertionError("single_update fast path should not call apply_update")
+
+    operator = SingleUpdateOnlyOperator(layout)
+
+    result = OptimizedSparseHamiltonianBuilder().build_with_stats(basis, [operator])
+
+    expected = np.array(
+        [
+            [0, 2],
+            [2, 0],
+        ],
+        dtype=np.complex128,
+    )
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert operator.single_update_access_count == 1
+    assert result.stats.n_raw_actions == 2
+    assert result.stats.n_kept_actions == 2
+
+
+def test_update_plaquette_pattern_duplicate_initial_patterns_falls_back() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    basis = Basis.from_states(
+        layout,
+        np.array(
+            [
+                [1, 0, 1, 0],
+                [0, 1, 0, 1],
+            ],
+            dtype=np.int64,
+        ),
+    )
+
+    operator = UpdatePlaquettePatternOperator(
+        layout=layout,
+        lattice=lattice,
+        plaquette_id=0,
+        transitions=(
+            UpdatePlaquettePatternTransition(
+                initial=np.asarray([1, 0, 1, 0], dtype=np.int64),
+                final=np.asarray([0, 1, 0, 1], dtype=np.int64),
+                coefficient=1.0,
+            ),
+            UpdatePlaquettePatternTransition(
+                initial=np.asarray([1, 0, 1, 0], dtype=np.int64),
+                final=np.asarray([0, 1, 0, 1], dtype=np.int64),
+                coefficient=2.0,
+            ),
+        ),
+    )
+
+    result = OptimizedSparseHamiltonianBuilder().build_with_stats(basis, [operator])
+
+    expected = np.array(
+        [
+            [0, 0],
+            [3, 0],
+        ],
+        dtype=np.complex128,
+    )
+
+    assert operator.supports_single_update is False
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert result.stats.n_raw_actions == 2
+    assert result.stats.n_kept_actions == 2

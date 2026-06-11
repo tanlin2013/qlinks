@@ -67,6 +67,15 @@ class LocalUpdateOperator(Protocol):
     def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]: ...
 
 
+class SingleLocalUpdateOperator(LocalUpdateOperator, Protocol):
+    """Local update operator with at most one action per input config."""
+
+    def single_update(
+        self,
+        config: npt.ArrayLike,
+    ) -> tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]] | None: ...
+
+
 class BaseLocalUpdateOperator:
     layout: VariableLayout
     name: str
@@ -173,17 +182,30 @@ class UpdateSetVariablesOperator(BaseLocalUpdateOperator):
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self.variable_indices.copy()
 
-    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+    def single_update(
+        self,
+        config: npt.ArrayLike,
+    ) -> tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]] | None:
         arr = self._as_config(config)
 
         if not np.array_equal(arr[self.variable_indices], self.initial_values):
+            return None
+
+        return (self.coefficient, self.variable_indices, self.final_values)
+
+    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+        update = self.single_update(config)
+
+        if update is None:
             return ()
+
+        coefficient, variable_indices, new_values = update
 
         return (
             LocalUpdateAction(
-                coefficient=self.coefficient,
-                variable_indices=self.variable_indices,
-                new_values=self.final_values,
+                coefficient=coefficient,
+                variable_indices=variable_indices,
+                new_values=new_values,
             ),
         )
 
@@ -203,6 +225,22 @@ class UpdateBinaryFlipOperator(BaseLocalUpdateOperator):
         values = set(self.layout.local_space(self.variable_index).values.tolist())
         if values != {0, 1}:
             raise ValueError("UpdateBinaryFlipOperator requires local values {0, 1}.")
+
+        object.__setattr__(
+            self,
+            "_variable_indices",
+            np.asarray([self.variable_index], dtype=np.int64),
+        )
+        object.__setattr__(
+            self,
+            "_value_if_zero",
+            np.asarray([1], dtype=np.int64),
+        )
+        object.__setattr__(
+            self,
+            "_value_if_one",
+            np.asarray([0], dtype=np.int64),
+        )
 
     @classmethod
     def on_site(
@@ -231,17 +269,26 @@ class UpdateBinaryFlipOperator(BaseLocalUpdateOperator):
         )
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
-        return np.asarray([self.variable_index], dtype=np.int64)
+        return self._variable_indices.copy()
+
+    def single_update(
+        self,
+        config: npt.ArrayLike,
+    ) -> tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]]:
+        arr = self._as_config(config)
+        value = int(arr[self.variable_index])
+        new_values = self._value_if_zero if value == 0 else self._value_if_one
+
+        return (self.coefficient, self._variable_indices, new_values)
 
     def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
-        arr = self._as_config(config)
-        new_value = 1 - int(arr[self.variable_index])
+        coefficient, variable_indices, new_values = self.single_update(config)
 
         return (
             LocalUpdateAction(
-                coefficient=self.coefficient,
-                variable_indices=np.asarray([self.variable_index], dtype=np.int64),
-                new_values=np.asarray([new_value], dtype=np.int64),
+                coefficient=coefficient,
+                variable_indices=variable_indices,
+                new_values=new_values,
             ),
         )
 
@@ -388,11 +435,19 @@ class UpdatePlaquettePatternOperator(BaseLocalUpdateOperator):
         if len(self.transitions) == 0:
             raise ValueError("UpdatePlaquettePatternOperator needs at least one transition.")
 
+        initial_patterns: set[bytes] = set()
+        has_unique_initial_patterns = True
+
         for transition in self.transitions:
             if transition.initial.size != variable_indices.size:
                 raise ValueError("Transition initial pattern has wrong length.")
             if transition.final.size != variable_indices.size:
                 raise ValueError("Transition final pattern has wrong length.")
+
+            initial_key = np.ascontiguousarray(transition.initial, dtype=np.int64).tobytes()
+            if initial_key in initial_patterns:
+                has_unique_initial_patterns = False
+            initial_patterns.add(initial_key)
 
             for variable_index, initial, final in zip(
                 variable_indices,
@@ -406,6 +461,7 @@ class UpdatePlaquettePatternOperator(BaseLocalUpdateOperator):
 
         object.__setattr__(self, "_link_ids", link_ids)
         object.__setattr__(self, "_variable_indices", variable_indices)
+        object.__setattr__(self, "_supports_single_update", has_unique_initial_patterns)
 
     @classmethod
     def qdm_flip(
@@ -450,6 +506,26 @@ class UpdatePlaquettePatternOperator(BaseLocalUpdateOperator):
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self._variable_indices.copy()
+
+    @property
+    def supports_single_update(self) -> bool:
+        return bool(self._supports_single_update)
+
+    def single_update(
+        self,
+        config: npt.ArrayLike,
+    ) -> tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]] | None:
+        if not self._supports_single_update:
+            return None
+
+        arr = self._as_config(config)
+        local_values = arr[self._variable_indices]
+
+        for transition in self.transitions:
+            if np.array_equal(local_values, transition.initial):
+                return (transition.coefficient, self._variable_indices, transition.final)
+
+        return None
 
     def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
         arr = self._as_config(config)
@@ -506,6 +582,21 @@ class UpdatePXPSpinFlipOperator(BaseLocalUpdateOperator):
         object.__setattr__(self, "_site_variable", site_variable)
         object.__setattr__(self, "_neighbor_sites", neighbor_sites)
         object.__setattr__(self, "_neighbor_variables", neighbor_variables)
+        object.__setattr__(
+            self,
+            "_variable_indices",
+            np.asarray([site_variable], dtype=np.int64),
+        )
+        object.__setattr__(
+            self,
+            "_value_if_zero",
+            np.asarray([1], dtype=np.int64),
+        )
+        object.__setattr__(
+            self,
+            "_value_if_one",
+            np.asarray([0], dtype=np.int64),
+        )
 
     @property
     def site_variable(self) -> int:
@@ -525,18 +616,32 @@ class UpdatePXPSpinFlipOperator(BaseLocalUpdateOperator):
             dtype=np.int64,
         )
 
-    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+    def single_update(
+        self,
+        config: npt.ArrayLike,
+    ) -> tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]] | None:
         arr = self._as_config(config)
 
         if np.any(arr[self._neighbor_variables] == self.occupied_value):
+            return None
+
+        value = int(arr[self._site_variable])
+        new_values = self._value_if_zero if value == 0 else self._value_if_one
+
+        return (self.coefficient, self._variable_indices, new_values)
+
+    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+        update = self.single_update(config)
+
+        if update is None:
             return ()
 
-        new_value = 1 - int(arr[self._site_variable])
+        coefficient, variable_indices, new_values = update
 
         return (
             LocalUpdateAction(
-                coefficient=self.coefficient,
-                variable_indices=np.asarray([self._site_variable], dtype=np.int64),
-                new_values=np.asarray([new_value], dtype=np.int64),
+                coefficient=coefficient,
+                variable_indices=variable_indices,
+                new_values=new_values,
             ),
         )

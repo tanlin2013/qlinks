@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal, Sequence
+from typing import Any, Callable, Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -28,6 +28,48 @@ class OptimizedSparseBuildStats:
 class OptimizedSparseBuildResult:
     matrix: Any
     stats: OptimizedSparseBuildStats
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedUpdateOperators:
+    single_update_functions: tuple[
+        Callable[
+            [npt.ArrayLike],
+            tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]] | None,
+        ],
+        ...,
+    ]
+    fallback_operators: tuple[LocalUpdateOperator, ...]
+
+
+def _prepare_update_operators(
+    operators: Sequence[LocalUpdateOperator],
+) -> _PreparedUpdateOperators:
+    """Classify update operators once before entering the optimized hot loop."""
+    single_update_functions: list[
+        Callable[
+            [npt.ArrayLike],
+            tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]] | None,
+        ]
+    ] = []
+    fallback_operators: list[LocalUpdateOperator] = []
+
+    for operator in operators:
+        supports_single_update = bool(getattr(operator, "supports_single_update", True))
+
+        if supports_single_update:
+            single_update = getattr(operator, "single_update", None)
+
+            if callable(single_update):
+                single_update_functions.append(single_update)
+                continue
+
+        fallback_operators.append(operator)
+
+    return _PreparedUpdateOperators(
+        single_update_functions=tuple(single_update_functions),
+        fallback_operators=tuple(fallback_operators),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,8 +144,52 @@ class OptimizedSparseHamiltonianBuilder:
         n_kept_actions = 0
         n_missing_actions = 0
 
-        for col, config in enumerate(basis.iter_states(copy=False)):
-            for operator in operators:
+        states = basis.states
+        encode_config = basis.encoder.encode
+        index = basis.index
+        prepared_operators = _prepare_update_operators(operators)
+
+        for col, config in enumerate(states):
+            for single_update in prepared_operators.single_update_functions:
+                update = single_update(config)
+
+                if update is None:
+                    continue
+
+                n_raw_actions += 1
+                coefficient, variable_indices, new_values = update
+
+                if abs(coefficient) <= self.drop_zero_atol:
+                    continue
+
+                self._validate_update_values(
+                    basis,
+                    variable_indices=variable_indices,
+                    new_values=new_values,
+                )
+
+                scratch[:] = config
+                scratch[variable_indices] = new_values
+
+                row = index.get(encode_config(scratch))
+
+                if row is None:
+                    n_missing_actions += 1
+
+                    if self.on_missing == "raise":
+                        raise KeyError(
+                            "Operator update produced a configuration outside the basis: "
+                            f"{scratch.tolist()}"
+                        )
+
+                    continue
+
+                rows.append(row)
+                cols.append(col)
+                data.append(coefficient)
+                n_kept_actions += 1
+
+            for operator in prepared_operators.fallback_operators:
                 actions = operator.apply_update(config)
                 n_raw_actions += len(actions)
 
@@ -116,7 +202,7 @@ class OptimizedSparseHamiltonianBuilder:
                     scratch[:] = config
                     scratch[action.variable_indices] = action.new_values
 
-                    row = basis.get_index(scratch)
+                    row = index.get(encode_config(scratch))
 
                     if row is None:
                         n_missing_actions += 1
@@ -157,6 +243,21 @@ class OptimizedSparseHamiltonianBuilder:
 
         return OptimizedSparseBuildResult(matrix=matrix, stats=stats)
 
+    def _validate_update_values(
+        self,
+        basis: Basis,
+        *,
+        variable_indices: npt.ArrayLike,
+        new_values: npt.ArrayLike,
+    ) -> None:
+        """Validate only the updated values."""
+        for variable_index, value in zip(
+            np.asarray(variable_indices, dtype=np.int64),
+            np.asarray(new_values, dtype=np.int64),
+            strict=True,
+        ):
+            basis.layout.local_space(int(variable_index)).validate_value(int(value))
+
     def _validate_action_against_layout(
         self,
         basis: Basis,
@@ -167,12 +268,11 @@ class OptimizedSparseHamiltonianBuilder:
 
         This is much cheaper than validating the full scratch config every time.
         """
-        for variable_index, value in zip(
-            action.variable_indices,
-            action.new_values,
-            strict=True,
-        ):
-            basis.layout.local_space(int(variable_index)).validate_value(int(value))
+        self._validate_update_values(
+            basis,
+            variable_indices=action.variable_indices,
+            new_values=action.new_values,
+        )
 
 
 def build_optimized_sparse_hamiltonian(
