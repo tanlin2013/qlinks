@@ -110,8 +110,11 @@ class BitmaskSparseHamiltonianBuilder:
         n_kept_actions = 0
         n_missing_actions = 0
 
-        for col in range(basis.n_states):
-            code = basis.code(col)
+        codes = basis.codes
+        index = basis.index
+
+        for col, code_obj in enumerate(codes):
+            code = int(code_obj)
             diagonal_coefficient = 0.0 + 0.0j
 
             for operator in operators:
@@ -131,7 +134,7 @@ class BitmaskSparseHamiltonianBuilder:
                     if abs(coefficient) <= self.drop_zero_atol:
                         continue
 
-                    row = basis.get_index(new_code)
+                    row = index.get(int(new_code))
 
                     if row is None:
                         n_missing_actions += 1
@@ -156,7 +159,7 @@ class BitmaskSparseHamiltonianBuilder:
                     if abs(action.coefficient) <= self.drop_zero_atol:
                         continue
 
-                    row = basis.get_index(action.code)
+                    row = index.get(int(action.code))
 
                     if row is None:
                         n_missing_actions += 1
