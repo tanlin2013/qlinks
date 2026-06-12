@@ -78,6 +78,98 @@ def _nnz(matrix) -> int | None:
     return int(matrix.nnz)
 
 
+def _json_key(key: object) -> str:
+    return str(key)
+
+
+def _jsonable(value: object) -> object:
+    """Recursively convert benchmark metadata to JSON-serializable values."""
+    if isinstance(value, dict):
+        return {_json_key(key): _jsonable(item) for key, item in value.items()}
+
+    if isinstance(value, tuple | list):
+        return [_jsonable(item) for item in value]
+
+    if isinstance(value, set | frozenset):
+        return [_jsonable(item) for item in sorted(value, key=str)]
+
+    if isinstance(value, complex):
+        return {"real": float(value.real), "imag": float(value.imag)}
+
+    if isinstance(value, str | int | float | bool) or value is None:
+        return value
+
+    return str(value)
+
+
+def _markdown_escape(value: object) -> str:
+    text = str(value)
+    return text.replace("\\", "\\\\").replace("|", "\\|").replace("\n", "<br>")
+
+
+def _format_seconds(value: float | None) -> str:
+    if value is None:
+        return ""
+
+    return f"{value:.6f}"
+
+
+def _markdown_table(headers: list[str], rows: list[list[object]]) -> str:
+    lines = [
+        "| " + " | ".join(_markdown_escape(header) for header in headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
+    lines.extend("| " + " | ".join(_markdown_escape(cell) for cell in row) + " |" for row in rows)
+    return "\n".join(lines)
+
+
+def format_markdown_report(results: list[CageSearchBenchmarkResult]) -> str:
+    headers = [
+        "case",
+        "builder",
+        "search_type",
+        "n_states",
+        "records",
+        "build_s",
+        "cand1_s",
+        "cand2_s",
+        "solve1_s",
+        "solve2_s",
+        "dedup_s",
+        "search_s",
+        "total_s",
+        "counts_by_signature",
+    ]
+    rows = [
+        [
+            result.name,
+            result.builder,
+            result.search_type,
+            result.n_states,
+            result.n_records,
+            _format_seconds(result.build_total_seconds),
+            _format_seconds(result.type1_candidate_seconds),
+            _format_seconds(result.type2_candidate_seconds),
+            _format_seconds(result.type1_solve_seconds),
+            _format_seconds(result.type2_solve_seconds),
+            _format_seconds(result.deduplicate_seconds),
+            _format_seconds(result.search_total_seconds),
+            _format_seconds(result.total_seconds),
+            result.counts_by_signature,
+        ]
+        for result in results
+    ]
+
+    return "\n".join(
+        [
+            "## Cage-search benchmark",
+            "",
+            _markdown_table(headers, rows),
+            "",
+        ]
+    )
+
+
 def make_benchmark_cases() -> list[CageBenchmarkCase]:
     """Return modest default cage-search benchmark cases.
 
@@ -451,6 +543,12 @@ def main() -> None:
         help="Optional path to write JSON benchmark results.",
     )
     parser.add_argument(
+        "--markdown",
+        type=str,
+        default=None,
+        help="Optional path to write a compact GitHub-ready Markdown report.",
+    )
+    parser.add_argument(
         "--only",
         type=str,
         default=None,
@@ -496,13 +594,19 @@ def main() -> None:
     if args.json is not None:
         with open(args.json, "w", encoding="utf-8") as f:
             json.dump(
-                [asdict(result) for result in results],
+                [_jsonable(asdict(result)) for result in results],
                 f,
                 indent=2,
                 default=str,
             )
 
         print(f"\nWrote JSON results to {args.json}")
+
+    if args.markdown is not None:
+        with open(args.markdown, "w", encoding="utf-8") as f:
+            f.write(format_markdown_report(results))
+
+        print(f"\nWrote Markdown results to {args.markdown}")
 
 
 if __name__ == "__main__":

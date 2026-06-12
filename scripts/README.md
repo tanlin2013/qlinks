@@ -8,7 +8,10 @@ These scripts are for local performance profiling and are not part of the unit-t
 python scripts/benchmark_basis.py
 python scripts/benchmark_basis.py --only spin_one
 python scripts/benchmark_basis.py --json basis_benchmark.json
+python scripts/benchmark_basis.py --markdown basis_benchmark.md
 ```
+
+Use `--markdown` to write a compact GitHub-ready timing table.
 
 ## Hamiltonian construction
 
@@ -42,10 +45,31 @@ python scripts/benchmark_cage_search.py \
   --degenerate-basis-strategy ipr \
   --ipr-n-restarts 32
 python scripts/benchmark_cage_search.py --json cage_search_benchmark.json
+python scripts/benchmark_cage_search.py --markdown cage_search_benchmark.md
 ```
 
 The cage-search benchmark reports separate timings for candidate generation,
-candidate solving, rank deduplication, and total search time.
+candidate solving, rank deduplication, and total search time. Use `--markdown`
+to write a compact GitHub-ready stage-timing table.
+
+## Open-system solvers and MCWF
+
+```bash
+python scripts/benchmark_open_system.py
+python scripts/benchmark_open_system.py --operation mcwf --n-trajectories 512
+python scripts/benchmark_open_system.py --only qubit --operation all
+python scripts/benchmark_open_system.py --json open_system_benchmark.json
+python scripts/benchmark_open_system.py --markdown open_system_benchmark.md
+python scripts/benchmark_open_system.py \
+  --operation all \
+  --n-trajectories 512 \
+  --json open_system_benchmark.json \
+  --markdown open_system_benchmark.md
+```
+
+The open-system benchmark separates dense/sparse operator preparation,
+Liouvillian construction, deterministic Lindblad solvers, and MCWF ensemble
+sampling. Use it before doing deeper MCWF or sparse-triplet optimization.
 
 ---
 

@@ -37,6 +37,84 @@ def _time_call(func: Callable):
     return out, elapsed
 
 
+def _json_key(key: object) -> str:
+    return str(key)
+
+
+def _jsonable(value: object) -> object:
+    """Recursively convert benchmark metadata to JSON-serializable values."""
+    if isinstance(value, dict):
+        return {_json_key(key): _jsonable(item) for key, item in value.items()}
+
+    if isinstance(value, tuple | list):
+        return [_jsonable(item) for item in value]
+
+    if isinstance(value, set | frozenset):
+        return [_jsonable(item) for item in sorted(value, key=str)]
+
+    if isinstance(value, complex):
+        return {"real": float(value.real), "imag": float(value.imag)}
+
+    if isinstance(value, str | int | float | bool) or value is None:
+        return value
+
+    return str(value)
+
+
+def _markdown_escape(value: object) -> str:
+    text = str(value)
+    return text.replace("\\", "\\\\").replace("|", "\\|").replace("\n", "<br>")
+
+
+def _format_seconds(value: float | None) -> str:
+    if value is None:
+        return ""
+
+    return f"{value:.6f}"
+
+
+def _markdown_table(headers: list[str], rows: list[list[object]]) -> str:
+    lines = [
+        "| " + " | ".join(_markdown_escape(header) for header in headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
+    lines.extend("| " + " | ".join(_markdown_escape(cell) for cell in row) + " |" for row in rows)
+    return "\n".join(lines)
+
+
+def format_markdown_report(results: list[BasisBenchmarkResult]) -> str:
+    headers = [
+        "case",
+        "model",
+        "solver",
+        "sort",
+        "n_variables",
+        "n_states",
+        "basis_time_s",
+    ]
+    rows = [
+        [
+            result.name,
+            result.model,
+            result.solver,
+            result.sort,
+            result.n_variables,
+            result.n_states,
+            _format_seconds(result.elapsed_seconds),
+        ]
+        for result in results
+    ]
+
+    return "\n".join(
+        [
+            "## Basis-generation benchmark",
+            "",
+            _markdown_table(headers, rows),
+            "",
+        ]
+    )
+
+
 def make_benchmark_cases() -> list[tuple[str, object]]:
     """
     Keep these cases small enough to run quickly on a laptop.
@@ -195,6 +273,12 @@ def main() -> None:
         help="Optional path to write JSON benchmark results.",
     )
     parser.add_argument(
+        "--markdown",
+        type=str,
+        default=None,
+        help="Optional path to write a compact GitHub-ready Markdown report.",
+    )
+    parser.add_argument(
         "--only",
         type=str,
         default=None,
@@ -226,13 +310,19 @@ def main() -> None:
     if args.json is not None:
         with open(args.json, "w", encoding="utf-8") as f:
             json.dump(
-                [asdict(result) for result in results],
+                [_jsonable(asdict(result)) for result in results],
                 f,
                 indent=2,
                 default=str,
             )
 
         print(f"\nWrote JSON results to {args.json}")
+
+    if args.markdown is not None:
+        with open(args.markdown, "w", encoding="utf-8") as f:
+            f.write(format_markdown_report(results))
+
+        print(f"\nWrote Markdown results to {args.markdown}")
 
 
 if __name__ == "__main__":
