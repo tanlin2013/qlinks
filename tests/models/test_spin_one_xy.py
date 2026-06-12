@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from qlinks.models import SpinOneXYChainModel
+from tests.helpers.assertions import assert_sparse_allclose
 
 
 def test_spin_one_xy_chain_basis_count_open() -> None:
@@ -81,14 +82,34 @@ def test_spin_one_xy_chain_rejects_bitmask_builder_for_non_binary_basis() -> Non
         model.build(builder="bitmask")
 
 
-def test_spin_one_xy_chain_rejects_optimized_builder() -> None:
+def test_spin_one_xy_chain_optimized_builder_matches_sparse() -> None:
     model = SpinOneXYChainModel(
         length=3,
         boundary_condition="open",
         j_xy=1.0,
     )
 
-    with pytest.raises(NotImplementedError, match="sparse"):
+    sparse_result = model.build(builder="sparse")
+    optimized_result = model.build(builder="optimized")
+
+    np.testing.assert_array_equal(
+        optimized_result.basis.states,
+        sparse_result.basis.states,
+    )
+    assert_sparse_allclose(optimized_result.hamiltonian, sparse_result.hamiltonian)
+    assert_sparse_allclose(optimized_result.kinetic, sparse_result.kinetic)
+    assert optimized_result.potential is None
+
+
+def test_spin_one_xy_chain_rejects_optimized_builder_for_potential_terms() -> None:
+    model = SpinOneXYChainModel(
+        length=3,
+        boundary_condition="open",
+        j_xy=1.0,
+        h_z=0.3,
+    )
+
+    with pytest.raises(NotImplementedError, match="potential terms"):
         model.build(builder="optimized")
 
 

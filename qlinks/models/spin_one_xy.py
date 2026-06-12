@@ -13,6 +13,7 @@ from qlinks.operators import (
     LocalSquareValueDiagonalOperator,
     LocalValueDiagonalOperator,
     SpinOneXYBondOperator,
+    UpdateSpinOneXYBondOperator,
 )
 from qlinks.variables import LocalSpace, VariableLayout
 
@@ -72,22 +73,34 @@ class SpinOneXYChainModel(HamiltonianModelBase):
     ) -> tuple[object, ...]:
         validate_builder_name(builder)
 
-        if builder != "sparse":
-            raise NotImplementedError(
-                "SpinOneXYChainModel currently supports only builder='sparse'."
-            )
-
         if layout is None:
             layout = self.layout
 
-        return tuple(
-            SpinOneXYBondOperator(
-                layout=layout,
-                lattice=self.lattice,
-                link_id=int(link_id),
-                coefficient=self.j_xy,
+        if builder == "sparse":
+            return tuple(
+                SpinOneXYBondOperator(
+                    layout=layout,
+                    lattice=self.lattice,
+                    link_id=int(link_id),
+                    coefficient=self.j_xy,
+                )
+                for link_id in self.lattice.link_ids
             )
-            for link_id in self.lattice.link_ids
+
+        if builder == "optimized":
+            return tuple(
+                UpdateSpinOneXYBondOperator(
+                    layout=layout,
+                    lattice=self.lattice,
+                    link_id=int(link_id),
+                    coefficient=self.j_xy,
+                )
+                for link_id in self.lattice.link_ids
+            )
+
+        raise NotImplementedError(
+            "SpinOneXYChainModel currently supports kinetic terms only for "
+            "builder='sparse' or builder='optimized'."
         )
 
     def make_potential_operators(
@@ -98,15 +111,19 @@ class SpinOneXYChainModel(HamiltonianModelBase):
     ) -> tuple[object, ...]:
         validate_builder_name(builder)
 
-        if builder != "sparse":
-            raise NotImplementedError(
-                "SpinOneXYChainModel currently supports only builder='sparse'."
-            )
-
         if layout is None:
             layout = self.layout
 
         operators: list[object] = []
+
+        if builder != "sparse":
+            if self.h_z == 0 and self.d_z == 0:
+                return ()
+
+            raise NotImplementedError(
+                "SpinOneXYChainModel currently supports potential terms only for "
+                "builder='sparse'."
+            )
 
         for site_id in self.lattice.site_ids:
             variable_index = int(layout.site_variable_index(int(site_id)))

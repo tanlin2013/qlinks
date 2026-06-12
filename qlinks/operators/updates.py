@@ -312,6 +312,12 @@ class UpdateNegationFlipOperator(BaseLocalUpdateOperator):
                     "UpdateNegationFlipOperator requires a local space closed under v -> -v."
                 )
 
+        object.__setattr__(
+            self,
+            "_variable_indices",
+            np.asarray([self.variable_index], dtype=np.int64),
+        )
+
     @classmethod
     def on_link(
         cls,
@@ -326,17 +332,29 @@ class UpdateNegationFlipOperator(BaseLocalUpdateOperator):
         )
 
     def affected_variables(self) -> npt.NDArray[np.int64]:
-        return np.asarray([self.variable_index], dtype=np.int64)
+        return self._variable_indices.copy()
 
-    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+    def single_update(
+        self,
+        config: npt.ArrayLike,
+    ) -> tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]]:
         arr = self._as_config(config)
         new_value = -int(arr[self.variable_index])
 
         return (
+            self.coefficient,
+            self._variable_indices,
+            np.asarray([new_value], dtype=np.int64),
+        )
+
+    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+        coefficient, variable_indices, new_values = self.single_update(config)
+
+        return (
             LocalUpdateAction(
-                coefficient=self.coefficient,
-                variable_indices=np.asarray([self.variable_index], dtype=np.int64),
-                new_values=np.asarray([new_value], dtype=np.int64),
+                coefficient=coefficient,
+                variable_indices=variable_indices,
+                new_values=new_values,
             ),
         )
 
@@ -375,14 +393,22 @@ class UpdateMultiNegationFlipOperator(BaseLocalUpdateOperator):
     def affected_variables(self) -> npt.NDArray[np.int64]:
         return self.variable_indices.copy()
 
-    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+    def single_update(
+        self,
+        config: npt.ArrayLike,
+    ) -> tuple[complex, npt.NDArray[np.int64], npt.NDArray[np.int64]]:
         arr = self._as_config(config)
         new_values = -arr[self.variable_indices]
 
+        return (self.coefficient, self.variable_indices, new_values)
+
+    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+        coefficient, variable_indices, new_values = self.single_update(config)
+
         return (
             LocalUpdateAction(
-                coefficient=self.coefficient,
-                variable_indices=self.variable_indices,
+                coefficient=coefficient,
+                variable_indices=variable_indices,
                 new_values=new_values,
             ),
         )

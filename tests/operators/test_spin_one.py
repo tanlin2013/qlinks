@@ -4,6 +4,7 @@ import pytest
 from qlinks.lattice import ChainLattice
 from qlinks.operators import (
     SpinOneXYBondOperator,
+    UpdateSpinOneXYBondOperator,
     spin_one_lower_amplitude,
     spin_one_raise_amplitude,
 )
@@ -184,3 +185,62 @@ def test_operator_variable_indices_accessor_returns_copy() -> None:
         op.variable_indices,
         np.array([0, 1], dtype=np.int64),
     )
+
+
+def test_update_spin_one_xy_bond_matches_sparse_actions() -> None:
+    lattice = ChainLattice(2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_sites(
+        lattice,
+        LocalSpace.spin_one(),
+    )
+
+    sparse_op = SpinOneXYBondOperator(
+        layout=layout,
+        lattice=lattice,
+        link_id=0,
+        coefficient=2.0,
+    )
+    update_op = UpdateSpinOneXYBondOperator(
+        layout=layout,
+        lattice=lattice,
+        link_id=0,
+        coefficient=2.0,
+    )
+
+    config = np.array([0, 0], dtype=np.int64)
+    sparse_actions = sparse_op.apply(config)
+    update_actions = update_op.apply_update(config)
+
+    assert len(update_actions) == len(sparse_actions)
+
+    reconstructed_configs = []
+    for action in update_actions:
+        new_config = config.copy()
+        new_config[action.variable_indices] = action.new_values
+        reconstructed_configs.append(new_config)
+
+    for sparse_action in sparse_actions:
+        assert any(
+            np.array_equal(sparse_action.config, update_config)
+            for update_config in reconstructed_configs
+        )
+        assert any(
+            np.isclose(sparse_action.coefficient, update_action.coefficient)
+            for update_action in update_actions
+        )
+
+
+def test_update_spin_one_xy_bond_rejects_wrong_local_space() -> None:
+    lattice = ChainLattice(2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_sites(
+        lattice,
+        LocalSpace.binary(),
+    )
+
+    with pytest.raises(ValueError, match=r"requires local-space values \[-1, 0, 1\]"):
+        UpdateSpinOneXYBondOperator(
+            layout=layout,
+            lattice=lattice,
+            link_id=0,
+            coefficient=1.0,
+        )
