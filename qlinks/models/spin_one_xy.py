@@ -116,13 +116,13 @@ class SpinOneXYChainModel(HamiltonianModelBase):
 
         operators: list[object] = []
 
-        if builder != "sparse":
+        if builder not in ("sparse", "optimized"):
             if self.h_z == 0 and self.d_z == 0:
                 return ()
 
             raise NotImplementedError(
                 "SpinOneXYChainModel currently supports potential terms only for "
-                "builder='sparse'."
+                "builder='sparse' or builder='optimized'."
             )
 
         for site_id in self.lattice.site_ids:

@@ -8,7 +8,11 @@ import numpy.typing as npt
 
 from qlinks.backends import SparseBackend, SparseBackendName, get_sparse_backend
 from qlinks.basis import Basis
-from qlinks.operators import LocalUpdateAction, LocalUpdateOperator
+from qlinks.operators import (
+    DiagonalLocalOperator,
+    LocalUpdateAction,
+    LocalUpdateOperator,
+)
 
 MissingActionPolicy = Literal["skip", "raise"]
 
@@ -32,6 +36,7 @@ class OptimizedSparseBuildResult:
 
 @dataclass(frozen=True, slots=True)
 class _PreparedUpdateOperators:
+    diagonal_value_functions: tuple[Callable[[npt.ArrayLike], complex | None], ...]
     single_update_functions: tuple[
         Callable[
             [npt.ArrayLike],
@@ -43,9 +48,10 @@ class _PreparedUpdateOperators:
 
 
 def _prepare_update_operators(
-    operators: Sequence[LocalUpdateOperator],
+    operators: Sequence[object],
 ) -> _PreparedUpdateOperators:
-    """Classify update operators once before entering the optimized hot loop."""
+    """Classify operators once before entering the optimized hot loop."""
+    diagonal_value_functions: list[Callable[[npt.ArrayLike], complex | None]] = []
     single_update_functions: list[
         Callable[
             [npt.ArrayLike],
@@ -55,6 +61,12 @@ def _prepare_update_operators(
     fallback_operators: list[LocalUpdateOperator] = []
 
     for operator in operators:
+        diagonal_value = getattr(operator, "diagonal_value", None)
+
+        if callable(diagonal_value):
+            diagonal_value_functions.append(diagonal_value)
+            continue
+
         supports_single_update = bool(getattr(operator, "supports_single_update", True))
 
         if supports_single_update:
@@ -64,9 +76,18 @@ def _prepare_update_operators(
                 single_update_functions.append(single_update)
                 continue
 
+        apply_update = getattr(operator, "apply_update", None)
+
+        if not callable(apply_update):
+            raise TypeError(
+                "OptimizedSparseHamiltonianBuilder operators must provide either "
+                "diagonal_value(config) or apply_update(config)."
+            )
+
         fallback_operators.append(operator)
 
     return _PreparedUpdateOperators(
+        diagonal_value_functions=tuple(diagonal_value_functions),
         single_update_functions=tuple(single_update_functions),
         fallback_operators=tuple(fallback_operators),
     )
@@ -106,14 +127,14 @@ class OptimizedSparseHamiltonianBuilder:
     def build(
         self,
         basis: Basis,
-        operators: Sequence[LocalUpdateOperator],
+        operators: Sequence[LocalUpdateOperator | DiagonalLocalOperator],
     ) -> Any:
         return self.build_with_stats(basis, operators).matrix
 
     def build_with_stats(
         self,
         basis: Basis,
-        operators: Sequence[LocalUpdateOperator],
+        operators: Sequence[LocalUpdateOperator | DiagonalLocalOperator],
     ) -> OptimizedSparseBuildResult:
         if self.on_missing not in ("skip", "raise"):
             raise ValueError("on_missing must be either 'skip' or 'raise'.")
@@ -150,6 +171,23 @@ class OptimizedSparseHamiltonianBuilder:
         prepared_operators = _prepare_update_operators(operators)
 
         for col, config in enumerate(states):
+            diagonal_coefficient = 0.0 + 0.0j
+
+            for diagonal_value in prepared_operators.diagonal_value_functions:
+                value = diagonal_value(config)
+
+                if value is None:
+                    continue
+
+                n_raw_actions += 1
+                diagonal_coefficient += complex(value)
+
+            if abs(diagonal_coefficient) > self.drop_zero_atol:
+                rows.append(col)
+                cols.append(col)
+                data.append(diagonal_coefficient)
+                n_kept_actions += 1
+
             for single_update in prepared_operators.single_update_functions:
                 update = single_update(config)
 
@@ -277,7 +315,7 @@ class OptimizedSparseHamiltonianBuilder:
 
 def build_optimized_sparse_hamiltonian(
     basis: Basis,
-    operators: Sequence[LocalUpdateOperator],
+    operators: Sequence[LocalUpdateOperator | DiagonalLocalOperator],
     *,
     dtype: npt.DTypeLike = np.complex128,
     on_missing: MissingActionPolicy = "skip",

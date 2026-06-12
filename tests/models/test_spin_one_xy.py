@@ -101,16 +101,27 @@ def test_spin_one_xy_chain_optimized_builder_matches_sparse() -> None:
     assert optimized_result.potential is None
 
 
-def test_spin_one_xy_chain_rejects_optimized_builder_for_potential_terms() -> None:
+def test_spin_one_xy_chain_optimized_builder_matches_sparse_with_potential() -> None:
     model = SpinOneXYChainModel(
         length=3,
         boundary_condition="open",
         j_xy=1.0,
         h_z=0.3,
+        d_z=0.7,
     )
 
-    with pytest.raises(NotImplementedError, match="potential terms"):
-        model.build(builder="optimized")
+    sparse_result = model.build(builder="sparse")
+    optimized_result = model.build(builder="optimized")
+
+    np.testing.assert_array_equal(
+        optimized_result.basis.states,
+        sparse_result.basis.states,
+    )
+    assert optimized_result.potential is not None
+    assert sparse_result.potential is not None
+    assert_sparse_allclose(optimized_result.hamiltonian, sparse_result.hamiltonian)
+    assert_sparse_allclose(optimized_result.kinetic, sparse_result.kinetic)
+    assert_sparse_allclose(optimized_result.potential, sparse_result.potential)
 
 
 def test_spin_one_xy_chain_two_site_matrix_elements() -> None:
@@ -150,7 +161,7 @@ def test_spin_one_xy_potential_diagonal_matches_h_and_d_terms():
     )
 
     result = model.build(
-        builder="sparse",
+        builder="optimized",
         basis_solver="dfs",
         sort_basis=True,
         on_missing="raise",

@@ -13,6 +13,7 @@ from qlinks.lattice import ChainLattice, SquareLattice
 from qlinks.operators import (
     BinaryFlipOperator,
     LocalUpdateAction,
+    LocalValueDiagonalOperator,
     PlaquettePatternOperator,
     PXPSpinFlipOperator,
     UpdateBinaryFlipOperator,
@@ -242,6 +243,63 @@ def test_optimized_builder_validates_updated_value() -> None:
 
     with pytest.raises(ValueError, match="not allowed"):
         OptimizedSparseHamiltonianBuilder().build(basis, [BadUpdateOperator(layout)])
+
+
+def test_optimized_builder_accepts_diagonal_operator_fast_path() -> None:
+    layout = VariableLayout.from_sites(2, LocalSpace.binary())
+    basis = BruteForceBasisSolver(sort=True).solve(layout)
+
+    diagonal_operator = LocalValueDiagonalOperator(
+        layout=layout,
+        variable_index=0,
+        coefficient=2.0,
+    )
+
+    result = OptimizedSparseHamiltonianBuilder().build_with_stats(
+        basis,
+        [diagonal_operator],
+    )
+
+    expected = np.diag([0.0, 0.0, 2.0, 2.0]).astype(np.complex128)
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert result.stats.n_raw_actions == 4
+    assert result.stats.n_kept_actions == 2
+    assert result.stats.n_missing_actions == 0
+
+
+def test_optimized_builder_mixes_diagonal_and_update_operators() -> None:
+    layout = VariableLayout.from_sites(1, LocalSpace.binary())
+    basis = BruteForceBasisSolver(sort=True).solve(layout)
+
+    diagonal_operator = LocalValueDiagonalOperator(
+        layout=layout,
+        variable_index=0,
+        coefficient=3.0,
+    )
+    update_operator = UpdateBinaryFlipOperator(
+        layout=layout,
+        variable_index=0,
+        coefficient=1.0,
+    )
+
+    result = OptimizedSparseHamiltonianBuilder().build_with_stats(
+        basis,
+        [diagonal_operator, update_operator],
+    )
+
+    expected = np.array(
+        [
+            [0.0, 1.0],
+            [1.0, 3.0],
+        ],
+        dtype=np.complex128,
+    )
+
+    np.testing.assert_allclose(result.matrix.toarray(), expected)
+    assert result.stats.n_raw_actions == 4
+    assert result.stats.n_kept_actions == 3
+    assert result.stats.n_missing_actions == 0
 
 
 def test_optimized_empty_basis() -> None:
