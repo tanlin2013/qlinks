@@ -12,10 +12,17 @@ python scripts/benchmark_basis.py --json basis_benchmark.json
 
 ## Hamiltonian construction
 
+By default, the Hamiltonian benchmark uses each case's recommended builder.
+Use `--builder sparse`, `--builder optimized`, or `--builder bitmask` to force
+one builder where supported, and `--builder all` to compare all supported
+builders per case.
+
 ```bash
 python scripts/benchmark_hamiltonian.py
 python scripts/benchmark_hamiltonian.py --split-basis-timing
-python scripts/benchmark_hamiltonian.py --only qdm --split-basis-timing
+python scripts/benchmark_hamiltonian.py --builder all --split-basis-timing
+python scripts/benchmark_hamiltonian.py --builder sparse --only qdm --split-basis-timing
+python scripts/benchmark_hamiltonian.py --list-cases
 python scripts/benchmark_hamiltonian.py --json hamiltonian_benchmark.json
 ```
 

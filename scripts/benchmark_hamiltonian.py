@@ -6,7 +6,7 @@ import gc
 import json
 import time
 from dataclasses import asdict, dataclass
-from typing import Callable
+from typing import Callable, Literal
 
 from qlinks.models import (
     PXPModel,
@@ -16,6 +16,16 @@ from qlinks.models import (
 from qlinks.models.qdm import SquareQDMModel
 from qlinks.models.qlm import SquareQLMModel
 
+BuilderSelection = Literal["recommended", "all", "sparse", "optimized", "bitmask"]
+
+
+@dataclass(frozen=True)
+class HamiltonianBenchmarkCase:
+    name: str
+    model: object
+    recommended_builder: str
+    builders: tuple[str, ...]
+
 
 @dataclass(frozen=True)
 class HamiltonianBenchmarkResult:
@@ -24,6 +34,7 @@ class HamiltonianBenchmarkResult:
     parameters: dict
     basis_solver: str
     builder: str
+    recommended_builder: str
     backend: str
     sort_basis: bool
     n_variables: int
@@ -52,71 +63,97 @@ def _nnz(matrix) -> int | None:
     return int(matrix.nnz)
 
 
-def make_benchmark_cases() -> list[tuple[str, object]]:
+def make_benchmark_cases() -> list[HamiltonianBenchmarkCase]:
     """
     Keep default cases modest. Larger Hamiltonians should be run manually.
     """
-    cases: list[tuple[str, object]] = []
+    cases: list[HamiltonianBenchmarkCase] = []
 
     cases.append(
-        (
-            "pxp_chain_L16_open",
-            PXPModel.chain(
+        HamiltonianBenchmarkCase(
+            name="pxp_chain_L16_open",
+            model=PXPModel.chain(
                 length=16,
                 boundary_condition="open",
             ),
+            recommended_builder="bitmask",
+            builders=("sparse", "optimized", "bitmask"),
         )
     )
 
     cases.append(
-        (
-            "spin_one_xy_chain_L8_open",
-            SpinOneXYChainModel(
+        HamiltonianBenchmarkCase(
+            name="spin_one_xy_chain_L8_open",
+            model=SpinOneXYChainModel(
                 length=8,
                 boundary_condition="open",
                 j_xy=1.0,
             ),
+            recommended_builder="optimized",
+            builders=("sparse", "optimized"),
         )
     )
 
     cases.append(
-        (
-            "toric_code_2x2_pbc",
-            ToricCodeModel(
+        HamiltonianBenchmarkCase(
+            name="toric_code_2x2_pbc",
+            model=ToricCodeModel(
                 lx=2,
                 ly=2,
                 boundary_condition="periodic",
             ),
+            recommended_builder="sparse",
+            builders=("sparse",),
         )
     )
 
     cases.append(
-        (
-            "square_qlm_4x4_pbc_w00",
-            SquareQLMModel(
+        HamiltonianBenchmarkCase(
+            name="square_qlm_4x4_pbc_w00",
+            model=SquareQLMModel(
                 lx=4,
                 ly=4,
                 boundary_condition="periodic",
                 winding_x=0,
                 winding_y=0,
             ),
+            recommended_builder="bitmask",
+            builders=("sparse", "bitmask"),
         )
     )
 
     cases.append(
-        (
-            "square_qdm_4x4_pbc_w00",
-            SquareQDMModel(
+        HamiltonianBenchmarkCase(
+            name="square_qdm_4x4_pbc_w00",
+            model=SquareQDMModel(
                 lx=4,
                 ly=4,
                 boundary_condition="periodic",
                 winding_x=0,
                 winding_y=0,
             ),
+            recommended_builder="bitmask",
+            builders=("sparse", "bitmask"),
         )
     )
 
     return cases
+
+
+def selected_builders(
+    case: HamiltonianBenchmarkCase,
+    builder_selection: BuilderSelection,
+) -> tuple[str, ...]:
+    if builder_selection == "recommended":
+        return (case.recommended_builder,)
+
+    if builder_selection == "all":
+        return case.builders
+
+    if builder_selection not in case.builders:
+        return ()
+
+    return (builder_selection,)
 
 
 def model_parameters(model: object) -> dict:
@@ -132,6 +169,7 @@ def run_hamiltonian_benchmark(
     model: object,
     basis_solver: str,
     builder: str,
+    recommended_builder: str,
     backend: str,
     sort_basis: bool,
     split_basis_timing: bool,
@@ -177,6 +215,7 @@ def run_hamiltonian_benchmark(
         parameters=model_parameters(model),
         basis_solver=basis_solver,
         builder=builder,
+        recommended_builder=recommended_builder,
         backend=backend,
         sort_basis=sort_basis,
         n_variables=model.layout.n_variables,
@@ -191,12 +230,33 @@ def run_hamiltonian_benchmark(
     )
 
 
+def print_case_list(cases: list[HamiltonianBenchmarkCase]) -> None:
+    headers = ["name", "model", "recommended", "builders"]
+    rows = [
+        [
+            case.name,
+            type(case.model).__name__,
+            case.recommended_builder,
+            ",".join(case.builders),
+        ]
+        for case in cases
+    ]
+    widths = [max(len(header), *(len(row[i]) for row in rows)) for i, header in enumerate(headers)]
+
+    print("  ".join(header.ljust(widths[i]) for i, header in enumerate(headers)))
+    print("  ".join("-" * widths[i] for i in range(len(headers))))
+
+    for row in rows:
+        print("  ".join(row[i].ljust(widths[i]) for i in range(len(headers))))
+
+
 def print_table(results: list[HamiltonianBenchmarkResult]) -> None:
     headers = [
         "name",
         "model",
         "solver",
         "builder",
+        "recommended",
         "n_states",
         "H.nnz",
         "K.nnz",
@@ -212,6 +272,7 @@ def print_table(results: list[HamiltonianBenchmarkResult]) -> None:
             result.model,
             result.basis_solver,
             result.builder,
+            "*" if result.builder == result.recommended_builder else "",
             str(result.n_states),
             str(result.h_nnz),
             str(result.kinetic_nnz),
@@ -241,8 +302,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--builder",
-        default="sparse",
-        choices=["sparse", "optimized", "bitmask"],
+        default="recommended",
+        choices=["recommended", "all", "sparse", "optimized", "bitmask"],
+        help=(
+            "Builder to benchmark. Use 'recommended' for each case's default fast "
+            "path, or 'all' to compare all supported builders per case."
+        ),
     )
     parser.add_argument(
         "--backend",
@@ -268,35 +333,59 @@ def main() -> None:
         default=None,
         help="Run only cases whose name contains this substring.",
     )
+    parser.add_argument(
+        "--list-cases",
+        action="store_true",
+        help="List benchmark cases and supported builders, then exit.",
+    )
 
     args = parser.parse_args()
 
+    cases = make_benchmark_cases()
+
+    if args.only is not None:
+        cases = [case for case in cases if args.only in case.name]
+
+    if args.list_cases:
+        print_case_list(cases)
+        return
+
     results: list[HamiltonianBenchmarkResult] = []
 
-    for name, model in make_benchmark_cases():
-        if args.only is not None and args.only not in name:
-            continue
+    for case in cases:
+        builders = selected_builders(case, args.builder)
 
-        print(f"Running {name} ...", flush=True)
-
-        try:
-            result = run_hamiltonian_benchmark(
-                name=name,
-                model=model,
-                basis_solver=args.basis_solver,
-                builder=args.builder,
-                backend=args.backend,
-                sort_basis=not args.no_sort_basis,
-                split_basis_timing=args.split_basis_timing,
+        if not builders:
+            print(
+                f"Skipping {case.name}: builder {args.builder!r} is not supported. "
+                f"Supported builders are {case.builders}.",
+                flush=True,
             )
-        except NotImplementedError as exc:
-            print(f"  skipped: {exc}")
-            continue
-        except ValueError as exc:
-            print(f"  skipped: {exc}")
             continue
 
-        results.append(result)
+        for builder in builders:
+            label = f"{case.name} [{builder}]"
+            print(f"Running {label} ...", flush=True)
+
+            try:
+                result = run_hamiltonian_benchmark(
+                    name=case.name,
+                    model=case.model,
+                    basis_solver=args.basis_solver,
+                    builder=builder,
+                    recommended_builder=case.recommended_builder,
+                    backend=args.backend,
+                    sort_basis=not args.no_sort_basis,
+                    split_basis_timing=args.split_basis_timing,
+                )
+            except NotImplementedError as exc:
+                print(f"  skipped: {exc}")
+                continue
+            except ValueError as exc:
+                print(f"  skipped: {exc}")
+                continue
+
+            results.append(result)
 
     print()
     print_table(results)
