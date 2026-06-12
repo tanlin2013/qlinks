@@ -63,6 +63,36 @@ def _nnz(matrix) -> int | None:
     return int(matrix.nnz)
 
 
+def _json_key(key: object) -> str:
+    """Return a stable JSON object key for benchmark metadata."""
+    return str(key)
+
+
+def _jsonable(value: object) -> object:
+    """Recursively convert benchmark metadata to JSON-serializable values.
+
+    ``json.dump(default=str)`` only handles unsupported values, not unsupported
+    dictionary keys. Model parameter dictionaries can contain tuple keys, for
+    example lattice translation maps, so keys must be normalized before dumping.
+    """
+    if isinstance(value, dict):
+        return {_json_key(key): _jsonable(item) for key, item in value.items()}
+
+    if isinstance(value, tuple | list):
+        return [_jsonable(item) for item in value]
+
+    if isinstance(value, set | frozenset):
+        return [_jsonable(item) for item in sorted(value, key=str)]
+
+    if isinstance(value, complex):
+        return {"real": float(value.real), "imag": float(value.imag)}
+
+    if isinstance(value, str | int | float | bool) or value is None:
+        return value
+
+    return str(value)
+
+
 def make_benchmark_cases() -> list[HamiltonianBenchmarkCase]:
     """
     Keep default cases modest. Larger Hamiltonians should be run manually.
@@ -393,7 +423,7 @@ def main() -> None:
     if args.json is not None:
         with open(args.json, "w", encoding="utf-8") as f:
             json.dump(
-                [asdict(result) for result in results],
+                [_jsonable(asdict(result)) for result in results],
                 f,
                 indent=2,
                 default=str,
