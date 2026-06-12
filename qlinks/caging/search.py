@@ -50,6 +50,7 @@ class CageSearchConfig:
     rank_tolerance_factor: float = 100.0
     signature_tolerance_factor: float = 10.0
     potential_signature_unit: complex = 1.0
+    store_full_states: bool = True
 
     include_type1: bool | None = None
     include_type2: bool | None = None
@@ -446,11 +447,21 @@ class CageSearcher:
                 if kinetic_value not in allowed_kappas:
                     continue
 
+                full_state = (
+                    embed_cage_state(
+                        cage_state,
+                        hilbert_size=int(self.hamiltonian_matrix.shape[0]),
+                    )
+                    if self.config.store_full_states
+                    else None
+                )
+
                 records.append(
                     CageRecord(
                         cage_state=cage_state,
                         signature=signature,
                         candidate=candidate,
+                        full_state=full_state,
                     )
                 )
 
