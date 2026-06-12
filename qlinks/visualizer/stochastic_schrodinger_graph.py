@@ -15,6 +15,8 @@ from qlinks.visualizer.hamiltonian_graph import (
     HamiltonianGraphVisualizer,
     LayoutName,
     NodeColorRule,
+    _networkx_layout,
+    _scalar_values_to_colors,
 )
 
 TrajectoryNodeColorRule = Literal[
@@ -191,17 +193,50 @@ class StochasticSchrodingerGraphVisualizer:
         repeat: bool = True,
         save_path: str | Path | None = None,
         colorbar: bool = False,
+        redraw_each_frame: bool = False,
         **layout_kwargs,
     ):
         """Animate the trajectory on a fixed graph layout."""
+        if redraw_each_frame or colorbar:
+            return self._animate_redraw_each_frame(
+                layout=layout,
+                color_by=color_by,
+                edge_color_by=edge_color_by,
+                interval=interval,
+                repeat=repeat,
+                save_path=save_path,
+                colorbar=colorbar,
+                **layout_kwargs,
+            )
+
+        return self._animate_cached_networkx(
+            layout=layout,
+            color_by=color_by,
+            edge_color_by=edge_color_by,
+            interval=interval,
+            repeat=repeat,
+            save_path=save_path,
+            **layout_kwargs,
+        )
+
+    def _animate_redraw_each_frame(
+        self,
+        *,
+        layout: LayoutName,
+        color_by: TrajectoryNodeColorRule,
+        edge_color_by: EdgeColorRule,
+        interval: int,
+        repeat: bool,
+        save_path: str | Path | None,
+        colorbar: bool,
+        **layout_kwargs,
+    ):
+        """Animate by redrawing every frame. Kept for full compatibility."""
         import matplotlib.pyplot as plt
         from matplotlib.animation import FuncAnimation
 
-        # Reuse the existing layout helper indirectly by drawing the first frame.
         fig, ax = plt.subplots(figsize=self.graph_visualizer.style.figure_size)
 
-        # Simpler first implementation: redraw each frame.
-        # Later we can optimize by updating PathCollection colors only.
         def update(frame: int):
             ax.clear()
 
@@ -247,6 +282,130 @@ class StochasticSchrodingerGraphVisualizer:
             animation.save(str(save_path))
 
         return animation
+
+    def _animate_cached_networkx(
+        self,
+        *,
+        layout: LayoutName,
+        color_by: TrajectoryNodeColorRule,
+        edge_color_by: EdgeColorRule,
+        interval: int,
+        repeat: bool,
+        save_path: str | Path | None,
+        **layout_kwargs,
+    ):
+        """Animate by caching layout, edges, labels, and updating node colors."""
+        import matplotlib.pyplot as plt
+        import networkx as nx
+        from matplotlib.animation import FuncAnimation
+
+        fig, ax = plt.subplots(figsize=self.graph_visualizer.style.figure_size)
+        graph = self.graph_visualizer.to_networkx()
+        positions = _networkx_layout(graph, layout, **layout_kwargs)
+
+        node_color_rule = _trajectory_color_to_node_color(color_by)
+        initial_values = self._node_values_for_frame(
+            0,
+            node_color_rule=node_color_rule,
+        )
+        node_colors = _scalar_values_to_colors(
+            initial_values,
+            cmap=self.graph_visualizer.style.cmap,
+            color_by=node_color_rule,
+        )
+
+        node_collection = nx.draw_networkx_nodes(
+            graph,
+            positions,
+            node_color=node_colors,
+            node_size=self.graph_visualizer.style.vertex_size * 12,
+            ax=ax,
+        )
+
+        edge_colors = self.graph_visualizer._edge_colors_for_matplotlib(
+            edge_color_by=edge_color_by,
+        )
+        edge_alpha = (
+            None if edge_color_by == "weight_complex" else self.graph_visualizer.style.edge_alpha
+        )
+        edge_collection = nx.draw_networkx_edges(
+            graph,
+            positions,
+            width=self.graph_visualizer.style.edge_width,
+            edge_color=edge_colors,
+            alpha=edge_alpha,
+            ax=ax,
+        )
+
+        label_artists = {}
+        if self.graph_visualizer.style.label_vertices:
+            labels = {
+                local_index: label
+                for local_index, label in enumerate(self.graph_visualizer.vertex_display_labels())
+            }
+            label_artists = nx.draw_networkx_labels(
+                graph,
+                positions,
+                labels=labels,
+                font_size=self.graph_visualizer.style.vertex_label_size,
+                ax=ax,
+            )
+
+        ax.set_axis_off()
+        title_artist = ax.set_title("")
+
+        def update(frame: int):
+            values = self._node_values_for_frame(
+                frame,
+                node_color_rule=node_color_rule,
+            )
+            node_collection.set_facecolor(
+                _scalar_values_to_colors(
+                    values,
+                    cmap=self.graph_visualizer.style.cmap,
+                    color_by=node_color_rule,
+                )
+            )
+            time = float(self.trajectory.times[int(frame)])
+            title_artist.set_text(f"stochastic trajectory, t={time:.4g}")
+
+            artists: list = [node_collection, title_artist]
+            if edge_collection is not None:
+                if isinstance(edge_collection, list):
+                    artists.extend(edge_collection)
+                else:
+                    artists.append(edge_collection)
+            artists.extend(label_artists.values())
+            return artists
+
+        update(0)
+
+        animation = FuncAnimation(
+            fig,
+            update,
+            frames=self.trajectory.n_times,
+            interval=interval,
+            repeat=repeat,
+        )
+
+        if save_path is not None:
+            animation.save(str(save_path))
+
+        return animation
+
+    def _node_values_for_frame(
+        self,
+        frame: int,
+        *,
+        node_color_rule: NodeColorRule,
+    ) -> npt.NDArray[np.float64]:
+        return np.asarray(
+            self.graph_visualizer.node_values(
+                color_by=node_color_rule,
+                state_vector=self.trajectory.state_at(frame),
+            ),
+            dtype=np.float64,
+        )
 
 
 def _trajectory_color_to_node_color(

@@ -165,6 +165,43 @@ def test_stochastic_visualizer_animation_smoke() -> None:
     assert animation is not None
 
 
+def test_stochastic_visualizer_animation_redraw_each_frame_smoke() -> None:
+    hamiltonian = sp.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0],
+                [1.0, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+
+    visualizer = StochasticSchrodingerGraphVisualizer.from_trajectory(
+        times=np.asarray([0.0, 1.0]),
+        states=np.asarray(
+            [
+                [1.0, 0.0],
+                [0.0, 1.0],
+            ],
+            dtype=np.complex128,
+        ),
+        hamiltonian=hamiltonian,
+        style=HamiltonianGraphStyle(
+            colorbar=False,
+            edge_colorbar=False,
+        ),
+    )
+
+    animation = visualizer.animate(
+        layout="circle",
+        interval=10,
+        repeat=False,
+        redraw_each_frame=True,
+    )
+
+    assert animation is not None
+
+
 @pytest.mark.manual
 @pytest.mark.skipif(
     os.environ.get("QLINKS_SHOW_PLOTS") != "1",
