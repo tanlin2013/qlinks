@@ -43,6 +43,7 @@ class DimerCoveringConstraint(BaseConstraint):
         object.__setattr__(self, "link_ids", link_ids)
         object.__setattr__(self, "required_count", int(self.required_count))
         object.__setattr__(self, "_variable_indices", variable_indices)
+        object.__setattr__(self, "_n_incident_links", int(variable_indices.size))
 
     @classmethod
     def from_lattice_site(
@@ -123,10 +124,11 @@ class DimerCoveringConstraint(BaseConstraint):
         variable_indices = self._variable_indices
         assigned_local = assigned[variable_indices]
 
+        assigned_count = int(np.count_nonzero(assigned_local))
         assigned_values = arr[variable_indices[assigned_local]]
 
         occupied_so_far = int(np.sum(assigned_values))
-        unassigned_count = int(np.count_nonzero(~assigned_local))
+        unassigned_count = self._n_incident_links - assigned_count
 
         # Too many dimers already touching this site.
         if occupied_so_far > self.required_count:

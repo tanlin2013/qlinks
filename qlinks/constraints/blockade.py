@@ -34,6 +34,9 @@ class NearestNeighborBlockadeConstraint(BaseConstraint):
         self.layout.local_space(vj).validate_value(self.occupied_value)
 
         object.__setattr__(self, "_variable_indices", np.asarray([vi, vj], dtype=np.int64))
+        object.__setattr__(self, "_vi", int(vi))
+        object.__setattr__(self, "_vj", int(vj))
+        object.__setattr__(self, "_occupied_value", int(self.occupied_value))
 
     @classmethod
     def from_lattice(
@@ -92,12 +95,12 @@ class NearestNeighborBlockadeConstraint(BaseConstraint):
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)
 
-        variable_indices = self._variable_indices
-        assigned_local = assigned[variable_indices]
+        vi = self._vi
+        vj = self._vj
 
         # If fewer than two variables are assigned, this edge cannot yet violate blockade.
-        if not np.all(assigned_local):
+        if not (assigned[vi] and assigned[vj]):
             return True
 
-        values = arr[variable_indices]
-        return not np.all(values == self.occupied_value)
+        occupied = self._occupied_value
+        return not (int(arr[vi]) == occupied and int(arr[vj]) == occupied)

@@ -141,6 +141,7 @@ class TriangularZ2WindingSector(BaseSectorCondition):
         object.__setattr__(self, "_link_ids", cut.link_ids)
         object.__setattr__(self, "_variable_indices", cut.variable_indices)
         object.__setattr__(self, "target", int(self.target))
+        object.__setattr__(self, "_n_cut_links", int(cut.variable_indices.size))
 
         self.validate_target(
             target=self.target,
@@ -195,11 +196,22 @@ class TriangularZ2WindingSector(BaseSectorCondition):
         to wait.
         """
         assigned = np.asarray(assigned_mask, dtype=bool)
+        assigned_local = assigned[self._variable_indices]
 
-        if np.all(assigned[self._variable_indices]):
-            return self.is_satisfied(config)
+        if int(np.count_nonzero(assigned_local)) != self._n_cut_links:
+            return True
 
-        return True
+        arr = np.asarray(config, dtype=np.int64)
+        values = arr[self._variable_indices]
+
+        if self.value_convention == "binary":
+            parity = int(np.sum(values) % 2)
+        elif self.value_convention == "flux_pm":
+            parity = int(np.sum((values + 1) // 2) % 2)
+        else:
+            raise ValueError(f"Unsupported value convention: {self.value_convention}")
+
+        return parity == self.target
 
     @classmethod
     def allowed_targets(

@@ -84,10 +84,17 @@ class GaussLawConstraint(BaseConstraint):
             dtype=np.int64,
         )
 
+        internal_charge = internal_charge_value(
+            int(self.charge),
+            charge_normalization=self.charge_normalization,
+        )
+
         object.__setattr__(self, "link_ids", link_ids)
         object.__setattr__(self, "signs", signs)
         object.__setattr__(self, "charge", int(self.charge))
         object.__setattr__(self, "_variable_indices", variable_indices)
+        object.__setattr__(self, "_internal_charge", internal_charge)
+        object.__setattr__(self, "_n_incident_links", int(variable_indices.size))
 
     @classmethod
     def from_lattice_site(
@@ -162,10 +169,7 @@ class GaussLawConstraint(BaseConstraint):
 
     def check(self, config: npt.ArrayLike) -> ConstraintResult:
         actual = self.value(config)
-        target = internal_charge_value(
-            self.charge,
-            charge_normalization=self.charge_normalization,
-        )
+        target = self._internal_charge
 
         residual = actual - target
         satisfied = residual == 0
@@ -191,26 +195,25 @@ class GaussLawConstraint(BaseConstraint):
         assigned = np.asarray(assigned_mask, dtype=bool)
 
         variable_indices = self._variable_indices
-        orientations = self.signs.astype(np.int64)
+        signs = self.signs
 
         assigned_local = assigned[variable_indices]
+        assigned_count = int(np.count_nonzero(assigned_local))
 
-        assigned_indices = variable_indices[assigned_local]
-        assigned_orientations = orientations[assigned_local]
-
-        current = int(np.sum(assigned_orientations * arr[assigned_indices]))
-
-        remaining_orientations = orientations[~assigned_local]
-
-        # For spin-half flux values {-1, +1}.
-        # Each unassigned term is orientation * E, so it can contribute -1 or +1.
-        min_remaining = -int(np.sum(np.abs(remaining_orientations)))
-        max_remaining = int(np.sum(np.abs(remaining_orientations)))
-
-        target = internal_charge_value(
-            self.charge,
-            charge_normalization=self.charge_normalization,
+        current = int(
+            np.dot(
+                signs[assigned_local],
+                arr[variable_indices[assigned_local]],
+            )
         )
+
+        # For flux values {-1, +1}, every unassigned incident link can still
+        # contribute either -1 or +1 after multiplying by the incidence sign.
+        remaining_count = self._n_incident_links - assigned_count
+        min_remaining = -remaining_count
+        max_remaining = remaining_count
+
+        target = self._internal_charge
 
         if target < current + min_remaining:
             return False
@@ -218,7 +221,7 @@ class GaussLawConstraint(BaseConstraint):
         if target > current + max_remaining:
             return False
 
-        if np.all(assigned_local):
+        if remaining_count == 0:
             return current == target
 
         return True

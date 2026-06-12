@@ -398,6 +398,11 @@ class SquareWindingSector(BaseSectorCondition):
             flux_normalization=self.flux_normalization,
         )
 
+        min_contributions, max_contributions = self._signed_local_value_bounds()
+        object.__setattr__(self, "_internal_target", self._infer_internal_target())
+        object.__setattr__(self, "_min_contributions", min_contributions)
+        object.__setattr__(self, "_max_contributions", max_contributions)
+
     @classmethod
     def cut_data(
         cls,
@@ -448,7 +453,7 @@ class SquareWindingSector(BaseSectorCondition):
         arr = self._as_config(config)
         return int(np.dot(self._signs, arr[self._variable_indices]))
 
-    def internal_target(self) -> int:
+    def _infer_internal_target(self) -> int:
         values_seen: set[int] = set()
 
         for variable_index in self._variable_indices:
@@ -466,6 +471,29 @@ class SquareWindingSector(BaseSectorCondition):
             self.target,
             flux_normalization="integer_flux",
         )
+
+    def _signed_local_value_bounds(
+        self,
+    ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]:
+        min_contributions: list[int] = []
+        max_contributions: list[int] = []
+
+        for sign, variable_index in zip(self._signs, self._variable_indices, strict=True):
+            values = np.asarray(
+                self.layout.local_space(int(variable_index)).values,
+                dtype=np.int64,
+            )
+            signed_values = int(sign) * values
+            min_contributions.append(int(np.min(signed_values)))
+            max_contributions.append(int(np.max(signed_values)))
+
+        return (
+            np.asarray(min_contributions, dtype=np.int64),
+            np.asarray(max_contributions, dtype=np.int64),
+        )
+
+    def internal_target(self) -> int:
+        return int(self._internal_target)
 
     def check(self, config: npt.ArrayLike) -> ConstraintResult:
         actual = self.value(config)
@@ -499,21 +527,11 @@ class SquareWindingSector(BaseSectorCondition):
             )
         )
 
-        min_remaining = 0
-        max_remaining = 0
+        unassigned_local = ~assigned_local
+        min_remaining = int(np.sum(self._min_contributions[unassigned_local]))
+        max_remaining = int(np.sum(self._max_contributions[unassigned_local]))
 
-        for local_position, variable_index in enumerate(variable_indices):
-            if assigned_local[local_position]:
-                continue
-
-            sign = int(signs[local_position])
-            values = self.layout.local_space(int(variable_index)).values
-
-            signed_values = sign * values
-            min_remaining += int(np.min(signed_values))
-            max_remaining += int(np.max(signed_values))
-
-        target = self.internal_target()
+        target = self._internal_target
 
         if target < current + min_remaining:
             return False
@@ -521,7 +539,7 @@ class SquareWindingSector(BaseSectorCondition):
         if target > current + max_remaining:
             return False
 
-        if np.all(assigned_local):
+        if not np.any(unassigned_local):
             return current == target
 
         return True
@@ -661,6 +679,9 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
             direction=self.direction,
         )
 
+        object.__setattr__(self, "_internal_target", int(self.target))
+        object.__setattr__(self, "_n_cut_links", int(cut.variable_indices.size))
+
     @classmethod
     def cut_data(
         cls,
@@ -724,7 +745,7 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         return int(np.sum(self._signs * (2 * n - 1)))
 
     def internal_target(self) -> int:
-        return int(self.target)
+        return int(self._internal_target)
 
     def check(self, configuration: npt.ArrayLike) -> ConstraintResult:
         actual = self.value(configuration)
@@ -761,12 +782,12 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         n = arr[assigned_indices]
         current = int(np.sum(assigned_signs * (2 * n - 1)))
 
-        remaining_signs = signs[~assigned_local]
+        remaining_count = self._n_cut_links - int(np.count_nonzero(assigned_local))
 
-        min_remaining = -int(np.sum(np.abs(remaining_signs)))
-        max_remaining = int(np.sum(np.abs(remaining_signs)))
+        min_remaining = -remaining_count
+        max_remaining = remaining_count
 
-        target = self.internal_target()
+        target = self._internal_target
 
         if target < current + min_remaining:
             return False
@@ -774,7 +795,7 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         if target > current + max_remaining:
             return False
 
-        if np.all(assigned_local):
+        if remaining_count == 0:
             return current == target
 
         return True
@@ -912,6 +933,9 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
             flux_normalization=self.flux_normalization,
         )
 
+        object.__setattr__(self, "_internal_target", self._infer_internal_target())
+        object.__setattr__(self, "_n_cut_links", int(cut.variable_indices.size))
+
     @classmethod
     def cut_data(
         cls,
@@ -965,7 +989,7 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
         electric = self._electric_values(values)
         return int(np.dot(self._signs, electric))
 
-    def internal_target(self) -> int:
+    def _infer_internal_target(self) -> int:
         if self.value_convention == "flux_pm":
             return internal_flux_winding_value(
                 self.target,
@@ -976,6 +1000,9 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
             self.target,
             flux_normalization="integer_flux",
         )
+
+    def internal_target(self) -> int:
+        return int(self._internal_target)
 
     def is_satisfied(self, config: npt.ArrayLike) -> bool:
         return self.value(config) == self.internal_target()
@@ -1009,15 +1036,17 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
         assigned_local = assigned[variable_indices]
 
         assigned_values = arr[variable_indices[assigned_local]]
-        current = int(np.sum(self._electric_values(assigned_values)))
+        assigned_signs = self._signs[assigned_local]
+        current = int(np.sum(assigned_signs * self._electric_values(assigned_values)))
 
-        remaining = int(np.count_nonzero(~assigned_local))
+        remaining = self._n_cut_links - int(np.count_nonzero(assigned_local))
 
-        # Each unassigned link contributes either -1 or +1.
+        # Each unassigned link contributes either -1 or +1 after multiplying
+        # by the cut sign.
         min_possible = current - remaining
         max_possible = current + remaining
 
-        target = self.internal_target()
+        target = self._internal_target
 
         if target < min_possible:
             return False
