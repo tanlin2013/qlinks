@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qlinks.builders.optimized_sparse &#8212; qlinks 1.0.0a0 documentation</title>
+    <title>qlinks.builders.optimized_sparse &#8212; qlinks 1.0.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=20af2631"></script>
+    <script src="../../../_static/documentation_options.js?v=f9c1cefe"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -49,7 +49,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.0a0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -126,7 +126,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.0a0 documentation</p>
+    <p class="title logo__title">qlinks 1.0.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -315,7 +315,11 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparseBackend</span><span class="p">,</span> <span class="n">SparseBackendName</span><span class="p">,</span> <span class="n">get_sparse_backend</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.basis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Basis</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.operators</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalUpdateAction</span><span class="p">,</span> <span class="n">LocalUpdateOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.operators</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DiagonalLocalOperator</span><span class="p">,</span>
+    <span class="n">LocalUpdateAction</span><span class="p">,</span>
+    <span class="n">LocalUpdateOperator</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">MissingActionPolicy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;raise&quot;</span><span class="p">]</span>
 
@@ -345,6 +349,7 @@
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_PreparedUpdateOperators</span><span class="p">:</span>
+    <span class="n">diagonal_value_functions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
     <span class="n">single_update_functions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span>
         <span class="n">Callable</span><span class="p">[</span>
             <span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
@@ -356,9 +361,10 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_update_operators</span><span class="p">(</span>
-    <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalUpdateOperator</span><span class="p">],</span>
+    <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_PreparedUpdateOperators</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Classify update operators once before entering the optimized hot loop.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Classify operators once before entering the optimized hot loop.&quot;&quot;&quot;</span>
+    <span class="n">diagonal_value_functions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">single_update_functions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span>
         <span class="n">Callable</span><span class="p">[</span>
             <span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
@@ -368,6 +374,12 @@
     <span class="n">fallback_operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalUpdateOperator</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">operators</span><span class="p">:</span>
+        <span class="n">diagonal_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="s2">&quot;diagonal_value&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">diagonal_value</span><span class="p">):</span>
+            <span class="n">diagonal_value_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diagonal_value</span><span class="p">)</span>
+            <span class="k">continue</span>
+
         <span class="n">supports_single_update</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="s2">&quot;supports_single_update&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">supports_single_update</span><span class="p">:</span>
@@ -377,9 +389,18 @@
                 <span class="n">single_update_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">single_update</span><span class="p">)</span>
                 <span class="k">continue</span>
 
+        <span class="n">apply_update</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="s2">&quot;apply_update&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">apply_update</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;OptimizedSparseHamiltonianBuilder operators must provide either &quot;</span>
+                <span class="s2">&quot;diagonal_value(config) or apply_update(config).&quot;</span>
+            <span class="p">)</span>
+
         <span class="n">fallback_operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">_PreparedUpdateOperators</span><span class="p">(</span>
+        <span class="n">diagonal_value_functions</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">diagonal_value_functions</span><span class="p">),</span>
         <span class="n">single_update_functions</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">single_update_functions</span><span class="p">),</span>
         <span class="n">fallback_operators</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">fallback_operators</span><span class="p">),</span>
     <span class="p">)</span>
@@ -423,7 +444,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">basis</span><span class="p">:</span> <span class="n">Basis</span><span class="p">,</span>
-        <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalUpdateOperator</span><span class="p">],</span>
+        <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalUpdateOperator</span> <span class="o">|</span> <span class="n">DiagonalLocalOperator</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_with_stats</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">operators</span><span class="p">)</span><span class="o">.</span><span class="n">matrix</span></div>
 
@@ -433,7 +454,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">build_with_stats</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">basis</span><span class="p">:</span> <span class="n">Basis</span><span class="p">,</span>
-        <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalUpdateOperator</span><span class="p">],</span>
+        <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalUpdateOperator</span> <span class="o">|</span> <span class="n">DiagonalLocalOperator</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizedSparseBuildResult</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_missing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;raise&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;on_missing must be either &#39;skip&#39; or &#39;raise&#39;.&quot;</span><span class="p">)</span>
@@ -470,6 +491,23 @@
         <span class="n">prepared_operators</span> <span class="o">=</span> <span class="n">_prepare_update_operators</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+            <span class="n">diagonal_coefficient</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span>
+
+            <span class="k">for</span> <span class="n">diagonal_value</span> <span class="ow">in</span> <span class="n">prepared_operators</span><span class="o">.</span><span class="n">diagonal_value_functions</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">diagonal_value</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">n_raw_actions</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">diagonal_coefficient</span> <span class="o">+=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">diagonal_coefficient</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_zero_atol</span><span class="p">:</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diagonal_coefficient</span><span class="p">)</span>
+                <span class="n">n_kept_actions</span> <span class="o">+=</span> <span class="mi">1</span>
+
             <span class="k">for</span> <span class="n">single_update</span> <span class="ow">in</span> <span class="n">prepared_operators</span><span class="o">.</span><span class="n">single_update_functions</span><span class="p">:</span>
                 <span class="n">update</span> <span class="o">=</span> <span class="n">single_update</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
@@ -601,7 +639,7 @@
 <a class="viewcode-back" href="../../../qlinks.builders.html#qlinks.builders.optimized_sparse.build_optimized_sparse_hamiltonian">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_optimized_sparse_hamiltonian</span><span class="p">(</span>
     <span class="n">basis</span><span class="p">:</span> <span class="n">Basis</span><span class="p">,</span>
-    <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalUpdateOperator</span><span class="p">],</span>
+    <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalUpdateOperator</span> <span class="o">|</span> <span class="n">DiagonalLocalOperator</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">DTypeLike</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
     <span class="n">on_missing</span><span class="p">:</span> <span class="n">MissingActionPolicy</span> <span class="o">=</span> <span class="s2">&quot;skip&quot;</span><span class="p">,</span>

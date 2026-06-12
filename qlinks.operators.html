@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks.operators package &#8212; qlinks 1.0.0a0 documentation</title>
+    <title>qlinks.operators package &#8212; qlinks 1.0.0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=20af2631"></script>
+    <script src="_static/documentation_options.js?v=f9c1cefe"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="qlinks.open_sys package" href="qlinks.open_sys.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.0a0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.0a0 documentation</p>
+    <p class="title logo__title">qlinks 1.0.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -581,6 +581,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.on_link"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.on_link()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.single_update"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.single_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.apply_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.__init__()</span></code></a></li>
 </ul>
@@ -591,6 +592,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.coefficient"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.coefficient</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.single_update"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.single_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.apply_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.__init__()</span></code></a></li>
 </ul>
@@ -839,6 +841,19 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.SpinOneXYBondOperator.__init__"><code class="docutils literal notranslate"><span class="pre">SpinOneXYBondOperator.__init__()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.layout"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.layout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.lattice"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.lattice</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.link_id"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.link_id</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.coefficient"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.coefficient</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.site_ids"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.site_ids</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.variable_indices"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.variable_indices</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.apply_update()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.TransposedBasisOperator"><code class="docutils literal notranslate"><span class="pre">TransposedBasisOperator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.TransposedBasisOperator.parent"><code class="docutils literal notranslate"><span class="pre">TransposedBasisOperator.parent</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.TransposedBasisOperator.conjugate"><code class="docutils literal notranslate"><span class="pre">TransposedBasisOperator.conjugate</span></code></a></li>
@@ -930,6 +945,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.coefficient"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.coefficient</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.single_update"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.single_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.apply_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.__init__()</span></code></a></li>
 </ul>
@@ -941,6 +957,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.on_link"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.on_link()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.single_update"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.single_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.apply_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.__init__()</span></code></a></li>
 </ul>
@@ -3090,6 +3107,19 @@ setting those variables to final_values.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.operators.updates.UpdateNegationFlipOperator.single_update">
+<span class="sig-name descname"><span class="pre">single_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdateNegationFlipOperator.single_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.updates.UpdateNegationFlipOperator.single_update" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[complex, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.operators.updates.UpdateNegationFlipOperator.apply_update">
 <span class="sig-name descname"><span class="pre">apply_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdateNegationFlipOperator.apply_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.updates.UpdateNegationFlipOperator.apply_update" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -3163,6 +3193,19 @@ setting those variables to final_values.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.operators.updates.UpdateMultiNegationFlipOperator.single_update">
+<span class="sig-name descname"><span class="pre">single_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdateMultiNegationFlipOperator.single_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.single_update" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[complex, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -5208,6 +5251,103 @@ and other local loop moves.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.operators.</span></span><span class="sig-name descname"><span class="pre">UpdateSpinOneXYBondOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'update_spin_one_xy_bond'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/spin_one.html#UpdateSpinOneXYBondOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#qlinks.operators.updates.BaseLocalUpdateOperator" title="qlinks.operators.updates.BaseLocalUpdateOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLocalUpdateOperator</span></code></a></p>
+<p>Update-action version of <a class="reference internal" href="#qlinks.operators.SpinOneXYBondOperator" title="qlinks.operators.SpinOneXYBondOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinOneXYBondOperator</span></code></a>.</p>
+<p>The operator returns only local two-site updates instead of allocating full
+output configurations. It is intended for <code class="docutils literal notranslate"><span class="pre">OptimizedSparseHamiltonianBuilder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
+<li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.chain.ChainLattice" title="qlinks.lattice.chain.ChainLattice"><em>ChainLattice</em></a>)</p></li>
+<li><p><strong>link_id</strong> (<em>int</em>)</p></li>
+<li><p><strong>coefficient</strong> (<em>complex</em>)</p></li>
+<li><p><strong>name</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.layout">
+<span class="sig-name descname"><span class="pre">layout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><span class="pre">VariableLayout</span></a></em><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.layout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.lattice">
+<span class="sig-name descname"><span class="pre">lattice</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.chain.ChainLattice" title="qlinks.lattice.chain.ChainLattice"><span class="pre">ChainLattice</span></a></em><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.lattice" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.link_id">
+<span class="sig-name descname"><span class="pre">link_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.link_id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.coefficient">
+<span class="sig-name descname"><span class="pre">coefficient</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">complex</span></em><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.coefficient" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.site_ids">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">site_ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.site_ids" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.variable_indices">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variable_indices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.variable_indices" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.affected_variables">
+<span class="sig-name descname"><span class="pre">affected_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/spin_one.html#UpdateSpinOneXYBondOperator.affected_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.affected_variables" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.apply_update">
+<span class="sig-name descname"><span class="pre">apply_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/spin_one.html#UpdateSpinOneXYBondOperator.apply_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.apply_update" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[<a class="reference internal" href="#qlinks.operators.updates.LocalUpdateAction" title="qlinks.operators.updates.LocalUpdateAction"><em>LocalUpdateAction</em></a>, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateSpinOneXYBondOperator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'update_spin_one_xy_bond'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.operators.UpdateSpinOneXYBondOperator.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
+<li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.chain.ChainLattice" title="qlinks.lattice.chain.ChainLattice"><em>ChainLattice</em></a>)</p></li>
+<li><p><strong>link_id</strong> (<em>int</em>)</p></li>
+<li><p><strong>coefficient</strong> (<em>complex</em>)</p></li>
+<li><p><strong>name</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qlinks.operators.TransposedBasisOperator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.operators.</span></span><span class="sig-name descname"><span class="pre">TransposedBasisOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conjugate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/linear.html#TransposedBasisOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.TransposedBasisOperator" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -5979,6 +6119,19 @@ local updates.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateMultiNegationFlipOperator.single_update">
+<span class="sig-name descname"><span class="pre">single_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdateMultiNegationFlipOperator.single_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.UpdateMultiNegationFlipOperator.single_update" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[complex, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.operators.UpdateMultiNegationFlipOperator.apply_update">
 <span class="sig-name descname"><span class="pre">apply_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdateMultiNegationFlipOperator.apply_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.UpdateMultiNegationFlipOperator.apply_update" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -6069,6 +6222,19 @@ local updates.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.operators.UpdateNegationFlipOperator.single_update">
+<span class="sig-name descname"><span class="pre">single_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/operators/updates.html#UpdateNegationFlipOperator.single_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.operators.UpdateNegationFlipOperator.single_update" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[complex, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -6905,6 +7071,7 @@ setting those variables to final_values.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.on_link"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.on_link()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.single_update"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.single_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.apply_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateNegationFlipOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.__init__()</span></code></a></li>
 </ul>
@@ -6915,6 +7082,7 @@ setting those variables to final_values.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.coefficient"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.coefficient</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.single_update"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.single_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.apply_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.updates.UpdateMultiNegationFlipOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.__init__()</span></code></a></li>
 </ul>
@@ -7163,6 +7331,19 @@ setting those variables to final_values.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.SpinOneXYBondOperator.__init__"><code class="docutils literal notranslate"><span class="pre">SpinOneXYBondOperator.__init__()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.layout"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.layout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.lattice"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.lattice</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.link_id"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.link_id</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.coefficient"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.coefficient</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.site_ids"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.site_ids</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.variable_indices"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.variable_indices</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.apply_update()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateSpinOneXYBondOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateSpinOneXYBondOperator.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.TransposedBasisOperator"><code class="docutils literal notranslate"><span class="pre">TransposedBasisOperator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.TransposedBasisOperator.parent"><code class="docutils literal notranslate"><span class="pre">TransposedBasisOperator.parent</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.TransposedBasisOperator.conjugate"><code class="docutils literal notranslate"><span class="pre">TransposedBasisOperator.conjugate</span></code></a></li>
@@ -7254,6 +7435,7 @@ setting those variables to final_values.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.coefficient"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.coefficient</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.single_update"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.single_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.apply_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateMultiNegationFlipOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateMultiNegationFlipOperator.__init__()</span></code></a></li>
 </ul>
@@ -7265,6 +7447,7 @@ setting those variables to final_values.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.name"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.on_link"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.on_link()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.affected_variables"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.affected_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.single_update"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.single_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.apply_update"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.apply_update()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.operators.UpdateNegationFlipOperator.__init__"><code class="docutils literal notranslate"><span class="pre">UpdateNegationFlipOperator.__init__()</span></code></a></li>
 </ul>
