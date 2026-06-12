@@ -24,7 +24,13 @@ python scripts/benchmark_hamiltonian.py --builder all --split-basis-timing
 python scripts/benchmark_hamiltonian.py --builder sparse --only qdm --split-basis-timing
 python scripts/benchmark_hamiltonian.py --list-cases
 python scripts/benchmark_hamiltonian.py --json hamiltonian_benchmark.json
+python scripts/benchmark_hamiltonian.py --builder all --split-basis-timing --markdown hamiltonian_benchmark.md
 ```
+
+Use `--markdown` to write a compact GitHub-ready report containing both the raw
+benchmark table and a fastest-observed-builder summary. This is useful for
+copying benchmark results into GitHub issues without including the large model
+parameter payload from `--json`.
 
 ## Cage search
 

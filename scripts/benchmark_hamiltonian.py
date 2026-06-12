@@ -93,6 +93,137 @@ def _jsonable(value: object) -> object:
     return str(value)
 
 
+def _markdown_escape(value: object) -> str:
+    """Escape a value for a compact GitHub-flavored Markdown table cell."""
+    text = str(value)
+    return text.replace("\\", "\\\\").replace("|", "\\|").replace("\n", "<br>")
+
+
+def _format_seconds(value: float | None) -> str:
+    if value is None:
+        return ""
+
+    return f"{value:.6f}"
+
+
+def _format_optional_int(value: int | None) -> str:
+    if value is None:
+        return ""
+
+    return str(value)
+
+
+def _markdown_table(headers: list[str], rows: list[list[object]]) -> str:
+    lines = [
+        "| " + " | ".join(_markdown_escape(header) for header in headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
+
+    lines.extend("| " + " | ".join(_markdown_escape(cell) for cell in row) + " |" for row in rows)
+
+    return "\n".join(lines)
+
+
+def format_markdown_results_table(results: list[HamiltonianBenchmarkResult]) -> str:
+    """Return a compact GitHub-ready Markdown timing table."""
+    headers = [
+        "case",
+        "model",
+        "builder",
+        "recommended",
+        "n_states",
+        "H.nnz",
+        "K.nnz",
+        "V.nnz",
+        "total_s",
+        "basis_s",
+        "matrix_s",
+    ]
+    rows = [
+        [
+            result.name,
+            result.model,
+            result.builder,
+            "yes" if result.builder == result.recommended_builder else "",
+            result.n_states,
+            result.h_nnz,
+            _format_optional_int(result.kinetic_nnz),
+            _format_optional_int(result.potential_nnz),
+            _format_seconds(result.build_total_seconds),
+            _format_seconds(result.basis_seconds),
+            _format_seconds(result.matrix_seconds),
+        ]
+        for result in results
+    ]
+    return _markdown_table(headers, rows)
+
+
+def _group_results_by_name(
+    results: list[HamiltonianBenchmarkResult],
+) -> dict[str, list[HamiltonianBenchmarkResult]]:
+    grouped: dict[str, list[HamiltonianBenchmarkResult]] = {}
+    for result in results:
+        grouped.setdefault(result.name, []).append(result)
+
+    return grouped
+
+
+def format_markdown_best_builder_table(results: list[HamiltonianBenchmarkResult]) -> str:
+    """Return a GitHub-ready table summarizing fastest observed builders."""
+    headers = [
+        "case",
+        "fastest_builder",
+        "recommended_builder",
+        "total_s",
+        "basis_s",
+        "matrix_s",
+        "speedup_vs_sparse",
+    ]
+    rows: list[list[object]] = []
+
+    for name, case_results in _group_results_by_name(results).items():
+        best = min(case_results, key=lambda result: result.build_total_seconds)
+        sparse = next(
+            (result for result in case_results if result.builder == "sparse"),
+            None,
+        )
+        if sparse is None:
+            speedup = ""
+        else:
+            speedup = f"{sparse.build_total_seconds / best.build_total_seconds:.2f}x"
+
+        rows.append(
+            [
+                name,
+                best.builder,
+                best.recommended_builder,
+                _format_seconds(best.build_total_seconds),
+                _format_seconds(best.basis_seconds),
+                _format_seconds(best.matrix_seconds),
+                speedup,
+            ]
+        )
+
+    return _markdown_table(headers, rows)
+
+
+def format_markdown_report(results: list[HamiltonianBenchmarkResult]) -> str:
+    """Return a compact benchmark report suitable for GitHub issues."""
+    sections = [
+        "## Hamiltonian builder benchmark",
+        "",
+        "### Fastest observed builder per case",
+        "",
+        format_markdown_best_builder_table(results),
+        "",
+        "### Raw timing table",
+        "",
+        format_markdown_results_table(results),
+        "",
+    ]
+    return "\n".join(sections)
+
+
 def make_benchmark_cases() -> list[HamiltonianBenchmarkCase]:
     """
     Keep default cases modest. Larger Hamiltonians should be run manually.
@@ -119,7 +250,7 @@ def make_benchmark_cases() -> list[HamiltonianBenchmarkCase]:
                 boundary_condition="open",
                 j_xy=1.0,
             ),
-            recommended_builder="optimized",
+            recommended_builder="sparse",
             builders=("sparse", "optimized"),
         )
     )
@@ -358,6 +489,12 @@ def main() -> None:
         default=None,
     )
     parser.add_argument(
+        "--markdown",
+        type=str,
+        default=None,
+        help="Write a compact GitHub-ready Markdown summary to this path.",
+    )
+    parser.add_argument(
         "--only",
         type=str,
         default=None,
@@ -430,6 +567,12 @@ def main() -> None:
             )
 
         print(f"\nWrote JSON results to {args.json}")
+
+    if args.markdown is not None:
+        with open(args.markdown, "w", encoding="utf-8") as f:
+            f.write(format_markdown_report(results))
+
+        print(f"\nWrote Markdown results to {args.markdown}")
 
 
 if __name__ == "__main__":
