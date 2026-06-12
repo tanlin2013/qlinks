@@ -1231,12 +1231,21 @@ def _recycling_regions_from_construction_context(
 
 def _partition_plaquette_terms_by_region(
     terms: tuple[LocalTermDescriptor, ...],
-    region_variables: frozenset[int],
+    region_variables: frozenset[int] | None = None,
+    *,
+    variable_index_set: frozenset[int] | None = None,
 ) -> tuple[
     tuple[LocalTermDescriptor, ...],
     tuple[LocalTermDescriptor, ...],
     tuple[LocalTermDescriptor, ...],
 ]:
+    if region_variables is None:
+        if variable_index_set is None:
+            raise TypeError("region_variables or variable_index_set is required")
+        region_variables = variable_index_set
+    elif variable_index_set is not None and region_variables != variable_index_set:
+        raise ValueError("region_variables and variable_index_set disagree")
+
     inside: list[LocalTermDescriptor] = []
     outside: list[LocalTermDescriptor] = []
     crossing: list[LocalTermDescriptor] = []
@@ -1407,6 +1416,7 @@ def _group_reduced_iz_reports_by_connected_support(
                     visited.add(candidate_index)
                     stack.append(candidate_index)
 
+        component_indices.sort()
         groups.append(tuple(reports[index] for index in component_indices))
 
     return tuple(groups)
