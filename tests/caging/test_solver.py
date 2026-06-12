@@ -8,6 +8,10 @@ from qlinks.caging import (
     solve_candidate_for_kinetic_targets,
     solve_candidates,
 )
+from qlinks.caging.candidate import (
+    BOUNDARY_OVERLAP_MATRIX_METADATA_KEY,
+    INTERNAL_KINETIC_MATRIX_METADATA_KEY,
+)
 
 
 def test_solve_candidate_finds_two_site_antisymmetric_cage() -> None:
@@ -196,6 +200,42 @@ def test_solve_candidate_for_kinetic_targets_rejects_boundary_leakage_without_fu
     )
 
     assert cage_states == []
+
+
+def test_solve_candidate_for_kinetic_targets_uses_column_block_for_boundary_residual() -> None:
+    kinetic_matrix = np.zeros((3, 3), dtype=np.complex128)
+    self_loop_values = np.array([2.0, 2.0, 0.0], dtype=np.complex128)
+    hamiltonian = kinetic_matrix + np.diag(self_loop_values)
+    candidate = CandidateSubgraph(
+        vertices=np.array([0, 1]),
+        metadata={
+            INTERNAL_KINETIC_MATRIX_METADATA_KEY: np.zeros((2, 2), dtype=np.complex128),
+            # This mimics a tiny positive Gram-matrix roundoff error.  If the
+            # boundary residual is recovered as sqrt(<psi|B^†B|psi>), one exact
+            # cage is falsely rejected at tolerance 1e-10.  The actual kinetic
+            # column block has no boundary leakage, so both states should pass.
+            BOUNDARY_OVERLAP_MATRIX_METADATA_KEY: np.diag(
+                np.array([1e-16, 0.0], dtype=np.complex128)
+            ),
+        },
+    )
+
+    cage_states = solve_candidate_for_kinetic_targets(
+        hamiltonian,
+        kinetic_matrix,
+        self_loop_values,
+        candidate,
+        target_kappas=(0.0,),
+        config=CageSolverConfig(
+            tolerance=1e-10,
+            validate_full_residual=True,
+        ),
+    )
+
+    assert len(cage_states) == 2
+    assert all(cage_state.boundary_residual <= 1e-10 for cage_state in cage_states)
+    assert all(cage_state.full_residual is not None for cage_state in cage_states)
+    assert all(cage_state.full_residual <= 1e-10 for cage_state in cage_states)
 
 
 def test_solve_candidates_combines_results() -> None:

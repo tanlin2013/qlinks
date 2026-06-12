@@ -35,6 +35,28 @@ def _full_residual_from_column_block(
     return float(scipy_linalg.norm(residual))
 
 
+def _boundary_residual_from_column_block(
+    operator_column_block: object,
+    parent_vertices: np.ndarray,
+    local_state: np.ndarray,
+    dense_internal_matrix: np.ndarray,
+) -> float:
+    """Return outside-support residual from a full column block.
+
+    This computes ``||O[outside, S] psi||`` from ``O[:, S]`` without forming
+    an explicit outside-complement matrix.  It is numerically more reliable
+    than recovering the residual from ``B^† B`` because it avoids taking the
+    square root of small Gram-matrix roundoff errors.
+    """
+    residual = np.asarray(
+        operator_column_block @ local_state,
+        dtype=np.complex128,
+    ).reshape(-1)
+    residual[parent_vertices] -= dense_internal_matrix @ local_state
+
+    return float(scipy_linalg.norm(residual))
+
+
 def _boundary_residual_from_overlap(
     boundary_overlap_matrix: np.ndarray,
     local_state: np.ndarray,
@@ -146,6 +168,7 @@ def _build_validated_cage_state(
     config: CageSolverConfig,
     metadata: dict[str, object],
     dense_boundary_overlap_matrix: np.ndarray | None = None,
+    boundary_column_block: object | None = None,
     hamiltonian_column_block: object | None = None,
 ) -> CageState | None:
     """Validate and build a CageState, trimming support if possible."""
@@ -164,6 +187,13 @@ def _build_validated_cage_state(
     # Validate against the parent candidate first.
     if dense_boundary_matrix is not None:
         boundary_residual = float(scipy_linalg.norm(dense_boundary_matrix @ local_state_on_parent))
+    elif boundary_column_block is not None:
+        boundary_residual = _boundary_residual_from_column_block(
+            boundary_column_block,
+            parent_vertices,
+            local_state_on_parent,
+            dense_internal_matrix,
+        )
     elif dense_boundary_overlap_matrix is not None:
         boundary_residual = _boundary_residual_from_overlap(
             dense_boundary_overlap_matrix,
@@ -171,7 +201,8 @@ def _build_validated_cage_state(
         )
     else:
         raise ValueError(
-            "Either dense_boundary_matrix or dense_boundary_overlap_matrix " "is required."
+            "Either dense_boundary_matrix, boundary_column_block, or "
+            "dense_boundary_overlap_matrix is required."
         )
 
     eigen_residual = float(
@@ -284,9 +315,7 @@ def solve_candidate_for_kinetic_targets(
 
     dense_kinetic_internal = as_dense_array(internal_kinetic_matrix)
     dense_hamiltonian_internal = dense_kinetic_internal + z_value * dense_identity_matrix
-    hamiltonian_column_block = (
-        hamiltonian[:, candidate.vertices] if config.validate_full_residual else None
-    )
+    hamiltonian_column_block = hamiltonian[:, candidate.vertices]
 
     cage_states: list[CageState] = []
 
@@ -341,6 +370,7 @@ def solve_candidate_for_kinetic_targets(
                     "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
                 },
                 dense_boundary_overlap_matrix=dense_boundary_overlap,
+                boundary_column_block=hamiltonian_column_block,
                 hamiltonian_column_block=hamiltonian_column_block,
             )
 
