@@ -61,12 +61,16 @@ python scripts/benchmark_cage_lindblad.py --only qlm --builder bitmask
 python scripts/benchmark_cage_lindblad.py --monitor-source reduced_iz_operators
 python scripts/benchmark_cage_lindblad.py   --monitor-source reduced_iz_operators   --reduced-iz-monitor-decomposition connected_support
 python scripts/benchmark_cage_lindblad.py --check-liouvillian
+python scripts/benchmark_cage_lindblad.py --skip-jump-residuals
 python scripts/benchmark_cage_lindblad.py --json cage_lindblad_benchmark.json
 python scripts/benchmark_cage_lindblad.py --markdown cage_lindblad_benchmark.md
 ```
 
 The Cage-Lindblad benchmark separates model build, cage search, cage
-classification, and open-system construction time. The default local-term
+classification, and open-system construction time. It also reports construction
+sub-stages such as monitor assembly, jump assembly, diagnostics, and optional
+Liouvillian checks. Use `--skip-jump-residuals` to separate jump materialization
+from the cost of computing `||J psi||` diagnostics. The default local-term
 builder is `sparse`, but encoded bitmask build results are promoted to the
 bitmask local-term path internally, matching the construction API behavior.
 

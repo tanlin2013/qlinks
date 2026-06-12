@@ -60,6 +60,7 @@ class CageLindbladBenchmarkResult:
     monitor_plaquette_policy: str
     jump_plaquette_policy: str
     check_liouvillian: bool
+    compute_jump_residuals: bool
     n_variables: int
     n_states: int
     selected_signature: tuple[int, int]
@@ -70,6 +71,7 @@ class CageLindbladBenchmarkResult:
     classification_seconds: float
     construction_seconds: float
     total_seconds: float
+    construction_stage_seconds: dict[str, float]
     n_nontrivial_zeros: int
     classification_label: str
     region_size: int
@@ -136,6 +138,13 @@ def _format_residual(value: float | None) -> str:
     return f"{value:.3e}"
 
 
+def _stage_seconds(
+    stages: dict[str, float],
+    stage_name: str,
+) -> float:
+    return float(stages.get(stage_name, 0.0))
+
+
 def _markdown_table(headers: list[str], rows: list[list[object]]) -> str:
     lines = [
         "| " + " | ".join(_markdown_escape(header) for header in headers) + " |",
@@ -164,6 +173,7 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
         "decomp",
         "content",
         "jump_design",
+        "jump_resid",
         "n_states",
         "signature",
         "region",
@@ -173,9 +183,13 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
         "search_s",
         "classify_s",
         "construct_s",
+        "monitor_s",
+        "jumps_s",
+        "diag_s",
+        "Lcheck_s",
         "total_s",
         "monitor_resid",
-        "jump_resid",
+        "jump_resid_norm",
         "L_resid",
     ]
     rows = [
@@ -187,6 +201,7 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
             result.reduced_iz_monitor_decomposition,
             result.reduced_iz_monitor_content,
             result.jump_operator_design,
+            result.compute_jump_residuals,
             result.n_states,
             result.selected_signature,
             result.region_size,
@@ -196,6 +211,10 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
             _format_seconds(result.search_seconds),
             _format_seconds(result.classification_seconds),
             _format_seconds(result.construction_seconds),
+            _format_seconds(_stage_seconds(result.construction_stage_seconds, "monitor_assembly")),
+            _format_seconds(_stage_seconds(result.construction_stage_seconds, "jump_assembly")),
+            _format_seconds(_stage_seconds(result.construction_stage_seconds, "diagnostics")),
+            _format_seconds(_stage_seconds(result.construction_stage_seconds, "liouvillian_check")),
             _format_seconds(result.total_seconds),
             _format_residual(result.monitor_residual),
             _format_residual(result.max_jump_residual),
@@ -324,6 +343,7 @@ def run_cage_lindblad_benchmark(
     jump_plaquette_policy: JumpPlaquettePolicy,
     jump_operator_design: JumpOperatorDesign,
     check_liouvillian: bool,
+    compute_jump_residuals: bool,
     residual_tolerance: float,
     classification_sector_policy: str,
     signature: tuple[int, int] | None,
@@ -373,6 +393,7 @@ def run_cage_lindblad_benchmark(
         )
     )
 
+    construction_stage_seconds: dict[str, float] = {}
     construction, construction_seconds = _time_call(
         lambda: build_type1_cage_lindblad_construction(
             model=case.model,
@@ -389,6 +410,8 @@ def run_cage_lindblad_benchmark(
             jump_plaquette_policy=jump_plaquette_policy,
             jump_operator_design=jump_operator_design,
             check_liouvillian=check_liouvillian,
+            compute_jump_residuals=compute_jump_residuals,
+            timing_collector=construction_stage_seconds,
             residual_tolerance=residual_tolerance,
         )
     )
@@ -409,6 +432,7 @@ def run_cage_lindblad_benchmark(
         monitor_plaquette_policy=monitor_plaquette_policy,
         jump_plaquette_policy=jump_plaquette_policy,
         check_liouvillian=check_liouvillian,
+        compute_jump_residuals=compute_jump_residuals,
         n_variables=case.model.layout.n_variables,
         n_states=build_result.basis.n_states,
         selected_signature=record.signature,
@@ -422,6 +446,7 @@ def run_cage_lindblad_benchmark(
         + search_seconds
         + classification_seconds
         + construction_seconds,
+        construction_stage_seconds=dict(construction_stage_seconds),
         n_nontrivial_zeros=classification_report.n_nontrivial_zeros,
         classification_label=str(classification_report.label),
         region_size=int(summary["region_size"]),
@@ -462,6 +487,9 @@ def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
         "search_s",
         "classify_s",
         "construct_s",
+        "monitor_s",
+        "jumps_s",
+        "diag_s",
         "total_s",
     ]
     rows = [
@@ -480,6 +508,9 @@ def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
             f"{result.search_seconds:.6f}",
             f"{result.classification_seconds:.6f}",
             f"{result.construction_seconds:.6f}",
+            f"{_stage_seconds(result.construction_stage_seconds, 'monitor_assembly'):.6f}",
+            f"{_stage_seconds(result.construction_stage_seconds, 'jump_assembly'):.6f}",
+            f"{_stage_seconds(result.construction_stage_seconds, 'diagnostics'):.6f}",
             f"{result.total_seconds:.6f}",
         ]
         for result in results
@@ -559,6 +590,14 @@ def main() -> None:
         action="store_true",
         help="Also time the expensive final Liouvillian dark-state check.",
     )
+    parser.add_argument(
+        "--skip-jump-residuals",
+        action="store_true",
+        help=(
+            "Skip computing ||J psi|| diagnostics after constructing jumps. "
+            "This is useful for separating jump materialization from residual checks."
+        ),
+    )
     parser.add_argument("--residual-tolerance", type=float, default=1.0e-10)
     parser.add_argument(
         "--signature",
@@ -610,6 +649,7 @@ def main() -> None:
                 jump_plaquette_policy=args.jump_plaquette_policy,
                 jump_operator_design=args.jump_operator_design,
                 check_liouvillian=args.check_liouvillian,
+                compute_jump_residuals=not args.skip_jump_residuals,
                 residual_tolerance=args.residual_tolerance,
                 classification_sector_policy=args.classification_sector_policy,
                 signature=args.signature,

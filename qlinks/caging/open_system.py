@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -62,6 +63,19 @@ JumpPlaquettePolicy = Literal[
     "outside_or_crossing",
     "not_strictly_inside",
 ]
+
+
+def _record_construction_stage(
+    timing_collector: dict[str, float] | None,
+    stage_name: str,
+    start_time: float,
+) -> None:
+    if timing_collector is None:
+        return
+
+    timing_collector[stage_name] = (
+        timing_collector.get(stage_name, 0.0) + time.perf_counter() - start_time
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -605,6 +619,8 @@ def build_type1_cage_lindblad_construction(
     include_collective_cancellation: bool = True,
     use_collective_coefficients: bool = True,
     check_liouvillian: bool = True,
+    compute_jump_residuals: bool = True,
+    timing_collector: dict[str, float] | None = None,
     residual_tolerance: float = 1e-10,
 ) -> CageLindbladConstruction:
     """Build M_R and J_p = K_p M_R for a type-1 cage.
@@ -620,11 +636,14 @@ def build_type1_cage_lindblad_construction(
 
     psi = psi / norm
 
+    stage_start = time.perf_counter()
     region = extract_cage_region_support(
         classification_report,
         include_collective_cancellation=include_collective_cancellation,
     )
+    _record_construction_stage(timing_collector, "extract_region", stage_start)
 
+    stage_start = time.perf_counter()
     kinetic_terms = model.local_term_descriptors(
         operator_kind="kinetic",
         term_kind="plaquette",
@@ -657,6 +676,7 @@ def build_type1_cage_lindblad_construction(
         crossing_terms=crossing_kinetic,
         policy=jump_plaquette_policy,
     )
+    _record_construction_stage(timing_collector, "select_terms", stage_start)
 
     dim = build_result.hamiltonian.shape[0]
     identity = sp.identity(dim, format="csr", dtype=np.complex128)
@@ -670,6 +690,8 @@ def build_type1_cage_lindblad_construction(
 
     monitor_components: tuple[ReducedIZMonitorComponent, ...] = ()
     component_jumps: tuple[Any, ...] | None = None
+
+    stage_start = time.perf_counter()
 
     if monitor_source == "local_hamiltonian_terms":
         kinetic_inside_matrix = _sum_local_terms(
@@ -821,6 +843,7 @@ def build_type1_cage_lindblad_construction(
                 include_projector_like=include_projector_like,
                 include_collective_cancellation=include_collective_cancellation,
                 use_collective_coefficients=use_collective_coefficients,
+                compute_jump_residuals=compute_jump_residuals,
             )
 
         component_z_values = tuple(component.z_value for component in monitor_components)
@@ -855,6 +878,9 @@ def build_type1_cage_lindblad_construction(
     else:
         raise ValueError(f"Unknown monitor_source: {monitor_source!r}")
 
+    _record_construction_stage(timing_collector, "monitor_assembly", stage_start)
+
+    stage_start = time.perf_counter()
     if component_jumps is not None:
         jumps = _build_component_decomposition_jump_operators(
             model=model,
@@ -881,6 +907,8 @@ def build_type1_cage_lindblad_construction(
             jump_operator_design=jump_operator_design,
         )
 
+    _record_construction_stage(timing_collector, "jump_assembly", stage_start)
+
     recycling_build_result = None
     recycling_jumps: tuple[Any, ...] = ()
     recycling_regions = _recycling_regions_from_construction_context(
@@ -888,6 +916,7 @@ def build_type1_cage_lindblad_construction(
         monitor_components=monitor_components,
     )
 
+    stage_start = time.perf_counter()
     if recycling_jump_source != "none":
         basis_configs = basis_configs_from_build_result(build_result)
 
@@ -907,11 +936,17 @@ def build_type1_cage_lindblad_construction(
         recycling_jumps = recycling_build_result.jumps
         jumps = tuple(jumps) + tuple(recycling_jumps)
 
+    _record_construction_stage(timing_collector, "recycling", stage_start)
+
+    stage_start = time.perf_counter()
     monitor_residual = float(np.linalg.norm(monitor @ psi))
-    jump_residuals = _jump_residuals(
-        state=psi,
-        jumps=jumps,
-    )
+    if compute_jump_residuals:
+        jump_residuals = _jump_residuals(
+            state=psi,
+            jumps=jumps,
+        )
+    else:
+        jump_residuals = ()
     max_jump_residual = max(jump_residuals) if jump_residuals else 0.0
     bad_component_residuals = [
         component
@@ -942,7 +977,10 @@ def build_type1_cage_lindblad_construction(
             for selection in recycling_build_result.selections
         )
 
+    _record_construction_stage(timing_collector, "diagnostics", stage_start)
+
     liouvillian_residual = None
+    stage_start = time.perf_counter()
     if check_liouvillian:
         target_density_matrix = density_matrix_from_state(
             psi,
@@ -956,6 +994,8 @@ def build_type1_cage_lindblad_construction(
         )
         liouvillian_residual = float(np.linalg.norm(target_rhs))
 
+    _record_construction_stage(timing_collector, "liouvillian_check", stage_start)
+
     if monitor_residual > residual_tolerance:
         raise ValueError(
             "The inferred regional monitor does not annihilate the cage state: "
@@ -964,7 +1004,7 @@ def build_type1_cage_lindblad_construction(
             "not compatible with the current type-1 construction."
         )
 
-    if max_jump_residual > residual_tolerance:
+    if compute_jump_residuals and max_jump_residual > residual_tolerance:
         raise ValueError(
             "The inferred jump operators do not annihilate the cage state: "
             f"max_p ||J_p psi||={max_jump_residual:.3e}."
@@ -1559,6 +1599,7 @@ def _build_reduced_iz_monitor_components(
     include_projector_like: bool = True,
     include_collective_cancellation: bool = True,
     use_collective_coefficients: bool = True,
+    compute_jump_residuals: bool = True,
 ) -> tuple[
     sp.csr_array,
     tuple[InterferenceZeroReport, ...],
@@ -1647,10 +1688,13 @@ def _build_reduced_iz_monitor_components(
 
             component_jumps.append((kinetic @ component_monitor).tocsr())
 
-        component_jump_residuals = _jump_residuals(
-            state=state,
-            jumps=tuple(component_jumps),
-        )
+        if compute_jump_residuals:
+            component_jump_residuals = _jump_residuals(
+                state=state,
+                jumps=tuple(component_jumps),
+            )
+        else:
+            component_jump_residuals = ()
 
         component_monitor_residual = float(np.linalg.norm(component_monitor @ state))
 
