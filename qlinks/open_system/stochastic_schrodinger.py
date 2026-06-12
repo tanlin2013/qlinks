@@ -475,9 +475,9 @@ def _run_quantum_jump_trajectory_prepared_scipy(
     jump_operators = tuple(np.asarray(jump, dtype=np.complex128) for jump in prepared.jumps)
     has_jump_operators = len(jump_operators) > 0
 
-    states: list[Any] = []
+    states: list[Any] = [None] * int(times.size) if store_states else []
     if store_states:
-        states.append(state.copy())
+        states[0] = state.copy()
 
     if state_callback is not None:
         state_callback(0, state)
@@ -497,13 +497,19 @@ def _run_quantum_jump_trajectory_prepared_scipy(
             step_size = remaining_step
 
             jumped_states: tuple[ArrayC, ...] = ()
+            jumped_state_single: ArrayC | None = None
             probabilities = np.zeros(0, dtype=np.float64)
             total_jump_probability = 0.0
 
             if has_jump_operators:
-                jumped_states, rates = _evaluate_jumps_numpy(state, jump_operators)
-                probabilities = step_size * rates
-                total_jump_probability = float(np.sum(probabilities))
+                if len(jump_operators) == 1:
+                    jumped_state_single = jump_operators[0] @ state
+                    rate = max(float(np.vdot(jumped_state_single, jumped_state_single).real), 0.0)
+                    total_jump_probability = step_size * rate
+                else:
+                    jumped_states, rates = _evaluate_jumps_numpy(state, jump_operators)
+                    probabilities = step_size * rates
+                    total_jump_probability = float(np.sum(probabilities))
 
                 if total_jump_probability > max_jump_probability:
                     if not adaptive_time_step:
@@ -522,8 +528,11 @@ def _run_quantum_jump_trajectory_prepared_scipy(
                     if step_size >= remaining_step:
                         step_size = remaining_step
 
-                    probabilities = step_size * rates
-                    total_jump_probability = float(np.sum(probabilities))
+                    if len(jump_operators) == 1:
+                        total_jump_probability = step_size * rate
+                    else:
+                        probabilities = step_size * rates
+                        total_jump_probability = float(np.sum(probabilities))
 
                     if total_jump_probability > max_jump_probability:
                         raise RuntimeError(
@@ -540,11 +549,13 @@ def _run_quantum_jump_trajectory_prepared_scipy(
                 )
 
             if has_jump_operators and rng.random() < total_jump_probability:
-                if probabilities.size == 1:
+                if len(jump_operators) == 1:
                     jump_index = 0
+                    assert jumped_state_single is not None
+                    state = jumped_state_single
                 else:
                     jump_index = choose_jump(probabilities, rng)
-                state = jumped_states[jump_index]
+                    state = jumped_states[jump_index]
                 jump_times.append(float(current_time + step_size))
                 jump_indices.append(jump_index)
             else:
@@ -569,7 +580,7 @@ def _run_quantum_jump_trajectory_prepared_scipy(
                 )
 
         if store_states:
-            states.append(state.copy())
+            states[time_index + 1] = state.copy()
 
         if state_callback is not None:
             state_callback(time_index + 1, state)
