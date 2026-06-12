@@ -175,6 +175,27 @@ def test_as_metadata() -> None:
     }
 
 
+def test_variable_index_uses_cached_lookup_and_indices_are_defensive() -> None:
+    layout = VariableLayout.from_sites_and_links(
+        num_sites=2,
+        site_space=LocalSpace.binary(),
+        num_links=3,
+        link_space=LocalSpace.spin_half_flux(),
+    )
+
+    assert layout.variable_index(VariableKind.SITE, 1) == 1
+    assert layout.variable_index("link", 2) == 4
+
+    site_indices = layout.site_variable_indices()
+    link_indices = layout.link_variable_indices()
+
+    site_indices[0] = 99
+    link_indices[0] = 99
+
+    np.testing.assert_array_equal(layout.site_variable_indices(), np.array([0, 1]))
+    np.testing.assert_array_equal(layout.link_variable_indices(), np.array([2, 3, 4]))
+
+
 def test_missing_variable_raises_key_error() -> None:
     layout = VariableLayout.from_sites(2, LocalSpace.binary())
 

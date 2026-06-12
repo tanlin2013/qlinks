@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Protocol
 
@@ -64,17 +64,43 @@ class VariableLayout:
     """
 
     specs: tuple[VariableSpec, ...]
+    _index_by_key: dict[tuple[VariableKind, int], int] = field(
+        init=False, repr=False, compare=False
+    )
+    _site_variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False, compare=False)
+    _link_variable_indices: npt.NDArray[np.int64] = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if len(self.specs) == 0:
             raise ValueError("VariableLayout must contain at least one variable.")
 
-        seen: set[tuple[VariableKind, int]] = set()
-        for spec in self.specs:
+        index_by_key: dict[tuple[VariableKind, int], int] = {}
+        site_variable_indices: list[int] = []
+        link_variable_indices: list[int] = []
+
+        for variable_index, spec in enumerate(self.specs):
             key = (spec.kind, spec.geometry_index)
-            if key in seen:
+            if key in index_by_key:
                 raise ValueError(f"Duplicate variable for {spec.kind}:{spec.geometry_index}.")
-            seen.add(key)
+
+            index_by_key[key] = variable_index
+
+            if spec.kind == VariableKind.SITE:
+                site_variable_indices.append(variable_index)
+            elif spec.kind == VariableKind.LINK:
+                link_variable_indices.append(variable_index)
+
+        object.__setattr__(self, "_index_by_key", index_by_key)
+        object.__setattr__(
+            self,
+            "_site_variable_indices",
+            np.asarray(site_variable_indices, dtype=np.int64),
+        )
+        object.__setattr__(
+            self,
+            "_link_variable_indices",
+            np.asarray(link_variable_indices, dtype=np.int64),
+        )
 
     @classmethod
     def from_sites(cls, num_sites: int, local_space: LocalSpace) -> VariableLayout:
@@ -174,12 +200,12 @@ class VariableLayout:
 
     def variable_index(self, kind: VariableKind | str, geometry_index: int) -> int:
         kind = VariableKind(kind)
+        key = (kind, int(geometry_index))
 
-        for variable_index, spec in enumerate(self.specs):
-            if spec.kind == kind and spec.geometry_index == geometry_index:
-                return variable_index
-
-        raise KeyError(f"No variable found for {kind}:{geometry_index}.")
+        try:
+            return self._index_by_key[key]
+        except KeyError as exc:
+            raise KeyError(f"No variable found for {kind}:{geometry_index}.") from exc
 
     def site_variable_index(self, site_index: int) -> int:
         return self.variable_index(VariableKind.SITE, site_index)
@@ -188,24 +214,10 @@ class VariableLayout:
         return self.variable_index(VariableKind.LINK, link_index)
 
     def site_variable_indices(self) -> npt.NDArray[np.int64]:
-        return np.asarray(
-            [
-                variable_index
-                for variable_index, spec in enumerate(self.specs)
-                if spec.kind == VariableKind.SITE
-            ],
-            dtype=np.int64,
-        )
+        return self._site_variable_indices.copy()
 
     def link_variable_indices(self) -> npt.NDArray[np.int64]:
-        return np.asarray(
-            [
-                variable_index
-                for variable_index, spec in enumerate(self.specs)
-                if spec.kind == VariableKind.LINK
-            ],
-            dtype=np.int64,
-        )
+        return self._link_variable_indices.copy()
 
     def empty_config(self, fill_value: int = 0) -> npt.NDArray[np.int64]:
         config = np.full(self.n_variables, fill_value, dtype=np.int64)
