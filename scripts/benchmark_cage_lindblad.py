@@ -146,6 +146,16 @@ def _markdown_table(headers: list[str], rows: list[list[object]]) -> str:
 
 
 def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
+    if len(results) == 0:
+        return "\n".join(
+            [
+                "## Cage-Lindblad construction benchmark",
+                "",
+                "No successful benchmark results.",
+                "",
+            ]
+        )
+
     headers = [
         "case",
         "builder",
@@ -216,11 +226,12 @@ def make_benchmark_cases() -> list[CageLindbladBenchmarkCase]:
                 winding_x=0,
                 winding_y=0,
                 winding_convention="electric",
-                coup_kin=1.0,
+                coup_kin=-1.0,
                 coup_pot=1.0,
             ),
             builder="sparse",
             search_type="type1",
+            signature=(0, 6),
         ),
         CageLindbladBenchmarkCase(
             name="square_qlm_4x4_pbc_w00",
@@ -231,12 +242,12 @@ def make_benchmark_cases() -> list[CageLindbladBenchmarkCase]:
                 winding_x=0,
                 winding_y=0,
                 charges=0,
-                coup_kin=1.0,
+                coup_kin=-1.0,
                 coup_pot=1.0,
             ),
-            builder="bitmask",
+            builder="sparse",
             search_type="type1",
-            signature=(0, 6),
+            signature=(0, 8),
         ),
     ]
 
@@ -432,6 +443,10 @@ def run_cage_lindblad_benchmark(
 
 
 def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
+    if len(results) == 0:
+        print("No successful Cage-Lindblad benchmark results.")
+        return
+
     headers = [
         "name",
         "builder",
@@ -502,12 +517,12 @@ def main() -> None:
     parser.add_argument("--backend", default="scipy")
     parser.add_argument(
         "--monitor-source",
-        default="local_hamiltonian_terms",
+        default="reduced_iz_operators",
         choices=["local_hamiltonian_terms", "reduced_iz_operators"],
     )
     parser.add_argument(
         "--reduced-iz-monitor-decomposition",
-        default="single_sum",
+        default="exact_support",
         choices=["single_sum", "exact_support", "connected_support"],
     )
     parser.add_argument(
