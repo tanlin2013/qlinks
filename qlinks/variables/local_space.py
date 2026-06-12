@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Iterable
 
 import numpy as np
@@ -25,6 +25,8 @@ class LocalSpace:
     """
 
     values: npt.NDArray[np.integer]
+    _value_set: frozenset[int] = field(init=False, repr=False, compare=False)
+    _value_to_code: dict[int, int] = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         values = np.asarray(self.values, dtype=np.int64)
@@ -38,7 +40,11 @@ class LocalSpace:
         if np.unique(values).size != values.size:
             raise ValueError("LocalSpace.values must not contain duplicates.")
 
+        value_to_code = {int(value): code for code, value in enumerate(values)}
+
         object.__setattr__(self, "values", values)
+        object.__setattr__(self, "_value_set", frozenset(value_to_code))
+        object.__setattr__(self, "_value_to_code", value_to_code)
 
     @classmethod
     def from_values(cls, values: Iterable[int]) -> LocalSpace:
@@ -74,7 +80,7 @@ class LocalSpace:
         return self.values.dtype
 
     def contains(self, value: int) -> bool:
-        return bool(np.any(self.values == value))
+        return int(value) in self._value_set
 
     def validate_value(self, value: int) -> None:
         if not self.contains(value):
@@ -94,10 +100,14 @@ class LocalSpace:
         """
         Convert a physical local value to a dense integer code 0, ..., dim - 1.
         """
-        matches = np.flatnonzero(self.values == value)
-        if matches.size == 0:
-            raise ValueError(f"Value {value} is not allowed in local space {self.values.tolist()}.")
-        return int(matches[0])
+        value = int(value)
+
+        try:
+            return self._value_to_code[value]
+        except KeyError as exc:
+            raise ValueError(
+                f"Value {value} is not allowed in local space {self.values.tolist()}."
+            ) from exc
 
     def code_to_value(self, code: int) -> int:
         """

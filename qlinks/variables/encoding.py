@@ -51,10 +51,46 @@ class ConfigEncoder:
         *,
         validate: bool = True,
     ) -> dict[bytes, int]:
+        if isinstance(configs, np.ndarray):
+            return self._build_index_from_array(configs, validate=validate)
+
         index: dict[bytes, int] = {}
 
         for i, config in enumerate(configs):
             key = self.encode(config, validate=validate)
+            if key in index:
+                raise ValueError(f"Duplicate configuration found at position {i}.")
+            index[key] = i
+
+        return index
+
+    def _build_index_from_array(
+        self,
+        configs: npt.NDArray[np.integer],
+        *,
+        validate: bool,
+    ) -> dict[bytes, int]:
+        arr = np.asarray(configs, dtype=np.int64)
+
+        if arr.ndim != 2:
+            raise ValueError("Expected a two-dimensional array of configurations.")
+
+        if arr.shape[1] != self.layout.n_variables:
+            raise ValueError(
+                f"Expected configs with {self.layout.n_variables} variables, "
+                f"got {arr.shape[1]}."
+            )
+
+        if validate:
+            self.layout.validate_batch(arr)
+
+        contiguous = np.ascontiguousarray(arr, dtype=np.int64)
+        index: dict[bytes, int] = {}
+
+        # Iterating over rows still creates one bytes key per state, but avoids
+        # the per-row ConfigEncoder.encode(...) dispatch and per-row validation.
+        for i, row in enumerate(contiguous):
+            key = row.tobytes()
             if key in index:
                 raise ValueError(f"Duplicate configuration found at position {i}.")
             index[key] = i

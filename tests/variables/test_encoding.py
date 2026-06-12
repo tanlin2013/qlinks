@@ -107,3 +107,51 @@ def test_bit_packed_binary_encoder_rejects_invalid_config() -> None:
 
     with pytest.raises(ValueError, match="not allowed"):
         encoder.encode(np.array([0, 1, 2]))
+
+
+def test_config_encoder_build_index_from_array_matches_iterable() -> None:
+    layout = VariableLayout.from_sites(3, LocalSpace.binary())
+    encoder = ConfigEncoder(layout)
+    configs = np.array(
+        [
+            [0, 0, 0],
+            [0, 1, 0],
+            [1, 0, 1],
+        ],
+        dtype=np.int64,
+    )
+
+    array_index = encoder.build_index(configs)
+    iterable_index = encoder.build_index([row.copy() for row in configs])
+
+    assert array_index == iterable_index
+
+
+def test_config_encoder_build_index_from_array_rejects_duplicates() -> None:
+    layout = VariableLayout.from_sites(3, LocalSpace.binary())
+    encoder = ConfigEncoder(layout)
+    configs = np.array(
+        [
+            [0, 0, 0],
+            [0, 0, 0],
+        ],
+        dtype=np.int64,
+    )
+
+    with pytest.raises(ValueError, match="Duplicate configuration"):
+        encoder.build_index(configs)
+
+
+def test_config_encoder_build_index_from_array_batch_validates() -> None:
+    layout = VariableLayout.from_sites(3, LocalSpace.binary())
+    encoder = ConfigEncoder(layout)
+    configs = np.array(
+        [
+            [0, 0, 0],
+            [0, 2, 0],
+        ],
+        dtype=np.int64,
+    )
+
+    with pytest.raises(ValueError, match="outside local space"):
+        encoder.build_index(configs)

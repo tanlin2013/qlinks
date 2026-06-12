@@ -74,3 +74,15 @@ def test_value_code_conversion() -> None:
 
     with pytest.raises(ValueError, match="outside valid range"):
         space.code_to_value(3)
+
+
+def test_local_space_cached_lookup_tables_are_used() -> None:
+    space = LocalSpace.from_values([-2, 0, 3])
+
+    assert space.contains(-2)
+    assert space.contains(0)
+    assert space.contains(3)
+    assert not space.contains(1)
+    assert space.value_to_code(-2) == 0
+    assert space.value_to_code(0) == 1
+    assert space.value_to_code(3) == 2
