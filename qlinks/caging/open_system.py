@@ -11,6 +11,7 @@ from qlinks.basis import basis_configs_from_build_result
 from qlinks.caging.classification import (
     CageClassificationReport,
     InterferenceZeroReport,
+    LocalTransitionPattern,
 )
 from qlinks.caging.support import CageRegionSupport, extract_cage_region_support
 from qlinks.encoded import BinaryEncodedBasis
@@ -1788,6 +1789,22 @@ def _monitor_coefficient_for_zero_report(
     return 1.0 + 0.0j
 
 
+def _transition_pattern_key(values: tuple[int, ...] | NDArray[np.integer]) -> tuple[int, ...]:
+    return tuple(int(value) for value in values)
+
+
+def _group_local_transitions_by_source(
+    transitions: tuple[LocalTransitionPattern, ...],
+) -> dict[tuple[int, ...], tuple[LocalTransitionPattern, ...]]:
+    grouped: dict[tuple[int, ...], list[LocalTransitionPattern]] = {}
+
+    for transition in transitions:
+        key = _transition_pattern_key(transition.source_local)
+        grouped.setdefault(key, []).append(transition)
+
+    return {key: tuple(group) for key, group in grouped.items()}
+
+
 def _build_reduced_iz_operator_matrix(
     *,
     zero_report: InterferenceZeroReport,
@@ -1800,14 +1817,15 @@ def _build_reduced_iz_operator_matrix(
     data: list[complex] = []
 
     local_mask = zero_report.local_mask
+    transitions_by_source = _group_local_transitions_by_source(
+        zero_report.local_transitions,
+    )
 
     for source_index, source_config in enumerate(basis_configs):
-        source_local = tuple(int(x) for x in source_config[local_mask])
+        source_local = _transition_pattern_key(source_config[local_mask])
+        local_transitions = transitions_by_source.get(source_local, ())
 
-        for transition in zero_report.local_transitions:
-            if tuple(int(x) for x in transition.source_local) != source_local:
-                continue
-
+        for transition in local_transitions:
             target_config = np.array(source_config, copy=True)
             target_config[local_mask] = np.asarray(
                 transition.target_local,

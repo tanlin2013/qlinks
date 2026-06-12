@@ -5,14 +5,23 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 
+from qlinks.caging.classification import (
+    InterferenceZeroReport,
+    LocalTransitionPattern,
+)
 from qlinks.caging.open_system import (
     CageLindbladConstruction,
     _build_component_decomposition_jump_operators,
+    _build_reduced_iz_operator_matrix,
+    _group_local_transitions_by_source,
+    _group_reduced_iz_reports_for_monitor,
     _infer_sharp_potential_value,
     _LocalTermMatrixCache,
+    _partition_plaquette_terms_by_region,
     _resolve_local_term_builder,
     _select_jump_terms,
     _select_monitor_terms,
+    _transition_pattern_key,
 )
 from qlinks.encoded import BinaryEncodedBasis
 from qlinks.models import LocalTermDescriptor
@@ -70,6 +79,45 @@ def _fake_construction() -> CageLindbladConstruction:
         max_jump_residual=0.0,
         jump_residuals=(),
         liouvillian_residual=0.0,
+    )
+
+
+def _zero_report(
+    *,
+    zero_index: int,
+    local_mask: tuple[bool, ...],
+    label: str = "q_empty",
+    transitions: tuple[LocalTransitionPattern, ...] = (),
+) -> InterferenceZeroReport:
+    return InterferenceZeroReport(
+        zero_index=zero_index,
+        active_neighbors=np.array([], dtype=np.int64),
+        active_matrix_elements=np.array([], dtype=np.complex128),
+        active_amplitudes=np.array([], dtype=np.complex128),
+        cancellation_residual=0.0,
+        common_mask=np.zeros(len(local_mask), dtype=np.bool_),
+        local_mask=np.asarray(local_mask, dtype=np.bool_),
+        local_transitions=transitions,
+        q_sector_weight=1.0,
+        reduced_action_norm=0.0,
+        complement_action_norm=0.0,
+        complement_target_indices=np.array([], dtype=np.int64),
+        explained_complement_target_indices=np.array([], dtype=np.int64),
+        unexplained_complement_target_indices=np.array([], dtype=np.int64),
+        complement_targets_are_known_zeros=True,
+        trivial_target_indices=np.array([], dtype=np.int64),
+        known_nonprojector_iz_target_indices=np.array([], dtype=np.int64),
+        projector_like_iz_target_indices=np.array([], dtype=np.int64),
+        unexpected_target_indices=np.array([], dtype=np.int64),
+        complement_support_indices=np.array([], dtype=np.int64),
+        complement_contributing_input_indices=np.array([], dtype=np.int64),
+        projector_like_annihilated_input_indices=np.array([], dtype=np.int64),
+        source_projector_like=False,
+        has_unexpected_targets=False,
+        has_nonzero_complement_action=False,
+        unexpected_target_probe_failure_indices=np.array([], dtype=np.int64),
+        nonzero_complement_action_target_indices=np.array([], dtype=np.int64),
+        probe_mechanism_label=label,  # type: ignore[arg-type]
     )
 
 
@@ -358,3 +406,98 @@ def test_component_decomposition_hamiltonian_outside_appends_kinetic_plus_potent
 
     expected_outside = 33.0 * np.eye(2, dtype=np.complex128)
     np.testing.assert_allclose(jumps[1].toarray(), expected_outside)
+
+
+def test_partition_plaquette_terms_by_region_separates_inside_crossing_outside():
+    terms = (
+        LocalTermDescriptor(
+            term_id=0,
+            term_kind="plaquette",
+            operator_kind="kinetic",
+            support_links=(0, 1),
+        ),
+        LocalTermDescriptor(
+            term_id=1,
+            term_kind="plaquette",
+            operator_kind="kinetic",
+            support_links=(1, 2),
+        ),
+        LocalTermDescriptor(
+            term_id=2,
+            term_kind="plaquette",
+            operator_kind="kinetic",
+            support_links=(3, 4),
+        ),
+    )
+
+    inside, outside, crossing = _partition_plaquette_terms_by_region(
+        terms,
+        variable_index_set=frozenset({0, 1}),
+    )
+
+    assert tuple(term.term_id for term in inside) == (0,)
+    assert tuple(term.term_id for term in outside) == (2,)
+    assert tuple(term.term_id for term in crossing) == (1,)
+
+
+def test_group_reduced_iz_reports_for_monitor_exact_and_connected_supports():
+    report_0 = _zero_report(zero_index=0, local_mask=(True, True, False, False))
+    report_1 = _zero_report(zero_index=1, local_mask=(False, True, True, False))
+    report_2 = _zero_report(zero_index=2, local_mask=(False, False, False, True))
+    report_3 = _zero_report(zero_index=3, local_mask=(True, True, False, False))
+
+    exact_groups = _group_reduced_iz_reports_for_monitor(
+        (report_0, report_1, report_2, report_3),
+        decomposition="exact_support",
+    )
+    connected_groups = _group_reduced_iz_reports_for_monitor(
+        (report_0, report_1, report_2, report_3),
+        decomposition="connected_support",
+    )
+
+    assert [[report.zero_index for report in group] for group in exact_groups] == [
+        [0, 3],
+        [1],
+        [2],
+    ]
+    assert [[report.zero_index for report in group] for group in connected_groups] == [
+        [0, 1, 3],
+        [2],
+    ]
+
+
+def test_group_local_transitions_by_source_and_reduced_iz_matrix():
+    transitions = (
+        LocalTransitionPattern(
+            source_local=(0,),
+            target_local=(1,),
+            matrix_element=2.0 + 0.0j,
+        ),
+        LocalTransitionPattern(
+            source_local=(1,),
+            target_local=(0,),
+            matrix_element=3.0 + 0.0j,
+        ),
+    )
+    grouped = _group_local_transitions_by_source(transitions)
+
+    assert tuple(grouped) == ((0,), (1,))
+    assert _transition_pattern_key(np.array([1], dtype=np.int64)) == (1,)
+
+    basis_configs = np.array([[0], [1]], dtype=np.int64)
+    zero_report = _zero_report(
+        zero_index=0,
+        local_mask=(True,),
+        transitions=transitions,
+    )
+    matrix = _build_reduced_iz_operator_matrix(
+        zero_report=zero_report,
+        basis_configs=basis_configs,
+        config_to_index={(0,): 0, (1,): 1},
+        shape=(2, 2),
+    )
+
+    np.testing.assert_allclose(
+        matrix.toarray(),
+        np.array([[0.0, 3.0], [2.0, 0.0]], dtype=np.complex128),
+    )
