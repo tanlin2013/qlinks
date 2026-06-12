@@ -1,6 +1,6 @@
 [project]
 name = "qlinks"
-version = "1.0.0-alpha"
+version = "1.0.0"
 description = "Quantum link model"
 authors = [
     { name = "Tan Tao-Lin", email = "tanlin2013@gmail.com" },
