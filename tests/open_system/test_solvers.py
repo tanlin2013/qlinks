@@ -109,3 +109,39 @@ def test_solve_lindblad_auto_returns_result():
 
     assert len(result.density_matrices) == len(times)
     assert result.method in {"krylov", "rk4_liouville", "rk4_matrix"}
+
+
+def test_lindblad_problem_reuses_prepared_dense_operators(monkeypatch):
+    import qlinks.open_system.solvers as solvers
+
+    hamiltonian = np.array(
+        [[1.0, 0.2], [0.2, -1.0]],
+        dtype=np.complex128,
+    )
+    jump = np.array(
+        [[0.0, 1.0], [0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    density_matrix = initial_density_matrix(2, kind="mixed", rng=0)
+
+    call_count = 0
+    original_prepare = solvers.prepare_dense_lindblad_operators
+
+    def counted_prepare(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return original_prepare(*args, **kwargs)
+
+    monkeypatch.setattr(solvers, "prepare_dense_lindblad_operators", counted_prepare)
+
+    problem = solvers.LindbladProblem(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        backend="scipy",
+    )
+
+    problem.rhs(density_matrix)
+    problem.rhs(density_matrix)
+    _ = problem.rk4_scale
+
+    assert call_count == 1

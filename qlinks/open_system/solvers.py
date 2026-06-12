@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass, replace
+from functools import cached_property
 from typing import Any, Literal
 
 import numpy as np
@@ -13,9 +14,12 @@ from qlinks.open_system.backend import (
 )
 from qlinks.open_system.diagnostics import verify_density_matrix
 from qlinks.open_system.operators import (
+    DenseLindbladOperators,
     build_liouvillian,
     estimate_lindblad_scale,
-    lindblad_rhs_density_matrix,
+    estimate_lindblad_scale_prepared,
+    lindblad_rhs_density_matrix_prepared,
+    prepare_dense_lindblad_operators,
     unvectorize_density_matrix,
     vectorize_density_matrix,
 )
@@ -78,6 +82,18 @@ class LindbladProblem:
     def dim(self) -> int:
         return int(self.hamiltonian.shape[0])
 
+    @cached_property
+    def dense_operators(self) -> DenseLindbladOperators:
+        return prepare_dense_lindblad_operators(
+            hamiltonian=self.hamiltonian,
+            jumps=self.jumps,
+            backend=self.backend,
+        )
+
+    @cached_property
+    def rk4_scale(self) -> float:
+        return estimate_lindblad_scale_prepared(self.dense_operators)
+
     def build_liouvillian(self, *, sparse_format: str = "csc"):
         return build_liouvillian(
             self.hamiltonian,
@@ -87,11 +103,9 @@ class LindbladProblem:
         )
 
     def rhs(self, density_matrix: Any):
-        return lindblad_rhs_density_matrix(
+        return lindblad_rhs_density_matrix_prepared(
             density_matrix,
-            hamiltonian=self.hamiltonian,
-            jumps=self.jumps,
-            backend=self.backend,
+            dense_operators=self.dense_operators,
         )
 
     def evolve(
@@ -313,11 +327,7 @@ def _evolve_rk4_matrix(
             )
         )
 
-    scale = estimate_lindblad_scale(
-        hamiltonian=problem.hamiltonian,
-        jumps=problem.jumps,
-        backend=backend,
-    )
+    scale = problem.rk4_scale
 
     for time_index in range(times.size - 1):
         step_size = float(times[time_index + 1] - times[time_index])

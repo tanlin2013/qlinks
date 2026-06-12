@@ -20,6 +20,47 @@ StateSampler = Callable[[np.random.Generator], Any]
 
 
 @dataclass(frozen=True, slots=True)
+class _McwfPreparedOperators:
+    backend: OpenSystemBackend
+    hamiltonian: Any
+    jumps: tuple[Any, ...]
+    effective_hamiltonian_matrix: Any
+
+
+def _prepare_mcwf_operators(
+    *,
+    hamiltonian: Any,
+    jumps: list[Any] | tuple[Any, ...],
+    backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
+) -> _McwfPreparedOperators:
+    backend_obj = get_open_system_backend(backend)
+    hamiltonian_backend = as_backend_dense_array(
+        hamiltonian,
+        backend=backend_obj,
+        dtype=np.complex128,
+    )
+    jump_operators = tuple(
+        as_backend_dense_array(
+            jump,
+            backend=backend_obj,
+            dtype=np.complex128,
+        )
+        for jump in jumps
+    )
+    effective_hamiltonian_matrix = effective_hamiltonian(
+        hamiltonian_backend,
+        jump_operators,
+    )
+
+    return _McwfPreparedOperators(
+        backend=backend_obj,
+        hamiltonian=hamiltonian_backend,
+        jumps=jump_operators,
+        effective_hamiltonian_matrix=effective_hamiltonian_matrix,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class McwfOptions:
     """Options for Monte Carlo wave-function sampling."""
 
@@ -170,35 +211,54 @@ def run_quantum_jump_trajectory(
     conservative: if the total jump probability in one time step is too large,
     it raises an error and asks the caller to refine the time grid.
     """
+    prepared = _prepare_mcwf_operators(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        backend=backend,
+    )
+    return _run_quantum_jump_trajectory_prepared(
+        prepared=prepared,
+        state_initial=state_initial,
+        times=times,
+        rng=rng,
+        return_backend_arrays=return_backend_arrays,
+        store_states=store_states,
+        normalize_each_step=normalize_each_step,
+        max_jump_probability=max_jump_probability,
+        adaptive_time_step=adaptive_time_step,
+        adaptive_safety_factor=adaptive_safety_factor,
+        min_step_size=min_step_size,
+        max_substeps_per_interval=max_substeps_per_interval,
+    )
+
+
+def _run_quantum_jump_trajectory_prepared(
+    *,
+    prepared: _McwfPreparedOperators,
+    state_initial: Any,
+    times: NDArray[np.float64],
+    rng: np.random.Generator | int | None = None,
+    return_backend_arrays: bool = False,
+    store_states: bool = True,
+    normalize_each_step: bool = True,
+    max_jump_probability: float = 0.1,
+    adaptive_time_step: bool = False,
+    adaptive_safety_factor: float = 0.8,
+    min_step_size: float = 1.0e-12,
+    max_substeps_per_interval: int = 100_000,
+) -> TrajectoryResult:
     times = np.asarray(times, dtype=np.float64)
     _validate_times_for_mcwf(times)
 
     generator = _rng_from_seed(rng)
-    backend_obj = get_open_system_backend(backend)
-
-    hamiltonian_backend = as_backend_dense_array(
-        hamiltonian,
-        backend=backend_obj,
-        dtype=np.complex128,
-    )
-    jump_operators = [
-        as_backend_dense_array(
-            jump,
-            backend=backend_obj,
-            dtype=np.complex128,
-        )
-        for jump in jumps
-    ]
+    backend_obj = prepared.backend
+    jump_operators = prepared.jumps
 
     state = _normalize_backend_state(
         backend_obj.asarray(state_initial, dtype=np.complex128),
         backend=backend_obj,
     )
-
-    effective_hamiltonian_matrix = effective_hamiltonian(
-        hamiltonian_backend,
-        jump_operators,
-    )
+    effective_hamiltonian_matrix = prepared.effective_hamiltonian_matrix
 
     states: list[Any] = []
     if store_states:
@@ -372,28 +432,20 @@ def sample_lindblad_mcwf(
     _validate_times_for_mcwf(times)
 
     generator = _rng_from_seed(options.seed if rng is None else rng)
-    backend_obj = get_open_system_backend(options.backend)
-
-    hamiltonian_backend = as_backend_dense_array(
-        hamiltonian,
-        backend=backend_obj,
-        dtype=np.complex128,
+    prepared = _prepare_mcwf_operators(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        backend=options.backend,
     )
-    jump_operators = [
-        as_backend_dense_array(
-            jump,
-            backend=backend_obj,
-            dtype=np.complex128,
-        )
-        for jump in jumps
-    ]
+    backend_obj = prepared.backend
+    hamiltonian_backend = prepared.hamiltonian
 
     dim = int(hamiltonian_backend.shape[0])
 
     if hamiltonian_backend.shape != (dim, dim):
         raise ValueError("hamiltonian must be a square matrix.")
 
-    for jump in jump_operators:
+    for jump in prepared.jumps:
         if jump.shape != (dim, dim):
             raise ValueError("Every jump operator must have shape (dim, dim).")
 
@@ -422,13 +474,11 @@ def sample_lindblad_mcwf(
             rng=trajectory_rng,
         )
 
-        trajectory = run_quantum_jump_trajectory(
-            hamiltonian=hamiltonian_backend,
-            jumps=jump_operators,
+        trajectory = _run_quantum_jump_trajectory_prepared(
+            prepared=prepared,
             state_initial=trajectory_state_initial,
             times=times,
             rng=trajectory_rng,
-            backend=options.backend,
             return_backend_arrays=options.return_backend_arrays,
             store_states=True,
             normalize_each_step=options.normalize_each_step,

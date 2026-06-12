@@ -35,9 +35,13 @@ from qlinks.open_system.local_recycling import (
     select_local_recycling_candidates,
 )
 from qlinks.open_system.operators import (
+    DenseLindbladOperators,
     build_liouvillian,
     estimate_lindblad_scale,
+    estimate_lindblad_scale_prepared,
     lindblad_rhs_density_matrix,
+    lindblad_rhs_density_matrix_prepared,
+    prepare_dense_lindblad_operators,
     unvectorize_density_matrix,
     vectorize_density_matrix,
 )
@@ -77,9 +81,13 @@ __all__ = [
     "OpenSystemBackend",
     "OpenSystemBackendName",
     "get_open_system_backend",
+    "DenseLindbladOperators",
     "build_liouvillian",
     "estimate_lindblad_scale",
+    "estimate_lindblad_scale_prepared",
     "lindblad_rhs_density_matrix",
+    "lindblad_rhs_density_matrix_prepared",
+    "prepare_dense_lindblad_operators",
     "unvectorize_density_matrix",
     "vectorize_density_matrix",
     "LindbladEvolutionOptions",

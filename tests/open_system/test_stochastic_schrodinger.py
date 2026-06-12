@@ -774,6 +774,38 @@ def test_sample_lindblad_mcwf_forwards_adaptive_options() -> None:
     assert len(result.trajectories) == 2
 
 
+def test_sample_lindblad_mcwf_reuses_prepared_effective_hamiltonian(monkeypatch, qubit_ops):
+    import qlinks.open_system.stochastic_schrodinger as stochastic_schrodinger
+
+    call_count = 0
+    original_effective_hamiltonian = stochastic_schrodinger.effective_hamiltonian
+
+    def counted_effective_hamiltonian(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return original_effective_hamiltonian(*args, **kwargs)
+
+    monkeypatch.setattr(
+        stochastic_schrodinger,
+        "effective_hamiltonian",
+        counted_effective_hamiltonian,
+    )
+
+    sample_lindblad_mcwf(
+        hamiltonian=np.zeros((2, 2), dtype=np.complex128),
+        jumps=[qubit_ops["sigma_minus"]],
+        state_initial=qubit_ops["ket1"],
+        times=np.linspace(0.0, 0.1, 3),
+        options=McwfOptions(
+            n_trajectories=4,
+            seed=123,
+            store_trajectories=False,
+        ),
+    )
+
+    assert call_count == 1
+
+
 @pytest.mark.manual
 def test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
     import matplotlib.pyplot as plt

@@ -91,3 +91,36 @@ def test_lindblad_rhs_accepts_sparse_hamiltonian_and_jumps():
     assert rhs.shape == (2, 2)
     assert rhs.dtype == np.complex128
     assert abs(np.trace(rhs)) < 1e-12
+
+
+def test_prepared_lindblad_rhs_matches_public_rhs():
+    from qlinks.open_system.operators import (
+        lindblad_rhs_density_matrix_prepared,
+        prepare_dense_lindblad_operators,
+    )
+
+    hamiltonian = np.array(
+        [[1.0, 0.2], [0.2, -1.0]],
+        dtype=np.complex128,
+    )
+    jump = np.array(
+        [[0.0, 1.0], [0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    density_matrix = initial_density_matrix(2, kind="mixed", rng=0)
+
+    dense_operators = prepare_dense_lindblad_operators(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+    )
+    expected = lindblad_rhs_density_matrix(
+        density_matrix,
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+    )
+    actual = lindblad_rhs_density_matrix_prepared(
+        density_matrix,
+        dense_operators=dense_operators,
+    )
+
+    np.testing.assert_allclose(actual, expected)
