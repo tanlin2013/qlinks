@@ -17,6 +17,7 @@ from qlinks.open_system import (
     prepare_dense_lindblad_operators,
     prepare_sparse_lindblad_operators,
     pure_density_matrix,
+    run_quantum_jump_trajectory,
     sample_lindblad_mcwf,
     solve_lindblad,
 )
@@ -29,6 +30,7 @@ OpenSystemOperation = Literal[
     "rk4_matrix",
     "rk4_liouville",
     "krylov",
+    "single_trajectory",
     "mcwf",
 ]
 
@@ -39,6 +41,7 @@ _OPERATION_ORDER: tuple[str, ...] = (
     "rk4_matrix",
     "rk4_liouville",
     "krylov",
+    "single_trajectory",
     "mcwf",
 )
 
@@ -331,6 +334,27 @@ def run_open_system_benchmark(
         details = {
             "method": result.method,
             "n_substeps_total": int(sum(result.n_substeps_per_interval)),
+        }
+
+    elif operation == "single_trajectory":
+        trajectory, elapsed = _time_call(
+            lambda: run_quantum_jump_trajectory(
+                hamiltonian=case.hamiltonian,
+                jumps=case.jumps,
+                state_initial=case.state_initial,
+                times=times,
+                rng=seed,
+                backend=backend,  # type: ignore[arg-type]
+                store_states=True,
+                adaptive_time_step=mcwf_adaptive_time_step,
+                max_jump_probability=mcwf_max_jump_probability,
+            )
+        )
+        n_trajectories_result = 1
+        details = {
+            "stored_states": len(trajectory.states),
+            "observed_jumps": int(trajectory.jump_indices.size),
+            "adaptive": mcwf_adaptive_time_step,
         }
 
     elif operation == "mcwf":

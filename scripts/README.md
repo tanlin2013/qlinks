@@ -56,6 +56,7 @@ to write a compact GitHub-ready stage-timing table.
 
 ```bash
 python scripts/benchmark_open_system.py
+python scripts/benchmark_open_system.py --operation single_trajectory --n-times 201
 python scripts/benchmark_open_system.py --operation mcwf --n-trajectories 512
 python scripts/benchmark_open_system.py --only qubit --operation all
 python scripts/benchmark_open_system.py --json open_system_benchmark.json
@@ -68,8 +69,9 @@ python scripts/benchmark_open_system.py \
 ```
 
 The open-system benchmark separates dense/sparse operator preparation,
-Liouvillian construction, deterministic Lindblad solvers, and MCWF ensemble
-sampling. Use it before doing deeper MCWF or sparse-triplet optimization.
+Liouvillian construction, deterministic Lindblad solvers, single MCWF trajectory
+evolution, and MCWF ensemble sampling. Use `--operation single_trajectory`
+with a larger `--n-times` value to profile animation-oriented runs.
 
 ---
 
