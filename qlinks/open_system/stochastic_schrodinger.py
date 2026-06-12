@@ -428,6 +428,174 @@ def _run_quantum_jump_trajectory_prepared(
     )
 
 
+def _can_use_vectorized_mcwf_ensemble(
+    *,
+    options: McwfOptions,
+    backend: OpenSystemBackend,
+) -> bool:
+    """Return whether the ensemble can use the NumPy vectorized MCWF path."""
+    return (
+        backend.name == "scipy"
+        and not options.store_trajectories
+        and not options.adaptive_time_step
+        and options.normalize_each_step
+    )
+
+
+def _sample_lindblad_mcwf_vectorized_scipy(
+    *,
+    prepared: _McwfPreparedOperators,
+    dim: int,
+    times: NDArray[np.float64],
+    state_initial: Any | None,
+    state_sampler: StateSampler | None,
+    options: McwfOptions,
+    rng: np.random.Generator,
+) -> EnsembleResult:
+    """Sample an MCWF ensemble with trajectory states stored as columns."""
+    states = _initial_state_matrix_for_ensemble(
+        dim=dim,
+        n_trajectories=options.n_trajectories,
+        state_initial=state_initial,
+        state_sampler=state_sampler,
+        rng=rng,
+    )
+    effective_hamiltonian_matrix = np.asarray(
+        prepared.effective_hamiltonian_matrix,
+        dtype=np.complex128,
+    )
+    jump_operators = tuple(np.asarray(jump, dtype=np.complex128) for jump in prepared.jumps)
+
+    rho_t: list[ArrayC] = [_density_matrix_from_state_matrix(states)]
+
+    for time_index in range(times.size - 1):
+        step_size = float(times[time_index + 1] - times[time_index])
+
+        jumped_states: tuple[ArrayC, ...] = ()
+        probabilities = np.zeros((0, options.n_trajectories), dtype=np.float64)
+        total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
+
+        if jump_operators:
+            jumped_states = tuple(jump @ states for jump in jump_operators)
+            rates = np.asarray(
+                [
+                    np.einsum(
+                        "ij,ij->j",
+                        jumped_state.conj(),
+                        jumped_state,
+                    ).real
+                    for jumped_state in jumped_states
+                ],
+                dtype=np.float64,
+            )
+            np.maximum(rates, 0.0, out=rates)
+            probabilities = step_size * rates
+            total_jump_probabilities = np.sum(probabilities, axis=0)
+
+            max_total_jump_probability = float(np.max(total_jump_probabilities))
+            if max_total_jump_probability > options.max_jump_probability:
+                raise RuntimeError(
+                    "Time step is too large for first-order MCWF: "
+                    f"total jump probability={max_total_jump_probability:.6e}, "
+                    f"allowed maximum={options.max_jump_probability:.6e}. "
+                    "Use a finer time grid, enable adaptive_time_step=True, "
+                    "or increase max_jump_probability only if you know this is "
+                    "acceptable."
+                )
+
+        next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
+
+        if jump_operators:
+            jump_mask = rng.random(options.n_trajectories) < total_jump_probabilities
+            if np.any(jump_mask):
+                selected_jump_indices = _choose_jump_indices_vectorized(
+                    probabilities=probabilities,
+                    total_probabilities=total_jump_probabilities,
+                    rng=rng,
+                )
+                for jump_index, jumped_state in enumerate(jumped_states):
+                    selected_mask = jump_mask & (selected_jump_indices == jump_index)
+                    if np.any(selected_mask):
+                        next_states[:, selected_mask] = jumped_state[:, selected_mask]
+
+        norms = np.linalg.norm(next_states, axis=0)
+        if np.any(norms == 0.0):
+            raise RuntimeError(
+                "At least one MCWF state reached zero norm. " "Try a smaller time step."
+            )
+
+        states = next_states / norms.reshape(1, -1)
+        rho_t.append(_density_matrix_from_state_matrix(states))
+
+    return EnsembleResult(
+        times=times,
+        rho_t=rho_t,
+        trajectories=None,
+    )
+
+
+def _choose_jump_indices_vectorized(
+    *,
+    probabilities: NDArray[np.float64],
+    total_probabilities: NDArray[np.float64],
+    rng: np.random.Generator,
+) -> NDArray[np.int64]:
+    cumulative_probabilities = np.cumsum(probabilities, axis=0)
+    draws = rng.random(total_probabilities.size) * total_probabilities
+    selected = np.sum(
+        draws.reshape(1, -1) >= cumulative_probabilities,
+        axis=0,
+        dtype=np.int64,
+    )
+    return np.minimum(selected, probabilities.shape[0] - 1).astype(np.int64, copy=False)
+
+
+def _initial_state_matrix_for_ensemble(
+    *,
+    dim: int,
+    n_trajectories: int,
+    state_initial: Any | None,
+    state_sampler: StateSampler | None,
+    rng: np.random.Generator,
+) -> ArrayC:
+    if state_initial is not None:
+        state = _normalize_numpy_state(np.asarray(state_initial, dtype=np.complex128))
+        return np.repeat(state.reshape(-1, 1), n_trajectories, axis=1)
+
+    states = np.empty((dim, n_trajectories), dtype=np.complex128)
+    child_seeds = rng.integers(
+        low=0,
+        high=np.iinfo(np.int64).max,
+        size=n_trajectories,
+        dtype=np.int64,
+    )
+
+    for trajectory_index, child_seed in enumerate(child_seeds):
+        trajectory_rng = np.random.default_rng(int(child_seed))
+        state = _initial_state_for_trajectory(
+            dim=dim,
+            state_initial=None,
+            state_sampler=state_sampler,
+            rng=trajectory_rng,
+        )
+        states[:, trajectory_index] = _normalize_numpy_state(state)
+
+    return states
+
+
+def _normalize_numpy_state(state: ArrayC) -> ArrayC:
+    norm = float(np.linalg.norm(state))
+
+    if norm == 0.0:
+        raise ValueError("state must be nonzero.")
+
+    return np.asarray(state / norm, dtype=np.complex128)
+
+
+def _density_matrix_from_state_matrix(states: ArrayC) -> ArrayC:
+    return (states @ states.conj().T) / float(states.shape[1])
+
+
 def sample_lindblad_mcwf(
     *,
     hamiltonian: Any,
@@ -498,6 +666,20 @@ def sample_lindblad_mcwf(
     for jump in prepared.jumps:
         if jump.shape != (dim, dim):
             raise ValueError("Every jump operator must have shape (dim, dim).")
+
+    if _can_use_vectorized_mcwf_ensemble(
+        options=options,
+        backend=backend_obj,
+    ):
+        return _sample_lindblad_mcwf_vectorized_scipy(
+            prepared=prepared,
+            dim=dim,
+            times=times,
+            state_initial=state_initial,
+            state_sampler=state_sampler,
+            options=options,
+            rng=generator,
+        )
 
     rho_t = [np.zeros((dim, dim), dtype=np.complex128) for _ in range(times.size)]
 

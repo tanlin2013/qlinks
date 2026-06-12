@@ -497,6 +497,48 @@ def test_sample_lindblad_mcwf_density_matrices_are_valid_for_trivial_case():
         assert np.trace(density_matrix) == pytest.approx(1.0)
 
 
+def test_sample_lindblad_mcwf_vectorized_fixed_state_no_trajectories(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jumps: list[np.ndarray] = []
+    times = np.linspace(0.0, 0.4, 5)
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        state_initial=qubit_ops["ket0"],
+        times=times,
+        options=McwfOptions(
+            n_trajectories=32,
+            seed=123,
+            store_trajectories=False,
+        ),
+    )
+
+    assert result.trajectories is None
+    for density_matrix in result.rho_t:
+        np.testing.assert_allclose(density_matrix, projector(qubit_ops["ket0"]))
+
+
+def test_sample_lindblad_mcwf_vectorized_raises_when_step_too_large(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(10.0) * qubit_ops["sigma_minus"]
+    times = np.asarray([0.0, 0.2], dtype=np.float64)
+
+    with pytest.raises(RuntimeError, match="Time step is too large"):
+        sample_lindblad_mcwf(
+            hamiltonian=hamiltonian,
+            jumps=[jump],
+            state_initial=qubit_ops["ket1"],
+            times=times,
+            options=McwfOptions(
+                n_trajectories=4,
+                seed=123,
+                store_trajectories=False,
+                max_jump_probability=0.1,
+            ),
+        )
+
+
 def test_sample_lindblad_mcwf_reproducible_with_seed(qubit_ops):
     hamiltonian = 0.5 * qubit_ops["sigma_x"]
     decay_rate = 0.4
