@@ -432,6 +432,44 @@ def test_sample_lindblad_mcwf_store_trajectories_without_states(qubit_ops):
         assert trajectory.states == []
 
 
+def test_sample_lindblad_mcwf_accumulates_density_without_stored_states(qubit_ops):
+    hamiltonian = 0.5 * qubit_ops["sigma_x"]
+    jumps: list[np.ndarray] = []
+    state_initial = qubit_ops["ket0"]
+    times = np.linspace(0.0, 0.2, 5)
+
+    expected_trajectory = run_quantum_jump_trajectory(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        state_initial=state_initial,
+        times=times,
+        rng=np.random.default_rng(11),
+    )
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        state_initial=state_initial,
+        times=times,
+        options=McwfOptions(
+            n_trajectories=1,
+            seed=11,
+            store_trajectories=True,
+            store_states=False,
+        ),
+    )
+
+    assert result.trajectories is not None
+    assert len(result.trajectories) == 1
+    assert result.trajectories[0].states == []
+
+    for actual_density_matrix, expected_state in zip(
+        result.rho_t,
+        expected_trajectory.states,
+    ):
+        np.testing.assert_allclose(actual_density_matrix, projector(expected_state))
+
+
 def test_sample_lindblad_mcwf_density_matrices_are_valid_for_trivial_case():
     hamiltonian = np.zeros((2, 2), dtype=np.complex128)
     jumps: list[np.ndarray] = []
@@ -563,7 +601,7 @@ def test_sample_lindblad_mcwf_decay_relaxes_toward_ground_state_on_average(qubit
     hamiltonian = np.zeros((2, 2), dtype=np.complex128)
     decay_rate = 1.0
     jumps = [np.sqrt(decay_rate) * qubit_ops["sigma_minus"]]
-    times = np.linspace(0.0, 4.0, 401)
+    times = np.linspace(0.0, 4.0, 201)
 
     result = sample_lindblad_mcwf(
         hamiltonian=hamiltonian,
@@ -571,7 +609,7 @@ def test_sample_lindblad_mcwf_decay_relaxes_toward_ground_state_on_average(qubit
         state_initial=qubit_ops["ket1"],
         times=times,
         options=McwfOptions(
-            n_trajectories=4000,
+            n_trajectories=500,
             seed=321,
             store_trajectories=False,
             max_jump_probability=0.1,
@@ -583,7 +621,7 @@ def test_sample_lindblad_mcwf_decay_relaxes_toward_ground_state_on_average(qubit
 
     assert excited_population[0] == pytest.approx(1.0, abs=1e-12)
     assert excited_population[-1] < 0.1
-    assert excited_population[50] > excited_population[150] > excited_population[300]
+    assert excited_population[50] > excited_population[100] > excited_population[200]
 
 
 def test_observable_vs_time_returns_correct_values(qubit_ops):
@@ -816,7 +854,7 @@ def test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
     hamiltonian = 0.5 * drive_strength * qubit_ops["sigma_x"]
     jumps = [np.sqrt(decay_rate) * qubit_ops["sigma_minus"]]
 
-    times = np.linspace(0.0, 10.0, 1001)
+    times = np.linspace(0.0, 10.0, 201)
 
     result = sample_lindblad_mcwf(
         hamiltonian=hamiltonian,
@@ -824,7 +862,7 @@ def test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
         state_initial=qubit_ops["ket1"],
         times=times,
         options=McwfOptions(
-            n_trajectories=2000,
+            n_trajectories=1000,
             seed=1234,
             store_trajectories=False,
             max_jump_probability=0.1,

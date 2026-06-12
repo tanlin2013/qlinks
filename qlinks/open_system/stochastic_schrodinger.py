@@ -27,6 +27,22 @@ class _McwfPreparedOperators:
     effective_hamiltonian_matrix: Any
 
 
+@dataclass(frozen=True, slots=True)
+class _JumpEvaluation:
+    jumped_states: tuple[Any, ...]
+    rates: NDArray[np.float64]
+
+    @property
+    def n_jumps(self) -> int:
+        return int(self.rates.size)
+
+    def probabilities(self, step_size: float) -> NDArray[np.float64]:
+        if self.rates.size == 0:
+            return np.zeros(0, dtype=np.float64)
+
+        return np.maximum(step_size * self.rates, 0.0)
+
+
 def _prepare_mcwf_operators(
     *,
     hamiltonian: Any,
@@ -149,16 +165,41 @@ def jump_probabilities(
     backend: OpenSystemBackend,
 ) -> NDArray[np.float64]:
     """Return first-order jump probabilities dt <psi|J^dagger J|psi>."""
+    return _evaluate_jumps(
+        state,
+        jumps,
+        backend=backend,
+    ).probabilities(step_size)
+
+
+def _evaluate_jumps(
+    state: Any,
+    jumps: list[Any] | tuple[Any, ...],
+    *,
+    backend: OpenSystemBackend,
+) -> _JumpEvaluation:
+    """Return J_mu|psi> and rates ||J_mu|psi>||^2 for one MCWF state."""
+    if not jumps:
+        return _JumpEvaluation(
+            jumped_states=(),
+            rates=np.zeros(0, dtype=np.float64),
+        )
+
     array_module = backend.array_module
-    probabilities: list[float] = []
+    jumped_states: list[Any] = []
+    rates: list[float] = []
 
     for jump in jumps:
         jumped_state = jump @ state
         rate = array_module.real(array_module.vdot(jumped_state, jumped_state))
         rate_float = float(backend.to_numpy(rate))
-        probabilities.append(max(step_size * rate_float, 0.0))
+        jumped_states.append(jumped_state)
+        rates.append(max(rate_float, 0.0))
 
-    return np.asarray(probabilities, dtype=np.float64)
+    return _JumpEvaluation(
+        jumped_states=tuple(jumped_states),
+        rates=np.asarray(rates, dtype=np.float64),
+    )
 
 
 def choose_jump(
@@ -240,6 +281,7 @@ def _run_quantum_jump_trajectory_prepared(
     rng: np.random.Generator | int | None = None,
     return_backend_arrays: bool = False,
     store_states: bool = True,
+    state_callback: Callable[[int, Any], None] | None = None,
     normalize_each_step: bool = True,
     max_jump_probability: float = 0.1,
     adaptive_time_step: bool = False,
@@ -253,6 +295,7 @@ def _run_quantum_jump_trajectory_prepared(
     generator = _rng_from_seed(rng)
     backend_obj = prepared.backend
     jump_operators = prepared.jumps
+    has_jump_operators = len(jump_operators) > 0
 
     state = _normalize_backend_state(
         backend_obj.asarray(state_initial, dtype=np.complex128),
@@ -265,6 +308,9 @@ def _run_quantum_jump_trajectory_prepared(
         states.append(
             _maybe_to_numpy(state, backend=backend_obj, enabled=not return_backend_arrays)
         )
+
+    if state_callback is not None:
+        state_callback(0, state)
 
     jump_times: list[float] = []
     jump_indices: list[int] = []
@@ -280,13 +326,18 @@ def _run_quantum_jump_trajectory_prepared(
             remaining_step = interval_stop - current_time
             step_size = remaining_step
 
-            probabilities = jump_probabilities(
-                state,
-                jump_operators,
-                step_size,
-                backend=backend_obj,
-            )
-            total_jump_probability = float(np.sum(probabilities))
+            if has_jump_operators:
+                jump_evaluation = _evaluate_jumps(
+                    state,
+                    jump_operators,
+                    backend=backend_obj,
+                )
+                probabilities = jump_evaluation.probabilities(step_size)
+                total_jump_probability = float(np.sum(probabilities))
+            else:
+                jump_evaluation = None
+                probabilities = np.zeros(0, dtype=np.float64)
+                total_jump_probability = 0.0
 
             if total_jump_probability > max_jump_probability:
                 if not adaptive_time_step:
@@ -306,12 +357,8 @@ def _run_quantum_jump_trajectory_prepared(
                     # Should only happen from roundoff, but keep the branch safe.
                     step_size = remaining_step
 
-                probabilities = jump_probabilities(
-                    state,
-                    jump_operators,
-                    step_size,
-                    backend=backend_obj,
-                )
+                assert jump_evaluation is not None
+                probabilities = jump_evaluation.probabilities(step_size)
                 total_jump_probability = float(np.sum(probabilities))
 
                 if total_jump_probability > max_jump_probability:
@@ -328,9 +375,9 @@ def _run_quantum_jump_trajectory_prepared(
                     "the requested time interval."
                 )
 
-            if generator.random() < total_jump_probability:
+            if jump_evaluation is not None and generator.random() < total_jump_probability:
                 jump_index = choose_jump(probabilities, generator)
-                state = jump_operators[jump_index] @ state
+                state = jump_evaluation.jumped_states[jump_index]
                 jump_times.append(float(current_time + step_size))
                 jump_indices.append(jump_index)
             else:
@@ -368,6 +415,9 @@ def _run_quantum_jump_trajectory_prepared(
                     enabled=not return_backend_arrays,
                 )
             )
+
+        if state_callback is not None:
+            state_callback(time_index + 1, state)
 
     return TrajectoryResult(
         times=times,
@@ -464,6 +514,12 @@ def sample_lindblad_mcwf(
         dtype=np.int64,
     )
 
+    def accumulate_density_matrix(time_index: int, state: Any) -> None:
+        state_numpy = _state_to_numpy(state, backend=backend_obj)
+        rho_t[time_index] += projector(state_numpy)
+
+    store_trajectory_states = bool(options.store_trajectories and options.store_states)
+
     for child_seed in child_seeds:
         trajectory_rng = np.random.default_rng(int(child_seed))
 
@@ -480,7 +536,8 @@ def sample_lindblad_mcwf(
             times=times,
             rng=trajectory_rng,
             return_backend_arrays=options.return_backend_arrays,
-            store_states=True,
+            store_states=store_trajectory_states,
+            state_callback=accumulate_density_matrix,
             normalize_each_step=options.normalize_each_step,
             max_jump_probability=options.max_jump_probability,
             adaptive_time_step=options.adaptive_time_step,
@@ -489,23 +546,8 @@ def sample_lindblad_mcwf(
             max_substeps_per_interval=options.max_substeps_per_interval,
         )
 
-        for time_index, state in enumerate(trajectory.states):
-            state_numpy = _state_to_numpy(state, backend=backend_obj)
-            rho_t[time_index] += projector(state_numpy)
-
         if stored_trajectories is not None:
-            if options.store_states:
-                stored_trajectories.append(trajectory)
-            else:
-                stored_trajectories.append(
-                    TrajectoryResult(
-                        times=trajectory.times,
-                        states=[],
-                        jump_times=trajectory.jump_times,
-                        jump_indices=trajectory.jump_indices,
-                        norm_errors=trajectory.norm_errors,
-                    )
-                )
+            stored_trajectories.append(trajectory)
 
     rho_t = [density_matrix / float(options.n_trajectories) for density_matrix in rho_t]
 
