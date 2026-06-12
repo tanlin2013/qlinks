@@ -124,3 +124,59 @@ def test_prepared_lindblad_rhs_matches_public_rhs():
     )
 
     np.testing.assert_allclose(actual, expected)
+
+
+def test_build_liouvillian_from_prepared_matches_public_builder():
+    from qlinks.open_system.operators import (
+        build_liouvillian_from_prepared,
+        prepare_sparse_lindblad_operators,
+    )
+
+    hamiltonian = np.array(
+        [[1.0, 0.2], [0.2, -1.0]],
+        dtype=np.complex128,
+    )
+    jump = np.array(
+        [[0.0, 1.0], [0.0, 0.0]],
+        dtype=np.complex128,
+    )
+
+    prepared = prepare_sparse_lindblad_operators(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        sparse_format="csr",
+    )
+    expected = build_liouvillian(
+        hamiltonian,
+        [jump],
+        backend="scipy",
+        sparse_format="csr",
+    )
+    actual = build_liouvillian_from_prepared(prepared)
+
+    np.testing.assert_allclose(actual.toarray(), expected.toarray())
+    assert actual.format == "csr"
+
+
+def test_prepare_sparse_lindblad_operators_caches_jump_products():
+    from qlinks.open_system.operators import prepare_sparse_lindblad_operators
+
+    hamiltonian = np.diag([1.0, -1.0]).astype(np.complex128)
+    jump = np.array(
+        [[0.0, 1.0], [0.0, 0.0]],
+        dtype=np.complex128,
+    )
+
+    prepared = prepare_sparse_lindblad_operators(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        sparse_format="csc",
+    )
+
+    assert prepared.sparse_format == "csc"
+    assert len(prepared.jumps) == 1
+    assert len(prepared.jump_dagger_jumps) == 1
+    np.testing.assert_allclose(
+        prepared.jump_dagger_jumps[0].toarray(),
+        jump.conj().T @ jump,
+    )

@@ -25,6 +25,22 @@ class DenseLindbladOperators:
     jump_dagger_jumps: tuple[Any, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class SparseLindbladOperators:
+    """Sparse Lindblad operators prepared for Liouville-space construction."""
+
+    backend: OpenSystemBackend
+    sparse_format: str
+    hamiltonian: Any
+    identity: Any
+    jumps: tuple[Any, ...]
+    jump_dagger_jumps: tuple[Any, ...]
+
+    @property
+    def dim(self) -> int:
+        return int(self.hamiltonian.shape[0])
+
+
 def prepare_dense_lindblad_operators(
     *,
     hamiltonian: Any,
@@ -62,22 +78,15 @@ def prepare_dense_lindblad_operators(
     )
 
 
-def vectorize_density_matrix(density_matrix: Any) -> Any:
-    return density_matrix.reshape(-1, order="F")
-
-
-def unvectorize_density_matrix(vectorized_density_matrix: Any, dim: int) -> Any:
-    return vectorized_density_matrix.reshape((dim, dim), order="F")
-
-
-def build_liouvillian(
+def prepare_sparse_lindblad_operators(
+    *,
     hamiltonian: Any,
     jumps: list[Any] | tuple[Any, ...],
-    *,
     backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
     sparse_format: str = "csc",
     dtype=np.complex128,
-):
+) -> SparseLindbladOperators:
+    """Convert sparse Lindblad operators once for Liouville-space construction."""
     backend_obj = get_open_system_backend(backend)
 
     hamiltonian_sparse = as_backend_sparse_matrix(
@@ -86,30 +95,65 @@ def build_liouvillian(
         format=sparse_format,
         dtype=dtype,
     )
-    dim = hamiltonian_sparse.shape[0]
+    dim = int(hamiltonian_sparse.shape[0])
     identity = backend_obj.sparse_identity(
         dim,
         format=sparse_format,
         dtype=dtype,
     )
 
-    liouvillian = -1j * (
-        backend_obj.sparse_kron(identity, hamiltonian_sparse, format=sparse_format)
-        - backend_obj.sparse_kron(hamiltonian_sparse.T, identity, format=sparse_format)
-    )
-
-    for jump in jumps:
-        jump_sparse = as_backend_sparse_matrix(
+    jump_operators = tuple(
+        as_backend_sparse_matrix(
             jump,
             backend=backend_obj,
             format=sparse_format,
             dtype=dtype,
         )
-        jump_dagger_jump = (jump_sparse.conj().T @ jump_sparse).asformat(sparse_format)
+        for jump in jumps
+    )
+    jump_dagger_jumps = tuple(
+        (jump.conj().T @ jump).asformat(sparse_format) for jump in jump_operators
+    )
 
+    return SparseLindbladOperators(
+        backend=backend_obj,
+        sparse_format=sparse_format,
+        hamiltonian=hamiltonian_sparse,
+        identity=identity,
+        jumps=jump_operators,
+        jump_dagger_jumps=jump_dagger_jumps,
+    )
+
+
+def vectorize_density_matrix(density_matrix: Any) -> Any:
+    return density_matrix.reshape(-1, order="F")
+
+
+def unvectorize_density_matrix(vectorized_density_matrix: Any, dim: int) -> Any:
+    return vectorized_density_matrix.reshape((dim, dim), order="F")
+
+
+def build_liouvillian_from_prepared(
+    sparse_operators: SparseLindbladOperators,
+):
+    """Build the Liouvillian from preconverted sparse Lindblad operators."""
+    backend_obj = sparse_operators.backend
+    sparse_format = sparse_operators.sparse_format
+    hamiltonian = sparse_operators.hamiltonian
+    identity = sparse_operators.identity
+
+    liouvillian = -1j * (
+        backend_obj.sparse_kron(identity, hamiltonian, format=sparse_format)
+        - backend_obj.sparse_kron(hamiltonian.T, identity, format=sparse_format)
+    )
+
+    for jump, jump_dagger_jump in zip(
+        sparse_operators.jumps,
+        sparse_operators.jump_dagger_jumps,
+    ):
         jump_term = backend_obj.sparse_kron(
-            jump_sparse.conj(),
-            jump_sparse,
+            jump.conj(),
+            jump,
             format=sparse_format,
         )
         left_loss = backend_obj.sparse_kron(
@@ -126,6 +170,24 @@ def build_liouvillian(
         liouvillian = liouvillian + jump_term - 0.5 * left_loss - 0.5 * right_loss
 
     return liouvillian.asformat(sparse_format)
+
+
+def build_liouvillian(
+    hamiltonian: Any,
+    jumps: list[Any] | tuple[Any, ...],
+    *,
+    backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
+    sparse_format: str = "csc",
+    dtype=np.complex128,
+):
+    sparse_operators = prepare_sparse_lindblad_operators(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        backend=backend,
+        sparse_format=sparse_format,
+        dtype=dtype,
+    )
+    return build_liouvillian_from_prepared(sparse_operators)
 
 
 def lindblad_rhs_density_matrix(

@@ -15,11 +15,12 @@ from qlinks.open_system.backend import (
 from qlinks.open_system.diagnostics import verify_density_matrix
 from qlinks.open_system.operators import (
     DenseLindbladOperators,
-    build_liouvillian,
-    estimate_lindblad_scale,
+    SparseLindbladOperators,
+    build_liouvillian_from_prepared,
     estimate_lindblad_scale_prepared,
     lindblad_rhs_density_matrix_prepared,
     prepare_dense_lindblad_operators,
+    prepare_sparse_lindblad_operators,
     unvectorize_density_matrix,
     vectorize_density_matrix,
 )
@@ -77,6 +78,8 @@ class LindbladProblem:
         self.backend = get_open_system_backend(backend)
         self.hamiltonian = hamiltonian
         self.jumps = tuple(jumps)
+        self._sparse_operator_cache: dict[str, SparseLindbladOperators] = {}
+        self._liouvillian_cache: dict[str, Any] = {}
 
     @property
     def dim(self) -> int:
@@ -94,13 +97,26 @@ class LindbladProblem:
     def rk4_scale(self) -> float:
         return estimate_lindblad_scale_prepared(self.dense_operators)
 
+    def sparse_operators(self, *, sparse_format: str = "csc") -> SparseLindbladOperators:
+        cached = self._sparse_operator_cache.get(sparse_format)
+        if cached is None:
+            cached = prepare_sparse_lindblad_operators(
+                hamiltonian=self.hamiltonian,
+                jumps=self.jumps,
+                backend=self.backend,
+                sparse_format=sparse_format,
+            )
+            self._sparse_operator_cache[sparse_format] = cached
+        return cached
+
     def build_liouvillian(self, *, sparse_format: str = "csc"):
-        return build_liouvillian(
-            self.hamiltonian,
-            self.jumps,
-            backend=self.backend,
-            sparse_format=sparse_format,
-        )
+        cached = self._liouvillian_cache.get(sparse_format)
+        if cached is None:
+            cached = build_liouvillian_from_prepared(
+                self.sparse_operators(sparse_format=sparse_format),
+            )
+            self._liouvillian_cache[sparse_format] = cached
+        return cached
 
     def rhs(self, density_matrix: Any):
         return lindblad_rhs_density_matrix_prepared(
@@ -524,11 +540,7 @@ def _evolve_rk4_liouville(
             )
         )
 
-    scale = estimate_lindblad_scale(
-        hamiltonian=problem.hamiltonian,
-        jumps=problem.jumps,
-        backend=backend,
-    )
+    scale = problem.rk4_scale
 
     for time_index in range(times.size - 1):
         step_size = float(times[time_index + 1] - times[time_index])

@@ -145,3 +145,39 @@ def test_lindblad_problem_reuses_prepared_dense_operators(monkeypatch):
     _ = problem.rk4_scale
 
     assert call_count == 1
+
+
+def test_lindblad_problem_reuses_prepared_sparse_operators_and_liouvillian(monkeypatch):
+    import qlinks.open_system.solvers as solvers
+
+    hamiltonian = np.array(
+        [[1.0, 0.2], [0.2, -1.0]],
+        dtype=np.complex128,
+    )
+    jump = np.array(
+        [[0.0, 1.0], [0.0, 0.0]],
+        dtype=np.complex128,
+    )
+
+    call_count = 0
+    original_prepare = solvers.prepare_sparse_lindblad_operators
+
+    def counted_prepare(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return original_prepare(*args, **kwargs)
+
+    monkeypatch.setattr(solvers, "prepare_sparse_lindblad_operators", counted_prepare)
+
+    problem = solvers.LindbladProblem(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        backend="scipy",
+    )
+
+    liouvillian_1 = problem.build_liouvillian(sparse_format="csr")
+    liouvillian_2 = problem.build_liouvillian(sparse_format="csr")
+    _ = problem.sparse_operators(sparse_format="csr")
+
+    assert call_count == 1
+    assert liouvillian_1 is liouvillian_2
