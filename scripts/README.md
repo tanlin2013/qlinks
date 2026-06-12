@@ -52,6 +52,24 @@ The cage-search benchmark reports separate timings for candidate generation,
 candidate solving, rank deduplication, and total search time. Use `--markdown`
 to write a compact GitHub-ready stage-timing table.
 
+## Cage-Lindblad construction
+
+```bash
+python scripts/benchmark_cage_lindblad.py
+python scripts/benchmark_cage_lindblad.py --only qdm
+python scripts/benchmark_cage_lindblad.py --only qlm --builder bitmask
+python scripts/benchmark_cage_lindblad.py --monitor-source reduced_iz_operators
+python scripts/benchmark_cage_lindblad.py   --monitor-source reduced_iz_operators   --reduced-iz-monitor-decomposition connected_support
+python scripts/benchmark_cage_lindblad.py --check-liouvillian
+python scripts/benchmark_cage_lindblad.py --json cage_lindblad_benchmark.json
+python scripts/benchmark_cage_lindblad.py --markdown cage_lindblad_benchmark.md
+```
+
+The Cage-Lindblad benchmark separates model build, cage search, cage
+classification, and open-system construction time. The default local-term
+builder is `sparse`, but encoded bitmask build results are promoted to the
+bitmask local-term path internally, matching the construction API behavior.
+
 ## Open-system solvers and MCWF
 
 ```bash
