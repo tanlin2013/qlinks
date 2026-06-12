@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -8,14 +9,18 @@ from qlinks.caging.open_system import (
     CageLindbladConstruction,
     _build_component_decomposition_jump_operators,
     _infer_sharp_potential_value,
+    _LocalTermMatrixCache,
+    _resolve_local_term_builder,
     _select_jump_terms,
     _select_monitor_terms,
 )
+from qlinks.encoded import BinaryEncodedBasis
 from qlinks.models import LocalTermDescriptor
 from qlinks.open_system import (
     LindbladEvolutionOptions,
     initial_density_matrix,
 )
+from qlinks.variables import LocalSpace, VariableLayout
 
 
 @dataclass(frozen=True)
@@ -66,6 +71,54 @@ def _fake_construction() -> CageLindbladConstruction:
         jump_residuals=(),
         liouvillian_residual=0.0,
     )
+
+
+def test_local_term_builder_uses_bitmask_for_encoded_build_result():
+    layout = VariableLayout.from_sites(2, LocalSpace.binary())
+    encoded_basis = BinaryEncodedBasis.from_codes(layout, [0, 1, 2, 3])
+    build_result = SimpleNamespace(basis=encoded_basis)
+
+    assert _resolve_local_term_builder("sparse", build_result) == "bitmask"
+    assert _resolve_local_term_builder("optimized", build_result) == "bitmask"
+
+
+class _RecordingLocalTermModel:
+    def __init__(self):
+        self.calls: list[tuple[int, str]] = []
+
+    def build_local_term(self, term, build_result, *, builder, backend):
+        del build_result, backend
+        self.calls.append((int(term.term_id), str(builder)))
+        return sp.csr_array(float(term.term_id) * np.eye(2, dtype=np.complex128))
+
+
+def test_local_term_matrix_cache_reuses_terms_and_promotes_bitmask_builder():
+    layout = VariableLayout.from_sites(2, LocalSpace.binary())
+    encoded_basis = BinaryEncodedBasis.from_codes(layout, [0, 1, 2, 3])
+    build_result = SimpleNamespace(
+        basis=encoded_basis,
+        hamiltonian=sp.csr_array((2, 2), dtype=np.complex128),
+    )
+    model = _RecordingLocalTermModel()
+    term = LocalTermDescriptor(
+        term_id=3,
+        term_kind="plaquette",
+        operator_kind="kinetic",
+        support_links=(0, 1),
+    )
+    cache = _LocalTermMatrixCache(
+        model=model,
+        build_result=build_result,
+        builder="sparse",
+        backend="scipy",
+    )
+
+    first = cache.get(term)
+    second = cache.get(term)
+
+    assert first is second
+    assert model.calls == [(3, "bitmask")]
+    np.testing.assert_allclose(first.toarray(), 3.0 * np.eye(2))
 
 
 def test_select_jump_terms_can_include_crossing_terms():

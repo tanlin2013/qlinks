@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 import numpy as np
@@ -13,6 +13,7 @@ from qlinks.caging.classification import (
     InterferenceZeroReport,
 )
 from qlinks.caging.support import CageRegionSupport, extract_cage_region_support
+from qlinks.encoded import BinaryEncodedBasis
 from qlinks.models.base import (
     HamiltonianBuilderName,
     ModelBuildResult,
@@ -60,6 +61,119 @@ JumpPlaquettePolicy = Literal[
     "outside_or_crossing",
     "not_strictly_inside",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class _LocalTermMatrixCache:
+    """Cache local Hamiltonian term matrices for one construction.
+
+    Cage Lindblad constructions repeatedly reuse the same plaquette terms
+    while assembling monitors, jumps, and diagnostic residuals. Keeping this
+    tiny cache avoids rebuilding identical sparse matrices and also centralizes
+    the builder choice needed for encoded bitmask build results.
+    """
+
+    model: Any
+    build_result: ModelBuildResult
+    builder: HamiltonianBuilderName
+    backend: SparseBackendName
+    _matrices: dict[tuple[str, str, int, tuple[int, ...]], sp.csr_array] = field(
+        init=False, repr=False, compare=False
+    )
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "_matrices", {})
+
+    @property
+    def effective_builder(self) -> HamiltonianBuilderName:
+        return _resolve_local_term_builder(
+            self.builder,
+            self.build_result,
+        )
+
+    def get(self, term: LocalTermDescriptor) -> sp.csr_array:
+        key = _local_term_cache_key(term)
+
+        if key not in self._matrices:
+            matrix = self.model.build_local_term(
+                term,
+                self.build_result,
+                builder=self.effective_builder,
+                backend=self.backend,
+            )
+
+            if matrix is None:
+                shape = self.build_result.hamiltonian.shape
+                matrix = sp.csr_array(shape, dtype=np.complex128)
+
+            self._matrices[key] = matrix.tocsr()
+
+        return self._matrices[key]
+
+
+def _resolve_local_term_builder(
+    builder: HamiltonianBuilderName,
+    build_result: ModelBuildResult,
+) -> HamiltonianBuilderName:
+    """Return a local-term builder compatible with ``build_result.basis``.
+
+    ``build_type1_cage_lindblad_construction`` historically defaulted to
+    ``builder="sparse"``. That default is convenient for array-basis builds,
+    but it is incompatible with a ``ModelBuildResult`` produced by the bitmask
+    builder because local terms must be assembled in the encoded basis ordering.
+    In that case, use the bitmask local-term path automatically.
+    """
+
+    if isinstance(build_result.basis, BinaryEncodedBasis):
+        return "bitmask"
+
+    return builder
+
+
+def _local_term_cache_key(
+    term: LocalTermDescriptor,
+) -> tuple[str, str, int, tuple[int, ...]]:
+    return (
+        str(term.operator_kind),
+        str(term.term_kind),
+        int(term.term_id),
+        tuple(int(index) for index in term.support_links),
+    )
+
+
+def _local_term_matrix(
+    *,
+    model: Any,
+    build_result: ModelBuildResult | None,
+    term: LocalTermDescriptor,
+    builder: HamiltonianBuilderName,
+    backend: SparseBackendName,
+    local_term_cache: _LocalTermMatrixCache | None = None,
+) -> sp.csr_array:
+    if local_term_cache is not None:
+        return local_term_cache.get(term)
+
+    if build_result is None:
+        matrix = model.build_local_term(
+            term,
+            build_result,
+            builder=builder,
+            backend=backend,
+        )
+    else:
+        matrix = model.build_local_term(
+            term,
+            build_result,
+            builder=_resolve_local_term_builder(builder, build_result),
+            backend=backend,
+        )
+
+    if matrix is None:
+        if build_result is None:
+            raise ValueError("Cannot infer shape for an empty local term without build_result.")
+        matrix = sp.csr_array(build_result.hamiltonian.shape, dtype=np.complex128)
+
+    return matrix.tocsr()
 
 
 @dataclass(frozen=True, slots=True)
@@ -546,6 +660,12 @@ def build_type1_cage_lindblad_construction(
     dim = build_result.hamiltonian.shape[0]
     identity = sp.identity(dim, format="csr", dtype=np.complex128)
     shape = build_result.hamiltonian.shape
+    local_term_cache = _LocalTermMatrixCache(
+        model=model,
+        build_result=build_result,
+        builder=builder,
+        backend=backend,
+    )
 
     monitor_components: tuple[ReducedIZMonitorComponent, ...] = ()
     component_jumps: tuple[Any, ...] | None = None
@@ -558,6 +678,7 @@ def build_type1_cage_lindblad_construction(
             builder=builder,
             backend=backend,
             shape=shape,
+            local_term_cache=local_term_cache,
         )
         potential_inside_matrix = _sum_local_terms(
             model=model,
@@ -566,6 +687,7 @@ def build_type1_cage_lindblad_construction(
             builder=builder,
             backend=backend,
             shape=shape,
+            local_term_cache=local_term_cache,
         )
 
         if z_value is None:
@@ -601,6 +723,7 @@ def build_type1_cage_lindblad_construction(
                 identity=identity,
                 builder=builder,
                 backend=backend,
+                local_term_cache=local_term_cache,
                 reduced_iz_monitor_content=reduced_iz_monitor_content,
                 residual_tolerance=residual_tolerance,
                 include_q_empty=include_q_empty,
@@ -690,6 +813,7 @@ def build_type1_cage_lindblad_construction(
                 identity=identity,
                 builder=builder,
                 backend=backend,
+                local_term_cache=local_term_cache,
                 residual_tolerance=residual_tolerance,
                 include_q_empty=include_q_empty,
                 include_closed_by_known_zeros=include_closed_by_known_zeros,
@@ -739,6 +863,7 @@ def build_type1_cage_lindblad_construction(
             potential_terms_by_plaquette_id=potential_by_pid,
             builder=builder,
             backend=backend,
+            local_term_cache=local_term_cache,
             jump_operator_design=jump_operator_design,
         )
     else:
@@ -751,6 +876,7 @@ def build_type1_cage_lindblad_construction(
             potential_terms_by_plaquette_id=potential_by_pid,
             builder=builder,
             backend=backend,
+            local_term_cache=local_term_cache,
             jump_operator_design=jump_operator_design,
         )
 
@@ -907,74 +1033,73 @@ def _build_jump_operators(
     builder: HamiltonianBuilderName,
     backend: SparseBackendName,
     jump_operator_design: JumpOperatorDesign,
+    local_term_cache: _LocalTermMatrixCache | None = None,
 ) -> tuple[Any, ...]:
     if jump_operator_design == "kinetic_times_monitor":
         return tuple(
             (
-                model.build_local_term(
-                    term,
-                    build_result,
+                _local_term_matrix(
+                    model=model,
+                    build_result=build_result,
+                    term=term,
                     builder=builder,
                     backend=backend,
-                ).tocsr()
+                    local_term_cache=local_term_cache,
+                )
                 @ monitor
             ).tocsr()
             for term in jump_kinetic_terms
         )
 
     if jump_operator_design == "kinetic_outside_monitor_inside":
-        monitor_term_ids = {int(term.term_id) for term in monitor_kinetic_terms}
-
+        monitor_terms_by_id = {int(term.term_id): term for term in monitor_kinetic_terms}
         jump_terms_by_id = {int(term.term_id): term for term in jump_kinetic_terms}
-
-        all_jump_ids = sorted(set(monitor_term_ids) | set(jump_terms_by_id))
+        all_jump_ids = sorted(set(monitor_terms_by_id) | set(jump_terms_by_id))
 
         jumps: list[Any] = []
 
         for plaquette_id in all_jump_ids:
-            if plaquette_id in monitor_term_ids:
-                term = next(
-                    term for term in monitor_kinetic_terms if int(term.term_id) == plaquette_id
-                )
-                kinetic = model.build_local_term(
-                    term,
-                    build_result,
+            if plaquette_id in monitor_terms_by_id:
+                kinetic = _local_term_matrix(
+                    model=model,
+                    build_result=build_result,
+                    term=monitor_terms_by_id[plaquette_id],
                     builder=builder,
                     backend=backend,
-                ).tocsr()
+                    local_term_cache=local_term_cache,
+                )
                 jumps.append((kinetic @ monitor).tocsr())
             else:
-                term = jump_terms_by_id[plaquette_id]
-                kinetic = model.build_local_term(
-                    term,
-                    build_result,
-                    builder=builder,
-                    backend=backend,
-                ).tocsr()
-                jumps.append(kinetic)
+                jumps.append(
+                    _local_term_matrix(
+                        model=model,
+                        build_result=build_result,
+                        term=jump_terms_by_id[plaquette_id],
+                        builder=builder,
+                        backend=backend,
+                        local_term_cache=local_term_cache,
+                    )
+                )
 
         return tuple(jumps)
 
     if jump_operator_design == "hamiltonian_outside_monitor_inside":
-        monitor_term_ids = {int(term.term_id) for term in monitor_kinetic_terms}
-
+        monitor_terms_by_id = {int(term.term_id): term for term in monitor_kinetic_terms}
         jump_terms_by_id = {int(term.term_id): term for term in jump_kinetic_terms}
-
-        all_jump_ids = sorted(set(monitor_term_ids) | set(jump_terms_by_id))
+        all_jump_ids = sorted(set(monitor_terms_by_id) | set(jump_terms_by_id))
 
         jumps: list[Any] = []
 
         for plaquette_id in all_jump_ids:
-            if plaquette_id in monitor_term_ids:
-                term = next(
-                    term for term in monitor_kinetic_terms if int(term.term_id) == plaquette_id
-                )
-                kinetic = model.build_local_term(
-                    term,
-                    build_result,
+            if plaquette_id in monitor_terms_by_id:
+                kinetic = _local_term_matrix(
+                    model=model,
+                    build_result=build_result,
+                    term=monitor_terms_by_id[plaquette_id],
                     builder=builder,
                     backend=backend,
-                ).tocsr()
+                    local_term_cache=local_term_cache,
+                )
                 jumps.append((kinetic @ monitor).tocsr())
             else:
                 kinetic_term = jump_terms_by_id[plaquette_id]
@@ -985,6 +1110,7 @@ def _build_jump_operators(
                     potential_terms_by_plaquette_id=potential_terms_by_plaquette_id,
                     builder=builder,
                     backend=backend,
+                    local_term_cache=local_term_cache,
                 )
                 jumps.append(local_hamiltonian)
 
@@ -996,13 +1122,14 @@ def _build_jump_operators(
 def _build_component_decomposition_jump_operators(
     *,
     model: Any,
-    build_result: ModelBuildResult,
+    build_result: ModelBuildResult | None,
     component_jumps: tuple[Any, ...],
     jump_kinetic_terms: tuple[LocalTermDescriptor, ...],
     potential_terms_by_plaquette_id: dict[int, LocalTermDescriptor],
     builder: HamiltonianBuilderName,
     backend: SparseBackendName,
     jump_operator_design: JumpOperatorDesign,
+    local_term_cache: _LocalTermMatrixCache | None = None,
 ) -> tuple[Any, ...]:
     """Build jumps for frustration-free monitor decomposition.
 
@@ -1018,12 +1145,14 @@ def _build_component_decomposition_jump_operators(
 
     if jump_operator_design == "kinetic_outside_monitor_inside":
         outside_jumps = tuple(
-            model.build_local_term(
-                kinetic_term,
-                build_result,
+            _local_term_matrix(
+                model=model,
+                build_result=build_result,
+                term=kinetic_term,
                 builder=builder,
                 backend=backend,
-            ).tocsr()
+                local_term_cache=local_term_cache,
+            )
             for kinetic_term in jump_kinetic_terms
         )
 
@@ -1038,6 +1167,7 @@ def _build_component_decomposition_jump_operators(
                 potential_terms_by_plaquette_id=potential_terms_by_plaquette_id,
                 builder=builder,
                 backend=backend,
+                local_term_cache=local_term_cache,
             )
             for kinetic_term in jump_kinetic_terms
         )
@@ -1050,18 +1180,21 @@ def _build_component_decomposition_jump_operators(
 def _build_local_kinetic_plus_potential(
     *,
     model: Any,
-    build_result: ModelBuildResult,
+    build_result: ModelBuildResult | None,
     kinetic_term: LocalTermDescriptor,
     potential_terms_by_plaquette_id: dict[int, LocalTermDescriptor],
     builder: HamiltonianBuilderName,
     backend: SparseBackendName,
+    local_term_cache: _LocalTermMatrixCache | None = None,
 ):
-    kinetic = model.build_local_term(
-        kinetic_term,
-        build_result,
+    kinetic = _local_term_matrix(
+        model=model,
+        build_result=build_result,
+        term=kinetic_term,
         builder=builder,
         backend=backend,
-    ).tocsr()
+        local_term_cache=local_term_cache,
+    )
 
     plaquette_id = int(kinetic_term.term_id)
     potential_term = potential_terms_by_plaquette_id.get(plaquette_id)
@@ -1069,12 +1202,14 @@ def _build_local_kinetic_plus_potential(
     if potential_term is None:
         return kinetic
 
-    potential = model.build_local_term(
-        potential_term,
-        build_result,
+    potential = _local_term_matrix(
+        model=model,
+        build_result=build_result,
+        term=potential_term,
         builder=builder,
         backend=backend,
-    ).tocsr()
+        local_term_cache=local_term_cache,
+    )
 
     return (kinetic + potential).tocsr()
 
@@ -1166,6 +1301,7 @@ def _sum_local_terms(
     builder: HamiltonianBuilderName,
     backend: SparseBackendName,
     shape: tuple[int, int],
+    local_term_cache: _LocalTermMatrixCache | None = None,
 ) -> Any:
     if len(terms) == 0:
         return sp.csr_array(shape, dtype=np.complex128)
@@ -1173,15 +1309,14 @@ def _sum_local_terms(
     total = sp.csr_array(shape, dtype=np.complex128)
 
     for term in terms:
-        matrix = model.build_local_term(
-            term,
-            build_result,
+        total = total + _local_term_matrix(
+            model=model,
+            build_result=build_result,
+            term=term,
             builder=builder,
             backend=backend,
+            local_term_cache=local_term_cache,
         )
-
-        if matrix is not None:
-            total = total + matrix.tocsr()
 
     return total.tocsr()
 
@@ -1333,6 +1468,7 @@ def _build_reduced_iz_monitor(
     identity: Any | None = None,
     builder: HamiltonianBuilderName = "sparse",
     backend: SparseBackendName = "scipy",
+    local_term_cache: _LocalTermMatrixCache | None = None,
     reduced_iz_monitor_content: ReducedIZMonitorContent = "offdiagonal_only",
     residual_tolerance: float = 1e-10,
     include_q_empty: bool = True,
@@ -1381,6 +1517,7 @@ def _build_reduced_iz_monitor(
             shape=shape,
             residual_tolerance=residual_tolerance,
             label="full reduced-IZ monitor support",
+            local_term_cache=local_term_cache,
         )
 
     elif reduced_iz_monitor_content != "offdiagonal_only":
@@ -1405,6 +1542,7 @@ def _build_reduced_iz_monitor_components(
     builder: HamiltonianBuilderName,
     backend: SparseBackendName,
     residual_tolerance: float,
+    local_term_cache: _LocalTermMatrixCache | None = None,
     include_q_empty: bool = True,
     include_closed_by_known_zeros: bool = True,
     include_projector_like: bool = True,
@@ -1478,6 +1616,7 @@ def _build_reduced_iz_monitor_components(
                 shape=shape,
                 residual_tolerance=residual_tolerance,
                 label=f"reduced-IZ monitor component {component_id}",
+                local_term_cache=local_term_cache,
             )
         elif reduced_iz_monitor_content != "offdiagonal_only":
             raise ValueError(
@@ -1486,12 +1625,14 @@ def _build_reduced_iz_monitor_components(
 
         component_jumps: list[Any] = []
         for kinetic_term in component_kinetic_terms:
-            kinetic = model.build_local_term(
-                kinetic_term,
-                build_result,
+            kinetic = _local_term_matrix(
+                model=model,
+                build_result=build_result,
+                term=kinetic_term,
                 builder=builder,
                 backend=backend,
-            ).tocsr()
+                local_term_cache=local_term_cache,
+            )
 
             component_jumps.append((kinetic @ component_monitor).tocsr())
 
@@ -1602,6 +1743,7 @@ def _add_potential_to_monitor(
     shape: tuple[int, int],
     residual_tolerance: float,
     label: str,
+    local_term_cache: _LocalTermMatrixCache | None = None,
 ) -> tuple[Any, complex]:
     potential_matrix = _sum_local_terms(
         model=model,
@@ -1610,6 +1752,7 @@ def _add_potential_to_monitor(
         builder=builder,
         backend=backend,
         shape=shape,
+        local_term_cache=local_term_cache,
     )
 
     z_value = _infer_sharp_potential_value(
