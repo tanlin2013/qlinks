@@ -130,13 +130,14 @@ class Basis:
                 f"Expected states with {layout.n_variables} variables, got {arr.shape[1]}."
             )
 
-        layout.validate_batch(arr)
-
         if sort:
             arr = arr[np.lexsort(arr.T[::-1])]
 
         encoder = ConfigEncoder(layout)
-        index = encoder.build_index(arr)
+        # ``Basis.__post_init__`` performs the batch local-space validation.
+        # Avoid validating every row again while building the index; this is a
+        # hot path for basis solvers that have already generated valid states.
+        index = encoder.build_index(arr, validate=False)
 
         return cls(
             layout=layout,

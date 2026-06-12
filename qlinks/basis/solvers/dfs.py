@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal, Sequence
 
@@ -11,6 +12,7 @@ from qlinks.constraints import Constraint, SectorCondition
 from qlinks.variables import VariableLayout
 
 ConditionLike = Constraint | SectorCondition
+PartialCheck = Callable[[npt.NDArray[np.int64], npt.NDArray[np.bool_]], bool]
 VariableOrderStrategy = Literal["auto", "layout", "degree"]
 
 
@@ -56,7 +58,7 @@ class DFSBasisSolver:
             n_variables=n,
             conditions=all_conditions,
         )
-        condition_indices_by_variable = self._build_condition_lookup(
+        partial_checks_by_variable = self._build_partial_check_lookup(
             n_variables=n,
             condition_infos=condition_infos,
         )
@@ -86,6 +88,9 @@ class DFSBasisSolver:
             layout=layout,
             variable_order=variable_order,
         )
+        partial_checks_by_depth = tuple(
+            partial_checks_by_variable[int(variable_index)] for variable_index in variable_order
+        )
 
         def dfs(depth: int) -> None:
             if max_states is not None and len(states) >= max_states:
@@ -108,9 +113,7 @@ class DFSBasisSolver:
                 if self._partial_check_after_assignment(
                     config=config,
                     assigned_mask=assigned_mask,
-                    variable_index=variable_index,
-                    condition_infos=condition_infos,
-                    condition_indices_by_variable=condition_indices_by_variable,
+                    partial_checks=partial_checks_by_depth[depth],
                 ):
                     dfs(depth + 1)
 
@@ -253,18 +256,19 @@ class DFSBasisSolver:
         )
 
     @staticmethod
-    def _build_condition_lookup(
+    def _build_partial_check_lookup(
         *,
         n_variables: int,
         condition_infos: Sequence[_ConditionInfo],
-    ) -> list[list[int]]:
-        lookup: list[list[int]] = [[] for _ in range(n_variables)]
+    ) -> tuple[tuple[PartialCheck, ...], ...]:
+        lookup: list[list[PartialCheck]] = [[] for _ in range(n_variables)]
 
-        for condition_index, info in enumerate(condition_infos):
+        for info in condition_infos:
+            partial_check = info.condition.partial_check
             for variable_index in info.affected_variables:
-                lookup[int(variable_index)].append(condition_index)
+                lookup[int(variable_index)].append(partial_check)
 
-        return lookup
+        return tuple(tuple(partial_checks) for partial_checks in lookup)
 
     @staticmethod
     def _zero_variable_conditions_are_satisfied(
@@ -287,14 +291,10 @@ class DFSBasisSolver:
         *,
         config: npt.NDArray[np.int64],
         assigned_mask: npt.NDArray[np.bool_],
-        variable_index: int,
-        condition_infos: Sequence[_ConditionInfo],
-        condition_indices_by_variable: list[list[int]],
+        partial_checks: Sequence[PartialCheck],
     ) -> bool:
-        for condition_index in condition_indices_by_variable[variable_index]:
-            condition = condition_infos[condition_index].condition
-
-            if not condition.partial_check(config, assigned_mask):
+        for partial_check in partial_checks:
+            if not partial_check(config, assigned_mask):
                 return False
 
         return True
