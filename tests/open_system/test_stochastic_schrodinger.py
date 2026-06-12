@@ -197,6 +197,25 @@ def test_evolve_no_jump_first_order_matches_manual_formula():
     np.testing.assert_allclose(actual, expected)
 
 
+def test_run_quantum_jump_trajectory_can_skip_state_storage(qubit_ops):
+    hamiltonian = 0.5 * qubit_ops["sigma_x"]
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.5, 6)
+
+    result = run_quantum_jump_trajectory(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        state_initial=qubit_ops["ket1"],
+        times=times,
+        rng=np.random.default_rng(0),
+        store_states=False,
+    )
+
+    assert result.states == []
+    np.testing.assert_allclose(result.times, times)
+    assert result.norm_errors.shape == (len(times) - 1,)
+
+
 def test_run_quantum_jump_trajectory_returns_dataclass(qubit_ops):
     hamiltonian = np.zeros((2, 2), dtype=np.complex128)
     jumps: list[np.ndarray] = []

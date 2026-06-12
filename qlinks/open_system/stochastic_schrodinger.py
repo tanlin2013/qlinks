@@ -212,6 +212,9 @@ def choose_jump(
     if total_probability <= 0.0:
         raise ValueError("Total jump probability must be positive when choosing a jump.")
 
+    if len(probabilities) == 1:
+        return 0
+
     return int(
         rng.choice(
             len(probabilities),
@@ -294,6 +297,23 @@ def _run_quantum_jump_trajectory_prepared(
 
     generator = _rng_from_seed(rng)
     backend_obj = prepared.backend
+
+    if backend_obj.name == "scipy":
+        return _run_quantum_jump_trajectory_prepared_scipy(
+            prepared=prepared,
+            state_initial=state_initial,
+            times=times,
+            rng=generator,
+            return_backend_arrays=return_backend_arrays,
+            store_states=store_states,
+            state_callback=state_callback,
+            normalize_each_step=normalize_each_step,
+            max_jump_probability=max_jump_probability,
+            adaptive_time_step=adaptive_time_step,
+            adaptive_safety_factor=adaptive_safety_factor,
+            min_step_size=min_step_size,
+            max_substeps_per_interval=max_substeps_per_interval,
+        )
     jump_operators = prepared.jumps
     has_jump_operators = len(jump_operators) > 0
 
@@ -426,6 +446,161 @@ def _run_quantum_jump_trajectory_prepared(
         jump_indices=np.asarray(jump_indices, dtype=np.int64),
         norm_errors=np.asarray(norm_errors, dtype=np.float64),
     )
+
+
+def _run_quantum_jump_trajectory_prepared_scipy(
+    *,
+    prepared: _McwfPreparedOperators,
+    state_initial: Any,
+    times: NDArray[np.float64],
+    rng: np.random.Generator,
+    return_backend_arrays: bool = False,
+    store_states: bool = True,
+    state_callback: Callable[[int, Any], None] | None = None,
+    normalize_each_step: bool = True,
+    max_jump_probability: float = 0.1,
+    adaptive_time_step: bool = False,
+    adaptive_safety_factor: float = 0.8,
+    min_step_size: float = 1.0e-12,
+    max_substeps_per_interval: int = 100_000,
+) -> TrajectoryResult:
+    """Run one trajectory with a NumPy-specialized inner loop."""
+    del return_backend_arrays  # SciPy backend states are already NumPy arrays.
+
+    state = _normalize_numpy_state(np.asarray(state_initial, dtype=np.complex128))
+    effective_hamiltonian_matrix = np.asarray(
+        prepared.effective_hamiltonian_matrix,
+        dtype=np.complex128,
+    )
+    jump_operators = tuple(np.asarray(jump, dtype=np.complex128) for jump in prepared.jumps)
+    has_jump_operators = len(jump_operators) > 0
+
+    states: list[Any] = []
+    if store_states:
+        states.append(state.copy())
+
+    if state_callback is not None:
+        state_callback(0, state)
+
+    jump_times: list[float] = []
+    jump_indices: list[int] = []
+    norm_errors: list[float] = []
+
+    for time_index in range(times.size - 1):
+        interval_start = float(times[time_index])
+        interval_stop = float(times[time_index + 1])
+        current_time = interval_start
+        substeps = 0
+
+        while current_time < interval_stop:
+            remaining_step = interval_stop - current_time
+            step_size = remaining_step
+
+            jumped_states: tuple[ArrayC, ...] = ()
+            probabilities = np.zeros(0, dtype=np.float64)
+            total_jump_probability = 0.0
+
+            if has_jump_operators:
+                jumped_states, rates = _evaluate_jumps_numpy(state, jump_operators)
+                probabilities = step_size * rates
+                total_jump_probability = float(np.sum(probabilities))
+
+                if total_jump_probability > max_jump_probability:
+                    if not adaptive_time_step:
+                        raise RuntimeError(
+                            "Time step is too large for first-order MCWF: "
+                            f"total jump probability={total_jump_probability:.6e}, "
+                            f"allowed maximum={max_jump_probability:.6e}. "
+                            "Use a finer time grid, enable adaptive_time_step=True, "
+                            "or increase max_jump_probability only if you know this is "
+                            "acceptable."
+                        )
+
+                    scale = adaptive_safety_factor * max_jump_probability / total_jump_probability
+                    step_size = max(remaining_step * scale, min_step_size)
+
+                    if step_size >= remaining_step:
+                        step_size = remaining_step
+
+                    probabilities = step_size * rates
+                    total_jump_probability = float(np.sum(probabilities))
+
+                    if total_jump_probability > max_jump_probability:
+                        raise RuntimeError(
+                            "Adaptive MCWF failed to reduce the step enough: "
+                            f"total jump probability={total_jump_probability:.6e}, "
+                            f"allowed maximum={max_jump_probability:.6e}. "
+                            "Try a smaller min_step_size or max_jump_probability."
+                        )
+
+            if step_size < min_step_size and remaining_step > min_step_size:
+                raise RuntimeError(
+                    "Adaptive MCWF reached min_step_size before completing "
+                    "the requested time interval."
+                )
+
+            if has_jump_operators and rng.random() < total_jump_probability:
+                if probabilities.size == 1:
+                    jump_index = 0
+                else:
+                    jump_index = choose_jump(probabilities, rng)
+                state = jumped_states[jump_index]
+                jump_times.append(float(current_time + step_size))
+                jump_indices.append(jump_index)
+            else:
+                state = state - 1j * step_size * (effective_hamiltonian_matrix @ state)
+
+            state_norm = float(np.linalg.norm(state))
+            norm_errors.append(abs(state_norm - 1.0))
+
+            if normalize_each_step:
+                if state_norm == 0.0:
+                    raise RuntimeError("The MCWF state reached zero norm. Try a smaller time step.")
+                state = state / state_norm
+
+            current_time += step_size
+            substeps += 1
+
+            if substeps > max_substeps_per_interval:
+                raise RuntimeError(
+                    "Adaptive MCWF exceeded max_substeps_per_interval. "
+                    "Try increasing max_jump_probability, increasing "
+                    "max_substeps_per_interval, or checking jump rates."
+                )
+
+        if store_states:
+            states.append(state.copy())
+
+        if state_callback is not None:
+            state_callback(time_index + 1, state)
+
+    return TrajectoryResult(
+        times=times,
+        states=states,
+        jump_times=np.asarray(jump_times, dtype=np.float64),
+        jump_indices=np.asarray(jump_indices, dtype=np.int64),
+        norm_errors=np.asarray(norm_errors, dtype=np.float64),
+    )
+
+
+def _evaluate_jumps_numpy(
+    state: ArrayC,
+    jumps: tuple[ArrayC, ...],
+) -> tuple[tuple[ArrayC, ...], NDArray[np.float64]]:
+    """Return J_mu|psi> and rates for one NumPy MCWF state."""
+    if not jumps:
+        return (), np.zeros(0, dtype=np.float64)
+
+    jumped_states = tuple(jump @ state for jump in jumps)
+    rates = np.fromiter(
+        (
+            max(float(np.vdot(jumped_state, jumped_state).real), 0.0)
+            for jumped_state in jumped_states
+        ),
+        dtype=np.float64,
+        count=len(jumped_states),
+    )
+    return jumped_states, rates
 
 
 def _can_use_vectorized_mcwf_ensemble(
