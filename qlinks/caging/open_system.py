@@ -1406,10 +1406,14 @@ def _reduced_iz_reports_for_monitor(
     return tuple(selected)
 
 
+def _support_key_from_mask(local_mask: NDArray[np.bool_]) -> tuple[int, ...]:
+    return tuple(int(index) for index in np.flatnonzero(local_mask))
+
+
 def _support_key_for_zero_report(
     zero_report: InterferenceZeroReport,
 ) -> tuple[int, ...]:
-    return tuple(int(index) for index in np.flatnonzero(zero_report.local_mask))
+    return _support_key_from_mask(zero_report.local_mask)
 
 
 def _group_reduced_iz_reports_by_exact_support(
@@ -1479,6 +1483,115 @@ def _group_reduced_iz_reports_for_monitor(
     raise ValueError(f"Unknown reduced-IZ monitor decomposition: {decomposition!r}")
 
 
+@dataclass(slots=True)
+class _ReducedIZAssemblyCache:
+    """Cache basis-index lookups for reduced-IZ sparse assembly.
+
+    Reduced-IZ monitor construction often builds many local operators with the
+    same local support.  Scanning the full constrained basis for every report is
+    the dominant cost in the Cage-Lindblad benchmark, so this cache stores the
+    source basis indices and source->target row/column arrays for each local
+    transition pattern.
+    """
+
+    basis_configs: NDArray[np.integer]
+    config_to_index: dict[tuple[int, ...], int]
+    _source_groups_by_mask: dict[
+        tuple[int, ...],
+        dict[tuple[int, ...], NDArray[np.int64]],
+    ] = field(default_factory=dict, init=False, repr=False)
+    _transition_indices_by_pattern: dict[
+        tuple[tuple[int, ...], tuple[int, ...], tuple[int, ...]],
+        tuple[NDArray[np.int64], NDArray[np.int64]],
+    ] = field(default_factory=dict, init=False, repr=False)
+
+    def source_indices(
+        self,
+        *,
+        mask_key: tuple[int, ...],
+        source_local: tuple[int, ...],
+    ) -> NDArray[np.int64]:
+        source_groups = self._source_groups_by_mask.get(mask_key)
+
+        if source_groups is None:
+            source_groups = self._build_source_groups(mask_key)
+            self._source_groups_by_mask[mask_key] = source_groups
+
+        return source_groups.get(
+            _transition_pattern_key(source_local),
+            np.empty(0, dtype=np.int64),
+        )
+
+    def transition_indices(
+        self,
+        *,
+        local_mask: NDArray[np.bool_],
+        source_local: tuple[int, ...] | NDArray[np.integer],
+        target_local: tuple[int, ...] | NDArray[np.integer],
+    ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+        mask_key = _support_key_from_mask(local_mask)
+        source_key = _transition_pattern_key(source_local)
+        target_key = _transition_pattern_key(target_local)
+        cache_key = (mask_key, source_key, target_key)
+
+        cached = self._transition_indices_by_pattern.get(cache_key)
+        if cached is not None:
+            return cached
+
+        source_indices = self.source_indices(
+            mask_key=mask_key,
+            source_local=source_key,
+        )
+
+        if len(source_indices) == 0:
+            result = (np.empty(0, dtype=np.int64), np.empty(0, dtype=np.int64))
+            self._transition_indices_by_pattern[cache_key] = result
+            return result
+
+        target_configs = np.array(
+            self.basis_configs[source_indices],
+            copy=True,
+        )
+        target_configs[:, np.asarray(mask_key, dtype=np.int64)] = np.asarray(
+            target_key,
+            dtype=target_configs.dtype,
+        )
+
+        rows: list[int] = []
+        cols: list[int] = []
+
+        for column_index, target_config in zip(source_indices, target_configs, strict=True):
+            row_index = self.config_to_index.get(tuple(int(x) for x in target_config))
+            if row_index is None:
+                continue
+
+            rows.append(int(row_index))
+            cols.append(int(column_index))
+
+        result = (
+            np.asarray(rows, dtype=np.int64),
+            np.asarray(cols, dtype=np.int64),
+        )
+        self._transition_indices_by_pattern[cache_key] = result
+        return result
+
+    def _build_source_groups(
+        self,
+        mask_key: tuple[int, ...],
+    ) -> dict[tuple[int, ...], NDArray[np.int64]]:
+        grouped: dict[tuple[int, ...], list[int]] = {}
+        mask_indices = np.asarray(mask_key, dtype=np.int64)
+
+        for source_index, source_config in enumerate(self.basis_configs):
+            source_key = _transition_pattern_key(source_config[mask_indices])
+            grouped.setdefault(source_key, []).append(int(source_index))
+
+        return {
+            source_key: np.asarray(indices, dtype=np.int64)
+            for source_key, indices in grouped.items()
+        }
+
+
 def _build_reduced_iz_monitor_from_reports(
     *,
     reports: tuple[InterferenceZeroReport, ...],
@@ -1486,8 +1599,20 @@ def _build_reduced_iz_monitor_from_reports(
     config_to_index: dict[tuple[int, ...], int],
     shape: tuple[int, int],
     use_collective_coefficients: bool,
+    assembly_cache: _ReducedIZAssemblyCache | None = None,
 ) -> sp.csr_array:
-    monitor = sp.csr_array(shape, dtype=np.complex128)
+    if len(reports) == 0:
+        return sp.csr_array(shape, dtype=np.complex128)
+
+    if assembly_cache is None:
+        assembly_cache = _ReducedIZAssemblyCache(
+            basis_configs=basis_configs,
+            config_to_index=config_to_index,
+        )
+
+    rows_parts: list[NDArray[np.int64]] = []
+    cols_parts: list[NDArray[np.int64]] = []
+    data_parts: list[NDArray[np.complex128]] = []
 
     for zero_report in reports:
         coefficient = _monitor_coefficient_for_zero_report(
@@ -1495,16 +1620,37 @@ def _build_reduced_iz_monitor_from_reports(
             use_collective_coefficients=use_collective_coefficients,
         )
 
-        reduced_operator = _build_reduced_iz_operator_matrix(
-            zero_report=zero_report,
-            basis_configs=basis_configs,
-            config_to_index=config_to_index,
-            shape=shape,
-        )
+        for transition in zero_report.local_transitions:
+            rows, cols = assembly_cache.transition_indices(
+                local_mask=zero_report.local_mask,
+                source_local=transition.source_local,
+                target_local=transition.target_local,
+            )
 
-        monitor = monitor + coefficient * reduced_operator
+            if len(rows) == 0:
+                continue
 
-    return monitor.tocsr()
+            rows_parts.append(rows)
+            cols_parts.append(cols)
+            data_parts.append(
+                np.full(
+                    len(rows),
+                    coefficient * complex(transition.matrix_element),
+                    dtype=np.complex128,
+                )
+            )
+
+    if len(data_parts) == 0:
+        return sp.csr_array(shape, dtype=np.complex128)
+
+    return sp.csr_array(
+        (
+            np.concatenate(data_parts),
+            (np.concatenate(rows_parts), np.concatenate(cols_parts)),
+        ),
+        shape=shape,
+        dtype=np.complex128,
+    ).tocsr()
 
 
 def _build_reduced_iz_monitor(
@@ -1540,12 +1686,18 @@ def _build_reduced_iz_monitor(
         tuple(int(value) for value in config): index for index, config in enumerate(basis_configs)
     }
 
+    assembly_cache = _ReducedIZAssemblyCache(
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+    )
+
     monitor = _build_reduced_iz_monitor_from_reports(
         reports=selected_reports,
         basis_configs=basis_configs,
         config_to_index=config_to_index,
         shape=shape,
         use_collective_coefficients=use_collective_coefficients,
+        assembly_cache=assembly_cache,
     )
 
     inferred_z_value: complex | None = None
@@ -1618,6 +1770,11 @@ def _build_reduced_iz_monitor_components(
         tuple(int(value) for value in config): index for index, config in enumerate(basis_configs)
     }
 
+    assembly_cache = _ReducedIZAssemblyCache(
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+    )
+
     report_groups = _group_reduced_iz_reports_for_monitor(
         selected_reports,
         decomposition=decomposition,
@@ -1634,6 +1791,7 @@ def _build_reduced_iz_monitor_components(
             config_to_index=config_to_index,
             shape=shape,
             use_collective_coefficients=use_collective_coefficients,
+            assembly_cache=assembly_cache,
         )
 
         component_support = _union_support_for_zero_reports(report_group)
@@ -1865,39 +2023,45 @@ def _build_reduced_iz_operator_matrix(
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     shape: tuple[int, int],
+    assembly_cache: _ReducedIZAssemblyCache | None = None,
 ) -> sp.csr_array:
-    rows: list[int] = []
-    cols: list[int] = []
-    data: list[complex] = []
+    if assembly_cache is None:
+        assembly_cache = _ReducedIZAssemblyCache(
+            basis_configs=basis_configs,
+            config_to_index=config_to_index,
+        )
 
-    local_mask = zero_report.local_mask
-    transitions_by_source = _group_local_transitions_by_source(
-        zero_report.local_transitions,
-    )
+    rows_parts: list[NDArray[np.int64]] = []
+    cols_parts: list[NDArray[np.int64]] = []
+    data_parts: list[NDArray[np.complex128]] = []
 
-    for source_index, source_config in enumerate(basis_configs):
-        source_local = _transition_pattern_key(source_config[local_mask])
-        local_transitions = transitions_by_source.get(source_local, ())
+    for transition in zero_report.local_transitions:
+        rows, cols = assembly_cache.transition_indices(
+            local_mask=zero_report.local_mask,
+            source_local=transition.source_local,
+            target_local=transition.target_local,
+        )
 
-        for transition in local_transitions:
-            target_config = np.array(source_config, copy=True)
-            target_config[local_mask] = np.asarray(
-                transition.target_local,
-                dtype=target_config.dtype,
+        if len(rows) == 0:
+            continue
+
+        rows_parts.append(rows)
+        cols_parts.append(cols)
+        data_parts.append(
+            np.full(
+                len(rows),
+                complex(transition.matrix_element),
+                dtype=np.complex128,
             )
+        )
 
-            target_index = config_to_index.get(tuple(int(x) for x in target_config))
-            if target_index is None:
-                continue
-
-            rows.append(int(target_index))
-            cols.append(int(source_index))
-            data.append(complex(transition.matrix_element))
+    if len(data_parts) == 0:
+        return sp.csr_array(shape, dtype=np.complex128)
 
     return sp.csr_array(
         (
-            np.asarray(data, dtype=np.complex128),
-            (rows, cols),
+            np.concatenate(data_parts),
+            (np.concatenate(rows_parts), np.concatenate(cols_parts)),
         ),
         shape=shape,
         dtype=np.complex128,

@@ -12,12 +12,14 @@ from qlinks.caging.classification import (
 from qlinks.caging.open_system import (
     CageLindbladConstruction,
     _build_component_decomposition_jump_operators,
+    _build_reduced_iz_monitor_from_reports,
     _build_reduced_iz_operator_matrix,
     _group_local_transitions_by_source,
     _group_reduced_iz_reports_for_monitor,
     _infer_sharp_potential_value,
     _LocalTermMatrixCache,
     _partition_plaquette_terms_by_region,
+    _ReducedIZAssemblyCache,
     _resolve_local_term_builder,
     _select_jump_terms,
     _select_monitor_terms,
@@ -464,6 +466,55 @@ def test_group_reduced_iz_reports_for_monitor_exact_and_connected_supports():
         [0, 1, 3],
         [2],
     ]
+
+
+def test_reduced_iz_monitor_from_reports_reuses_assembly_cache():
+    transitions_a = (
+        LocalTransitionPattern(
+            source_local=(0,),
+            target_local=(1,),
+            matrix_element=2.0 + 0.0j,
+        ),
+    )
+    transitions_b = (
+        LocalTransitionPattern(
+            source_local=(1,),
+            target_local=(0,),
+            matrix_element=3.0 + 0.0j,
+        ),
+    )
+    report_a = _zero_report(
+        zero_index=0,
+        local_mask=(True,),
+        transitions=transitions_a,
+    )
+    report_b = _zero_report(
+        zero_index=1,
+        local_mask=(True,),
+        transitions=transitions_b,
+    )
+    basis_configs = np.array([[0], [1]], dtype=np.int64)
+    config_to_index = {(0,): 0, (1,): 1}
+    assembly_cache = _ReducedIZAssemblyCache(
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+    )
+
+    matrix = _build_reduced_iz_monitor_from_reports(
+        reports=(report_a, report_b),
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+        shape=(2, 2),
+        use_collective_coefficients=False,
+        assembly_cache=assembly_cache,
+    )
+
+    np.testing.assert_allclose(
+        matrix.toarray(),
+        np.array([[0.0, 3.0], [2.0, 0.0]], dtype=np.complex128),
+    )
+    assert len(assembly_cache._source_groups_by_mask) == 1
+    assert len(assembly_cache._transition_indices_by_pattern) == 2
 
 
 def test_group_local_transitions_by_source_and_reduced_iz_matrix():
