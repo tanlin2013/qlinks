@@ -230,6 +230,64 @@ def _slice_csr_rows(
     )
 
 
+def _slice_csc_columns(
+    matrix: sp.csc_array,
+    *,
+    column_start: int,
+    column_stop: int,
+) -> sp.csr_array:
+    """Return a CSC column slice without generic sparse indexing."""
+
+    matrix = matrix.tocsc()
+    data_start = int(matrix.indptr[column_start])
+    data_stop = int(matrix.indptr[column_stop])
+
+    indptr = matrix.indptr[column_start : column_stop + 1].copy()
+    indptr -= indptr[0]
+
+    return sp.csc_array(
+        (
+            matrix.data[data_start:data_stop].copy(),
+            matrix.indices[data_start:data_stop].copy(),
+            indptr,
+        ),
+        shape=(matrix.shape[0], column_stop - column_start),
+    ).tocsr()
+
+
+def _left_multiply_same_left_sparse_csr_batch(
+    left: Any,
+    right_matrices: tuple[Any, ...],
+) -> tuple[sp.csr_array, ...]:
+    """Return ``left @ right`` for many right factors sharing one left factor."""
+
+    if len(right_matrices) == 0:
+        return ()
+
+    if len(right_matrices) == 1:
+        return (_left_multiply_sparse_csr(left, right_matrices[0]),)
+
+    left_csr = left.tocsr()
+    right_csr = tuple(matrix.tocsr() for matrix in right_matrices)
+    row_count = int(right_csr[0].shape[0])
+    column_count = int(right_csr[0].shape[1])
+
+    if any(matrix.shape != (row_count, column_count) for matrix in right_csr):
+        return tuple(_left_multiply_sparse_csr(left_csr, matrix) for matrix in right_csr)
+
+    stacked_right = sp.hstack(right_csr, format="csr")
+    stacked_product = (left_csr @ stacked_right).tocsc()
+
+    return tuple(
+        _slice_csc_columns(
+            stacked_product,
+            column_start=product_index * column_count,
+            column_stop=(product_index + 1) * column_count,
+        )
+        for product_index in range(len(right_csr))
+    )
+
+
 def _left_multiply_sparse_csr_batch(
     left_matrices: tuple[Any, ...],
     right: Any,
@@ -1684,9 +1742,19 @@ class _ReducedIZAssemblyCache:
         source_local: tuple[int, ...] | NDArray[np.integer],
         target_local: tuple[int, ...] | NDArray[np.integer],
     ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
-        mask_key = _support_key_from_mask(local_mask)
-        source_key = _transition_pattern_key(source_local)
-        target_key = _transition_pattern_key(target_local)
+        return self.transition_indices_by_key(
+            mask_key=_support_key_from_mask(local_mask),
+            source_key=_transition_pattern_key(source_local),
+            target_key=_transition_pattern_key(target_local),
+        )
+
+    def transition_indices_by_key(
+        self,
+        *,
+        mask_key: tuple[int, ...],
+        source_key: tuple[int, ...],
+        target_key: tuple[int, ...],
+    ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
         cache_key = (mask_key, source_key, target_key)
 
         cached = self._transition_indices_by_pattern.get(cache_key)
@@ -1830,35 +1898,51 @@ def _build_reduced_iz_monitor_from_reports(
             config_to_index=config_to_index,
         )
 
-    rows_parts: list[NDArray[np.int64]] = []
-    cols_parts: list[NDArray[np.int64]] = []
-    data_parts: list[NDArray[np.complex128]] = []
+    transition_coefficients: dict[
+        tuple[tuple[int, ...], tuple[int, ...], tuple[int, ...]], complex
+    ] = {}
 
     for zero_report in reports:
         coefficient = _monitor_coefficient_for_zero_report(
             zero_report,
             use_collective_coefficients=use_collective_coefficients,
         )
+        mask_key = _support_key_from_mask(zero_report.local_mask)
 
         for transition in zero_report.local_transitions:
-            rows, cols = assembly_cache.transition_indices(
-                local_mask=zero_report.local_mask,
-                source_local=transition.source_local,
-                target_local=transition.target_local,
+            source_key = _transition_pattern_key(transition.source_local)
+            target_key = _transition_pattern_key(transition.target_local)
+            key = (mask_key, source_key, target_key)
+            transition_coefficients[key] = transition_coefficients.get(key, 0.0 + 0.0j) + (
+                coefficient * complex(transition.matrix_element)
             )
 
-            if len(rows) == 0:
-                continue
+    rows_parts: list[NDArray[np.int64]] = []
+    cols_parts: list[NDArray[np.int64]] = []
+    data_parts: list[NDArray[np.complex128]] = []
 
-            rows_parts.append(rows)
-            cols_parts.append(cols)
-            data_parts.append(
-                np.full(
-                    len(rows),
-                    coefficient * complex(transition.matrix_element),
-                    dtype=np.complex128,
-                )
+    for (mask_key, source_key, target_key), coefficient in transition_coefficients.items():
+        if coefficient == 0.0:
+            continue
+
+        rows, cols = assembly_cache.transition_indices_by_key(
+            mask_key=mask_key,
+            source_key=source_key,
+            target_key=target_key,
+        )
+
+        if len(rows) == 0:
+            continue
+
+        rows_parts.append(rows)
+        cols_parts.append(cols)
+        data_parts.append(
+            np.full(
+                len(rows),
+                coefficient,
+                dtype=np.complex128,
             )
+        )
 
     if len(data_parts) == 0:
         return sp.csr_array(shape, dtype=np.complex128)
@@ -2002,8 +2086,8 @@ def _build_reduced_iz_monitor_components(
     )
 
     total_monitor = sp.csr_array(shape, dtype=np.complex128)
-    components: list[ReducedIZMonitorComponent] = []
-    jumps: list[Any] = []
+    component_specs: list[dict[str, Any]] = []
+    jump_specs: list[tuple[LocalTermDescriptor, sp.csr_array]] = []
 
     for component_id, report_group in enumerate(report_groups):
         component_stage_start = time.perf_counter()
@@ -2022,20 +2106,21 @@ def _build_reduced_iz_monitor_components(
         )
 
         component_support = _union_support_for_zero_reports(report_group)
+        component_support_set = frozenset(component_support)
 
         component_kinetic_terms = _select_terms_inside_variable_support(
             kinetic_terms,
-            frozenset(component_support),
+            component_support_set,
         )
 
         component_potential_terms = _select_terms_inside_variable_support(
             potential_terms,
-            frozenset(component_support),
+            component_support_set,
         )
 
         component_support_plaquette_ids = _plaquette_ids_inside_variable_support(
             kinetic_terms,
-            frozenset(component_support),
+            component_support_set,
         )
 
         component_z_value: complex | None = None
@@ -2060,57 +2145,109 @@ def _build_reduced_iz_monitor_components(
                 f"Unknown reduced-IZ monitor content: " f"{reduced_iz_monitor_content!r}"
             )
 
-        component_stage_start = time.perf_counter()
-        component_kinetic_matrices = tuple(
-            _local_term_matrix(
-                model=model,
-                build_result=build_result,
-                term=kinetic_term,
-                builder=builder,
-                backend=backend,
-                local_term_cache=local_term_cache,
-            )
-            for kinetic_term in component_kinetic_terms
-        )
-        component_jumps = list(
-            _left_multiply_sparse_csr_batch(
-                component_kinetic_matrices,
-                component_monitor,
-            )
+        jump_indices: list[int] = []
+        for kinetic_term in component_kinetic_terms:
+            jump_indices.append(len(jump_specs))
+            jump_specs.append((kinetic_term, component_monitor))
+
+        component_specs.append(
+            {
+                "component_id": component_id,
+                "report_group": report_group,
+                "monitor": component_monitor,
+                "support": component_support,
+                "support_plaquette_ids": component_support_plaquette_ids,
+                "kinetic_terms": component_kinetic_terms,
+                "potential_terms": component_potential_terms,
+                "z_value": component_z_value,
+                "jump_indices": tuple(jump_indices),
+            }
         )
 
+        component_stage_start = time.perf_counter()
+        total_monitor = total_monitor + component_monitor
         _record_construction_stage(
             timing_collector,
-            "component_jump_products",
+            "component_monitor_sum",
             component_stage_start,
         )
 
-        component_stage_start = time.perf_counter()
+    component_stage_start = time.perf_counter()
+    jump_results: list[Any | None] = [None] * len(jump_specs)
+    jump_specs_by_term: dict[
+        tuple[str, str, int, tuple[int, ...]],
+        tuple[LocalTermDescriptor, list[tuple[int, sp.csr_array]]],
+    ] = {}
+
+    for jump_index, (kinetic_term, component_monitor) in enumerate(jump_specs):
+        term_key = _local_term_cache_key(kinetic_term)
+        grouped_entry = jump_specs_by_term.get(term_key)
+        if grouped_entry is None:
+            grouped_entry = (kinetic_term, [])
+            jump_specs_by_term[term_key] = grouped_entry
+
+        grouped_entry[1].append((jump_index, component_monitor))
+
+    for kinetic_term, grouped_specs in jump_specs_by_term.values():
+        kinetic_matrix = _local_term_matrix(
+            model=model,
+            build_result=build_result,
+            term=kinetic_term,
+            builder=builder,
+            backend=backend,
+            local_term_cache=local_term_cache,
+        )
+        products = _left_multiply_same_left_sparse_csr_batch(
+            kinetic_matrix,
+            tuple(component_monitor for _jump_index, component_monitor in grouped_specs),
+        )
+
+        for (jump_index, _component_monitor), product in zip(
+            grouped_specs,
+            products,
+            strict=True,
+        ):
+            jump_results[jump_index] = product
+
+    if any(jump is None for jump in jump_results):
+        raise RuntimeError("Internal error while assembling reduced-IZ component jumps.")
+
+    jumps = [jump for jump in jump_results if jump is not None]
+    _record_construction_stage(
+        timing_collector,
+        "component_jump_products",
+        component_stage_start,
+    )
+
+    component_stage_start = time.perf_counter()
+    components: list[ReducedIZMonitorComponent] = []
+    for component_spec in component_specs:
+        component_jumps = tuple(jumps[index] for index in component_spec["jump_indices"])
+
         if compute_jump_residuals:
             component_jump_residuals = _jump_residuals(
                 state=state,
-                jumps=tuple(component_jumps),
+                jumps=component_jumps,
             )
         else:
             component_jump_residuals = ()
 
+        component_monitor = component_spec["monitor"]
         component_monitor_residual = float(np.linalg.norm(component_monitor @ state))
-        _record_construction_stage(
-            timing_collector,
-            "component_diagnostics",
-            component_stage_start,
-        )
+        report_group = component_spec["report_group"]
+        component_kinetic_terms = component_spec["kinetic_terms"]
+        component_potential_terms = component_spec["potential_terms"]
 
         components.append(
             ReducedIZMonitorComponent(
-                component_id=component_id,
+                component_id=int(component_spec["component_id"]),
                 monitor=component_monitor,
                 zero_indices=tuple(int(zero_report.zero_index) for zero_report in report_group),
-                support_variables=component_support,
-                support_plaquette_ids=component_support_plaquette_ids,
+                support_variables=component_spec["support"],
+                support_plaquette_ids=component_spec["support_plaquette_ids"],
                 monitor_plaquette_ids=tuple(int(term.term_id) for term in component_kinetic_terms),
                 jump_plaquette_ids=tuple(int(term.term_id) for term in component_kinetic_terms),
-                z_value=component_z_value,
+                z_value=component_spec["z_value"],
                 n_potential_terms=(
                     len(component_potential_terms)
                     if reduced_iz_monitor_content == "offdiagonal_plus_potential"
@@ -2121,14 +2258,11 @@ def _build_reduced_iz_monitor_components(
             )
         )
 
-        component_stage_start = time.perf_counter()
-        total_monitor = total_monitor + component_monitor
-        jumps.extend(component_jumps)
-        _record_construction_stage(
-            timing_collector,
-            "component_monitor_sum",
-            component_stage_start,
-        )
+    _record_construction_stage(
+        timing_collector,
+        "component_diagnostics",
+        component_stage_start,
+    )
 
     return (
         total_monitor.tocsr(),

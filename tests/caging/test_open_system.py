@@ -17,6 +17,7 @@ from qlinks.caging.open_system import (
     _group_local_transitions_by_source,
     _group_reduced_iz_reports_for_monitor,
     _infer_sharp_potential_value,
+    _left_multiply_same_left_sparse_csr_batch,
     _left_multiply_sparse_csr,
     _left_multiply_sparse_csr_batch,
     _LocalTermMatrixCache,
@@ -247,6 +248,36 @@ def test_left_multiply_sparse_csr_batch_matches_individual_products():
     assert len(products) == 2
     np.testing.assert_allclose(products[0].toarray(), (left_a @ right).toarray())
     np.testing.assert_allclose(products[1].toarray(), (left_b @ right).toarray())
+
+
+def test_left_multiply_same_left_sparse_csr_batch_matches_individual_products():
+    left = sp.csr_array(
+        (
+            np.array([1.0, -2.0], dtype=np.complex128),
+            (np.array([0, 2]), np.array([1, 0])),
+        ),
+        shape=(3, 3),
+    )
+    right_a = sp.csr_array(
+        (
+            np.array([2.0, -1.0j, 4.0], dtype=np.complex128),
+            (np.array([0, 1, 2]), np.array([1, 0, 2])),
+        ),
+        shape=(3, 4),
+    )
+    right_b = sp.csr_array(
+        (
+            np.array([3.0, 5.0], dtype=np.complex128),
+            (np.array([1, 2]), np.array([3, 0])),
+        ),
+        shape=(3, 4),
+    )
+
+    products = _left_multiply_same_left_sparse_csr_batch(left, (right_a, right_b))
+
+    assert len(products) == 2
+    np.testing.assert_allclose(products[0].toarray(), (left @ right_a).toarray())
+    np.testing.assert_allclose(products[1].toarray(), (left @ right_b).toarray())
 
 
 def test_select_jump_terms_can_include_crossing_terms():
@@ -593,6 +624,47 @@ def test_reduced_iz_monitor_from_reports_reuses_assembly_cache():
     )
     assert len(assembly_cache._source_groups_by_mask) == 1
     assert len(assembly_cache._transition_indices_by_pattern) == 2
+
+
+def test_reduced_iz_monitor_from_reports_aggregates_duplicate_transitions():
+    transitions = (
+        LocalTransitionPattern(
+            source_local=(0,),
+            target_local=(1,),
+            matrix_element=2.0 + 0.0j,
+        ),
+    )
+    report_a = _zero_report(
+        zero_index=0,
+        local_mask=(True,),
+        transitions=transitions,
+    )
+    report_b = _zero_report(
+        zero_index=1,
+        local_mask=(True,),
+        transitions=transitions,
+    )
+    basis_configs = np.array([[0], [1]], dtype=np.int64)
+    config_to_index = {(0,): 0, (1,): 1}
+    assembly_cache = _ReducedIZAssemblyCache(
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+    )
+
+    matrix = _build_reduced_iz_monitor_from_reports(
+        reports=(report_a, report_b),
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+        shape=(2, 2),
+        use_collective_coefficients=False,
+        assembly_cache=assembly_cache,
+    )
+
+    np.testing.assert_allclose(
+        matrix.toarray(),
+        np.array([[0.0, 0.0], [4.0, 0.0]], dtype=np.complex128),
+    )
+    assert len(assembly_cache._transition_indices_by_pattern) == 1
 
 
 def test_group_local_transitions_by_source_and_reduced_iz_matrix():
