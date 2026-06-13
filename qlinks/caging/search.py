@@ -43,6 +43,7 @@ class CageSearchConfig:
     ipr_step_size: float = 0.1
     ipr_candidate_count: int = 64
     ipr_rank_completion_patience: int | None = None
+    ipr_batch_size: int = 16
     ipr_random_seed: int | None = None
 
     type1_kappas: tuple[int, ...] = (0,)
@@ -465,6 +466,7 @@ class CageSearcher:
             ipr_step_size=self.config.ipr_step_size,
             ipr_candidate_count=self.config.ipr_candidate_count,
             ipr_rank_completion_patience=self.config.ipr_rank_completion_patience,
+            ipr_batch_size=self.config.ipr_batch_size,
             ipr_random_seed=self.config.ipr_random_seed,
             timing_collector=timing_collector,
         )

@@ -24,6 +24,7 @@ class IPRLocalizationConfig:
     minimum_gap_ratio: float = 10.0
     random_seed: int | None = None
     rank_completion_patience: int | None = None
+    batch_size: int = 16
 
 
 @dataclass(frozen=True)
@@ -107,6 +108,40 @@ def _random_unit_vector(
         np.asarray(vector, dtype=np.complex128),
         tolerance=1e-14,
     )
+
+
+def _random_unit_vectors(
+    dimension: int,
+    count: int,
+    *,
+    rng: np.random.Generator,
+) -> NDArray[np.complex128]:
+    if count <= 0:
+        return np.zeros((dimension, 0), dtype=np.complex128)
+
+    real_part = rng.normal(size=(dimension, count))
+    imag_part = rng.normal(size=(dimension, count))
+    vectors = np.asarray(real_part + 1j * imag_part, dtype=np.complex128)
+    norms = scipy_linalg.norm(vectors, axis=0)
+    if np.any(norms <= 1e-14):
+        # This is extraordinarily unlikely for Gaussian starts, but keep the
+        # same near-zero guard as the scalar helper.
+        raise ValueError("Cannot normalize a near-zero vector.")
+    return np.asarray(vectors / norms[np.newaxis, :], dtype=np.complex128)
+
+
+def _normalize_columns(
+    matrix: NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> NDArray[np.complex128]:
+    if matrix.shape[1] == 0:
+        return np.zeros_like(matrix, dtype=np.complex128)
+
+    norms = scipy_linalg.norm(matrix, axis=0)
+    if np.any(norms <= tolerance):
+        raise ValueError("Cannot normalize a near-zero vector.")
+    return np.asarray(matrix / norms[np.newaxis, :], dtype=np.complex128)
 
 
 def support_mask_by_largest_gap(
@@ -225,6 +260,113 @@ def _maximize_ipr_once_with_working_basis(
     )
 
 
+def _localized_states_by_batched_ipr(
+    working_basis: _IPRWorkingBasis,
+    *,
+    config: IPRLocalizationConfig,
+    rng: np.random.Generator,
+    count: int,
+) -> list[LocalizedState]:
+    """Find several local IPR maxima using matrix-matrix operations."""
+    basis = working_basis.basis
+    basis_adjoint = working_basis.basis_adjoint
+    dimension = working_basis.dimension
+    if dimension == 0:
+        raise ValueError("Cannot localize an empty eigenspace.")
+    if count <= 0:
+        return []
+
+    coefficients = _random_unit_vectors(dimension, count, rng=rng)
+    step_sizes = np.full(count, config.step_size, dtype=np.float64)
+    previous_values = np.full(count, -np.inf, dtype=np.float64)
+    active_mask = np.ones(count, dtype=np.bool_)
+
+    for _iteration_index in range(config.max_iter):
+        if not bool(np.any(active_mask)):
+            break
+
+        active_columns = np.flatnonzero(active_mask)
+        active_coefficients = coefficients[:, active_columns]
+        local_states = basis @ active_coefficients
+        amplitudes_squared = np.abs(local_states) ** 2
+        ipr_values = np.asarray(np.sum(amplitudes_squared**2, axis=0), dtype=np.float64)
+
+        converged_local = (
+            np.abs(ipr_values - previous_values[active_columns]) <= config.convergence_tolerance
+        )
+        if np.any(converged_local):
+            active_mask[active_columns[converged_local]] = False
+
+        still_active_columns = active_columns[~converged_local]
+        if still_active_columns.size == 0:
+            continue
+
+        local_states = local_states[:, ~converged_local]
+        amplitudes_squared = amplitudes_squared[:, ~converged_local]
+        ipr_values = ipr_values[~converged_local]
+        previous_values[still_active_columns] = ipr_values
+
+        active_coefficients = coefficients[:, still_active_columns]
+        gradients = 2.0 * (basis_adjoint @ (amplitudes_squared * local_states))
+
+        # Tangent-space projection for each column on ||coefficients||_2 = 1.
+        projections = np.real(np.sum(np.conj(active_coefficients) * gradients, axis=0))
+        gradients = gradients - active_coefficients * projections[np.newaxis, :]
+
+        trial_coefficients = active_coefficients + (
+            step_sizes[still_active_columns][np.newaxis, :] * gradients
+        )
+        trial_coefficients = _normalize_columns(
+            trial_coefficients,
+            tolerance=config.rank_tolerance,
+        )
+
+        trial_states = basis @ trial_coefficients
+        trial_values = np.asarray(
+            np.sum(np.abs(trial_states) ** 4, axis=0),
+            dtype=np.float64,
+        )
+
+        accepted_local = trial_values >= ipr_values
+        if np.any(accepted_local):
+            accepted_columns = still_active_columns[accepted_local]
+            coefficients[:, accepted_columns] = trial_coefficients[:, accepted_local]
+            step_sizes[accepted_columns] *= 1.02
+
+        rejected_columns = still_active_columns[~accepted_local]
+        if rejected_columns.size:
+            step_sizes[rejected_columns] *= 0.5
+
+        exhausted_columns = still_active_columns[step_sizes[still_active_columns] <= 1e-14]
+        if exhausted_columns.size:
+            active_mask[exhausted_columns] = False
+
+    final_states = basis @ coefficients
+    final_states = _normalize_columns(
+        final_states,
+        tolerance=config.rank_tolerance,
+    )
+
+    localized_states: list[LocalizedState] = []
+    for column_index in range(count):
+        local_state = final_states[:, column_index]
+        support_mask = support_mask_by_largest_gap(
+            local_state,
+            minimum_amplitude=config.amplitude_tolerance,
+            minimum_gap_ratio=config.minimum_gap_ratio,
+        )
+        localized_states.append(
+            LocalizedState(
+                local_state=np.asarray(local_state, dtype=np.complex128),
+                coefficients=np.asarray(coefficients[:, column_index], dtype=np.complex128),
+                support_mask=support_mask,
+                ipr_value=inverse_participation_ratio(local_state),
+            )
+        )
+
+    return localized_states
+
+
 def maximize_ipr_once(
     eigenspace_basis: NDArray[np.complex128],
     *,
@@ -315,31 +457,58 @@ def localized_basis_by_many_start_ipr(
 
     completed_unique_support_count_at: int | None = None
 
-    for candidate_index in range(config.candidate_count):
-        localized_state = _maximize_ipr_once_with_working_basis(
-            working_basis,
-            config=config,
-            rng=rng,
-        )
+    candidate_index = 0
+    batch_size = max(1, int(config.batch_size))
 
-        key = _support_key(localized_state.support_mask)
-        if len(key) == 0:
-            continue
+    while candidate_index < config.candidate_count:
+        current_batch_size = min(batch_size, config.candidate_count - candidate_index)
+        if current_batch_size == 1:
+            localized_states = [
+                _maximize_ipr_once_with_working_basis(
+                    working_basis,
+                    config=config,
+                    rng=rng,
+                )
+            ]
+        else:
+            localized_states = _localized_states_by_batched_ipr(
+                working_basis,
+                config=config,
+                rng=rng,
+                count=current_batch_size,
+            )
 
-        old_state = best_by_support.get(key)
-        if old_state is None or localized_state.ipr_value > old_state.ipr_value:
-            best_by_support[key] = localized_state
+        should_stop = False
+        for localized_state in localized_states:
+            key = _support_key(localized_state.support_mask)
+            if len(key) == 0:
+                candidate_index += 1
+                continue
 
-        if config.rank_completion_patience is not None and len(best_by_support) >= target_dimension:
-            if completed_unique_support_count_at is None:
-                completed_unique_support_count_at = candidate_index
-                if config.rank_completion_patience <= 0:
-                    break
-            elif (
-                candidate_index - completed_unique_support_count_at
-                >= config.rank_completion_patience
+            old_state = best_by_support.get(key)
+            if old_state is None or localized_state.ipr_value > old_state.ipr_value:
+                best_by_support[key] = localized_state
+
+            if (
+                config.rank_completion_patience is not None
+                and len(best_by_support) >= target_dimension
             ):
+                if completed_unique_support_count_at is None:
+                    completed_unique_support_count_at = candidate_index
+                    if config.rank_completion_patience <= 0:
+                        should_stop = True
+                elif (
+                    candidate_index - completed_unique_support_count_at
+                    >= config.rank_completion_patience
+                ):
+                    should_stop = True
+
+            candidate_index += 1
+            if should_stop:
                 break
+
+        if should_stop:
+            break
 
     selected_selector = IndependentColumnSelector(tolerance=config.rank_tolerance)
 

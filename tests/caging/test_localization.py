@@ -265,6 +265,7 @@ def test_many_start_ipr_rank_completion_patience_stops_after_unique_supports(mon
 
     config = IPRLocalizationConfig(
         candidate_count=10,
+        batch_size=1,
         rank_completion_patience=0,
         random_seed=123,
         rank_tolerance=1e-10,
@@ -274,3 +275,59 @@ def test_many_start_ipr_rank_completion_patience_stops_after_unique_supports(mon
 
     assert calls == 2
     assert localized_basis.shape[1] == 2
+
+
+def test_many_start_ipr_uses_batched_restart_kernel(monkeypatch):
+    import qlinks.caging.localization as localization
+
+    basis = np.eye(4, 2, dtype=np.complex128)
+    batch_sizes: list[int] = []
+    scalar_calls = 0
+
+    def fake_scalar_maximize(working_basis, *, config, rng):
+        nonlocal scalar_calls
+        scalar_calls += 1
+        raise AssertionError("scalar IPR kernel should not be used for batch_size > 1")
+
+    def fake_batched_ipr(working_basis, *, config, rng, count):
+        batch_sizes.append(count)
+        states = []
+        supports = [
+            np.array([True, False, False, False]),
+            np.array([False, True, False, False]),
+            np.array([True, False, False, False]),
+            np.array([False, True, False, False]),
+        ]
+        for index in range(count):
+            support_mask = supports[index % len(supports)]
+            local_state = np.zeros(working_basis.basis.shape[0], dtype=np.complex128)
+            local_state[np.flatnonzero(support_mask)[0]] = 1.0
+            states.append(
+                localization.LocalizedState(
+                    local_state=local_state,
+                    coefficients=np.zeros(working_basis.dimension, dtype=np.complex128),
+                    support_mask=support_mask,
+                    ipr_value=1.0,
+                )
+            )
+        return states
+
+    monkeypatch.setattr(
+        localization,
+        "_maximize_ipr_once_with_working_basis",
+        fake_scalar_maximize,
+    )
+    monkeypatch.setattr(localization, "_localized_states_by_batched_ipr", fake_batched_ipr)
+
+    config = IPRLocalizationConfig(
+        candidate_count=5,
+        batch_size=3,
+        random_seed=123,
+        rank_tolerance=1e-10,
+    )
+
+    localized_basis = localized_basis_by_many_start_ipr(basis, config=config)
+
+    assert scalar_calls == 0
+    assert batch_sizes == [3, 2]
+    assert localized_basis.shape == (4, 2)

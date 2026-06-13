@@ -66,6 +66,7 @@ class CageLindbladBenchmarkResult:
     ipr_candidate_count: int
     ipr_max_iter: int
     ipr_rank_completion_patience: int | None
+    ipr_batch_size: int
     n_variables: int
     n_states: int
     selected_signature: tuple[int, int]
@@ -393,6 +394,7 @@ def run_cage_lindblad_benchmark(
     ipr_candidate_count: int,
     ipr_max_iter: int,
     ipr_rank_completion_patience: int | None,
+    ipr_batch_size: int,
 ) -> CageLindbladBenchmarkResult:
     build_result, build_seconds = _time_call(
         lambda: case.model.build(
@@ -411,6 +413,7 @@ def run_cage_lindblad_benchmark(
         ipr_max_iter=ipr_max_iter,
         ipr_candidate_count=ipr_candidate_count,
         ipr_rank_completion_patience=ipr_rank_completion_patience,
+        ipr_batch_size=ipr_batch_size,
         ipr_random_seed=1234,
         store_full_states=True,
     )
@@ -496,6 +499,7 @@ def run_cage_lindblad_benchmark(
         ipr_candidate_count=ipr_candidate_count,
         ipr_max_iter=ipr_max_iter,
         ipr_rank_completion_patience=ipr_rank_completion_patience,
+        ipr_batch_size=ipr_batch_size,
         n_variables=case.model.layout.n_variables,
         n_states=build_result.basis.n_states,
         selected_signature=record.signature,
@@ -699,6 +703,7 @@ def main() -> None:
     parser.add_argument("--recycling-two-pattern-tolerance", type=float, default=1.0e-8)
     parser.add_argument("--ipr-candidate-count", type=int, default=128)
     parser.add_argument("--ipr-max-iter", type=int, default=1000)
+    parser.add_argument("--ipr-batch-size", type=int, default=16)
     parser.add_argument(
         "--ipr-rank-completion-patience",
         type=int,
@@ -775,6 +780,7 @@ def main() -> None:
                 ipr_candidate_count=args.ipr_candidate_count,
                 ipr_max_iter=args.ipr_max_iter,
                 ipr_rank_completion_patience=args.ipr_rank_completion_patience,
+                ipr_batch_size=args.ipr_batch_size,
             )
         except (IndexError, NotImplementedError, ValueError) as exc:
             print(f"  skipped: {exc}")
