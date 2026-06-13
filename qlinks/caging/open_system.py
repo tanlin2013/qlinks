@@ -13,6 +13,13 @@ from qlinks.caging.classification import (
     CageClassificationReport,
     InterferenceZeroReport,
     LocalTransitionPattern,
+    ReducedIZMonitorDecomposition,
+    group_reduced_iz_monitor_reports,
+    group_reduced_iz_reports_by_connected_support,
+    group_reduced_iz_reports_by_exact_support,
+    select_reduced_iz_monitor_reports,
+    support_key_for_zero_report,
+    support_key_from_mask,
 )
 from qlinks.caging.support import CageRegionSupport, extract_cage_region_support
 from qlinks.encoded import BinaryEncodedBasis
@@ -42,11 +49,6 @@ MonitorSource = Literal[
 MonitorPlaquettePolicy = Literal[
     "strict_inside",
     "touching",
-]
-ReducedIZMonitorDecomposition = Literal[
-    "single_sum",
-    "exact_support",
-    "connected_support",
 ]
 ReducedIZMonitorContent = Literal[
     "offdiagonal_only",
@@ -1233,14 +1235,15 @@ def build_type1_cage_lindblad_construction(
                     )
                 z_value = reduced_iz_z_value
 
-            single_component_support = tuple(
-                sorted(
-                    {
-                        index
-                        for report in reduced_iz_monitor_reports
-                        for index in _support_key_for_zero_report(report)
-                    }
-                )
+            single_component_groups = classification_report.reduced_iz_component_groups(
+                decomposition="single_sum",
+                include_q_empty=include_q_empty,
+                include_closed_by_known_zeros=include_closed_by_known_zeros,
+                include_projector_like=include_projector_like,
+                include_collective_cancellation=include_collective_cancellation,
+            )
+            single_component_support = (
+                single_component_groups[0].support_variables if single_component_groups else ()
             )
 
             single_component_support_set = frozenset(single_component_support)
@@ -1257,15 +1260,7 @@ def build_type1_cage_lindblad_construction(
                     zero_indices=tuple(
                         int(report.zero_index) for report in reduced_iz_monitor_reports
                     ),
-                    support_variables=tuple(
-                        sorted(
-                            {
-                                index
-                                for report in reduced_iz_monitor_reports
-                                for index in _support_key_for_zero_report(report)
-                            }
-                        )
-                    ),
+                    support_variables=single_component_support,
                     support_plaquette_ids=single_component_support_plaquette_ids,
                     monitor_plaquette_ids=tuple(
                         int(term.term_id) for term in monitor_kinetic_terms
@@ -1895,108 +1890,15 @@ def _component_jump_residuals_from_components(
     )
 
 
-def _reduced_iz_reports_for_monitor(
-    report: CageClassificationReport,
-    *,
-    include_q_empty: bool = True,
-    include_closed_by_known_zeros: bool = True,
-    include_projector_like: bool = True,
-    include_collective_cancellation: bool = True,
-) -> tuple[InterferenceZeroReport, ...]:
-    selected: list[InterferenceZeroReport] = []
-
-    for zero_report in report.zero_reports:
-        label = zero_report.probe_mechanism_label
-
-        if label == "q_empty" and include_q_empty:
-            selected.append(zero_report)
-        elif label == "closed_by_known_zeros" and include_closed_by_known_zeros:
-            selected.append(zero_report)
-        elif label == "projector_like" and include_projector_like:
-            selected.append(zero_report)
-        elif label == "collective_cancellation" and include_collective_cancellation:
-            selected.append(zero_report)
-        elif label == "unexplained_leakage":
-            continue
-
-    return tuple(selected)
-
-
-def _support_key_from_mask(local_mask: NDArray[np.bool_]) -> tuple[int, ...]:
-    return tuple(int(index) for index in np.flatnonzero(local_mask))
-
-
-def _support_key_for_zero_report(
-    zero_report: InterferenceZeroReport,
-) -> tuple[int, ...]:
-    return _support_key_from_mask(zero_report.local_mask)
-
-
-def _group_reduced_iz_reports_by_exact_support(
-    reports: tuple[InterferenceZeroReport, ...],
-) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
-    grouped: dict[tuple[int, ...], list[InterferenceZeroReport]] = {}
-
-    for zero_report in reports:
-        key = _support_key_for_zero_report(zero_report)
-        grouped.setdefault(key, []).append(zero_report)
-
-    return tuple(tuple(group) for _key, group in sorted(grouped.items(), key=lambda item: item[0]))
-
-
-def _group_reduced_iz_reports_by_connected_support(
-    reports: tuple[InterferenceZeroReport, ...],
-) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
-    if len(reports) == 0:
-        return ()
-
-    supports = [set(_support_key_for_zero_report(zero_report)) for zero_report in reports]
-
-    visited: set[int] = set()
-    groups: list[tuple[InterferenceZeroReport, ...]] = []
-
-    for start_index in range(len(reports)):
-        if start_index in visited:
-            continue
-
-        stack = [start_index]
-        component_indices: list[int] = []
-        visited.add(start_index)
-
-        while stack:
-            current_index = stack.pop()
-            component_indices.append(current_index)
-            current_support = supports[current_index]
-
-            for candidate_index, candidate_support in enumerate(supports):
-                if candidate_index in visited:
-                    continue
-
-                if not current_support.isdisjoint(candidate_support):
-                    visited.add(candidate_index)
-                    stack.append(candidate_index)
-
-        component_indices.sort()
-        groups.append(tuple(reports[index] for index in component_indices))
-
-    return tuple(groups)
-
-
-def _group_reduced_iz_reports_for_monitor(
-    reports: tuple[InterferenceZeroReport, ...],
-    *,
-    decomposition: ReducedIZMonitorDecomposition,
-) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
-    if decomposition == "single_sum":
-        return (reports,) if reports else ()
-
-    if decomposition == "exact_support":
-        return _group_reduced_iz_reports_by_exact_support(reports)
-
-    if decomposition == "connected_support":
-        return _group_reduced_iz_reports_by_connected_support(reports)
-
-    raise ValueError(f"Unknown reduced-IZ monitor decomposition: {decomposition!r}")
+# Reduced-IZ report selection and support/decomposition grouping live in
+# qlinks.caging.classification.  Keep private aliases here for compatibility
+# with older tests and downstream imports that used the construction module.
+_reduced_iz_reports_for_monitor = select_reduced_iz_monitor_reports
+_support_key_from_mask = support_key_from_mask
+_support_key_for_zero_report = support_key_for_zero_report
+_group_reduced_iz_reports_by_exact_support = group_reduced_iz_reports_by_exact_support
+_group_reduced_iz_reports_by_connected_support = group_reduced_iz_reports_by_connected_support
+_group_reduced_iz_reports_for_monitor = group_reduced_iz_monitor_reports
 
 
 @dataclass(slots=True)
@@ -2509,9 +2411,19 @@ def _build_reduced_iz_monitor_components(
         }
         assembly_cache.config_to_index = config_to_index
 
-    report_groups = _group_reduced_iz_reports_for_monitor(
-        selected_reports,
+    report_groups = classification_report.reduced_iz_report_groups(
         decomposition=decomposition,
+        include_q_empty=include_q_empty,
+        include_closed_by_known_zeros=include_closed_by_known_zeros,
+        include_projector_like=include_projector_like,
+        include_collective_cancellation=include_collective_cancellation,
+    )
+    component_groups = classification_report.reduced_iz_component_groups(
+        decomposition=decomposition,
+        include_q_empty=include_q_empty,
+        include_closed_by_known_zeros=include_closed_by_known_zeros,
+        include_projector_like=include_projector_like,
+        include_collective_cancellation=include_collective_cancellation,
     )
 
     total_monitor_terms: list[Any] = []
@@ -2519,7 +2431,8 @@ def _build_reduced_iz_monitor_components(
     component_specs: list[dict[str, Any]] = []
     jump_specs: list[tuple[LocalTermDescriptor, Any]] = []
 
-    for component_id, report_group in enumerate(report_groups):
+    for component_group, report_group in zip(component_groups, report_groups, strict=True):
+        component_id = int(component_group.component_id)
         component_stage_start = time.perf_counter()
         component_monitor_state = _reduced_iz_monitor_state_from_reports(
             reports=report_group,
@@ -2555,7 +2468,7 @@ def _build_reduced_iz_monitor_components(
             component_stage_start,
         )
 
-        component_support = _union_support_for_zero_reports(report_group)
+        component_support = component_group.support_variables
         component_support_set = frozenset(component_support)
 
         component_kinetic_terms = _select_terms_inside_variable_support(

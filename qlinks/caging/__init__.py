@@ -7,8 +7,15 @@ from qlinks.caging.classification import (
     CollectiveCancellationReport,
     InterferenceZeroReport,
     LocalTransitionPattern,
+    ReducedIZMonitorComponentGroup,
+    ReducedIZMonitorDecomposition,
     classify_cage_state,
     classify_full_state,
+    group_reduced_iz_monitor_reports,
+    reduced_iz_component_groups_from_reports,
+    reduced_iz_probe_support_from_report,
+    select_reduced_iz_monitor_reports,
+    support_key_for_zero_report,
 )
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
 from qlinks.caging.localization import (
@@ -81,7 +88,6 @@ from qlinks.caging.support import (
     ReducedIZProbeSupport,
     distinct_reduced_iz_pattern_supports,
     extract_cage_region_support,
-    reduced_iz_probe_support_from_report,
 )
 from qlinks.caging.types import CageSolverConfig
 
@@ -141,6 +147,13 @@ __all__ = [
     "CollectiveCancellationReport",
     "InterferenceZeroReport",
     "LocalTransitionPattern",
+    "ReducedIZMonitorComponentGroup",
+    "ReducedIZMonitorDecomposition",
+    "group_reduced_iz_monitor_reports",
+    "reduced_iz_component_groups_from_reports",
+    "reduced_iz_probe_support_from_report",
+    "select_reduced_iz_monitor_reports",
+    "support_key_for_zero_report",
     "classify_cage_state",
     "classify_full_state",
     "CageRegionSupport",

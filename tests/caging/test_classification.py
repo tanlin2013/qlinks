@@ -15,6 +15,9 @@ from qlinks.caging.classification import (
     _group_local_transitions_by_source,
     classify_cage_state,
     classify_full_state,
+    group_reduced_iz_monitor_reports,
+    select_reduced_iz_monitor_reports,
+    support_key_for_zero_report,
 )
 from qlinks.caging.results import CageState
 from tests.helpers.states import (
@@ -171,6 +174,26 @@ def test_classify_full_state_finds_regional_candidate(
     assert zero_report.local_mask.tolist() == [False, True, True]
     assert zero_report.local_region_size == 2
 
+    assert support_key_for_zero_report(zero_report) == (1, 2)
+    assert report.reduced_iz_region_variable_indices == (1, 2)
+    assert report.n_reduced_iz_probe_supports == 1
+    assert report.reduced_iz_probe_supports[0].zero_index == indices["h"]
+    assert report.reduced_iz_probe_supports[0].variable_indices == (1, 2)
+    assert report.reduced_iz_component_groups(decomposition="single_sum")[0].zero_indices == (
+        indices["h"],
+    )
+    assert report.reduced_iz_component_groups(decomposition="exact_support")[
+        0
+    ].support_variables == (1, 2)
+    assert report.reduced_iz_component_groups(decomposition="connected_support")[
+        0
+    ].support_variables == (1, 2)
+    assert select_reduced_iz_monitor_reports(report) == report.zero_reports
+    assert group_reduced_iz_monitor_reports(
+        report.zero_reports,
+        decomposition="exact_support",
+    ) == (report.zero_reports,)
+
     # No wavefunction weight lives outside the common beta sector.
     assert zero_report.q_sector_weight <= config.action_tolerance
     assert zero_report.complement_action_norm <= config.action_tolerance
@@ -221,6 +244,10 @@ def test_classify_full_state_finds_regional_candidate(
     assert report.n_unexpected_target_probe_failures == 0
     assert report.n_nonzero_complement_action_probe_failures == 0
 
+    rendered = report.to_text()
+    assert "Reduced-IZ monitor cache" in rendered
+    assert "exact_support groups" in rendered
+
 
 def test_classify_full_state_regional_when_complement_targets_are_known_zeros(
     classification_config, two_zero_closed_interference_case
@@ -261,6 +288,16 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros(
 
     h0_report = reports_by_zero[indices["h0"]]
     h1_report = reports_by_zero[indices["h1"]]
+
+    assert report.reduced_iz_region_variable_indices == (1, 2)
+    assert [
+        group.zero_indices
+        for group in report.reduced_iz_component_groups(decomposition="exact_support")
+    ] == [(indices["h0"], indices["h1"])]
+    assert [
+        group.zero_indices
+        for group in report.reduced_iz_component_groups(decomposition="connected_support")
+    ] == [(indices["h0"], indices["h1"])]
 
     assert h0_report.q_sector_weight == pytest.approx(0.5)
     assert h1_report.q_sector_weight == pytest.approx(0.5)

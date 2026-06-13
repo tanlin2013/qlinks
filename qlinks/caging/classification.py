@@ -43,6 +43,11 @@ CollectiveCancellationMode: TypeAlias = Literal[
     "all_problematic_sum",
     "all_problematic_nullspace",
 ]
+ReducedIZMonitorDecomposition: TypeAlias = Literal[
+    "single_sum",
+    "exact_support",
+    "connected_support",
+]
 SectorPolicy = Literal[
     "raise_if_disconnected",
     "infer_support_component",
@@ -240,6 +245,47 @@ class CollectiveCancellationReport:
 
 
 @dataclass(frozen=True, slots=True)
+class ReducedIZProbeSupport:
+    """Cached support data for one reduced IZ probe ``Z_h^(R)``."""
+
+    zero_index: int
+    mechanism_label: IZProbeMechanismLabel
+    variable_indices: tuple[int, ...]
+    local_region_size: int
+    complement_action_norm: float
+    reduced_action_norm: float
+    n_local_transitions: int
+    n_complement_targets: int
+    n_unexplained_complement_targets: int
+
+    @property
+    def is_valid_for_region_union(self) -> bool:
+        return self.mechanism_label != "unexplained_leakage"
+
+
+@dataclass(frozen=True, slots=True)
+class ReducedIZMonitorComponentGroup:
+    """Cached report-side plan for one reduced-IZ monitor component.
+
+    The construction layer can consume these groups directly instead of
+    rediscovering reduced-IZ supports and frustration-free decompositions.
+    """
+
+    component_id: int
+    decomposition: ReducedIZMonitorDecomposition
+    zero_indices: tuple[int, ...]
+    support_variables: tuple[int, ...]
+
+    @property
+    def n_terms(self) -> int:
+        return len(self.zero_indices)
+
+    @property
+    def support_size(self) -> int:
+        return len(self.support_variables)
+
+
+@dataclass(frozen=True, slots=True)
 class CageClassificationReport:
     """Regional/extended diagnostic report for one cage state."""
 
@@ -305,6 +351,15 @@ class CageClassificationReport:
     # Details.
     zero_reports: tuple[InterferenceZeroReport, ...]
     collective_cancellation_reports: tuple[CollectiveCancellationReport, ...]
+
+    # Reduced-IZ monitor preparation cached at classification time.
+    reduced_iz_probe_supports: tuple[ReducedIZProbeSupport, ...] = field(default_factory=tuple)
+    reduced_iz_region_variable_indices: tuple[int, ...] = ()
+    reduced_iz_monitor_component_groups: dict[
+        ReducedIZMonitorDecomposition,
+        tuple[ReducedIZMonitorComponentGroup, ...],
+    ] = field(default_factory=dict)
+
     metadata: dict[str, object] = field(default_factory=dict)
 
     def __repr__(self) -> str:
@@ -328,6 +383,81 @@ class CageClassificationReport:
     def __rich__(self):
         return self.to_rich()
 
+    @property
+    def n_reduced_iz_probe_supports(self) -> int:
+        return len(self.reduced_iz_probe_supports)
+
+    @property
+    def n_reduced_iz_region_variables(self) -> int:
+        return len(self.reduced_iz_region_variable_indices)
+
+    def selected_reduced_iz_reports(
+        self,
+        *,
+        include_q_empty: bool = True,
+        include_closed_by_known_zeros: bool = True,
+        include_projector_like: bool = True,
+        include_collective_cancellation: bool = True,
+    ) -> tuple[InterferenceZeroReport, ...]:
+        """Return reduced-IZ reports selected for monitor assembly."""
+        return select_reduced_iz_monitor_reports(
+            self,
+            include_q_empty=include_q_empty,
+            include_closed_by_known_zeros=include_closed_by_known_zeros,
+            include_projector_like=include_projector_like,
+            include_collective_cancellation=include_collective_cancellation,
+        )
+
+    def reduced_iz_report_groups(
+        self,
+        *,
+        decomposition: ReducedIZMonitorDecomposition,
+        include_q_empty: bool = True,
+        include_closed_by_known_zeros: bool = True,
+        include_projector_like: bool = True,
+        include_collective_cancellation: bool = True,
+    ) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
+        """Return report groups for a reduced-IZ monitor decomposition."""
+        reports = self.selected_reduced_iz_reports(
+            include_q_empty=include_q_empty,
+            include_closed_by_known_zeros=include_closed_by_known_zeros,
+            include_projector_like=include_projector_like,
+            include_collective_cancellation=include_collective_cancellation,
+        )
+        return group_reduced_iz_monitor_reports(
+            reports,
+            decomposition=decomposition,
+        )
+
+    def reduced_iz_component_groups(
+        self,
+        *,
+        decomposition: ReducedIZMonitorDecomposition,
+        include_q_empty: bool = True,
+        include_closed_by_known_zeros: bool = True,
+        include_projector_like: bool = True,
+        include_collective_cancellation: bool = True,
+    ) -> tuple[ReducedIZMonitorComponentGroup, ...]:
+        """Return cached/recomputed reduced-IZ component-group metadata."""
+        if (
+            include_q_empty
+            and include_closed_by_known_zeros
+            and include_projector_like
+            and include_collective_cancellation
+            and decomposition in self.reduced_iz_monitor_component_groups
+        ):
+            return self.reduced_iz_monitor_component_groups[decomposition]
+
+        return reduced_iz_component_groups_from_reports(
+            self.selected_reduced_iz_reports(
+                include_q_empty=include_q_empty,
+                include_closed_by_known_zeros=include_closed_by_known_zeros,
+                include_projector_like=include_projector_like,
+                include_collective_cancellation=include_collective_cancellation,
+            ),
+            decomposition=decomposition,
+        )
+
     def to_rich(
         self,
         *,
@@ -335,170 +465,146 @@ class CageClassificationReport:
         max_zero_reports: int = 10,
     ) -> Group:
         """Return a Rich renderable for this report."""
-        renderables = [
-            Panel(
-                Group(
-                    Text("Cage classification report", style="bold"),
-                    Text(f"label: {self.label}"),
-                ),
-                expand=False,
+        header = Panel(
+            Group(
+                Text("Cage classification report", style="bold"),
+                Text(f"label: {self.label}"),
             ),
-            _rich_key_value_section(
-                "Support",
-                [
-                    ("support size", self.support_size),
-                    ("Hilbert size", self.hilbert_size),
-                    ("support fraction", _format_float(self.support_fraction)),
-                ],
+            expand=False,
+        )
+
+        overview = Table(title="Overview")
+        overview.add_column("quantity", style="bold")
+        overview.add_column("value", justify="right")
+        overview.add_row("support size", str(self.support_size))
+        overview.add_row("Hilbert size", str(self.hilbert_size))
+        overview.add_row("support fraction", _format_float(self.support_fraction))
+        overview.add_row("nontrivial zeros", str(self.n_nontrivial_zeros))
+        overview.add_row("distinct local patterns", str(self.n_distinct_local_patterns))
+        overview.add_row(
+            "classification domain", str(self.metadata.get("classification_domain_size", "n/a"))
+        )
+
+        mechanisms = Table(title="Reduced-IZ probe mechanisms")
+        mechanisms.add_column("mechanism", style="bold")
+        mechanisms.add_column("count", justify="right")
+        mechanisms.add_column("zero indices")
+        mechanisms.add_row(
+            "q-empty",
+            str(self.n_q_empty_source_probes),
+            _format_index_preview(self.q_empty_source_zero_indices),
+        )
+        mechanisms.add_row(
+            "closed by known zeros",
+            str(self.n_closed_by_known_zero_network_source_probes),
+            _format_index_preview(self.closed_by_known_zero_network_source_zero_indices),
+        )
+        mechanisms.add_row(
+            "projector-like",
+            str(self.n_projector_like_source_probes),
+            _format_index_preview(self.projector_like_source_zero_indices),
+        )
+        mechanisms.add_row(
+            "collective cancellation",
+            str(self.n_collective_cancellation_source_probes),
+            _format_index_preview(self.collective_cancellation_source_zero_indices),
+        )
+        mechanisms.add_row(
+            "unexplained leakage",
+            str(self.n_invalid_source_probes),
+            _format_index_preview(self.invalid_source_zero_indices),
+        )
+
+        closure = Table(title="Complement closure and diagnostics")
+        closure.add_column("quantity", style="bold")
+        closure.add_column("value", justify="right")
+        closure.add_row("complement targets", str(self.n_complement_targets))
+        closure.add_row(
+            "unexplained complement targets", str(self.n_unexplained_complement_targets)
+        )
+        closure.add_row(
+            "fraction closed",
+            _format_float(self.fraction_zeros_with_closed_complement_targets),
+        )
+        closure.add_row("unexpected-target failures", str(self.n_unexpected_target_probe_failures))
+        closure.add_row(
+            "nonzero-complement-action failures",
+            str(self.n_nonzero_complement_action_probe_failures),
+        )
+        closure.add_row("mean Q-sector weight", _format_float(self.mean_q_sector_weight))
+        closure.add_row("max Q-sector weight", _format_float(self.max_q_sector_weight))
+        closure.add_row("mean reduced action norm", _format_float(self.mean_reduced_action_norm))
+        closure.add_row("max reduced action norm", _format_float(self.max_reduced_action_norm))
+        closure.add_row(
+            "mean complement action norm", _format_float(self.mean_complement_action_norm)
+        )
+        closure.add_row(
+            "max complement action norm", _format_float(self.max_complement_action_norm)
+        )
+
+        reduced_iz = Table(title="Reduced-IZ monitor cache")
+        reduced_iz.add_column("quantity", style="bold")
+        reduced_iz.add_column("value", justify="right")
+        reduced_iz.add_row("probe supports", str(len(self.reduced_iz_probe_supports)))
+        reduced_iz.add_row(
+            "region variables",
+            _format_index_tuple(self.reduced_iz_region_variable_indices),
+        )
+        for decomposition in ("single_sum", "exact_support", "connected_support"):
+            groups = self.reduced_iz_component_groups(
+                decomposition=decomposition,  # type: ignore[arg-type]
+            )
+            group_sizes = tuple(group.n_terms for group in groups)
+            reduced_iz.add_row(
+                f"{decomposition} groups",
+                f"{len(groups)} {group_sizes}",
+            )
+
+        state_level = Table(title="State-level interpretation")
+        state_level.add_column("quantity", style="bold")
+        state_level.add_column("value", justify="right")
+        state_level.add_row(
+            "has only regional mechanisms",
+            str(
+                self.n_projector_like_source_probes == 0
+                and self.n_collective_cancellation_source_probes == 0
+                and self.n_invalid_source_probes == 0
             ),
-            _rich_key_value_section(
-                "Interference zeros",
-                [
-                    ("nontrivial zeros", self.n_nontrivial_zeros),
-                    ("distinct local patterns", self.n_distinct_local_patterns),
-                ],
+        )
+        state_level.add_row(
+            "contains extended mechanisms",
+            str(
+                self.n_projector_like_source_probes > 0
+                or self.n_collective_cancellation_source_probes > 0
             ),
-            _rich_key_value_section(
-                "Complement closure",
-                [
-                    ("complement targets", self.n_complement_targets),
-                    (
-                        "unexplained complement targets",
-                        self.n_unexplained_complement_targets,
-                    ),
-                    (
-                        "fraction zeros with closed complement targets",
-                        _format_float(self.fraction_zeros_with_closed_complement_targets),
-                    ),
-                ],
-            ),
-            _rich_key_value_section(
-                "Operator diagnostics",
-                [
-                    ("mean Q-sector weight", _format_float(self.mean_q_sector_weight)),
-                    ("max Q-sector weight", _format_float(self.max_q_sector_weight)),
-                    (
-                        "mean reduced action norm",
-                        _format_float(self.mean_reduced_action_norm),
-                    ),
-                    (
-                        "max reduced action norm",
-                        _format_float(self.max_reduced_action_norm),
-                    ),
-                    (
-                        "mean complement action norm",
-                        _format_float(self.mean_complement_action_norm),
-                    ),
-                    (
-                        "max complement action norm",
-                        _format_float(self.max_complement_action_norm),
-                    ),
-                ],
-            ),
-            _rich_key_value_section(
-                "Reduced IZ probe mechanisms",
-                [
-                    ("q-empty source probes", self.n_q_empty_source_probes),
-                    (
-                        "closed-by-known-zero-network source probes",
-                        self.n_closed_by_known_zero_network_source_probes,
-                    ),
-                    ("projector-like source probes", self.n_projector_like_source_probes),
-                    (
-                        "unexplained-leakage source probes",
-                        self.n_invalid_source_probes,
-                    ),
-                    (
-                        "collective-cancellation source probes",
-                        self.n_collective_cancellation_source_probes,
-                    ),
-                ],
-            ),
-            _rich_key_value_section(
-                "Collective cancellation",
-                [
-                    ("collective groups", len(self.collective_cancellation_reports)),
-                    (
-                        "collectively cancelled source zeros",
-                        _format_index_preview(self.collective_cancellation_source_zero_indices),
-                    ),
-                ],
-            ),
-            _rich_key_value_section(
-                "Invalid probe reasons",
-                [
-                    (
-                        "unexpected-target source probes",
-                        self.n_unexpected_target_probe_failures,
-                    ),
-                    (
-                        "nonzero-complement-action source probes",
-                        self.n_nonzero_complement_action_probe_failures,
-                    ),
-                ],
-            ),
-            _rich_key_value_section(
-                "Complement target explanations",
-                [
-                    ("trivial zero targets", self.n_trivial_targets),
-                    (
-                        "known non-projector IZ targets",
-                        self.n_known_nonprojector_iz_targets,
-                    ),
-                    (
-                        "projector-like IZ targets",
-                        self.n_projector_like_iz_targets,
-                    ),
-                    ("unexpected targets", self.n_unexpected_targets),
-                ],
-            ),
-            _rich_key_value_section(
-                "State-level interpretation",
-                [
-                    (
-                        "has only regional mechanisms",
-                        self.n_projector_like_source_probes == 0
-                        and self.n_invalid_source_probes == 0,
-                    ),
-                    (
-                        "contains projector-like extended mechanisms",
-                        self.n_projector_like_source_probes > 0,
-                    ),
-                    (
-                        "has invalid probe failures",
-                        self.n_invalid_source_probes > 0,
-                    ),
-                ],
-            ),
-            _rich_key_value_section(
-                "Mechanism zero indices",
-                [
-                    ("q-empty", _format_index_preview(self.q_empty_source_zero_indices)),
-                    (
-                        "closed-by-known-zero",
-                        _format_index_preview(
-                            self.closed_by_known_zero_network_source_zero_indices
-                        ),
-                    ),
-                    (
-                        "projector-like",
-                        _format_index_preview(self.projector_like_source_zero_indices),
-                    ),
-                    (
-                        "unexplained-leakage",
-                        _format_index_preview(self.invalid_source_zero_indices),
-                    ),
-                    (
-                        "unexpected-target failures",
-                        _format_index_preview(self.unexpected_target_probe_failure_indices),
-                    ),
-                    (
-                        "nonzero-complement-action failures",
-                        _format_index_preview(self.nonzero_complement_action_probe_failure_indices),
-                    ),
-                ],
-            ),
+        )
+        state_level.add_row("has invalid probe failures", str(self.n_invalid_source_probes > 0))
+
+        renderables: list[object] = [
+            header,
+            overview,
+            mechanisms,
+            closure,
+            reduced_iz,
+            state_level,
         ]
+
+        if self.collective_cancellation_reports:
+            collective = Table(title="Collective cancellation groups")
+            collective.add_column("group", justify="right")
+            collective.add_column("kind")
+            collective.add_column("size", justify="right")
+            collective.add_column("zeros")
+            collective.add_column("norm", justify="right")
+            for collective_report in self.collective_cancellation_reports:
+                collective.add_row(
+                    str(collective_report.group_id),
+                    f"{collective_report.grouping_kind}/{collective_report.relation_kind}",
+                    str(collective_report.group_size),
+                    _format_index_preview(collective_report.source_zero_indices),
+                    _format_float(collective_report.collective_action_norm),
+                )
+            renderables.append(collective)
 
         if self.metadata:
             renderables.append(
@@ -555,6 +661,19 @@ class CageClassificationReport:
             "Interference zeros": {
                 "nontrivial zeros": self.n_nontrivial_zeros,
                 "distinct local patterns": self.n_distinct_local_patterns,
+            },
+            "Reduced IZ monitor cache": {
+                "probe supports": len(self.reduced_iz_probe_supports),
+                "region variables": self.reduced_iz_region_variable_indices,
+                "single_sum groups": len(
+                    self.reduced_iz_component_groups(decomposition="single_sum")
+                ),
+                "exact_support groups": len(
+                    self.reduced_iz_component_groups(decomposition="exact_support")
+                ),
+                "connected_support groups": len(
+                    self.reduced_iz_component_groups(decomposition="connected_support")
+                ),
             },
             "Reduced IZ probe mechanisms": {
                 "q-empty source probes": self.n_q_empty_source_probes,
@@ -783,6 +902,23 @@ def classify_full_state(
             np.mean([report.complement_targets_are_known_zeros for report in zero_reports])
         )
 
+    reduced_iz_probe_supports = tuple(
+        reduced_iz_probe_support_from_report(report) for report in zero_reports
+    )
+    reduced_iz_region_variable_indices = _reduced_iz_region_variables_from_supports(
+        reduced_iz_probe_supports
+    )
+    default_reduced_iz_reports = select_reduced_iz_monitor_reports_from_zero_reports(
+        tuple(zero_reports)
+    )
+    reduced_iz_monitor_component_groups = {
+        decomposition: reduced_iz_component_groups_from_reports(
+            default_reduced_iz_reports,
+            decomposition=decomposition,
+        )
+        for decomposition in ("single_sum", "exact_support", "connected_support")
+    }
+
     metadata = {} if metadata is None else dict(metadata)
     metadata.setdefault(
         "classification_domain_size",
@@ -848,8 +984,207 @@ def classify_full_state(
         mean_complement_action_norm=_safe_mean(complement_norms),
         max_complement_action_norm=_safe_max(complement_norms),
         zero_reports=tuple(zero_reports),
+        reduced_iz_probe_supports=reduced_iz_probe_supports,
+        reduced_iz_region_variable_indices=reduced_iz_region_variable_indices,
+        reduced_iz_monitor_component_groups=reduced_iz_monitor_component_groups,
         metadata=metadata,
     )
+
+
+def reduced_iz_probe_support_from_report(
+    zero_report: InterferenceZeroReport,
+) -> ReducedIZProbeSupport:
+    """Return cached public support metadata for a reduced IZ probe."""
+    variable_indices = support_key_for_zero_report(zero_report)
+
+    return ReducedIZProbeSupport(
+        zero_index=int(zero_report.zero_index),
+        mechanism_label=zero_report.probe_mechanism_label,
+        variable_indices=variable_indices,
+        local_region_size=len(variable_indices),
+        complement_action_norm=float(zero_report.complement_action_norm),
+        reduced_action_norm=float(zero_report.reduced_action_norm),
+        n_local_transitions=len(zero_report.local_transitions),
+        n_complement_targets=int(zero_report.n_complement_targets),
+        n_unexplained_complement_targets=int(zero_report.n_unexplained_complement_targets),
+    )
+
+
+def _reduced_iz_region_variables_from_supports(
+    probe_supports: tuple[ReducedIZProbeSupport, ...],
+) -> tuple[int, ...]:
+    return tuple(
+        sorted(
+            {
+                variable_index
+                for probe_support in probe_supports
+                if probe_support.is_valid_for_region_union
+                for variable_index in probe_support.variable_indices
+            }
+        )
+    )
+
+
+def select_reduced_iz_monitor_reports(
+    report: CageClassificationReport,
+    *,
+    include_q_empty: bool = True,
+    include_closed_by_known_zeros: bool = True,
+    include_projector_like: bool = True,
+    include_collective_cancellation: bool = True,
+) -> tuple[InterferenceZeroReport, ...]:
+    """Select reduced-IZ reports from a classification report for monitor use."""
+    return select_reduced_iz_monitor_reports_from_zero_reports(
+        report.zero_reports,
+        include_q_empty=include_q_empty,
+        include_closed_by_known_zeros=include_closed_by_known_zeros,
+        include_projector_like=include_projector_like,
+        include_collective_cancellation=include_collective_cancellation,
+    )
+
+
+def select_reduced_iz_monitor_reports_from_zero_reports(
+    zero_reports: tuple[InterferenceZeroReport, ...] | list[InterferenceZeroReport],
+    *,
+    include_q_empty: bool = True,
+    include_closed_by_known_zeros: bool = True,
+    include_projector_like: bool = True,
+    include_collective_cancellation: bool = True,
+) -> tuple[InterferenceZeroReport, ...]:
+    """Select non-invalid reduced-IZ zero reports for monitor assembly."""
+    selected: list[InterferenceZeroReport] = []
+
+    for zero_report in zero_reports:
+        label = zero_report.probe_mechanism_label
+
+        if label == "q_empty" and include_q_empty:
+            selected.append(zero_report)
+        elif label == "closed_by_known_zeros" and include_closed_by_known_zeros:
+            selected.append(zero_report)
+        elif label == "projector_like" and include_projector_like:
+            selected.append(zero_report)
+        elif label == "collective_cancellation" and include_collective_cancellation:
+            selected.append(zero_report)
+        elif label == "unexplained_leakage":
+            continue
+
+    return tuple(selected)
+
+
+def support_key_from_mask(local_mask: NDArray[np.bool_]) -> tuple[int, ...]:
+    """Return the variable-index support key for a local reduced-IZ mask."""
+    return tuple(int(index) for index in np.flatnonzero(local_mask))
+
+
+def support_key_for_zero_report(
+    zero_report: InterferenceZeroReport,
+) -> tuple[int, ...]:
+    """Return the variable-index support key for one reduced-IZ report."""
+    return support_key_from_mask(zero_report.local_mask)
+
+
+def group_reduced_iz_reports_by_exact_support(
+    reports: tuple[InterferenceZeroReport, ...],
+) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
+    """Group reduced-IZ reports with identical support variables."""
+    grouped: dict[tuple[int, ...], list[InterferenceZeroReport]] = {}
+
+    for zero_report in reports:
+        key = support_key_for_zero_report(zero_report)
+        grouped.setdefault(key, []).append(zero_report)
+
+    return tuple(tuple(group) for _key, group in sorted(grouped.items(), key=lambda item: item[0]))
+
+
+def group_reduced_iz_reports_by_connected_support(
+    reports: tuple[InterferenceZeroReport, ...],
+) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
+    """Group reduced-IZ reports whose supports overlap transitively."""
+    if len(reports) == 0:
+        return ()
+
+    supports = [set(support_key_for_zero_report(zero_report)) for zero_report in reports]
+
+    visited: set[int] = set()
+    groups: list[tuple[InterferenceZeroReport, ...]] = []
+
+    for start_index in range(len(reports)):
+        if start_index in visited:
+            continue
+
+        stack = [start_index]
+        component_indices: list[int] = []
+        visited.add(start_index)
+
+        while stack:
+            current_index = stack.pop()
+            component_indices.append(current_index)
+            current_support = supports[current_index]
+
+            for candidate_index, candidate_support in enumerate(supports):
+                if candidate_index in visited:
+                    continue
+
+                if not current_support.isdisjoint(candidate_support):
+                    visited.add(candidate_index)
+                    stack.append(candidate_index)
+
+        component_indices.sort()
+        groups.append(tuple(reports[index] for index in component_indices))
+
+    return tuple(groups)
+
+
+def group_reduced_iz_monitor_reports(
+    reports: tuple[InterferenceZeroReport, ...],
+    *,
+    decomposition: ReducedIZMonitorDecomposition,
+) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
+    """Group reports according to a reduced-IZ monitor decomposition."""
+    if decomposition == "single_sum":
+        return (reports,) if reports else ()
+
+    if decomposition == "exact_support":
+        return group_reduced_iz_reports_by_exact_support(reports)
+
+    if decomposition == "connected_support":
+        return group_reduced_iz_reports_by_connected_support(reports)
+
+    raise ValueError(f"Unknown reduced-IZ monitor decomposition: {decomposition!r}")
+
+
+def reduced_iz_component_groups_from_reports(
+    reports: tuple[InterferenceZeroReport, ...],
+    *,
+    decomposition: ReducedIZMonitorDecomposition,
+) -> tuple[ReducedIZMonitorComponentGroup, ...]:
+    """Return cached report-side metadata for reduced-IZ monitor components."""
+    groups = group_reduced_iz_monitor_reports(
+        reports,
+        decomposition=decomposition,
+    )
+    component_groups: list[ReducedIZMonitorComponentGroup] = []
+
+    for component_id, report_group in enumerate(groups):
+        support_variables = tuple(
+            sorted(
+                {
+                    variable_index
+                    for zero_report in report_group
+                    for variable_index in support_key_for_zero_report(zero_report)
+                }
+            )
+        )
+        component_groups.append(
+            ReducedIZMonitorComponentGroup(
+                component_id=component_id,
+                decomposition=decomposition,
+                zero_indices=tuple(int(report.zero_index) for report in report_group),
+                support_variables=support_variables,
+            )
+        )
+
+    return tuple(component_groups)
 
 
 def _find_trivial_zero_indices(
@@ -2010,6 +2345,15 @@ def _format_index_preview(
     values = [int(value) for value in indices[:max_items]]
     suffix = "" if len(indices) <= max_items else f", ... +{len(indices) - max_items}"
     return f"{values}{suffix}"
+
+
+def _format_index_tuple(
+    indices: tuple[int, ...] | NDArray[np.int64],
+    *,
+    max_items: int = 20,
+) -> str:
+    array = np.asarray(indices, dtype=np.int64)
+    return _format_index_preview(array, max_items=max_items)
 
 
 def _rich_key_value_section(

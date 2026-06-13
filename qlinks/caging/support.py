@@ -9,31 +9,14 @@ from qlinks.caging.classification import (
     CageClassificationReport,
     InterferenceZeroReport,
     IZProbeMechanismLabel,
+    ReducedIZProbeSupport,
+    reduced_iz_probe_support_from_report,
 )
 
 CageSupportExtractionPolicy = Literal[
     "raise_on_unexplained",
     "ignore_unexplained",
 ]
-
-
-@dataclass(frozen=True, slots=True)
-class ReducedIZProbeSupport:
-    """Support data for one reduced IZ probe Z_h^(R)."""
-
-    zero_index: int
-    mechanism_label: IZProbeMechanismLabel
-    variable_indices: tuple[int, ...]
-    local_region_size: int
-    complement_action_norm: float
-    reduced_action_norm: float
-    n_local_transitions: int
-    n_complement_targets: int
-    n_unexplained_complement_targets: int
-
-    @property
-    def is_valid_for_region_union(self) -> bool:
-        return self.mechanism_label != "unexplained_leakage"
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,9 +72,13 @@ def extract_cage_region_support(
     ignored_probe_supports: list[ReducedIZProbeSupport] = []
     union_variables: set[int] = set()
 
-    for zero_report in report.zero_reports:
-        probe_support = reduced_iz_probe_support_from_report(zero_report)
+    cached_probe_supports = report.reduced_iz_probe_supports
+    if not cached_probe_supports and report.zero_reports:
+        cached_probe_supports = tuple(
+            reduced_iz_probe_support_from_report(zero_report) for zero_report in report.zero_reports
+        )
 
+    for probe_support in cached_probe_supports:
         use_probe = _should_use_probe_support(
             probe_support,
             include_q_empty=include_q_empty,
@@ -143,24 +130,6 @@ def extract_cage_region_support(
             "n_nontrivial_zeros": report.n_nontrivial_zeros,
             "n_distinct_local_patterns": report.n_distinct_local_patterns,
         },
-    )
-
-
-def reduced_iz_probe_support_from_report(
-    zero_report: InterferenceZeroReport,
-) -> ReducedIZProbeSupport:
-    variable_indices = tuple(int(index) for index in np.flatnonzero(zero_report.local_mask))
-
-    return ReducedIZProbeSupport(
-        zero_index=int(zero_report.zero_index),
-        mechanism_label=zero_report.probe_mechanism_label,
-        variable_indices=variable_indices,
-        local_region_size=len(variable_indices),
-        complement_action_norm=float(zero_report.complement_action_norm),
-        reduced_action_norm=float(zero_report.reduced_action_norm),
-        n_local_transitions=len(zero_report.local_transitions),
-        n_complement_targets=int(zero_report.n_complement_targets),
-        n_unexplained_complement_targets=int(zero_report.n_unexplained_complement_targets),
     )
 
 
