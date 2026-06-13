@@ -2,18 +2,21 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+import scipy.sparse as sp
 
 from qlinks.basis import basis_configs_from_basis
 from qlinks.caging.classification import (
     CageClassificationConfig,
     InterferenceZeroReport,
     LocalTransitionPattern,
+    _active_frontier_zero_indices,
     _annotate_probe_mechanisms,
     _apply_reduced_local_operator,
     _build_config_to_index,
     _build_reduced_local_operator_application_context,
     _classify_from_zero_reports,
     _complement_support_indices,
+    _find_trivial_zero_indices,
     _group_local_transitions_by_source,
     _q_sector_weight,
     classify_cage_state,
@@ -32,6 +35,56 @@ from tests.helpers.states import (
 
 def _zero_indices(indices: np.ndarray) -> set[int]:
     return {int(index) for index in indices}
+
+
+def test_active_frontier_zero_indices_uses_incoming_active_columns() -> None:
+    kinetic = sp.csr_array(
+        (
+            np.array([1.0, 1.0, 1.0], dtype=np.float64),
+            (
+                np.array([2, 0, 3], dtype=np.int64),
+                np.array([0, 3, 1], dtype=np.int64),
+            ),
+        ),
+        shape=(4, 4),
+    )
+    support_mask = np.array([True, False, False, False], dtype=np.bool_)
+    domain_mask = np.ones(4, dtype=np.bool_)
+
+    frontier = _active_frontier_zero_indices(
+        kinetic,
+        support_mask=support_mask,
+        domain_mask=domain_mask,
+        active_state_indices=np.array([0], dtype=np.int64),
+    )
+
+    # The frontier is defined by K[h, u] != 0 for active source column u.
+    # Row 0 -> column 3 is an outgoing edge from the active vertex and should
+    # not make 3 a zero candidate.
+    np.testing.assert_array_equal(frontier, np.array([2], dtype=np.int64))
+
+
+def test_find_trivial_zero_indices_uses_active_frontier_cache() -> None:
+    kinetic = sp.csr_array(
+        (
+            np.array([1.0], dtype=np.float64),
+            (np.array([2], dtype=np.int64), np.array([0], dtype=np.int64)),
+        ),
+        shape=(4, 4),
+    )
+    support_mask = np.array([True, False, False, False], dtype=np.bool_)
+    domain_mask = np.ones(4, dtype=np.bool_)
+    frontier = np.array([2], dtype=np.int64)
+
+    cached = _find_trivial_zero_indices(
+        np.zeros(4, dtype=np.complex128),
+        kinetic,
+        support_mask=support_mask,
+        domain_mask=domain_mask,
+        active_frontier_zero_indices=frontier,
+    )
+
+    assert cached == {1, 3}
 
 
 def _minimal_zero_report(

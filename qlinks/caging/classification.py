@@ -853,6 +853,13 @@ def classify_full_state(
         _ReducedLocalOperatorApplicationContext,
     ] = {}
 
+    active_frontier_zero_indices = _active_frontier_zero_indices(
+        kinetic_csr,
+        support_mask=support_mask,
+        domain_mask=domain_mask,
+        active_state_indices=active_domain_indices,
+    )
+
     zero_reports = _find_nontrivial_interference_zeros(
         full_state,
         kinetic_csr,
@@ -860,6 +867,7 @@ def classify_full_state(
         config_to_index=config_to_index,
         support_mask=support_mask,
         domain_mask=domain_mask,
+        active_frontier_zero_indices=active_frontier_zero_indices,
         active_state_indices=active_state_indices,
         active_domain_indices=active_domain_indices,
         local_operator_contexts=local_operator_contexts,
@@ -871,6 +879,7 @@ def classify_full_state(
         kinetic_csr,
         support_mask=support_mask,
         domain_mask=domain_mask,
+        active_frontier_zero_indices=active_frontier_zero_indices,
     )
 
     zero_reports = _annotate_probe_mechanisms(
@@ -1315,12 +1324,45 @@ def _monitor_coefficient_for_zero_report(
     return 1.0 + 0.0j
 
 
+def _active_frontier_zero_indices(
+    kinetic_matrix: sp.csr_array,
+    *,
+    support_mask: NDArray[np.bool_],
+    domain_mask: NDArray[np.bool_],
+    active_state_indices: NDArray[np.int64],
+) -> NDArray[np.int64]:
+    """Return zero-amplitude domain vertices adjacent to active support.
+
+    The reduced-IZ search only needs vertices ``h`` that receive at least one
+    kinetic contribution from a finite-amplitude source ``u``.  In matrix
+    language this means ``K[h, u] != 0`` for an active source column ``u``.
+    Building this frontier from CSC columns avoids scanning every zero row in
+    the Hilbert space for each classification run.
+    """
+    if active_state_indices.size == 0:
+        return np.array([], dtype=np.int64)
+
+    frontier_mask = np.zeros(support_mask.shape, dtype=np.bool_)
+    kinetic_csc = kinetic_matrix.tocsc()
+
+    for source_index_raw in active_state_indices:
+        source_index = int(source_index_raw)
+        col_start = kinetic_csc.indptr[source_index]
+        col_end = kinetic_csc.indptr[source_index + 1]
+        frontier_mask[kinetic_csc.indices[col_start:col_end]] = True
+
+    frontier_mask &= domain_mask
+    frontier_mask &= ~support_mask
+    return np.flatnonzero(frontier_mask).astype(np.int64, copy=False)
+
+
 def _find_trivial_zero_indices(
     full_state: NDArray[np.complex128],
     kinetic_matrix: sp.csr_array,
     *,
     support_mask: NDArray[np.bool_],
     domain_mask: NDArray[np.bool_],
+    active_frontier_zero_indices: NDArray[np.int64] | None = None,
 ) -> set[int]:
     """Return zero-amplitude vertices with no active kinetic neighbors.
 
@@ -1328,6 +1370,12 @@ def _find_trivial_zero_indices(
     direct contribution from the cage support under the parent kinetic
     Hamiltonian. Nontrivial IZs are handled separately.
     """
+    if active_frontier_zero_indices is not None:
+        trivial_mask = domain_mask & ~support_mask
+        trivial_mask = np.array(trivial_mask, dtype=np.bool_, copy=True)
+        trivial_mask[active_frontier_zero_indices] = False
+        return {int(index) for index in np.flatnonzero(trivial_mask)}
+
     trivial_zero_indices: set[int] = set()
 
     for zero_index in np.flatnonzero(domain_mask):
@@ -1354,6 +1402,7 @@ def _find_nontrivial_interference_zeros(
     config_to_index: dict[tuple[int, ...], int],
     support_mask: NDArray[np.bool_],
     domain_mask: NDArray[np.bool_],
+    active_frontier_zero_indices: NDArray[np.int64],
     active_state_indices: NDArray[np.int64],
     active_domain_indices: NDArray[np.int64],
     local_operator_contexts: dict[tuple[int, ...], _ReducedLocalOperatorApplicationContext] | None,
@@ -1362,12 +1411,8 @@ def _find_nontrivial_interference_zeros(
     """Find zero vertices with nontrivial cancellation from active neighbors."""
     reports: list[InterferenceZeroReport] = []
 
-    for zero_index in range(full_state.size):
-        if not domain_mask[zero_index]:
-            continue
-
-        if support_mask[zero_index]:
-            continue
+    for zero_index_raw in active_frontier_zero_indices:
+        zero_index = int(zero_index_raw)
 
         row_start = kinetic_matrix.indptr[zero_index]
         row_end = kinetic_matrix.indptr[zero_index + 1]
