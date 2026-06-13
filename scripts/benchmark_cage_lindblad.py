@@ -28,6 +28,7 @@ from qlinks.caging.open_system import (
     build_type1_cage_lindblad_construction,
 )
 from qlinks.models import HoneycombQDMModel, SquareQDMModel, SquareQLMModel
+from qlinks.open_system import RecyclingJumpSource
 
 BuilderName = Literal["sparse", "optimized", "bitmask"]
 SearchTypeName = Literal["type1", "type2", "type1_and_type2", "custom"]
@@ -60,6 +61,8 @@ class CageLindbladBenchmarkResult:
     jump_plaquette_policy: str
     check_liouvillian: bool
     compute_jump_residuals: bool
+    recycling_jump_source: str
+    max_recycling_jumps_per_region: int
     n_variables: int
     n_states: int
     selected_signature: tuple[int, int]
@@ -173,6 +176,8 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
         "content",
         "jump_design",
         "jump_resid",
+        "recycling",
+        "recycling_jumps",
         "n_states",
         "signature",
         "region",
@@ -184,6 +189,7 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
         "construct_s",
         "monitor_s",
         "jumps_s",
+        "recycle_s",
         "diag_s",
         "Lcheck_s",
         "total_s",
@@ -201,6 +207,8 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
             result.reduced_iz_monitor_content,
             result.jump_operator_design,
             result.compute_jump_residuals,
+            result.recycling_jump_source,
+            result.n_recycling_jumps,
             result.n_states,
             result.selected_signature,
             result.region_size,
@@ -212,6 +220,7 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
             _format_seconds(result.construction_seconds),
             _format_seconds(_stage_seconds(result.construction_stage_seconds, "monitor_assembly")),
             _format_seconds(_stage_seconds(result.construction_stage_seconds, "jump_assembly")),
+            _format_seconds(_stage_seconds(result.construction_stage_seconds, "recycling")),
             _format_seconds(_stage_seconds(result.construction_stage_seconds, "diagnostics")),
             _format_seconds(_stage_seconds(result.construction_stage_seconds, "liouvillian_check")),
             _format_seconds(result.total_seconds),
@@ -358,6 +367,13 @@ def run_cage_lindblad_benchmark(
     jump_operator_design: JumpOperatorDesign,
     check_liouvillian: bool,
     compute_jump_residuals: bool,
+    recycling_jump_source: RecyclingJumpSource,
+    max_recycling_jumps_per_region: int,
+    recycling_rdm_tolerance: float,
+    recycling_dark_tolerance: float,
+    recycling_inflow_tolerance: float,
+    recycling_prefer_sparse: bool,
+    recycling_two_pattern_tolerance: float,
     residual_tolerance: float,
     classification_sector_policy: str,
     signature: tuple[int, int] | None,
@@ -429,6 +445,13 @@ def run_cage_lindblad_benchmark(
             jump_operator_design=jump_operator_design,
             check_liouvillian=check_liouvillian,
             compute_jump_residuals=compute_jump_residuals,
+            recycling_jump_source=recycling_jump_source,
+            max_recycling_jumps_per_region=max_recycling_jumps_per_region,
+            recycling_rdm_tolerance=recycling_rdm_tolerance,
+            recycling_dark_tolerance=recycling_dark_tolerance,
+            recycling_inflow_tolerance=recycling_inflow_tolerance,
+            recycling_prefer_sparse=recycling_prefer_sparse,
+            recycling_two_pattern_tolerance=recycling_two_pattern_tolerance,
             timing_collector=construction_stage_seconds,
             residual_tolerance=residual_tolerance,
         )
@@ -451,6 +474,8 @@ def run_cage_lindblad_benchmark(
         jump_plaquette_policy=jump_plaquette_policy,
         check_liouvillian=check_liouvillian,
         compute_jump_residuals=compute_jump_residuals,
+        recycling_jump_source=recycling_jump_source,
+        max_recycling_jumps_per_region=max_recycling_jumps_per_region,
         n_variables=case.model.layout.n_variables,
         n_states=build_result.basis.n_states,
         selected_signature=record.signature,
@@ -496,6 +521,8 @@ def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
         "local_builder",
         "monitor",
         "decomp",
+        "recycling",
+        "recycle_j",
         "n_states",
         "signature",
         "region",
@@ -507,6 +534,7 @@ def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
         "construct_s",
         "monitor_s",
         "jumps_s",
+        "recycle_s",
         "diag_s",
         "total_s",
     ]
@@ -517,6 +545,8 @@ def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
             result.local_term_builder,
             result.monitor_source,
             result.reduced_iz_monitor_decomposition,
+            result.recycling_jump_source,
+            str(result.n_recycling_jumps),
             str(result.n_states),
             str(result.selected_signature),
             str(result.region_size),
@@ -528,6 +558,7 @@ def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
             f"{result.construction_seconds:.6f}",
             f"{_stage_seconds(result.construction_stage_seconds, 'monitor_assembly'):.6f}",
             f"{_stage_seconds(result.construction_stage_seconds, 'jump_assembly'):.6f}",
+            f"{_stage_seconds(result.construction_stage_seconds, 'recycling'):.6f}",
             f"{_stage_seconds(result.construction_stage_seconds, 'diagnostics'):.6f}",
             f"{result.total_seconds:.6f}",
         ]
@@ -616,6 +647,27 @@ def main() -> None:
             "This is useful for separating jump materialization from residual checks."
         ),
     )
+    parser.add_argument(
+        "--recycling-jump-source",
+        default="none",
+        choices=["none", "local_rdm_rank_one", "local_rdm_two_pattern"],
+        help="Build local reduced-density-matrix recycling jumps during construction.",
+    )
+    parser.add_argument(
+        "--max-recycling-jumps-per-region",
+        type=int,
+        default=1,
+        help="Maximum selected recycling jumps per local region.",
+    )
+    parser.add_argument("--recycling-rdm-tolerance", type=float, default=1.0e-10)
+    parser.add_argument("--recycling-dark-tolerance", type=float, default=1.0e-10)
+    parser.add_argument("--recycling-inflow-tolerance", type=float, default=1.0e-12)
+    parser.add_argument(
+        "--no-recycling-prefer-sparse",
+        action="store_true",
+        help="Do not prefer sparser local recycling jumps when selecting candidates.",
+    )
+    parser.add_argument("--recycling-two-pattern-tolerance", type=float, default=1.0e-8)
     parser.add_argument("--residual-tolerance", type=float, default=1.0e-10)
     parser.add_argument(
         "--signature",
@@ -668,6 +720,13 @@ def main() -> None:
                 jump_operator_design=args.jump_operator_design,
                 check_liouvillian=args.check_liouvillian,
                 compute_jump_residuals=not args.skip_jump_residuals,
+                recycling_jump_source=args.recycling_jump_source,
+                max_recycling_jumps_per_region=args.max_recycling_jumps_per_region,
+                recycling_rdm_tolerance=args.recycling_rdm_tolerance,
+                recycling_dark_tolerance=args.recycling_dark_tolerance,
+                recycling_inflow_tolerance=args.recycling_inflow_tolerance,
+                recycling_prefer_sparse=not args.no_recycling_prefer_sparse,
+                recycling_two_pattern_tolerance=args.recycling_two_pattern_tolerance,
                 residual_tolerance=args.residual_tolerance,
                 classification_sector_policy=args.classification_sector_policy,
                 signature=args.signature,
