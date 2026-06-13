@@ -123,3 +123,14 @@ def test_local_terms_reconstruct_aggregate(
     expected = getattr(result, expected_matrix_name)
 
     assert_sparse_allclose(reconstructed, expected)
+
+
+def test_local_term_descriptor_caches_support_link_set() -> None:
+    term = SquareQDMModel(lx=2, ly=2, boundary_condition="open").local_term_descriptors(
+        operator_kind="kinetic"
+    )[0]
+
+    assert term.support_link_set == frozenset(term.support_links)
+    assert term.support_link_set is term.support_link_set
+    assert term.is_inside_links(set(term.support_links))
+    assert term.is_disjoint_from_links(set())

@@ -1010,3 +1010,40 @@ def test_mixed_projected_and_locally_cancelled_inputs_are_projector_like(classif
     assert annotated[0].source_projector_like
     assert not annotated[0].has_unexpected_targets
     assert not annotated[0].has_nonzero_complement_action
+
+
+def test_interference_zero_report_cached_local_variable_indices() -> None:
+    report = InterferenceZeroReport(
+        zero_index=5,
+        active_neighbors=empty_int_array(),
+        active_matrix_elements=empty_complex_array(),
+        active_amplitudes=empty_complex_array(),
+        cancellation_residual=0.0,
+        common_mask=np.array([False, True, False, True], dtype=np.bool_),
+        local_mask=np.array([True, False, True, False], dtype=np.bool_),
+        local_transitions=(),
+        q_sector_weight=0.0,
+        reduced_action_norm=0.0,
+        complement_action_norm=0.0,
+        complement_target_indices=empty_int_array(),
+        explained_complement_target_indices=empty_int_array(),
+        unexplained_complement_target_indices=empty_int_array(),
+        complement_targets_are_known_zeros=True,
+        trivial_target_indices=empty_int_array(),
+        known_nonprojector_iz_target_indices=empty_int_array(),
+        projector_like_iz_target_indices=empty_int_array(),
+        unexpected_target_indices=empty_int_array(),
+        complement_support_indices=empty_int_array(),
+        complement_contributing_input_indices=empty_int_array(),
+        projector_like_annihilated_input_indices=empty_int_array(),
+        source_projector_like=False,
+        has_unexpected_targets=False,
+        has_nonzero_complement_action=False,
+        unexpected_target_probe_failure_indices=empty_int_array(),
+        nonzero_complement_action_target_indices=empty_int_array(),
+        probe_mechanism_label="q_empty",
+        local_variable_indices=(0, 2),
+    )
+
+    assert report.local_region_size == 2
+    assert support_key_for_zero_report(report) == (0, 2)

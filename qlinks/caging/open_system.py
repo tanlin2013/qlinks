@@ -1041,16 +1041,9 @@ def build_type1_cage_lindblad_construction(
     _record_construction_stage(timing_collector, "extract_region", stage_start)
 
     stage_start = time.perf_counter()
-    kinetic_terms = model.local_term_descriptors(
-        operator_kind="kinetic",
-        term_kind="plaquette",
+    kinetic_terms, potential_terms, potential_by_pid = _plaquette_local_terms_by_operator_kind(
+        model
     )
-    potential_terms = model.local_term_descriptors(
-        operator_kind="potential",
-        term_kind="plaquette",
-    )
-
-    potential_by_pid = {int(term.term_id): term for term in potential_terms}
 
     inside_kinetic, outside_kinetic, crossing_kinetic = _partition_plaquette_terms_by_region(
         kinetic_terms,
@@ -2485,7 +2478,7 @@ def _build_reduced_iz_monitor_components(
 
         component_stage_start = time.perf_counter()
         total_monitor_terms.append(component_monitor)
-        total_monitor_state = total_monitor_state + component_monitor_state
+        total_monitor_state += component_monitor_state
         _record_construction_stage(
             timing_collector,
             "component_monitor_sum",
@@ -2586,6 +2579,25 @@ def _union_support_for_zero_reports(
         support.update(_support_key_for_zero_report(zero_report))
 
     return tuple(sorted(support))
+
+
+def _plaquette_local_terms_by_operator_kind(
+    model: Any,
+) -> tuple[
+    tuple[LocalTermDescriptor, ...],
+    tuple[LocalTermDescriptor, ...],
+    dict[int, LocalTermDescriptor],
+]:
+    """Return plaquette kinetic/potential descriptors from one model query.
+
+    Calling ``local_term_descriptors`` once avoids rebuilding identical
+    plaquette-support tuples separately for kinetic and potential terms.
+    """
+    terms = model.local_term_descriptors(term_kind="plaquette")
+    kinetic_terms = tuple(term for term in terms if term.operator_kind == "kinetic")
+    potential_terms = tuple(term for term in terms if term.operator_kind == "potential")
+    potential_by_pid = {int(term.term_id): term for term in potential_terms}
+    return kinetic_terms, potential_terms, potential_by_pid
 
 
 def _term_support_sets(

@@ -151,8 +151,14 @@ class InterferenceZeroReport:
         default_factory=lambda: np.array([], dtype=np.complex128)
     )
 
+    # Cached tuple form of ``np.flatnonzero(local_mask)``.  This keeps report
+    # grouping/decomposition from repeatedly scanning the same boolean masks.
+    local_variable_indices: tuple[int, ...] = ()
+
     @property
     def local_region_size(self) -> int:
+        if self.local_variable_indices:
+            return len(self.local_variable_indices)
         return int(np.count_nonzero(self.local_mask))
 
     @property
@@ -1101,6 +1107,8 @@ def support_key_for_zero_report(
     zero_report: InterferenceZeroReport,
 ) -> tuple[int, ...]:
     """Return the variable-index support key for one reduced-IZ report."""
+    if zero_report.local_variable_indices:
+        return zero_report.local_variable_indices
     return support_key_from_mask(zero_report.local_mask)
 
 
@@ -1495,6 +1503,7 @@ def _build_zero_report(
         probe_mechanism_label="unexplained_leakage",
         local_transitions=tuple(local_transitions),
         reduced_action_vector=reduced_action.astype(np.complex128, copy=True),
+        local_variable_indices=support_key_from_mask(local_mask),
     )
 
 
@@ -1826,6 +1835,7 @@ def _replace_interference_zero_report(
         "collective_cancellation_coefficient": (report.collective_cancellation_coefficient),
         "collective_cancellation_norm": report.collective_cancellation_norm,
         "reduced_action_vector": report.reduced_action_vector,
+        "local_variable_indices": report.local_variable_indices,
     }
 
     values.update(updates)
