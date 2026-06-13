@@ -1407,6 +1407,7 @@ def _replace_interference_zero_report(
         ),
         "collective_cancellation_coefficient": (report.collective_cancellation_coefficient),
         "collective_cancellation_norm": report.collective_cancellation_norm,
+        "reduced_action_vector": report.reduced_action_vector,
     }
 
     values.update(updates)

@@ -380,7 +380,7 @@ class _LazyReducedIZMonitorOperator:
 
     reports: tuple[InterferenceZeroReport, ...]
     basis_configs: NDArray[np.integer]
-    config_to_index: dict[tuple[int, ...], int]
+    config_to_index: dict[tuple[int, ...], int] | None
     shape: tuple[int, int]
     use_collective_coefficients: bool
     assembly_cache: Any | None = None
@@ -2011,7 +2011,7 @@ class _ReducedIZAssemblyCache:
     """
 
     basis_configs: NDArray[np.integer]
-    config_to_index: dict[tuple[int, ...], int]
+    config_to_index: dict[tuple[int, ...], int] | None = None
     _source_groups_by_mask: dict[
         tuple[int, ...],
         dict[tuple[int, ...], NDArray[np.int64]],
@@ -2026,10 +2026,25 @@ class _ReducedIZAssemblyCache:
     _value_digits_by_variable: tuple[dict[int, int], ...] = field(
         default=(), init=False, repr=False
     )
+    _integer_code_lookup_prepared: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.basis_configs = np.ascontiguousarray(self.basis_configs, dtype=np.int64)
+
+    def _ensure_integer_code_lookup(self) -> None:
+        if self._integer_code_lookup_prepared:
+            return
+        self._integer_code_lookup_prepared = True
         self._prepare_integer_code_lookup()
+
+    def _config_to_index_lookup(self) -> dict[tuple[int, ...], int]:
+        if self.config_to_index is None:
+            self.config_to_index = {
+                tuple(int(value) for value in config): index
+                for index, config in enumerate(self.basis_configs)
+            }
+
+        return self.config_to_index
 
     def _prepare_integer_code_lookup(self) -> None:
         """Prepare a mixed-radix code lookup for fast target-state indexing.
@@ -2173,7 +2188,7 @@ class _ReducedIZAssemblyCache:
         cols: list[int] = []
 
         for column_index, target_config in zip(source_indices, target_configs, strict=True):
-            row_index = self.config_to_index.get(tuple(int(x) for x in target_config))
+            row_index = self._config_to_index_lookup().get(tuple(int(x) for x in target_config))
             if row_index is None:
                 continue
 
@@ -2195,6 +2210,8 @@ class _ReducedIZAssemblyCache:
         target_key: tuple[int, ...],
         source_indices: NDArray[np.int64],
     ) -> tuple[NDArray[np.int64], NDArray[np.int64]] | None:
+        self._ensure_integer_code_lookup()
+
         if self._config_codes is None or self._code_to_index is None:
             return None
 
@@ -2290,7 +2307,7 @@ def _build_reduced_iz_monitor_from_reports(
     *,
     reports: tuple[InterferenceZeroReport, ...],
     basis_configs: NDArray[np.integer],
-    config_to_index: dict[tuple[int, ...], int],
+    config_to_index: dict[tuple[int, ...], int] | None,
     shape: tuple[int, int],
     use_collective_coefficients: bool,
     assembly_cache: _ReducedIZAssemblyCache | None = None,
@@ -2477,14 +2494,20 @@ def _build_reduced_iz_monitor_components(
         include_collective_cancellation=include_collective_cancellation,
     )
 
-    config_to_index = {
-        tuple(int(value) for value in config): index for index, config in enumerate(basis_configs)
-    }
-
-    assembly_cache = _ReducedIZAssemblyCache(
-        basis_configs=basis_configs,
-        config_to_index=config_to_index,
-    )
+    # Keep sparse reduced-IZ matrix assembly lazy for the offdiagonal-only
+    # component path.  The fast construction path only needs the cached action
+    # vectors stored in the classification report; basis-index maps are built
+    # later only if a caller materializes a monitor matrix.  A shared lightweight
+    # cache is still passed to lazy monitors so later materialization can reuse
+    # source groups and transition-index lookups across components.
+    config_to_index: dict[tuple[int, ...], int] | None = None
+    assembly_cache = _ReducedIZAssemblyCache(basis_configs=basis_configs)
+    if reduced_iz_monitor_content == "offdiagonal_plus_potential":
+        config_to_index = {
+            tuple(int(value) for value in config): index
+            for index, config in enumerate(basis_configs)
+        }
+        assembly_cache.config_to_index = config_to_index
 
     report_groups = _group_reduced_iz_reports_for_monitor(
         selected_reports,
