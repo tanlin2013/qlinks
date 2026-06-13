@@ -25,6 +25,7 @@ class CageSolverConfig:
     ipr_step_size: float = 0.1
     ipr_convergence_tolerance: float = 1e-12
     ipr_candidate_count: int = 64
+    ipr_rank_completion_patience: int | None = None
 
     # Support detection/refinement.
     ipr_support_tolerance_factor: float = 100.0

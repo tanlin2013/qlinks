@@ -205,3 +205,72 @@ def test_solve_candidate_ipr_splits_degenerate_union_support():
 
         residual = np.linalg.norm(hamiltonian @ full_vector - cage_state.energy * full_vector)
         assert residual <= config.tolerance
+
+
+def test_many_start_ipr_avoids_per_restart_orthonormalization(monkeypatch):
+    import qlinks.caging.localization as localization
+
+    basis = np.eye(4, 2, dtype=np.complex128)
+    call_count = 0
+    original = localization._orthonormalize_columns
+
+    def counted_orthonormalize(matrix, *, tolerance):
+        nonlocal call_count
+        call_count += 1
+        return original(matrix, tolerance=tolerance)
+
+    monkeypatch.setattr(localization, "_orthonormalize_columns", counted_orthonormalize)
+
+    config = IPRLocalizationConfig(
+        candidate_count=5,
+        max_iter=2,
+        random_seed=123,
+        rank_tolerance=1e-10,
+    )
+
+    localized_basis_by_many_start_ipr(basis, config=config)
+
+    # One call prepares the cached working basis; one final call
+    # orthonormalizes the selected localized output basis. The old slow path
+    # effectively did one extra orthonormalization per restart.
+    assert call_count == 2
+
+
+def test_many_start_ipr_rank_completion_patience_stops_after_unique_supports(monkeypatch):
+    import qlinks.caging.localization as localization
+
+    basis = np.eye(4, 2, dtype=np.complex128)
+    supports = [
+        np.array([True, False, False, False]),
+        np.array([False, True, False, False]),
+        np.array([False, False, True, False]),
+        np.array([False, False, False, True]),
+    ]
+    calls = 0
+
+    def fake_maximize(working_basis, *, config, rng):
+        nonlocal calls
+        support_mask = supports[min(calls, len(supports) - 1)]
+        local_state = np.zeros(working_basis.basis.shape[0], dtype=np.complex128)
+        local_state[np.flatnonzero(support_mask)[0]] = 1.0
+        calls += 1
+        return localization.LocalizedState(
+            local_state=local_state,
+            coefficients=np.zeros(working_basis.dimension, dtype=np.complex128),
+            support_mask=support_mask,
+            ipr_value=1.0,
+        )
+
+    monkeypatch.setattr(localization, "_maximize_ipr_once_with_working_basis", fake_maximize)
+
+    config = IPRLocalizationConfig(
+        candidate_count=10,
+        rank_completion_patience=0,
+        random_seed=123,
+        rank_tolerance=1e-10,
+    )
+
+    localized_basis = localized_basis_by_many_start_ipr(basis, config=config)
+
+    assert calls == 2
+    assert localized_basis.shape[1] == 2

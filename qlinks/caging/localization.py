@@ -23,6 +23,7 @@ class IPRLocalizationConfig:
     rank_tolerance: float = 1e-8
     minimum_gap_ratio: float = 10.0
     random_seed: int | None = None
+    rank_completion_patience: int | None = None
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,33 @@ class LocalizedState:
     coefficients: NDArray[np.complex128]
     support_mask: NDArray[np.bool_]
     ipr_value: float
+
+
+@dataclass(frozen=True)
+class _IPRWorkingBasis:
+    """Cached orthonormal basis data reused by many IPR restarts."""
+
+    basis: NDArray[np.complex128]
+    basis_adjoint: NDArray[np.complex128]
+
+    @property
+    def dimension(self) -> int:
+        return int(self.basis.shape[1])
+
+
+def _prepare_ipr_working_basis(
+    eigenspace_basis: NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> _IPRWorkingBasis:
+    basis = _orthonormalize_columns(
+        eigenspace_basis,
+        tolerance=tolerance,
+    )
+    return _IPRWorkingBasis(
+        basis=basis,
+        basis_adjoint=np.asarray(basis.conj().T, dtype=np.complex128),
+    )
 
 
 def inverse_participation_ratio(
@@ -128,18 +156,16 @@ def support_mask_by_largest_gap(
     return gap_support_mask
 
 
-def maximize_ipr_once(
-    eigenspace_basis: NDArray[np.complex128],
+def _maximize_ipr_once_with_working_basis(
+    working_basis: _IPRWorkingBasis,
     *,
     config: IPRLocalizationConfig,
     rng: np.random.Generator,
 ) -> LocalizedState:
-    """Find one local IPR maximum inside span(eigenspace_basis)."""
-    basis = _orthonormalize_columns(
-        eigenspace_basis,
-        tolerance=config.rank_tolerance,
-    )
-    dimension = basis.shape[1]
+    """Find one local IPR maximum using a pre-orthonormalized basis."""
+    basis = working_basis.basis
+    basis_adjoint = working_basis.basis_adjoint
+    dimension = working_basis.dimension
     if dimension == 0:
         raise ValueError("Cannot localize an empty eigenspace.")
 
@@ -149,13 +175,14 @@ def maximize_ipr_once(
 
     for _iteration_index in range(config.max_iter):
         local_state = basis @ coefficients
-        ipr_value = inverse_participation_ratio(local_state)
+        amplitudes_squared = np.abs(local_state) ** 2
+        ipr_value = float(np.sum(amplitudes_squared**2))
 
         if abs(ipr_value - previous_value) <= config.convergence_tolerance:
             break
         previous_value = ipr_value
 
-        gradient = 2.0 * (basis.conj().T @ ((np.abs(local_state) ** 2) * local_state))
+        gradient = 2.0 * (basis_adjoint @ (amplitudes_squared * local_state))
 
         # Tangent-space projection for ||coefficients||_2 = 1.
         gradient = gradient - coefficients * np.real(np.vdot(coefficients, gradient))
@@ -195,6 +222,24 @@ def maximize_ipr_once(
         coefficients=np.asarray(coefficients, dtype=np.complex128),
         support_mask=support_mask,
         ipr_value=inverse_participation_ratio(local_state),
+    )
+
+
+def maximize_ipr_once(
+    eigenspace_basis: NDArray[np.complex128],
+    *,
+    config: IPRLocalizationConfig,
+    rng: np.random.Generator,
+) -> LocalizedState:
+    """Find one local IPR maximum inside span(eigenspace_basis)."""
+    working_basis = _prepare_ipr_working_basis(
+        eigenspace_basis,
+        tolerance=config.rank_tolerance,
+    )
+    return _maximize_ipr_once_with_working_basis(
+        working_basis,
+        config=config,
+        rng=rng,
     )
 
 
@@ -254,10 +299,11 @@ def localized_basis_by_many_start_ipr(
     3. enforce exact compactness using a nullspace outside each support,
     4. rank-select independent compact states.
     """
-    basis = _orthonormalize_columns(
+    working_basis = _prepare_ipr_working_basis(
         eigenspace_basis,
         tolerance=config.rank_tolerance,
     )
+    basis = working_basis.basis
     target_dimension = basis.shape[1]
 
     if target_dimension <= 1:
@@ -267,9 +313,11 @@ def localized_basis_by_many_start_ipr(
 
     best_by_support: dict[tuple[int, ...], LocalizedState] = {}
 
-    for _candidate_index in range(config.candidate_count):
-        localized_state = maximize_ipr_once(
-            basis,
+    completed_unique_support_count_at: int | None = None
+
+    for candidate_index in range(config.candidate_count):
+        localized_state = _maximize_ipr_once_with_working_basis(
+            working_basis,
             config=config,
             rng=rng,
         )
@@ -281,6 +329,17 @@ def localized_basis_by_many_start_ipr(
         old_state = best_by_support.get(key)
         if old_state is None or localized_state.ipr_value > old_state.ipr_value:
             best_by_support[key] = localized_state
+
+        if config.rank_completion_patience is not None and len(best_by_support) >= target_dimension:
+            if completed_unique_support_count_at is None:
+                completed_unique_support_count_at = candidate_index
+                if config.rank_completion_patience <= 0:
+                    break
+            elif (
+                candidate_index - completed_unique_support_count_at
+                >= config.rank_completion_patience
+            ):
+                break
 
     selected_selector = IndependentColumnSelector(tolerance=config.rank_tolerance)
 

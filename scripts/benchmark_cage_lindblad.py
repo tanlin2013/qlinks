@@ -63,6 +63,9 @@ class CageLindbladBenchmarkResult:
     compute_jump_residuals: bool
     recycling_jump_source: str
     max_recycling_jumps_per_region: int
+    ipr_candidate_count: int
+    ipr_max_iter: int
+    ipr_rank_completion_patience: int | None
     n_variables: int
     n_states: int
     selected_signature: tuple[int, int]
@@ -387,6 +390,9 @@ def run_cage_lindblad_benchmark(
     classification_sector_policy: str,
     signature: tuple[int, int] | None,
     record_index: int,
+    ipr_candidate_count: int,
+    ipr_max_iter: int,
+    ipr_rank_completion_patience: int | None,
 ) -> CageLindbladBenchmarkResult:
     build_result, build_seconds = _time_call(
         lambda: case.model.build(
@@ -402,7 +408,9 @@ def run_cage_lindblad_benchmark(
         tolerance=residual_tolerance,
         degenerate_basis_strategy="ipr",
         ipr_n_restarts=256,
-        ipr_candidate_count=128,
+        ipr_max_iter=ipr_max_iter,
+        ipr_candidate_count=ipr_candidate_count,
+        ipr_rank_completion_patience=ipr_rank_completion_patience,
         ipr_random_seed=1234,
         store_full_states=True,
     )
@@ -485,6 +493,9 @@ def run_cage_lindblad_benchmark(
         compute_jump_residuals=compute_jump_residuals,
         recycling_jump_source=recycling_jump_source,
         max_recycling_jumps_per_region=max_recycling_jumps_per_region,
+        ipr_candidate_count=ipr_candidate_count,
+        ipr_max_iter=ipr_max_iter,
+        ipr_rank_completion_patience=ipr_rank_completion_patience,
         n_variables=case.model.layout.n_variables,
         n_states=build_result.basis.n_states,
         selected_signature=record.signature,
@@ -686,6 +697,18 @@ def main() -> None:
         help="Do not prefer sparser local recycling jumps when selecting candidates.",
     )
     parser.add_argument("--recycling-two-pattern-tolerance", type=float, default=1.0e-8)
+    parser.add_argument("--ipr-candidate-count", type=int, default=128)
+    parser.add_argument("--ipr-max-iter", type=int, default=1000)
+    parser.add_argument(
+        "--ipr-rank-completion-patience",
+        type=int,
+        default=None,
+        help=(
+            "Optional IPR early-stop patience after the number of unique "
+            "localized supports reaches the degenerate subspace dimension. "
+            "Leave unset to keep the full candidate-count scan."
+        ),
+    )
     parser.add_argument("--residual-tolerance", type=float, default=1.0e-10)
     parser.add_argument(
         "--signature",
@@ -749,6 +772,9 @@ def main() -> None:
                 classification_sector_policy=args.classification_sector_policy,
                 signature=args.signature,
                 record_index=args.record_index,
+                ipr_candidate_count=args.ipr_candidate_count,
+                ipr_max_iter=args.ipr_max_iter,
+                ipr_rank_completion_patience=args.ipr_rank_completion_patience,
             )
         except (IndexError, NotImplementedError, ValueError) as exc:
             print(f"  skipped: {exc}")
