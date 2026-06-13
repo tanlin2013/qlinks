@@ -11,6 +11,7 @@ from qlinks.caging.classification import (
     _annotate_probe_mechanisms,
     _apply_reduced_local_operator,
     _build_config_to_index,
+    _build_reduced_local_operator_application_context,
     _classify_from_zero_reports,
     _complement_support_indices,
     _group_local_transitions_by_source,
@@ -171,6 +172,104 @@ def test_apply_reduced_local_operator_accepts_source_indices_cache() -> None:
     np.testing.assert_allclose(output, expected_output)
     np.testing.assert_array_equal(target_indices, np.array([1, 3], dtype=np.int64))
     np.testing.assert_array_equal(input_indices, np.array([0, 2], dtype=np.int64))
+
+
+def test_apply_reduced_local_operator_uses_application_context() -> None:
+    basis_configs = np.array(
+        [
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 1, 0],
+            [0, 1, 1],
+            [1, 0, 0],
+            [1, 0, 1],
+            [1, 1, 0],
+            [1, 1, 1],
+        ],
+        dtype=np.int64,
+    )
+    full_state = np.array([3.0, 0.0, 5.0, 0.0, 7.0, 0.0, 11.0, 0.0], dtype=np.complex128)
+    local_mask = np.array([False, False, True], dtype=np.bool_)
+    domain_mask = np.ones(basis_configs.shape[0], dtype=np.bool_)
+    transitions = (
+        LocalTransitionPattern(
+            source_local=(0,),
+            target_local=(1,),
+            matrix_element=2.0,
+        ),
+    )
+    context = _build_reduced_local_operator_application_context(
+        basis_configs=basis_configs,
+        domain_mask=domain_mask,
+        local_mask=local_mask,
+    )
+
+    uncached = _apply_reduced_local_operator(
+        full_state,
+        basis_configs=basis_configs,
+        config_to_index=_build_config_to_index(basis_configs),
+        local_mask=local_mask,
+        local_transitions=transitions,
+        domain_mask=domain_mask,
+        source_indices=np.array([0, 2, 4, 6], dtype=np.int64),
+    )
+    cached = _apply_reduced_local_operator(
+        full_state,
+        basis_configs=basis_configs,
+        config_to_index=_build_config_to_index(basis_configs),
+        local_mask=local_mask,
+        local_transitions=transitions,
+        domain_mask=domain_mask,
+        application_context=context,
+        source_indices=np.array([0, 2, 4, 6], dtype=np.int64),
+    )
+
+    np.testing.assert_allclose(cached[0], uncached[0])
+    np.testing.assert_array_equal(cached[1], uncached[1])
+    np.testing.assert_array_equal(cached[2], uncached[2])
+    assert context.local_variable_indices == (2,)
+    assert context.environment_variable_indices == (0, 1)
+
+
+def test_apply_reduced_local_operator_context_respects_domain_targets() -> None:
+    basis_configs = np.array(
+        [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [1, 1],
+        ],
+        dtype=np.int64,
+    )
+    full_state = np.array([3.0, 0.0, 5.0, 0.0], dtype=np.complex128)
+    local_mask = np.array([False, True], dtype=np.bool_)
+    domain_mask = np.array([True, False, True, True], dtype=np.bool_)
+    transitions = (
+        LocalTransitionPattern(
+            source_local=(0,),
+            target_local=(1,),
+            matrix_element=2.0,
+        ),
+    )
+    context = _build_reduced_local_operator_application_context(
+        basis_configs=basis_configs,
+        domain_mask=domain_mask,
+        local_mask=local_mask,
+    )
+
+    output, target_indices, input_indices = _apply_reduced_local_operator(
+        full_state,
+        basis_configs=basis_configs,
+        config_to_index=_build_config_to_index(basis_configs),
+        local_mask=local_mask,
+        local_transitions=transitions,
+        domain_mask=domain_mask,
+        application_context=context,
+    )
+
+    np.testing.assert_allclose(output, np.array([0.0, 0.0, 0.0, 10.0], dtype=np.complex128))
+    np.testing.assert_array_equal(target_indices, np.array([3], dtype=np.int64))
+    np.testing.assert_array_equal(input_indices, np.array([2], dtype=np.int64))
 
 
 def test_q_sector_weight_uses_active_indices_cache(classification_config) -> None:

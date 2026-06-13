@@ -83,6 +83,27 @@ class LocalTransitionPattern:
 
 
 @dataclass(frozen=True, slots=True)
+class _ReducedLocalOperatorApplicationContext:
+    """Cached constrained-basis lookups for one reduced local support.
+
+    For a fixed local mask, applying a reduced local operator only changes the
+    local coordinates and preserves the environment coordinates.  This context
+    maps ``(environment_key, local_key)`` directly to the constrained-basis
+    index, so repeated reduced-IZ probes avoid rebuilding full target
+    configurations and hashing full configuration tuples.
+    """
+
+    local_variable_indices: tuple[int, ...]
+    environment_variable_indices: tuple[int, ...]
+    local_key_by_basis_index: dict[int, tuple[int, ...]]
+    environment_key_by_basis_index: dict[int, tuple[int, ...]]
+    index_by_environment_and_local: dict[
+        tuple[tuple[int, ...], tuple[int, ...]],
+        int,
+    ]
+
+
+@dataclass(frozen=True, slots=True)
 class InterferenceZeroReport:
     """Diagnostics for one source nontrivial interference zero.
 
@@ -827,6 +848,10 @@ def classify_full_state(
     )
 
     config_to_index = _build_config_to_index(basis_configs)
+    local_operator_contexts: dict[
+        tuple[int, ...],
+        _ReducedLocalOperatorApplicationContext,
+    ] = {}
 
     zero_reports = _find_nontrivial_interference_zeros(
         full_state,
@@ -837,6 +862,7 @@ def classify_full_state(
         domain_mask=domain_mask,
         active_state_indices=active_state_indices,
         active_domain_indices=active_domain_indices,
+        local_operator_contexts=local_operator_contexts,
         config=config,
     )
 
@@ -860,6 +886,7 @@ def classify_full_state(
         config_to_index=config_to_index,
         domain_mask=domain_mask,
         active_domain_indices=active_domain_indices,
+        local_operator_contexts=local_operator_contexts,
         config=config,
     )
 
@@ -1329,6 +1356,7 @@ def _find_nontrivial_interference_zeros(
     domain_mask: NDArray[np.bool_],
     active_state_indices: NDArray[np.int64],
     active_domain_indices: NDArray[np.int64],
+    local_operator_contexts: dict[tuple[int, ...], _ReducedLocalOperatorApplicationContext] | None,
     config: CageClassificationConfig,
 ) -> list[InterferenceZeroReport]:
     """Find zero vertices with nontrivial cancellation from active neighbors."""
@@ -1376,6 +1404,7 @@ def _find_nontrivial_interference_zeros(
             domain_mask=domain_mask,
             active_state_indices=active_state_indices,
             active_domain_indices=active_domain_indices,
+            local_operator_contexts=local_operator_contexts,
             config=config,
         )
         reports.append(report)
@@ -1396,6 +1425,7 @@ def _build_zero_report(
     domain_mask: NDArray[np.bool_],
     active_state_indices: NDArray[np.int64],
     active_domain_indices: NDArray[np.int64],
+    local_operator_contexts: dict[tuple[int, ...], _ReducedLocalOperatorApplicationContext] | None,
     config: CageClassificationConfig,
 ) -> InterferenceZeroReport:
     """Build one interference-zero diagnostic report."""
@@ -1426,6 +1456,12 @@ def _build_zero_report(
         local_mask=local_mask,
     )
     local_transition_lookup = _group_local_transitions_by_source(local_transitions)
+    application_context = _get_reduced_local_operator_application_context(
+        local_operator_contexts,
+        basis_configs=basis_configs,
+        domain_mask=domain_mask,
+        local_mask=local_mask,
+    )
 
     reduced_action, _reduced_targets, _reduced_inputs = _apply_reduced_local_operator(
         full_state,
@@ -1437,6 +1473,7 @@ def _build_zero_report(
         local_mask=local_mask,
         local_transitions=local_transitions,
         local_transition_lookup=local_transition_lookup,
+        application_context=application_context,
         source_indices=active_domain_indices,
         amplitude_tolerance=config.amplitude_tolerance,
     )
@@ -1452,6 +1489,7 @@ def _build_zero_report(
             local_mask=local_mask,
             local_transitions=local_transitions,
             local_transition_lookup=local_transition_lookup,
+            application_context=application_context,
             source_indices=active_domain_indices,
             use_complement_common_sector=True,
             amplitude_tolerance=config.amplitude_tolerance,
@@ -1691,6 +1729,7 @@ def _annotate_collective_cancellations(
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
     active_domain_indices: NDArray[np.int64] | None,
+    local_operator_contexts: dict[tuple[int, ...], _ReducedLocalOperatorApplicationContext] | None,
     config: CageClassificationConfig,
 ) -> tuple[list[InterferenceZeroReport], tuple[CollectiveCancellationReport, ...]]:
     if config.collective_cancellation_mode == "disabled":
@@ -1750,6 +1789,7 @@ def _annotate_collective_cancellations(
                 config_to_index=config_to_index,
                 domain_mask=domain_mask,
                 active_domain_indices=active_domain_indices,
+                local_operator_contexts=local_operator_contexts,
                 config=config,
                 grouping_kind=grouping_kind,
             )
@@ -1765,6 +1805,7 @@ def _annotate_collective_cancellations(
                 config_to_index=config_to_index,
                 domain_mask=domain_mask,
                 active_domain_indices=active_domain_indices,
+                local_operator_contexts=local_operator_contexts,
                 config=config,
                 grouping_kind=grouping_kind,
             )
@@ -1874,8 +1915,16 @@ def _complement_action_for_report(
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
     active_domain_indices: NDArray[np.int64] | None,
+    local_operator_contexts: dict[tuple[int, ...], _ReducedLocalOperatorApplicationContext] | None,
     config: CageClassificationConfig,
 ) -> tuple[NDArray[np.complex128], NDArray[np.int64]]:
+    application_context = _get_reduced_local_operator_application_context(
+        local_operator_contexts,
+        basis_configs=basis_configs,
+        domain_mask=domain_mask,
+        local_mask=report.local_mask,
+    )
+
     action, target_indices, _input_indices = _apply_reduced_local_operator(
         full_state,
         basis_configs=basis_configs,
@@ -1885,6 +1934,7 @@ def _complement_action_for_report(
         reference_config=basis_configs[int(report.zero_index)],
         local_mask=report.local_mask,
         local_transitions=report.local_transitions,
+        application_context=application_context,
         source_indices=active_domain_indices,
         use_complement_common_sector=True,
         amplitude_tolerance=config.amplitude_tolerance,
@@ -2033,6 +2083,7 @@ def _find_unit_sum_collective_cancellation(
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
     active_domain_indices: NDArray[np.int64] | None,
+    local_operator_contexts: dict[tuple[int, ...], _ReducedLocalOperatorApplicationContext] | None,
     config: CageClassificationConfig,
     grouping_kind: Literal["same_local_support", "all_problematic"],
 ) -> CollectiveCancellationReport | None:
@@ -2047,6 +2098,7 @@ def _find_unit_sum_collective_cancellation(
             config_to_index=config_to_index,
             domain_mask=domain_mask,
             active_domain_indices=active_domain_indices,
+            local_operator_contexts=local_operator_contexts,
             config=config,
         )
         actions.append(action)
@@ -2071,6 +2123,7 @@ def _find_nullspace_collective_cancellation(
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
     active_domain_indices: NDArray[np.int64] | None,
+    local_operator_contexts: dict[tuple[int, ...], _ReducedLocalOperatorApplicationContext] | None,
     config: CageClassificationConfig,
     grouping_kind: Literal["same_local_support", "all_problematic"],
 ) -> CollectiveCancellationReport | None:
@@ -2085,6 +2138,7 @@ def _find_nullspace_collective_cancellation(
             config_to_index=config_to_index,
             domain_mask=domain_mask,
             active_domain_indices=active_domain_indices,
+            local_operator_contexts=local_operator_contexts,
             config=config,
         )
         actions.append(action)
@@ -2262,6 +2316,71 @@ def _local_transitions_for_zero(
     return transitions
 
 
+def _build_reduced_local_operator_application_context(
+    *,
+    basis_configs: NDArray[np.integer],
+    domain_mask: NDArray[np.bool_],
+    local_mask: NDArray[np.bool_],
+) -> _ReducedLocalOperatorApplicationContext:
+    """Build cached local/environment pattern lookups for one local mask."""
+    local_variable_indices = support_key_from_mask(local_mask)
+    environment_variable_indices = tuple(
+        int(index) for index in np.flatnonzero(~np.asarray(local_mask, dtype=np.bool_))
+    )
+
+    local_columns = np.asarray(local_variable_indices, dtype=np.int64)
+    environment_columns = np.asarray(environment_variable_indices, dtype=np.int64)
+
+    local_key_by_basis_index: dict[int, tuple[int, ...]] = {}
+    environment_key_by_basis_index: dict[int, tuple[int, ...]] = {}
+    index_by_environment_and_local: dict[
+        tuple[tuple[int, ...], tuple[int, ...]],
+        int,
+    ] = {}
+
+    for basis_index_raw in np.flatnonzero(domain_mask):
+        basis_index = int(basis_index_raw)
+        config = basis_configs[basis_index]
+        local_key = _indexed_config_key(config, local_columns)
+        environment_key = _indexed_config_key(config, environment_columns)
+
+        local_key_by_basis_index[basis_index] = local_key
+        environment_key_by_basis_index[basis_index] = environment_key
+        index_by_environment_and_local[(environment_key, local_key)] = basis_index
+
+    return _ReducedLocalOperatorApplicationContext(
+        local_variable_indices=local_variable_indices,
+        environment_variable_indices=environment_variable_indices,
+        local_key_by_basis_index=local_key_by_basis_index,
+        environment_key_by_basis_index=environment_key_by_basis_index,
+        index_by_environment_and_local=index_by_environment_and_local,
+    )
+
+
+def _get_reduced_local_operator_application_context(
+    cache: dict[tuple[int, ...], _ReducedLocalOperatorApplicationContext] | None,
+    *,
+    basis_configs: NDArray[np.integer],
+    domain_mask: NDArray[np.bool_],
+    local_mask: NDArray[np.bool_],
+) -> _ReducedLocalOperatorApplicationContext | None:
+    """Return a cached local-operator application context when a cache is supplied."""
+    if cache is None:
+        return None
+
+    support_key = support_key_from_mask(local_mask)
+    context = cache.get(support_key)
+    if context is None:
+        context = _build_reduced_local_operator_application_context(
+            basis_configs=basis_configs,
+            domain_mask=domain_mask,
+            local_mask=local_mask,
+        )
+        cache[support_key] = context
+
+    return context
+
+
 def _apply_reduced_local_operator(
     full_state: NDArray[np.complex128],
     *,
@@ -2273,6 +2392,7 @@ def _apply_reduced_local_operator(
     local_transition_lookup: (
         dict[tuple[int, ...], tuple[LocalTransitionPattern, ...]] | None
     ) = None,
+    application_context: _ReducedLocalOperatorApplicationContext | None = None,
     source_indices: NDArray[np.int64] | None = None,
     common_mask: NDArray[np.bool_] | None = None,
     reference_config: NDArray[np.integer] | None = None,
@@ -2307,6 +2427,14 @@ def _apply_reduced_local_operator(
         active_mask = domain_mask & (np.abs(full_state) > amplitude_tolerance)
         source_indices = np.flatnonzero(active_mask).astype(np.int64, copy=False)
 
+    if application_context is not None:
+        expected_support = support_key_from_mask(local_mask)
+        if application_context.local_variable_indices != expected_support:
+            raise ValueError(
+                "application_context was built for a different local support: "
+                f"{application_context.local_variable_indices!r} != {expected_support!r}."
+            )
+
     for source_index_raw in source_indices:
         source_index = int(source_index_raw)
         if not domain_mask[source_index]:
@@ -2331,20 +2459,34 @@ def _apply_reduced_local_operator(
             if not use_complement_common_sector and not in_common_sector:
                 continue
 
-        source_local = _config_key(source_config[local_mask])
+        if application_context is None:
+            source_local = _config_key(source_config[local_mask])
+            environment_key: tuple[int, ...] | None = None
+        else:
+            source_local = application_context.local_key_by_basis_index.get(source_index)
+            environment_key = application_context.environment_key_by_basis_index.get(source_index)
+            if source_local is None or environment_key is None:
+                continue
+
         matching_transitions = transitions_by_source.get(source_local)
 
         if matching_transitions is None:
             continue
 
         for transition in matching_transitions:
-            target_config = np.array(source_config, copy=True)
-            target_config[local_mask] = np.array(
-                transition.target_local,
-                dtype=target_config.dtype,
-            )
+            if application_context is None:
+                target_config = np.array(source_config, copy=True)
+                target_config[local_mask] = np.array(
+                    transition.target_local,
+                    dtype=target_config.dtype,
+                )
 
-            target_index = config_to_index.get(_config_key(target_config))
+                target_index = config_to_index.get(_config_key(target_config))
+            else:
+                target_index = application_context.index_by_environment_and_local.get(
+                    (environment_key, transition.target_local)
+                )
+
             if target_index is None:
                 continue
 
@@ -2391,6 +2533,16 @@ def _build_config_to_index(
 def _config_key(config: NDArray[np.integer]) -> tuple[int, ...]:
     """Hashable representation of one basis configuration."""
     return tuple(int(value) for value in np.asarray(config).ravel())
+
+
+def _indexed_config_key(
+    config: NDArray[np.integer],
+    indices: NDArray[np.int64],
+) -> tuple[int, ...]:
+    """Hashable key for a selected subset of one basis configuration."""
+    if indices.size == 0:
+        return ()
+    return tuple(int(value) for value in np.asarray(config)[indices])
 
 
 def _local_pattern_key(
