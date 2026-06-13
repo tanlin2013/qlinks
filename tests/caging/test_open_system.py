@@ -196,6 +196,28 @@ def test_left_multiply_sparse_csr_matches_scipy_product():
     np.testing.assert_allclose(actual.toarray(), expected.toarray())
 
 
+def test_left_multiply_sparse_csr_handles_general_sparse_left_factor():
+    left = sp.csr_array(
+        (
+            np.array([1.0, -0.5j, 2.0], dtype=np.complex128),
+            (np.array([0, 2, 1]), np.array([1, 1, 0])),
+        ),
+        shape=(3, 3),
+    )
+    right = sp.csr_array(
+        (
+            np.array([2.0, 3.0, -1.0j], dtype=np.complex128),
+            (np.array([0, 1, 1]), np.array([0, 1, 2])),
+        ),
+        shape=(3, 4),
+    )
+
+    actual = _left_multiply_sparse_csr(left, right)
+    expected = left @ right
+
+    np.testing.assert_allclose(actual.toarray(), expected.toarray())
+
+
 def test_left_multiply_sparse_csr_sums_duplicate_entries():
     left = sp.csr_array(
         (

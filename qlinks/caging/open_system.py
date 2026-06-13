@@ -191,15 +191,100 @@ def _local_term_matrix(
     return matrix.tocsr()
 
 
+@dataclass(frozen=True, slots=True)
+class _SparseColumnAction:
+    """Column-action representation for monomial sparse left factors.
+
+    Local kinetic plaquette terms in QDM/QLM are partial permutations in the
+    constrained basis: each input basis state maps to at most one output state.
+    For products ``K @ M``, exploiting this column action avoids generic sparse
+    matrix multiplication and turns the product into a vectorized remapping of
+    the nonzero rows of ``M``.
+    """
+
+    row_by_column: NDArray[np.int64]
+    data_by_column: NDArray[np.complex128]
+    output_shape: tuple[int, int]
+
+    @classmethod
+    def from_left(cls, left: Any) -> "_SparseColumnAction | None":
+        left_csc = left.tocsc()
+        left_csc.sum_duplicates()
+        counts = np.diff(left_csc.indptr)
+
+        if np.any(counts > 1):
+            return None
+
+        n_columns = int(left_csc.shape[1])
+        row_by_column = np.full(n_columns, -1, dtype=np.int64)
+        data_by_column = np.zeros(n_columns, dtype=np.complex128)
+
+        active_columns = np.flatnonzero(counts == 1)
+        if len(active_columns) > 0:
+            starts = left_csc.indptr[active_columns]
+            row_by_column[active_columns] = left_csc.indices[starts].astype(
+                np.int64,
+                copy=False,
+            )
+            data_by_column[active_columns] = left_csc.data[starts].astype(
+                np.complex128,
+                copy=False,
+            )
+
+        return cls(
+            row_by_column=row_by_column,
+            data_by_column=data_by_column,
+            output_shape=(int(left_csc.shape[0]), int(left_csc.shape[1])),
+        )
+
+    def apply(self, right: Any) -> sp.csr_array:
+        right_coo = right.tocoo()
+        if int(right_coo.shape[0]) != self.output_shape[1]:
+            raise ValueError(
+                "Sparse column action shape mismatch: "
+                f"left has {self.output_shape[1]} columns but right has "
+                f"{right_coo.shape[0]} rows."
+            )
+
+        if right_coo.nnz == 0:
+            return sp.csr_array(
+                (self.output_shape[0], int(right_coo.shape[1])),
+                dtype=np.complex128,
+            )
+
+        mapped_rows = self.row_by_column[right_coo.row]
+        nonzero_mask = mapped_rows >= 0
+
+        if not np.any(nonzero_mask):
+            return sp.csr_array(
+                (self.output_shape[0], int(right_coo.shape[1])),
+                dtype=np.complex128,
+            )
+
+        source_rows = right_coo.row[nonzero_mask]
+        rows = mapped_rows[nonzero_mask]
+        cols = right_coo.col[nonzero_mask]
+        data = self.data_by_column[source_rows] * right_coo.data[nonzero_mask]
+
+        return sp.coo_array(
+            (data.astype(np.complex128, copy=False), (rows, cols)),
+            shape=(self.output_shape[0], int(right_coo.shape[1])),
+            dtype=np.complex128,
+        ).tocsr()
+
+
 def _left_multiply_sparse_csr(left: Any, right: Any) -> sp.csr_array:
     """Return ``left @ right`` as a CSR sparse array.
 
-    The reduced-IZ Cage-Lindblad path builds many products of local kinetic
-    terms with monitor components.  SciPy's sparse product is implemented in
-    optimized code and is faster than Python row-gathering for the matrix sizes
-    that dominate the benchmark, so this helper keeps a single normalization
-    point for sparse format handling.
+    Local plaquette kinetic terms are usually partial permutations in the
+    constrained basis.  In that common case, use a vectorized column-action
+    remapping of ``right`` rather than generic sparse matrix multiplication.
+    Fall back to SciPy's sparse product for general sparse left factors.
     """
+
+    action = _SparseColumnAction.from_left(left)
+    if action is not None:
+        return action.apply(right)
 
     result = left.tocsr() @ right.tocsr()
     return result.tocsr()
@@ -264,6 +349,10 @@ def _left_multiply_same_left_sparse_csr_batch(
     if len(right_matrices) == 0:
         return ()
 
+    action = _SparseColumnAction.from_left(left)
+    if action is not None:
+        return tuple(action.apply(matrix) for matrix in right_matrices)
+
     if len(right_matrices) == 1:
         return (_left_multiply_sparse_csr(left, right_matrices[0]),)
 
@@ -295,13 +384,17 @@ def _left_multiply_sparse_csr_batch(
     """Return ``left @ right`` for many left factors sharing one right factor.
 
     Component-decomposed reduced-IZ monitors often need several products
-    ``K_p M_i`` for the same monitor component ``M_i``.  Stacking all ``K_p``
-    factors vertically lets SciPy perform one sparse product for the component,
-    then we split the result back into individual jump matrices.
+    ``K_p M_i`` for the same monitor component ``M_i``.  When all kinetic
+    terms are partial permutations, applying the column actions independently
+    avoids the cost of building and slicing a vertically stacked sparse product.
     """
 
     if len(left_matrices) == 0:
         return ()
+
+    actions = tuple(_SparseColumnAction.from_left(matrix) for matrix in left_matrices)
+    if all(action is not None for action in actions):
+        return tuple(action.apply(right) for action in actions if action is not None)
 
     if len(left_matrices) == 1:
         return (_left_multiply_sparse_csr(left_matrices[0], right),)
