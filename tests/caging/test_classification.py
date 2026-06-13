@@ -12,7 +12,9 @@ from qlinks.caging.classification import (
     _apply_reduced_local_operator,
     _build_config_to_index,
     _classify_from_zero_reports,
+    _complement_support_indices,
     _group_local_transitions_by_source,
+    _q_sector_weight,
     classify_cage_state,
     classify_full_state,
     group_reduced_iz_monitor_reports,
@@ -131,6 +133,115 @@ def test_apply_reduced_local_operator_accepts_grouped_transitions() -> None:
     np.testing.assert_allclose(output, expected_output)
     np.testing.assert_array_equal(target_indices, np.array([1, 3], dtype=np.int64))
     np.testing.assert_array_equal(input_indices, np.array([0, 2], dtype=np.int64))
+
+
+def test_apply_reduced_local_operator_accepts_source_indices_cache() -> None:
+    basis_configs = np.array(
+        [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [1, 1],
+        ],
+        dtype=np.int64,
+    )
+    full_state = np.array([3.0, 7.0, 5.0, 11.0], dtype=np.complex128)
+    local_mask = np.array([False, True], dtype=np.bool_)
+    domain_mask = np.ones(basis_configs.shape[0], dtype=np.bool_)
+    transitions = (
+        LocalTransitionPattern(
+            source_local=(0,),
+            target_local=(1,),
+            matrix_element=2.0,
+        ),
+    )
+
+    output, target_indices, input_indices = _apply_reduced_local_operator(
+        full_state,
+        basis_configs=basis_configs,
+        config_to_index=_build_config_to_index(basis_configs),
+        local_mask=local_mask,
+        local_transitions=transitions,
+        domain_mask=domain_mask,
+        source_indices=np.array([0, 2], dtype=np.int64),
+    )
+
+    expected_output = np.array([0.0, 6.0, 0.0, 10.0], dtype=np.complex128)
+
+    np.testing.assert_allclose(output, expected_output)
+    np.testing.assert_array_equal(target_indices, np.array([1, 3], dtype=np.int64))
+    np.testing.assert_array_equal(input_indices, np.array([0, 2], dtype=np.int64))
+
+
+def test_q_sector_weight_uses_active_indices_cache(classification_config) -> None:
+    basis_configs = np.array(
+        [
+            [0, 0, 0],
+            [0, 1, 0],
+            [1, 0, 0],
+            [1, 1, 0],
+        ],
+        dtype=np.int64,
+    )
+    full_state = np.array([0.0, 0.5, 0.0, 0.25j], dtype=np.complex128)
+    common_mask = np.array([True, False, True], dtype=np.bool_)
+    reference_config = basis_configs[0]
+
+    uncached = _q_sector_weight(
+        full_state,
+        basis_configs=basis_configs,
+        reference_config=reference_config,
+        common_mask=common_mask,
+        config=classification_config,
+    )
+    cached = _q_sector_weight(
+        full_state,
+        basis_configs=basis_configs,
+        reference_config=reference_config,
+        common_mask=common_mask,
+        active_indices=np.array([1, 3], dtype=np.int64),
+        config=classification_config,
+    )
+
+    assert cached == pytest.approx(uncached)
+    assert cached == pytest.approx(abs(0.25j) ** 2)
+
+
+def test_complement_support_indices_uses_active_domain_indices_cache() -> None:
+    basis_configs = np.array(
+        [
+            [0, 0, 0],
+            [0, 1, 0],
+            [1, 0, 0],
+            [1, 1, 0],
+        ],
+        dtype=np.int64,
+    )
+    full_state = np.array([0.0, 0.5, 1.0, 0.25j], dtype=np.complex128)
+    common_mask = np.array([True, False, True], dtype=np.bool_)
+    reference_config = basis_configs[0]
+    domain_mask = np.array([True, True, False, True], dtype=np.bool_)
+
+    uncached = _complement_support_indices(
+        full_state,
+        basis_configs=basis_configs,
+        reference_config=reference_config,
+        common_mask=common_mask,
+        domain_mask=domain_mask,
+        amplitude_tolerance=0.0,
+    )
+    cached = _complement_support_indices(
+        full_state,
+        basis_configs=basis_configs,
+        reference_config=reference_config,
+        common_mask=common_mask,
+        domain_mask=domain_mask,
+        active_domain_indices=np.array([1, 3], dtype=np.int64),
+        amplitude_tolerance=0.0,
+    )
+
+    np.testing.assert_array_equal(cached, uncached)
+    np.testing.assert_array_equal(cached, np.array([3], dtype=np.int64))
 
 
 def test_classify_full_state_finds_regional_candidate(

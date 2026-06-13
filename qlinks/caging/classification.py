@@ -812,11 +812,18 @@ def classify_full_state(
     support_size = int(np.count_nonzero(support_mask))
     support_fraction = support_size / float(hilbert_size)
 
+    active_state_indices = np.flatnonzero(support_mask).astype(np.int64, copy=False)
+
     domain_mask = _resolve_classification_domain_mask(
         kinetic_csr,
         support_mask=support_mask,
         sector_mask=sector_mask,
         config=config,
+    )
+
+    active_domain_indices = active_state_indices[domain_mask[active_state_indices]].astype(
+        np.int64,
+        copy=False,
     )
 
     config_to_index = _build_config_to_index(basis_configs)
@@ -828,6 +835,8 @@ def classify_full_state(
         config_to_index=config_to_index,
         support_mask=support_mask,
         domain_mask=domain_mask,
+        active_state_indices=active_state_indices,
+        active_domain_indices=active_domain_indices,
         config=config,
     )
 
@@ -850,6 +859,7 @@ def classify_full_state(
         basis_configs=basis_configs,
         config_to_index=config_to_index,
         domain_mask=domain_mask,
+        active_domain_indices=active_domain_indices,
         config=config,
     )
 
@@ -1317,6 +1327,8 @@ def _find_nontrivial_interference_zeros(
     config_to_index: dict[tuple[int, ...], int],
     support_mask: NDArray[np.bool_],
     domain_mask: NDArray[np.bool_],
+    active_state_indices: NDArray[np.int64],
+    active_domain_indices: NDArray[np.int64],
     config: CageClassificationConfig,
 ) -> list[InterferenceZeroReport]:
     """Find zero vertices with nontrivial cancellation from active neighbors."""
@@ -1362,6 +1374,8 @@ def _find_nontrivial_interference_zeros(
             basis_configs=basis_configs,
             config_to_index=config_to_index,
             domain_mask=domain_mask,
+            active_state_indices=active_state_indices,
+            active_domain_indices=active_domain_indices,
             config=config,
         )
         reports.append(report)
@@ -1380,6 +1394,8 @@ def _build_zero_report(
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
+    active_state_indices: NDArray[np.int64],
+    active_domain_indices: NDArray[np.int64],
     config: CageClassificationConfig,
 ) -> InterferenceZeroReport:
     """Build one interference-zero diagnostic report."""
@@ -1398,6 +1414,7 @@ def _build_zero_report(
         basis_configs=basis_configs,
         reference_config=basis_configs[zero_index],
         common_mask=common_mask,
+        active_indices=active_state_indices,
         config=config,
     )
 
@@ -1420,6 +1437,7 @@ def _build_zero_report(
         local_mask=local_mask,
         local_transitions=local_transitions,
         local_transition_lookup=local_transition_lookup,
+        source_indices=active_domain_indices,
         amplitude_tolerance=config.amplitude_tolerance,
     )
 
@@ -1434,6 +1452,7 @@ def _build_zero_report(
             local_mask=local_mask,
             local_transitions=local_transitions,
             local_transition_lookup=local_transition_lookup,
+            source_indices=active_domain_indices,
             use_complement_common_sector=True,
             amplitude_tolerance=config.amplitude_tolerance,
         )
@@ -1445,6 +1464,7 @@ def _build_zero_report(
         reference_config=basis_configs[zero_index],
         domain_mask=domain_mask,
         common_mask=common_mask,
+        active_domain_indices=active_domain_indices,
         amplitude_tolerance=config.amplitude_tolerance,
     )
 
@@ -1670,6 +1690,7 @@ def _annotate_collective_cancellations(
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
+    active_domain_indices: NDArray[np.int64] | None,
     config: CageClassificationConfig,
 ) -> tuple[list[InterferenceZeroReport], tuple[CollectiveCancellationReport, ...]]:
     if config.collective_cancellation_mode == "disabled":
@@ -1728,6 +1749,7 @@ def _annotate_collective_cancellations(
                 basis_configs=basis_configs,
                 config_to_index=config_to_index,
                 domain_mask=domain_mask,
+                active_domain_indices=active_domain_indices,
                 config=config,
                 grouping_kind=grouping_kind,
             )
@@ -1742,6 +1764,7 @@ def _annotate_collective_cancellations(
                 basis_configs=basis_configs,
                 config_to_index=config_to_index,
                 domain_mask=domain_mask,
+                active_domain_indices=active_domain_indices,
                 config=config,
                 grouping_kind=grouping_kind,
             )
@@ -1850,6 +1873,7 @@ def _complement_action_for_report(
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
+    active_domain_indices: NDArray[np.int64] | None,
     config: CageClassificationConfig,
 ) -> tuple[NDArray[np.complex128], NDArray[np.int64]]:
     action, target_indices, _input_indices = _apply_reduced_local_operator(
@@ -1861,6 +1885,7 @@ def _complement_action_for_report(
         reference_config=basis_configs[int(report.zero_index)],
         local_mask=report.local_mask,
         local_transitions=report.local_transitions,
+        source_indices=active_domain_indices,
         use_complement_common_sector=True,
         amplitude_tolerance=config.amplitude_tolerance,
     )
@@ -2007,6 +2032,7 @@ def _find_unit_sum_collective_cancellation(
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
+    active_domain_indices: NDArray[np.int64] | None,
     config: CageClassificationConfig,
     grouping_kind: Literal["same_local_support", "all_problematic"],
 ) -> CollectiveCancellationReport | None:
@@ -2020,6 +2046,7 @@ def _find_unit_sum_collective_cancellation(
             basis_configs=basis_configs,
             config_to_index=config_to_index,
             domain_mask=domain_mask,
+            active_domain_indices=active_domain_indices,
             config=config,
         )
         actions.append(action)
@@ -2043,6 +2070,7 @@ def _find_nullspace_collective_cancellation(
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     domain_mask: NDArray[np.bool_],
+    active_domain_indices: NDArray[np.int64] | None,
     config: CageClassificationConfig,
     grouping_kind: Literal["same_local_support", "all_problematic"],
 ) -> CollectiveCancellationReport | None:
@@ -2056,6 +2084,7 @@ def _find_nullspace_collective_cancellation(
             basis_configs=basis_configs,
             config_to_index=config_to_index,
             domain_mask=domain_mask,
+            active_domain_indices=active_domain_indices,
             config=config,
         )
         actions.append(action)
@@ -2123,25 +2152,36 @@ def _q_sector_weight(
     basis_configs: NDArray[np.integer],
     reference_config: NDArray[np.integer],
     common_mask: NDArray[np.bool_],
+    active_indices: NDArray[np.int64] | None = None,
     config: CageClassificationConfig,
 ) -> float:
     """
     Weight outside the common product-state sector.
 
-    This estimates || Q_beta |psi> ||^2.
+    This estimates || Q_beta |psi> ||^2.  Only finite-amplitude entries can
+    contribute, so callers that already have those indices can avoid scanning
+    the full constrained basis for every zero report.
     """
     if np.count_nonzero(common_mask) == 0:
         return 1.0
 
+    if active_indices is None:
+        active_indices = np.flatnonzero(np.abs(full_state) > config.amplitude_tolerance).astype(
+            np.int64,
+            copy=False,
+        )
+
+    if active_indices.size == 0:
+        return 0.0
+
+    active_configs = basis_configs[active_indices]
     same_common_sector = np.all(
-        basis_configs[:, common_mask] == reference_config[common_mask][None, :],
+        active_configs[:, common_mask] == reference_config[common_mask][None, :],
         axis=1,
     )
-    complement_mask = ~same_common_sector
-
-    amplitudes = full_state[complement_mask]
-    active = np.abs(amplitudes) > config.amplitude_tolerance
-    return float(np.sum(np.abs(amplitudes[active]) ** 2))
+    complement_indices = active_indices[~same_common_sector]
+    amplitudes = full_state[complement_indices]
+    return float(np.sum(np.abs(amplitudes) ** 2))
 
 
 def _complement_support_indices(
@@ -2151,24 +2191,30 @@ def _complement_support_indices(
     reference_config: NDArray[np.integer],
     common_mask: NDArray[np.bool_],
     domain_mask: NDArray[np.bool_],
+    active_domain_indices: NDArray[np.int64] | None = None,
     amplitude_tolerance: float,
 ) -> NDArray[np.int64]:
     """Return finite-amplitude basis indices outside the beta common sector."""
-    if np.count_nonzero(common_mask) == 0:
-        complement_mask = np.ones(full_state.size, dtype=np.bool_)
-    else:
-        same_common_sector = np.all(
-            basis_configs[:, common_mask] == reference_config[common_mask][None, :],
-            axis=1,
+    if active_domain_indices is None:
+        active_mask = np.abs(full_state) > amplitude_tolerance
+        active_domain_indices = np.flatnonzero(active_mask & domain_mask).astype(
+            np.int64,
+            copy=False,
         )
-        complement_mask = ~same_common_sector
 
-    active_mask = np.abs(full_state) > amplitude_tolerance
+    if active_domain_indices.size == 0:
+        return np.array([], dtype=np.int64)
 
-    return np.flatnonzero(complement_mask & active_mask & domain_mask).astype(
-        np.int64,
-        copy=False,
+    if np.count_nonzero(common_mask) == 0:
+        return active_domain_indices.astype(np.int64, copy=False)
+
+    active_configs = basis_configs[active_domain_indices]
+    same_common_sector = np.all(
+        active_configs[:, common_mask] == reference_config[common_mask][None, :],
+        axis=1,
     )
+
+    return active_domain_indices[~same_common_sector].astype(np.int64, copy=False)
 
 
 def _local_transitions_for_zero(
@@ -2227,6 +2273,7 @@ def _apply_reduced_local_operator(
     local_transition_lookup: (
         dict[tuple[int, ...], tuple[LocalTransitionPattern, ...]] | None
     ) = None,
+    source_indices: NDArray[np.int64] | None = None,
     common_mask: NDArray[np.bool_] | None = None,
     reference_config: NDArray[np.integer] | None = None,
     use_complement_common_sector: bool = False,
@@ -2256,7 +2303,12 @@ def _apply_reduced_local_operator(
         else local_transition_lookup
     )
 
-    for source_index, source_config in enumerate(basis_configs):
+    if source_indices is None:
+        active_mask = domain_mask & (np.abs(full_state) > amplitude_tolerance)
+        source_indices = np.flatnonzero(active_mask).astype(np.int64, copy=False)
+
+    for source_index_raw in source_indices:
+        source_index = int(source_index_raw)
         if not domain_mask[source_index]:
             continue
 
@@ -2264,6 +2316,8 @@ def _apply_reduced_local_operator(
 
         if abs(source_amplitude) <= amplitude_tolerance:
             continue
+
+        source_config = basis_configs[source_index]
 
         if common_mask is not None:
             if reference_config is None:
