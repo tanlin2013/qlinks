@@ -39,6 +39,37 @@ class LocalReducedDensityMatrix:
 
 
 @dataclass(frozen=True, slots=True)
+class _LocalPatternBasisContext:
+    """Grouped constrained-basis data for one local region."""
+
+    variable_indices: tuple[int, ...]
+    local_patterns: tuple[tuple[int, ...], ...]
+    environment_groups: tuple[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]], ...]
+    dim: int
+
+    @property
+    def local_dim(self) -> int:
+        return len(self.local_patterns)
+
+
+@dataclass(frozen=True, slots=True)
+class _LocalPatternEmbeddingContext:
+    """Precomputed constrained-basis embedding data for one local region."""
+
+    variable_indices: tuple[int, ...]
+    local_patterns: tuple[tuple[int, ...], ...]
+    source_full_indices: npt.NDArray[np.int64]
+    target_full_indices: npt.NDArray[np.int64]
+    source_local_indices: npt.NDArray[np.int64]
+    target_local_indices: npt.NDArray[np.int64]
+    dim: int
+
+    @property
+    def local_dim(self) -> int:
+        return len(self.local_patterns)
+
+
+@dataclass(frozen=True, slots=True)
 class LocalMatrixUnitTerm:
     """One local matrix-unit term coefficient * |target><source|."""
 
@@ -157,72 +188,106 @@ class LocalRecyclingBuildResult:
         )
 
 
-def local_reduced_density_matrix_from_state(
+def _local_pattern_basis_context_from_basis(
     *,
     basis_configs: npt.NDArray[np.integer],
-    state: npt.ArrayLike,
     variable_indices: tuple[int, ...] | list[int],
-    tolerance: float = 1e-10,
-) -> LocalReducedDensityMatrix:
-    """Compute rho_Omega for a state represented in a constrained basis."""
+    local_patterns: tuple[tuple[int, ...], ...] | None = None,
+) -> _LocalPatternBasisContext:
+    configs = np.asarray(basis_configs)
     variable_indices = tuple(int(index) for index in variable_indices)
 
     if len(variable_indices) == 0:
         raise ValueError("variable_indices must be nonempty.")
 
-    configs = np.asarray(basis_configs)
-    amplitudes = np.asarray(state, dtype=np.complex128)
-
     if configs.ndim != 2:
         raise ValueError("basis_configs must have shape (n_basis, n_variables).")
+
+    n_basis, n_variables = configs.shape
+
+    if any(index < 0 or index >= n_variables for index in variable_indices):
+        raise ValueError("variable_indices contains out-of-range entries.")
+
+    variable_index_set = set(variable_indices)
+    environment_indices = tuple(
+        index for index in range(n_variables) if index not in variable_index_set
+    )
+    variable_index_array = np.asarray(variable_indices, dtype=np.int64)
+    environment_index_array = np.asarray(environment_indices, dtype=np.int64)
+
+    if local_patterns is None:
+        local_patterns = tuple(
+            sorted(
+                {tuple(int(value) for value in config[variable_index_array]) for config in configs}
+            )
+        )
+    else:
+        local_patterns = tuple(tuple(int(value) for value in pattern) for pattern in local_patterns)
+
+    if len(local_patterns) == 0:
+        raise ValueError("local_patterns must be nonempty.")
+
+    if any(len(pattern) != len(variable_indices) for pattern in local_patterns):
+        raise ValueError("local pattern length must match variable_indices.")
+
+    local_pattern_to_index = {pattern: index for index, pattern in enumerate(local_patterns)}
+    environment_groups: dict[tuple[int, ...], list[tuple[int, int]]] = {}
+
+    for basis_index, config in enumerate(configs):
+        local_pattern = tuple(int(value) for value in config[variable_index_array])
+        local_index = local_pattern_to_index.get(local_pattern)
+
+        if local_index is None:
+            continue
+
+        environment_pattern = tuple(int(value) for value in config[environment_index_array])
+        environment_groups.setdefault(environment_pattern, []).append(
+            (int(basis_index), int(local_index))
+        )
+
+    grouped = tuple(
+        (
+            np.asarray([basis_index for basis_index, _ in group], dtype=np.int64),
+            np.asarray([local_index for _, local_index in group], dtype=np.int64),
+        )
+        for group in environment_groups.values()
+    )
+
+    return _LocalPatternBasisContext(
+        variable_indices=variable_indices,
+        local_patterns=local_patterns,
+        environment_groups=grouped,
+        dim=int(n_basis),
+    )
+
+
+def _local_reduced_density_matrix_from_basis_context(
+    *,
+    context: _LocalPatternBasisContext,
+    state: npt.ArrayLike,
+    tolerance: float = 1e-10,
+) -> LocalReducedDensityMatrix:
+    amplitudes = np.asarray(state, dtype=np.complex128)
 
     if amplitudes.ndim != 1:
         raise ValueError("state must be one-dimensional.")
 
-    if configs.shape[0] != amplitudes.size:
+    if context.dim != amplitudes.size:
         raise ValueError("basis_configs and state have incompatible sizes.")
-
-    n_variables = configs.shape[1]
-
-    if any(index < 0 or index >= n_variables for index in variable_indices):
-        raise ValueError("variable_indices contains out-of-range entries.")
 
     norm = np.linalg.norm(amplitudes)
     if norm == 0.0:
         raise ValueError("state must be nonzero.")
 
     amplitudes = amplitudes / norm
+    density_matrix = np.zeros((context.local_dim, context.local_dim), dtype=np.complex128)
 
-    variable_set = set(variable_indices)
-    environment_indices = tuple(index for index in range(n_variables) if index not in variable_set)
-
-    local_patterns = tuple(
-        sorted(
-            {tuple(int(value) for value in config[list(variable_indices)]) for config in configs}
+    for basis_indices, local_indices in context.environment_groups:
+        group_amplitudes = amplitudes[basis_indices]
+        density_matrix[np.ix_(local_indices, local_indices)] += np.outer(
+            group_amplitudes,
+            group_amplitudes.conj(),
         )
-    )
-    local_to_index = {pattern: index for index, pattern in enumerate(local_patterns)}
-
-    environment_groups: dict[
-        tuple[int, ...],
-        list[tuple[int, np.complex128]],
-    ] = {}
-
-    for basis_index, config in enumerate(configs):
-        local_pattern = tuple(int(value) for value in config[list(variable_indices)])
-        environment_pattern = tuple(int(value) for value in config[list(environment_indices)])
-        local_index = local_to_index[local_pattern]
-        environment_groups.setdefault(environment_pattern, []).append(
-            (local_index, amplitudes[basis_index])
-        )
-
-    local_dim = len(local_patterns)
-    density_matrix = np.zeros((local_dim, local_dim), dtype=np.complex128)
-
-    for local_amplitudes in environment_groups.values():
-        for row_index, row_amplitude in local_amplitudes:
-            for col_index, col_amplitude in local_amplitudes:
-                density_matrix[row_index, col_index] += row_amplitude * col_amplitude.conj()
 
     density_matrix = 0.5 * (density_matrix + density_matrix.conj().T)
 
@@ -233,12 +298,122 @@ def local_reduced_density_matrix_from_state(
     null_mask = ~support_mask
 
     return LocalReducedDensityMatrix(
-        variable_indices=variable_indices,
-        local_patterns=local_patterns,
+        variable_indices=context.variable_indices,
+        local_patterns=context.local_patterns,
         density_matrix=density_matrix,
         eigenvalues=eigenvalues,
         support_basis=eigenvectors[:, support_mask].astype(np.complex128),
         null_basis=eigenvectors[:, null_mask].astype(np.complex128),
+    )
+
+
+def local_reduced_density_matrix_from_state(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    state: npt.ArrayLike,
+    variable_indices: tuple[int, ...] | list[int],
+    tolerance: float = 1e-10,
+) -> LocalReducedDensityMatrix:
+    """Compute rho_Omega for a state represented in a constrained basis."""
+    context = _local_pattern_basis_context_from_basis(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    return _local_reduced_density_matrix_from_basis_context(
+        context=context,
+        state=state,
+        tolerance=tolerance,
+    )
+
+
+def _embedding_context_from_basis_context(
+    context: _LocalPatternBasisContext,
+) -> _LocalPatternEmbeddingContext:
+    source_full_chunks: list[npt.NDArray[np.int64]] = []
+    target_full_chunks: list[npt.NDArray[np.int64]] = []
+    source_local_chunks: list[npt.NDArray[np.int64]] = []
+    target_local_chunks: list[npt.NDArray[np.int64]] = []
+
+    for full_indices, local_indices in context.environment_groups:
+        group_size = int(full_indices.size)
+
+        if group_size == 0:
+            continue
+
+        source_full_chunks.append(np.repeat(full_indices, group_size))
+        target_full_chunks.append(np.tile(full_indices, group_size))
+        source_local_chunks.append(np.repeat(local_indices, group_size))
+        target_local_chunks.append(np.tile(local_indices, group_size))
+
+    if len(source_full_chunks) == 0:
+        source_full_indices = np.asarray((), dtype=np.int64)
+        target_full_indices = np.asarray((), dtype=np.int64)
+        source_local_indices = np.asarray((), dtype=np.int64)
+        target_local_indices = np.asarray((), dtype=np.int64)
+    else:
+        source_full_indices = np.concatenate(source_full_chunks).astype(np.int64, copy=False)
+        target_full_indices = np.concatenate(target_full_chunks).astype(np.int64, copy=False)
+        source_local_indices = np.concatenate(source_local_chunks).astype(np.int64, copy=False)
+        target_local_indices = np.concatenate(target_local_chunks).astype(np.int64, copy=False)
+
+    return _LocalPatternEmbeddingContext(
+        variable_indices=context.variable_indices,
+        local_patterns=context.local_patterns,
+        source_full_indices=source_full_indices,
+        target_full_indices=target_full_indices,
+        source_local_indices=source_local_indices,
+        target_local_indices=target_local_indices,
+        dim=context.dim,
+    )
+
+
+def _embedding_context_from_basis(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    variable_indices: tuple[int, ...] | list[int],
+    local_patterns: tuple[tuple[int, ...], ...],
+) -> _LocalPatternEmbeddingContext:
+    """Precompute constrained-basis transitions induced by local pattern changes."""
+    basis_context = _local_pattern_basis_context_from_basis(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+        local_patterns=local_patterns,
+    )
+    return _embedding_context_from_basis_context(basis_context)
+
+
+def _embed_local_pattern_operator_from_context(
+    *,
+    context: _LocalPatternEmbeddingContext,
+    local_operator: npt.NDArray[np.complex128],
+) -> sp.csr_array:
+    local_dim = context.local_dim
+
+    if local_operator.shape != (local_dim, local_dim):
+        raise ValueError(
+            "local_operator has incompatible shape: "
+            f"{local_operator.shape} != {(local_dim, local_dim)}."
+        )
+
+    if context.source_full_indices.size == 0:
+        return sp.csr_array((context.dim, context.dim), dtype=np.complex128)
+
+    data = np.asarray(
+        local_operator[context.target_local_indices, context.source_local_indices],
+        dtype=np.complex128,
+    )
+    nonzero_mask = data != 0.0
+
+    return sp.csr_array(
+        (
+            data[nonzero_mask],
+            (
+                context.target_full_indices[nonzero_mask],
+                context.source_full_indices[nonzero_mask],
+            ),
+        ),
+        shape=(context.dim, context.dim),
+        dtype=np.complex128,
     )
 
 
@@ -250,69 +425,14 @@ def embed_local_pattern_operator(
     local_operator: npt.NDArray[np.complex128],
 ) -> sp.csr_array:
     """Embed a local operator into the constrained full basis."""
-    configs = np.asarray(basis_configs)
-    variable_indices = tuple(int(index) for index in variable_indices)
-
-    if configs.ndim != 2:
-        raise ValueError("basis_configs must have shape (n_basis, n_variables).")
-
-    local_dim = len(local_patterns)
-
-    if local_operator.shape != (local_dim, local_dim):
-        raise ValueError(
-            "local_operator has incompatible shape: "
-            f"{local_operator.shape} != {(local_dim, local_dim)}."
-        )
-
-    local_pattern_to_index = {pattern: index for index, pattern in enumerate(local_patterns)}
-    config_to_index = {
-        tuple(int(value) for value in config): index for index, config in enumerate(configs)
-    }
-
-    rows: list[int] = []
-    cols: list[int] = []
-    data: list[complex] = []
-
-    for source_index, source_config in enumerate(configs):
-        source_local_pattern = tuple(int(value) for value in source_config[list(variable_indices)])
-        source_local_index = local_pattern_to_index.get(source_local_pattern)
-
-        if source_local_index is None:
-            continue
-
-        for target_local_index, target_local_pattern in enumerate(local_patterns):
-            matrix_element = complex(local_operator[target_local_index, source_local_index])
-
-            if abs(matrix_element) == 0.0:
-                continue
-
-            target_config = np.array(source_config, copy=True)
-            target_config[list(variable_indices)] = np.asarray(
-                target_local_pattern,
-                dtype=target_config.dtype,
-            )
-
-            target_index = config_to_index.get(tuple(int(value) for value in target_config))
-
-            if target_index is None:
-                continue
-
-            rows.append(int(target_index))
-            cols.append(int(source_index))
-            data.append(matrix_element)
-
-    dim = configs.shape[0]
-
-    return sp.csr_array(
-        (
-            np.asarray(data, dtype=np.complex128),
-            (
-                np.asarray(rows, dtype=np.int64),
-                np.asarray(cols, dtype=np.int64),
-            ),
-        ),
-        shape=(dim, dim),
-        dtype=np.complex128,
+    context = _embedding_context_from_basis(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+        local_patterns=local_patterns,
+    )
+    return _embed_local_pattern_operator_from_context(
+        context=context,
+        local_operator=local_operator,
     )
 
 
@@ -321,9 +441,13 @@ def score_recycling_jump(
     jump: Any,
     target_state: npt.ArrayLike,
 ) -> tuple[float, float, float, float]:
-    """Return target residual, inflow, outflow, and projector commutator."""
-    jump_dense = jump.toarray() if hasattr(jump, "toarray") else np.asarray(jump)
+    """Return target residual, inflow, outflow, and projector commutator.
 
+    The diagnostics are Frobenius norms of the corresponding projected
+    operators.  They can be evaluated from ``J|psi>`` and ``J^dagger|psi>``
+    without materializing the dense projectors ``|psi><psi|`` and
+    ``I-|psi><psi|``.
+    """
     state = np.asarray(target_state, dtype=np.complex128)
     norm = np.linalg.norm(state)
 
@@ -332,15 +456,24 @@ def score_recycling_jump(
 
     state = state / norm
 
-    projector_target = np.outer(state, state.conj())
-    identity = np.eye(state.size, dtype=np.complex128)
-    projector_orthogonal = identity - projector_target
+    if sp.issparse(jump):
+        target_vector = np.asarray(jump @ state, dtype=np.complex128)
+        adjoint_target_vector = np.asarray(jump.conj().T @ state, dtype=np.complex128)
+    else:
+        jump_array = np.asarray(jump, dtype=np.complex128)
+        target_vector = np.asarray(jump_array @ state, dtype=np.complex128)
+        adjoint_target_vector = np.asarray(jump_array.conj().T @ state, dtype=np.complex128)
 
-    target_residual = float(np.linalg.norm(jump_dense @ state))
-    inflow_norm = float(np.linalg.norm(projector_target @ jump_dense @ projector_orthogonal))
-    outflow_norm = float(np.linalg.norm(projector_orthogonal @ jump_dense @ projector_target))
+    expectation = complex(np.vdot(state, target_vector))
+    expectation_norm_sq = abs(expectation) ** 2
+    target_norm_sq = float(np.vdot(target_vector, target_vector).real)
+    adjoint_target_norm_sq = float(np.vdot(adjoint_target_vector, adjoint_target_vector).real)
+
+    target_residual = float(np.sqrt(max(target_norm_sq, 0.0)))
+    inflow_norm = float(np.sqrt(max(adjoint_target_norm_sq - expectation_norm_sq, 0.0)))
+    outflow_norm = float(np.sqrt(max(target_norm_sq - expectation_norm_sq, 0.0)))
     projector_commutator_norm = float(
-        np.linalg.norm(jump_dense @ projector_target - projector_target @ jump_dense)
+        np.sqrt(max(target_norm_sq + adjoint_target_norm_sq - 2.0 * expectation_norm_sq, 0.0))
     )
 
     return (
@@ -362,15 +495,21 @@ def scan_local_recycling_candidates(
     max_candidates: int | None = None,
 ) -> LocalRecyclingScanResult:
     """Scan local rank-one recycling jumps from rho_Omega."""
-    reduced_density_matrix = local_reduced_density_matrix_from_state(
+    basis_context = _local_pattern_basis_context_from_basis(
         basis_configs=basis_configs,
-        state=target_state,
         variable_indices=variable_indices,
+    )
+    reduced_density_matrix = _local_reduced_density_matrix_from_basis_context(
+        context=basis_context,
+        state=target_state,
         tolerance=rdm_tolerance,
     )
 
     support_basis = reduced_density_matrix.support_basis
     null_basis = reduced_density_matrix.null_basis
+    support_eigenvalues = reduced_density_matrix.eigenvalues[
+        reduced_density_matrix.eigenvalues > rdm_tolerance
+    ]
 
     candidates: list[LocalRecyclingCandidate] = []
 
@@ -380,6 +519,8 @@ def scan_local_recycling_candidates(
             candidates=(),
         )
 
+    embedding_context = _embedding_context_from_basis_context(basis_context)
+
     for alpha_index in range(support_basis.shape[1]):
         alpha_vector = support_basis[:, alpha_index]
 
@@ -387,22 +528,15 @@ def scan_local_recycling_candidates(
             beta_vector = null_basis[:, beta_index]
             local_operator = np.outer(alpha_vector, beta_vector.conj())
 
-            jump = embed_local_pattern_operator(
-                basis_configs=basis_configs,
-                variable_indices=reduced_density_matrix.variable_indices,
-                local_patterns=reduced_density_matrix.local_patterns,
+            jump = _embed_local_pattern_operator_from_context(
+                context=embedding_context,
                 local_operator=local_operator,
             )
 
-            (
-                target_residual,
-                inflow_norm,
-                outflow_norm,
-                projector_commutator_norm,
-            ) = score_recycling_jump(
-                jump=jump,
-                target_state=target_state,
-            )
+            inflow_norm = float(np.sqrt(max(float(support_eigenvalues[alpha_index]), 0.0)))
+            target_residual = 0.0
+            outflow_norm = 0.0
+            projector_commutator_norm = inflow_norm
 
             if target_residual > dark_tolerance:
                 continue
@@ -483,47 +617,52 @@ def local_rank_one_matrix_unit_expansion(
     return tuple(terms)
 
 
-def detect_two_pattern_recycling_structure(
+def _detect_two_pattern_recycling_structure_from_vectors(
     *,
-    candidate: LocalRecyclingCandidate,
+    variable_indices: tuple[int, ...],
+    alpha_index: int,
+    beta_index: int,
     local_patterns: tuple[tuple[int, ...], ...],
+    alpha: npt.ArrayLike,
+    beta: npt.ArrayLike,
     tolerance: float = 1e-8,
 ) -> TwoPatternRecyclingStructure | None:
-    """Detect whether a candidate is a two-pattern |minus><plus| jump."""
-    terms = local_rank_one_matrix_unit_expansion(
-        local_patterns=local_patterns,
-        alpha=candidate.local_alpha_vector,
-        beta=candidate.local_beta_vector,
-        tolerance=tolerance,
+    alpha_array = np.asarray(alpha, dtype=np.complex128)
+    beta_array = np.asarray(beta, dtype=np.complex128)
+
+    if alpha_array.ndim != 1 or beta_array.ndim != 1:
+        raise ValueError("alpha and beta must be one-dimensional.")
+
+    if alpha_array.shape != beta_array.shape:
+        raise ValueError("alpha and beta must have the same shape.")
+
+    if alpha_array.size != len(local_patterns):
+        raise ValueError("alpha/beta size must match the number of local patterns.")
+
+    alpha_support = np.flatnonzero(np.abs(alpha_array) > tolerance)
+    beta_support = np.flatnonzero(np.abs(beta_array) > tolerance)
+
+    if alpha_support.size != 2 or beta_support.size != 2:
+        return None
+
+    if set(int(index) for index in alpha_support) != set(int(index) for index in beta_support):
+        return None
+
+    pattern_indices = tuple(
+        sorted((int(index) for index in alpha_support), key=lambda index: local_patterns[index])
     )
+    pattern_a = local_patterns[pattern_indices[0]]
+    pattern_b = local_patterns[pattern_indices[1]]
 
-    if len(terms) != 4:
-        return None
-
-    target_patterns = {term.target_pattern for term in terms}
-    source_patterns = {term.source_pattern for term in terms}
-
-    if len(target_patterns) != 2 or target_patterns != source_patterns:
-        return None
-
-    pattern_a, pattern_b = tuple(sorted(target_patterns))
-
-    coefficient_by_pair = {
-        (term.target_pattern, term.source_pattern): term.coefficient for term in terms
-    }
-
-    try:
-        coefficients = np.asarray(
-            [
-                coefficient_by_pair[(pattern_a, pattern_a)],
-                coefficient_by_pair[(pattern_a, pattern_b)],
-                coefficient_by_pair[(pattern_b, pattern_a)],
-                coefficient_by_pair[(pattern_b, pattern_b)],
-            ],
-            dtype=np.complex128,
-        )
-    except KeyError:
-        return None
+    coefficients = np.asarray(
+        [
+            alpha_array[pattern_indices[0]] * beta_array[pattern_indices[0]].conj(),
+            alpha_array[pattern_indices[0]] * beta_array[pattern_indices[1]].conj(),
+            alpha_array[pattern_indices[1]] * beta_array[pattern_indices[0]].conj(),
+            alpha_array[pattern_indices[1]] * beta_array[pattern_indices[1]].conj(),
+        ],
+        dtype=np.complex128,
+    )
 
     templates = (
         np.asarray([1.0, 1.0, -1.0, -1.0], dtype=np.complex128) / 2.0,
@@ -551,15 +690,43 @@ def detect_two_pattern_recycling_structure(
     if best_residual > tolerance:
         return None
 
+    terms = tuple(
+        LocalMatrixUnitTerm(
+            coefficient=complex(alpha_array[target_index] * beta_array[source_index].conj()),
+            target_pattern=tuple(int(value) for value in local_patterns[target_index]),
+            source_pattern=tuple(int(value) for value in local_patterns[source_index]),
+        )
+        for target_index in pattern_indices
+        for source_index in pattern_indices
+    )
+
     return TwoPatternRecyclingStructure(
-        variable_indices=tuple(int(index) for index in candidate.variable_indices),
+        variable_indices=tuple(int(index) for index in variable_indices),
         pattern_a=pattern_a,
         pattern_b=pattern_b,
-        alpha_index=int(candidate.alpha_index),
-        beta_index=int(candidate.beta_index),
+        alpha_index=int(alpha_index),
+        beta_index=int(beta_index),
         phase=best_phase,
         residual=best_residual,
         matrix_unit_terms=terms,
+    )
+
+
+def detect_two_pattern_recycling_structure(
+    *,
+    candidate: LocalRecyclingCandidate,
+    local_patterns: tuple[tuple[int, ...], ...],
+    tolerance: float = 1e-8,
+) -> TwoPatternRecyclingStructure | None:
+    """Detect whether a candidate is a two-pattern |minus><plus| jump."""
+    return _detect_two_pattern_recycling_structure_from_vectors(
+        variable_indices=candidate.variable_indices,
+        alpha_index=candidate.alpha_index,
+        beta_index=candidate.beta_index,
+        local_patterns=local_patterns,
+        alpha=candidate.local_alpha_vector,
+        beta=candidate.local_beta_vector,
+        tolerance=tolerance,
     )
 
 
@@ -609,6 +776,146 @@ def select_local_recycling_candidates(
     return tuple(selections[:max_candidates])
 
 
+def _two_pattern_support_indices(
+    vector: npt.ArrayLike,
+    *,
+    tolerance: float,
+) -> tuple[int, int] | None:
+    support = np.flatnonzero(np.abs(np.asarray(vector, dtype=np.complex128)) > tolerance)
+
+    if support.size != 2:
+        return None
+
+    return int(support[0]), int(support[1])
+
+
+def _scan_local_two_pattern_recycling_candidates(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    target_state: npt.ArrayLike,
+    variable_indices: tuple[int, ...] | list[int],
+    rdm_tolerance: float = 1e-10,
+    dark_tolerance: float = 1e-10,
+    inflow_tolerance: float = 1e-10,
+    two_pattern_tolerance: float = 1e-8,
+) -> LocalRecyclingScanResult:
+    """Scan only two-pattern local RDM recycling candidates.
+
+    This avoids embedding/scoring every rank-one support-null pair when the
+    caller will discard all non-two-pattern candidates anyway.
+    """
+    basis_context = _local_pattern_basis_context_from_basis(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    reduced_density_matrix = _local_reduced_density_matrix_from_basis_context(
+        context=basis_context,
+        state=target_state,
+        tolerance=rdm_tolerance,
+    )
+
+    support_basis = reduced_density_matrix.support_basis
+    null_basis = reduced_density_matrix.null_basis
+    support_eigenvalues = reduced_density_matrix.eigenvalues[
+        reduced_density_matrix.eigenvalues > rdm_tolerance
+    ]
+
+    candidates: list[LocalRecyclingCandidate] = []
+
+    if support_basis.shape[1] == 0 or null_basis.shape[1] == 0:
+        return LocalRecyclingScanResult(
+            reduced_density_matrix=reduced_density_matrix,
+            candidates=(),
+        )
+
+    alpha_two_pattern_supports = tuple(
+        _two_pattern_support_indices(
+            support_basis[:, alpha_index],
+            tolerance=two_pattern_tolerance,
+        )
+        for alpha_index in range(support_basis.shape[1])
+    )
+    beta_two_pattern_supports = tuple(
+        _two_pattern_support_indices(
+            null_basis[:, beta_index],
+            tolerance=two_pattern_tolerance,
+        )
+        for beta_index in range(null_basis.shape[1])
+    )
+
+    embedding_context: _LocalPatternEmbeddingContext | None = None
+
+    for alpha_index in range(support_basis.shape[1]):
+        alpha_support = alpha_two_pattern_supports[alpha_index]
+
+        if alpha_support is None:
+            continue
+
+        alpha_vector = support_basis[:, alpha_index]
+        inflow_norm = float(np.sqrt(max(float(support_eigenvalues[alpha_index]), 0.0)))
+        target_residual = 0.0
+        outflow_norm = 0.0
+        projector_commutator_norm = inflow_norm
+
+        if target_residual > dark_tolerance or inflow_norm <= inflow_tolerance:
+            continue
+
+        for beta_index in range(null_basis.shape[1]):
+            if beta_two_pattern_supports[beta_index] != alpha_support:
+                continue
+
+            beta_vector = null_basis[:, beta_index]
+            structure = _detect_two_pattern_recycling_structure_from_vectors(
+                variable_indices=reduced_density_matrix.variable_indices,
+                alpha_index=int(alpha_index),
+                beta_index=int(beta_index),
+                local_patterns=reduced_density_matrix.local_patterns,
+                alpha=alpha_vector,
+                beta=beta_vector,
+                tolerance=two_pattern_tolerance,
+            )
+
+            if structure is None:
+                continue
+
+            if embedding_context is None:
+                embedding_context = _embedding_context_from_basis_context(basis_context)
+
+            local_operator = np.outer(alpha_vector, beta_vector.conj())
+            jump = _embed_local_pattern_operator_from_context(
+                context=embedding_context,
+                local_operator=local_operator,
+            )
+            candidates.append(
+                LocalRecyclingCandidate(
+                    variable_indices=reduced_density_matrix.variable_indices,
+                    alpha_index=int(alpha_index),
+                    beta_index=int(beta_index),
+                    jump=jump,
+                    target_residual=target_residual,
+                    inflow_norm=inflow_norm,
+                    outflow_norm=outflow_norm,
+                    projector_commutator_norm=projector_commutator_norm,
+                    local_alpha_vector=alpha_vector.astype(np.complex128),
+                    local_beta_vector=beta_vector.astype(np.complex128),
+                )
+            )
+
+    candidates = sorted(
+        candidates,
+        key=lambda candidate: (
+            -float(candidate.inflow_norm),
+            float(candidate.target_residual),
+            int(candidate.jump.nnz),
+        ),
+    )
+
+    return LocalRecyclingScanResult(
+        reduced_density_matrix=reduced_density_matrix,
+        candidates=tuple(candidates),
+    )
+
+
 def build_local_recycling_jumps_from_regions(
     *,
     basis_configs: npt.NDArray[np.integer],
@@ -626,20 +933,38 @@ def build_local_recycling_jumps_from_regions(
     """Scan several regions and return selected local recycling jumps."""
     scan_results: list[LocalRecyclingScanResult] = []
     selections: list[LocalRecyclingSelection] = []
+    scan_result_cache: dict[tuple[int, ...], LocalRecyclingScanResult] = {}
 
     if source == "none":
         return LocalRecyclingBuildResult(scan_results=(), selections=())
 
     for region in regions:
-        scan_result = scan_local_recycling_candidates(
-            basis_configs=basis_configs,
-            target_state=target_state,
-            variable_indices=region,
-            rdm_tolerance=rdm_tolerance,
-            dark_tolerance=dark_tolerance,
-            inflow_tolerance=inflow_tolerance,
-            max_candidates=max_candidates_per_region,
-        )
+        region_key = tuple(int(index) for index in region)
+        scan_result = scan_result_cache.get(region_key)
+
+        if scan_result is None:
+            if source == "local_rdm_two_pattern":
+                scan_result = _scan_local_two_pattern_recycling_candidates(
+                    basis_configs=basis_configs,
+                    target_state=target_state,
+                    variable_indices=region_key,
+                    rdm_tolerance=rdm_tolerance,
+                    dark_tolerance=dark_tolerance,
+                    inflow_tolerance=inflow_tolerance,
+                    two_pattern_tolerance=two_pattern_tolerance,
+                )
+            else:
+                scan_result = scan_local_recycling_candidates(
+                    basis_configs=basis_configs,
+                    target_state=target_state,
+                    variable_indices=region_key,
+                    rdm_tolerance=rdm_tolerance,
+                    dark_tolerance=dark_tolerance,
+                    inflow_tolerance=inflow_tolerance,
+                    max_candidates=max_candidates_per_region,
+                )
+            scan_result_cache[region_key] = scan_result
+
         scan_results.append(scan_result)
 
         selections.extend(
