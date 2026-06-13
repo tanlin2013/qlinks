@@ -23,6 +23,99 @@ class VertexSignature:
     values: tuple[Hashable, ...]
 
 
+@dataclass(frozen=True)
+class SparseKineticNeighborCache:
+    """Reusable sparse-neighborhood view for cage-candidate partitioning.
+
+    Type-1 candidate discovery only needs the *support pattern* of the
+    boundary-overlap graph to split a self-loop/bipartition sector into
+    connected components. Building the weighted overlap ``K[:, S]^† K[:, S]``
+    for every full sector can be noticeably more expensive than the actual
+    connectivity query. This cache keeps one CSC copy of the kinetic matrix and
+    constructs the unweighted overlap graph by sharing sparse row-neighbor
+    buckets. Weighted overlaps are still materialized later, but only for the
+    final candidate components needed by the solver.
+    """
+
+    csc_matrix: scipy_sparse.csc_matrix
+
+    @classmethod
+    def from_matrix(cls, matrix: object) -> "SparseKineticNeighborCache":
+        """Build a reusable CSC-neighborhood cache from a sparse matrix."""
+        if not scipy_sparse.issparse(matrix):
+            raise TypeError("SparseKineticNeighborCache requires a sparse matrix.")
+        return cls(csc_matrix=scipy_sparse.csc_matrix(matrix))
+
+    def boundary_overlap_adjacency(
+        self,
+        candidate_vertices: NDArray[np.int_],
+    ) -> scipy_sparse.csr_matrix:
+        """Return the unweighted shared-neighbor graph on candidate vertices.
+
+        Vertices ``a`` and ``b`` are adjacent when the two sparse columns
+        ``K[:, a]`` and ``K[:, b]`` share at least one nonzero row. This is the
+        off-diagonal sparsity pattern of ``K[:, S]^† K[:, S]``.
+        """
+        vertices = np.asarray(candidate_vertices, dtype=np.int64)
+        local_size = int(vertices.size)
+
+        if local_size == 0:
+            return scipy_sparse.csr_matrix((0, 0), dtype=np.int8)
+
+        row_to_local_columns: dict[int, list[tuple[int, complex]]] = defaultdict(list)
+        indptr = self.csc_matrix.indptr
+        indices = self.csc_matrix.indices
+        data = self.csc_matrix.data
+
+        for local_column_index, vertex_index in enumerate(vertices):
+            start = int(indptr[int(vertex_index)])
+            stop = int(indptr[int(vertex_index) + 1])
+            for entry_position in range(start, stop):
+                row_to_local_columns[int(indices[entry_position])].append(
+                    (local_column_index, complex(data[entry_position]))
+                )
+
+        overlap_entries: dict[tuple[int, int], complex] = defaultdict(complex)
+
+        for local_columns in row_to_local_columns.values():
+            if len(local_columns) < 2:
+                continue
+            for row_local_index, row_value in local_columns:
+                for column_local_index, column_value in local_columns:
+                    if row_local_index != column_local_index:
+                        overlap_entries[(row_local_index, column_local_index)] += (
+                            np.conj(row_value) * column_value
+                        )
+
+        nonzero_entries = [
+            (row_index, column_index)
+            for (row_index, column_index), value in overlap_entries.items()
+            if value != 0.0
+        ]
+
+        if len(nonzero_entries) == 0:
+            return scipy_sparse.csr_matrix((local_size, local_size), dtype=np.int8)
+
+        row_indices, column_indices = zip(*nonzero_entries, strict=True)
+        adjacency = scipy_sparse.csr_matrix(
+            (
+                np.ones(len(nonzero_entries), dtype=np.int8),
+                (row_indices, column_indices),
+            ),
+            shape=(local_size, local_size),
+        )
+        return adjacency
+
+    def boundary_overlap_matrix(
+        self,
+        candidate_vertices: NDArray[np.int_],
+    ) -> scipy_sparse.csr_matrix:
+        """Return the weighted boundary-overlap matrix for final candidates."""
+        vertices = np.asarray(candidate_vertices, dtype=np.int64)
+        column_block = self.csc_matrix[:, vertices]
+        return (column_block.conj().T @ column_block).tocsr()
+
+
 def _rounded_scalar_signature(
     value: complex,
     *,
@@ -175,6 +268,7 @@ def type1_candidates_from_bipartite_self_loops(
     *,
     min_component_size: int = 2,
     decimals: int = 12,
+    neighbor_cache: SparseKineticNeighborCache | None = None,
 ) -> list[CandidateSubgraph]:
     """
     Generate Type-1 candidates from ``(bipartition_label, self_loop_value)``.
@@ -194,6 +288,9 @@ def type1_candidates_from_bipartite_self_loops(
         decimals=decimals,
     )
 
+    if neighbor_cache is None and scipy_sparse.issparse(kinetic_matrix):
+        neighbor_cache = SparseKineticNeighborCache.from_matrix(kinetic_matrix)
+
     candidate_subgraphs: list[CandidateSubgraph] = []
 
     for vertex_signature, group_vertices in signature_groups.items():
@@ -201,27 +298,47 @@ def type1_candidates_from_bipartite_self_loops(
             continue
 
         # Type-1 candidates are grouped by one bipartition side and uniform
-        # self-loop value. The relevant connectivity is the boundary-overlap
-        # graph K[:, S]^\dagger K[:, S]. Using the full column block avoids
-        # constructing the explicit outside-complement mask for every group.
-        column_block = _column_block(kinetic_matrix, group_vertices)
-        boundary_overlap_matrix = column_block.conj().T @ column_block
-        group_candidates = _components_from_adjacency(
-            boundary_overlap_matrix,
-            group_vertices,
-            min_component_size=min_component_size,
-        )
+        # self-loop value. The relevant connectivity is the support pattern of
+        # K[:, S]^† K[:, S]. For sparse matrices, build that unweighted graph
+        # from cached column-neighbor buckets and materialize the weighted
+        # overlap only for final connected candidates.
+        if neighbor_cache is None:
+            column_block = _column_block(kinetic_matrix, group_vertices)
+            boundary_overlap_matrix = column_block.conj().T @ column_block
+            group_candidates = _components_from_adjacency(
+                boundary_overlap_matrix,
+                group_vertices,
+                min_component_size=min_component_size,
+            )
+        else:
+            boundary_overlap_matrix = None
+            boundary_overlap_adjacency = neighbor_cache.boundary_overlap_adjacency(
+                group_vertices,
+            )
+            group_candidates = _components_from_adjacency(
+                boundary_overlap_adjacency,
+                group_vertices,
+                min_component_size=min_component_size,
+            )
 
         for group_candidate in group_candidates:
-            local_indices = _local_indices_for_vertices(
-                group_vertices,
-                group_candidate.vertices,
-            )
-            candidate_boundary_overlap = _submatrix(
-                boundary_overlap_matrix,
-                local_indices,
-                local_indices,
-            )
+            if boundary_overlap_matrix is None:
+                if neighbor_cache is None:
+                    raise RuntimeError("neighbor_cache unexpectedly missing.")
+                candidate_boundary_overlap = neighbor_cache.boundary_overlap_matrix(
+                    group_candidate.vertices,
+                )
+            else:
+                local_indices = _local_indices_for_vertices(
+                    group_vertices,
+                    group_candidate.vertices,
+                )
+                candidate_boundary_overlap = _submatrix(
+                    boundary_overlap_matrix,
+                    local_indices,
+                    local_indices,
+                )
+
             candidate_internal_kinetic = np.zeros(
                 (group_candidate.size, group_candidate.size),
                 dtype=np.complex128,

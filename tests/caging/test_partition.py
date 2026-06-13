@@ -10,6 +10,7 @@ from qlinks.caging.candidate import (
     BOUNDARY_OVERLAP_MATRIX_METADATA_KEY,
     INTERNAL_KINETIC_MATRIX_METADATA_KEY,
 )
+from qlinks.caging.partition import SparseKineticNeighborCache
 
 
 def test_group_vertices_by_signature_uses_bipartition_and_self_loop() -> None:
@@ -199,3 +200,74 @@ def test_type2_candidates_cache_internal_kinetic_block() -> None:
             dtype=np.complex128,
         ),
     )
+
+
+def test_sparse_kinetic_neighbor_cache_matches_boundary_overlap_adjacency() -> None:
+    kinetic_matrix = scipy_sparse.csr_array(
+        np.array(
+            [
+                [0.0, 0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 1.0, 0.0],
+                [1.0, 1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+    vertices = np.array([0, 1, 3, 4], dtype=np.int64)
+
+    cache = SparseKineticNeighborCache.from_matrix(kinetic_matrix)
+    adjacency = cache.boundary_overlap_adjacency(vertices).toarray()
+
+    column_block = kinetic_matrix[:, vertices]
+    expected = (column_block.conj().T @ column_block).toarray()
+    np.fill_diagonal(expected, 0.0)
+    expected = (np.abs(expected) > 0).astype(np.int8)
+
+    np.testing.assert_array_equal(adjacency, expected)
+
+
+def test_type1_sparse_neighbor_cache_matches_dense_candidates() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 1.0, 0.0],
+            [1.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.array([4.0, 4.0, 0.0, 4.0, 4.0], dtype=np.complex128)
+    bipartition_labels = np.array([0, 0, 1, 1, 0], dtype=np.int64)
+
+    dense_candidates = type1_candidates_from_bipartite_self_loops(
+        kinetic_matrix,
+        self_loop_values,
+        bipartition_labels,
+        min_component_size=2,
+    )
+    sparse_candidates = type1_candidates_from_bipartite_self_loops(
+        scipy_sparse.csr_array(kinetic_matrix),
+        self_loop_values,
+        bipartition_labels,
+        min_component_size=2,
+    )
+
+    dense_supports = sorted(tuple(candidate.vertices.tolist()) for candidate in dense_candidates)
+    sparse_supports = sorted(tuple(candidate.vertices.tolist()) for candidate in sparse_candidates)
+
+    assert sparse_supports == dense_supports
+
+    dense_overlaps = [
+        np.asarray(candidate.metadata[BOUNDARY_OVERLAP_MATRIX_METADATA_KEY])
+        for candidate in dense_candidates
+    ]
+    sparse_overlaps = [
+        candidate.metadata[BOUNDARY_OVERLAP_MATRIX_METADATA_KEY].toarray()
+        for candidate in sparse_candidates
+    ]
+
+    for dense_overlap, sparse_overlap in zip(dense_overlaps, sparse_overlaps, strict=True):
+        np.testing.assert_allclose(sparse_overlap, dense_overlap)
