@@ -22,12 +22,26 @@ StateSampler = Callable[[np.random.Generator], Any]
 
 
 @dataclass(frozen=True, slots=True)
+class _SparseJumpRateEvaluator:
+    """Sparse jump-rate evaluator that avoids full J|psi> work buffers."""
+
+    jumps: tuple[scipy_sparse.csr_array, ...]
+    active_rows: tuple[NDArray[np.int64], ...]
+
+    @property
+    def n_jumps(self) -> int:
+        return len(self.jumps)
+
+
+@dataclass(frozen=True, slots=True)
 class _McwfPreparedOperators:
     backend: OpenSystemBackend
     hamiltonian: Any
     jumps: tuple[Any, ...]
     effective_hamiltonian_matrix: Any
+    sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None = None
     uses_sparse_operators: bool = False
+    uses_sparse_rate_evaluator: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +66,7 @@ def _prepare_mcwf_operators(
     jumps: list[Any] | tuple[Any, ...],
     backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
     prefer_sparse_operators: bool = True,
+    prefer_sparse_rate_evaluator: bool = True,
 ) -> _McwfPreparedOperators:
     backend_obj = get_open_system_backend(backend)
     use_sparse_operators = (
@@ -99,12 +114,20 @@ def _prepare_mcwf_operators(
         jump_operators,
     )
 
+    sparse_jump_rate_evaluator = (
+        _build_sparse_jump_rate_evaluator(jump_operators)
+        if (backend_obj.name == "scipy" and use_sparse_operators and prefer_sparse_rate_evaluator)
+        else None
+    )
+
     return _McwfPreparedOperators(
         backend=backend_obj,
         hamiltonian=hamiltonian_backend,
         jumps=jump_operators,
         effective_hamiltonian_matrix=effective_hamiltonian_matrix,
+        sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
         uses_sparse_operators=use_sparse_operators,
+        uses_sparse_rate_evaluator=sparse_jump_rate_evaluator is not None,
     )
 
 
@@ -129,6 +152,46 @@ def _as_numpy_or_scipy_sparse(operator: Any) -> Any:
     return np.asarray(operator, dtype=np.complex128)
 
 
+def _build_sparse_jump_rate_evaluator(
+    jumps: tuple[Any, ...],
+    *,
+    max_active_row_fraction: float = 0.02,
+) -> _SparseJumpRateEvaluator | None:
+    """Return a sparse row evaluator when it should beat full sparse matmul.
+
+    The standard sparse-matrix product ``J @ states`` allocates a full
+    ``(dim, n_trajectories)`` dense block for every jump. Cage-Lindblad jumps
+    are often very row-sparse, so it is cheaper to evaluate only nonzero output
+    rows and sum their squared norms.
+    """
+    if not jumps or not all(scipy_sparse.issparse(jump) for jump in jumps):
+        return None
+
+    dim = int(jumps[0].shape[0])
+    csr_jumps: list[scipy_sparse.csr_array] = []
+    active_rows: list[NDArray[np.int64]] = []
+    total_active_rows = 0
+
+    for jump in jumps:
+        jump_csr = jump.tocsr().astype(np.complex128)
+        rows = np.flatnonzero(np.diff(jump_csr.indptr) > 0).astype(np.int64, copy=False)
+        csr_jumps.append(jump_csr)
+        active_rows.append(rows)
+        total_active_rows += int(rows.size)
+
+    if dim <= 0:
+        return None
+
+    average_active_fraction = total_active_rows / float(dim * len(jumps))
+    if average_active_fraction > max_active_row_fraction:
+        return None
+
+    return _SparseJumpRateEvaluator(
+        jumps=tuple(csr_jumps),
+        active_rows=tuple(active_rows),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class McwfOptions:
     """Options for Monte Carlo wave-function sampling."""
@@ -142,6 +205,7 @@ class McwfOptions:
     normalize_each_step: bool = True
     max_jump_probability: float = 0.1
     prefer_sparse_operators: bool = True
+    prefer_sparse_rate_evaluator: bool = True
 
     adaptive_time_step: bool = False
     adaptive_safety_factor: float = 0.8
@@ -299,6 +363,7 @@ def run_quantum_jump_trajectory(
     normalize_each_step: bool = True,
     max_jump_probability: float = 0.1,
     prefer_sparse_operators: bool = True,
+    prefer_sparse_rate_evaluator: bool = True,
     adaptive_time_step: bool = False,
     adaptive_safety_factor: float = 0.8,
     min_step_size: float = 1.0e-12,
@@ -315,6 +380,7 @@ def run_quantum_jump_trajectory(
         jumps=jumps,
         backend=backend,
         prefer_sparse_operators=prefer_sparse_operators,
+        prefer_sparse_rate_evaluator=prefer_sparse_rate_evaluator,
     )
     return _run_quantum_jump_trajectory_prepared(
         prepared=prepared,
@@ -526,6 +592,7 @@ def _run_quantum_jump_trajectory_prepared_scipy(
     state = _normalize_numpy_state(np.asarray(state_initial, dtype=np.complex128))
     effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
     jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
+    sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
     has_jump_operators = len(jump_operators) > 0
 
     states: list[Any] = [None] * int(times.size) if store_states else []
@@ -555,7 +622,14 @@ def _run_quantum_jump_trajectory_prepared_scipy(
             total_jump_probability = 0.0
 
             if has_jump_operators:
-                if len(jump_operators) == 1:
+                if sparse_jump_rate_evaluator is not None:
+                    rates = _evaluate_sparse_jump_rates_numpy(
+                        state,
+                        sparse_jump_rate_evaluator,
+                    )
+                    probabilities = step_size * rates
+                    total_jump_probability = float(np.sum(probabilities))
+                elif len(jump_operators) == 1:
                     jumped_state_single = jump_operators[0] @ state
                     rate = max(float(np.vdot(jumped_state_single, jumped_state_single).real), 0.0)
                     total_jump_probability = step_size * rate
@@ -581,7 +655,7 @@ def _run_quantum_jump_trajectory_prepared_scipy(
                     if step_size >= remaining_step:
                         step_size = remaining_step
 
-                    if len(jump_operators) == 1:
+                    if len(jump_operators) == 1 and sparse_jump_rate_evaluator is None:
                         total_jump_probability = step_size * rate
                     else:
                         probabilities = step_size * rates
@@ -602,13 +676,16 @@ def _run_quantum_jump_trajectory_prepared_scipy(
                 )
 
             if has_jump_operators and rng.random() < total_jump_probability:
-                if len(jump_operators) == 1:
+                if len(jump_operators) == 1 and sparse_jump_rate_evaluator is None:
                     jump_index = 0
                     assert jumped_state_single is not None
                     state = jumped_state_single
                 else:
                     jump_index = choose_jump(probabilities, rng)
-                    state = jumped_states[jump_index]
+                    if sparse_jump_rate_evaluator is not None:
+                        state = jump_operators[jump_index] @ state
+                    else:
+                        state = jumped_states[jump_index]
                 jump_times.append(float(current_time + step_size))
                 jump_indices.append(jump_index)
             else:
@@ -701,6 +778,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     )
     effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
     jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
+    sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
 
     rho_t: list[ArrayC] = [_density_matrix_from_state_matrix(states)]
 
@@ -711,7 +789,13 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
 
         if jump_operators:
-            rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
+            if sparse_jump_rate_evaluator is not None:
+                rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+                    states,
+                    sparse_jump_rate_evaluator,
+                )
+            else:
+                rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
             probabilities = step_size * rates
             total_jump_probabilities = np.sum(probabilities, axis=0)
 
@@ -758,6 +842,53 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         rho_t=rho_t,
         trajectories=None,
     )
+
+
+def _evaluate_sparse_jump_rates_numpy(
+    state: ArrayC,
+    evaluator: _SparseJumpRateEvaluator,
+) -> NDArray[np.float64]:
+    """Return ||J_mu psi||^2 without forming full dense J_mu|psi> vectors."""
+    rates = np.zeros(evaluator.n_jumps, dtype=np.float64)
+
+    for jump_index, (jump, rows) in enumerate(
+        zip(evaluator.jumps, evaluator.active_rows, strict=True)
+    ):
+        indptr = jump.indptr
+        indices = jump.indices
+        data = jump.data
+        rate = 0.0
+        for row in rows:
+            start = int(indptr[row])
+            stop = int(indptr[row + 1])
+            row_value = np.dot(data[start:stop], state[indices[start:stop]])
+            rate += float(abs(row_value) ** 2)
+        rates[jump_index] = max(rate, 0.0)
+
+    return rates
+
+
+def _evaluate_sparse_jump_rates_state_matrix_numpy(
+    states: ArrayC,
+    evaluator: _SparseJumpRateEvaluator,
+) -> NDArray[np.float64]:
+    """Return ||J_mu psi_a||^2 without full dense J_mu|psi_a> blocks."""
+    rates = np.zeros((evaluator.n_jumps, states.shape[1]), dtype=np.float64)
+
+    for jump_index, (jump, rows) in enumerate(
+        zip(evaluator.jumps, evaluator.active_rows, strict=True)
+    ):
+        indptr = jump.indptr
+        indices = jump.indices
+        data = jump.data
+        for row in rows:
+            start = int(indptr[row])
+            stop = int(indptr[row + 1])
+            row_values = data[start:stop] @ states[indices[start:stop], :]
+            rates[jump_index, :] += np.abs(row_values) ** 2
+
+    np.maximum(rates, 0.0, out=rates)
+    return rates
 
 
 def _evaluate_jump_rates_state_matrix_numpy(
@@ -918,6 +1049,7 @@ def sample_lindblad_mcwf(
         jumps=jumps,
         backend=options.backend,
         prefer_sparse_operators=options.prefer_sparse_operators,
+        prefer_sparse_rate_evaluator=options.prefer_sparse_rate_evaluator,
     )
     backend_obj = prepared.backend
     hamiltonian_backend = prepared.hamiltonian

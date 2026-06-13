@@ -964,6 +964,7 @@ def test_prepare_mcwf_operators_preserves_sparse_scipy_inputs(qubit_ops):
     )
 
     assert prepared.uses_sparse_operators
+    assert not prepared.uses_sparse_rate_evaluator
     assert scipy_sparse.issparse(prepared.hamiltonian)
     assert scipy_sparse.issparse(prepared.jumps[0])
     assert scipy_sparse.issparse(prepared.effective_hamiltonian_matrix)
@@ -1031,3 +1032,127 @@ def test_jump_rates_state_matrix_do_not_require_retaining_jump_blocks(qubit_ops)
     )
 
     np.testing.assert_allclose(actual, expected)
+
+
+def test_build_sparse_jump_rate_evaluator_uses_row_sparse_jumps():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _build_sparse_jump_rate_evaluator,
+    )
+
+    dim = 128
+    jump0 = scipy_sparse.csr_array(
+        ([1.0 + 0.0j], ([3], [5])),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+    jump1 = scipy_sparse.csr_array(
+        ([2.0 + 0.0j], ([7], [11])),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+
+    evaluator = _build_sparse_jump_rate_evaluator((jump0, jump1))
+
+    assert evaluator is not None
+    assert evaluator.n_jumps == 2
+    np.testing.assert_array_equal(evaluator.active_rows[0], np.asarray([3]))
+    np.testing.assert_array_equal(evaluator.active_rows[1], np.asarray([7]))
+
+
+def test_build_sparse_jump_rate_evaluator_rejects_row_dense_jumps():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _build_sparse_jump_rate_evaluator,
+    )
+
+    jump = scipy_sparse.eye(8, format="csr", dtype=np.complex128)
+
+    assert _build_sparse_jump_rate_evaluator((jump,)) is None
+
+
+def test_sparse_jump_rate_evaluator_state_matrix_matches_full_sparse_rates():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _build_sparse_jump_rate_evaluator,
+        _evaluate_jump_rates_state_matrix_numpy,
+        _evaluate_sparse_jump_rates_state_matrix_numpy,
+    )
+
+    dim = 128
+    states = np.zeros((dim, 2), dtype=np.complex128)
+    states[5, 0] = 1.0
+    states[11, 1] = 1.0j
+    jump0 = scipy_sparse.csr_array(
+        ([1.0 + 0.0j], ([3], [5])),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+    jump1 = scipy_sparse.csr_array(
+        ([2.0 + 0.0j], ([7], [11])),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+    jumps = (jump0, jump1)
+    evaluator = _build_sparse_jump_rate_evaluator(jumps)
+    assert evaluator is not None
+
+    actual = _evaluate_sparse_jump_rates_state_matrix_numpy(states, evaluator)
+    expected = _evaluate_jump_rates_state_matrix_numpy(states, jumps)
+
+    np.testing.assert_allclose(actual, expected, atol=1e-14)
+
+
+def test_vectorized_mcwf_sparse_rate_evaluator_matches_sparse_matmul(qubit_ops):
+    import scipy.sparse as scipy_sparse
+
+    dim = 128
+    hamiltonian = scipy_sparse.csr_array((dim, dim), dtype=np.complex128)
+    jumps = [
+        scipy_sparse.csr_array(
+            ([np.sqrt(0.2)], ([3], [5])),
+            shape=(dim, dim),
+            dtype=np.complex128,
+        ),
+        scipy_sparse.csr_array(
+            ([np.sqrt(0.3)], ([7], [11])),
+            shape=(dim, dim),
+            dtype=np.complex128,
+        ),
+    ]
+    state_initial = np.zeros(dim, dtype=np.complex128)
+    state_initial[5] = 1.0
+    times = np.linspace(0.0, 0.2, 5)
+
+    baseline = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        times=times,
+        state_initial=state_initial,
+        options=McwfOptions(
+            n_trajectories=16,
+            seed=123,
+            store_trajectories=False,
+            prefer_sparse_operators=True,
+            prefer_sparse_rate_evaluator=False,
+        ),
+    )
+    optimized = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        times=times,
+        state_initial=state_initial,
+        options=McwfOptions(
+            n_trajectories=16,
+            seed=123,
+            store_trajectories=False,
+            prefer_sparse_operators=True,
+            prefer_sparse_rate_evaluator=True,
+        ),
+    )
+
+    for actual_rho, expected_rho in zip(optimized.rho_t, baseline.rho_t, strict=True):
+        np.testing.assert_allclose(actual_rho, expected_rho, atol=1e-14)
