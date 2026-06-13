@@ -138,6 +138,14 @@ class InterferenceZeroReport:
     collective_cancellation_coefficient: complex = 0.0 + 0.0j
     collective_cancellation_norm: float = np.inf
 
+    # Cached action of the reduced local operator on the classified cage state.
+    # This is intentionally optional: older tests and hand-built reports can
+    # leave it empty, in which case downstream code falls back to sparse
+    # operator materialization.
+    reduced_action_vector: NDArray[np.complex128] = field(
+        default_factory=lambda: np.array([], dtype=np.complex128)
+    )
+
     @property
     def local_region_size(self) -> int:
         return int(np.count_nonzero(self.local_mask))
@@ -1068,6 +1076,7 @@ def _build_zero_report(
         unexpected_target_indices=np.array([], dtype=np.int64),
         probe_mechanism_label="unexplained_leakage",
         local_transitions=tuple(local_transitions),
+        reduced_action_vector=reduced_action.astype(np.complex128, copy=True),
     )
 
 

@@ -18,11 +18,14 @@ from qlinks.caging.open_system import (
     _group_reduced_iz_reports_for_monitor,
     _infer_sharp_potential_value,
     _lazy_left_multiply_sparse_csr,
+    _LazyReducedIZMonitorOperator,
+    _LazySparseSumOperator,
     _left_multiply_same_left_sparse_csr_batch,
     _left_multiply_sparse_csr,
     _left_multiply_sparse_csr_batch,
     _LocalTermMatrixCache,
     _partition_plaquette_terms_by_region,
+    _reduced_iz_monitor_state_from_reports,
     _ReducedIZAssemblyCache,
     _resolve_local_term_builder,
     _select_jump_terms,
@@ -94,6 +97,7 @@ def _zero_report(
     local_mask: tuple[bool, ...],
     label: str = "q_empty",
     transitions: tuple[LocalTransitionPattern, ...] = (),
+    reduced_action_vector: np.ndarray | None = None,
 ) -> InterferenceZeroReport:
     return InterferenceZeroReport(
         zero_index=zero_index,
@@ -124,6 +128,11 @@ def _zero_report(
         unexpected_target_probe_failure_indices=np.array([], dtype=np.int64),
         nonzero_complement_action_target_indices=np.array([], dtype=np.int64),
         probe_mechanism_label=label,  # type: ignore[arg-type]
+        reduced_action_vector=(
+            np.array([], dtype=np.complex128)
+            if reduced_action_vector is None
+            else np.asarray(reduced_action_vector, dtype=np.complex128)
+        ),
     )
 
 
@@ -738,3 +747,74 @@ def test_group_local_transitions_by_source_and_reduced_iz_matrix():
         matrix.toarray(),
         np.array([[0.0, 3.0], [2.0, 0.0]], dtype=np.complex128),
     )
+
+
+def test_reduced_iz_monitor_state_uses_cached_classification_actions():
+    state = np.array([1.0, 0.0], dtype=np.complex128)
+    report_a = _zero_report(
+        zero_index=0,
+        local_mask=(True,),
+        reduced_action_vector=np.array([0.0, 2.0], dtype=np.complex128),
+    )
+    report_b = _zero_report(
+        zero_index=1,
+        local_mask=(True,),
+        reduced_action_vector=np.array([3.0, 0.0], dtype=np.complex128),
+    )
+
+    action = _reduced_iz_monitor_state_from_reports(
+        reports=(report_a, report_b),
+        state=state,
+        use_collective_coefficients=False,
+    )
+
+    np.testing.assert_allclose(action, np.array([3.0, 2.0], dtype=np.complex128))
+
+
+def test_lazy_reduced_iz_monitor_materializes_only_when_requested():
+    transitions = (
+        LocalTransitionPattern(
+            source_local=(0,),
+            target_local=(1,),
+            matrix_element=2.0 + 0.0j,
+        ),
+    )
+    report = _zero_report(
+        zero_index=0,
+        local_mask=(True,),
+        transitions=transitions,
+        reduced_action_vector=np.array([0.0, 2.0], dtype=np.complex128),
+    )
+    basis_configs = np.array([[0], [1]], dtype=np.int64)
+    config_to_index = {(0,): 0, (1,): 1}
+
+    monitor = _LazyReducedIZMonitorOperator(
+        reports=(report,),
+        basis_configs=basis_configs,
+        config_to_index=config_to_index,
+        shape=(2, 2),
+        use_collective_coefficients=False,
+        _state_action=np.array([0.0, 2.0], dtype=np.complex128),
+    )
+    total = _LazySparseSumOperator(
+        terms=(monitor,),
+        shape=(2, 2),
+        _state_action=np.array([0.0, 2.0], dtype=np.complex128),
+    )
+
+    assert monitor._matrix is None
+    assert total._matrix is None
+    np.testing.assert_allclose(
+        _reduced_iz_monitor_state_from_reports(
+            reports=(report,),
+            state=np.array([1.0, 0.0], dtype=np.complex128),
+            use_collective_coefficients=False,
+        ),
+        np.array([0.0, 2.0], dtype=np.complex128),
+    )
+    np.testing.assert_allclose(
+        total.tocsr().toarray(),
+        np.array([[0.0, 0.0], [2.0, 0.0]], dtype=np.complex128),
+    )
+    assert monitor._matrix is not None
+    assert total._matrix is not None
