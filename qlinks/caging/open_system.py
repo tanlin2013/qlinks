@@ -191,6 +191,71 @@ def _local_term_matrix(
     return matrix.tocsr()
 
 
+def _left_multiply_sparse_csr(left: Any, right: Any) -> sp.csr_array:
+    """Return ``left @ right`` using row-gathering for sparse local terms.
+
+    Cage-Lindblad component jumps repeatedly multiply a very sparse local
+    kinetic matrix into a sparse reduced-IZ monitor.  SciPy's generic sparse
+    matrix product is robust but has noticeable overhead for many small local
+    products.  Here we exploit the left sparse factor directly: each nonzero
+    ``left[row, source_row]`` contributes a scaled copy of ``right[source_row]``
+    to output row ``row``.
+    """
+
+    left_coo = left.tocoo(copy=False)
+    right_csr = right.tocsr()
+    shape = (left_coo.shape[0], right_csr.shape[1])
+    dtype = np.result_type(left_coo.dtype, right_csr.dtype, np.complex128)
+
+    if left_coo.nnz == 0 or right_csr.nnz == 0:
+        return sp.csr_array(shape, dtype=dtype)
+
+    rows_parts: list[NDArray[np.int64]] = []
+    cols_parts: list[NDArray[np.int64]] = []
+    data_parts: list[NDArray[np.complex128]] = []
+
+    for output_row, source_row, coefficient in zip(
+        left_coo.row,
+        left_coo.col,
+        left_coo.data,
+        strict=True,
+    ):
+        row_start = int(right_csr.indptr[int(source_row)])
+        row_end = int(right_csr.indptr[int(source_row) + 1])
+
+        if row_start == row_end:
+            continue
+
+        row_nnz = row_end - row_start
+        rows_parts.append(np.full(row_nnz, int(output_row), dtype=np.int64))
+        cols_parts.append(
+            np.asarray(
+                right_csr.indices[row_start:row_end],
+                dtype=np.int64,
+            )
+        )
+        data_parts.append(
+            np.asarray(
+                complex(coefficient) * right_csr.data[row_start:row_end],
+                dtype=dtype,
+            )
+        )
+
+    if len(data_parts) == 0:
+        return sp.csr_array(shape, dtype=dtype)
+
+    result = sp.csr_array(
+        (
+            np.concatenate(data_parts),
+            (np.concatenate(rows_parts), np.concatenate(cols_parts)),
+        ),
+        shape=shape,
+        dtype=dtype,
+    )
+    result.sum_duplicates()
+    return result.tocsr()
+
+
 @dataclass(frozen=True, slots=True)
 class ReducedIZMonitorComponent:
     """One frustration-free reduced-IZ monitor component."""
@@ -844,6 +909,7 @@ def build_type1_cage_lindblad_construction(
                 include_collective_cancellation=include_collective_cancellation,
                 use_collective_coefficients=use_collective_coefficients,
                 compute_jump_residuals=compute_jump_residuals,
+                timing_collector=timing_collector,
             )
 
         component_z_values = tuple(component.z_value for component in monitor_components)
@@ -1078,7 +1144,7 @@ def _build_jump_operators(
 ) -> tuple[Any, ...]:
     if jump_operator_design == "kinetic_times_monitor":
         return tuple(
-            (
+            _left_multiply_sparse_csr(
                 _local_term_matrix(
                     model=model,
                     build_result=build_result,
@@ -1086,9 +1152,9 @@ def _build_jump_operators(
                     builder=builder,
                     backend=backend,
                     local_term_cache=local_term_cache,
-                )
-                @ monitor
-            ).tocsr()
+                ),
+                monitor,
+            )
             for term in jump_kinetic_terms
         )
 
@@ -1109,7 +1175,7 @@ def _build_jump_operators(
                     backend=backend,
                     local_term_cache=local_term_cache,
                 )
-                jumps.append((kinetic @ monitor).tocsr())
+                jumps.append(_left_multiply_sparse_csr(kinetic, monitor))
             else:
                 jumps.append(
                     _local_term_matrix(
@@ -1141,7 +1207,7 @@ def _build_jump_operators(
                     backend=backend,
                     local_term_cache=local_term_cache,
                 )
-                jumps.append((kinetic @ monitor).tocsr())
+                jumps.append(_left_multiply_sparse_csr(kinetic, monitor))
             else:
                 kinetic_term = jump_terms_by_id[plaquette_id]
                 local_hamiltonian = _build_local_kinetic_plus_potential(
@@ -1893,6 +1959,7 @@ def _build_reduced_iz_monitor_components(
     include_collective_cancellation: bool = True,
     use_collective_coefficients: bool = True,
     compute_jump_residuals: bool = True,
+    timing_collector: dict[str, float] | None = None,
 ) -> tuple[
     sp.csr_array,
     tuple[InterferenceZeroReport, ...],
@@ -1926,6 +1993,7 @@ def _build_reduced_iz_monitor_components(
     jumps: list[Any] = []
 
     for component_id, report_group in enumerate(report_groups):
+        component_stage_start = time.perf_counter()
         component_monitor = _build_reduced_iz_monitor_from_reports(
             reports=report_group,
             basis_configs=basis_configs,
@@ -1933,6 +2001,11 @@ def _build_reduced_iz_monitor_components(
             shape=shape,
             use_collective_coefficients=use_collective_coefficients,
             assembly_cache=assembly_cache,
+        )
+        _record_construction_stage(
+            timing_collector,
+            "component_monitor_assembly",
+            component_stage_start,
         )
 
         component_support = _union_support_for_zero_reports(report_group)
@@ -1974,6 +2047,7 @@ def _build_reduced_iz_monitor_components(
                 f"Unknown reduced-IZ monitor content: " f"{reduced_iz_monitor_content!r}"
             )
 
+        component_stage_start = time.perf_counter()
         component_jumps: list[Any] = []
         for kinetic_term in component_kinetic_terms:
             kinetic = _local_term_matrix(
@@ -1985,8 +2059,15 @@ def _build_reduced_iz_monitor_components(
                 local_term_cache=local_term_cache,
             )
 
-            component_jumps.append((kinetic @ component_monitor).tocsr())
+            component_jumps.append(_left_multiply_sparse_csr(kinetic, component_monitor))
 
+        _record_construction_stage(
+            timing_collector,
+            "component_jump_products",
+            component_stage_start,
+        )
+
+        component_stage_start = time.perf_counter()
         if compute_jump_residuals:
             component_jump_residuals = _jump_residuals(
                 state=state,
@@ -1996,6 +2077,11 @@ def _build_reduced_iz_monitor_components(
             component_jump_residuals = ()
 
         component_monitor_residual = float(np.linalg.norm(component_monitor @ state))
+        _record_construction_stage(
+            timing_collector,
+            "component_diagnostics",
+            component_stage_start,
+        )
 
         components.append(
             ReducedIZMonitorComponent(
@@ -2017,8 +2103,14 @@ def _build_reduced_iz_monitor_components(
             )
         )
 
+        component_stage_start = time.perf_counter()
         total_monitor = total_monitor + component_monitor
         jumps.extend(component_jumps)
+        _record_construction_stage(
+            timing_collector,
+            "component_monitor_sum",
+            component_stage_start,
+        )
 
     return (
         total_monitor.tocsr(),

@@ -17,6 +17,7 @@ from qlinks.caging.open_system import (
     _group_local_transitions_by_source,
     _group_reduced_iz_reports_for_monitor,
     _infer_sharp_potential_value,
+    _left_multiply_sparse_csr,
     _LocalTermMatrixCache,
     _partition_plaquette_terms_by_region,
     _ReducedIZAssemblyCache,
@@ -169,6 +170,52 @@ def test_local_term_matrix_cache_reuses_terms_and_promotes_bitmask_builder():
     assert first is second
     assert model.calls == [(3, "bitmask")]
     np.testing.assert_allclose(first.toarray(), 3.0 * np.eye(2))
+
+
+def test_left_multiply_sparse_csr_matches_scipy_product():
+    left = sp.csr_array(
+        (
+            np.array([2.0, -1.0, 0.5], dtype=np.complex128),
+            (np.array([0, 1, 1]), np.array([1, 0, 2])),
+        ),
+        shape=(3, 3),
+    )
+    right = sp.csr_array(
+        (
+            np.array([1.0, 3.0j, -2.0, 4.0], dtype=np.complex128),
+            (np.array([0, 1, 1, 2]), np.array([0, 0, 2, 1])),
+        ),
+        shape=(3, 4),
+    )
+
+    actual = _left_multiply_sparse_csr(left, right)
+    expected = left @ right
+
+    np.testing.assert_allclose(actual.toarray(), expected.toarray())
+
+
+def test_left_multiply_sparse_csr_sums_duplicate_entries():
+    left = sp.csr_array(
+        (
+            np.array([1.0, 2.0], dtype=np.complex128),
+            (np.array([0, 0]), np.array([1, 1])),
+        ),
+        shape=(2, 2),
+    )
+    right = sp.csr_array(
+        (
+            np.array([5.0], dtype=np.complex128),
+            (np.array([1]), np.array([0])),
+        ),
+        shape=(2, 2),
+    )
+
+    actual = _left_multiply_sparse_csr(left, right)
+
+    np.testing.assert_allclose(
+        actual.toarray(),
+        np.array([[15.0, 0.0], [0.0, 0.0]], dtype=np.complex128),
+    )
 
 
 def test_select_jump_terms_can_include_crossing_terms():
