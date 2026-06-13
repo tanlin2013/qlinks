@@ -1504,6 +1504,82 @@ class _ReducedIZAssemblyCache:
         tuple[tuple[int, ...], tuple[int, ...], tuple[int, ...]],
         tuple[NDArray[np.int64], NDArray[np.int64]],
     ] = field(default_factory=dict, init=False, repr=False)
+    _config_codes: NDArray[np.int64] | None = field(default=None, init=False, repr=False)
+    _code_to_index: dict[int, int] | None = field(default=None, init=False, repr=False)
+    _radix_weights: tuple[int, ...] = field(default=(), init=False, repr=False)
+    _value_digits_by_variable: tuple[dict[int, int], ...] = field(
+        default=(), init=False, repr=False
+    )
+
+    def __post_init__(self) -> None:
+        self.basis_configs = np.ascontiguousarray(self.basis_configs, dtype=np.int64)
+        self._prepare_integer_code_lookup()
+
+    def _prepare_integer_code_lookup(self) -> None:
+        """Prepare a mixed-radix code lookup for fast target-state indexing.
+
+        The generic fallback builds a full target configuration and looks it up
+        as a tuple.  Reduced-IZ assembly repeats that lookup many times.  When
+        the per-variable local alphabets fit in int64 mixed-radix codes, target
+        indices can instead be found by applying a local code delta to the source
+        basis codes.
+        """
+
+        if self.basis_configs.ndim != 2:
+            return
+
+        n_states, n_variables = self.basis_configs.shape
+        if n_states == 0 or n_variables == 0:
+            self._config_codes = np.zeros(n_states, dtype=np.int64)
+            self._code_to_index = {}
+            self._radix_weights = ()
+            self._value_digits_by_variable = ()
+            return
+
+        max_code = int(np.iinfo(np.int64).max)
+        multiplier = 1
+        weights: list[int] = []
+        value_maps: list[dict[int, int]] = []
+
+        for variable_index in range(n_variables):
+            values = tuple(int(value) for value in np.unique(self.basis_configs[:, variable_index]))
+            base = len(values)
+
+            if base == 0 or multiplier > max_code // max(base, 1):
+                self._config_codes = None
+                self._code_to_index = None
+                self._radix_weights = ()
+                self._value_digits_by_variable = ()
+                return
+
+            weights.append(multiplier)
+            value_maps.append({value: digit for digit, value in enumerate(values)})
+            multiplier *= base
+
+        codes = np.zeros(n_states, dtype=np.int64)
+        for variable_index, (weight, value_map) in enumerate(zip(weights, value_maps, strict=True)):
+            digits = np.fromiter(
+                (value_map[int(value)] for value in self.basis_configs[:, variable_index]),
+                dtype=np.int64,
+                count=n_states,
+            )
+            codes += digits * int(weight)
+
+        code_to_index: dict[int, int] = {}
+        for basis_index, code in enumerate(codes):
+            code_key = int(code)
+            if code_key in code_to_index:
+                self._config_codes = None
+                self._code_to_index = None
+                self._radix_weights = ()
+                self._value_digits_by_variable = ()
+                return
+            code_to_index[code_key] = int(basis_index)
+
+        self._config_codes = codes
+        self._code_to_index = code_to_index
+        self._radix_weights = tuple(weights)
+        self._value_digits_by_variable = tuple(value_maps)
 
     def source_indices(
         self,
@@ -1548,6 +1624,16 @@ class _ReducedIZAssemblyCache:
             self._transition_indices_by_pattern[cache_key] = result
             return result
 
+        encoded_result = self._transition_indices_from_integer_codes(
+            mask_key=mask_key,
+            source_key=source_key,
+            target_key=target_key,
+            source_indices=source_indices,
+        )
+        if encoded_result is not None:
+            self._transition_indices_by_pattern[cache_key] = encoded_result
+            return encoded_result
+
         target_configs = np.array(
             self.basis_configs[source_indices],
             copy=True,
@@ -1575,21 +1661,76 @@ class _ReducedIZAssemblyCache:
         self._transition_indices_by_pattern[cache_key] = result
         return result
 
+    def _transition_indices_from_integer_codes(
+        self,
+        *,
+        mask_key: tuple[int, ...],
+        source_key: tuple[int, ...],
+        target_key: tuple[int, ...],
+        source_indices: NDArray[np.int64],
+    ) -> tuple[NDArray[np.int64], NDArray[np.int64]] | None:
+        if self._config_codes is None or self._code_to_index is None:
+            return None
+
+        delta = 0
+        for variable_index, source_value, target_value in zip(
+            mask_key,
+            source_key,
+            target_key,
+            strict=True,
+        ):
+            value_map = self._value_digits_by_variable[int(variable_index)]
+            source_digit = value_map.get(int(source_value))
+            target_digit = value_map.get(int(target_value))
+
+            if source_digit is None or target_digit is None:
+                empty = (np.empty(0, dtype=np.int64), np.empty(0, dtype=np.int64))
+                return empty
+
+            weight = self._radix_weights[int(variable_index)]
+            delta += (int(target_digit) - int(source_digit)) * int(weight)
+
+        target_codes = self._config_codes[source_indices] + int(delta)
+
+        rows: list[int] = []
+        cols: list[int] = []
+        code_to_index = self._code_to_index
+        for target_code, column_index in zip(target_codes, source_indices, strict=True):
+            row_index = code_to_index.get(int(target_code))
+            if row_index is None:
+                continue
+
+            rows.append(int(row_index))
+            cols.append(int(column_index))
+
+        return (
+            np.asarray(rows, dtype=np.int64),
+            np.asarray(cols, dtype=np.int64),
+        )
+
     def _build_source_groups(
         self,
         mask_key: tuple[int, ...],
     ) -> dict[tuple[int, ...], NDArray[np.int64]]:
-        grouped: dict[tuple[int, ...], list[int]] = {}
         mask_indices = np.asarray(mask_key, dtype=np.int64)
+        local_values = np.ascontiguousarray(self.basis_configs[:, mask_indices], dtype=np.int64)
 
-        for source_index, source_config in enumerate(self.basis_configs):
-            source_key = _transition_pattern_key(source_config[mask_indices])
-            grouped.setdefault(source_key, []).append(int(source_index))
+        if local_values.ndim == 1:
+            local_values = local_values.reshape(-1, 1)
 
-        return {
-            source_key: np.asarray(indices, dtype=np.int64)
-            for source_key, indices in grouped.items()
-        }
+        unique_values, inverse = np.unique(
+            local_values,
+            axis=0,
+            return_inverse=True,
+        )
+
+        grouped: dict[tuple[int, ...], NDArray[np.int64]] = {}
+        for group_index, source_local in enumerate(unique_values):
+            grouped[_transition_pattern_key(source_local)] = np.flatnonzero(
+                inverse == group_index
+            ).astype(np.int64, copy=False)
+
+        return grouped
 
 
 def _build_reduced_iz_monitor_from_reports(
