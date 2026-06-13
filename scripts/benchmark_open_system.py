@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass
 from typing import Callable, Literal
 
 import numpy as np
+import scipy.sparse as scipy_sparse
 
 from qlinks.open_system import (
     LindbladEvolutionOptions,
@@ -49,8 +50,8 @@ _OPERATION_ORDER: tuple[str, ...] = (
 @dataclass(frozen=True)
 class OpenSystemBenchmarkCase:
     name: str
-    hamiltonian: np.ndarray
-    jumps: tuple[np.ndarray, ...]
+    hamiltonian: object
+    jumps: tuple[object, ...]
     state_initial: np.ndarray
     parameters: dict
 
@@ -166,7 +167,10 @@ def _pauli_and_ladder_operators() -> dict[str, np.ndarray]:
     }
 
 
-def make_benchmark_cases() -> list[OpenSystemBenchmarkCase]:
+def make_benchmark_cases(
+    *,
+    include_sparse_many_jump_case: bool = False,
+) -> list[OpenSystemBenchmarkCase]:
     ops = _pauli_and_ladder_operators()
     sigma_minus = ops["sigma_minus"]
     sigma_x = ops["sigma_x"]
@@ -191,7 +195,7 @@ def make_benchmark_cases() -> list[OpenSystemBenchmarkCase]:
     )
     two_qubit_state = np.kron(ket1, ket1)
 
-    return [
+    cases = [
         OpenSystemBenchmarkCase(
             name="qubit_amplitude_damping",
             hamiltonian=qubit_hamiltonian,
@@ -217,6 +221,44 @@ def make_benchmark_cases() -> list[OpenSystemBenchmarkCase]:
             },
         ),
     ]
+
+    if include_sparse_many_jump_case:
+        dim = 512
+        n_jumps = 128
+        entries_per_jump = 2
+        rng = np.random.default_rng(2026)
+        sparse_jumps = []
+        for _ in range(n_jumps):
+            rows = rng.choice(dim, size=entries_per_jump, replace=False)
+            columns = rng.choice(dim, size=entries_per_jump, replace=False)
+            values = 0.01 * (
+                rng.normal(size=entries_per_jump) + 1j * rng.normal(size=entries_per_jump)
+            )
+            sparse_jumps.append(
+                scipy_sparse.csr_array(
+                    (values, (rows, columns)),
+                    shape=(dim, dim),
+                    dtype=np.complex128,
+                )
+            )
+
+        sparse_state = np.zeros(dim, dtype=np.complex128)
+        sparse_state[0] = 1.0
+        cases.append(
+            OpenSystemBenchmarkCase(
+                name="sparse_many_jump_mcwf",
+                hamiltonian=scipy_sparse.csr_array((dim, dim), dtype=np.complex128),
+                jumps=tuple(sparse_jumps),
+                state_initial=sparse_state,
+                parameters={
+                    "dim": dim,
+                    "n_jumps": n_jumps,
+                    "entries_per_jump": entries_per_jump,
+                },
+            )
+        )
+
+    return cases
 
 
 def selected_operations(operation: OpenSystemOperation) -> tuple[str, ...]:
@@ -279,6 +321,7 @@ def run_open_system_benchmark(
     mcwf_adaptive_time_step: bool,
     mcwf_max_jump_probability: float,
     mcwf_prefer_sparse_operators: bool,
+    mcwf_prefer_sparse_rate_evaluator: bool,
 ) -> OpenSystemBenchmarkResult:
     liouvillian_shape: tuple[int, int] | None = None
     liouvillian_nnz: int | None = None
@@ -350,6 +393,7 @@ def run_open_system_benchmark(
                 adaptive_time_step=mcwf_adaptive_time_step,
                 max_jump_probability=mcwf_max_jump_probability,
                 prefer_sparse_operators=mcwf_prefer_sparse_operators,
+                prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
             )
         )
         n_trajectories_result = 1
@@ -358,6 +402,7 @@ def run_open_system_benchmark(
             "observed_jumps": int(trajectory.jump_indices.size),
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
+            "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
         }
 
     elif operation == "mcwf":
@@ -370,6 +415,7 @@ def run_open_system_benchmark(
             adaptive_time_step=mcwf_adaptive_time_step,
             max_jump_probability=mcwf_max_jump_probability,
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
+            prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
         )
         result, elapsed = _time_call(
             lambda: sample_lindblad_mcwf(
@@ -385,6 +431,7 @@ def run_open_system_benchmark(
             "n_rho": len(result.rho_t),
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
+            "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
         }
 
     else:
@@ -547,6 +594,15 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--mcwf-disable-sparse-rate-evaluator",
+        action="store_true",
+        help=(
+            "Disable the sparse row-based MCWF jump-rate evaluator. "
+            "By default, very row-sparse scipy jumps avoid full dense J|psi> "
+            "rate buffers."
+        ),
+    )
+    parser.add_argument(
         "--json",
         type=str,
         default=None,
@@ -564,13 +620,24 @@ def main() -> None:
         default=None,
         help="Run only cases whose name contains this substring.",
     )
+    parser.add_argument(
+        "--include-sparse-many-jump-case",
+        action="store_true",
+        help=(
+            "Include a synthetic row-sparse many-jump MCWF case. "
+            "This is intended for MCWF-only benchmarks; deterministic "
+            "Liouvillian solvers may be expensive for this case."
+        ),
+    )
 
     args = parser.parse_args()
 
     times = np.linspace(0.0, args.time_stop, args.n_times, dtype=np.float64)
     results: list[OpenSystemBenchmarkResult] = []
 
-    for case in make_benchmark_cases():
+    for case in make_benchmark_cases(
+        include_sparse_many_jump_case=args.include_sparse_many_jump_case,
+    ):
         if args.only is not None and args.only not in case.name:
             continue
 
@@ -589,6 +656,7 @@ def main() -> None:
                     mcwf_adaptive_time_step=args.mcwf_adaptive_time_step,
                     mcwf_max_jump_probability=args.mcwf_max_jump_probability,
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
+                    mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
                 )
             except NotImplementedError as exc:
                 print(f"  skipped: {exc}")
