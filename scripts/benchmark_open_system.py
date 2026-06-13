@@ -278,6 +278,7 @@ def run_open_system_benchmark(
     rk4_step_policy: str,
     mcwf_adaptive_time_step: bool,
     mcwf_max_jump_probability: float,
+    mcwf_prefer_sparse_operators: bool,
 ) -> OpenSystemBenchmarkResult:
     liouvillian_shape: tuple[int, int] | None = None
     liouvillian_nnz: int | None = None
@@ -348,6 +349,7 @@ def run_open_system_benchmark(
                 store_states=True,
                 adaptive_time_step=mcwf_adaptive_time_step,
                 max_jump_probability=mcwf_max_jump_probability,
+                prefer_sparse_operators=mcwf_prefer_sparse_operators,
             )
         )
         n_trajectories_result = 1
@@ -355,6 +357,7 @@ def run_open_system_benchmark(
             "stored_states": len(trajectory.states),
             "observed_jumps": int(trajectory.jump_indices.size),
             "adaptive": mcwf_adaptive_time_step,
+            "prefer_sparse_operators": mcwf_prefer_sparse_operators,
         }
 
     elif operation == "mcwf":
@@ -366,6 +369,7 @@ def run_open_system_benchmark(
             store_states=False,
             adaptive_time_step=mcwf_adaptive_time_step,
             max_jump_probability=mcwf_max_jump_probability,
+            prefer_sparse_operators=mcwf_prefer_sparse_operators,
         )
         result, elapsed = _time_call(
             lambda: sample_lindblad_mcwf(
@@ -380,6 +384,7 @@ def run_open_system_benchmark(
         details = {
             "n_rho": len(result.rho_t),
             "adaptive": mcwf_adaptive_time_step,
+            "prefer_sparse_operators": mcwf_prefer_sparse_operators,
         }
 
     else:
@@ -534,6 +539,14 @@ def main() -> None:
         help="Maximum first-order jump probability per MCWF step.",
     )
     parser.add_argument(
+        "--mcwf-dense-operators",
+        action="store_true",
+        help=(
+            "Materialize MCWF Hamiltonian and jump operators as dense arrays. "
+            "By default, scipy sparse/lazy inputs stay sparse."
+        ),
+    )
+    parser.add_argument(
         "--json",
         type=str,
         default=None,
@@ -575,6 +588,7 @@ def main() -> None:
                     rk4_step_policy=args.rk4_step_policy,
                     mcwf_adaptive_time_step=args.mcwf_adaptive_time_step,
                     mcwf_max_jump_probability=args.mcwf_max_jump_probability,
+                    mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
                 )
             except NotImplementedError as exc:
                 print(f"  skipped: {exc}")

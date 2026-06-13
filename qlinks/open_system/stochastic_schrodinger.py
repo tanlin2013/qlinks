@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from typing import Any, Callable, Iterable
 
 import numpy as np
+import scipy.sparse as scipy_sparse
 from numpy.typing import NDArray
 
 from qlinks.open_system.backend import (
     OpenSystemBackend,
     OpenSystemBackendName,
     as_backend_dense_array,
+    as_backend_sparse_matrix,
     get_open_system_backend,
 )
 from qlinks.open_system.states import random_pure_state
@@ -25,6 +27,7 @@ class _McwfPreparedOperators:
     hamiltonian: Any
     jumps: tuple[Any, ...]
     effective_hamiltonian_matrix: Any
+    uses_sparse_operators: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,21 +51,49 @@ def _prepare_mcwf_operators(
     hamiltonian: Any,
     jumps: list[Any] | tuple[Any, ...],
     backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
+    prefer_sparse_operators: bool = True,
 ) -> _McwfPreparedOperators:
     backend_obj = get_open_system_backend(backend)
-    hamiltonian_backend = as_backend_dense_array(
-        hamiltonian,
-        backend=backend_obj,
-        dtype=np.complex128,
+    use_sparse_operators = (
+        backend_obj.name == "scipy"
+        and prefer_sparse_operators
+        and (
+            _is_sparse_like_operator(hamiltonian)
+            or any(_is_sparse_like_operator(jump) for jump in jumps)
+        )
     )
-    jump_operators = tuple(
-        as_backend_dense_array(
-            jump,
+
+    if use_sparse_operators:
+        hamiltonian_backend = as_backend_sparse_matrix(
+            hamiltonian,
+            backend=backend_obj,
+            format="csr",
+            dtype=np.complex128,
+        )
+        jump_operators = tuple(
+            as_backend_sparse_matrix(
+                jump,
+                backend=backend_obj,
+                format="csr",
+                dtype=np.complex128,
+            )
+            for jump in jumps
+        )
+    else:
+        hamiltonian_backend = as_backend_dense_array(
+            hamiltonian,
             backend=backend_obj,
             dtype=np.complex128,
         )
-        for jump in jumps
-    )
+        jump_operators = tuple(
+            as_backend_dense_array(
+                jump,
+                backend=backend_obj,
+                dtype=np.complex128,
+            )
+            for jump in jumps
+        )
+
     effective_hamiltonian_matrix = effective_hamiltonian(
         hamiltonian_backend,
         jump_operators,
@@ -73,7 +104,29 @@ def _prepare_mcwf_operators(
         hamiltonian=hamiltonian_backend,
         jumps=jump_operators,
         effective_hamiltonian_matrix=effective_hamiltonian_matrix,
+        uses_sparse_operators=use_sparse_operators,
     )
+
+
+def _is_sparse_like_operator(operator: Any) -> bool:
+    return (
+        scipy_sparse.issparse(operator)
+        or hasattr(operator, "asformat")
+        or hasattr(operator, "tocsr")
+    )
+
+
+def _as_numpy_or_scipy_sparse(operator: Any) -> Any:
+    if scipy_sparse.issparse(operator):
+        return operator.tocsr().astype(np.complex128)
+
+    if hasattr(operator, "tocsr"):
+        return operator.tocsr().astype(np.complex128)
+
+    if hasattr(operator, "asformat"):
+        return operator.asformat("csr").astype(np.complex128)
+
+    return np.asarray(operator, dtype=np.complex128)
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,6 +141,7 @@ class McwfOptions:
     store_trajectories: bool = False
     normalize_each_step: bool = True
     max_jump_probability: float = 0.1
+    prefer_sparse_operators: bool = True
 
     adaptive_time_step: bool = False
     adaptive_safety_factor: float = 0.8
@@ -244,6 +298,7 @@ def run_quantum_jump_trajectory(
     store_states: bool = True,
     normalize_each_step: bool = True,
     max_jump_probability: float = 0.1,
+    prefer_sparse_operators: bool = True,
     adaptive_time_step: bool = False,
     adaptive_safety_factor: float = 0.8,
     min_step_size: float = 1.0e-12,
@@ -259,6 +314,7 @@ def run_quantum_jump_trajectory(
         hamiltonian=hamiltonian,
         jumps=jumps,
         backend=backend,
+        prefer_sparse_operators=prefer_sparse_operators,
     )
     return _run_quantum_jump_trajectory_prepared(
         prepared=prepared,
@@ -468,11 +524,8 @@ def _run_quantum_jump_trajectory_prepared_scipy(
     del return_backend_arrays  # SciPy backend states are already NumPy arrays.
 
     state = _normalize_numpy_state(np.asarray(state_initial, dtype=np.complex128))
-    effective_hamiltonian_matrix = np.asarray(
-        prepared.effective_hamiltonian_matrix,
-        dtype=np.complex128,
-    )
-    jump_operators = tuple(np.asarray(jump, dtype=np.complex128) for jump in prepared.jumps)
+    effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
+    jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
     has_jump_operators = len(jump_operators) > 0
 
     states: list[Any] = [None] * int(times.size) if store_states else []
@@ -646,35 +699,19 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         state_sampler=state_sampler,
         rng=rng,
     )
-    effective_hamiltonian_matrix = np.asarray(
-        prepared.effective_hamiltonian_matrix,
-        dtype=np.complex128,
-    )
-    jump_operators = tuple(np.asarray(jump, dtype=np.complex128) for jump in prepared.jumps)
+    effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
+    jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
 
     rho_t: list[ArrayC] = [_density_matrix_from_state_matrix(states)]
 
     for time_index in range(times.size - 1):
         step_size = float(times[time_index + 1] - times[time_index])
 
-        jumped_states: tuple[ArrayC, ...] = ()
         probabilities = np.zeros((0, options.n_trajectories), dtype=np.float64)
         total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
 
         if jump_operators:
-            jumped_states = tuple(jump @ states for jump in jump_operators)
-            rates = np.asarray(
-                [
-                    np.einsum(
-                        "ij,ij->j",
-                        jumped_state.conj(),
-                        jumped_state,
-                    ).real
-                    for jumped_state in jumped_states
-                ],
-                dtype=np.float64,
-            )
-            np.maximum(rates, 0.0, out=rates)
+            rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
             probabilities = step_size * rates
             total_jump_probabilities = np.sum(probabilities, axis=0)
 
@@ -699,10 +736,13 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     total_probabilities=total_jump_probabilities,
                     rng=rng,
                 )
-                for jump_index, jumped_state in enumerate(jumped_states):
-                    selected_mask = jump_mask & (selected_jump_indices == jump_index)
-                    if np.any(selected_mask):
-                        next_states[:, selected_mask] = jumped_state[:, selected_mask]
+                _apply_selected_jumps_to_state_matrix_numpy(
+                    next_states=next_states,
+                    states=states,
+                    jumps=jump_operators,
+                    jump_mask=jump_mask,
+                    selected_jump_indices=selected_jump_indices,
+                )
 
         norms = np.linalg.norm(next_states, axis=0)
         if np.any(norms == 0.0):
@@ -718,6 +758,43 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         rho_t=rho_t,
         trajectories=None,
     )
+
+
+def _evaluate_jump_rates_state_matrix_numpy(
+    states: ArrayC,
+    jumps: tuple[Any, ...],
+) -> NDArray[np.float64]:
+    """Return rates ||J_mu psi_a||^2 without retaining J_mu|psi_a| blocks."""
+    rates = np.empty((len(jumps), states.shape[1]), dtype=np.float64)
+
+    for jump_index, jump in enumerate(jumps):
+        jumped_states = jump @ states
+        rates[jump_index, :] = np.einsum(
+            "ij,ij->j",
+            jumped_states.conj(),
+            jumped_states,
+            optimize=True,
+        ).real
+
+    np.maximum(rates, 0.0, out=rates)
+    return rates
+
+
+def _apply_selected_jumps_to_state_matrix_numpy(
+    *,
+    next_states: ArrayC,
+    states: ArrayC,
+    jumps: tuple[Any, ...],
+    jump_mask: NDArray[np.bool_],
+    selected_jump_indices: NDArray[np.int64],
+) -> None:
+    """Apply only the jump channels that were actually selected."""
+    active_jump_indices = np.unique(selected_jump_indices[jump_mask])
+
+    for jump_index in active_jump_indices:
+        selected_mask = jump_mask & (selected_jump_indices == jump_index)
+        if np.any(selected_mask):
+            next_states[:, selected_mask] = jumps[int(jump_index)] @ states[:, selected_mask]
 
 
 def _choose_jump_indices_vectorized(
@@ -840,6 +917,7 @@ def sample_lindblad_mcwf(
         hamiltonian=hamiltonian,
         jumps=jumps,
         backend=options.backend,
+        prefer_sparse_operators=options.prefer_sparse_operators,
     )
     backend_obj = prepared.backend
     hamiltonian_backend = prepared.hamiltonian

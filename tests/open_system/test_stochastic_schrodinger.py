@@ -946,3 +946,88 @@ def test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+
+def test_prepare_mcwf_operators_preserves_sparse_scipy_inputs(qubit_ops):
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import _prepare_mcwf_operators
+
+    hamiltonian = scipy_sparse.csr_array(0.5 * qubit_ops["sigma_x"])
+    jump = scipy_sparse.csr_array(np.sqrt(0.2) * qubit_ops["sigma_minus"])
+
+    prepared = _prepare_mcwf_operators(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        backend="scipy",
+        prefer_sparse_operators=True,
+    )
+
+    assert prepared.uses_sparse_operators
+    assert scipy_sparse.issparse(prepared.hamiltonian)
+    assert scipy_sparse.issparse(prepared.jumps[0])
+    assert scipy_sparse.issparse(prepared.effective_hamiltonian_matrix)
+
+
+def test_vectorized_mcwf_sparse_matches_dense_fixed_seed(qubit_ops):
+    import scipy.sparse as scipy_sparse
+
+    hamiltonian = 0.5 * qubit_ops["sigma_x"]
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.2, 5)
+    state_initial = normalize_state(np.array([1.0, 0.2j], dtype=np.complex128))
+
+    dense_result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=state_initial,
+        options=McwfOptions(
+            n_trajectories=16,
+            seed=123,
+            store_trajectories=False,
+            prefer_sparse_operators=False,
+        ),
+    )
+    sparse_result = sample_lindblad_mcwf(
+        hamiltonian=scipy_sparse.csr_array(hamiltonian),
+        jumps=[scipy_sparse.csr_array(jump)],
+        times=times,
+        state_initial=state_initial,
+        options=McwfOptions(
+            n_trajectories=16,
+            seed=123,
+            store_trajectories=False,
+            prefer_sparse_operators=True,
+        ),
+    )
+
+    for dense_rho, sparse_rho in zip(dense_result.rho_t, sparse_result.rho_t, strict=True):
+        np.testing.assert_allclose(sparse_rho, dense_rho, atol=1e-14)
+
+
+def test_jump_rates_state_matrix_do_not_require_retaining_jump_blocks(qubit_ops):
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _evaluate_jump_rates_state_matrix_numpy,
+    )
+
+    states = np.column_stack(
+        [
+            normalize_state(np.array([1.0, 0.0], dtype=np.complex128)),
+            normalize_state(np.array([1.0, 1.0j], dtype=np.complex128)),
+        ]
+    )
+    jumps = (
+        scipy_sparse.csr_array(np.sqrt(0.2) * qubit_ops["sigma_minus"]),
+        scipy_sparse.csr_array(np.sqrt(0.3) * qubit_ops["sigma_plus"]),
+    )
+
+    actual = _evaluate_jump_rates_state_matrix_numpy(states, jumps)
+    expected = np.asarray(
+        [np.einsum("ij,ij->j", (jump @ states).conj(), jump @ states).real for jump in jumps],
+        dtype=np.float64,
+    )
+
+    np.testing.assert_allclose(actual, expected)
