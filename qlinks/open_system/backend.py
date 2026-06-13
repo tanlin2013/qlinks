@@ -80,6 +80,10 @@ def as_backend_sparse_matrix(
     if backend.name == "scipy":
         if scipy_sparse.issparse(matrix):
             return matrix.asformat(format).astype(dtype)
+        if hasattr(matrix, "asformat"):
+            return matrix.asformat(format).astype(dtype)
+        if hasattr(matrix, "tocsr"):
+            return matrix.tocsr().asformat(format).astype(dtype)
         return scipy_sparse.csr_array(matrix, dtype=dtype).asformat(format)
 
     # cupy path
@@ -88,6 +92,10 @@ def as_backend_sparse_matrix(
 
     if scipy_sparse.issparse(matrix):
         return backend.sparse_module.csr_matrix(matrix.astype(dtype)).asformat(format)
+
+    if hasattr(matrix, "tocsr"):
+        sparse_matrix = matrix.tocsr()
+        return backend.sparse_module.csr_matrix(sparse_matrix.astype(dtype)).asformat(format)
 
     return backend.sparse_module.csr_matrix(
         backend.asarray(matrix, dtype=dtype),
@@ -103,9 +111,19 @@ def as_backend_dense_array(
     if backend.name == "scipy":
         if scipy_sparse.issparse(matrix):
             return matrix.toarray().astype(dtype)
+        if hasattr(matrix, "toarray"):
+            return matrix.toarray().astype(dtype)
+        if hasattr(matrix, "tocsr"):
+            return matrix.tocsr().toarray().astype(dtype)
         return np.asarray(matrix, dtype=dtype)
 
     if scipy_sparse.issparse(matrix):
         return backend.array_module.asarray(matrix.toarray(), dtype=dtype)
+
+    if hasattr(matrix, "toarray"):
+        return backend.array_module.asarray(matrix.toarray(), dtype=dtype)
+
+    if hasattr(matrix, "tocsr"):
+        return backend.array_module.asarray(matrix.tocsr().toarray(), dtype=dtype)
 
     return backend.asarray(matrix, dtype=dtype)

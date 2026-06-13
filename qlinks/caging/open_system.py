@@ -273,6 +273,61 @@ class _SparseColumnAction:
         ).tocsr()
 
 
+@dataclass(slots=True)
+class _LazySparseProductOperator:
+    """Lazy sparse product ``left @ right`` for component jump operators.
+
+    Reduced-IZ component decompositions can create hundreds of products
+    ``K_p M_i``.  During construction we usually only need their residuals on
+    the cage state, which can be checked from ``K_p (M_i |psi>)`` without
+    materializing the full sparse product.  The full matrix is therefore built
+    only when a downstream solver or caller asks for a sparse/dense matrix.
+    """
+
+    left: Any
+    right: Any
+    _matrix: sp.csr_array | None = field(default=None, init=False, repr=False)
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        return (int(self.left.shape[0]), int(self.right.shape[1]))
+
+    @property
+    def dtype(self):
+        return np.result_type(
+            getattr(self.left, "dtype", np.complex128),
+            getattr(self.right, "dtype", np.complex128),
+        )
+
+    @property
+    def T(self):
+        return self.tocsr().T
+
+    def tocsr(self) -> sp.csr_array:
+        if self._matrix is None:
+            self._matrix = _left_multiply_sparse_csr(self.left, self.right)
+        return self._matrix
+
+    def asformat(self, format: str):
+        return self.tocsr().asformat(format)
+
+    def astype(self, dtype):
+        return self.tocsr().astype(dtype)
+
+    def toarray(self):
+        return self.tocsr().toarray()
+
+    def conj(self):
+        return self.tocsr().conj()
+
+    def __matmul__(self, other):
+        return self.tocsr() @ other
+
+
+def _lazy_left_multiply_sparse_csr(left: Any, right: Any) -> _LazySparseProductOperator:
+    return _LazySparseProductOperator(left=left, right=right)
+
+
 def _left_multiply_sparse_csr(left: Any, right: Any) -> sp.csr_array:
     """Return ``left @ right`` as a CSR sparse array.
 
@@ -1171,10 +1226,18 @@ def build_type1_cage_lindblad_construction(
     stage_start = time.perf_counter()
     monitor_residual = float(np.linalg.norm(monitor @ psi))
     if compute_jump_residuals:
-        jump_residuals = _jump_residuals(
-            state=psi,
-            jumps=jumps,
-        )
+        if component_jumps is None:
+            jump_residuals = _jump_residuals(
+                state=psi,
+                jumps=jumps,
+            )
+        else:
+            component_jump_residuals = _component_jump_residuals_from_components(monitor_components)
+            remaining_jumps = tuple(jumps[len(component_jumps) :])
+            jump_residuals = component_jump_residuals + _jump_residuals(
+                state=psi,
+                jumps=remaining_jumps,
+            )
     else:
         jump_residuals = ()
     max_jump_residual = max(jump_residuals) if jump_residuals else 0.0
@@ -1607,6 +1670,44 @@ def _jump_residuals(
     jumps: tuple[Any, ...],
 ) -> tuple[float, ...]:
     return tuple(float(np.linalg.norm(jump @ state)) for jump in jumps)
+
+
+def _component_jump_residuals_from_monitor_state(
+    *,
+    monitor_state: NDArray[np.complex128],
+    kinetic_terms: tuple[LocalTermDescriptor, ...],
+    model: Any,
+    build_result: ModelBuildResult,
+    builder: HamiltonianBuilderName,
+    backend: SparseBackendName,
+    local_term_cache: _LocalTermMatrixCache | None = None,
+) -> tuple[float, ...]:
+    """Return ``||K_p M_i psi||`` without materializing ``K_p M_i``."""
+
+    return tuple(
+        float(
+            np.linalg.norm(
+                _local_term_matrix(
+                    model=model,
+                    build_result=build_result,
+                    term=kinetic_term,
+                    builder=builder,
+                    backend=backend,
+                    local_term_cache=local_term_cache,
+                )
+                @ monitor_state
+            )
+        )
+        for kinetic_term in kinetic_terms
+    )
+
+
+def _component_jump_residuals_from_components(
+    components: tuple[ReducedIZMonitorComponent, ...],
+) -> tuple[float, ...]:
+    return tuple(
+        float(residual) for component in components for residual in component.jump_residuals
+    )
 
 
 def _reduced_iz_reports_for_monitor(
@@ -2266,22 +2367,9 @@ def _build_reduced_iz_monitor_components(
         )
 
     component_stage_start = time.perf_counter()
-    jump_results: list[Any | None] = [None] * len(jump_specs)
-    jump_specs_by_term: dict[
-        tuple[str, str, int, tuple[int, ...]],
-        tuple[LocalTermDescriptor, list[tuple[int, sp.csr_array]]],
-    ] = {}
+    jump_results: list[Any] = []
 
-    for jump_index, (kinetic_term, component_monitor) in enumerate(jump_specs):
-        term_key = _local_term_cache_key(kinetic_term)
-        grouped_entry = jump_specs_by_term.get(term_key)
-        if grouped_entry is None:
-            grouped_entry = (kinetic_term, [])
-            jump_specs_by_term[term_key] = grouped_entry
-
-        grouped_entry[1].append((jump_index, component_monitor))
-
-    for kinetic_term, grouped_specs in jump_specs_by_term.values():
+    for kinetic_term, component_monitor in jump_specs:
         kinetic_matrix = _local_term_matrix(
             model=model,
             build_result=build_result,
@@ -2290,22 +2378,9 @@ def _build_reduced_iz_monitor_components(
             backend=backend,
             local_term_cache=local_term_cache,
         )
-        products = _left_multiply_same_left_sparse_csr_batch(
-            kinetic_matrix,
-            tuple(component_monitor for _jump_index, component_monitor in grouped_specs),
-        )
+        jump_results.append(_lazy_left_multiply_sparse_csr(kinetic_matrix, component_monitor))
 
-        for (jump_index, _component_monitor), product in zip(
-            grouped_specs,
-            products,
-            strict=True,
-        ):
-            jump_results[jump_index] = product
-
-    if any(jump is None for jump in jump_results):
-        raise RuntimeError("Internal error while assembling reduced-IZ component jumps.")
-
-    jumps = [jump for jump in jump_results if jump is not None]
+    jumps = jump_results
     _record_construction_stage(
         timing_collector,
         "component_jump_products",
@@ -2315,21 +2390,25 @@ def _build_reduced_iz_monitor_components(
     component_stage_start = time.perf_counter()
     components: list[ReducedIZMonitorComponent] = []
     for component_spec in component_specs:
-        component_jumps = tuple(jumps[index] for index in component_spec["jump_indices"])
-
-        if compute_jump_residuals:
-            component_jump_residuals = _jump_residuals(
-                state=state,
-                jumps=component_jumps,
-            )
-        else:
-            component_jump_residuals = ()
-
         component_monitor = component_spec["monitor"]
-        component_monitor_residual = float(np.linalg.norm(component_monitor @ state))
+        component_monitor_state = component_monitor @ state
+        component_monitor_residual = float(np.linalg.norm(component_monitor_state))
         report_group = component_spec["report_group"]
         component_kinetic_terms = component_spec["kinetic_terms"]
         component_potential_terms = component_spec["potential_terms"]
+
+        if compute_jump_residuals:
+            component_jump_residuals = _component_jump_residuals_from_monitor_state(
+                monitor_state=component_monitor_state,
+                kinetic_terms=component_kinetic_terms,
+                model=model,
+                build_result=build_result,
+                builder=builder,
+                backend=backend,
+                local_term_cache=local_term_cache,
+            )
+        else:
+            component_jump_residuals = ()
 
         components.append(
             ReducedIZMonitorComponent(

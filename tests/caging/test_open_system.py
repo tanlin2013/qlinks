@@ -17,6 +17,7 @@ from qlinks.caging.open_system import (
     _group_local_transitions_by_source,
     _group_reduced_iz_reports_for_monitor,
     _infer_sharp_potential_value,
+    _lazy_left_multiply_sparse_csr,
     _left_multiply_same_left_sparse_csr_batch,
     _left_multiply_sparse_csr,
     _left_multiply_sparse_csr_batch,
@@ -172,6 +173,19 @@ def test_local_term_matrix_cache_reuses_terms_and_promotes_bitmask_builder():
     assert first is second
     assert model.calls == [(3, "bitmask")]
     np.testing.assert_allclose(first.toarray(), 3.0 * np.eye(2))
+
+
+def test_lazy_left_multiply_materializes_on_demand():
+    left = sp.csr_array(np.array([[0.0, 2.0], [3.0, 0.0]], dtype=np.complex128))
+    right = sp.csr_array(np.array([[1.0, 0.0], [0.0, 4.0]], dtype=np.complex128))
+
+    lazy = _lazy_left_multiply_sparse_csr(left, right)
+
+    assert lazy.shape == (2, 2)
+    vector = np.array([1.0, -1.0])
+
+    np.testing.assert_allclose(lazy.toarray(), (left @ right).toarray())
+    np.testing.assert_allclose(lazy @ vector, (left @ right) @ vector)
 
 
 def test_left_multiply_sparse_csr_matches_scipy_product():
