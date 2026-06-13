@@ -289,3 +289,19 @@ def _dummy_cage_state(index: int) -> CageState:
         eigen_residual=0.0,
         full_residual=0.0,
     )
+
+
+def test_cage_search_result_stores_search_stage_seconds() -> None:
+    result = _search_toy_fixed_kappa_cage()
+
+    assert "solve_type1" in result.search_stage_seconds
+    assert "rank_deduplication" in result.search_stage_seconds
+    assert result.search_stage_seconds["solve_type1"] >= 0.0
+
+
+def test_cage_searcher_records_solver_stage_seconds() -> None:
+    result = _search_toy_fixed_kappa_cage()
+
+    assert "solver.candidate_blocks" in result.search_stage_seconds
+    assert "solver.fixed_kappa_nullspace" in result.search_stage_seconds
+    assert "solver.validation" in result.search_stage_seconds

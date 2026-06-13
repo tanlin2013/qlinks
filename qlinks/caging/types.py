@@ -30,3 +30,7 @@ class CageSolverConfig:
     ipr_support_tolerance_factor: float = 100.0
     ipr_rank_tolerance_factor: float = 100.0
     ipr_random_seed: int | None = None
+
+    # Optional mutable timing sink used by benchmark/diagnostic callers.
+    # Keys are internal stage names and values are accumulated seconds.
+    timing_collector: dict[str, float] | None = None

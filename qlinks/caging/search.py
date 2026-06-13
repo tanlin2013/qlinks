@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections import defaultdict, deque
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field, replace
@@ -138,6 +139,7 @@ class CageSearchResult:
     config: CageSearchConfig
     type1_candidates: list[CandidateSubgraph] = field(default_factory=list)
     type2_candidates: list[CandidateSubgraph] = field(default_factory=list)
+    search_stage_seconds: dict[str, float] = field(default_factory=dict)
 
     def __len__(self) -> int:
         return len(self.records)
@@ -327,33 +329,64 @@ class CageSearcher:
         type2_candidates: list[CandidateSubgraph] | None = None,
     ) -> CageSearchResult:
         """Run the full cage-search workflow."""
+        search_stage_seconds: dict[str, float] = {}
         type1_enabled, type2_enabled = self._enabled_candidate_types()
 
         if type1_candidates is None:
-            type1_candidates = self._build_type1_candidates() if type1_enabled else []
+            type1_candidates = (
+                self._time_search_stage(
+                    "candidate_build_type1",
+                    self._build_type1_candidates,
+                    search_stage_seconds,
+                )
+                if type1_enabled
+                else []
+            )
 
         if type2_candidates is None:
-            type2_candidates = self._build_type2_candidates() if type2_enabled else []
+            type2_candidates = (
+                self._time_search_stage(
+                    "candidate_build_type2",
+                    self._build_type2_candidates,
+                    search_stage_seconds,
+                )
+                if type2_enabled
+                else []
+            )
 
         records: list[CageRecord] = []
 
         if type1_enabled:
             records.extend(
-                self._solve_candidates(
-                    candidates=type1_candidates,
-                    allowed_kappas=self.config.type1_kappas,
+                self._time_search_stage(
+                    "solve_type1",
+                    lambda: self._solve_candidates(
+                        candidates=type1_candidates,
+                        allowed_kappas=self.config.type1_kappas,
+                        timing_collector=search_stage_seconds,
+                    ),
+                    search_stage_seconds,
                 )
             )
 
         if type2_enabled:
             records.extend(
-                self._solve_candidates(
-                    candidates=type2_candidates,
-                    allowed_kappas=self.config.type2_kappas,
+                self._time_search_stage(
+                    "solve_type2",
+                    lambda: self._solve_candidates(
+                        candidates=type2_candidates,
+                        allowed_kappas=self.config.type2_kappas,
+                        timing_collector=search_stage_seconds,
+                    ),
+                    search_stage_seconds,
                 )
             )
 
-        records = self._deduplicate_records_by_signature(records)
+        records = self._time_search_stage(
+            "rank_deduplication",
+            lambda: self._deduplicate_records_by_signature(records),
+            search_stage_seconds,
+        )
 
         return CageSearchResult(
             records=records,
@@ -361,7 +394,21 @@ class CageSearcher:
             config=self.config,
             type1_candidates=type1_candidates,
             type2_candidates=type2_candidates,
+            search_stage_seconds=dict(search_stage_seconds),
         )
+
+    @staticmethod
+    def _time_search_stage(
+        stage_name: str,
+        func,
+        timing_collector: dict[str, float],
+    ):
+        start = time.perf_counter()
+        result = func()
+        timing_collector[stage_name] = timing_collector.get(stage_name, 0.0) + (
+            time.perf_counter() - start
+        )
+        return result
 
     def _enabled_candidate_types(self) -> tuple[bool, bool]:
         if self.config.include_type1 is not None:
@@ -406,6 +453,7 @@ class CageSearcher:
         *,
         candidates: list[CandidateSubgraph],
         allowed_kappas: tuple[int, ...],
+        timing_collector: dict[str, float] | None = None,
     ) -> list[CageRecord]:
         solver_config = CageSolverConfig(
             tolerance=self.config.tolerance,
@@ -416,6 +464,7 @@ class CageSearcher:
             ipr_step_size=self.config.ipr_step_size,
             ipr_candidate_count=self.config.ipr_candidate_count,
             ipr_random_seed=self.config.ipr_random_seed,
+            timing_collector=timing_collector,
         )
 
         records: list[CageRecord] = []

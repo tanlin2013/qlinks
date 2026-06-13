@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import numpy as np
 import scipy.linalg as scipy_linalg
 
@@ -17,6 +19,28 @@ from qlinks.caging.nullspace import as_dense_array, nullspace_from_gram
 from qlinks.caging.prefilters import extract_subblocks
 from qlinks.caging.results import CageState
 from qlinks.caging.types import CageSolverConfig
+
+
+def _add_timing(
+    timing_collector: dict[str, float] | None,
+    stage_name: str,
+    elapsed_seconds: float,
+) -> None:
+    if timing_collector is None:
+        return
+
+    timing_collector[stage_name] = timing_collector.get(stage_name, 0.0) + elapsed_seconds
+
+
+def _time_solver_stage(
+    timing_collector: dict[str, float] | None,
+    stage_name: str,
+    func,
+):
+    start = time.perf_counter()
+    result = func()
+    _add_timing(timing_collector, stage_name, time.perf_counter() - start)
+    return result
 
 
 def _full_residual_from_column_block(
@@ -305,9 +329,13 @@ def solve_candidate_for_kinetic_targets(
     if z_value is None:
         return []
 
-    internal_kinetic_matrix, dense_boundary_overlap = _candidate_kinetic_blocks_for_fixed_kappa(
-        kinetic_matrix,
-        candidate,
+    internal_kinetic_matrix, dense_boundary_overlap = _time_solver_stage(
+        config.timing_collector,
+        "solver.candidate_blocks",
+        lambda: _candidate_kinetic_blocks_for_fixed_kappa(
+            kinetic_matrix,
+            candidate,
+        ),
     )
 
     support_size = candidate.size
@@ -322,7 +350,11 @@ def solve_candidate_for_kinetic_targets(
     for target_kappa in target_kappas:
         shifted_matrix = dense_kinetic_internal - target_kappa * dense_identity_matrix
         gram_matrix = dense_boundary_overlap + shifted_matrix.conj().T @ shifted_matrix
-        local_basis = nullspace_from_gram(gram_matrix, tolerance=config.tolerance)
+        local_basis = _time_solver_stage(
+            config.timing_collector,
+            "solver.fixed_kappa_nullspace",
+            lambda: nullspace_from_gram(gram_matrix, tolerance=config.tolerance),
+        )
 
         if local_basis.shape[1] == 0:
             continue
@@ -341,9 +373,13 @@ def solve_candidate_for_kinetic_targets(
                 rank_tolerance=(config.ipr_rank_tolerance_factor * config.tolerance),
                 random_seed=config.ipr_random_seed,
             )
-            local_basis = localized_basis_by_many_start_ipr(
-                local_basis.astype(np.complex128, copy=False),
-                config=ipr_config,
+            local_basis = _time_solver_stage(
+                config.timing_collector,
+                "solver.ipr_localization",
+                lambda: localized_basis_by_many_start_ipr(
+                    local_basis.astype(np.complex128, copy=False),
+                    config=ipr_config,
+                ),
             )
             used_ipr = True
 
@@ -351,27 +387,31 @@ def solve_candidate_for_kinetic_targets(
 
         for localized_index in range(local_basis.shape[1]):
             local_state = local_basis[:, localized_index]
-            cage_state = _build_validated_cage_state(
-                hamiltonian,
-                candidate.vertices,
-                local_state,
-                energy_value,
-                candidate=candidate,
-                dense_internal_matrix=dense_hamiltonian_internal,
-                dense_boundary_matrix=None,
-                config=config,
-                metadata={
-                    "fixed_kappa_solver": True,
-                    "target_kappa": complex(target_kappa),
-                    "self_loop_value": z_value,
-                    "invariant_subspace_dim": fixed_kappa_subspace_dim,
-                    "degenerate_group_index": 0,
-                    "degenerate_group_size": fixed_kappa_subspace_dim,
-                    "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
-                },
-                dense_boundary_overlap_matrix=dense_boundary_overlap,
-                boundary_column_block=hamiltonian_column_block,
-                hamiltonian_column_block=hamiltonian_column_block,
+            cage_state = _time_solver_stage(
+                config.timing_collector,
+                "solver.validation",
+                lambda: _build_validated_cage_state(
+                    hamiltonian,
+                    candidate.vertices,
+                    local_state,
+                    energy_value,
+                    candidate=candidate,
+                    dense_internal_matrix=dense_hamiltonian_internal,
+                    dense_boundary_matrix=None,
+                    config=config,
+                    metadata={
+                        "fixed_kappa_solver": True,
+                        "target_kappa": complex(target_kappa),
+                        "self_loop_value": z_value,
+                        "invariant_subspace_dim": fixed_kappa_subspace_dim,
+                        "degenerate_group_index": 0,
+                        "degenerate_group_size": fixed_kappa_subspace_dim,
+                        "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
+                    },
+                    dense_boundary_overlap_matrix=dense_boundary_overlap,
+                    boundary_column_block=hamiltonian_column_block,
+                    hamiltonian_column_block=hamiltonian_column_block,
+                ),
             )
 
             if cage_state is not None:
@@ -390,17 +430,25 @@ def solve_candidate(
     if config is None:
         config = CageSolverConfig()
 
-    internal_matrix, boundary_matrix, _outside_indices = extract_subblocks(
-        hamiltonian,
-        candidate.vertices,
+    internal_matrix, boundary_matrix, _outside_indices = _time_solver_stage(
+        config.timing_collector,
+        "solver.extract_subblocks",
+        lambda: extract_subblocks(
+            hamiltonian,
+            candidate.vertices,
+        ),
     )
 
-    subspace_basis = invariant_boundary_nullspace(
-        internal_matrix,
-        boundary_matrix,
-        tolerance=config.tolerance,
-        max_power=config.max_power,
-        stabilization_rounds=config.stabilization_rounds,
+    subspace_basis = _time_solver_stage(
+        config.timing_collector,
+        "solver.invariant_boundary_nullspace",
+        lambda: invariant_boundary_nullspace(
+            internal_matrix,
+            boundary_matrix,
+            tolerance=config.tolerance,
+            max_power=config.max_power,
+            stabilization_rounds=config.stabilization_rounds,
+        ),
     )
 
     if subspace_basis.shape[1] == 0:
@@ -415,9 +463,17 @@ def solve_candidate(
     projected_matrix = subspace_basis.conj().T @ dense_internal_matrix @ subspace_basis
 
     if _is_hermitian(projected_matrix, tolerance=config.tolerance):
-        energy_values, projected_states = scipy_linalg.eigh(projected_matrix)
+        energy_values, projected_states = _time_solver_stage(
+            config.timing_collector,
+            "solver.projected_eigensolve",
+            lambda: scipy_linalg.eigh(projected_matrix),
+        )
     else:
-        energy_values, projected_states = scipy_linalg.eig(projected_matrix)
+        energy_values, projected_states = _time_solver_stage(
+            config.timing_collector,
+            "solver.projected_eigensolve",
+            lambda: scipy_linalg.eig(projected_matrix),
+        )
 
     cage_states: list[CageState] = []
 
@@ -445,31 +501,39 @@ def solve_candidate(
                 random_seed=config.ipr_random_seed,
             )
 
-            local_basis = localized_basis_by_many_start_ipr(
-                local_basis.astype(np.complex128, copy=False),
-                config=ipr_config,
+            local_basis = _time_solver_stage(
+                config.timing_collector,
+                "solver.ipr_localization",
+                lambda: localized_basis_by_many_start_ipr(
+                    local_basis.astype(np.complex128, copy=False),
+                    config=ipr_config,
+                ),
             )
             used_ipr = True
 
         for localized_index in range(local_basis.shape[1]):
             local_state = local_basis[:, localized_index]
 
-            cage_state = _build_validated_cage_state(
-                hamiltonian,
-                candidate.vertices,
-                local_state,
-                representative_energy,
-                candidate=candidate,
-                dense_internal_matrix=dense_internal_matrix,
-                dense_boundary_matrix=dense_boundary_matrix,
-                config=config,
-                metadata={
-                    "invariant_subspace_dim": subspace_basis.shape[1],
-                    "degenerate_group_index": group_index,
-                    "degenerate_group_size": len(state_indices),
-                    "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
-                },
-                hamiltonian_column_block=hamiltonian_column_block,
+            cage_state = _time_solver_stage(
+                config.timing_collector,
+                "solver.validation",
+                lambda: _build_validated_cage_state(
+                    hamiltonian,
+                    candidate.vertices,
+                    local_state,
+                    representative_energy,
+                    candidate=candidate,
+                    dense_internal_matrix=dense_internal_matrix,
+                    dense_boundary_matrix=dense_boundary_matrix,
+                    config=config,
+                    metadata={
+                        "invariant_subspace_dim": subspace_basis.shape[1],
+                        "degenerate_group_index": group_index,
+                        "degenerate_group_size": len(state_indices),
+                        "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
+                    },
+                    hamiltonian_column_block=hamiltonian_column_block,
+                ),
             )
 
             if cage_state is not None:

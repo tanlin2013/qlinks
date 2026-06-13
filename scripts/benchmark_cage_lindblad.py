@@ -73,6 +73,7 @@ class CageLindbladBenchmarkResult:
     classification_seconds: float
     construction_seconds: float
     total_seconds: float
+    search_stage_seconds: dict[str, float]
     construction_stage_seconds: dict[str, float]
     n_nontrivial_zeros: int
     classification_label: str
@@ -185,6 +186,10 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
         "jumps",
         "build_s",
         "search_s",
+        "cand1_s",
+        "solve1_s",
+        "ipr_s",
+        "dedup_s",
         "classify_s",
         "construct_s",
         "monitor_s",
@@ -216,6 +221,10 @@ def format_markdown_report(results: list[CageLindbladBenchmarkResult]) -> str:
             result.n_jumps,
             _format_seconds(result.build_seconds),
             _format_seconds(result.search_seconds),
+            _format_seconds(_stage_seconds(result.search_stage_seconds, "candidate_build_type1")),
+            _format_seconds(_stage_seconds(result.search_stage_seconds, "solve_type1")),
+            _format_seconds(_stage_seconds(result.search_stage_seconds, "solver.ipr_localization")),
+            _format_seconds(_stage_seconds(result.search_stage_seconds, "rank_deduplication")),
             _format_seconds(result.classification_seconds),
             _format_seconds(result.construction_seconds),
             _format_seconds(_stage_seconds(result.construction_stage_seconds, "monitor_assembly")),
@@ -489,6 +498,7 @@ def run_cage_lindblad_benchmark(
         + search_seconds
         + classification_seconds
         + construction_seconds,
+        search_stage_seconds=dict(search_result.search_stage_seconds),
         construction_stage_seconds=dict(construction_stage_seconds),
         n_nontrivial_zeros=classification_report.n_nontrivial_zeros,
         classification_label=str(classification_report.label),
@@ -530,6 +540,10 @@ def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
         "jumps",
         "build_s",
         "search_s",
+        "cand1_s",
+        "solve1_s",
+        "ipr_s",
+        "dedup_s",
         "classify_s",
         "construct_s",
         "monitor_s",
@@ -554,6 +568,10 @@ def print_table(results: list[CageLindbladBenchmarkResult]) -> None:
             str(result.n_jumps),
             f"{result.build_seconds:.6f}",
             f"{result.search_seconds:.6f}",
+            f"{_stage_seconds(result.search_stage_seconds, 'candidate_build_type1'):.6f}",
+            f"{_stage_seconds(result.search_stage_seconds, 'solve_type1'):.6f}",
+            f"{_stage_seconds(result.search_stage_seconds, 'solver.ipr_localization'):.6f}",
+            f"{_stage_seconds(result.search_stage_seconds, 'rank_deduplication'):.6f}",
             f"{result.classification_seconds:.6f}",
             f"{result.construction_seconds:.6f}",
             f"{_stage_seconds(result.construction_stage_seconds, 'monitor_assembly'):.6f}",

@@ -261,3 +261,35 @@ def test_solve_candidates_combines_results() -> None:
         [-1.0, -1.0],
         atol=1e-12,
     )
+
+
+def test_solve_candidate_for_kinetic_targets_accumulates_timing_collector() -> None:
+    kinetic_matrix = np.array(
+        [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    self_loop_values = np.full(3, 2.0, dtype=np.complex128)
+    hamiltonian = kinetic_matrix + np.diag(self_loop_values)
+    candidate = CandidateSubgraph(vertices=np.array([0, 1]))
+    timing_collector: dict[str, float] = {}
+
+    cage_states = solve_candidate_for_kinetic_targets(
+        hamiltonian,
+        kinetic_matrix,
+        self_loop_values,
+        candidate,
+        target_kappas=(-1.0,),
+        config=CageSolverConfig(
+            tolerance=1e-12,
+            timing_collector=timing_collector,
+        ),
+    )
+
+    assert len(cage_states) == 1
+    assert timing_collector["solver.candidate_blocks"] >= 0.0
+    assert timing_collector["solver.fixed_kappa_nullspace"] >= 0.0
+    assert timing_collector["solver.validation"] >= 0.0
