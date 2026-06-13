@@ -192,68 +192,81 @@ def _local_term_matrix(
 
 
 def _left_multiply_sparse_csr(left: Any, right: Any) -> sp.csr_array:
-    """Return ``left @ right`` using row-gathering for sparse local terms.
+    """Return ``left @ right`` as a CSR sparse array.
 
-    Cage-Lindblad component jumps repeatedly multiply a very sparse local
-    kinetic matrix into a sparse reduced-IZ monitor.  SciPy's generic sparse
-    matrix product is robust but has noticeable overhead for many small local
-    products.  Here we exploit the left sparse factor directly: each nonzero
-    ``left[row, source_row]`` contributes a scaled copy of ``right[source_row]``
-    to output row ``row``.
+    The reduced-IZ Cage-Lindblad path builds many products of local kinetic
+    terms with monitor components.  SciPy's sparse product is implemented in
+    optimized code and is faster than Python row-gathering for the matrix sizes
+    that dominate the benchmark, so this helper keeps a single normalization
+    point for sparse format handling.
     """
 
-    left_coo = left.tocoo(copy=False)
-    right_csr = right.tocsr()
-    shape = (left_coo.shape[0], right_csr.shape[1])
-    dtype = np.result_type(left_coo.dtype, right_csr.dtype, np.complex128)
-
-    if left_coo.nnz == 0 or right_csr.nnz == 0:
-        return sp.csr_array(shape, dtype=dtype)
-
-    rows_parts: list[NDArray[np.int64]] = []
-    cols_parts: list[NDArray[np.int64]] = []
-    data_parts: list[NDArray[np.complex128]] = []
-
-    for output_row, source_row, coefficient in zip(
-        left_coo.row,
-        left_coo.col,
-        left_coo.data,
-        strict=True,
-    ):
-        row_start = int(right_csr.indptr[int(source_row)])
-        row_end = int(right_csr.indptr[int(source_row) + 1])
-
-        if row_start == row_end:
-            continue
-
-        row_nnz = row_end - row_start
-        rows_parts.append(np.full(row_nnz, int(output_row), dtype=np.int64))
-        cols_parts.append(
-            np.asarray(
-                right_csr.indices[row_start:row_end],
-                dtype=np.int64,
-            )
-        )
-        data_parts.append(
-            np.asarray(
-                complex(coefficient) * right_csr.data[row_start:row_end],
-                dtype=dtype,
-            )
-        )
-
-    if len(data_parts) == 0:
-        return sp.csr_array(shape, dtype=dtype)
-
-    result = sp.csr_array(
-        (
-            np.concatenate(data_parts),
-            (np.concatenate(rows_parts), np.concatenate(cols_parts)),
-        ),
-        shape=shape,
-        dtype=dtype,
-    )
-    result.sum_duplicates()
+    result = left.tocsr() @ right.tocsr()
     return result.tocsr()
+
+
+def _slice_csr_rows(
+    matrix: sp.csr_array,
+    *,
+    row_start: int,
+    row_stop: int,
+) -> sp.csr_array:
+    """Return a CSR row slice without going through generic sparse indexing."""
+
+    matrix = matrix.tocsr()
+    data_start = int(matrix.indptr[row_start])
+    data_stop = int(matrix.indptr[row_stop])
+
+    indptr = matrix.indptr[row_start : row_stop + 1].copy()
+    indptr -= indptr[0]
+
+    return sp.csr_array(
+        (
+            matrix.data[data_start:data_stop].copy(),
+            matrix.indices[data_start:data_stop].copy(),
+            indptr,
+        ),
+        shape=(row_stop - row_start, matrix.shape[1]),
+    )
+
+
+def _left_multiply_sparse_csr_batch(
+    left_matrices: tuple[Any, ...],
+    right: Any,
+) -> tuple[sp.csr_array, ...]:
+    """Return ``left @ right`` for many left factors sharing one right factor.
+
+    Component-decomposed reduced-IZ monitors often need several products
+    ``K_p M_i`` for the same monitor component ``M_i``.  Stacking all ``K_p``
+    factors vertically lets SciPy perform one sparse product for the component,
+    then we split the result back into individual jump matrices.
+    """
+
+    if len(left_matrices) == 0:
+        return ()
+
+    if len(left_matrices) == 1:
+        return (_left_multiply_sparse_csr(left_matrices[0], right),)
+
+    left_csr = tuple(matrix.tocsr() for matrix in left_matrices)
+    row_count = int(left_csr[0].shape[0])
+    column_count = int(left_csr[0].shape[1])
+
+    if any(matrix.shape != (row_count, column_count) for matrix in left_csr):
+        return tuple(_left_multiply_sparse_csr(matrix, right) for matrix in left_csr)
+
+    right_csr = right.tocsr()
+    stacked_left = sp.vstack(left_csr, format="csr")
+    stacked_product = (stacked_left @ right_csr).tocsr()
+
+    return tuple(
+        _slice_csr_rows(
+            stacked_product,
+            row_start=product_index * row_count,
+            row_stop=(product_index + 1) * row_count,
+        )
+        for product_index in range(len(left_csr))
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -2048,9 +2061,8 @@ def _build_reduced_iz_monitor_components(
             )
 
         component_stage_start = time.perf_counter()
-        component_jumps: list[Any] = []
-        for kinetic_term in component_kinetic_terms:
-            kinetic = _local_term_matrix(
+        component_kinetic_matrices = tuple(
+            _local_term_matrix(
                 model=model,
                 build_result=build_result,
                 term=kinetic_term,
@@ -2058,8 +2070,14 @@ def _build_reduced_iz_monitor_components(
                 backend=backend,
                 local_term_cache=local_term_cache,
             )
-
-            component_jumps.append(_left_multiply_sparse_csr(kinetic, component_monitor))
+            for kinetic_term in component_kinetic_terms
+        )
+        component_jumps = list(
+            _left_multiply_sparse_csr_batch(
+                component_kinetic_matrices,
+                component_monitor,
+            )
+        )
 
         _record_construction_stage(
             timing_collector,

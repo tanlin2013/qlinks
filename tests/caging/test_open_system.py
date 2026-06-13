@@ -18,6 +18,7 @@ from qlinks.caging.open_system import (
     _group_reduced_iz_reports_for_monitor,
     _infer_sharp_potential_value,
     _left_multiply_sparse_csr,
+    _left_multiply_sparse_csr_batch,
     _LocalTermMatrixCache,
     _partition_plaquette_terms_by_region,
     _ReducedIZAssemblyCache,
@@ -216,6 +217,36 @@ def test_left_multiply_sparse_csr_sums_duplicate_entries():
         actual.toarray(),
         np.array([[15.0, 0.0], [0.0, 0.0]], dtype=np.complex128),
     )
+
+
+def test_left_multiply_sparse_csr_batch_matches_individual_products():
+    left_a = sp.csr_array(
+        (
+            np.array([1.0, -2.0], dtype=np.complex128),
+            (np.array([0, 2]), np.array([1, 0])),
+        ),
+        shape=(3, 3),
+    )
+    left_b = sp.csr_array(
+        (
+            np.array([0.5, 3.0], dtype=np.complex128),
+            (np.array([1, 2]), np.array([2, 1])),
+        ),
+        shape=(3, 3),
+    )
+    right = sp.csr_array(
+        (
+            np.array([2.0, -1.0j, 4.0], dtype=np.complex128),
+            (np.array([0, 1, 2]), np.array([1, 0, 2])),
+        ),
+        shape=(3, 4),
+    )
+
+    products = _left_multiply_sparse_csr_batch((left_a, left_b), right)
+
+    assert len(products) == 2
+    np.testing.assert_allclose(products[0].toarray(), (left_a @ right).toarray())
+    np.testing.assert_allclose(products[1].toarray(), (left_b @ right).toarray())
 
 
 def test_select_jump_terms_can_include_crossing_terms():
