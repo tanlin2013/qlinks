@@ -27,8 +27,7 @@ from qlinks.caging.open_system import (
     ReducedIZMonitorDecomposition,
     build_type1_cage_lindblad_construction,
 )
-from qlinks.models.qdm import SquareQDMModel
-from qlinks.models.qlm import SquareQLMModel
+from qlinks.models import HoneycombQDMModel, SquareQDMModel, SquareQLMModel
 
 BuilderName = Literal["sparse", "optimized", "bitmask"]
 SearchTypeName = Literal["type1", "type2", "type1_and_type2", "custom"]
@@ -250,7 +249,7 @@ def make_benchmark_cases() -> list[CageLindbladBenchmarkCase]:
             ),
             builder="sparse",
             search_type="type1",
-            signature=(0, 6),
+            signature=(0, 4),
         ),
         CageLindbladBenchmarkCase(
             name="square_qlm_4x4_pbc_w00",
@@ -267,6 +266,21 @@ def make_benchmark_cases() -> list[CageLindbladBenchmarkCase]:
             builder="sparse",
             search_type="type1",
             signature=(0, 8),
+        ),
+        CageLindbladBenchmarkCase(
+            name="honeycomb_qdm_4x4_pbc_w-20",
+            model=HoneycombQDMModel(
+                lx=4,
+                ly=4,
+                boundary_condition="periodic",
+                winding_x=-2,
+                winding_y=0,
+                coup_kin=-1.0,
+                coup_pot=1.0,
+            ),
+            builder="sparse",
+            search_type="type1",
+            signature=(0, 4),
         ),
     ]
 
@@ -361,6 +375,10 @@ def run_cage_lindblad_benchmark(
     search_config = CageSearchConfig(
         search_type=case.search_type,
         tolerance=residual_tolerance,
+        degenerate_basis_strategy="ipr",
+        ipr_n_restarts=256,
+        ipr_candidate_count=128,
+        ipr_random_seed=1234,
         store_full_states=True,
     )
     searcher = CageSearcher.from_model_build_result(build_result, config=search_config)
