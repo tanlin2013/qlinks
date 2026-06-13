@@ -179,15 +179,18 @@ def test_classify_full_state_finds_regional_candidate(
     assert report.n_reduced_iz_probe_supports == 1
     assert report.reduced_iz_probe_supports[0].zero_index == indices["h"]
     assert report.reduced_iz_probe_supports[0].variable_indices == (1, 2)
-    assert report.reduced_iz_component_groups(decomposition="single_sum")[0].zero_indices == (
-        indices["h"],
+    single_group = report.reduced_iz_component_groups(decomposition="single_sum")[0]
+    exact_group = report.reduced_iz_component_groups(decomposition="exact_support")[0]
+    connected_group = report.reduced_iz_component_groups(decomposition="connected_support")[0]
+
+    assert single_group.zero_indices == (indices["h"],)
+    assert exact_group.support_variables == (1, 2)
+    assert connected_group.support_variables == (1, 2)
+    assert exact_group.has_state_action_vector
+    np.testing.assert_allclose(
+        exact_group.state_action_vector,
+        zero_report.reduced_action_vector,
     )
-    assert report.reduced_iz_component_groups(decomposition="exact_support")[
-        0
-    ].support_variables == (1, 2)
-    assert report.reduced_iz_component_groups(decomposition="connected_support")[
-        0
-    ].support_variables == (1, 2)
     assert select_reduced_iz_monitor_reports(report) == report.zero_reports
     assert group_reduced_iz_monitor_reports(
         report.zero_reports,
@@ -247,6 +250,7 @@ def test_classify_full_state_finds_regional_candidate(
     rendered = report.to_text()
     assert "Reduced-IZ monitor cache" in rendered
     assert "exact_support groups" in rendered
+    assert "exact_support cached actions" in rendered
 
 
 def test_classify_full_state_regional_when_complement_targets_are_known_zeros(
@@ -290,14 +294,15 @@ def test_classify_full_state_regional_when_complement_targets_are_known_zeros(
     h1_report = reports_by_zero[indices["h1"]]
 
     assert report.reduced_iz_region_variable_indices == (1, 2)
-    assert [
-        group.zero_indices
-        for group in report.reduced_iz_component_groups(decomposition="exact_support")
-    ] == [(indices["h0"], indices["h1"])]
-    assert [
-        group.zero_indices
-        for group in report.reduced_iz_component_groups(decomposition="connected_support")
-    ] == [(indices["h0"], indices["h1"])]
+    exact_groups = report.reduced_iz_component_groups(decomposition="exact_support")
+    connected_groups = report.reduced_iz_component_groups(decomposition="connected_support")
+    assert [group.zero_indices for group in exact_groups] == [(indices["h0"], indices["h1"])]
+    assert [group.zero_indices for group in connected_groups] == [(indices["h0"], indices["h1"])]
+    assert exact_groups[0].has_state_action_vector
+    np.testing.assert_allclose(
+        exact_groups[0].state_action_vector,
+        h0_report.reduced_action_vector + h1_report.reduced_action_vector,
+    )
 
     assert h0_report.q_sector_weight == pytest.approx(0.5)
     assert h1_report.q_sector_weight == pytest.approx(0.5)

@@ -381,10 +381,11 @@ class _LazyReducedIZMonitorOperator:
     """Lazy reduced-IZ sparse monitor assembled from classification reports."""
 
     reports: tuple[InterferenceZeroReport, ...]
-    basis_configs: NDArray[np.integer]
+    basis_configs: NDArray[np.integer] | None
     config_to_index: dict[tuple[int, ...], int] | None
     shape: tuple[int, int]
     use_collective_coefficients: bool
+    build_result: ModelBuildResult | None = None
     assembly_cache: Any | None = None
     _state_action: NDArray[np.complex128] | None = None
     _matrix: sp.csr_array | None = field(default=None, init=False, repr=False)
@@ -399,13 +400,31 @@ class _LazyReducedIZMonitorOperator:
 
     def tocsr(self) -> sp.csr_array:
         if self._matrix is None:
+            basis_configs = self.basis_configs
+            if basis_configs is None:
+                if self.build_result is None:
+                    raise ValueError(
+                        "Lazy reduced-IZ monitor materialization requires "
+                        "basis_configs or build_result."
+                    )
+                basis_configs = basis_configs_from_build_result(self.build_result)
+                self.basis_configs = basis_configs
+
+            assembly_cache = self.assembly_cache
+            if assembly_cache is None:
+                assembly_cache = _ReducedIZAssemblyCache(
+                    basis_configs=basis_configs,
+                    config_to_index=self.config_to_index,
+                )
+                self.assembly_cache = assembly_cache
+
             self._matrix = _build_reduced_iz_monitor_from_reports(
                 reports=self.reports,
-                basis_configs=self.basis_configs,
+                basis_configs=basis_configs,
                 config_to_index=self.config_to_index,
                 shape=self.shape,
                 use_collective_coefficients=self.use_collective_coefficients,
-                assembly_cache=self.assembly_cache,
+                assembly_cache=assembly_cache,
             ).tocsr()
         return self._matrix
 
@@ -507,6 +526,46 @@ def _state_action_from_lazy_operator(operator: Any) -> NDArray[np.complex128] | 
     return np.asarray(action, dtype=np.complex128)
 
 
+def _state_action_from_component_group(
+    component_group: Any,
+    *,
+    state: NDArray[np.complex128],
+) -> NDArray[np.complex128] | None:
+    action = getattr(component_group, "state_action_vector", None)
+    if action is None:
+        return None
+
+    action_array = np.asarray(action, dtype=np.complex128)
+    if action_array.shape != state.shape:
+        return None
+
+    return action_array
+
+
+def _report_groups_from_component_groups(
+    *,
+    selected_reports: tuple[InterferenceZeroReport, ...],
+    component_groups: tuple[Any, ...],
+) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
+    reports_by_zero_index = {int(report.zero_index): report for report in selected_reports}
+    report_groups: list[tuple[InterferenceZeroReport, ...]] = []
+
+    for component_group in component_groups:
+        group_reports: list[InterferenceZeroReport] = []
+        for zero_index in component_group.zero_indices:
+            try:
+                group_reports.append(reports_by_zero_index[int(zero_index)])
+            except KeyError as exc:
+                raise ValueError(
+                    "Reduced-IZ component group references a zero index that "
+                    "is absent from the selected monitor reports: "
+                    f"{int(zero_index)}."
+                ) from exc
+        report_groups.append(tuple(group_reports))
+
+    return tuple(report_groups)
+
+
 def _lazy_left_multiply_sparse_csr(left: Any, right: Any) -> _LazySparseProductOperator:
     return _LazySparseProductOperator(left=left, right=right)
 
@@ -527,136 +586,6 @@ def _left_multiply_sparse_csr(left: Any, right: Any) -> sp.csr_array:
 
     result = left.tocsr() @ right_csr
     return result.tocsr()
-
-
-def _slice_csr_rows(
-    matrix: sp.csr_array,
-    *,
-    row_start: int,
-    row_stop: int,
-) -> sp.csr_array:
-    """Return a CSR row slice without going through generic sparse indexing."""
-
-    matrix = matrix.tocsr()
-    data_start = int(matrix.indptr[row_start])
-    data_stop = int(matrix.indptr[row_stop])
-
-    indptr = matrix.indptr[row_start : row_stop + 1].copy()
-    indptr -= indptr[0]
-
-    return sp.csr_array(
-        (
-            matrix.data[data_start:data_stop].copy(),
-            matrix.indices[data_start:data_stop].copy(),
-            indptr,
-        ),
-        shape=(row_stop - row_start, matrix.shape[1]),
-    )
-
-
-def _slice_csc_columns(
-    matrix: sp.csc_array,
-    *,
-    column_start: int,
-    column_stop: int,
-) -> sp.csr_array:
-    """Return a CSC column slice without generic sparse indexing."""
-
-    matrix = matrix.tocsc()
-    data_start = int(matrix.indptr[column_start])
-    data_stop = int(matrix.indptr[column_stop])
-
-    indptr = matrix.indptr[column_start : column_stop + 1].copy()
-    indptr -= indptr[0]
-
-    return sp.csc_array(
-        (
-            matrix.data[data_start:data_stop].copy(),
-            matrix.indices[data_start:data_stop].copy(),
-            indptr,
-        ),
-        shape=(matrix.shape[0], column_stop - column_start),
-    ).tocsr()
-
-
-def _left_multiply_same_left_sparse_csr_batch(
-    left: Any,
-    right_matrices: tuple[Any, ...],
-) -> tuple[sp.csr_array, ...]:
-    """Return ``left @ right`` for many right factors sharing one left factor."""
-
-    if len(right_matrices) == 0:
-        return ()
-
-    action = _SparseColumnAction.from_left(left)
-    if action is not None:
-        return tuple(action.apply(matrix) for matrix in right_matrices)
-
-    if len(right_matrices) == 1:
-        return (_left_multiply_sparse_csr(left, right_matrices[0]),)
-
-    left_csr = left.tocsr()
-    right_csr = tuple(matrix.tocsr() for matrix in right_matrices)
-    row_count = int(right_csr[0].shape[0])
-    column_count = int(right_csr[0].shape[1])
-
-    if any(matrix.shape != (row_count, column_count) for matrix in right_csr):
-        return tuple(_left_multiply_sparse_csr(left_csr, matrix) for matrix in right_csr)
-
-    stacked_right = sp.hstack(right_csr, format="csr")
-    stacked_product = (left_csr @ stacked_right).tocsc()
-
-    return tuple(
-        _slice_csc_columns(
-            stacked_product,
-            column_start=product_index * column_count,
-            column_stop=(product_index + 1) * column_count,
-        )
-        for product_index in range(len(right_csr))
-    )
-
-
-def _left_multiply_sparse_csr_batch(
-    left_matrices: tuple[Any, ...],
-    right: Any,
-) -> tuple[sp.csr_array, ...]:
-    """Return ``left @ right`` for many left factors sharing one right factor.
-
-    Component-decomposed reduced-IZ monitors often need several products
-    ``K_p M_i`` for the same monitor component ``M_i``.  When all kinetic
-    terms are partial permutations, applying the column actions independently
-    avoids the cost of building and slicing a vertically stacked sparse product.
-    """
-
-    if len(left_matrices) == 0:
-        return ()
-
-    actions = tuple(_SparseColumnAction.from_left(matrix) for matrix in left_matrices)
-    if all(action is not None for action in actions):
-        return tuple(action.apply(right) for action in actions if action is not None)
-
-    if len(left_matrices) == 1:
-        return (_left_multiply_sparse_csr(left_matrices[0], right),)
-
-    left_csr = tuple(matrix.tocsr() for matrix in left_matrices)
-    row_count = int(left_csr[0].shape[0])
-    column_count = int(left_csr[0].shape[1])
-
-    if any(matrix.shape != (row_count, column_count) for matrix in left_csr):
-        return tuple(_left_multiply_sparse_csr(matrix, right) for matrix in left_csr)
-
-    right_csr = right.tocsr()
-    stacked_left = sp.vstack(left_csr, format="csr")
-    stacked_product = (stacked_left @ right_csr).tocsr()
-
-    return tuple(
-        _slice_csr_rows(
-            stacked_product,
-            row_start=product_index * row_count,
-            row_stop=(product_index + 1) * row_count,
-        )
-        for product_index in range(len(left_csr))
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1147,8 +1076,14 @@ def build_type1_cage_lindblad_construction(
     _record_construction_stage(timing_collector, "select_terms", stage_start)
 
     dim = build_result.hamiltonian.shape[0]
-    identity = sp.identity(dim, format="csr", dtype=np.complex128)
     shape = build_result.hamiltonian.shape
+    if (
+        monitor_source == "reduced_iz_operators"
+        and reduced_iz_monitor_content == "offdiagonal_only"
+    ):
+        identity = None
+    else:
+        identity = sp.identity(dim, format="csr", dtype=np.complex128)
     local_term_cache = _LocalTermMatrixCache(
         model=model,
         build_result=build_result,
@@ -1200,7 +1135,13 @@ def build_type1_cage_lindblad_construction(
         reduced_iz_monitor_zero_indices = ()
 
     elif monitor_source == "reduced_iz_operators":
-        basis_configs = basis_configs_from_build_result(build_result)
+        if (
+            reduced_iz_monitor_decomposition != "single_sum"
+            and reduced_iz_monitor_content == "offdiagonal_only"
+        ):
+            basis_configs = None
+        else:
+            basis_configs = basis_configs_from_build_result(build_result)
 
         if reduced_iz_monitor_decomposition == "single_sum":
             monitor, reduced_iz_monitor_reports, reduced_iz_z_value = _build_reduced_iz_monitor(
@@ -1241,6 +1182,7 @@ def build_type1_cage_lindblad_construction(
                 include_closed_by_known_zeros=include_closed_by_known_zeros,
                 include_projector_like=include_projector_like,
                 include_collective_cancellation=include_collective_cancellation,
+                use_collective_coefficients=use_collective_coefficients,
             )
             single_component_support = (
                 single_component_groups[0].support_variables if single_component_groups else ()
@@ -2361,7 +2303,7 @@ def _build_reduced_iz_monitor(
 def _build_reduced_iz_monitor_components(
     *,
     classification_report: CageClassificationReport,
-    basis_configs: NDArray[np.integer],
+    basis_configs: NDArray[np.integer] | None,
     shape: tuple[int, int],
     decomposition: ReducedIZMonitorDecomposition,
     reduced_iz_monitor_content: ReducedIZMonitorContent,
@@ -2397,34 +2339,37 @@ def _build_reduced_iz_monitor_components(
     )
 
     # Keep sparse reduced-IZ matrix assembly lazy for the offdiagonal-only
-    # component path.  The fast construction path only needs the cached action
+    # component path.  The fast construction path only needs cached action
     # vectors stored in the classification report; basis-index maps are built
-    # later only if a caller materializes a monitor matrix.  A shared lightweight
-    # cache is still passed to lazy monitors so later materialization can reuse
-    # source groups and transition-index lookups across components.
+    # later only if a caller materializes a monitor matrix.
     config_to_index: dict[tuple[int, ...], int] | None = None
-    assembly_cache = _ReducedIZAssemblyCache(basis_configs=basis_configs)
+    assembly_cache: _ReducedIZAssemblyCache | None = None
     if reduced_iz_monitor_content == "offdiagonal_plus_potential":
+        if basis_configs is None:
+            basis_configs = basis_configs_from_build_result(build_result)
         config_to_index = {
             tuple(int(value) for value in config): index
             for index, config in enumerate(basis_configs)
         }
-        assembly_cache.config_to_index = config_to_index
+        assembly_cache = _ReducedIZAssemblyCache(
+            basis_configs=basis_configs,
+            config_to_index=config_to_index,
+        )
 
-    report_groups = classification_report.reduced_iz_report_groups(
-        decomposition=decomposition,
-        include_q_empty=include_q_empty,
-        include_closed_by_known_zeros=include_closed_by_known_zeros,
-        include_projector_like=include_projector_like,
-        include_collective_cancellation=include_collective_cancellation,
-    )
     component_groups = classification_report.reduced_iz_component_groups(
         decomposition=decomposition,
         include_q_empty=include_q_empty,
         include_closed_by_known_zeros=include_closed_by_known_zeros,
         include_projector_like=include_projector_like,
         include_collective_cancellation=include_collective_cancellation,
+        use_collective_coefficients=use_collective_coefficients,
     )
+    report_groups = _report_groups_from_component_groups(
+        selected_reports=selected_reports,
+        component_groups=component_groups,
+    )
+    kinetic_term_supports = _term_support_sets(kinetic_terms)
+    potential_term_supports = _term_support_sets(potential_terms)
 
     total_monitor_terms: list[Any] = []
     total_monitor_state = np.zeros(shape[0], dtype=np.complex128)
@@ -2434,11 +2379,16 @@ def _build_reduced_iz_monitor_components(
     for component_group, report_group in zip(component_groups, report_groups, strict=True):
         component_id = int(component_group.component_id)
         component_stage_start = time.perf_counter()
-        component_monitor_state = _reduced_iz_monitor_state_from_reports(
-            reports=report_group,
+        component_monitor_state = _state_action_from_component_group(
+            component_group,
             state=state,
-            use_collective_coefficients=use_collective_coefficients,
         )
+        if component_monitor_state is None:
+            component_monitor_state = _reduced_iz_monitor_state_from_reports(
+                reports=report_group,
+                state=state,
+                use_collective_coefficients=use_collective_coefficients,
+            )
 
         if reduced_iz_monitor_content == "offdiagonal_only":
             component_monitor = _LazyReducedIZMonitorOperator(
@@ -2447,6 +2397,7 @@ def _build_reduced_iz_monitor_components(
                 config_to_index=config_to_index,
                 shape=shape,
                 use_collective_coefficients=use_collective_coefficients,
+                build_result=build_result,
                 assembly_cache=assembly_cache,
                 _state_action=component_monitor_state,
             )
@@ -2471,18 +2422,18 @@ def _build_reduced_iz_monitor_components(
         component_support = component_group.support_variables
         component_support_set = frozenset(component_support)
 
-        component_kinetic_terms = _select_terms_inside_variable_support(
-            kinetic_terms,
+        component_kinetic_terms = _select_terms_inside_cached_supports(
+            kinetic_term_supports,
             component_support_set,
         )
 
-        component_potential_terms = _select_terms_inside_variable_support(
-            potential_terms,
+        component_potential_terms = _select_terms_inside_cached_supports(
+            potential_term_supports,
             component_support_set,
         )
 
-        component_support_plaquette_ids = _plaquette_ids_inside_variable_support(
-            kinetic_terms,
+        component_support_plaquette_ids = _plaquette_ids_inside_cached_supports(
+            kinetic_term_supports,
             component_support_set,
         )
 
@@ -2635,6 +2586,28 @@ def _union_support_for_zero_reports(
         support.update(_support_key_for_zero_report(zero_report))
 
     return tuple(sorted(support))
+
+
+def _term_support_sets(
+    terms: tuple[LocalTermDescriptor, ...],
+) -> tuple[tuple[LocalTermDescriptor, frozenset[int]], ...]:
+    return tuple((term, term.support_link_set) for term in terms)
+
+
+def _select_terms_inside_cached_supports(
+    term_supports: tuple[tuple[LocalTermDescriptor, frozenset[int]], ...],
+    variable_support: frozenset[int],
+) -> tuple[LocalTermDescriptor, ...]:
+    return tuple(term for term, support in term_supports if support <= variable_support)
+
+
+def _plaquette_ids_inside_cached_supports(
+    term_supports: tuple[tuple[LocalTermDescriptor, frozenset[int]], ...],
+    variable_support: frozenset[int],
+) -> tuple[int, ...]:
+    return tuple(
+        int(term.term_id) for term, support in term_supports if support <= variable_support
+    )
 
 
 def _select_terms_inside_variable_support(

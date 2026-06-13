@@ -269,12 +269,17 @@ class ReducedIZMonitorComponentGroup:
 
     The construction layer can consume these groups directly instead of
     rediscovering reduced-IZ supports and frustration-free decompositions.
+    When available, ``state_action_vector`` stores the cached action of this
+    component monitor on the classified cage state.
     """
 
     component_id: int
     decomposition: ReducedIZMonitorDecomposition
     zero_indices: tuple[int, ...]
     support_variables: tuple[int, ...]
+    state_action_vector: NDArray[np.complex128] = field(
+        default_factory=lambda: np.array([], dtype=np.complex128)
+    )
 
     @property
     def n_terms(self) -> int:
@@ -283,6 +288,10 @@ class ReducedIZMonitorComponentGroup:
     @property
     def support_size(self) -> int:
         return len(self.support_variables)
+
+    @property
+    def has_state_action_vector(self) -> bool:
+        return self.state_action_vector.size > 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -437,6 +446,7 @@ class CageClassificationReport:
         include_closed_by_known_zeros: bool = True,
         include_projector_like: bool = True,
         include_collective_cancellation: bool = True,
+        use_collective_coefficients: bool = True,
     ) -> tuple[ReducedIZMonitorComponentGroup, ...]:
         """Return cached/recomputed reduced-IZ component-group metadata."""
         if (
@@ -444,6 +454,7 @@ class CageClassificationReport:
             and include_closed_by_known_zeros
             and include_projector_like
             and include_collective_cancellation
+            and use_collective_coefficients
             and decomposition in self.reduced_iz_monitor_component_groups
         ):
             return self.reduced_iz_monitor_component_groups[decomposition]
@@ -456,6 +467,7 @@ class CageClassificationReport:
                 include_collective_cancellation=include_collective_cancellation,
             ),
             decomposition=decomposition,
+            use_collective_coefficients=use_collective_coefficients,
         )
 
     def to_rich(
@@ -555,9 +567,14 @@ class CageClassificationReport:
                 decomposition=decomposition,  # type: ignore[arg-type]
             )
             group_sizes = tuple(group.n_terms for group in groups)
+            n_cached_actions = sum(group.has_state_action_vector for group in groups)
             reduced_iz.add_row(
                 f"{decomposition} groups",
                 f"{len(groups)} {group_sizes}",
+            )
+            reduced_iz.add_row(
+                f"{decomposition} cached actions",
+                f"{n_cached_actions}/{len(groups)}",
             )
 
         state_level = Table(title="State-level interpretation")
@@ -673,6 +690,10 @@ class CageClassificationReport:
                 ),
                 "connected_support groups": len(
                     self.reduced_iz_component_groups(decomposition="connected_support")
+                ),
+                "exact_support cached actions": sum(
+                    group.has_state_action_vector
+                    for group in self.reduced_iz_component_groups(decomposition="exact_support")
                 ),
             },
             "Reduced IZ probe mechanisms": {
@@ -1157,6 +1178,7 @@ def reduced_iz_component_groups_from_reports(
     reports: tuple[InterferenceZeroReport, ...],
     *,
     decomposition: ReducedIZMonitorDecomposition,
+    use_collective_coefficients: bool = True,
 ) -> tuple[ReducedIZMonitorComponentGroup, ...]:
     """Return cached report-side metadata for reduced-IZ monitor components."""
     groups = group_reduced_iz_monitor_reports(
@@ -1181,10 +1203,71 @@ def reduced_iz_component_groups_from_reports(
                 decomposition=decomposition,
                 zero_indices=tuple(int(report.zero_index) for report in report_group),
                 support_variables=support_variables,
+                state_action_vector=_reduced_iz_component_state_action_from_reports(
+                    report_group,
+                    use_collective_coefficients=use_collective_coefficients,
+                ),
             )
         )
 
     return tuple(component_groups)
+
+
+def _reduced_iz_component_state_action_from_reports(
+    reports: tuple[InterferenceZeroReport, ...],
+    *,
+    use_collective_coefficients: bool,
+) -> NDArray[np.complex128]:
+    """Return cached ``sum_h c_h Z_h^(R)|psi>`` for one component group.
+
+    Empty arrays are returned when reports do not contain compatible cached
+    reduced-action vectors, which preserves compatibility with hand-built or
+    older serialized reports.
+    """
+    if len(reports) == 0:
+        return np.array([], dtype=np.complex128)
+
+    first_action = np.asarray(reports[0].reduced_action_vector, dtype=np.complex128)
+    if first_action.ndim != 1 or first_action.size == 0:
+        return np.array([], dtype=np.complex128)
+
+    result = np.zeros_like(first_action, dtype=np.complex128)
+    for zero_report in reports:
+        action = np.asarray(zero_report.reduced_action_vector, dtype=np.complex128)
+        if action.shape != first_action.shape:
+            return np.array([], dtype=np.complex128)
+
+        try:
+            coefficient = _monitor_coefficient_for_zero_report(
+                zero_report,
+                use_collective_coefficients=use_collective_coefficients,
+            )
+        except ValueError:
+            return np.array([], dtype=np.complex128)
+
+        result = result + coefficient * action
+
+    return result
+
+
+def _monitor_coefficient_for_zero_report(
+    zero_report: InterferenceZeroReport,
+    *,
+    use_collective_coefficients: bool,
+) -> complex:
+    if (
+        use_collective_coefficients
+        and zero_report.probe_mechanism_label == "collective_cancellation"
+    ):
+        coefficient = complex(zero_report.collective_cancellation_coefficient)
+        if coefficient == 0:
+            raise ValueError(
+                "Collective-cancellation zero report has zero stored coefficient. "
+                "Cannot cache the reduced-IZ component action with collective coefficients."
+            )
+        return coefficient
+
+    return 1.0 + 0.0j
 
 
 def _find_trivial_zero_indices(
