@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from typing import Sequence
 
 import numpy as np
-from ortools.sat.python import cp_model
+
+try:
+    from ortools.sat.python import cp_model
+except ModuleNotFoundError:  # pragma: no cover - exercised when optional extra is absent.
+    cp_model = None
 
 from qlinks.basis.basis import Basis
 from qlinks.constraints import (
@@ -57,6 +61,13 @@ class CPSATBasisSolver:
         *,
         max_states: int | None = None,
     ) -> Basis:
+        if cp_model is None:
+            raise ImportError(
+                "CPSATBasisSolver requires the optional 'ortools' dependency. "
+                "Install qlinks with the cpsat extra or add ortools to your "
+                "environment to use this solver."
+            )
+
         if max_states is not None and max_states < 0:
             raise ValueError("max_states must be non-negative or None.")
         if max_states == 0:

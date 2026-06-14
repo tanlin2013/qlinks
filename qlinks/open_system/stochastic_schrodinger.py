@@ -49,6 +49,7 @@ class _McwfPreparedOperators:
     hamiltonian: Any
     jumps: tuple[Any, ...]
     effective_hamiltonian_matrix: Any
+    total_jump_rate_operator: Any | None = None
     sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None = None
     uses_sparse_operators: bool = False
     uses_sparse_rate_evaluator: bool = False
@@ -119,9 +120,13 @@ def _prepare_mcwf_operators(
             for jump in jumps
         )
 
-    effective_hamiltonian_matrix = effective_hamiltonian(
-        hamiltonian_backend,
+    total_jump_rate_operator = _total_jump_rate_operator(
         jump_operators,
+        shape=tuple(int(axis) for axis in hamiltonian_backend.shape),
+    )
+    effective_hamiltonian_matrix = _effective_hamiltonian_from_total_rate_operator(
+        hamiltonian_backend,
+        total_jump_rate_operator,
     )
 
     sparse_jump_rate_evaluator = (
@@ -135,6 +140,7 @@ def _prepare_mcwf_operators(
         hamiltonian=hamiltonian_backend,
         jumps=jump_operators,
         effective_hamiltonian_matrix=effective_hamiltonian_matrix,
+        total_jump_rate_operator=total_jump_rate_operator,
         sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
         uses_sparse_operators=use_sparse_operators,
         uses_sparse_rate_evaluator=sparse_jump_rate_evaluator is not None,
@@ -374,6 +380,7 @@ class McwfOptions:
     max_jump_probability: float = 0.1
     prefer_sparse_operators: bool = True
     prefer_sparse_rate_evaluator: bool = True
+    use_total_rate_first: bool = True
     store_density_matrices: bool = True
     store_state_snapshots: bool = False
     timing_collector: MutableMapping[str, float] | None = None
@@ -454,21 +461,59 @@ def expectation(state: Any, operator: Any) -> complex:
 
 def effective_hamiltonian(hamiltonian: Any, jumps: list[Any] | tuple[Any, ...]) -> Any:
     """Return H_eff = H - i/2 sum_mu J_mu^dagger J_mu."""
+    total_rate_operator = _total_jump_rate_operator(
+        tuple(jumps),
+        shape=tuple(int(axis) for axis in hamiltonian.shape),
+    )
+    return _effective_hamiltonian_from_total_rate_operator(
+        hamiltonian,
+        total_rate_operator,
+    )
+
+
+def _effective_hamiltonian_from_total_rate_operator(
+    hamiltonian: Any,
+    total_rate_operator: Any | None,
+) -> Any:
+    """Return ``H - 0.5j * Gamma`` for ``Gamma=sum J^dagger J``."""
     effective = hamiltonian.copy()
+    if total_rate_operator is None:
+        return effective
 
-    if (
-        jumps
-        and scipy_sparse.issparse(effective)
-        and all(scipy_sparse.issparse(jump) for jump in jumps)
-    ):
-        sparse_gram_sum = _sparse_jump_gram_sum_csr(jumps, shape=effective.shape)
+    if scipy_sparse.issparse(effective) or scipy_sparse.issparse(total_rate_operator):
+        effective_sparse = (
+            effective.tocsr()
+            if scipy_sparse.issparse(effective)
+            else scipy_sparse.csr_array(effective, dtype=np.complex128)
+        )
+        total_rate_sparse = (
+            total_rate_operator.tocsr()
+            if scipy_sparse.issparse(total_rate_operator)
+            else scipy_sparse.csr_array(total_rate_operator, dtype=np.complex128)
+        )
+        return (effective_sparse - 0.5j * total_rate_sparse).tocsr()
+
+    return effective - 0.5j * total_rate_operator
+
+
+def _total_jump_rate_operator(
+    jumps: list[Any] | tuple[Any, ...],
+    *,
+    shape: tuple[int, int],
+) -> Any | None:
+    """Return ``Gamma=sum_mu J_mu^dagger J_mu`` or ``None`` with no jumps."""
+    if not jumps:
+        return None
+
+    if all(scipy_sparse.issparse(jump) for jump in jumps):
+        sparse_gram_sum = _sparse_jump_gram_sum_csr(jumps, shape=shape)
         if sparse_gram_sum is not None:
-            return (effective.tocsr() - 0.5j * sparse_gram_sum).tocsr()
+            return sparse_gram_sum
 
-    for jump in jumps:
-        effective = effective - 0.5j * (jump.conj().T @ jump)
-
-    return effective
+    total = jumps[0].conj().T @ jumps[0]
+    for jump in jumps[1:]:
+        total = total + (jump.conj().T @ jump)
+    return total
 
 
 def _sparse_jump_gram_sum_csr(
@@ -626,6 +671,7 @@ def run_quantum_jump_trajectory(
     max_jump_probability: float = 0.1,
     prefer_sparse_operators: bool = True,
     prefer_sparse_rate_evaluator: bool = True,
+    use_total_rate_first: bool = True,
     adaptive_time_step: bool = False,
     adaptive_safety_factor: float = 0.8,
     min_step_size: float = 1.0e-12,
@@ -653,6 +699,7 @@ def run_quantum_jump_trajectory(
         store_states=store_states,
         normalize_each_step=normalize_each_step,
         max_jump_probability=max_jump_probability,
+        use_total_rate_first=use_total_rate_first,
         adaptive_time_step=adaptive_time_step,
         adaptive_safety_factor=adaptive_safety_factor,
         min_step_size=min_step_size,
@@ -671,6 +718,7 @@ def _run_quantum_jump_trajectory_prepared(
     state_callback: Callable[[int, Any], None] | None = None,
     normalize_each_step: bool = True,
     max_jump_probability: float = 0.1,
+    use_total_rate_first: bool = True,
     adaptive_time_step: bool = False,
     adaptive_safety_factor: float = 0.8,
     min_step_size: float = 1.0e-12,
@@ -693,6 +741,7 @@ def _run_quantum_jump_trajectory_prepared(
             state_callback=state_callback,
             normalize_each_step=normalize_each_step,
             max_jump_probability=max_jump_probability,
+            use_total_rate_first=use_total_rate_first,
             adaptive_time_step=adaptive_time_step,
             adaptive_safety_factor=adaptive_safety_factor,
             min_step_size=min_step_size,
@@ -843,6 +892,7 @@ def _run_quantum_jump_trajectory_prepared_scipy(
     state_callback: Callable[[int, Any], None] | None = None,
     normalize_each_step: bool = True,
     max_jump_probability: float = 0.1,
+    use_total_rate_first: bool = True,
     adaptive_time_step: bool = False,
     adaptive_safety_factor: float = 0.8,
     min_step_size: float = 1.0e-12,
@@ -853,6 +903,11 @@ def _run_quantum_jump_trajectory_prepared_scipy(
 
     state = _normalize_numpy_state(np.asarray(state_initial, dtype=np.complex128))
     effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
+    total_jump_rate_operator = (
+        _as_numpy_or_scipy_sparse(prepared.total_jump_rate_operator)
+        if prepared.total_jump_rate_operator is not None
+        else None
+    )
     jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
     sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
     has_jump_operators = len(jump_operators) > 0
@@ -884,7 +939,16 @@ def _run_quantum_jump_trajectory_prepared_scipy(
             total_jump_probability = 0.0
 
             if has_jump_operators:
-                if sparse_jump_rate_evaluator is not None:
+                if _should_use_total_rate_first(
+                    use_total_rate_first,
+                    total_jump_rate_operator=total_jump_rate_operator,
+                    sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+                ):
+                    total_jump_probability = step_size * _evaluate_total_jump_rate_numpy(
+                        state,
+                        total_jump_rate_operator,
+                    )
+                elif sparse_jump_rate_evaluator is not None:
                     rates = _evaluate_sparse_jump_rates_numpy(
                         state,
                         sparse_jump_rate_evaluator,
@@ -917,7 +981,16 @@ def _run_quantum_jump_trajectory_prepared_scipy(
                     if step_size >= remaining_step:
                         step_size = remaining_step
 
-                    if len(jump_operators) == 1 and sparse_jump_rate_evaluator is None:
+                    if _should_use_total_rate_first(
+                        use_total_rate_first,
+                        total_jump_rate_operator=total_jump_rate_operator,
+                        sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+                    ):
+                        total_jump_probability = step_size * _evaluate_total_jump_rate_numpy(
+                            state,
+                            total_jump_rate_operator,
+                        )
+                    elif len(jump_operators) == 1 and sparse_jump_rate_evaluator is None:
                         total_jump_probability = step_size * rate
                     else:
                         probabilities = step_size * rates
@@ -938,13 +1011,23 @@ def _run_quantum_jump_trajectory_prepared_scipy(
                 )
 
             if has_jump_operators and rng.random() < total_jump_probability:
-                if len(jump_operators) == 1 and sparse_jump_rate_evaluator is None:
+                if len(jump_operators) == 1:
                     jump_index = 0
-                    assert jumped_state_single is not None
+                    if jumped_state_single is None:
+                        jumped_state_single = jump_operators[0] @ state
                     state = jumped_state_single
                 else:
+                    if probabilities.size == 0:
+                        if sparse_jump_rate_evaluator is not None:
+                            rates = _evaluate_sparse_jump_rates_numpy(
+                                state,
+                                sparse_jump_rate_evaluator,
+                            )
+                        else:
+                            jumped_states, rates = _evaluate_jumps_numpy(state, jump_operators)
+                        probabilities = step_size * rates
                     jump_index = choose_jump(probabilities, rng)
-                    if sparse_jump_rate_evaluator is not None:
+                    if sparse_jump_rate_evaluator is not None or not jumped_states:
                         state = jump_operators[jump_index] @ state
                     else:
                         state = jumped_states[jump_index]
@@ -1045,6 +1128,11 @@ def _sample_lindblad_mcwf_vectorized_scipy(
 
     start = _perf_counter()
     effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
+    total_jump_rate_operator = (
+        _as_numpy_or_scipy_sparse(prepared.total_jump_rate_operator)
+        if prepared.total_jump_rate_operator is not None
+        else None
+    )
     jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
     sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
     _add_timing(timing_collector, "mcwf.operator_view_conversion", _perf_counter() - start)
@@ -1064,19 +1152,36 @@ def _sample_lindblad_mcwf_vectorized_scipy(
 
         probabilities = np.zeros((0, options.n_trajectories), dtype=np.float64)
         total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
+        rates: NDArray[np.float64] | None = None
 
         if jump_operators:
             start = _perf_counter()
-            if sparse_jump_rate_evaluator is not None:
-                rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+            if _should_use_total_rate_first(
+                options.use_total_rate_first,
+                total_jump_rate_operator=total_jump_rate_operator,
+                sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+            ):
+                total_rates = _evaluate_total_jump_rates_state_matrix_numpy(
                     states,
-                    sparse_jump_rate_evaluator,
+                    total_jump_rate_operator,
                 )
+                total_jump_probabilities = step_size * total_rates
+                elapsed = _perf_counter() - start
+                _add_timing(timing_collector, "mcwf.total_rate_evaluation", elapsed)
+                _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
             else:
-                rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
-            probabilities = step_size * rates
-            total_jump_probabilities = np.sum(probabilities, axis=0)
-            _add_timing(timing_collector, "mcwf.rate_evaluation", _perf_counter() - start)
+                if sparse_jump_rate_evaluator is not None:
+                    rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+                        states,
+                        sparse_jump_rate_evaluator,
+                    )
+                else:
+                    rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
+                probabilities = step_size * rates
+                total_jump_probabilities = np.sum(probabilities, axis=0)
+                elapsed = _perf_counter() - start
+                _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
+                _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
 
             max_total_jump_probability = float(np.max(total_jump_probabilities))
             if max_total_jump_probability > options.max_jump_probability:
@@ -1097,11 +1202,38 @@ def _sample_lindblad_mcwf_vectorized_scipy(
             start = _perf_counter()
             jump_mask = rng.random(options.n_trajectories) < total_jump_probabilities
             if np.any(jump_mask):
-                selected_jump_indices = _choose_jump_indices_vectorized(
-                    probabilities=probabilities,
-                    total_probabilities=total_jump_probabilities,
+                if rates is None:
+                    channel_start = _perf_counter()
+                    if sparse_jump_rate_evaluator is not None:
+                        selected_rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+                            states[:, jump_mask],
+                            sparse_jump_rate_evaluator,
+                        )
+                    else:
+                        selected_rates = _evaluate_jump_rates_state_matrix_numpy(
+                            states[:, jump_mask],
+                            jump_operators,
+                        )
+                    selected_probabilities = step_size * selected_rates
+                    selected_total_probabilities = np.sum(selected_probabilities, axis=0)
+                    channel_elapsed = _perf_counter() - channel_start
+                    _add_timing(
+                        timing_collector,
+                        "mcwf.channel_rate_evaluation",
+                        channel_elapsed,
+                    )
+                    _add_timing(timing_collector, "mcwf.rate_evaluation", channel_elapsed)
+                else:
+                    selected_probabilities = probabilities[:, jump_mask]
+                    selected_total_probabilities = total_jump_probabilities[jump_mask]
+
+                selected_for_active = _choose_jump_indices_vectorized(
+                    probabilities=selected_probabilities,
+                    total_probabilities=selected_total_probabilities,
                     rng=rng,
                 )
+                selected_jump_indices = np.zeros(options.n_trajectories, dtype=np.int64)
+                selected_jump_indices[jump_mask] = selected_for_active
                 _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
 
                 start = _perf_counter()
@@ -1143,6 +1275,73 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         trajectories=None,
         state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
     )
+
+
+def _should_use_total_rate_first(
+    enabled: bool,
+    *,
+    total_jump_rate_operator: Any | None,
+    sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None,
+) -> bool:
+    """Return whether to use total-rate-first sampling for this operator mix.
+
+    The total-rate path is structural: it avoids per-channel work on no-jump
+    steps.  It is not always the fastest kernel, however.  A pure single-entry
+    sparse rate matrix can be cheaper than applying ``Gamma=sum J†J``.  In that
+    case, keep the already vectorized channel-rate path.
+    """
+    if not enabled or total_jump_rate_operator is None:
+        return False
+
+    if sparse_jump_rate_evaluator is None:
+        return True
+
+    if (
+        sparse_jump_rate_evaluator.single_entry_rate_matrix is not None
+        and sparse_jump_rate_evaluator.expanded_rate_operator is None
+    ):
+        return False
+
+    channel_nnz = 0
+    if sparse_jump_rate_evaluator.single_entry_rate_matrix is not None:
+        channel_nnz += int(sparse_jump_rate_evaluator.single_entry_rate_matrix.nnz)
+    if sparse_jump_rate_evaluator.expanded_rate_operator is not None:
+        channel_nnz += int(sparse_jump_rate_evaluator.expanded_rate_operator.nnz)
+
+    if channel_nnz <= 0:
+        return True
+
+    if scipy_sparse.issparse(total_jump_rate_operator):
+        total_nnz = int(total_jump_rate_operator.nnz)
+        return total_nnz < channel_nnz
+
+    return True
+
+
+def _evaluate_total_jump_rates_state_matrix_numpy(
+    states: ArrayC,
+    total_jump_rate_operator: Any,
+) -> NDArray[np.float64]:
+    """Return ``<psi_a|Gamma|psi_a>`` for state columns."""
+    acted_states = total_jump_rate_operator @ states
+    rates = np.einsum(
+        "ij,ij->j",
+        states.conj(),
+        acted_states,
+        optimize=True,
+    ).real
+    rates = np.asarray(rates, dtype=np.float64)
+    np.maximum(rates, 0.0, out=rates)
+    return rates
+
+
+def _evaluate_total_jump_rate_numpy(
+    state: ArrayC,
+    total_jump_rate_operator: Any,
+) -> float:
+    """Return ``<psi|Gamma|psi>`` for one state."""
+    value = np.vdot(state, total_jump_rate_operator @ state).real
+    return max(float(value), 0.0)
 
 
 def _evaluate_sparse_jump_rates_numpy(

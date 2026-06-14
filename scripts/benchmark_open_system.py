@@ -511,6 +511,7 @@ def run_open_system_benchmark(
     mcwf_max_jump_probability: float,
     mcwf_prefer_sparse_operators: bool,
     mcwf_prefer_sparse_rate_evaluator: bool,
+    mcwf_use_total_rate_first: bool,
     mcwf_store_density_matrices: bool,
     mcwf_store_state_snapshots: bool,
 ) -> OpenSystemBenchmarkResult:
@@ -586,6 +587,7 @@ def run_open_system_benchmark(
                 max_jump_probability=mcwf_max_jump_probability,
                 prefer_sparse_operators=mcwf_prefer_sparse_operators,
                 prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
+                use_total_rate_first=mcwf_use_total_rate_first,
             )
         )
         n_trajectories_result = 1
@@ -595,6 +597,7 @@ def run_open_system_benchmark(
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
+            "use_total_rate_first": mcwf_use_total_rate_first,
         }
 
     elif operation == "mcwf":
@@ -609,6 +612,7 @@ def run_open_system_benchmark(
             max_jump_probability=mcwf_max_jump_probability,
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
             prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
+            use_total_rate_first=mcwf_use_total_rate_first,
             store_density_matrices=mcwf_store_density_matrices,
             store_state_snapshots=mcwf_store_state_snapshots,
             timing_collector=stage_seconds,
@@ -633,6 +637,7 @@ def run_open_system_benchmark(
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
+            "use_total_rate_first": mcwf_use_total_rate_first,
         }
 
     else:
@@ -821,6 +826,15 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--mcwf-disable-total-rate-first",
+        action="store_true",
+        help=(
+            "Disable total-rate-first MCWF sampling. By default, MCWF evaluates "
+            "the total rate <psi|sum J†J|psi> every step and only evaluates "
+            "per-channel rates for trajectories that actually jump."
+        ),
+    )
+    parser.add_argument(
         "--mcwf-skip-density-matrices",
         action="store_true",
         help="Skip full ensemble density-matrix accumulation for MCWF benchmarks.",
@@ -929,6 +943,7 @@ def main() -> None:
                     mcwf_max_jump_probability=args.mcwf_max_jump_probability,
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
                     mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
+                    mcwf_use_total_rate_first=(not args.mcwf_disable_total_rate_first),
                     mcwf_store_density_matrices=(not args.mcwf_skip_density_matrices),
                     mcwf_store_state_snapshots=args.mcwf_store_state_snapshots,
                 )

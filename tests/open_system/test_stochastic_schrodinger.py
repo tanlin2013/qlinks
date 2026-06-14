@@ -877,7 +877,9 @@ def test_sample_lindblad_mcwf_reuses_prepared_effective_hamiltonian(monkeypatch,
     import qlinks.open_system.stochastic_schrodinger as stochastic_schrodinger
 
     call_count = 0
-    original_effective_hamiltonian = stochastic_schrodinger.effective_hamiltonian
+    original_effective_hamiltonian = (
+        stochastic_schrodinger._effective_hamiltonian_from_total_rate_operator
+    )
 
     def counted_effective_hamiltonian(*args, **kwargs):
         nonlocal call_count
@@ -886,7 +888,7 @@ def test_sample_lindblad_mcwf_reuses_prepared_effective_hamiltonian(monkeypatch,
 
     monkeypatch.setattr(
         stochastic_schrodinger,
-        "effective_hamiltonian",
+        "_effective_hamiltonian_from_total_rate_operator",
         counted_effective_hamiltonian,
     )
 
@@ -1546,3 +1548,130 @@ def test_sample_lindblad_mcwf_state_snapshots_nonvectorized(qubit_ops):
     assert result.state_snapshots is not None
     assert len(result.state_snapshots) == len(times)
     assert all(snapshot.shape == (2, 2) for snapshot in result.state_snapshots)
+
+
+def test_total_jump_rate_operator_matches_channel_rates():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _evaluate_jump_rates_state_matrix_numpy,
+        _evaluate_total_jump_rates_state_matrix_numpy,
+        _total_jump_rate_operator,
+    )
+
+    dim = 16
+    jump0 = scipy_sparse.csr_array(
+        (
+            np.asarray([1.0 + 0.0j, 0.5j], dtype=np.complex128),
+            (np.asarray([2, 2]), np.asarray([3, 4])),
+        ),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+    jump1 = scipy_sparse.csr_array(
+        ([2.0 + 0.0j], ([5], [6])),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+    jumps = (jump0, jump1)
+    rng = np.random.default_rng(123)
+    states = rng.normal(size=(dim, 4)) + 1j * rng.normal(size=(dim, 4))
+
+    gamma = _total_jump_rate_operator(jumps, shape=(dim, dim))
+    assert gamma is not None
+
+    expected = np.sum(_evaluate_jump_rates_state_matrix_numpy(states, jumps), axis=0)
+    actual = _evaluate_total_jump_rates_state_matrix_numpy(states, gamma)
+
+    np.testing.assert_allclose(actual, expected, atol=1e-14)
+
+
+def test_vectorized_mcwf_total_rate_first_matches_channel_rate_path(qubit_ops):
+    import scipy.sparse as scipy_sparse
+
+    hamiltonian = scipy_sparse.csr_array(0.05 * qubit_ops["sigma_x"])
+    jumps = [
+        scipy_sparse.csr_array(np.sqrt(0.2) * qubit_ops["sigma_minus"]),
+        scipy_sparse.csr_array(np.sqrt(0.1) * qubit_ops["sigma_z"]),
+    ]
+    times = np.linspace(0.0, 0.1, 6)
+
+    baseline = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=32,
+            seed=123,
+            store_trajectories=False,
+            prefer_sparse_operators=True,
+            prefer_sparse_rate_evaluator=True,
+            use_total_rate_first=False,
+        ),
+    )
+    optimized = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=32,
+            seed=123,
+            store_trajectories=False,
+            prefer_sparse_operators=True,
+            prefer_sparse_rate_evaluator=True,
+            use_total_rate_first=True,
+        ),
+    )
+
+    for actual_rho, expected_rho in zip(optimized.rho_t, baseline.rho_t, strict=True):
+        np.testing.assert_allclose(actual_rho, expected_rho, atol=1e-14)
+
+
+def test_vectorized_mcwf_total_rate_first_skips_channel_rates_without_jumps(monkeypatch, qubit_ops):
+    import scipy.sparse as scipy_sparse
+
+    import qlinks.open_system.stochastic_schrodinger as stochastic_schrodinger
+
+    calls = 0
+    original = stochastic_schrodinger._evaluate_sparse_jump_rates_state_matrix_numpy
+
+    def counted_channel_rates(states, evaluator):
+        nonlocal calls
+        calls += 1
+        return original(states, evaluator)
+
+    monkeypatch.setattr(
+        stochastic_schrodinger,
+        "_evaluate_sparse_jump_rates_state_matrix_numpy",
+        counted_channel_rates,
+    )
+    monkeypatch.setattr(
+        stochastic_schrodinger,
+        "_should_use_total_rate_first",
+        lambda *args, **kwargs: True,
+    )
+
+    hamiltonian = scipy_sparse.csr_array((2, 2), dtype=np.complex128)
+    jump = scipy_sparse.csr_array(np.sqrt(0.2) * qubit_ops["sigma_minus"])
+    times = np.linspace(0.0, 0.1, 5)
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket0"],
+        options=McwfOptions(
+            n_trajectories=8,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=False,
+            prefer_sparse_operators=True,
+            prefer_sparse_rate_evaluator=True,
+            use_total_rate_first=True,
+        ),
+    )
+
+    assert result.rho_t == []
+    assert calls == 0
