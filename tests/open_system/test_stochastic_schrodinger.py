@@ -948,6 +948,93 @@ def test_sample_lindblad_mcwf_example_two_level_atom(qubit_ops):
     plt.show()
 
 
+def test_sparse_jump_gram_sum_matches_sparse_matmul():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _sparse_jump_gram_sum_csr,
+    )
+
+    dim = 16
+    jump0 = scipy_sparse.csr_array(
+        (
+            np.array([1.0 + 2.0j, 3.0 - 1.0j, -0.5j], dtype=np.complex128),
+            (np.array([2, 2, 7]), np.array([1, 4, 5])),
+        ),
+        shape=(dim, dim),
+    )
+    jump1 = scipy_sparse.csr_array(
+        (
+            np.array([0.25 + 0.1j, -1.0 + 0.2j], dtype=np.complex128),
+            (np.array([3, 9]), np.array([8, 2])),
+        ),
+        shape=(dim, dim),
+    )
+    jumps = (jump0, jump1)
+
+    actual = _sparse_jump_gram_sum_csr(jumps, shape=(dim, dim))
+    assert actual is not None
+    expected = sum((jump.conj().T @ jump for jump in jumps), scipy_sparse.csr_array((dim, dim)))
+
+    np.testing.assert_allclose(actual.toarray(), expected.toarray(), atol=1e-14)
+
+
+def test_sparse_jump_gram_sum_rejects_row_dense_jump():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _sparse_jump_gram_sum_csr,
+    )
+
+    dim = 64
+    jump = scipy_sparse.csr_array(
+        (
+            np.ones(dim, dtype=np.complex128),
+            (np.zeros(dim, dtype=np.int64), np.arange(dim, dtype=np.int64)),
+        ),
+        shape=(dim, dim),
+    )
+
+    assert _sparse_jump_gram_sum_csr((jump,), shape=(dim, dim), max_row_nnz=32) is None
+
+
+def test_effective_hamiltonian_sparse_many_jumps_matches_generic_path():
+    import scipy.sparse as scipy_sparse
+
+    dim = 16
+    hamiltonian = scipy_sparse.csr_array(
+        (
+            np.array([0.2, -0.1j], dtype=np.complex128),
+            (np.array([0, 5]), np.array([0, 3])),
+        ),
+        shape=(dim, dim),
+    )
+    jumps = (
+        scipy_sparse.csr_array(
+            (
+                np.array([1.0 + 0.1j, -0.3j], dtype=np.complex128),
+                (np.array([2, 2]), np.array([1, 4])),
+            ),
+            shape=(dim, dim),
+        ),
+        scipy_sparse.csr_array(
+            (
+                np.array([0.2 - 0.5j], dtype=np.complex128),
+                (np.array([7]), np.array([5])),
+            ),
+            shape=(dim, dim),
+        ),
+    )
+
+    actual = effective_hamiltonian(hamiltonian, jumps)
+    expected = hamiltonian.copy()
+    for jump in jumps:
+        expected = expected - 0.5j * (jump.conj().T @ jump)
+
+    assert scipy_sparse.issparse(actual)
+    np.testing.assert_allclose(actual.toarray(), expected.toarray(), atol=1e-14)
+
+
 def test_prepare_mcwf_operators_preserves_sparse_scipy_inputs(qubit_ops):
     import scipy.sparse as scipy_sparse
 

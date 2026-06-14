@@ -289,10 +289,85 @@ def effective_hamiltonian(hamiltonian: Any, jumps: list[Any] | tuple[Any, ...]) 
     """Return H_eff = H - i/2 sum_mu J_mu^dagger J_mu."""
     effective = hamiltonian.copy()
 
+    if (
+        jumps
+        and scipy_sparse.issparse(effective)
+        and all(scipy_sparse.issparse(jump) for jump in jumps)
+    ):
+        sparse_gram_sum = _sparse_jump_gram_sum_csr(jumps, shape=effective.shape)
+        if sparse_gram_sum is not None:
+            return (effective.tocsr() - 0.5j * sparse_gram_sum).tocsr()
+
     for jump in jumps:
         effective = effective - 0.5j * (jump.conj().T @ jump)
 
     return effective
+
+
+def _sparse_jump_gram_sum_csr(
+    jumps: list[Any] | tuple[Any, ...],
+    *,
+    shape: tuple[int, int],
+    max_row_nnz: int = 32,
+) -> scipy_sparse.csr_array | None:
+    """Return ``sum_mu J_mu.conj().T @ J_mu`` for row-sparse jumps.
+
+    This avoids doing many tiny sparse matrix multiplications and repeated sparse
+    additions during MCWF operator preparation.  The row-wise construction is
+    only used when every nonzero output row is sufficiently small; otherwise we
+    fall back to SciPy's sparse multiplication, which is better for row-dense
+    matrices.
+    """
+    if not jumps:
+        return scipy_sparse.csr_array(shape, dtype=np.complex128)
+
+    if shape[0] != shape[1]:
+        return None
+
+    dim = int(shape[0])
+    row_blocks: list[NDArray[np.int64]] = []
+    col_blocks: list[NDArray[np.int64]] = []
+    value_blocks: list[NDArray[np.complex128]] = []
+
+    for jump in jumps:
+        if not scipy_sparse.issparse(jump):
+            return None
+
+        jump_csr = jump.tocsr().astype(np.complex128, copy=False)
+        if jump_csr.shape != shape:
+            return None
+
+        indptr = jump_csr.indptr
+        indices = jump_csr.indices
+        data = jump_csr.data
+        row_counts = np.diff(indptr)
+        if row_counts.size and int(np.max(row_counts)) > max_row_nnz:
+            return None
+
+        active_rows = np.flatnonzero(row_counts > 0)
+        for row in active_rows:
+            start = int(indptr[row])
+            stop = int(indptr[row + 1])
+            columns = indices[start:stop].astype(np.int64, copy=False)
+            values = data[start:stop]
+            nnz = int(columns.size)
+            if nnz == 0:
+                continue
+
+            row_blocks.append(np.repeat(columns, nnz))
+            col_blocks.append(np.tile(columns, nnz))
+            value_blocks.append((values.conj().reshape(nnz, 1) * values.reshape(1, nnz)).ravel())
+
+    if not value_blocks:
+        return scipy_sparse.csr_array(shape, dtype=np.complex128)
+
+    rows = np.concatenate(row_blocks)
+    columns = np.concatenate(col_blocks)
+    values = np.concatenate(value_blocks).astype(np.complex128, copy=False)
+    gram = scipy_sparse.csr_array((values, (rows, columns)), shape=(dim, dim), dtype=np.complex128)
+    gram.sum_duplicates()
+    gram.eliminate_zeros()
+    return gram
 
 
 def jump_probabilities(
