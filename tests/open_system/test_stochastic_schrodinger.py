@@ -1912,6 +1912,8 @@ def test_event_driven_survival_threshold_carries_across_output_intervals(qubit_o
         rng=np.random.default_rng(123),
         max_substeps=100,
         min_step_size=1.0e-12,
+        max_jump_probability=10.0,
+        adaptive_safety_factor=0.8,
         timing_collector={},
     )
 
@@ -1943,7 +1945,41 @@ def test_event_driven_survival_threshold_jump_uses_norm_crossing(qubit_ops):
         rng=np.random.default_rng(123),
         max_substeps=100,
         min_step_size=1.0e-12,
+        max_jump_probability=0.1,
+        adaptive_safety_factor=0.8,
         timing_collector={},
     )
 
     np.testing.assert_allclose(next_states[:, 0], qubit_ops["ket0"], atol=1e-14)
+
+
+def test_event_driven_substeps_zero_rate_hamiltonian_mixing(qubit_ops):
+    from qlinks.open_system.stochastic_schrodinger import (
+        _advance_state_matrix_event_driven_numpy,
+    )
+
+    jump_rate = 2.0
+    hamiltonian = qubit_ops["sigma_x"]
+    jump = np.sqrt(jump_rate) * qubit_ops["sigma_minus"]
+    effective_hamiltonian = hamiltonian - 0.5j * (jump.conj().T @ jump)
+    states = qubit_ops["ket0"].reshape(2, 1).copy()
+    thresholds = np.asarray([0.95], dtype=np.float64)
+    timing: dict[str, float] = {}
+
+    _advance_state_matrix_event_driven_numpy(
+        states=states,
+        survival_thresholds=thresholds,
+        step_size=2.0,
+        effective_hamiltonian_matrix=effective_hamiltonian,
+        jump_operators=(jump,),
+        sparse_jump_rate_evaluator=None,
+        rng=np.random.default_rng(123),
+        max_substeps=100_000,
+        min_step_size=1.0e-12,
+        max_jump_probability=0.1,
+        adaptive_safety_factor=0.8,
+        timing_collector=timing,
+    )
+
+    assert timing["mcwf.channel_rate_evaluation"] > 0.0
+    assert timing["mcwf.selected_jump_application"] > 0.0

@@ -1211,6 +1211,8 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                 rng=rng,
                 max_substeps=options.max_substeps_per_interval,
                 min_step_size=options.min_step_size,
+                max_jump_probability=options.max_jump_probability,
+                adaptive_safety_factor=options.adaptive_safety_factor,
                 timing_collector=timing_collector,
             )
 
@@ -1419,8 +1421,8 @@ def _first_order_survival_crossing_times(
     derivatives: ArrayC,
     thresholds: NDArray[np.float64],
     max_times: NDArray[np.float64],
-) -> tuple[NDArray[np.bool_], NDArray[np.float64]]:
-    """Locate first-order no-jump norm threshold crossings.
+) -> tuple[NDArray[np.bool_], NDArray[np.float64], NDArray[np.float64]]:
+    """Locate first-order no-jump norm-threshold crossings.
 
     Starting from normalized columns ``psi`` and first-order no-jump
     derivatives ``dpsi/dt``, the unnormalized survival over one segment is
@@ -1428,20 +1430,19 @@ def _first_order_survival_crossing_times(
         ||psi + t dpsi/dt||^2 = 1 + b t + a t^2.
 
     The returned crossing time is the first nonnegative root of
-    ``1 + b t + a t^2 = threshold`` that lies before ``max_times``.  This is
-    the norm-threshold MCWF waiting-time condition for the same first-order
-    propagator used by the fixed-grid sampler.
+    ``1 + b t + a t^2 = threshold`` that lies before ``max_times``.  The
+    returned instantaneous total jump rates are ``-b`` clipped at zero.
     """
     thresholds = np.asarray(thresholds, dtype=np.float64)
     max_times = np.asarray(max_times, dtype=np.float64)
 
-    quadratic = np.einsum(
+    quadratic_coefficients = np.einsum(
         "ij,ij->j",
         derivatives.conj(),
         derivatives,
         optimize=True,
     ).real
-    linear = (
+    linear_coefficients = (
         2.0
         * np.einsum(
             "ij,ij->j",
@@ -1450,46 +1451,95 @@ def _first_order_survival_crossing_times(
             optimize=True,
         ).real
     )
-    constant = 1.0 - thresholds
+    constant_terms = 1.0 - thresholds
+    total_rates = np.maximum(-linear_coefficients, 0.0)
 
     crossing_times = np.full(thresholds.size, np.inf, dtype=np.float64)
 
-    linear_mask = np.abs(quadratic) <= np.finfo(np.float64).eps
-    valid_linear = linear_mask & (linear < 0.0)
-    crossing_times[valid_linear] = -constant[valid_linear] / linear[valid_linear]
+    linear_only_mask = np.abs(quadratic_coefficients) <= np.finfo(np.float64).eps
+    valid_linear_mask = linear_only_mask & (linear_coefficients < 0.0)
+    crossing_times[valid_linear_mask] = (
+        -constant_terms[valid_linear_mask] / linear_coefficients[valid_linear_mask]
+    )
 
-    quadratic_mask = ~linear_mask
+    quadratic_mask = ~linear_only_mask
     if np.any(quadratic_mask):
-        quad = quadratic[quadratic_mask]
-        lin = linear[quadratic_mask]
-        const = constant[quadratic_mask]
-        discriminant = lin * lin - 4.0 * quad * const
-        valid = discriminant >= 0.0
-        roots = np.full(quad.size, np.inf, dtype=np.float64)
-        if np.any(valid):
-            sqrt_discriminant = np.sqrt(np.maximum(discriminant[valid], 0.0))
-            q_valid = quad[valid]
-            l_valid = lin[valid]
-            root_a = (-l_valid - sqrt_discriminant) / (2.0 * q_valid)
-            root_b = (-l_valid + sqrt_discriminant) / (2.0 * q_valid)
-            positive_a = root_a >= 0.0
-            positive_b = root_b >= 0.0
-            roots_valid = np.full(root_a.size, np.inf, dtype=np.float64)
-            roots_valid[positive_a] = root_a[positive_a]
-            roots_valid[positive_b] = np.minimum(
-                roots_valid[positive_b],
-                root_b[positive_b],
+        quadratic_values = quadratic_coefficients[quadratic_mask]
+        linear_values = linear_coefficients[quadratic_mask]
+        constant_values = constant_terms[quadratic_mask]
+        discriminants = linear_values * linear_values - 4.0 * quadratic_values * constant_values
+        valid_discriminant_mask = discriminants >= 0.0
+        candidate_roots = np.full(quadratic_values.size, np.inf, dtype=np.float64)
+        if np.any(valid_discriminant_mask):
+            square_roots = np.sqrt(np.maximum(discriminants[valid_discriminant_mask], 0.0))
+            valid_quadratic_values = quadratic_values[valid_discriminant_mask]
+            valid_linear_values = linear_values[valid_discriminant_mask]
+            lower_roots = (-valid_linear_values - square_roots) / (2.0 * valid_quadratic_values)
+            upper_roots = (-valid_linear_values + square_roots) / (2.0 * valid_quadratic_values)
+            positive_lower_mask = lower_roots >= 0.0
+            positive_upper_mask = upper_roots >= 0.0
+            valid_roots = np.full(lower_roots.size, np.inf, dtype=np.float64)
+            valid_roots[positive_lower_mask] = lower_roots[positive_lower_mask]
+            valid_roots[positive_upper_mask] = np.minimum(
+                valid_roots[positive_upper_mask],
+                upper_roots[positive_upper_mask],
             )
-            roots[valid] = roots_valid
+            candidate_roots[valid_discriminant_mask] = valid_roots
 
-        crossing_times[quadratic_mask] = roots
+        crossing_times[quadratic_mask] = candidate_roots
 
     crossing_mask = (
         np.isfinite(crossing_times) & (crossing_times >= 0.0) & (crossing_times <= max_times)
     )
     crossing_times = np.minimum(crossing_times, max_times)
     np.maximum(crossing_times, 0.0, out=crossing_times)
-    return crossing_mask, crossing_times
+    return crossing_mask, crossing_times, total_rates
+
+
+def _event_driven_segment_limits(
+    *,
+    remaining_times: NDArray[np.float64],
+    total_rates: NDArray[np.float64],
+    derivative_norms: NDArray[np.float64],
+    max_jump_probability: float,
+    adaptive_safety_factor: float,
+) -> NDArray[np.float64]:
+    """Choose stable first-order no-jump segment lengths.
+
+    The norm-threshold MCWF event rule is correct only for the no-jump
+    propagator used to evaluate the survival norm.  A single large first-order
+    Euler step can make ``||psi_tilde||^2`` increase because of its quadratic
+    term, which suppresses norm crossings.  This helper caps each event segment
+    using both the instantaneous total jump rate and the full no-jump derivative
+    norm.  The derivative cap is important for states with zero instantaneous
+    jump rate that are rotated into jump-active subspaces by the Hamiltonian.
+    """
+    remaining_times = np.asarray(remaining_times, dtype=np.float64)
+    total_rates = np.asarray(total_rates, dtype=np.float64)
+    derivative_norms = np.asarray(derivative_norms, dtype=np.float64)
+    segment_limits = remaining_times.copy()
+    probability_cap = max_jump_probability * adaptive_safety_factor
+
+    positive_rate_mask = total_rates > 0.0
+    if np.any(positive_rate_mask):
+        rate_limited_steps = probability_cap / total_rates[positive_rate_mask]
+        segment_limits[positive_rate_mask] = np.minimum(
+            segment_limits[positive_rate_mask],
+            rate_limited_steps,
+        )
+
+    positive_derivative_mask = derivative_norms > 0.0
+    if np.any(positive_derivative_mask):
+        derivative_limited_steps = (
+            np.sqrt(probability_cap) / derivative_norms[positive_derivative_mask]
+        )
+        segment_limits[positive_derivative_mask] = np.minimum(
+            segment_limits[positive_derivative_mask],
+            derivative_limited_steps,
+        )
+
+    np.maximum(segment_limits, 0.0, out=segment_limits)
+    return segment_limits
 
 
 def _advance_state_matrix_event_driven_numpy(
@@ -1503,6 +1553,8 @@ def _advance_state_matrix_event_driven_numpy(
     rng: np.random.Generator,
     max_substeps: int,
     min_step_size: float,
+    max_jump_probability: float,
+    adaptive_safety_factor: float,
     timing_collector: MutableMapping[str, float] | None,
 ) -> tuple[ArrayC, NDArray[np.float64]]:
     """Advance a vectorized MCWF ensemble with norm-threshold jump times.
@@ -1563,13 +1615,27 @@ def _advance_state_matrix_event_driven_numpy(
 
         start = _perf_counter()
         derivatives = -1j * (effective_hamiltonian_matrix @ active_states)
-        crossing_mask, crossing_times = _first_order_survival_crossing_times(
+        _, _, total_rates = _first_order_survival_crossing_times(
             states=active_states,
             derivatives=derivatives,
             thresholds=active_thresholds,
             max_times=active_remaining,
         )
-        segment_steps = np.where(crossing_mask, crossing_times, active_remaining)
+        derivative_norms = np.linalg.norm(derivatives, axis=0)
+        segment_limits = _event_driven_segment_limits(
+            remaining_times=active_remaining,
+            total_rates=total_rates,
+            derivative_norms=derivative_norms,
+            max_jump_probability=max_jump_probability,
+            adaptive_safety_factor=adaptive_safety_factor,
+        )
+        crossing_mask, crossing_times, _ = _first_order_survival_crossing_times(
+            states=active_states,
+            derivatives=derivatives,
+            thresholds=active_thresholds,
+            max_times=segment_limits,
+        )
+        segment_steps = np.where(crossing_mask, crossing_times, segment_limits)
         next_active_states = active_states + derivatives * segment_steps.reshape(1, -1)
         _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
 
