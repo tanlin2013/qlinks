@@ -42,7 +42,7 @@ safety = "^3.0.0"
 isort = "8.0.1"
 flake8-bugbear = "^25.0.0"
 Flake8-pyproject = "^1.2.2"
-black = { version = "26.3.1", extras = ["d", "jupyter"] }
+black = { version = "26.5.1", extras = ["d", "jupyter"] }
 mypy = "^1.0.0"
 jupyter = "^1.0.0"
 jupyterlab = "^3.0.0"
