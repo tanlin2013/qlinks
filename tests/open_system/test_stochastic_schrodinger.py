@@ -1048,12 +1048,13 @@ def test_prepare_mcwf_operators_preserves_sparse_scipy_inputs(qubit_ops):
         jumps=[jump],
         backend="scipy",
         prefer_sparse_operators=True,
+        prefer_sparse_rate_evaluator=False,
     )
 
     assert prepared.uses_sparse_operators
     assert not prepared.uses_sparse_rate_evaluator
     assert scipy_sparse.issparse(prepared.hamiltonian)
-    assert scipy_sparse.issparse(prepared.jumps[0])
+    assert all(scipy_sparse.issparse(jump_operator) for jump_operator in prepared.jumps)
     assert scipy_sparse.issparse(prepared.effective_hamiltonian_matrix)
 
 
@@ -1260,6 +1261,58 @@ def test_sparse_jump_rate_evaluator_builds_single_entry_rate_matrix():
     rng = np.random.default_rng(123)
     state = rng.normal(size=dim) + 1j * rng.normal(size=dim)
     states = rng.normal(size=(dim, 3)) + 1j * rng.normal(size=(dim, 3))
+
+    expected_state = np.asarray(
+        [max(float(np.vdot(jump @ state, jump @ state).real), 0.0) for jump in jumps],
+        dtype=np.float64,
+    )
+    expected_matrix = _evaluate_jump_rates_state_matrix_numpy(states, jumps)
+
+    np.testing.assert_allclose(_evaluate_sparse_jump_rates_numpy(state, evaluator), expected_state)
+    np.testing.assert_allclose(
+        _evaluate_sparse_jump_rates_state_matrix_numpy(states, evaluator),
+        expected_matrix,
+    )
+
+
+def test_sparse_jump_rate_evaluator_builds_expanded_rate_operator_for_multi_entry_rows():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _build_sparse_jump_rate_evaluator,
+        _evaluate_jump_rates_state_matrix_numpy,
+        _evaluate_sparse_jump_rates_numpy,
+        _evaluate_sparse_jump_rates_state_matrix_numpy,
+    )
+
+    dim = 128
+    jump0 = scipy_sparse.csr_array(
+        (
+            np.asarray([1.0 + 0.0j, 2.0j], dtype=np.complex128),
+            (np.asarray([3, 3]), np.asarray([5, 6])),
+        ),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+    jump1 = scipy_sparse.csr_array(
+        (
+            np.asarray([0.5 + 0.0j, -1.0 + 0.0j], dtype=np.complex128),
+            (np.asarray([7, 9]), np.asarray([11, 12])),
+        ),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+    jumps = (jump0, jump1)
+
+    evaluator = _build_sparse_jump_rate_evaluator(jumps)
+    assert evaluator is not None
+    assert evaluator.expanded_rate_operator is not None
+    np.testing.assert_array_equal(evaluator.expanded_rate_jump_indices, np.asarray([0, 1]))
+    np.testing.assert_array_equal(evaluator.expanded_rate_row_splits, np.asarray([0, 1, 3]))
+
+    rng = np.random.default_rng(123)
+    state = rng.normal(size=dim) + 1j * rng.normal(size=dim)
+    states = rng.normal(size=(dim, 4)) + 1j * rng.normal(size=(dim, 4))
 
     expected_state = np.asarray(
         [max(float(np.vdot(jump @ state, jump @ state).real), 0.0) for jump in jumps],

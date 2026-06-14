@@ -33,6 +33,9 @@ class _SparseJumpRateEvaluator:
     single_entry_columns: tuple[NDArray[np.int64] | None, ...]
     single_entry_weights: tuple[NDArray[np.float64] | None, ...]
     single_entry_rate_matrix: scipy_sparse.csr_array | None
+    expanded_rate_operator: scipy_sparse.csr_array | None
+    expanded_rate_jump_indices: NDArray[np.int64]
+    expanded_rate_row_splits: NDArray[np.int64]
     generic_jump_indices: NDArray[np.int64]
 
     @property
@@ -162,7 +165,7 @@ def _as_numpy_or_scipy_sparse(operator: Any) -> Any:
 def _build_sparse_jump_rate_evaluator(
     jumps: tuple[Any, ...],
     *,
-    max_active_row_fraction: float = 0.02,
+    max_active_row_fraction: float = 0.5,
     min_single_entry_matrix_jumps: int = 8,
 ) -> _SparseJumpRateEvaluator | None:
     """Return a sparse row evaluator when it should beat full sparse matmul.
@@ -268,6 +271,17 @@ def _build_sparse_jump_rate_evaluator(
         else np.arange(len(jumps), dtype=np.int64)
     )
 
+    (
+        expanded_rate_operator,
+        expanded_rate_jump_indices,
+        expanded_rate_row_splits,
+    ) = _build_expanded_sparse_rate_operator(
+        row_columns=tuple(row_columns),
+        row_values=tuple(row_values),
+        jump_indices=generic_jump_indices,
+        dim=dim,
+    )
+
     return _SparseJumpRateEvaluator(
         jumps=tuple(csr_jumps),
         active_rows=tuple(active_rows),
@@ -276,7 +290,73 @@ def _build_sparse_jump_rate_evaluator(
         single_entry_columns=tuple(single_entry_columns),
         single_entry_weights=tuple(single_entry_weights),
         single_entry_rate_matrix=single_entry_rate_matrix,
+        expanded_rate_operator=expanded_rate_operator,
+        expanded_rate_jump_indices=expanded_rate_jump_indices,
+        expanded_rate_row_splits=expanded_rate_row_splits,
         generic_jump_indices=generic_jump_indices,
+    )
+
+
+def _build_expanded_sparse_rate_operator(
+    *,
+    row_columns: tuple[tuple[NDArray[np.int64], ...], ...],
+    row_values: tuple[tuple[NDArray[np.complex128], ...], ...],
+    jump_indices: NDArray[np.int64],
+    dim: int,
+) -> tuple[scipy_sparse.csr_array | None, NDArray[np.int64], NDArray[np.int64]]:
+    """Return one stacked sparse row operator for generic jump-rate evaluation.
+
+    Each row of the expanded operator is one nonzero output row of one jump.
+    A single sparse matmul gives all row amplitudes; grouped row-norm sums then
+    recover ``||J_mu psi||^2`` for each jump.  This removes the Python loop over
+    active rows in the common Cage-Lindblad case where jumps have multi-entry
+    rows and therefore cannot use the single-entry rate matrix.
+    """
+    if jump_indices.size == 0:
+        return None, np.zeros(0, dtype=np.int64), np.zeros(1, dtype=np.int64)
+
+    data_blocks: list[NDArray[np.complex128]] = []
+    row_blocks: list[NDArray[np.int64]] = []
+    column_blocks: list[NDArray[np.int64]] = []
+    expanded_jump_indices: list[int] = []
+    row_splits: list[int] = [0]
+    expanded_row = 0
+
+    for jump_index_raw in jump_indices:
+        jump_index = int(jump_index_raw)
+        rows_for_jump = 0
+        for columns, values in zip(row_columns[jump_index], row_values[jump_index], strict=True):
+            if columns.size == 0:
+                continue
+
+            data_blocks.append(values.astype(np.complex128, copy=False))
+            column_blocks.append(columns.astype(np.int64, copy=False))
+            row_blocks.append(np.full(columns.size, expanded_row, dtype=np.int64))
+            expanded_row += 1
+            rows_for_jump += 1
+
+        if rows_for_jump > 0:
+            expanded_jump_indices.append(jump_index)
+            row_splits.append(expanded_row)
+
+    if not data_blocks:
+        return None, np.zeros(0, dtype=np.int64), np.zeros(1, dtype=np.int64)
+
+    operator = scipy_sparse.csr_array(
+        (
+            np.concatenate(data_blocks),
+            (np.concatenate(row_blocks), np.concatenate(column_blocks)),
+        ),
+        shape=(expanded_row, dim),
+        dtype=np.complex128,
+    )
+    operator.sum_duplicates()
+    operator.eliminate_zeros()
+
+    return (
+        operator,
+        np.asarray(expanded_jump_indices, dtype=np.int64),
+        np.asarray(row_splits, dtype=np.int64),
     )
 
 
@@ -1076,22 +1156,31 @@ def _evaluate_sparse_jump_rates_numpy(
         state_weights = np.abs(state) ** 2
         rates += np.asarray(evaluator.single_entry_rate_matrix @ state_weights).reshape(-1)
 
-    for jump_index in evaluator.generic_jump_indices:
-        columns = evaluator.single_entry_columns[int(jump_index)]
-        weights = evaluator.single_entry_weights[int(jump_index)]
-        if columns is not None and weights is not None:
-            rates[int(jump_index)] = max(float(weights @ np.abs(state[columns]) ** 2), 0.0)
-            continue
+    if evaluator.expanded_rate_operator is not None:
+        row_values = evaluator.expanded_rate_operator @ state
+        row_rates = np.abs(row_values) ** 2
+        grouped_rates = np.add.reduceat(
+            row_rates,
+            evaluator.expanded_rate_row_splits[:-1],
+        )
+        rates[evaluator.expanded_rate_jump_indices] += grouped_rates
+    else:
+        for jump_index in evaluator.generic_jump_indices:
+            columns = evaluator.single_entry_columns[int(jump_index)]
+            weights = evaluator.single_entry_weights[int(jump_index)]
+            if columns is not None and weights is not None:
+                rates[int(jump_index)] = max(float(weights @ np.abs(state[columns]) ** 2), 0.0)
+                continue
 
-        rate = 0.0
-        for row_columns, row_values in zip(
-            evaluator.row_columns[int(jump_index)],
-            evaluator.row_values[int(jump_index)],
-            strict=True,
-        ):
-            value = np.dot(row_values, state[row_columns])
-            rate += float(abs(value) ** 2)
-        rates[int(jump_index)] = max(rate, 0.0)
+            rate = 0.0
+            for row_columns, row_values in zip(
+                evaluator.row_columns[int(jump_index)],
+                evaluator.row_values[int(jump_index)],
+                strict=True,
+            ):
+                value = np.dot(row_values, state[row_columns])
+                rate += float(abs(value) ** 2)
+            rates[int(jump_index)] = max(rate, 0.0)
 
     return rates
 
@@ -1107,22 +1196,32 @@ def _evaluate_sparse_jump_rates_state_matrix_numpy(
         state_weights = np.abs(states) ** 2
         rates += np.asarray(evaluator.single_entry_rate_matrix @ state_weights)
 
-    for jump_index in evaluator.generic_jump_indices:
-        jump_index_int = int(jump_index)
-        columns = evaluator.single_entry_columns[jump_index_int]
-        weights = evaluator.single_entry_weights[jump_index_int]
-        if columns is not None and weights is not None:
-            if columns.size:
-                rates[jump_index_int, :] = weights @ np.abs(states[columns, :]) ** 2
-            continue
+    if evaluator.expanded_rate_operator is not None:
+        expanded_values = evaluator.expanded_rate_operator @ states
+        expanded_row_rates = np.abs(expanded_values) ** 2
+        grouped_rates = np.add.reduceat(
+            expanded_row_rates,
+            evaluator.expanded_rate_row_splits[:-1],
+            axis=0,
+        )
+        rates[evaluator.expanded_rate_jump_indices, :] += grouped_rates
+    else:
+        for jump_index in evaluator.generic_jump_indices:
+            jump_index_int = int(jump_index)
+            columns = evaluator.single_entry_columns[jump_index_int]
+            weights = evaluator.single_entry_weights[jump_index_int]
+            if columns is not None and weights is not None:
+                if columns.size:
+                    rates[jump_index_int, :] = weights @ np.abs(states[columns, :]) ** 2
+                continue
 
-        for row_columns, row_values in zip(
-            evaluator.row_columns[jump_index_int],
-            evaluator.row_values[jump_index_int],
-            strict=True,
-        ):
-            row_values_for_states = row_values @ states[row_columns, :]
-            rates[jump_index_int, :] += np.abs(row_values_for_states) ** 2
+            for row_columns, row_values in zip(
+                evaluator.row_columns[jump_index_int],
+                evaluator.row_values[jump_index_int],
+                strict=True,
+            ):
+                row_values_for_states = row_values @ states[row_columns, :]
+                rates[jump_index_int, :] += np.abs(row_values_for_states) ** 2
 
     np.maximum(rates, 0.0, out=rates)
     return rates
