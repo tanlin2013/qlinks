@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, replace
 from typing import Any, Callable, Iterable, MutableMapping
 
@@ -53,6 +54,38 @@ class _McwfPreparedOperators:
     sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None = None
     uses_sparse_operators: bool = False
     uses_sparse_rate_evaluator: bool = False
+
+    def __getstate__(self) -> tuple[Any, ...]:
+        return (
+            self.backend.name,
+            self.hamiltonian,
+            self.jumps,
+            self.effective_hamiltonian_matrix,
+            self.total_jump_rate_operator,
+            self.sparse_jump_rate_evaluator,
+            self.uses_sparse_operators,
+            self.uses_sparse_rate_evaluator,
+        )
+
+    def __setstate__(self, state: tuple[Any, ...]) -> None:
+        (
+            backend_name,
+            hamiltonian,
+            jumps,
+            effective_hamiltonian_matrix,
+            total_jump_rate_operator,
+            sparse_jump_rate_evaluator,
+            uses_sparse_operators,
+            uses_sparse_rate_evaluator,
+        ) = state
+        object.__setattr__(self, "backend", get_open_system_backend(backend_name))
+        object.__setattr__(self, "hamiltonian", hamiltonian)
+        object.__setattr__(self, "jumps", jumps)
+        object.__setattr__(self, "effective_hamiltonian_matrix", effective_hamiltonian_matrix)
+        object.__setattr__(self, "total_jump_rate_operator", total_jump_rate_operator)
+        object.__setattr__(self, "sparse_jump_rate_evaluator", sparse_jump_rate_evaluator)
+        object.__setattr__(self, "uses_sparse_operators", uses_sparse_operators)
+        object.__setattr__(self, "uses_sparse_rate_evaluator", uses_sparse_rate_evaluator)
 
 
 @dataclass(frozen=True, slots=True)
@@ -384,6 +417,7 @@ class McwfOptions:
     store_density_matrices: bool = True
     store_state_snapshots: bool = False
     trajectory_chunk_size: int | None = None
+    trajectory_chunk_workers: int | None = None
     timing_collector: MutableMapping[str, float] | None = None
 
     adaptive_time_step: bool = False
@@ -398,6 +432,9 @@ class McwfOptions:
 
         if self.trajectory_chunk_size is not None and self.trajectory_chunk_size <= 0:
             raise ValueError("trajectory_chunk_size must be positive when set.")
+
+        if self.trajectory_chunk_workers is not None and self.trajectory_chunk_workers <= 0:
+            raise ValueError("trajectory_chunk_workers must be positive when set.")
 
         if self.max_jump_probability <= 0.0:
             raise ValueError("max_jump_probability must be positive.")
@@ -1296,6 +1333,8 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
     This keeps the per-chunk state matrix small while preserving the public
     ensemble result.  Density matrices are merged as weighted averages.  State
     snapshots, when requested, are concatenated column-wise in trajectory order.
+    If ``options.trajectory_chunk_workers`` is greater than one, chunks are run
+    in worker processes and merged deterministically in trajectory order.
     """
     chunk_size = _effective_trajectory_chunk_size(options)
     if chunk_size is None:
@@ -1330,37 +1369,81 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
         else None
     )
 
-    for (chunk_start, chunk_stop), chunk_seed in zip(chunk_slices, chunk_seeds, strict=True):
-        chunk_n = int(chunk_stop - chunk_start)
-        chunk_options = replace(
-            options,
-            n_trajectories=chunk_n,
-            trajectory_chunk_size=None,
-        )
-        chunk_rng = np.random.default_rng(int(chunk_seed))
+    worker_count = _effective_trajectory_chunk_workers(options, n_chunks=len(chunk_slices))
+    if worker_count <= 1:
+        for (chunk_start, chunk_stop), chunk_seed in zip(chunk_slices, chunk_seeds, strict=True):
+            chunk_n = int(chunk_stop - chunk_start)
+            chunk_options = replace(
+                options,
+                n_trajectories=chunk_n,
+                trajectory_chunk_size=None,
+                trajectory_chunk_workers=None,
+            )
+            chunk_rng = np.random.default_rng(int(chunk_seed))
 
-        chunk_result = _sample_lindblad_mcwf_vectorized_scipy(
-            prepared=prepared,
-            dim=dim,
-            times=times,
-            state_initial=state_initial,
-            state_sampler=state_sampler,
-            options=chunk_options,
-            rng=chunk_rng,
-        )
+            chunk_result = _sample_lindblad_mcwf_vectorized_scipy(
+                prepared=prepared,
+                dim=dim,
+                times=times,
+                state_initial=state_initial,
+                state_sampler=state_sampler,
+                options=chunk_options,
+                rng=chunk_rng,
+            )
 
-        start = _perf_counter()
-        if options.store_density_matrices:
-            weight = chunk_n / float(n_trajectories)
-            for time_index, density_matrix in enumerate(chunk_result.rho_t):
-                rho_t[time_index] += weight * density_matrix
+            _merge_mcwf_chunk_result(
+                parent_rho_t=rho_t,
+                parent_state_snapshots=state_snapshots,
+                chunk_result=chunk_result,
+                chunk_start=chunk_start,
+                chunk_stop=chunk_stop,
+                n_trajectories=n_trajectories,
+                timing_collector=timing_collector,
+            )
+    else:
+        worker_start = _perf_counter()
+        tasks = [
+            (
+                prepared,
+                dim,
+                times,
+                state_initial,
+                state_sampler,
+                replace(
+                    options,
+                    n_trajectories=int(chunk_stop - chunk_start),
+                    trajectory_chunk_size=None,
+                    trajectory_chunk_workers=None,
+                    timing_collector=None,
+                ),
+                int(chunk_seed),
+            )
+            for (chunk_start, chunk_stop), chunk_seed in zip(chunk_slices, chunk_seeds, strict=True)
+        ]
+        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+            chunk_outputs = list(executor.map(_sample_lindblad_mcwf_chunk_worker, tasks))
+        _add_timing(timing_collector, "mcwf.chunk_parallel_wall", _perf_counter() - worker_start)
 
-        if state_snapshots is not None:
-            if chunk_result.state_snapshots is None:
-                raise RuntimeError("chunked MCWF did not return requested state snapshots.")
-            for time_index, state_matrix in enumerate(chunk_result.state_snapshots):
-                state_snapshots[time_index][:, chunk_start:chunk_stop] = state_matrix
-        _add_timing(timing_collector, "mcwf.chunk_merge", _perf_counter() - start)
+        for (chunk_start, chunk_stop), (chunk_result, chunk_timing) in zip(
+            chunk_slices,
+            chunk_outputs,
+            strict=True,
+        ):
+            _merge_mcwf_timing(timing_collector, chunk_timing)
+            _merge_mcwf_timing(
+                timing_collector,
+                chunk_timing,
+                prefix="mcwf.worker.",
+            )
+            _merge_mcwf_chunk_result(
+                parent_rho_t=rho_t,
+                parent_state_snapshots=state_snapshots,
+                chunk_result=chunk_result,
+                chunk_start=chunk_start,
+                chunk_stop=chunk_stop,
+                n_trajectories=n_trajectories,
+                timing_collector=timing_collector,
+            )
 
     return EnsembleResult(
         times=times,
@@ -1370,12 +1453,97 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
     )
 
 
+def _sample_lindblad_mcwf_chunk_worker(
+    task: tuple[
+        _McwfPreparedOperators,
+        int,
+        NDArray[np.float64],
+        Any | None,
+        StateSampler | None,
+        McwfOptions,
+        int,
+    ],
+) -> tuple[EnsembleResult, dict[str, float]]:
+    """Run one MCWF chunk in a worker process.
+
+    The function is intentionally module-level so it is picklable under the
+    ``spawn`` multiprocessing start method used on macOS and Windows.
+    """
+    (
+        prepared,
+        dim,
+        times,
+        state_initial,
+        state_sampler,
+        options,
+        seed,
+    ) = task
+    timing: dict[str, float] = {}
+    chunk_options = replace(options, timing_collector=timing)
+    result = _sample_lindblad_mcwf_vectorized_scipy(
+        prepared=prepared,
+        dim=dim,
+        times=times,
+        state_initial=state_initial,
+        state_sampler=state_sampler,
+        options=chunk_options,
+        rng=np.random.default_rng(seed),
+    )
+    return result, timing
+
+
+def _merge_mcwf_chunk_result(
+    *,
+    parent_rho_t: list[ArrayC],
+    parent_state_snapshots: list[ArrayC] | None,
+    chunk_result: EnsembleResult,
+    chunk_start: int,
+    chunk_stop: int,
+    n_trajectories: int,
+    timing_collector: MutableMapping[str, float] | None,
+) -> None:
+    start = _perf_counter()
+    chunk_n = int(chunk_stop - chunk_start)
+    if parent_rho_t:
+        weight = chunk_n / float(n_trajectories)
+        for time_index, density_matrix in enumerate(chunk_result.rho_t):
+            parent_rho_t[time_index] += weight * density_matrix
+
+    if parent_state_snapshots is not None:
+        if chunk_result.state_snapshots is None:
+            raise RuntimeError("chunked MCWF did not return requested state snapshots.")
+        for time_index, state_matrix in enumerate(chunk_result.state_snapshots):
+            parent_state_snapshots[time_index][:, chunk_start:chunk_stop] = state_matrix
+    _add_timing(timing_collector, "mcwf.chunk_merge", _perf_counter() - start)
+
+
+def _merge_mcwf_timing(
+    timing_collector: MutableMapping[str, float] | None,
+    child_timing: MutableMapping[str, float],
+    *,
+    prefix: str = "",
+) -> None:
+    if timing_collector is None:
+        return
+
+    for stage, elapsed_seconds in child_timing.items():
+        _add_timing(timing_collector, f"{prefix}{stage}", elapsed_seconds)
+
+
 def _effective_trajectory_chunk_size(options: McwfOptions) -> int | None:
     chunk_size = options.trajectory_chunk_size
     if chunk_size is None or chunk_size >= options.n_trajectories:
         return None
 
     return int(chunk_size)
+
+
+def _effective_trajectory_chunk_workers(options: McwfOptions, *, n_chunks: int) -> int:
+    workers = options.trajectory_chunk_workers
+    if workers is None or workers <= 1 or n_chunks <= 1:
+        return 1
+
+    return min(int(workers), int(n_chunks))
 
 
 def _trajectory_chunk_slices(

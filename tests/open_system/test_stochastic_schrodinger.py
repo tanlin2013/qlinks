@@ -1745,3 +1745,45 @@ def test_sample_lindblad_mcwf_chunked_state_snapshots_have_all_trajectories(qubi
 def test_mcwf_options_rejects_nonpositive_trajectory_chunk_size():
     with pytest.raises(ValueError, match="trajectory_chunk_size"):
         McwfOptions(trajectory_chunk_size=0).validate()
+
+
+def test_sample_lindblad_mcwf_parallel_chunked_density_matches_unchunked(qubit_ops):
+    hamiltonian = 0.05 * qubit_ops["sigma_x"]
+    times = np.linspace(0.0, 0.1, 5)
+
+    baseline = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=8,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=True,
+            trajectory_chunk_size=None,
+        ),
+    )
+    chunked = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=8,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=True,
+            trajectory_chunk_size=4,
+            trajectory_chunk_workers=2,
+        ),
+    )
+
+    assert len(chunked.rho_t) == len(baseline.rho_t)
+    for actual, expected in zip(chunked.rho_t, baseline.rho_t, strict=True):
+        np.testing.assert_allclose(actual, expected, atol=1e-14)
+
+
+def test_mcwf_options_rejects_nonpositive_trajectory_chunk_workers():
+    with pytest.raises(ValueError, match="trajectory_chunk_workers"):
+        McwfOptions(trajectory_chunk_workers=0).validate()

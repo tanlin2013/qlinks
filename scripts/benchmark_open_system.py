@@ -515,6 +515,7 @@ def run_open_system_benchmark(
     mcwf_store_density_matrices: bool,
     mcwf_store_state_snapshots: bool,
     mcwf_trajectory_chunk_size: int | None,
+    mcwf_trajectory_chunk_workers: int | None,
 ) -> OpenSystemBenchmarkResult:
     liouvillian_shape: tuple[int, int] | None = None
     liouvillian_nnz: int | None = None
@@ -617,6 +618,7 @@ def run_open_system_benchmark(
             store_density_matrices=mcwf_store_density_matrices,
             store_state_snapshots=mcwf_store_state_snapshots,
             trajectory_chunk_size=mcwf_trajectory_chunk_size,
+            trajectory_chunk_workers=mcwf_trajectory_chunk_workers,
             timing_collector=stage_seconds,
         )
         result, elapsed = _time_call(
@@ -637,6 +639,7 @@ def run_open_system_benchmark(
             "store_density_matrices": mcwf_store_density_matrices,
             "store_state_snapshots": mcwf_store_state_snapshots,
             "trajectory_chunk_size": mcwf_trajectory_chunk_size,
+            "trajectory_chunk_workers": mcwf_trajectory_chunk_workers,
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
@@ -678,6 +681,7 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
         "rate_s",
         "prop_s",
         "chunk_s",
+        "parallel_s",
         "rho_s",
         "details",
     ]
@@ -696,6 +700,7 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
             _format_seconds((result.stage_seconds or {}).get("mcwf.rate_evaluation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.no_jump_propagation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_merge")),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_parallel_wall")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
             _details_text(result.details),
         ]
@@ -726,6 +731,7 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
         "rate_s",
         "prop_s",
         "chunk_s",
+        "parallel_s",
         "rho_s",
         "details",
     ]
@@ -744,6 +750,7 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
             _format_seconds((result.stage_seconds or {}).get("mcwf.rate_evaluation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.no_jump_propagation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_merge")),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_parallel_wall")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
             _details_text(result.details),
         ]
@@ -860,8 +867,17 @@ def main() -> None:
         default=None,
         help=(
             "Split vectorized MCWF into trajectory chunks of this size. "
-            "This lowers memory use for large n_trajectories and prepares the "
-            "sampler for future chunk-level parallelism."
+            "This lowers memory use for large n_trajectories."
+        ),
+    )
+    parser.add_argument(
+        "--mcwf-trajectory-chunk-workers",
+        type=int,
+        default=None,
+        help=(
+            "Run vectorized MCWF trajectory chunks in this many worker "
+            "processes. Requires --mcwf-trajectory-chunk-size; values <=1 "
+            "use the serial chunk path."
         ),
     )
     parser.add_argument(
@@ -964,6 +980,7 @@ def main() -> None:
                     mcwf_store_density_matrices=(not args.mcwf_skip_density_matrices),
                     mcwf_store_state_snapshots=args.mcwf_store_state_snapshots,
                     mcwf_trajectory_chunk_size=args.mcwf_trajectory_chunk_size,
+                    mcwf_trajectory_chunk_workers=args.mcwf_trajectory_chunk_workers,
                 )
             except NotImplementedError as exc:
                 print(f"  skipped: {exc}")
