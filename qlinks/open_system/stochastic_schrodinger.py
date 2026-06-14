@@ -1177,6 +1177,15 @@ def _fidelity_values_from_state_matrix(
     if target_matrix is None:
         return None
 
+    if target_matrix.shape[1] == 1:
+        overlaps = np.einsum(
+            "i,ij->j",
+            target_matrix[:, 0].conj(),
+            states,
+            optimize=True,
+        )
+        return np.asarray([np.mean(np.abs(overlaps) ** 2)], dtype=np.float64)
+
     overlaps = target_matrix.conj().T @ states
     return np.mean(np.abs(overlaps) ** 2, axis=1).astype(np.float64, copy=False)
 
@@ -1521,33 +1530,37 @@ def _normalize_state_matrix_columns_numpy(states: ArrayC) -> tuple[ArrayC, NDArr
     return states / norms.reshape(1, -1), norms.astype(np.float64, copy=False)
 
 
-def _first_order_survival_crossing_times(
+@dataclass(frozen=True, slots=True)
+class _FirstOrderSurvivalPolynomial:
+    """Quadratic survival polynomial for first-order no-jump propagation."""
+
+    quadratic_coefficients: NDArray[np.float64]
+    linear_coefficients: NDArray[np.float64]
+    constant_terms: NDArray[np.float64]
+    total_rates: NDArray[np.float64]
+
+
+def _first_order_survival_polynomial(
     *,
     states: ArrayC,
     derivatives: ArrayC,
     thresholds: NDArray[np.float64],
-    max_times: NDArray[np.float64],
-) -> tuple[NDArray[np.bool_], NDArray[np.float64], NDArray[np.float64]]:
-    """Locate first-order no-jump norm-threshold crossings.
+) -> _FirstOrderSurvivalPolynomial:
+    """Return coefficients for ``||psi + t dpsi/dt||^2 - threshold``.
 
-    Starting from normalized columns ``psi`` and first-order no-jump
-    derivatives ``dpsi/dt``, the unnormalized survival over one segment is
-
-        ||psi + t dpsi/dt||^2 = 1 + b t + a t^2.
-
-    The returned crossing time is the first nonnegative root of
-    ``1 + b t + a t^2 = threshold`` that lies before ``max_times``.  The
-    returned instantaneous total jump rates are ``-b`` clipped at zero.
+    The event-driven MCWF loop needs the same quadratic coefficients for
+    three decisions: estimating the instantaneous total jump rate, locating a
+    norm-threshold crossing inside the chosen segment, and normalizing the
+    propagated state at the segment endpoint.  Computing the coefficients once
+    avoids repeated dense reductions in the inner event loop.
     """
     thresholds = np.asarray(thresholds, dtype=np.float64)
-    max_times = np.asarray(max_times, dtype=np.float64)
-
     quadratic_coefficients = np.einsum(
         "ij,ij->j",
         derivatives.conj(),
         derivatives,
         optimize=True,
-    ).real
+    ).real.astype(np.float64, copy=False)
     linear_coefficients = (
         2.0
         * np.einsum(
@@ -1556,11 +1569,29 @@ def _first_order_survival_crossing_times(
             derivatives,
             optimize=True,
         ).real
-    )
-    constant_terms = 1.0 - thresholds
+    ).astype(np.float64, copy=False)
+    constant_terms = (1.0 - thresholds).astype(np.float64, copy=False)
     total_rates = np.maximum(-linear_coefficients, 0.0)
+    return _FirstOrderSurvivalPolynomial(
+        quadratic_coefficients=quadratic_coefficients,
+        linear_coefficients=linear_coefficients,
+        constant_terms=constant_terms,
+        total_rates=total_rates,
+    )
 
-    crossing_times = np.full(thresholds.size, np.inf, dtype=np.float64)
+
+def _first_order_crossing_times_from_polynomial(
+    polynomial: _FirstOrderSurvivalPolynomial,
+    *,
+    max_times: NDArray[np.float64],
+) -> tuple[NDArray[np.bool_], NDArray[np.float64]]:
+    """Locate first nonnegative roots of a cached survival polynomial."""
+    max_times = np.asarray(max_times, dtype=np.float64)
+    quadratic_coefficients = polynomial.quadratic_coefficients
+    linear_coefficients = polynomial.linear_coefficients
+    constant_terms = polynomial.constant_terms
+
+    crossing_times = np.full(constant_terms.size, np.inf, dtype=np.float64)
 
     linear_only_mask = np.abs(quadratic_coefficients) <= np.finfo(np.float64).eps
     valid_linear_mask = linear_only_mask & (linear_coefficients < 0.0)
@@ -1599,7 +1630,45 @@ def _first_order_survival_crossing_times(
     )
     crossing_times = np.minimum(crossing_times, max_times)
     np.maximum(crossing_times, 0.0, out=crossing_times)
-    return crossing_mask, crossing_times, total_rates
+    return crossing_mask, crossing_times
+
+
+def _first_order_survival_norm_squares(
+    polynomial: _FirstOrderSurvivalPolynomial,
+    step_sizes: NDArray[np.float64],
+    *,
+    thresholds: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    """Return ``||psi + dt dpsi/dt||^2`` from cached coefficients."""
+    step_sizes = np.asarray(step_sizes, dtype=np.float64)
+    thresholds = np.asarray(thresholds, dtype=np.float64)
+    norm_squares = (
+        thresholds
+        + polynomial.constant_terms
+        + polynomial.linear_coefficients * step_sizes
+        + polynomial.quadratic_coefficients * step_sizes * step_sizes
+    )
+    return np.asarray(norm_squares, dtype=np.float64)
+
+
+def _first_order_survival_crossing_times(
+    *,
+    states: ArrayC,
+    derivatives: ArrayC,
+    thresholds: NDArray[np.float64],
+    max_times: NDArray[np.float64],
+) -> tuple[NDArray[np.bool_], NDArray[np.float64], NDArray[np.float64]]:
+    """Locate first-order no-jump norm-threshold crossings."""
+    polynomial = _first_order_survival_polynomial(
+        states=states,
+        derivatives=derivatives,
+        thresholds=thresholds,
+    )
+    crossing_mask, crossing_times = _first_order_crossing_times_from_polynomial(
+        polynomial,
+        max_times=max_times,
+    )
+    return crossing_mask, crossing_times, polynomial.total_rates
 
 
 def _event_driven_segment_limits(
@@ -1773,11 +1842,10 @@ def _advance_state_matrix_event_driven_numpy(
 
         start = _perf_counter()
         derivatives = -1j * (effective_hamiltonian_matrix @ active_states)
-        _, _, total_rates = _first_order_survival_crossing_times(
+        survival_polynomial = _first_order_survival_polynomial(
             states=active_states,
             derivatives=derivatives,
             thresholds=active_thresholds,
-            max_times=active_remaining,
         )
         jump_derivative_norms = _jump_derivative_norms_state_matrix_numpy(
             derivatives,
@@ -1788,15 +1856,13 @@ def _advance_state_matrix_event_driven_numpy(
         )
         segment_limits = _event_driven_segment_limits(
             remaining_times=active_remaining,
-            total_rates=total_rates,
+            total_rates=survival_polynomial.total_rates,
             jump_derivative_norms=jump_derivative_norms,
             max_jump_probability=max_jump_probability,
             adaptive_safety_factor=adaptive_safety_factor,
         )
-        crossing_mask, crossing_times, _ = _first_order_survival_crossing_times(
-            states=active_states,
-            derivatives=derivatives,
-            thresholds=active_thresholds,
+        crossing_mask, crossing_times = _first_order_crossing_times_from_polynomial(
+            survival_polynomial,
             max_times=segment_limits,
         )
         segment_steps = np.where(crossing_mask, crossing_times, segment_limits)
@@ -1810,13 +1876,11 @@ def _advance_state_matrix_event_driven_numpy(
             )
 
         start = _perf_counter()
-        norm_squares = np.einsum(
-            "ij,ij->j",
-            next_active_states.conj(),
-            next_active_states,
-            optimize=True,
-        ).real
-        norm_squares = np.asarray(norm_squares, dtype=np.float64)
+        norm_squares = _first_order_survival_norm_squares(
+            survival_polynomial,
+            segment_steps,
+            thresholds=active_thresholds,
+        )
         if np.any(norm_squares <= 0.0):
             raise RuntimeError("At least one MCWF state reached zero norm.")
         normalized_active_states = next_active_states / np.sqrt(norm_squares).reshape(1, -1)
@@ -1852,17 +1916,15 @@ def _advance_state_matrix_event_driven_numpy(
                 total_probabilities=event_total_rates,
                 rng=rng,
             )
-            selected_jump_indices = np.zeros(active_indices.size, dtype=np.int64)
-            selected_jump_indices[event_columns] = selected_for_events
             _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - jump_start)
 
             start = _perf_counter()
-            _apply_selected_jumps_to_state_matrix_numpy(
+            _apply_selected_jumps_to_state_columns_numpy(
                 next_states=normalized_active_states,
-                states=normalized_active_states.copy(),
+                source_states=event_source_states,
+                destination_columns=event_columns,
                 jumps=jump_operators,
-                jump_mask=crossing_mask,
-                selected_jump_indices=selected_jump_indices,
+                selected_jump_indices=selected_for_events,
             )
             _add_timing(
                 timing_collector,
@@ -2390,6 +2452,34 @@ def _apply_selected_jumps_to_state_matrix_numpy(
         selected_mask = jump_mask & (selected_jump_indices == jump_index)
         if np.any(selected_mask):
             next_states[:, selected_mask] = jumps[int(jump_index)] @ states[:, selected_mask]
+
+
+def _apply_selected_jumps_to_state_columns_numpy(
+    *,
+    next_states: ArrayC,
+    source_states: ArrayC,
+    destination_columns: NDArray[np.int64],
+    jumps: tuple[Any, ...],
+    selected_jump_indices: NDArray[np.int64],
+) -> None:
+    """Apply selected jumps to an explicit subset of state-matrix columns.
+
+    The event-driven path often has a small set of jumping columns inside a
+    much larger active batch.  Passing only those source columns avoids copying
+    the full active state matrix merely to protect the pre-jump event states.
+    """
+    if source_states.shape[1] != destination_columns.size:
+        raise ValueError("source_states and destination_columns must have matching columns.")
+
+    if selected_jump_indices.shape != (destination_columns.size,):
+        raise ValueError("selected_jump_indices must have one entry per destination column.")
+
+    for jump_index in np.unique(selected_jump_indices):
+        selected_mask = selected_jump_indices == jump_index
+        if np.any(selected_mask):
+            next_states[:, destination_columns[selected_mask]] = (
+                jumps[int(jump_index)] @ source_states[:, selected_mask]
+            )
 
 
 def _choose_jump_indices_vectorized(
