@@ -28,6 +28,12 @@ class _SparseJumpRateEvaluator:
 
     jumps: tuple[scipy_sparse.csr_array, ...]
     active_rows: tuple[NDArray[np.int64], ...]
+    row_columns: tuple[tuple[NDArray[np.int64], ...], ...]
+    row_values: tuple[tuple[NDArray[np.complex128], ...], ...]
+    single_entry_columns: tuple[NDArray[np.int64] | None, ...]
+    single_entry_weights: tuple[NDArray[np.float64] | None, ...]
+    single_entry_rate_matrix: scipy_sparse.csr_array | None
+    generic_jump_indices: NDArray[np.int64]
 
     @property
     def n_jumps(self) -> int:
@@ -157,6 +163,7 @@ def _build_sparse_jump_rate_evaluator(
     jumps: tuple[Any, ...],
     *,
     max_active_row_fraction: float = 0.02,
+    min_single_entry_matrix_jumps: int = 8,
 ) -> _SparseJumpRateEvaluator | None:
     """Return a sparse row evaluator when it should beat full sparse matmul.
 
@@ -171,13 +178,48 @@ def _build_sparse_jump_rate_evaluator(
     dim = int(jumps[0].shape[0])
     csr_jumps: list[scipy_sparse.csr_array] = []
     active_rows: list[NDArray[np.int64]] = []
+    row_columns: list[tuple[NDArray[np.int64], ...]] = []
+    row_values: list[tuple[NDArray[np.complex128], ...]] = []
+    single_entry_columns: list[NDArray[np.int64] | None] = []
+    single_entry_weights: list[NDArray[np.float64] | None] = []
     total_active_rows = 0
 
     for jump in jumps:
         jump_csr = jump.tocsr().astype(np.complex128)
         rows = np.flatnonzero(np.diff(jump_csr.indptr) > 0).astype(np.int64, copy=False)
+        jump_row_columns: list[NDArray[np.int64]] = []
+        jump_row_values: list[NDArray[np.complex128]] = []
+        one_entry_columns: list[int] = []
+        one_entry_weights: list[float] = []
+        has_only_one_entry_rows = True
+
+        indptr = jump_csr.indptr
+        indices = jump_csr.indices
+        data = jump_csr.data
+        for row in rows:
+            start = int(indptr[row])
+            stop = int(indptr[row + 1])
+            columns = indices[start:stop].astype(np.int64, copy=True)
+            values = data[start:stop].astype(np.complex128, copy=True)
+            jump_row_columns.append(columns)
+            jump_row_values.append(values)
+
+            if columns.size == 1:
+                one_entry_columns.append(int(columns[0]))
+                one_entry_weights.append(float(abs(values[0]) ** 2))
+            else:
+                has_only_one_entry_rows = False
+
         csr_jumps.append(jump_csr)
         active_rows.append(rows)
+        row_columns.append(tuple(jump_row_columns))
+        row_values.append(tuple(jump_row_values))
+        if has_only_one_entry_rows:
+            single_entry_columns.append(np.asarray(one_entry_columns, dtype=np.int64))
+            single_entry_weights.append(np.asarray(one_entry_weights, dtype=np.float64))
+        else:
+            single_entry_columns.append(None)
+            single_entry_weights.append(None)
         total_active_rows += int(rows.size)
 
     if dim <= 0:
@@ -187,9 +229,54 @@ def _build_sparse_jump_rate_evaluator(
     if average_active_fraction > max_active_row_fraction:
         return None
 
+    single_entry_rate_matrix: scipy_sparse.csr_array | None = None
+    single_entry_matrix_jump_count = sum(
+        columns is not None and columns.size > 0 for columns in single_entry_columns
+    )
+    if single_entry_matrix_jump_count >= min_single_entry_matrix_jumps:
+        matrix_row_blocks: list[NDArray[np.int64]] = []
+        matrix_col_blocks: list[NDArray[np.int64]] = []
+        matrix_value_blocks: list[NDArray[np.float64]] = []
+        for jump_index, (columns, weights) in enumerate(
+            zip(single_entry_columns, single_entry_weights, strict=True)
+        ):
+            if columns is None or weights is None or columns.size == 0:
+                continue
+
+            matrix_row_blocks.append(np.full(columns.size, jump_index, dtype=np.int64))
+            matrix_col_blocks.append(columns)
+            matrix_value_blocks.append(weights)
+
+        if matrix_value_blocks:
+            single_entry_rate_matrix = scipy_sparse.csr_array(
+                (
+                    np.concatenate(matrix_value_blocks),
+                    (np.concatenate(matrix_row_blocks), np.concatenate(matrix_col_blocks)),
+                ),
+                shape=(len(jumps), dim),
+                dtype=np.float64,
+            )
+            single_entry_rate_matrix.sum_duplicates()
+            single_entry_rate_matrix.eliminate_zeros()
+
+    generic_jump_indices = (
+        np.asarray(
+            [index for index, columns in enumerate(single_entry_columns) if columns is None],
+            dtype=np.int64,
+        )
+        if single_entry_rate_matrix is not None
+        else np.arange(len(jumps), dtype=np.int64)
+    )
+
     return _SparseJumpRateEvaluator(
         jumps=tuple(csr_jumps),
         active_rows=tuple(active_rows),
+        row_columns=tuple(row_columns),
+        row_values=tuple(row_values),
+        single_entry_columns=tuple(single_entry_columns),
+        single_entry_weights=tuple(single_entry_weights),
+        single_entry_rate_matrix=single_entry_rate_matrix,
+        generic_jump_indices=generic_jump_indices,
     )
 
 
@@ -985,19 +1072,26 @@ def _evaluate_sparse_jump_rates_numpy(
     """Return ||J_mu psi||^2 without forming full dense J_mu|psi> vectors."""
     rates = np.zeros(evaluator.n_jumps, dtype=np.float64)
 
-    for jump_index, (jump, rows) in enumerate(
-        zip(evaluator.jumps, evaluator.active_rows, strict=True)
-    ):
-        indptr = jump.indptr
-        indices = jump.indices
-        data = jump.data
+    if evaluator.single_entry_rate_matrix is not None:
+        state_weights = np.abs(state) ** 2
+        rates += np.asarray(evaluator.single_entry_rate_matrix @ state_weights).reshape(-1)
+
+    for jump_index in evaluator.generic_jump_indices:
+        columns = evaluator.single_entry_columns[int(jump_index)]
+        weights = evaluator.single_entry_weights[int(jump_index)]
+        if columns is not None and weights is not None:
+            rates[int(jump_index)] = max(float(weights @ np.abs(state[columns]) ** 2), 0.0)
+            continue
+
         rate = 0.0
-        for row in rows:
-            start = int(indptr[row])
-            stop = int(indptr[row + 1])
-            row_value = np.dot(data[start:stop], state[indices[start:stop]])
-            rate += float(abs(row_value) ** 2)
-        rates[jump_index] = max(rate, 0.0)
+        for row_columns, row_values in zip(
+            evaluator.row_columns[int(jump_index)],
+            evaluator.row_values[int(jump_index)],
+            strict=True,
+        ):
+            value = np.dot(row_values, state[row_columns])
+            rate += float(abs(value) ** 2)
+        rates[int(jump_index)] = max(rate, 0.0)
 
     return rates
 
@@ -1009,17 +1103,26 @@ def _evaluate_sparse_jump_rates_state_matrix_numpy(
     """Return ||J_mu psi_a||^2 without full dense J_mu|psi_a> blocks."""
     rates = np.zeros((evaluator.n_jumps, states.shape[1]), dtype=np.float64)
 
-    for jump_index, (jump, rows) in enumerate(
-        zip(evaluator.jumps, evaluator.active_rows, strict=True)
-    ):
-        indptr = jump.indptr
-        indices = jump.indices
-        data = jump.data
-        for row in rows:
-            start = int(indptr[row])
-            stop = int(indptr[row + 1])
-            row_values = data[start:stop] @ states[indices[start:stop], :]
-            rates[jump_index, :] += np.abs(row_values) ** 2
+    if evaluator.single_entry_rate_matrix is not None:
+        state_weights = np.abs(states) ** 2
+        rates += np.asarray(evaluator.single_entry_rate_matrix @ state_weights)
+
+    for jump_index in evaluator.generic_jump_indices:
+        jump_index_int = int(jump_index)
+        columns = evaluator.single_entry_columns[jump_index_int]
+        weights = evaluator.single_entry_weights[jump_index_int]
+        if columns is not None and weights is not None:
+            if columns.size:
+                rates[jump_index_int, :] = weights @ np.abs(states[columns, :]) ** 2
+            continue
+
+        for row_columns, row_values in zip(
+            evaluator.row_columns[jump_index_int],
+            evaluator.row_values[jump_index_int],
+            strict=True,
+        ):
+            row_values_for_states = row_values @ states[row_columns, :]
+            rates[jump_index_int, :] += np.abs(row_values_for_states) ** 2
 
     np.maximum(rates, 0.0, out=rates)
     return rates

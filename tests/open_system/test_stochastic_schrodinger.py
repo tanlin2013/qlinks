@@ -1146,6 +1146,46 @@ def test_build_sparse_jump_rate_evaluator_uses_row_sparse_jumps():
     assert evaluator.n_jumps == 2
     np.testing.assert_array_equal(evaluator.active_rows[0], np.asarray([3]))
     np.testing.assert_array_equal(evaluator.active_rows[1], np.asarray([7]))
+    np.testing.assert_array_equal(evaluator.row_columns[0][0], np.asarray([5]))
+    np.testing.assert_allclose(evaluator.row_values[0][0], np.asarray([1.0 + 0.0j]))
+    np.testing.assert_array_equal(evaluator.single_entry_columns[0], np.asarray([5]))
+    np.testing.assert_allclose(evaluator.single_entry_weights[1], np.asarray([4.0]))
+
+
+def test_sparse_jump_rate_evaluator_keeps_multi_entry_row_interference():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _build_sparse_jump_rate_evaluator,
+        _evaluate_sparse_jump_rates_numpy,
+        _evaluate_sparse_jump_rates_state_matrix_numpy,
+    )
+
+    dim = 128
+    jump = scipy_sparse.csr_array(
+        (
+            np.asarray([1.0 + 0.0j, 1.0 + 0.0j], dtype=np.complex128),
+            (np.asarray([3, 3]), np.asarray([5, 6])),
+        ),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+    evaluator = _build_sparse_jump_rate_evaluator((jump,))
+    assert evaluator is not None
+    assert evaluator.single_entry_columns[0] is None
+
+    state = np.zeros(dim, dtype=np.complex128)
+    state[5] = 1.0
+    state[6] = 1.0
+    states = np.column_stack([state, -state])
+
+    # The two local amplitudes share one output row, so the rate is |1 + 1|^2,
+    # not |1|^2 + |1|^2.
+    np.testing.assert_allclose(_evaluate_sparse_jump_rates_numpy(state, evaluator), [4.0])
+    np.testing.assert_allclose(
+        _evaluate_sparse_jump_rates_state_matrix_numpy(states, evaluator),
+        np.asarray([[4.0, 4.0]], dtype=np.float64),
+    )
 
 
 def test_build_sparse_jump_rate_evaluator_rejects_row_dense_jumps():
@@ -1191,6 +1231,47 @@ def test_sparse_jump_rate_evaluator_state_matrix_matches_full_sparse_rates():
     expected = _evaluate_jump_rates_state_matrix_numpy(states, jumps)
 
     np.testing.assert_allclose(actual, expected, atol=1e-14)
+
+
+def test_sparse_jump_rate_evaluator_builds_single_entry_rate_matrix():
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _build_sparse_jump_rate_evaluator,
+        _evaluate_jump_rates_state_matrix_numpy,
+        _evaluate_sparse_jump_rates_numpy,
+        _evaluate_sparse_jump_rates_state_matrix_numpy,
+    )
+
+    dim = 128
+    jumps = tuple(
+        scipy_sparse.csr_array(
+            ([1.0 + 0.1j * index], ([index], [(index * 3) % dim])),
+            shape=(dim, dim),
+            dtype=np.complex128,
+        )
+        for index in range(16)
+    )
+    evaluator = _build_sparse_jump_rate_evaluator(jumps)
+    assert evaluator is not None
+    assert evaluator.single_entry_rate_matrix is not None
+    assert evaluator.generic_jump_indices.size == 0
+
+    rng = np.random.default_rng(123)
+    state = rng.normal(size=dim) + 1j * rng.normal(size=dim)
+    states = rng.normal(size=(dim, 3)) + 1j * rng.normal(size=(dim, 3))
+
+    expected_state = np.asarray(
+        [max(float(np.vdot(jump @ state, jump @ state).real), 0.0) for jump in jumps],
+        dtype=np.float64,
+    )
+    expected_matrix = _evaluate_jump_rates_state_matrix_numpy(states, jumps)
+
+    np.testing.assert_allclose(_evaluate_sparse_jump_rates_numpy(state, evaluator), expected_state)
+    np.testing.assert_allclose(
+        _evaluate_sparse_jump_rates_state_matrix_numpy(states, evaluator),
+        expected_matrix,
+    )
 
 
 def test_vectorized_mcwf_sparse_rate_evaluator_matches_sparse_matmul(qubit_ops):
