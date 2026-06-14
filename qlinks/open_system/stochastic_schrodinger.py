@@ -1186,6 +1186,13 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     if options.store_state_snapshots:
         state_snapshots = [states.copy()]
 
+    event_survival_thresholds: NDArray[np.float64] | None = None
+    if options.use_event_driven_jumps:
+        event_survival_thresholds = _draw_mcwf_survival_thresholds(
+            rng,
+            options.n_trajectories,
+        )
+
     for time_index in range(times.size - 1):
         interval_start = float(times[time_index])
         interval_stop = float(times[time_index + 1])
@@ -1193,14 +1200,14 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         substeps = 0
 
         if options.use_event_driven_jumps:
-            states = _advance_state_matrix_event_driven_numpy(
+            assert event_survival_thresholds is not None
+            states, event_survival_thresholds = _advance_state_matrix_event_driven_numpy(
                 states=states,
+                survival_thresholds=event_survival_thresholds,
                 step_size=interval_stop - interval_start,
                 effective_hamiltonian_matrix=effective_hamiltonian_matrix,
                 jump_operators=jump_operators,
                 sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
-                total_jump_rate_operator=total_jump_rate_operator,
-                use_total_rate_first=options.use_total_rate_first,
                 rng=rng,
                 max_substeps=options.max_substeps_per_interval,
                 min_step_size=options.min_step_size,
@@ -1387,37 +1394,147 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     )
 
 
+def _draw_mcwf_survival_thresholds(
+    rng: np.random.Generator,
+    size: int,
+) -> NDArray[np.float64]:
+    """Draw survival thresholds for norm-threshold MCWF jumps."""
+    thresholds = rng.random(size)
+    np.maximum(thresholds, np.finfo(np.float64).tiny, out=thresholds)
+    return thresholds.astype(np.float64, copy=False)
+
+
+def _normalize_state_matrix_columns_numpy(states: ArrayC) -> tuple[ArrayC, NDArray[np.float64]]:
+    """Normalize state columns and return the original column norms."""
+    norms = np.linalg.norm(states, axis=0)
+    if np.any(norms == 0.0):
+        raise RuntimeError("At least one MCWF state reached zero norm.")
+
+    return states / norms.reshape(1, -1), norms.astype(np.float64, copy=False)
+
+
+def _first_order_survival_crossing_times(
+    *,
+    states: ArrayC,
+    derivatives: ArrayC,
+    thresholds: NDArray[np.float64],
+    max_times: NDArray[np.float64],
+) -> tuple[NDArray[np.bool_], NDArray[np.float64]]:
+    """Locate first-order no-jump norm threshold crossings.
+
+    Starting from normalized columns ``psi`` and first-order no-jump
+    derivatives ``dpsi/dt``, the unnormalized survival over one segment is
+
+        ||psi + t dpsi/dt||^2 = 1 + b t + a t^2.
+
+    The returned crossing time is the first nonnegative root of
+    ``1 + b t + a t^2 = threshold`` that lies before ``max_times``.  This is
+    the norm-threshold MCWF waiting-time condition for the same first-order
+    propagator used by the fixed-grid sampler.
+    """
+    thresholds = np.asarray(thresholds, dtype=np.float64)
+    max_times = np.asarray(max_times, dtype=np.float64)
+
+    quadratic = np.einsum(
+        "ij,ij->j",
+        derivatives.conj(),
+        derivatives,
+        optimize=True,
+    ).real
+    linear = (
+        2.0
+        * np.einsum(
+            "ij,ij->j",
+            states.conj(),
+            derivatives,
+            optimize=True,
+        ).real
+    )
+    constant = 1.0 - thresholds
+
+    crossing_times = np.full(thresholds.size, np.inf, dtype=np.float64)
+
+    linear_mask = np.abs(quadratic) <= np.finfo(np.float64).eps
+    valid_linear = linear_mask & (linear < 0.0)
+    crossing_times[valid_linear] = -constant[valid_linear] / linear[valid_linear]
+
+    quadratic_mask = ~linear_mask
+    if np.any(quadratic_mask):
+        quad = quadratic[quadratic_mask]
+        lin = linear[quadratic_mask]
+        const = constant[quadratic_mask]
+        discriminant = lin * lin - 4.0 * quad * const
+        valid = discriminant >= 0.0
+        roots = np.full(quad.size, np.inf, dtype=np.float64)
+        if np.any(valid):
+            sqrt_discriminant = np.sqrt(np.maximum(discriminant[valid], 0.0))
+            q_valid = quad[valid]
+            l_valid = lin[valid]
+            root_a = (-l_valid - sqrt_discriminant) / (2.0 * q_valid)
+            root_b = (-l_valid + sqrt_discriminant) / (2.0 * q_valid)
+            positive_a = root_a >= 0.0
+            positive_b = root_b >= 0.0
+            roots_valid = np.full(root_a.size, np.inf, dtype=np.float64)
+            roots_valid[positive_a] = root_a[positive_a]
+            roots_valid[positive_b] = np.minimum(
+                roots_valid[positive_b],
+                root_b[positive_b],
+            )
+            roots[valid] = roots_valid
+
+        crossing_times[quadratic_mask] = roots
+
+    crossing_mask = (
+        np.isfinite(crossing_times) & (crossing_times >= 0.0) & (crossing_times <= max_times)
+    )
+    crossing_times = np.minimum(crossing_times, max_times)
+    np.maximum(crossing_times, 0.0, out=crossing_times)
+    return crossing_mask, crossing_times
+
+
 def _advance_state_matrix_event_driven_numpy(
     *,
     states: ArrayC,
+    survival_thresholds: NDArray[np.float64],
     step_size: float,
     effective_hamiltonian_matrix: Any,
     jump_operators: tuple[Any, ...],
     sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None,
-    total_jump_rate_operator: Any | None,
-    use_total_rate_first: bool,
     rng: np.random.Generator,
     max_substeps: int,
     min_step_size: float,
     timing_collector: MutableMapping[str, float] | None,
-) -> ArrayC:
-    """Advance a vectorized MCWF ensemble with piecewise-constant jump times.
+) -> tuple[ArrayC, NDArray[np.float64]]:
+    """Advance a vectorized MCWF ensemble with norm-threshold jump times.
 
-    This is an event-driven alternative to Bernoulli jump/no-jump sampling on
-    each output interval.  For each active trajectory, it samples an exponential
-    waiting time from the current total jump rate, propagates only until the
-    earlier of the jump event or output time, and evaluates per-channel rates
-    only for trajectories that actually jump.
+    This is the standard MCWF waiting-time construction adapted to the
+    existing first-order no-jump propagator.  Each trajectory carries a
+    survival threshold ``r`` across output intervals.  A jump occurs when the
+    unnormalized no-jump norm first satisfies ``||psi_tilde(t)||^2 <= r``.
+    If an output time is reached before the jump, the state is normalized and
+    the residual threshold is rescaled by the survival probability reached in
+    that interval.
 
-    The rates are piecewise constant over each event segment, matching the
-    first-order character of the existing MCWF integrator while avoiding a hard
-    ``dt * rate < max_jump_probability`` restriction for long output intervals.
+    This replaces the earlier piecewise-constant hazard approximation
+    ``tau = -log(u) / <Gamma>`` and avoids redrawing waiting times merely
+    because an output sample was requested.
     """
     if step_size < 0.0:
         raise ValueError("step_size must be nonnegative.")
 
+    if survival_thresholds.shape != (states.shape[1],):
+        raise ValueError("survival_thresholds must have one entry per trajectory.")
+
+    survival_thresholds = np.asarray(survival_thresholds, dtype=np.float64).copy()
+    np.clip(
+        survival_thresholds,
+        np.finfo(np.float64).tiny,
+        np.nextafter(1.0, 0.0),
+        out=survival_thresholds,
+    )
+
     if step_size == 0.0:
-        return states
+        return states, survival_thresholds
 
     if not jump_operators:
         start = _perf_counter()
@@ -1425,12 +1542,9 @@ def _advance_state_matrix_event_driven_numpy(
         _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
 
         start = _perf_counter()
-        norms = np.linalg.norm(next_states, axis=0)
-        if np.any(norms == 0.0):
-            raise RuntimeError("At least one MCWF state reached zero norm.")
-        next_states = next_states / norms.reshape(1, -1)
+        next_states, _ = _normalize_state_matrix_columns_numpy(next_states)
         _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
-        return next_states
+        return next_states, survival_thresholds
 
     remaining = np.full(states.shape[1], float(step_size), dtype=np.float64)
     active_indices = np.arange(states.shape[1], dtype=np.int64)
@@ -1445,47 +1559,19 @@ def _advance_state_matrix_event_driven_numpy(
 
         active_states = states[:, active_indices]
         active_remaining = remaining[active_indices]
+        active_thresholds = survival_thresholds[active_indices]
 
-        rate_start = _perf_counter()
-        rates: NDArray[np.float64] | None = None
-        if _should_use_total_rate_first(
-            use_total_rate_first,
-            total_jump_rate_operator=total_jump_rate_operator,
-            sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
-        ):
-            total_rates = _evaluate_total_jump_rates_state_matrix_numpy(
-                active_states,
-                total_jump_rate_operator,
-            )
-            elapsed = _perf_counter() - rate_start
-            _add_timing(timing_collector, "mcwf.total_rate_evaluation", elapsed)
-            _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
-        else:
-            if sparse_jump_rate_evaluator is not None:
-                rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
-                    active_states,
-                    sparse_jump_rate_evaluator,
-                )
-            else:
-                rates = _evaluate_jump_rates_state_matrix_numpy(active_states, jump_operators)
-            total_rates = np.sum(rates, axis=0)
-            elapsed = _perf_counter() - rate_start
-            _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
-            _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
-
-        total_rates = np.asarray(total_rates, dtype=np.float64)
-        np.maximum(total_rates, 0.0, out=total_rates)
-        draws = np.maximum(rng.random(active_indices.size), np.finfo(np.float64).tiny)
-        waiting_times = np.full(active_indices.size, np.inf, dtype=np.float64)
-        positive_rate_mask = total_rates > 0.0
-        waiting_times[positive_rate_mask] = (
-            -np.log(draws[positive_rate_mask]) / total_rates[positive_rate_mask]
+        start = _perf_counter()
+        derivatives = -1j * (effective_hamiltonian_matrix @ active_states)
+        crossing_mask, crossing_times = _first_order_survival_crossing_times(
+            states=active_states,
+            derivatives=derivatives,
+            thresholds=active_thresholds,
+            max_times=active_remaining,
         )
-
-        event_mask = waiting_times < active_remaining
-        segment_steps = np.minimum(active_remaining, waiting_times)
-        segment_steps[~np.isfinite(segment_steps)] = active_remaining[~np.isfinite(segment_steps)]
-        np.maximum(segment_steps, 0.0, out=segment_steps)
+        segment_steps = np.where(crossing_mask, crossing_times, active_remaining)
+        next_active_states = active_states + derivatives * segment_steps.reshape(1, -1)
+        _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
 
         if np.any((segment_steps < min_step_size) & (active_remaining > min_step_size)):
             raise RuntimeError(
@@ -1494,48 +1580,58 @@ def _advance_state_matrix_event_driven_numpy(
             )
 
         start = _perf_counter()
-        acted_states = effective_hamiltonian_matrix @ active_states
-        next_active_states = active_states - 1j * acted_states * segment_steps.reshape(1, -1)
-        _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
+        norm_squares = np.einsum(
+            "ij,ij->j",
+            next_active_states.conj(),
+            next_active_states,
+            optimize=True,
+        ).real
+        norm_squares = np.asarray(norm_squares, dtype=np.float64)
+        if np.any(norm_squares <= 0.0):
+            raise RuntimeError("At least one MCWF state reached zero norm.")
+        normalized_active_states = next_active_states / np.sqrt(norm_squares).reshape(1, -1)
+        _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
 
-        if np.any(event_mask):
-            jump_start = _perf_counter()
-            if rates is None:
-                channel_start = _perf_counter()
-                event_source_states = active_states[:, event_mask]
-                if sparse_jump_rate_evaluator is not None:
-                    event_rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
-                        event_source_states,
-                        sparse_jump_rate_evaluator,
-                    )
-                else:
-                    event_rates = _evaluate_jump_rates_state_matrix_numpy(
-                        event_source_states,
-                        jump_operators,
-                    )
-                event_total_rates = np.sum(event_rates, axis=0)
-                elapsed = _perf_counter() - channel_start
-                _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
-                _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
+        if np.any(crossing_mask):
+            event_columns = np.flatnonzero(crossing_mask)
+            event_source_states = normalized_active_states[:, event_columns]
+
+            channel_start = _perf_counter()
+            if sparse_jump_rate_evaluator is not None:
+                event_rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+                    event_source_states,
+                    sparse_jump_rate_evaluator,
+                )
             else:
-                event_rates = rates[:, event_mask]
-                event_total_rates = total_rates[event_mask]
+                event_rates = _evaluate_jump_rates_state_matrix_numpy(
+                    event_source_states,
+                    jump_operators,
+                )
+            event_total_rates = np.sum(event_rates, axis=0)
+            if np.any(event_total_rates <= 0.0):
+                raise RuntimeError(
+                    "A norm-threshold MCWF event was detected with zero channel rate."
+                )
+            elapsed = _perf_counter() - channel_start
+            _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
+            _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
 
+            jump_start = _perf_counter()
             selected_for_events = _choose_jump_indices_vectorized(
                 probabilities=event_rates,
                 total_probabilities=event_total_rates,
                 rng=rng,
             )
             selected_jump_indices = np.zeros(active_indices.size, dtype=np.int64)
-            selected_jump_indices[event_mask] = selected_for_events
+            selected_jump_indices[event_columns] = selected_for_events
             _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - jump_start)
 
             start = _perf_counter()
             _apply_selected_jumps_to_state_matrix_numpy(
-                next_states=next_active_states,
-                states=next_active_states,
+                next_states=normalized_active_states,
+                states=normalized_active_states.copy(),
                 jumps=jump_operators,
-                jump_mask=event_mask,
+                jump_mask=crossing_mask,
                 selected_jump_indices=selected_jump_indices,
             )
             _add_timing(
@@ -1544,18 +1640,34 @@ def _advance_state_matrix_event_driven_numpy(
                 _perf_counter() - start,
             )
 
-        start = _perf_counter()
-        norms = np.linalg.norm(next_active_states, axis=0)
-        if np.any(norms == 0.0):
-            raise RuntimeError("At least one MCWF state reached zero norm.")
-        states[:, active_indices] = next_active_states / norms.reshape(1, -1)
-        _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
+            start = _perf_counter()
+            normalized_active_states, _ = _normalize_state_matrix_columns_numpy(
+                normalized_active_states,
+            )
+            _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
 
+            survival_thresholds[active_indices[crossing_mask]] = _draw_mcwf_survival_thresholds(
+                rng,
+                int(np.count_nonzero(crossing_mask)),
+            )
+
+        no_event_mask = ~crossing_mask
+        if np.any(no_event_mask):
+            residual_thresholds = active_thresholds[no_event_mask] / norm_squares[no_event_mask]
+            np.clip(
+                residual_thresholds,
+                np.finfo(np.float64).tiny,
+                np.nextafter(1.0, 0.0),
+                out=residual_thresholds,
+            )
+            survival_thresholds[active_indices[no_event_mask]] = residual_thresholds
+
+        states[:, active_indices] = normalized_active_states
         remaining[active_indices] -= segment_steps
         active_indices = active_indices[remaining[active_indices] > min_step_size]
         event_substeps += 1
 
-    return states
+    return states, survival_thresholds
 
 
 def _sample_lindblad_mcwf_chunked_vectorized_scipy(
