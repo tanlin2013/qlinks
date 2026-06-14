@@ -1137,10 +1137,7 @@ def _can_use_vectorized_mcwf_ensemble(
 ) -> bool:
     """Return whether the ensemble can use the NumPy vectorized MCWF path."""
     return (
-        backend.name == "scipy"
-        and not options.store_trajectories
-        and not options.adaptive_time_step
-        and options.normalize_each_step
+        backend.name == "scipy" and not options.store_trajectories and options.normalize_each_step
     )
 
 
@@ -1189,117 +1186,158 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         state_snapshots = [states.copy()]
 
     for time_index in range(times.size - 1):
-        step_size = float(times[time_index + 1] - times[time_index])
+        interval_start = float(times[time_index])
+        interval_stop = float(times[time_index + 1])
+        current_time = interval_start
+        substeps = 0
 
-        probabilities = np.zeros((0, options.n_trajectories), dtype=np.float64)
-        total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
-        rates: NDArray[np.float64] | None = None
+        while current_time < interval_stop:
+            remaining_step = interval_stop - current_time
+            step_size = remaining_step
 
-        if jump_operators:
-            start = _perf_counter()
-            if _should_use_total_rate_first(
-                options.use_total_rate_first,
-                total_jump_rate_operator=total_jump_rate_operator,
-                sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
-            ):
-                total_rates = _evaluate_total_jump_rates_state_matrix_numpy(
-                    states,
-                    total_jump_rate_operator,
+            probabilities = np.zeros((0, options.n_trajectories), dtype=np.float64)
+            total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
+            rates: NDArray[np.float64] | None = None
+
+            if jump_operators:
+                (
+                    probabilities,
+                    total_jump_probabilities,
+                    rates,
+                ) = _evaluate_vectorized_jump_probabilities_numpy(
+                    states=states,
+                    step_size=step_size,
+                    jump_operators=jump_operators,
+                    sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+                    total_jump_rate_operator=total_jump_rate_operator,
+                    use_total_rate_first=options.use_total_rate_first,
+                    timing_collector=timing_collector,
                 )
-                total_jump_probabilities = step_size * total_rates
-                elapsed = _perf_counter() - start
-                _add_timing(timing_collector, "mcwf.total_rate_evaluation", elapsed)
-                _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
-            else:
-                if sparse_jump_rate_evaluator is not None:
-                    rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
-                        states,
-                        sparse_jump_rate_evaluator,
+
+                max_total_jump_probability = float(np.max(total_jump_probabilities))
+                if max_total_jump_probability > options.max_jump_probability:
+                    if not options.adaptive_time_step:
+                        raise RuntimeError(
+                            "Time step is too large for first-order MCWF: "
+                            f"total jump probability={max_total_jump_probability:.6e}, "
+                            f"allowed maximum={options.max_jump_probability:.6e}. "
+                            "Use a finer time grid, enable adaptive_time_step=True, "
+                            "or increase max_jump_probability only if you know this is "
+                            "acceptable."
+                        )
+
+                    scale = (
+                        options.adaptive_safety_factor
+                        * options.max_jump_probability
+                        / max_total_jump_probability
                     )
-                else:
-                    rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
-                probabilities = step_size * rates
-                total_jump_probabilities = np.sum(probabilities, axis=0)
-                elapsed = _perf_counter() - start
-                _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
-                _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
+                    step_size = max(remaining_step * scale, options.min_step_size)
+                    if step_size >= remaining_step:
+                        step_size = remaining_step
 
-            max_total_jump_probability = float(np.max(total_jump_probabilities))
-            if max_total_jump_probability > options.max_jump_probability:
+                    (
+                        probabilities,
+                        total_jump_probabilities,
+                        rates,
+                    ) = _evaluate_vectorized_jump_probabilities_numpy(
+                        states=states,
+                        step_size=step_size,
+                        jump_operators=jump_operators,
+                        sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+                        total_jump_rate_operator=total_jump_rate_operator,
+                        use_total_rate_first=options.use_total_rate_first,
+                        timing_collector=timing_collector,
+                    )
+                    max_total_jump_probability = float(np.max(total_jump_probabilities))
+                    if max_total_jump_probability > options.max_jump_probability:
+                        raise RuntimeError(
+                            "Adaptive MCWF failed to reduce the step enough: "
+                            f"total jump probability={max_total_jump_probability:.6e}, "
+                            f"allowed maximum={options.max_jump_probability:.6e}. "
+                            "Try a smaller min_step_size or max_jump_probability."
+                        )
+
+            if step_size < options.min_step_size and remaining_step > options.min_step_size:
                 raise RuntimeError(
-                    "Time step is too large for first-order MCWF: "
-                    f"total jump probability={max_total_jump_probability:.6e}, "
-                    f"allowed maximum={options.max_jump_probability:.6e}. "
-                    "Use a finer time grid, enable adaptive_time_step=True, "
-                    "or increase max_jump_probability only if you know this is "
-                    "acceptable."
+                    "Adaptive MCWF reached min_step_size before completing "
+                    "the requested time interval."
                 )
 
-        start = _perf_counter()
-        next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
-        _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
-
-        if jump_operators:
             start = _perf_counter()
-            jump_mask = rng.random(options.n_trajectories) < total_jump_probabilities
-            if np.any(jump_mask):
-                if rates is None:
-                    channel_start = _perf_counter()
-                    if sparse_jump_rate_evaluator is not None:
-                        selected_rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
-                            states[:, jump_mask],
-                            sparse_jump_rate_evaluator,
+            next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
+            _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
+
+            if jump_operators:
+                start = _perf_counter()
+                jump_mask = rng.random(options.n_trajectories) < total_jump_probabilities
+                if np.any(jump_mask):
+                    if rates is None:
+                        channel_start = _perf_counter()
+                        if sparse_jump_rate_evaluator is not None:
+                            selected_rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+                                states[:, jump_mask],
+                                sparse_jump_rate_evaluator,
+                            )
+                        else:
+                            selected_rates = _evaluate_jump_rates_state_matrix_numpy(
+                                states[:, jump_mask],
+                                jump_operators,
+                            )
+                        selected_probabilities = step_size * selected_rates
+                        selected_total_probabilities = np.sum(selected_probabilities, axis=0)
+                        channel_elapsed = _perf_counter() - channel_start
+                        _add_timing(
+                            timing_collector,
+                            "mcwf.channel_rate_evaluation",
+                            channel_elapsed,
                         )
+                        _add_timing(timing_collector, "mcwf.rate_evaluation", channel_elapsed)
                     else:
-                        selected_rates = _evaluate_jump_rates_state_matrix_numpy(
-                            states[:, jump_mask],
-                            jump_operators,
-                        )
-                    selected_probabilities = step_size * selected_rates
-                    selected_total_probabilities = np.sum(selected_probabilities, axis=0)
-                    channel_elapsed = _perf_counter() - channel_start
+                        selected_probabilities = probabilities[:, jump_mask]
+                        selected_total_probabilities = total_jump_probabilities[jump_mask]
+                    selected_for_active = _choose_jump_indices_vectorized(
+                        probabilities=selected_probabilities,
+                        total_probabilities=selected_total_probabilities,
+                        rng=rng,
+                    )
+                    selected_jump_indices = np.zeros(options.n_trajectories, dtype=np.int64)
+                    selected_jump_indices[jump_mask] = selected_for_active
+                    _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
+
+                    start = _perf_counter()
+                    _apply_selected_jumps_to_state_matrix_numpy(
+                        next_states=next_states,
+                        states=states,
+                        jumps=jump_operators,
+                        jump_mask=jump_mask,
+                        selected_jump_indices=selected_jump_indices,
+                    )
                     _add_timing(
                         timing_collector,
-                        "mcwf.channel_rate_evaluation",
-                        channel_elapsed,
+                        "mcwf.selected_jump_application",
+                        _perf_counter() - start,
                     )
-                    _add_timing(timing_collector, "mcwf.rate_evaluation", channel_elapsed)
                 else:
-                    selected_probabilities = probabilities[:, jump_mask]
-                    selected_total_probabilities = total_jump_probabilities[jump_mask]
+                    _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
 
-                selected_for_active = _choose_jump_indices_vectorized(
-                    probabilities=selected_probabilities,
-                    total_probabilities=selected_total_probabilities,
-                    rng=rng,
+            start = _perf_counter()
+            norms = np.linalg.norm(next_states, axis=0)
+            if np.any(norms == 0.0):
+                raise RuntimeError(
+                    "At least one MCWF state reached zero norm. " "Try a smaller time step."
                 )
-                selected_jump_indices = np.zeros(options.n_trajectories, dtype=np.int64)
-                selected_jump_indices[jump_mask] = selected_for_active
-                _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
 
-                start = _perf_counter()
-                _apply_selected_jumps_to_state_matrix_numpy(
-                    next_states=next_states,
-                    states=states,
-                    jumps=jump_operators,
-                    jump_mask=jump_mask,
-                    selected_jump_indices=selected_jump_indices,
+            states = next_states / norms.reshape(1, -1)
+            _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
+
+            current_time += step_size
+            substeps += 1
+            if substeps > options.max_substeps_per_interval:
+                raise RuntimeError(
+                    "Adaptive MCWF exceeded max_substeps_per_interval. "
+                    "Try increasing max_jump_probability, increasing "
+                    "max_substeps_per_interval, or checking jump rates."
                 )
-                _add_timing(
-                    timing_collector, "mcwf.selected_jump_application", _perf_counter() - start
-                )
-            else:
-                _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
-
-        start = _perf_counter()
-        norms = np.linalg.norm(next_states, axis=0)
-        if np.any(norms == 0.0):
-            raise RuntimeError(
-                "At least one MCWF state reached zero norm. " "Try a smaller time step."
-            )
-
-        states = next_states / norms.reshape(1, -1)
-        _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
 
         if options.store_state_snapshots:
             assert state_snapshots is not None
@@ -1554,6 +1592,52 @@ def _trajectory_chunk_slices(
         (start, min(start + chunk_size, n_trajectories))
         for start in range(0, n_trajectories, chunk_size)
     ]
+
+
+def _evaluate_vectorized_jump_probabilities_numpy(
+    *,
+    states: ArrayC,
+    step_size: float,
+    jump_operators: tuple[Any, ...],
+    sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None,
+    total_jump_rate_operator: Any | None,
+    use_total_rate_first: bool,
+    timing_collector: MutableMapping[str, float] | None,
+) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64] | None]:
+    """Return first-order jump probabilities for the vectorized MCWF path."""
+    start = _perf_counter()
+    if _should_use_total_rate_first(
+        use_total_rate_first,
+        total_jump_rate_operator=total_jump_rate_operator,
+        sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+    ):
+        total_rates = _evaluate_total_jump_rates_state_matrix_numpy(
+            states,
+            total_jump_rate_operator,
+        )
+        total_jump_probabilities = step_size * total_rates
+        elapsed = _perf_counter() - start
+        _add_timing(timing_collector, "mcwf.total_rate_evaluation", elapsed)
+        _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
+        return (
+            np.zeros((0, states.shape[1]), dtype=np.float64),
+            total_jump_probabilities,
+            None,
+        )
+
+    if sparse_jump_rate_evaluator is not None:
+        rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+            states,
+            sparse_jump_rate_evaluator,
+        )
+    else:
+        rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
+    probabilities = step_size * rates
+    total_jump_probabilities = np.sum(probabilities, axis=0)
+    elapsed = _perf_counter() - start
+    _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
+    _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
+    return probabilities, total_jump_probabilities, rates
 
 
 def _should_use_total_rate_first(

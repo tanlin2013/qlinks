@@ -558,6 +558,34 @@ def test_sample_lindblad_mcwf_vectorized_raises_when_step_too_large(qubit_ops):
         )
 
 
+def test_sample_lindblad_mcwf_vectorized_adaptive_step_succeeds(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(10.0) * qubit_ops["sigma_minus"]
+    times = np.asarray([0.0, 0.2], dtype=np.float64)
+    timing: dict[str, float] = {}
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        state_initial=qubit_ops["ket1"],
+        times=times,
+        options=McwfOptions(
+            n_trajectories=4,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=False,
+            max_jump_probability=0.1,
+            adaptive_time_step=True,
+            adaptive_safety_factor=0.8,
+            timing_collector=timing,
+        ),
+    )
+
+    assert result.trajectories is None
+    assert result.rho_t == []
+    assert timing["mcwf.rate_evaluation"] > 0.0
+
+
 def test_sample_lindblad_mcwf_reproducible_with_seed(qubit_ops):
     hamiltonian = 0.5 * qubit_ops["sigma_x"]
     decay_rate = 0.4
