@@ -168,9 +168,185 @@ def _pauli_and_ladder_operators() -> dict[str, np.ndarray]:
     }
 
 
+def _select_cage_record(search_result, *, signature: tuple[int, int], record_index: int):
+    records = list(search_result[signature].records)
+    if not records:
+        raise ValueError(f"No cage records were found for signature {signature}.")
+
+    if record_index < 0 or record_index >= len(records):
+        raise IndexError(
+            f"record_index={record_index} is out of range for "
+            f"{len(records)} selected cage records."
+        )
+
+    return records[record_index]
+
+
+def _full_state_for_cage_record(search_result, record) -> np.ndarray:
+    if record.full_state is not None:
+        return np.asarray(record.full_state, dtype=np.complex128)
+
+    full_state = np.zeros(search_result.hilbert_size, dtype=np.complex128)
+    full_state[record.support] = record.local_state
+    return full_state
+
+
+def _make_square_qdm_cage_lindblad_mcwf_case(
+    *,
+    check_liouvillian: bool,
+    ipr_candidate_count: int,
+    ipr_max_iter: int,
+    ipr_batch_size: int,
+    ipr_rank_completion_patience: int | None,
+    record_index: int,
+) -> OpenSystemBenchmarkCase:
+    """Build the square-QDM Cage-Lindblad problem used for real MCWF timing."""
+    from qlinks.basis import basis_configs_from_build_result
+    from qlinks.caging import (
+        CageClassificationConfig,
+        CageSearchConfig,
+        CageSearcher,
+        classify_full_state,
+    )
+    from qlinks.caging.open_system import build_type1_cage_lindblad_construction
+    from qlinks.models import SquareQDMModel
+
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=-1.0,
+        coup_pot=1.0,
+    )
+    signature = (0, 4)
+
+    build_result, build_seconds = _time_call(
+        lambda: model.build(
+            basis_solver="dfs",
+            builder="sparse",
+            backend="scipy",
+            on_missing="raise",
+        )
+    )
+
+    search_config = CageSearchConfig(
+        search_type="type1",
+        tolerance=1.0e-10,
+        degenerate_basis_strategy="ipr",
+        ipr_n_restarts=256,
+        ipr_max_iter=ipr_max_iter,
+        ipr_candidate_count=ipr_candidate_count,
+        ipr_rank_completion_patience=ipr_rank_completion_patience,
+        ipr_batch_size=ipr_batch_size,
+        ipr_random_seed=1234,
+        store_full_states=True,
+    )
+    searcher = CageSearcher.from_model_build_result(build_result, config=search_config)
+    search_result, search_seconds = _time_call(searcher.run)
+
+    record = _select_cage_record(
+        search_result,
+        signature=signature,
+        record_index=record_index,
+    )
+    state_vector = _full_state_for_cage_record(search_result, record)
+    basis_configs = basis_configs_from_build_result(build_result)
+
+    classification_config = CageClassificationConfig(
+        amplitude_tolerance=1.0e-10,
+        action_tolerance=1.0e-9,
+        sector_policy="infer_support_component",
+    )
+    report, classification_seconds = _time_call(
+        lambda: classify_full_state(
+            state_vector,
+            kinetic_matrix=build_result.kinetic,
+            basis_configs=basis_configs,
+            config=classification_config,
+            metadata={
+                "signature": record.signature,
+                "record_index": record_index,
+                "benchmark_case": "square_qdm_cage_lindblad_mcwf",
+            },
+        )
+    )
+
+    construction_stage_seconds: dict[str, float] = {}
+    construction, construction_seconds = _time_call(
+        lambda: build_type1_cage_lindblad_construction(
+            model=model,
+            build_result=build_result,
+            cage_state=state_vector,
+            classification_report=report,
+            z_value=record.signature[1],
+            builder="sparse",
+            backend="scipy",
+            monitor_source="reduced_iz_operators",
+            reduced_iz_monitor_content="offdiagonal_only",
+            reduced_iz_monitor_decomposition="exact_support",
+            jump_operator_design="kinetic_outside_monitor_inside",
+            jump_plaquette_policy="outside_or_crossing",
+            recycling_jump_source="local_rdm_two_pattern",
+            max_recycling_jumps_per_region=1,
+            check_liouvillian=check_liouvillian,
+            timing_collector=construction_stage_seconds,
+        )
+    )
+    summary = construction.to_summary_dict()
+
+    return OpenSystemBenchmarkCase(
+        name="square_qdm_cage_lindblad_mcwf",
+        hamiltonian=build_result.hamiltonian,
+        jumps=construction.jumps,
+        state_initial=state_vector,
+        parameters={
+            "model": type(model).__name__,
+            "lx": 4,
+            "ly": 4,
+            "boundary_condition": "periodic",
+            "winding_x": 0,
+            "winding_y": 0,
+            "winding_convention": "electric",
+            "signature": record.signature,
+            "record_index": record_index,
+            "n_states": build_result.basis.n_states,
+            "n_jumps": construction.n_jumps,
+            "n_component_jumps": construction.n_component_jumps,
+            "n_global_jump_terms": construction.n_global_jump_terms,
+            "n_recycling_jumps": construction.n_recycling_jumps,
+            "region_size": summary["region_size"],
+            "monitor_residual": summary["monitor_residual"],
+            "max_jump_residual": summary["max_jump_residual"],
+            "liouvillian_residual": summary["liouvillian_residual"],
+            "build_seconds": build_seconds,
+            "search_seconds": search_seconds,
+            "search_stage_seconds": dict(search_result.search_stage_seconds),
+            "classification_seconds": classification_seconds,
+            "construction_seconds": construction_seconds,
+            "construction_stage_seconds": dict(construction_stage_seconds),
+            "check_liouvillian": check_liouvillian,
+            "recycling_jump_source": "local_rdm_two_pattern",
+            "ipr_candidate_count": ipr_candidate_count,
+            "ipr_max_iter": ipr_max_iter,
+            "ipr_batch_size": ipr_batch_size,
+            "ipr_rank_completion_patience": ipr_rank_completion_patience,
+        },
+    )
+
+
 def make_benchmark_cases(
     *,
     include_sparse_many_jump_case: bool = False,
+    include_cage_lindblad_case: bool = False,
+    cage_lindblad_check_liouvillian: bool = True,
+    cage_lindblad_record_index: int = 0,
+    cage_lindblad_ipr_candidate_count: int = 128,
+    cage_lindblad_ipr_max_iter: int = 1000,
+    cage_lindblad_ipr_batch_size: int = 32,
+    cage_lindblad_ipr_rank_completion_patience: int | None = 0,
 ) -> list[OpenSystemBenchmarkCase]:
     ops = _pauli_and_ladder_operators()
     sigma_minus = ops["sigma_minus"]
@@ -256,6 +432,18 @@ def make_benchmark_cases(
                     "n_jumps": n_jumps,
                     "entries_per_jump": entries_per_jump,
                 },
+            )
+        )
+
+    if include_cage_lindblad_case:
+        cases.append(
+            _make_square_qdm_cage_lindblad_mcwf_case(
+                check_liouvillian=cage_lindblad_check_liouvillian,
+                ipr_candidate_count=cage_lindblad_ipr_candidate_count,
+                ipr_max_iter=cage_lindblad_ipr_max_iter,
+                ipr_batch_size=cage_lindblad_ipr_batch_size,
+                ipr_rank_completion_patience=cage_lindblad_ipr_rank_completion_patience,
+                record_index=cage_lindblad_record_index,
             )
         )
 
@@ -672,14 +860,55 @@ def main() -> None:
             "Liouvillian solvers may be expensive for this case."
         ),
     )
+    parser.add_argument(
+        "--include-cage-lindblad-case",
+        action="store_true",
+        help=(
+            "Include the real square_qdm_4x4_pbc_w00 Cage-Lindblad MCWF case "
+            "using the (0, 4) type-1 cage, exact-support reduced-IZ monitor, "
+            "kinetic-outside/monitor-inside jumps, and local_rdm_two_pattern "
+            "recycling jumps."
+        ),
+    )
+    parser.add_argument(
+        "--cage-lindblad-skip-liouvillian-check",
+        action="store_true",
+        help="Skip check_liouvillian when building the optional Cage-Lindblad MCWF case.",
+    )
+    parser.add_argument("--cage-lindblad-record-index", type=int, default=0)
+    parser.add_argument("--cage-lindblad-ipr-candidate-count", type=int, default=128)
+    parser.add_argument("--cage-lindblad-ipr-max-iter", type=int, default=1000)
+    parser.add_argument("--cage-lindblad-ipr-batch-size", type=int, default=32)
+    parser.add_argument(
+        "--cage-lindblad-ipr-rank-completion-patience",
+        type=int,
+        default=0,
+        help=(
+            "IPR early-stop patience for the optional Cage-Lindblad setup. "
+            "Use a negative value to disable early stopping."
+        ),
+    )
 
     args = parser.parse_args()
 
     times = np.linspace(0.0, args.time_stop, args.n_times, dtype=np.float64)
     results: list[OpenSystemBenchmarkResult] = []
 
+    cage_lindblad_patience = (
+        None
+        if args.cage_lindblad_ipr_rank_completion_patience < 0
+        else args.cage_lindblad_ipr_rank_completion_patience
+    )
+
     for case in make_benchmark_cases(
         include_sparse_many_jump_case=args.include_sparse_many_jump_case,
+        include_cage_lindblad_case=args.include_cage_lindblad_case,
+        cage_lindblad_check_liouvillian=(not args.cage_lindblad_skip_liouvillian_check),
+        cage_lindblad_record_index=args.cage_lindblad_record_index,
+        cage_lindblad_ipr_candidate_count=args.cage_lindblad_ipr_candidate_count,
+        cage_lindblad_ipr_max_iter=args.cage_lindblad_ipr_max_iter,
+        cage_lindblad_ipr_batch_size=args.cage_lindblad_ipr_batch_size,
+        cage_lindblad_ipr_rank_completion_patience=cage_lindblad_patience,
     ):
         if args.only is not None and args.only not in case.name:
             continue
