@@ -78,6 +78,7 @@ class OpenSystemBenchmarkResult:
     elapsed_seconds: float
     parameters: dict
     details: dict
+    stage_seconds: dict[str, float] | None = None
 
 
 def _time_call(func: Callable):
@@ -326,6 +327,7 @@ def run_open_system_benchmark(
     liouvillian_shape: tuple[int, int] | None = None
     liouvillian_nnz: int | None = None
     details: dict[str, object] = {}
+    stage_seconds: dict[str, float] | None = None
     n_trajectories_result: int | None = None
 
     if operation == "prepare_dense":
@@ -406,6 +408,7 @@ def run_open_system_benchmark(
         }
 
     elif operation == "mcwf":
+        stage_seconds = {}
         options = McwfOptions(
             backend=backend,  # type: ignore[arg-type]
             n_trajectories=n_trajectories,
@@ -416,6 +419,7 @@ def run_open_system_benchmark(
             max_jump_probability=mcwf_max_jump_probability,
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
             prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
+            timing_collector=stage_seconds,
         )
         result, elapsed = _time_call(
             lambda: sample_lindblad_mcwf(
@@ -450,6 +454,7 @@ def run_open_system_benchmark(
         elapsed_seconds=elapsed,
         parameters=case.parameters,
         details=details,
+        stage_seconds=stage_seconds,
     )
 
 
@@ -464,6 +469,9 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
         "traj",
         "L.nnz",
         "elapsed_s",
+        "rate_s",
+        "prop_s",
+        "rho_s",
         "details",
     ]
     rows = [
@@ -477,6 +485,9 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
             "" if result.n_trajectories is None else str(result.n_trajectories),
             "" if result.liouvillian_nnz is None else str(result.liouvillian_nnz),
             f"{result.elapsed_seconds:.6f}",
+            _format_seconds((result.stage_seconds or {}).get("mcwf.rate_evaluation")),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.no_jump_propagation")),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
             _details_text(result.details),
         ]
         for result in results
@@ -502,6 +513,9 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
         "traj",
         "L.nnz",
         "elapsed_s",
+        "rate_s",
+        "prop_s",
+        "rho_s",
         "details",
     ]
     rows = [
@@ -515,6 +529,9 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
             _format_optional_int(result.n_trajectories),
             _format_optional_int(result.liouvillian_nnz),
             _format_seconds(result.elapsed_seconds),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.rate_evaluation")),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.no_jump_propagation")),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
             _details_text(result.details),
         ]
         for result in results

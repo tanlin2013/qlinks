@@ -1156,3 +1156,52 @@ def test_vectorized_mcwf_sparse_rate_evaluator_matches_sparse_matmul(qubit_ops):
 
     for actual_rho, expected_rho in zip(optimized.rho_t, baseline.rho_t, strict=True):
         np.testing.assert_allclose(actual_rho, expected_rho, atol=1e-14)
+
+
+def test_sample_lindblad_mcwf_populates_timing_collector(qubit_ops):
+    timing: dict[str, float] = {}
+    hamiltonian = 0.1 * qubit_ops["sigma_x"]
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.1, 4)
+
+    sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=4,
+            seed=123,
+            store_trajectories=False,
+            timing_collector=timing,
+        ),
+    )
+
+    assert timing["mcwf.operator_preparation"] >= 0.0
+    assert timing["mcwf.initial_state_matrix"] >= 0.0
+    assert timing["mcwf.rate_evaluation"] >= 0.0
+    assert timing["mcwf.no_jump_propagation"] >= 0.0
+    assert timing["mcwf.normalization"] >= 0.0
+    assert timing["mcwf.density_accumulation"] >= 0.0
+
+
+def test_sample_lindblad_mcwf_accumulates_existing_timing_collector_values(qubit_ops):
+    timing: dict[str, float] = {"mcwf.rate_evaluation": 10.0}
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.1, 3)
+
+    sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=2,
+            seed=123,
+            store_trajectories=False,
+            timing_collector=timing,
+        ),
+    )
+
+    assert timing["mcwf.rate_evaluation"] >= 10.0

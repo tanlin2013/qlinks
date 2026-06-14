@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, MutableMapping
 
 import numpy as np
 import scipy.sparse as scipy_sparse
@@ -206,6 +207,7 @@ class McwfOptions:
     max_jump_probability: float = 0.1
     prefer_sparse_operators: bool = True
     prefer_sparse_rate_evaluator: bool = True
+    timing_collector: MutableMapping[str, float] | None = None
 
     adaptive_time_step: bool = False
     adaptive_safety_factor: float = 0.8
@@ -232,6 +234,21 @@ class McwfOptions:
         if not self.adaptive_time_step and self.max_substeps_per_interval != 100_000:
             # Optional: probably do not need this check.
             pass
+
+
+def _add_timing(
+    timing_collector: MutableMapping[str, float] | None,
+    stage: str,
+    elapsed_seconds: float,
+) -> None:
+    if timing_collector is None:
+        return
+
+    timing_collector[stage] = float(timing_collector.get(stage, 0.0)) + float(elapsed_seconds)
+
+
+def _perf_counter() -> float:
+    return time.perf_counter()
 
 
 @dataclass(frozen=True, slots=True)
@@ -769,6 +786,9 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     rng: np.random.Generator,
 ) -> EnsembleResult:
     """Sample an MCWF ensemble with trajectory states stored as columns."""
+    timing_collector = options.timing_collector
+
+    start = _perf_counter()
     states = _initial_state_matrix_for_ensemble(
         dim=dim,
         n_trajectories=options.n_trajectories,
@@ -776,11 +796,17 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         state_sampler=state_sampler,
         rng=rng,
     )
+    _add_timing(timing_collector, "mcwf.initial_state_matrix", _perf_counter() - start)
+
+    start = _perf_counter()
     effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
     jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
     sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
+    _add_timing(timing_collector, "mcwf.operator_view_conversion", _perf_counter() - start)
 
+    start = _perf_counter()
     rho_t: list[ArrayC] = [_density_matrix_from_state_matrix(states)]
+    _add_timing(timing_collector, "mcwf.density_accumulation", _perf_counter() - start)
 
     for time_index in range(times.size - 1):
         step_size = float(times[time_index + 1] - times[time_index])
@@ -789,6 +815,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
 
         if jump_operators:
+            start = _perf_counter()
             if sparse_jump_rate_evaluator is not None:
                 rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
                     states,
@@ -798,6 +825,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                 rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
             probabilities = step_size * rates
             total_jump_probabilities = np.sum(probabilities, axis=0)
+            _add_timing(timing_collector, "mcwf.rate_evaluation", _perf_counter() - start)
 
             max_total_jump_probability = float(np.max(total_jump_probabilities))
             if max_total_jump_probability > options.max_jump_probability:
@@ -810,9 +838,12 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     "acceptable."
                 )
 
+        start = _perf_counter()
         next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
+        _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
 
         if jump_operators:
+            start = _perf_counter()
             jump_mask = rng.random(options.n_trajectories) < total_jump_probabilities
             if np.any(jump_mask):
                 selected_jump_indices = _choose_jump_indices_vectorized(
@@ -820,6 +851,9 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     total_probabilities=total_jump_probabilities,
                     rng=rng,
                 )
+                _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
+
+                start = _perf_counter()
                 _apply_selected_jumps_to_state_matrix_numpy(
                     next_states=next_states,
                     states=states,
@@ -827,7 +861,13 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     jump_mask=jump_mask,
                     selected_jump_indices=selected_jump_indices,
                 )
+                _add_timing(
+                    timing_collector, "mcwf.selected_jump_application", _perf_counter() - start
+                )
+            else:
+                _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
 
+        start = _perf_counter()
         norms = np.linalg.norm(next_states, axis=0)
         if np.any(norms == 0.0):
             raise RuntimeError(
@@ -835,7 +875,11 @@ def _sample_lindblad_mcwf_vectorized_scipy(
             )
 
         states = next_states / norms.reshape(1, -1)
+        _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
+
+        start = _perf_counter()
         rho_t.append(_density_matrix_from_state_matrix(states))
+        _add_timing(timing_collector, "mcwf.density_accumulation", _perf_counter() - start)
 
     return EnsembleResult(
         times=times,
@@ -1044,6 +1088,7 @@ def sample_lindblad_mcwf(
     _validate_times_for_mcwf(times)
 
     generator = _rng_from_seed(options.seed if rng is None else rng)
+    start = _perf_counter()
     prepared = _prepare_mcwf_operators(
         hamiltonian=hamiltonian,
         jumps=jumps,
@@ -1051,6 +1096,7 @@ def sample_lindblad_mcwf(
         prefer_sparse_operators=options.prefer_sparse_operators,
         prefer_sparse_rate_evaluator=options.prefer_sparse_rate_evaluator,
     )
+    _add_timing(options.timing_collector, "mcwf.operator_preparation", _perf_counter() - start)
     backend_obj = prepared.backend
     hamiltonian_backend = prepared.hamiltonian
 
