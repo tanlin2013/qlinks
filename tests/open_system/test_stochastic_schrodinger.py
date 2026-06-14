@@ -1815,3 +1815,74 @@ def test_sample_lindblad_mcwf_parallel_chunked_density_matches_unchunked(qubit_o
 def test_mcwf_options_rejects_nonpositive_trajectory_chunk_workers():
     with pytest.raises(ValueError, match="trajectory_chunk_workers"):
         McwfOptions(trajectory_chunk_workers=0).validate()
+
+
+def test_sample_lindblad_mcwf_event_driven_no_jump_matches_fixed_grid(qubit_ops):
+    hamiltonian = 0.05 * qubit_ops["sigma_x"]
+    times = np.linspace(0.0, 0.2, 5)
+
+    fixed = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=6,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=False,
+            store_state_snapshots=True,
+        ),
+    )
+    event_driven = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=6,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=False,
+            store_state_snapshots=True,
+            use_event_driven_jumps=True,
+        ),
+    )
+
+    assert fixed.state_snapshots is not None
+    assert event_driven.state_snapshots is not None
+    for actual, expected in zip(
+        event_driven.state_snapshots,
+        fixed.state_snapshots,
+        strict=True,
+    ):
+        np.testing.assert_allclose(actual, expected, atol=1e-14)
+
+
+def test_sample_lindblad_mcwf_event_driven_accepts_large_output_interval(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(2.0) * qubit_ops["sigma_minus"]
+    times = np.asarray([0.0, 2.0], dtype=np.float64)
+    timing: dict[str, float] = {}
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=16,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=False,
+            store_state_snapshots=True,
+            max_jump_probability=0.1,
+            use_event_driven_jumps=True,
+            timing_collector=timing,
+        ),
+    )
+
+    assert result.rho_t == []
+    assert result.state_snapshots is not None
+    assert len(result.state_snapshots) == len(times)
+    assert timing["mcwf.rate_evaluation"] > 0.0

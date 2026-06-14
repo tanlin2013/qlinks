@@ -512,6 +512,7 @@ def run_open_system_benchmark(
     mcwf_prefer_sparse_operators: bool,
     mcwf_prefer_sparse_rate_evaluator: bool,
     mcwf_use_total_rate_first: bool,
+    mcwf_use_event_driven_jumps: bool,
     mcwf_store_density_matrices: bool,
     mcwf_store_state_snapshots: bool,
     mcwf_trajectory_chunk_size: int | None,
@@ -615,6 +616,7 @@ def run_open_system_benchmark(
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
             prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
             use_total_rate_first=mcwf_use_total_rate_first,
+            use_event_driven_jumps=mcwf_use_event_driven_jumps,
             store_density_matrices=mcwf_store_density_matrices,
             store_state_snapshots=mcwf_store_state_snapshots,
             trajectory_chunk_size=mcwf_trajectory_chunk_size,
@@ -644,6 +646,7 @@ def run_open_system_benchmark(
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
             "use_total_rate_first": mcwf_use_total_rate_first,
+            "use_event_driven_jumps": mcwf_use_event_driven_jumps,
         }
 
     else:
@@ -849,6 +852,15 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--mcwf-event-driven-jumps",
+        action="store_true",
+        help=(
+            "Use piecewise-constant event-driven jump-time sampling in the "
+            "vectorized MCWF ensemble path. This is experimental and is aimed "
+            "at long time-stop runs with coarse output grids."
+        ),
+    )
+    parser.add_argument(
         "--mcwf-skip-density-matrices",
         action="store_true",
         help="Skip full ensemble density-matrix accumulation for MCWF benchmarks.",
@@ -977,6 +989,7 @@ def main() -> None:
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
                     mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
                     mcwf_use_total_rate_first=(not args.mcwf_disable_total_rate_first),
+                    mcwf_use_event_driven_jumps=args.mcwf_event_driven_jumps,
                     mcwf_store_density_matrices=(not args.mcwf_skip_density_matrices),
                     mcwf_store_state_snapshots=args.mcwf_store_state_snapshots,
                     mcwf_trajectory_chunk_size=args.mcwf_trajectory_chunk_size,

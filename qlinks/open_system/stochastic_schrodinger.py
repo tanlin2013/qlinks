@@ -414,6 +414,7 @@ class McwfOptions:
     prefer_sparse_operators: bool = True
     prefer_sparse_rate_evaluator: bool = True
     use_total_rate_first: bool = True
+    use_event_driven_jumps: bool = False
     store_density_matrices: bool = True
     store_state_snapshots: bool = False
     trajectory_chunk_size: int | None = None
@@ -1191,6 +1192,36 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         current_time = interval_start
         substeps = 0
 
+        if options.use_event_driven_jumps:
+            states = _advance_state_matrix_event_driven_numpy(
+                states=states,
+                step_size=interval_stop - interval_start,
+                effective_hamiltonian_matrix=effective_hamiltonian_matrix,
+                jump_operators=jump_operators,
+                sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+                total_jump_rate_operator=total_jump_rate_operator,
+                use_total_rate_first=options.use_total_rate_first,
+                rng=rng,
+                max_substeps=options.max_substeps_per_interval,
+                min_step_size=options.min_step_size,
+                timing_collector=timing_collector,
+            )
+
+            if options.store_state_snapshots:
+                assert state_snapshots is not None
+                state_snapshots.append(states.copy())
+
+            if options.store_density_matrices:
+                start = _perf_counter()
+                rho_t.append(_density_matrix_from_state_matrix(states))
+                _add_timing(
+                    timing_collector,
+                    "mcwf.density_accumulation",
+                    _perf_counter() - start,
+                )
+
+            continue
+
         while current_time < interval_stop:
             remaining_step = interval_stop - current_time
             step_size = remaining_step
@@ -1354,6 +1385,177 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         trajectories=None,
         state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
     )
+
+
+def _advance_state_matrix_event_driven_numpy(
+    *,
+    states: ArrayC,
+    step_size: float,
+    effective_hamiltonian_matrix: Any,
+    jump_operators: tuple[Any, ...],
+    sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None,
+    total_jump_rate_operator: Any | None,
+    use_total_rate_first: bool,
+    rng: np.random.Generator,
+    max_substeps: int,
+    min_step_size: float,
+    timing_collector: MutableMapping[str, float] | None,
+) -> ArrayC:
+    """Advance a vectorized MCWF ensemble with piecewise-constant jump times.
+
+    This is an event-driven alternative to Bernoulli jump/no-jump sampling on
+    each output interval.  For each active trajectory, it samples an exponential
+    waiting time from the current total jump rate, propagates only until the
+    earlier of the jump event or output time, and evaluates per-channel rates
+    only for trajectories that actually jump.
+
+    The rates are piecewise constant over each event segment, matching the
+    first-order character of the existing MCWF integrator while avoiding a hard
+    ``dt * rate < max_jump_probability`` restriction for long output intervals.
+    """
+    if step_size < 0.0:
+        raise ValueError("step_size must be nonnegative.")
+
+    if step_size == 0.0:
+        return states
+
+    if not jump_operators:
+        start = _perf_counter()
+        next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
+        _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
+
+        start = _perf_counter()
+        norms = np.linalg.norm(next_states, axis=0)
+        if np.any(norms == 0.0):
+            raise RuntimeError("At least one MCWF state reached zero norm.")
+        next_states = next_states / norms.reshape(1, -1)
+        _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
+        return next_states
+
+    remaining = np.full(states.shape[1], float(step_size), dtype=np.float64)
+    active_indices = np.arange(states.shape[1], dtype=np.int64)
+    event_substeps = 0
+
+    while active_indices.size:
+        if event_substeps > max_substeps:
+            raise RuntimeError(
+                "Event-driven MCWF exceeded max_substeps_per_interval. "
+                "Try increasing max_substeps_per_interval or checking jump rates."
+            )
+
+        active_states = states[:, active_indices]
+        active_remaining = remaining[active_indices]
+
+        rate_start = _perf_counter()
+        rates: NDArray[np.float64] | None = None
+        if _should_use_total_rate_first(
+            use_total_rate_first,
+            total_jump_rate_operator=total_jump_rate_operator,
+            sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+        ):
+            total_rates = _evaluate_total_jump_rates_state_matrix_numpy(
+                active_states,
+                total_jump_rate_operator,
+            )
+            elapsed = _perf_counter() - rate_start
+            _add_timing(timing_collector, "mcwf.total_rate_evaluation", elapsed)
+            _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
+        else:
+            if sparse_jump_rate_evaluator is not None:
+                rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+                    active_states,
+                    sparse_jump_rate_evaluator,
+                )
+            else:
+                rates = _evaluate_jump_rates_state_matrix_numpy(active_states, jump_operators)
+            total_rates = np.sum(rates, axis=0)
+            elapsed = _perf_counter() - rate_start
+            _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
+            _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
+
+        total_rates = np.asarray(total_rates, dtype=np.float64)
+        np.maximum(total_rates, 0.0, out=total_rates)
+        draws = np.maximum(rng.random(active_indices.size), np.finfo(np.float64).tiny)
+        waiting_times = np.full(active_indices.size, np.inf, dtype=np.float64)
+        positive_rate_mask = total_rates > 0.0
+        waiting_times[positive_rate_mask] = (
+            -np.log(draws[positive_rate_mask]) / total_rates[positive_rate_mask]
+        )
+
+        event_mask = waiting_times < active_remaining
+        segment_steps = np.minimum(active_remaining, waiting_times)
+        segment_steps[~np.isfinite(segment_steps)] = active_remaining[~np.isfinite(segment_steps)]
+        np.maximum(segment_steps, 0.0, out=segment_steps)
+
+        if np.any((segment_steps < min_step_size) & (active_remaining > min_step_size)):
+            raise RuntimeError(
+                "Event-driven MCWF reached min_step_size before completing "
+                "the requested time interval."
+            )
+
+        start = _perf_counter()
+        acted_states = effective_hamiltonian_matrix @ active_states
+        next_active_states = active_states - 1j * acted_states * segment_steps.reshape(1, -1)
+        _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
+
+        if np.any(event_mask):
+            jump_start = _perf_counter()
+            if rates is None:
+                channel_start = _perf_counter()
+                event_source_states = active_states[:, event_mask]
+                if sparse_jump_rate_evaluator is not None:
+                    event_rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
+                        event_source_states,
+                        sparse_jump_rate_evaluator,
+                    )
+                else:
+                    event_rates = _evaluate_jump_rates_state_matrix_numpy(
+                        event_source_states,
+                        jump_operators,
+                    )
+                event_total_rates = np.sum(event_rates, axis=0)
+                elapsed = _perf_counter() - channel_start
+                _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
+                _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
+            else:
+                event_rates = rates[:, event_mask]
+                event_total_rates = total_rates[event_mask]
+
+            selected_for_events = _choose_jump_indices_vectorized(
+                probabilities=event_rates,
+                total_probabilities=event_total_rates,
+                rng=rng,
+            )
+            selected_jump_indices = np.zeros(active_indices.size, dtype=np.int64)
+            selected_jump_indices[event_mask] = selected_for_events
+            _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - jump_start)
+
+            start = _perf_counter()
+            _apply_selected_jumps_to_state_matrix_numpy(
+                next_states=next_active_states,
+                states=next_active_states,
+                jumps=jump_operators,
+                jump_mask=event_mask,
+                selected_jump_indices=selected_jump_indices,
+            )
+            _add_timing(
+                timing_collector,
+                "mcwf.selected_jump_application",
+                _perf_counter() - start,
+            )
+
+        start = _perf_counter()
+        norms = np.linalg.norm(next_active_states, axis=0)
+        if np.any(norms == 0.0):
+            raise RuntimeError("At least one MCWF state reached zero norm.")
+        states[:, active_indices] = next_active_states / norms.reshape(1, -1)
+        _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
+
+        remaining[active_indices] -= segment_steps
+        active_indices = active_indices[remaining[active_indices] > min_step_size]
+        event_substeps += 1
+
+    return states
 
 
 def _sample_lindblad_mcwf_chunked_vectorized_scipy(
