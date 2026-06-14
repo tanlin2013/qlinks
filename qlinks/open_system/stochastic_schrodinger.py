@@ -466,6 +466,17 @@ def _add_timing(
     timing_collector[stage] = float(timing_collector.get(stage, 0.0)) + float(elapsed_seconds)
 
 
+def _add_counter(
+    timing_collector: MutableMapping[str, float] | None,
+    name: str,
+    value: float,
+) -> None:
+    if timing_collector is None:
+        return
+
+    timing_collector[name] = float(timing_collector.get(name, 0.0)) + float(value)
+
+
 def _perf_counter() -> float:
     return time.perf_counter()
 
@@ -1866,8 +1877,16 @@ def _advance_state_matrix_event_driven_numpy(
             max_times=segment_limits,
         )
         segment_steps = np.where(crossing_mask, crossing_times, segment_limits)
-        next_active_states = active_states + derivatives * segment_steps.reshape(1, -1)
+        derivatives *= segment_steps.reshape(1, -1)
+        derivatives += active_states
+        next_active_states = derivatives
         _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
+        _add_counter(timing_collector, "mcwf.count.event_segments", 1.0)
+        _add_counter(
+            timing_collector,
+            "mcwf.count.event_active_columns",
+            float(active_indices.size),
+        )
 
         if np.any((segment_steps < min_step_size) & (active_remaining > min_step_size)):
             raise RuntimeError(
@@ -1883,10 +1902,13 @@ def _advance_state_matrix_event_driven_numpy(
         )
         if np.any(norm_squares <= 0.0):
             raise RuntimeError("At least one MCWF state reached zero norm.")
-        normalized_active_states = next_active_states / np.sqrt(norm_squares).reshape(1, -1)
+        next_active_states /= np.sqrt(norm_squares).reshape(1, -1)
+        normalized_active_states = next_active_states
         _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
 
         if np.any(crossing_mask):
+            n_events = int(np.count_nonzero(crossing_mask))
+            _add_counter(timing_collector, "mcwf.count.event_crossings", float(n_events))
             event_columns = np.flatnonzero(crossing_mask)
             event_source_states = normalized_active_states[:, event_columns]
 

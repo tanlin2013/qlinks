@@ -148,6 +148,13 @@ def _format_seconds(value: float | None) -> str:
     return f"{value:.6f}"
 
 
+def _format_counter(value: float | None) -> str:
+    if value is None:
+        return ""
+
+    return str(int(round(value)))
+
+
 def _format_optional_int(value: int | None) -> str:
     if value is None:
         return ""
@@ -911,6 +918,8 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
         "parallel_s",
         "rho_s",
         "fid_s",
+        "segments",
+        "events",
         "final_F",
         "details",
     ]
@@ -932,6 +941,8 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_parallel_wall")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.target_fidelity_accumulation")),
+            _format_counter((result.stage_seconds or {}).get("mcwf.count.event_segments")),
+            _format_counter((result.stage_seconds or {}).get("mcwf.count.event_crossings")),
             _format_seconds(result.final_target_fidelity),
             _details_text(result.details),
         ]
@@ -968,6 +979,8 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
         "parallel_s",
         "rho_s",
         "fid_s",
+        "segments",
+        "events",
         "final_F",
         "details",
     ]
@@ -989,6 +1002,8 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_parallel_wall")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.target_fidelity_accumulation")),
+            _format_counter((result.stage_seconds or {}).get("mcwf.count.event_segments")),
+            _format_counter((result.stage_seconds or {}).get("mcwf.count.event_crossings")),
             _format_seconds(result.final_target_fidelity),
             _details_text(result.details),
         ]
