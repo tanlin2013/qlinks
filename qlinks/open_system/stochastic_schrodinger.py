@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, replace
-from typing import Any, Callable, Iterable, MutableMapping
+from typing import Any, Callable, Iterable, Mapping, MutableMapping
 
 import numpy as np
 import scipy.sparse as scipy_sparse
@@ -419,6 +419,7 @@ class McwfOptions:
     store_state_snapshots: bool = False
     trajectory_chunk_size: int | None = None
     trajectory_chunk_workers: int | None = None
+    fidelity_targets: Mapping[str, Any] | None = None
     timing_collector: MutableMapping[str, float] | None = None
 
     adaptive_time_step: bool = False
@@ -488,6 +489,7 @@ class EnsembleResult:
     rho_t: list[ArrayC]
     trajectories: tuple[TrajectoryResult, ...] | None = None
     state_snapshots: tuple[ArrayC, ...] | None = None
+    target_fidelities: dict[str, NDArray[np.float64]] | None = None
 
 
 def projector(state: Any) -> Any:
@@ -1142,6 +1144,77 @@ def _can_use_vectorized_mcwf_ensemble(
     )
 
 
+def _prepare_fidelity_target_matrix(
+    *,
+    dim: int,
+    fidelity_targets: Mapping[str, Any] | None,
+) -> tuple[tuple[str, ...], ArrayC | None]:
+    """Return normalized target states as columns for streamed fidelity diagnostics."""
+    if not fidelity_targets:
+        return (), None
+
+    target_names: list[str] = []
+    target_columns: list[ArrayC] = []
+    for target_name, target_state_raw in fidelity_targets.items():
+        target_state = _normalize_numpy_state(np.asarray(target_state_raw, dtype=np.complex128))
+        if target_state.shape != (dim,):
+            raise ValueError(
+                f"fidelity target {target_name!r} has shape {target_state.shape}; "
+                f"expected ({dim},)."
+            )
+        target_names.append(str(target_name))
+        target_columns.append(target_state)
+
+    return tuple(target_names), np.column_stack(target_columns).astype(np.complex128, copy=False)
+
+
+def _fidelity_values_from_state_matrix(
+    states: ArrayC,
+    *,
+    target_matrix: ArrayC | None,
+) -> NDArray[np.float64] | None:
+    """Average |<target|psi>|^2 over trajectory columns for each target."""
+    if target_matrix is None:
+        return None
+
+    overlaps = target_matrix.conj().T @ states
+    return np.mean(np.abs(overlaps) ** 2, axis=1).astype(np.float64, copy=False)
+
+
+def _append_streamed_target_fidelities(
+    target_fidelity_series: dict[str, list[float]] | None,
+    *,
+    target_names: tuple[str, ...],
+    target_matrix: ArrayC | None,
+    states: ArrayC,
+    timing_collector: MutableMapping[str, float] | None,
+) -> None:
+    """Append streamed target fidelities without materializing rho or snapshots."""
+    if target_fidelity_series is None:
+        return
+
+    start = _perf_counter()
+    fidelity_values = _fidelity_values_from_state_matrix(states, target_matrix=target_matrix)
+    if fidelity_values is None:
+        return
+
+    for target_index, target_name in enumerate(target_names):
+        target_fidelity_series[target_name].append(float(fidelity_values[target_index]))
+    _add_timing(timing_collector, "mcwf.target_fidelity_accumulation", _perf_counter() - start)
+
+
+def _finalize_streamed_target_fidelities(
+    target_fidelity_series: dict[str, list[float]] | None,
+) -> dict[str, NDArray[np.float64]] | None:
+    if target_fidelity_series is None:
+        return None
+
+    return {
+        target_name: np.asarray(fidelity_values, dtype=np.float64)
+        for target_name, fidelity_values in target_fidelity_series.items()
+    }
+
+
 def _sample_lindblad_mcwf_vectorized_scipy(
     *,
     prepared: _McwfPreparedOperators,
@@ -1175,6 +1248,21 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
     sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
     _add_timing(timing_collector, "mcwf.operator_view_conversion", _perf_counter() - start)
+
+    target_names, target_matrix = _prepare_fidelity_target_matrix(
+        dim=dim,
+        fidelity_targets=options.fidelity_targets,
+    )
+    target_fidelity_series = (
+        {target_name: [] for target_name in target_names} if target_names else None
+    )
+    _append_streamed_target_fidelities(
+        target_fidelity_series,
+        target_names=target_names,
+        target_matrix=target_matrix,
+        states=states,
+        timing_collector=timing_collector,
+    )
 
     rho_t: list[ArrayC] = []
     if options.store_density_matrices:
@@ -1229,6 +1317,14 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     "mcwf.density_accumulation",
                     _perf_counter() - start,
                 )
+
+            _append_streamed_target_fidelities(
+                target_fidelity_series,
+                target_names=target_names,
+                target_matrix=target_matrix,
+                states=states,
+                timing_collector=timing_collector,
+            )
 
             continue
 
@@ -1389,11 +1485,20 @@ def _sample_lindblad_mcwf_vectorized_scipy(
             rho_t.append(_density_matrix_from_state_matrix(states))
             _add_timing(timing_collector, "mcwf.density_accumulation", _perf_counter() - start)
 
+        _append_streamed_target_fidelities(
+            target_fidelity_series,
+            target_names=target_names,
+            target_matrix=target_matrix,
+            states=states,
+            timing_collector=timing_collector,
+        )
+
     return EnsembleResult(
         times=times,
         rho_t=rho_t,
         trajectories=None,
         state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
+        target_fidelities=_finalize_streamed_target_fidelities(target_fidelity_series),
     )
 
 
@@ -1845,6 +1950,15 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
         if options.store_state_snapshots
         else None
     )
+    target_names, _ = _prepare_fidelity_target_matrix(
+        dim=dim,
+        fidelity_targets=options.fidelity_targets,
+    )
+    target_fidelity_series = (
+        {target_name: np.zeros(times.size, dtype=np.float64) for target_name in target_names}
+        if target_names
+        else None
+    )
 
     worker_count = _effective_trajectory_chunk_workers(options, n_chunks=len(chunk_slices))
     if worker_count <= 1:
@@ -1871,6 +1985,7 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
             _merge_mcwf_chunk_result(
                 parent_rho_t=rho_t,
                 parent_state_snapshots=state_snapshots,
+                parent_target_fidelities=target_fidelity_series,
                 chunk_result=chunk_result,
                 chunk_start=chunk_start,
                 chunk_stop=chunk_stop,
@@ -1915,6 +2030,7 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
             _merge_mcwf_chunk_result(
                 parent_rho_t=rho_t,
                 parent_state_snapshots=state_snapshots,
+                parent_target_fidelities=target_fidelity_series,
                 chunk_result=chunk_result,
                 chunk_start=chunk_start,
                 chunk_stop=chunk_stop,
@@ -1927,6 +2043,9 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
         rho_t=rho_t,
         trajectories=None,
         state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
+        target_fidelities=(
+            dict(target_fidelity_series) if target_fidelity_series is not None else None
+        ),
     )
 
 
@@ -1973,6 +2092,7 @@ def _merge_mcwf_chunk_result(
     *,
     parent_rho_t: list[ArrayC],
     parent_state_snapshots: list[ArrayC] | None,
+    parent_target_fidelities: dict[str, NDArray[np.float64]] | None,
     chunk_result: EnsembleResult,
     chunk_start: int,
     chunk_stop: int,
@@ -1991,6 +2111,13 @@ def _merge_mcwf_chunk_result(
             raise RuntimeError("chunked MCWF did not return requested state snapshots.")
         for time_index, state_matrix in enumerate(chunk_result.state_snapshots):
             parent_state_snapshots[time_index][:, chunk_start:chunk_stop] = state_matrix
+
+    if parent_target_fidelities is not None:
+        if chunk_result.target_fidelities is None:
+            raise RuntimeError("chunked MCWF did not return requested target fidelities.")
+        weight = chunk_n / float(n_trajectories)
+        for target_name, parent_values in parent_target_fidelities.items():
+            parent_values += weight * chunk_result.target_fidelities[target_name]
     _add_timing(timing_collector, "mcwf.chunk_merge", _perf_counter() - start)
 
 

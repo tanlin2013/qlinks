@@ -116,9 +116,17 @@ def analyze_lindblad_evolution(
         )
 
     if state_snapshots_resolved is None:
+        streamed_fidelities = _streamed_fidelities_from_ensemble_result(ensemble_result)
+        if streamed_fidelities is not None:
+            return _analyze_streamed_fidelity_series(
+                streamed_fidelities,
+                times=times_resolved,
+                source="ensemble_result.target_fidelities",
+            )
+
         raise ValueError(
             "Provide density_matrices, state_snapshots, trajectories, or an EnsembleResult "
-            "containing rho_t/state_snapshots/trajectories."
+            "containing rho_t/state_snapshots/trajectories/target_fidelities."
         )
 
     mode = density_check_mode
@@ -295,6 +303,55 @@ def _resolve_lindblad_evolution_inputs(
         _state_snapshots_from_trajectories(tuple(trajectories)),
         times_array,
         "trajectories",
+    )
+
+
+def _streamed_fidelities_from_ensemble_result(
+    ensemble_result: Any | None,
+) -> np.ndarray | None:
+    if ensemble_result is None:
+        return None
+
+    target_fidelities = getattr(ensemble_result, "target_fidelities", None)
+    if not target_fidelities:
+        return None
+
+    if "target" in target_fidelities:
+        return np.asarray(target_fidelities["target"], dtype=np.float64)
+
+    if len(target_fidelities) == 1:
+        return np.asarray(next(iter(target_fidelities.values())), dtype=np.float64)
+
+    raise ValueError(
+        "EnsembleResult contains multiple target_fidelities entries; use the "
+        "'target' key for analyze_lindblad_evolution or pass state_snapshots."
+    )
+
+
+def _analyze_streamed_fidelity_series(
+    fidelities: np.ndarray,
+    *,
+    times: np.ndarray | None,
+    source: str,
+) -> EvolutionDiagnostics:
+    fidelity_values = np.asarray(fidelities, dtype=np.float64)
+    if fidelity_values.ndim != 1 or fidelity_values.size == 0:
+        raise ValueError("streamed fidelity series must be a non-empty 1D array.")
+    _validate_times_length(times, fidelity_values.size)
+
+    missing_values = np.full(fidelity_values.size, np.nan, dtype=np.float64)
+    return EvolutionDiagnostics(
+        trace_errors=missing_values.copy(),
+        hermiticity_errors=missing_values.copy(),
+        min_eigenvalues=missing_values.copy(),
+        purities=missing_values.copy(),
+        fidelities=fidelity_values,
+        lindblad_residuals=None,
+        times=times,
+        source=source,
+        density_check_mode="streamed_fidelity",
+        trajectory_counts=None,
+        state_norm_errors=None,
     )
 
 

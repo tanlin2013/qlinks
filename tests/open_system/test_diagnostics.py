@@ -334,3 +334,18 @@ def test_absorbing_projector_symmetry_rejects_matrix_target():
             jumps=[],
             target_state=target,
         )
+
+
+def test_analyze_lindblad_evolution_accepts_streamed_target_fidelities_only():
+    result = EnsembleResult(
+        times=np.asarray([0.0, 1.0, 2.0], dtype=np.float64),
+        rho_t=[],
+        target_fidelities={"target": np.asarray([0.0, 0.5, 1.0], dtype=np.float64)},
+    )
+
+    diagnostics = analyze_lindblad_evolution(ensemble_result=result)
+
+    assert diagnostics.source == "ensemble_result.target_fidelities"
+    assert diagnostics.density_check_mode == "streamed_fidelity"
+    np.testing.assert_allclose(diagnostics.fidelities, [0.0, 0.5, 1.0])
+    assert np.isnan(diagnostics.purities).all()

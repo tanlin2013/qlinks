@@ -25,6 +25,7 @@ from qlinks.open_system import (
 
 OpenSystemOperation = Literal[
     "all",
+    "cage_compare",
     "prepare_dense",
     "prepare_sparse",
     "liouvillian",
@@ -54,6 +55,7 @@ class OpenSystemBenchmarkCase:
     jumps: tuple[object, ...]
     state_initial: np.ndarray
     parameters: dict
+    target_state: np.ndarray | None = None
 
     @property
     def dim(self) -> int:
@@ -79,6 +81,7 @@ class OpenSystemBenchmarkResult:
     parameters: dict
     details: dict
     stage_seconds: dict[str, float] | None = None
+    final_target_fidelity: float | None = None
 
 
 def _time_call(func: Callable):
@@ -148,6 +151,85 @@ def _details_text(details: dict) -> str:
     return ", ".join(f"{key}={value}" for key, value in details.items())
 
 
+def _target_state_fidelity_from_density_matrix(
+    density_matrix: object,
+    target_state: np.ndarray | None,
+) -> float | None:
+    if target_state is None:
+        return None
+
+    target = np.asarray(target_state, dtype=np.complex128)
+    density = np.asarray(density_matrix, dtype=np.complex128)
+    return float(np.real_if_close(np.vdot(target, density @ target)).real)
+
+
+def _target_state_fidelity_from_ensemble(
+    result: object, target_state: np.ndarray | None
+) -> float | None:
+    if target_state is None:
+        return None
+
+    target_fidelities = getattr(result, "target_fidelities", None)
+    if target_fidelities is not None and "target" in target_fidelities:
+        values = np.asarray(target_fidelities["target"], dtype=np.float64)
+        if values.size:
+            return float(values[-1])
+
+    state_snapshots = getattr(result, "state_snapshots", None)
+    if state_snapshots is not None and len(state_snapshots) > 0:
+        states = np.asarray(state_snapshots[-1], dtype=np.complex128)
+        target = np.asarray(target_state, dtype=np.complex128)
+        overlaps = target.conj() @ states
+        return float(np.mean(np.abs(overlaps) ** 2))
+
+    density_matrices = getattr(result, "rho_t", None)
+    if density_matrices:
+        return _target_state_fidelity_from_density_matrix(density_matrices[-1], target_state)
+
+    return None
+
+
+def _random_state_orthogonal_to_target(
+    *,
+    target_state: np.ndarray,
+    seed: int,
+) -> np.ndarray:
+    rng = np.random.default_rng(seed)
+    target = np.asarray(target_state, dtype=np.complex128)
+    candidate = rng.normal(size=target.shape) + 1j * rng.normal(size=target.shape)
+    candidate = candidate - target * np.vdot(target, candidate)
+    norm = float(np.linalg.norm(candidate))
+    if norm == 0.0:
+        raise RuntimeError("Could not draw a state orthogonal to the target state.")
+    return np.asarray(candidate / norm, dtype=np.complex128)
+
+
+def _initial_state_for_cage_lindblad_benchmark(
+    *,
+    target_state: np.ndarray,
+    mode: str,
+    seed: int = 12345,
+) -> np.ndarray:
+    target = np.asarray(target_state, dtype=np.complex128)
+    if mode == "target":
+        return target
+
+    if mode == "basis0":
+        state = np.zeros_like(target)
+        state[0] = 1.0
+        return state
+
+    if mode == "random":
+        rng = np.random.default_rng(seed)
+        state = rng.normal(size=target.shape) + 1j * rng.normal(size=target.shape)
+        return np.asarray(state / np.linalg.norm(state), dtype=np.complex128)
+
+    if mode == "random_orthogonal":
+        return _random_state_orthogonal_to_target(target_state=target, seed=seed)
+
+    raise ValueError(f"Unsupported Cage-Lindblad initial-state mode: {mode!r}")
+
+
 def _pauli_and_ladder_operators() -> dict[str, np.ndarray]:
     sigma_minus = np.array([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128)
     sigma_plus = sigma_minus.conj().T
@@ -199,6 +281,7 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
     ipr_batch_size: int,
     ipr_rank_completion_patience: int | None,
     record_index: int,
+    initial_state_mode: str = "target",
 ) -> OpenSystemBenchmarkCase:
     """Build the square-QDM Cage-Lindblad problem used for real MCWF timing."""
     from qlinks.basis import basis_configs_from_build_result
@@ -296,12 +379,17 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
         )
     )
     summary = construction.to_summary_dict()
+    state_initial = _initial_state_for_cage_lindblad_benchmark(
+        target_state=state_vector,
+        mode=initial_state_mode,
+    )
 
     return OpenSystemBenchmarkCase(
         name="square_qdm_cage_lindblad_mcwf",
         hamiltonian=build_result.hamiltonian,
         jumps=construction.jumps,
-        state_initial=state_vector,
+        state_initial=state_initial,
+        target_state=state_vector,
         parameters={
             "model": type(model).__name__,
             "lx": 4,
@@ -312,6 +400,8 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
             "winding_convention": "electric",
             "signature": record.signature,
             "record_index": record_index,
+            "initial_state_mode": initial_state_mode,
+            "initial_target_fidelity": float(abs(np.vdot(state_vector, state_initial)) ** 2),
             "n_states": build_result.basis.n_states,
             "n_jumps": construction.n_jumps,
             "n_component_jumps": construction.n_component_jumps,
@@ -347,6 +437,7 @@ def make_benchmark_cases(
     cage_lindblad_ipr_max_iter: int = 1000,
     cage_lindblad_ipr_batch_size: int = 32,
     cage_lindblad_ipr_rank_completion_patience: int | None = 0,
+    cage_lindblad_initial_state: str = "target",
 ) -> list[OpenSystemBenchmarkCase]:
     ops = _pauli_and_ladder_operators()
     sigma_minus = ops["sigma_minus"]
@@ -444,6 +535,7 @@ def make_benchmark_cases(
                 ipr_batch_size=cage_lindblad_ipr_batch_size,
                 ipr_rank_completion_patience=cage_lindblad_ipr_rank_completion_patience,
                 record_index=cage_lindblad_record_index,
+                initial_state_mode=cage_lindblad_initial_state,
             )
         )
 
@@ -526,6 +618,7 @@ def run_open_system_benchmark(
     details: dict[str, object] = {}
     stage_seconds: dict[str, float] | None = None
     n_trajectories_result: int | None = None
+    final_target_fidelity: float | None = None
 
     if operation == "prepare_dense":
         prepared, elapsed = _time_call(
@@ -574,10 +667,16 @@ def run_open_system_benchmark(
                 rk4_step_policy=rk4_step_policy,
             )
         )
+        final_target_fidelity = _target_state_fidelity_from_density_matrix(
+            result.density_matrices[-1],
+            case.target_state,
+        )
         details = {
             "method": result.method,
             "n_substeps_total": int(sum(result.n_substeps_per_interval)),
         }
+        if final_target_fidelity is not None:
+            details["final_target_fidelity"] = final_target_fidelity
 
     elif operation == "single_trajectory":
         trajectory, elapsed = _time_call(
@@ -624,6 +723,9 @@ def run_open_system_benchmark(
             store_state_snapshots=mcwf_store_state_snapshots,
             trajectory_chunk_size=mcwf_trajectory_chunk_size,
             trajectory_chunk_workers=mcwf_trajectory_chunk_workers,
+            fidelity_targets=(
+                {"target": case.target_state} if case.target_state is not None else None
+            ),
             timing_collector=stage_seconds,
         )
         result, elapsed = _time_call(
@@ -636,10 +738,17 @@ def run_open_system_benchmark(
             )
         )
         n_trajectories_result = n_trajectories
+        final_target_fidelity = _target_state_fidelity_from_ensemble(
+            result,
+            case.target_state,
+        )
         details = {
             "n_rho": len(result.rho_t),
             "n_state_snapshots": (
                 0 if result.state_snapshots is None else len(result.state_snapshots)
+            ),
+            "n_target_fidelity_series": (
+                0 if result.target_fidelities is None else len(result.target_fidelities)
             ),
             "store_density_matrices": mcwf_store_density_matrices,
             "store_state_snapshots": mcwf_store_state_snapshots,
@@ -651,6 +760,8 @@ def run_open_system_benchmark(
             "use_total_rate_first": mcwf_use_total_rate_first,
             "use_event_driven_jumps": mcwf_use_event_driven_jumps,
         }
+        if final_target_fidelity is not None:
+            details["final_target_fidelity"] = final_target_fidelity
 
     else:
         raise ValueError(f"Unsupported open-system benchmark operation: {operation!r}")
@@ -669,6 +780,7 @@ def run_open_system_benchmark(
         parameters=case.parameters,
         details=details,
         stage_seconds=stage_seconds,
+        final_target_fidelity=final_target_fidelity,
     )
 
 
@@ -693,6 +805,8 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
         "chunk_s",
         "parallel_s",
         "rho_s",
+        "fid_s",
+        "final_F",
         "details",
     ]
     rows = [
@@ -712,6 +826,8 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_merge")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_parallel_wall")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.target_fidelity_accumulation")),
+            _format_seconds(result.final_target_fidelity),
             _details_text(result.details),
         ]
         for result in results
@@ -746,6 +862,8 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
         "chunk_s",
         "parallel_s",
         "rho_s",
+        "fid_s",
+        "final_F",
         "details",
     ]
     rows = [
@@ -765,6 +883,8 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_merge")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_parallel_wall")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
+            _format_seconds((result.stage_seconds or {}).get("mcwf.target_fidelity_accumulation")),
+            _format_seconds(result.final_target_fidelity),
             _details_text(result.details),
         ]
         for result in results
@@ -948,6 +1068,16 @@ def main() -> None:
         help="Skip check_liouvillian when building the optional Cage-Lindblad MCWF case.",
     )
     parser.add_argument("--cage-lindblad-record-index", type=int, default=0)
+    parser.add_argument(
+        "--cage-lindblad-initial-state",
+        default="auto",
+        choices=["auto", "target", "random", "random_orthogonal", "basis0"],
+        help=(
+            "Initial state for the optional square-QDM Cage-Lindblad benchmark. "
+            "'auto' uses 'target' for ordinary benchmarks and "
+            "'random_orthogonal' for --operation cage_compare."
+        ),
+    )
     parser.add_argument("--cage-lindblad-ipr-candidate-count", type=int, default=128)
     parser.add_argument("--cage-lindblad-ipr-max-iter", type=int, default=1000)
     parser.add_argument("--cage-lindblad-ipr-batch-size", type=int, default=32)
@@ -972,6 +1102,15 @@ def main() -> None:
         else args.cage_lindblad_ipr_rank_completion_patience
     )
     include_cage_lindblad_case = args.include_cage_lindblad_case or args.operation == "cage_compare"
+    only_filter = args.only
+    if args.operation == "cage_compare" and only_filter is None:
+        only_filter = "square_qdm_cage_lindblad"
+
+    cage_lindblad_initial_state = args.cage_lindblad_initial_state
+    if cage_lindblad_initial_state == "auto":
+        cage_lindblad_initial_state = (
+            "random_orthogonal" if args.operation == "cage_compare" else "target"
+        )
 
     for case in make_benchmark_cases(
         include_sparse_many_jump_case=args.include_sparse_many_jump_case,
@@ -982,8 +1121,9 @@ def main() -> None:
         cage_lindblad_ipr_max_iter=args.cage_lindblad_ipr_max_iter,
         cage_lindblad_ipr_batch_size=args.cage_lindblad_ipr_batch_size,
         cage_lindblad_ipr_rank_completion_patience=cage_lindblad_patience,
+        cage_lindblad_initial_state=cage_lindblad_initial_state,
     ):
-        if args.only is not None and args.only not in case.name:
+        if only_filter is not None and only_filter not in case.name:
             continue
 
         for operation in selected_operations(args.operation):

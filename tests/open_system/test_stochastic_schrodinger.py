@@ -2025,3 +2025,62 @@ def test_jump_derivative_norms_ignore_dark_subspace_phase_rotation(qubit_ops):
     )
 
     np.testing.assert_allclose(jump_derivative_norms, [0.0], atol=1e-14)
+
+
+def test_sample_lindblad_mcwf_streams_target_fidelity_without_snapshots(qubit_ops):
+    from qlinks.open_system.stochastic_schrodinger import (
+        McwfOptions,
+        sample_lindblad_mcwf,
+    )
+
+    times = np.linspace(0.0, 0.2, 3)
+    options = McwfOptions(
+        n_trajectories=4,
+        seed=123,
+        store_density_matrices=False,
+        store_state_snapshots=False,
+        fidelity_targets={"target": qubit_ops["ket1"]},
+    )
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=np.zeros((2, 2), dtype=np.complex128),
+        jumps=[],
+        state_initial=qubit_ops["ket1"],
+        times=times,
+        options=options,
+    )
+
+    assert result.rho_t == []
+    assert result.state_snapshots is None
+    assert result.target_fidelities is not None
+    np.testing.assert_allclose(result.target_fidelities["target"], np.ones(times.size))
+
+
+def test_sample_lindblad_mcwf_chunked_streamed_target_fidelity(qubit_ops):
+    from qlinks.open_system.stochastic_schrodinger import (
+        McwfOptions,
+        sample_lindblad_mcwf,
+    )
+
+    times = np.linspace(0.0, 0.2, 3)
+    options = McwfOptions(
+        n_trajectories=6,
+        seed=123,
+        store_density_matrices=False,
+        store_state_snapshots=False,
+        trajectory_chunk_size=2,
+        fidelity_targets={"target": qubit_ops["ket1"]},
+    )
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=np.zeros((2, 2), dtype=np.complex128),
+        jumps=[],
+        state_initial=qubit_ops["ket1"],
+        times=times,
+        options=options,
+    )
+
+    assert result.rho_t == []
+    assert result.state_snapshots is None
+    assert result.target_fidelities is not None
+    np.testing.assert_allclose(result.target_fidelities["target"], np.ones(times.size))
