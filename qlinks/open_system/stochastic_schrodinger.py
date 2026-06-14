@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Callable, Iterable, MutableMapping
 
 import numpy as np
@@ -383,6 +383,7 @@ class McwfOptions:
     use_total_rate_first: bool = True
     store_density_matrices: bool = True
     store_state_snapshots: bool = False
+    trajectory_chunk_size: int | None = None
     timing_collector: MutableMapping[str, float] | None = None
 
     adaptive_time_step: bool = False
@@ -394,6 +395,9 @@ class McwfOptions:
         """Validate MCWF time-step control options."""
         if self.n_trajectories <= 0:
             raise ValueError("options.n_trajectories must be positive.")
+
+        if self.trajectory_chunk_size is not None and self.trajectory_chunk_size <= 0:
+            raise ValueError("trajectory_chunk_size must be positive when set.")
 
         if self.max_jump_probability <= 0.0:
             raise ValueError("max_jump_probability must be positive.")
@@ -1277,6 +1281,113 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     )
 
 
+def _sample_lindblad_mcwf_chunked_vectorized_scipy(
+    *,
+    prepared: _McwfPreparedOperators,
+    dim: int,
+    times: NDArray[np.float64],
+    state_initial: Any | None,
+    state_sampler: StateSampler | None,
+    options: McwfOptions,
+    rng: np.random.Generator,
+) -> EnsembleResult:
+    """Sample a vectorized MCWF ensemble in independent trajectory chunks.
+
+    This keeps the per-chunk state matrix small while preserving the public
+    ensemble result.  Density matrices are merged as weighted averages.  State
+    snapshots, when requested, are concatenated column-wise in trajectory order.
+    """
+    chunk_size = _effective_trajectory_chunk_size(options)
+    if chunk_size is None:
+        return _sample_lindblad_mcwf_vectorized_scipy(
+            prepared=prepared,
+            dim=dim,
+            times=times,
+            state_initial=state_initial,
+            state_sampler=state_sampler,
+            options=options,
+            rng=rng,
+        )
+
+    timing_collector = options.timing_collector
+    n_trajectories = int(options.n_trajectories)
+    chunk_slices = _trajectory_chunk_slices(n_trajectories, chunk_size)
+    chunk_seeds = rng.integers(
+        low=0,
+        high=np.iinfo(np.int64).max,
+        size=len(chunk_slices),
+        dtype=np.int64,
+    )
+
+    rho_t = (
+        [np.zeros((dim, dim), dtype=np.complex128) for _ in range(times.size)]
+        if options.store_density_matrices
+        else []
+    )
+    state_snapshots = (
+        [np.empty((dim, n_trajectories), dtype=np.complex128) for _ in range(times.size)]
+        if options.store_state_snapshots
+        else None
+    )
+
+    for (chunk_start, chunk_stop), chunk_seed in zip(chunk_slices, chunk_seeds, strict=True):
+        chunk_n = int(chunk_stop - chunk_start)
+        chunk_options = replace(
+            options,
+            n_trajectories=chunk_n,
+            trajectory_chunk_size=None,
+        )
+        chunk_rng = np.random.default_rng(int(chunk_seed))
+
+        chunk_result = _sample_lindblad_mcwf_vectorized_scipy(
+            prepared=prepared,
+            dim=dim,
+            times=times,
+            state_initial=state_initial,
+            state_sampler=state_sampler,
+            options=chunk_options,
+            rng=chunk_rng,
+        )
+
+        start = _perf_counter()
+        if options.store_density_matrices:
+            weight = chunk_n / float(n_trajectories)
+            for time_index, density_matrix in enumerate(chunk_result.rho_t):
+                rho_t[time_index] += weight * density_matrix
+
+        if state_snapshots is not None:
+            if chunk_result.state_snapshots is None:
+                raise RuntimeError("chunked MCWF did not return requested state snapshots.")
+            for time_index, state_matrix in enumerate(chunk_result.state_snapshots):
+                state_snapshots[time_index][:, chunk_start:chunk_stop] = state_matrix
+        _add_timing(timing_collector, "mcwf.chunk_merge", _perf_counter() - start)
+
+    return EnsembleResult(
+        times=times,
+        rho_t=rho_t,
+        trajectories=None,
+        state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
+    )
+
+
+def _effective_trajectory_chunk_size(options: McwfOptions) -> int | None:
+    chunk_size = options.trajectory_chunk_size
+    if chunk_size is None or chunk_size >= options.n_trajectories:
+        return None
+
+    return int(chunk_size)
+
+
+def _trajectory_chunk_slices(
+    n_trajectories: int,
+    chunk_size: int,
+) -> list[tuple[int, int]]:
+    return [
+        (start, min(start + chunk_size, n_trajectories))
+        for start in range(0, n_trajectories, chunk_size)
+    ]
+
+
 def _should_use_total_rate_first(
     enabled: bool,
     *,
@@ -1620,6 +1731,17 @@ def sample_lindblad_mcwf(
         options=options,
         backend=backend_obj,
     ):
+        if _effective_trajectory_chunk_size(options) is not None:
+            return _sample_lindblad_mcwf_chunked_vectorized_scipy(
+                prepared=prepared,
+                dim=dim,
+                times=times,
+                state_initial=state_initial,
+                state_sampler=state_sampler,
+                options=options,
+                rng=generator,
+            )
+
         return _sample_lindblad_mcwf_vectorized_scipy(
             prepared=prepared,
             dim=dim,

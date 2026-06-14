@@ -1675,3 +1675,73 @@ def test_vectorized_mcwf_total_rate_first_skips_channel_rates_without_jumps(monk
 
     assert result.rho_t == []
     assert calls == 0
+
+
+def test_sample_lindblad_mcwf_chunked_density_matches_unchunked(qubit_ops):
+    hamiltonian = 0.05 * qubit_ops["sigma_x"]
+    times = np.linspace(0.0, 0.1, 6)
+
+    baseline = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=12,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=True,
+            trajectory_chunk_size=None,
+        ),
+    )
+    chunked = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=12,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=True,
+            trajectory_chunk_size=5,
+        ),
+    )
+
+    assert len(chunked.rho_t) == len(baseline.rho_t)
+    for actual, expected in zip(chunked.rho_t, baseline.rho_t, strict=True):
+        np.testing.assert_allclose(actual, expected, atol=1e-14)
+
+
+def test_sample_lindblad_mcwf_chunked_state_snapshots_have_all_trajectories(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.1, 4)
+    timing = {}
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=10,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=False,
+            store_state_snapshots=True,
+            trajectory_chunk_size=4,
+            timing_collector=timing,
+        ),
+    )
+
+    assert result.rho_t == []
+    assert result.state_snapshots is not None
+    assert len(result.state_snapshots) == len(times)
+    assert all(snapshot.shape == (2, 10) for snapshot in result.state_snapshots)
+    assert timing["mcwf.chunk_merge"] >= 0.0
+
+
+def test_mcwf_options_rejects_nonpositive_trajectory_chunk_size():
+    with pytest.raises(ValueError, match="trajectory_chunk_size"):
+        McwfOptions(trajectory_chunk_size=0).validate()
