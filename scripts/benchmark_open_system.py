@@ -47,6 +47,26 @@ _OPERATION_ORDER: tuple[str, ...] = (
     "mcwf",
 )
 
+_CAGE_COMPARE_DEFAULT_OPERATIONS: tuple[str, ...] = (
+    "liouvillian",
+    "krylov",
+    "rk4_liouville",
+    "mcwf",
+)
+
+_CAGE_COMPARE_ALLOWED_OPERATIONS: tuple[str, ...] = (
+    "liouvillian",
+    "krylov",
+    "rk4_liouville",
+    "rk4_matrix",
+    "mcwf",
+)
+
+_CAGE_LINDBLAD_CASES: tuple[str, ...] = (
+    "square_qdm_pbc_w00",
+    "triangular_qdm_pbc_w00",
+)
+
 
 @dataclass(frozen=True)
 class OpenSystemBenchmarkCase:
@@ -273,8 +293,9 @@ def _full_state_for_cage_record(search_result, record) -> np.ndarray:
     return full_state
 
 
-def _make_square_qdm_cage_lindblad_mcwf_case(
+def _make_qdm_cage_lindblad_mcwf_case(
     *,
+    cage_lindblad_case: str,
     check_liouvillian: bool,
     ipr_candidate_count: int,
     ipr_max_iter: int,
@@ -283,7 +304,7 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
     record_index: int,
     initial_state_mode: str = "target",
 ) -> OpenSystemBenchmarkCase:
-    """Build the square-QDM Cage-Lindblad problem used for real MCWF timing."""
+    """Build a QDM Cage-Lindblad problem used for real MCWF timing."""
     from qlinks.basis import basis_configs_from_build_result
     from qlinks.caging import (
         CageClassificationConfig,
@@ -292,18 +313,56 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
         classify_full_state,
     )
     from qlinks.caging.open_system import build_type1_cage_lindblad_construction
-    from qlinks.models import SquareQDMModel
+    from qlinks.models import SquareQDMModel, TriangularQDMModel
 
-    model = SquareQDMModel(
-        lx=4,
-        ly=4,
-        boundary_condition="periodic",
-        winding_x=0,
-        winding_y=0,
-        winding_convention="electric",
-        coup_kin=-1.0,
-        coup_pot=1.0,
-    )
+    if cage_lindblad_case == "square_qdm_pbc_w00":
+        model = SquareQDMModel(
+            lx=4,
+            ly=4,
+            boundary_condition="periodic",
+            winding_x=0,
+            winding_y=0,
+            winding_convention="electric",
+            coup_kin=-1.0,
+            coup_pot=1.0,
+        )
+        case_name = "square_qdm_cage_lindblad_mcwf"
+        model_parameters = {
+            "benchmark_case": cage_lindblad_case,
+            "model": type(model).__name__,
+            "lx": 4,
+            "ly": 4,
+            "boundary_condition": "periodic",
+            "winding_x": 0,
+            "winding_y": 0,
+            "winding_convention": "electric",
+        }
+    elif cage_lindblad_case == "triangular_qdm_pbc_w00":
+        model = TriangularQDMModel(
+            lx=4,
+            ly=4,
+            boundary_condition="periodic",
+            winding_a=0,
+            winding_b=0,
+            coup_kin=-1.0,
+            coup_pot=1.0,
+        )
+        case_name = "triangular_qdm_cage_lindblad_mcwf"
+        model_parameters = {
+            "benchmark_case": cage_lindblad_case,
+            "model": type(model).__name__,
+            "lx": 4,
+            "ly": 4,
+            "boundary_condition": "periodic",
+            "winding_a": 0,
+            "winding_b": 0,
+        }
+    else:
+        raise ValueError(
+            f"Unsupported cage_lindblad_case={cage_lindblad_case!r}; "
+            f"expected one of {_CAGE_LINDBLAD_CASES!r}."
+        )
+
     signature = (0, 4)
 
     build_result, build_seconds = _time_call(
@@ -352,7 +411,7 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
             metadata={
                 "signature": record.signature,
                 "record_index": record_index,
-                "benchmark_case": "square_qdm_cage_lindblad_mcwf",
+                "benchmark_case": case_name,
             },
         )
     )
@@ -384,46 +443,64 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
         mode=initial_state_mode,
     )
 
+    parameters = {
+        **model_parameters,
+        "signature": record.signature,
+        "record_index": record_index,
+        "initial_state_mode": initial_state_mode,
+        "initial_target_fidelity": float(abs(np.vdot(state_vector, state_initial)) ** 2),
+        "n_states": build_result.basis.n_states,
+        "n_jumps": construction.n_jumps,
+        "n_component_jumps": construction.n_component_jumps,
+        "n_global_jump_terms": construction.n_global_jump_terms,
+        "n_recycling_jumps": construction.n_recycling_jumps,
+        "region_size": summary["region_size"],
+        "monitor_residual": summary["monitor_residual"],
+        "max_jump_residual": summary["max_jump_residual"],
+        "liouvillian_residual": summary["liouvillian_residual"],
+        "build_seconds": build_seconds,
+        "search_seconds": search_seconds,
+        "search_stage_seconds": dict(search_result.search_stage_seconds),
+        "classification_seconds": classification_seconds,
+        "construction_seconds": construction_seconds,
+        "construction_stage_seconds": dict(construction_stage_seconds),
+        "check_liouvillian": check_liouvillian,
+        "recycling_jump_source": "local_rdm_two_pattern",
+        "ipr_candidate_count": ipr_candidate_count,
+        "ipr_max_iter": ipr_max_iter,
+        "ipr_batch_size": ipr_batch_size,
+        "ipr_rank_completion_patience": ipr_rank_completion_patience,
+    }
+
     return OpenSystemBenchmarkCase(
-        name="square_qdm_cage_lindblad_mcwf",
+        name=case_name,
         hamiltonian=build_result.hamiltonian,
         jumps=construction.jumps,
         state_initial=state_initial,
         target_state=state_vector,
-        parameters={
-            "model": type(model).__name__,
-            "lx": 4,
-            "ly": 4,
-            "boundary_condition": "periodic",
-            "winding_x": 0,
-            "winding_y": 0,
-            "winding_convention": "electric",
-            "signature": record.signature,
-            "record_index": record_index,
-            "initial_state_mode": initial_state_mode,
-            "initial_target_fidelity": float(abs(np.vdot(state_vector, state_initial)) ** 2),
-            "n_states": build_result.basis.n_states,
-            "n_jumps": construction.n_jumps,
-            "n_component_jumps": construction.n_component_jumps,
-            "n_global_jump_terms": construction.n_global_jump_terms,
-            "n_recycling_jumps": construction.n_recycling_jumps,
-            "region_size": summary["region_size"],
-            "monitor_residual": summary["monitor_residual"],
-            "max_jump_residual": summary["max_jump_residual"],
-            "liouvillian_residual": summary["liouvillian_residual"],
-            "build_seconds": build_seconds,
-            "search_seconds": search_seconds,
-            "search_stage_seconds": dict(search_result.search_stage_seconds),
-            "classification_seconds": classification_seconds,
-            "construction_seconds": construction_seconds,
-            "construction_stage_seconds": dict(construction_stage_seconds),
-            "check_liouvillian": check_liouvillian,
-            "recycling_jump_source": "local_rdm_two_pattern",
-            "ipr_candidate_count": ipr_candidate_count,
-            "ipr_max_iter": ipr_max_iter,
-            "ipr_batch_size": ipr_batch_size,
-            "ipr_rank_completion_patience": ipr_rank_completion_patience,
-        },
+        parameters=parameters,
+    )
+
+
+def _make_square_qdm_cage_lindblad_mcwf_case(
+    *,
+    check_liouvillian: bool,
+    ipr_candidate_count: int,
+    ipr_max_iter: int,
+    ipr_batch_size: int,
+    ipr_rank_completion_patience: int | None,
+    record_index: int,
+    initial_state_mode: str = "target",
+) -> OpenSystemBenchmarkCase:
+    return _make_qdm_cage_lindblad_mcwf_case(
+        cage_lindblad_case="square_qdm_pbc_w00",
+        check_liouvillian=check_liouvillian,
+        ipr_candidate_count=ipr_candidate_count,
+        ipr_max_iter=ipr_max_iter,
+        ipr_batch_size=ipr_batch_size,
+        ipr_rank_completion_patience=ipr_rank_completion_patience,
+        record_index=record_index,
+        initial_state_mode=initial_state_mode,
     )
 
 
@@ -438,6 +515,7 @@ def make_benchmark_cases(
     cage_lindblad_ipr_batch_size: int = 32,
     cage_lindblad_ipr_rank_completion_patience: int | None = 0,
     cage_lindblad_initial_state: str = "target",
+    cage_lindblad_case: str = "square_qdm_pbc_w00",
 ) -> list[OpenSystemBenchmarkCase]:
     ops = _pauli_and_ladder_operators()
     sigma_minus = ops["sigma_minus"]
@@ -528,7 +606,8 @@ def make_benchmark_cases(
 
     if include_cage_lindblad_case:
         cases.append(
-            _make_square_qdm_cage_lindblad_mcwf_case(
+            _make_qdm_cage_lindblad_mcwf_case(
+                cage_lindblad_case=cage_lindblad_case,
                 check_liouvillian=cage_lindblad_check_liouvillian,
                 ipr_candidate_count=cage_lindblad_ipr_candidate_count,
                 ipr_max_iter=cage_lindblad_ipr_max_iter,
@@ -542,12 +621,38 @@ def make_benchmark_cases(
     return cases
 
 
-def selected_operations(operation: OpenSystemOperation) -> tuple[str, ...]:
+def _parse_operation_list(value: str) -> tuple[str, ...]:
+    if value == "default":
+        return _CAGE_COMPARE_DEFAULT_OPERATIONS
+
+    if value == "all":
+        return _CAGE_COMPARE_ALLOWED_OPERATIONS
+
+    operations = tuple(item.strip() for item in value.split(",") if item.strip())
+    if not operations:
+        raise ValueError("Operation list must not be empty.")
+
+    unsupported = [item for item in operations if item not in _CAGE_COMPARE_ALLOWED_OPERATIONS]
+    if unsupported:
+        raise ValueError(
+            "Unsupported cage-compare operation(s): "
+            f"{unsupported!r}; allowed operations are "
+            f"{_CAGE_COMPARE_ALLOWED_OPERATIONS!r}."
+        )
+
+    return operations
+
+
+def selected_operations(
+    operation: OpenSystemOperation,
+    *,
+    cage_compare_operations: tuple[str, ...] = _CAGE_COMPARE_DEFAULT_OPERATIONS,
+) -> tuple[str, ...]:
     if operation == "all":
         return _OPERATION_ORDER
 
     if operation == "cage_compare":
-        return ("liouvillian", "krylov", "rk4_liouville", "rk4_matrix", "mcwf")
+        return cage_compare_operations
 
     return (operation,)
 
@@ -908,7 +1013,7 @@ def main() -> None:
         choices=["all", "cage_compare", *_OPERATION_ORDER],
         help=(
             "Operation to benchmark. Use 'all' for all open-system operations. "
-            "Use 'cage_compare' to run the square-QDM Cage-Lindblad exact-vs-MCWF suite."
+            "Use 'cage_compare' to run the selected QDM Cage-Lindblad exact-vs-MCWF suite."
         ),
     )
     parser.add_argument(
@@ -1056,10 +1161,28 @@ def main() -> None:
         "--include-cage-lindblad-case",
         action="store_true",
         help=(
-            "Include the real square_qdm_4x4_pbc_w00 Cage-Lindblad MCWF case "
-            "using the (0, 4) type-1 cage, exact-support reduced-IZ monitor, "
+            "Include a real QDM Cage-Lindblad MCWF case using the (0, 4) "
+            "type-1 cage, exact-support reduced-IZ monitor, "
             "kinetic-outside/monitor-inside jumps, and local_rdm_two_pattern "
             "recycling jumps."
+        ),
+    )
+    parser.add_argument(
+        "--cage-lindblad-case",
+        default="square_qdm_pbc_w00",
+        choices=list(_CAGE_LINDBLAD_CASES),
+        help=(
+            "Real QDM Cage-Lindblad benchmark case to build when "
+            "--include-cage-lindblad-case or --operation cage_compare is used."
+        ),
+    )
+    parser.add_argument(
+        "--cage-compare-operations",
+        default="default",
+        help=(
+            "Comma-separated operation list for --operation cage_compare. "
+            "Use 'default' for liouvillian,krylov,rk4_liouville,mcwf; "
+            "use 'all' to also include rk4_matrix."
         ),
     )
     parser.add_argument(
@@ -1073,7 +1196,7 @@ def main() -> None:
         default="auto",
         choices=["auto", "target", "random", "random_orthogonal", "basis0"],
         help=(
-            "Initial state for the optional square-QDM Cage-Lindblad benchmark. "
+            "Initial state for the optional QDM Cage-Lindblad benchmark. "
             "'auto' uses 'target' for ordinary benchmarks and "
             "'random_orthogonal' for --operation cage_compare."
         ),
@@ -1101,10 +1224,15 @@ def main() -> None:
         if args.cage_lindblad_ipr_rank_completion_patience < 0
         else args.cage_lindblad_ipr_rank_completion_patience
     )
+    cage_compare_operations = _parse_operation_list(args.cage_compare_operations)
     include_cage_lindblad_case = args.include_cage_lindblad_case or args.operation == "cage_compare"
     only_filter = args.only
     if args.operation == "cage_compare" and only_filter is None:
-        only_filter = "square_qdm_cage_lindblad"
+        only_filter = (
+            "triangular_qdm_cage_lindblad"
+            if args.cage_lindblad_case == "triangular_qdm_pbc_w00"
+            else "square_qdm_cage_lindblad"
+        )
 
     cage_lindblad_initial_state = args.cage_lindblad_initial_state
     if cage_lindblad_initial_state == "auto":
@@ -1122,11 +1250,15 @@ def main() -> None:
         cage_lindblad_ipr_batch_size=args.cage_lindblad_ipr_batch_size,
         cage_lindblad_ipr_rank_completion_patience=cage_lindblad_patience,
         cage_lindblad_initial_state=cage_lindblad_initial_state,
+        cage_lindblad_case=args.cage_lindblad_case,
     ):
         if only_filter is not None and only_filter not in case.name:
             continue
 
-        for operation in selected_operations(args.operation):
+        for operation in selected_operations(
+            args.operation,
+            cage_compare_operations=cage_compare_operations,
+        ):
             print(f"Running {case.name} [{operation}] ...", flush=True)
             try:
                 result = run_open_system_benchmark(
