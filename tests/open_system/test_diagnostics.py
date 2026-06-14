@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 
 from qlinks.open_system import (
+    EnsembleResult,
+    TrajectoryResult,
     analyze_lindblad_evolution,
     density_matrix_from_state,
     diagnose_absorbing_projector_symmetry,
@@ -67,6 +69,97 @@ def test_analyze_lindblad_evolution_reports_fidelity():
 
     np.testing.assert_allclose(diagnostics.fidelities, [1.0, 1.0])
     np.testing.assert_allclose(diagnostics.purities, [1.0, 1.0])
+
+
+def test_analyze_lindblad_evolution_accepts_ensemble_state_snapshots():
+    ket0 = np.array([1.0, 0.0], dtype=np.complex128)
+    ket1 = np.array([0.0, 1.0], dtype=np.complex128)
+    snapshot = np.column_stack([ket0, ket1])
+    result = EnsembleResult(
+        times=np.array([0.0, 1.0], dtype=np.float64),
+        rho_t=[],
+        state_snapshots=(snapshot, snapshot),
+    )
+
+    diagnostics = analyze_lindblad_evolution(
+        ensemble_result=result,
+        target_state=ket0,
+    )
+
+    assert diagnostics.source == "ensemble_result.state_snapshots"
+    assert diagnostics.density_check_mode == "low_rank"
+    np.testing.assert_allclose(diagnostics.times, [0.0, 1.0])
+    np.testing.assert_array_equal(diagnostics.trajectory_counts, [2, 2])
+    np.testing.assert_allclose(diagnostics.state_norm_errors, [0.0, 0.0])
+    np.testing.assert_allclose(diagnostics.fidelities, [0.5, 0.5])
+    np.testing.assert_allclose(diagnostics.purities, [0.5, 0.5])
+    assert np.all(np.isnan(diagnostics.min_eigenvalues))
+
+
+def test_analyze_lindblad_evolution_full_mode_materializes_state_snapshots():
+    ket0 = np.array([1.0, 0.0], dtype=np.complex128)
+    snapshot = np.column_stack([ket0, ket0])
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+
+    diagnostics = analyze_lindblad_evolution(
+        state_snapshots=[snapshot],
+        times=[0.0],
+        target_state=ket0,
+        hamiltonian=hamiltonian,
+        jumps=[],
+        density_check_mode="full",
+    )
+
+    assert diagnostics.source == "state_snapshots"
+    assert diagnostics.density_check_mode == "full"
+    np.testing.assert_allclose(diagnostics.fidelities, [1.0])
+    np.testing.assert_allclose(diagnostics.purities, [1.0])
+    np.testing.assert_allclose(diagnostics.lindblad_residuals, [0.0])
+    np.testing.assert_allclose(diagnostics.min_eigenvalues, [0.0])
+
+
+def test_analyze_lindblad_evolution_accepts_stored_trajectories():
+    ket0 = np.array([1.0, 0.0], dtype=np.complex128)
+    ket1 = np.array([0.0, 1.0], dtype=np.complex128)
+    trajectories = (
+        TrajectoryResult(
+            times=np.array([0.0], dtype=np.float64),
+            states=[ket0],
+            jump_times=np.array([], dtype=np.float64),
+            jump_indices=np.array([], dtype=np.int64),
+            norm_errors=np.array([], dtype=np.float64),
+        ),
+        TrajectoryResult(
+            times=np.array([0.0], dtype=np.float64),
+            states=[ket1],
+            jump_times=np.array([], dtype=np.float64),
+            jump_indices=np.array([], dtype=np.int64),
+            norm_errors=np.array([], dtype=np.float64),
+        ),
+    )
+
+    diagnostics = analyze_lindblad_evolution(
+        trajectories=trajectories,
+        times=[0.0],
+        target_state=ket0,
+    )
+
+    assert diagnostics.source == "trajectories"
+    np.testing.assert_allclose(diagnostics.fidelities, [0.5])
+    np.testing.assert_array_equal(diagnostics.trajectory_counts, [2])
+
+
+def test_analyze_lindblad_evolution_requires_full_mode_for_snapshot_residuals():
+    ket0 = np.array([1.0, 0.0], dtype=np.complex128)
+    snapshot = np.column_stack([ket0, ket0])
+
+    with pytest.raises(ValueError, match="Lindblad residuals require"):
+        analyze_lindblad_evolution(
+            state_snapshots=[snapshot],
+            hamiltonian=np.zeros((2, 2), dtype=np.complex128),
+            jumps=[],
+            density_check_mode="low_rank",
+        )
 
 
 def test_diagnose_dark_subspace_amplitude_damping_unique_ground_state():
