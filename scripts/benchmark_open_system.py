@@ -454,6 +454,9 @@ def selected_operations(operation: OpenSystemOperation) -> tuple[str, ...]:
     if operation == "all":
         return _OPERATION_ORDER
 
+    if operation == "cage_compare":
+        return ("liouvillian", "krylov", "rk4_liouville", "rk4_matrix", "mcwf")
+
     return (operation,)
 
 
@@ -670,6 +673,10 @@ def run_open_system_benchmark(
 
 
 def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
+    if not results:
+        print("No benchmark results.")
+        return
+
     headers = [
         "name",
         "operation",
@@ -710,7 +717,10 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
         for result in results
     ]
 
-    widths = [max(len(header), *(len(row[i]) for row in rows)) for i, header in enumerate(headers)]
+    widths = [
+        max([len(header), *(len(row[index]) for row in rows)])
+        for index, header in enumerate(headers)
+    ]
 
     print("  ".join(header.ljust(widths[i]) for i, header in enumerate(headers)))
     print("  ".join("-" * widths[i] for i in range(len(headers))))
@@ -775,8 +785,11 @@ def main() -> None:
     parser.add_argument(
         "--operation",
         default="all",
-        choices=["all", *_OPERATION_ORDER],
-        help="Operation to benchmark. Use 'all' for all open-system operations.",
+        choices=["all", "cage_compare", *_OPERATION_ORDER],
+        help=(
+            "Operation to benchmark. Use 'all' for all open-system operations. "
+            "Use 'cage_compare' to run the square-QDM Cage-Lindblad exact-vs-MCWF suite."
+        ),
     )
     parser.add_argument(
         "--backend",
@@ -958,10 +971,11 @@ def main() -> None:
         if args.cage_lindblad_ipr_rank_completion_patience < 0
         else args.cage_lindblad_ipr_rank_completion_patience
     )
+    include_cage_lindblad_case = args.include_cage_lindblad_case or args.operation == "cage_compare"
 
     for case in make_benchmark_cases(
         include_sparse_many_jump_case=args.include_sparse_many_jump_case,
-        include_cage_lindblad_case=args.include_cage_lindblad_case,
+        include_cage_lindblad_case=include_cage_lindblad_case,
         cage_lindblad_check_liouvillian=(not args.cage_lindblad_skip_liouvillian_check),
         cage_lindblad_record_index=args.cage_lindblad_record_index,
         cage_lindblad_ipr_candidate_count=args.cage_lindblad_ipr_candidate_count,
