@@ -1205,3 +1205,123 @@ def test_sample_lindblad_mcwf_accumulates_existing_timing_collector_values(qubit
     )
 
     assert timing["mcwf.rate_evaluation"] >= 10.0
+
+
+def test_sample_lindblad_mcwf_can_skip_density_matrices(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.1, 4)
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=4,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=False,
+        ),
+    )
+
+    assert result.rho_t == []
+    assert result.state_snapshots is None
+
+
+def test_density_matrix_from_state_matrix_validates_shape():
+    from qlinks.open_system.stochastic_schrodinger import (
+        density_matrix_from_state_matrix,
+    )
+
+    with pytest.raises(ValueError, match="2D array"):
+        density_matrix_from_state_matrix(np.ones(2, dtype=np.complex128))
+
+    with pytest.raises(ValueError, match="at least one trajectory"):
+        density_matrix_from_state_matrix(np.zeros((2, 0), dtype=np.complex128))
+
+
+def test_sample_lindblad_mcwf_state_snapshots_reconstruct_density(qubit_ops):
+    from qlinks.open_system.stochastic_schrodinger import (
+        density_matrix_from_state_matrix,
+    )
+
+    hamiltonian = 0.1 * qubit_ops["sigma_x"]
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.1, 4)
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=4,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=True,
+            store_state_snapshots=True,
+        ),
+    )
+
+    assert result.state_snapshots is not None
+    assert len(result.state_snapshots) == len(times)
+    for snapshot, density_matrix in zip(result.state_snapshots, result.rho_t, strict=True):
+        assert snapshot.shape == (2, 4)
+        np.testing.assert_allclose(
+            density_matrix_from_state_matrix(snapshot),
+            density_matrix,
+            atol=1e-14,
+        )
+
+
+def test_sample_lindblad_mcwf_state_snapshots_without_density(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.1, 3)
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=3,
+            seed=123,
+            store_trajectories=False,
+            store_density_matrices=False,
+            store_state_snapshots=True,
+        ),
+    )
+
+    assert result.rho_t == []
+    assert result.state_snapshots is not None
+    assert len(result.state_snapshots) == len(times)
+    assert all(snapshot.shape == (2, 3) for snapshot in result.state_snapshots)
+
+
+def test_sample_lindblad_mcwf_state_snapshots_nonvectorized(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jump = np.sqrt(0.2) * qubit_ops["sigma_minus"]
+    times = np.linspace(0.0, 0.1, 3)
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        times=times,
+        state_initial=qubit_ops["ket1"],
+        options=McwfOptions(
+            n_trajectories=2,
+            seed=123,
+            store_trajectories=True,
+            store_states=False,
+            store_density_matrices=False,
+            store_state_snapshots=True,
+        ),
+    )
+
+    assert result.rho_t == []
+    assert result.trajectories is not None
+    assert result.state_snapshots is not None
+    assert len(result.state_snapshots) == len(times)
+    assert all(snapshot.shape == (2, 2) for snapshot in result.state_snapshots)

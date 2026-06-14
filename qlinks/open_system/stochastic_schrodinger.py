@@ -207,6 +207,8 @@ class McwfOptions:
     max_jump_probability: float = 0.1
     prefer_sparse_operators: bool = True
     prefer_sparse_rate_evaluator: bool = True
+    store_density_matrices: bool = True
+    store_state_snapshots: bool = False
     timing_collector: MutableMapping[str, float] | None = None
 
     adaptive_time_step: bool = False
@@ -269,6 +271,7 @@ class EnsembleResult:
     times: NDArray[np.float64]
     rho_t: list[ArrayC]
     trajectories: tuple[TrajectoryResult, ...] | None = None
+    state_snapshots: tuple[ArrayC, ...] | None = None
 
 
 def projector(state: Any) -> Any:
@@ -804,9 +807,15 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
     _add_timing(timing_collector, "mcwf.operator_view_conversion", _perf_counter() - start)
 
-    start = _perf_counter()
-    rho_t: list[ArrayC] = [_density_matrix_from_state_matrix(states)]
-    _add_timing(timing_collector, "mcwf.density_accumulation", _perf_counter() - start)
+    rho_t: list[ArrayC] = []
+    if options.store_density_matrices:
+        start = _perf_counter()
+        rho_t.append(_density_matrix_from_state_matrix(states))
+        _add_timing(timing_collector, "mcwf.density_accumulation", _perf_counter() - start)
+
+    state_snapshots: list[ArrayC] | None = None
+    if options.store_state_snapshots:
+        state_snapshots = [states.copy()]
 
     for time_index in range(times.size - 1):
         step_size = float(times[time_index + 1] - times[time_index])
@@ -877,14 +886,20 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         states = next_states / norms.reshape(1, -1)
         _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
 
-        start = _perf_counter()
-        rho_t.append(_density_matrix_from_state_matrix(states))
-        _add_timing(timing_collector, "mcwf.density_accumulation", _perf_counter() - start)
+        if options.store_state_snapshots:
+            assert state_snapshots is not None
+            state_snapshots.append(states.copy())
+
+        if options.store_density_matrices:
+            start = _perf_counter()
+            rho_t.append(_density_matrix_from_state_matrix(states))
+            _add_timing(timing_collector, "mcwf.density_accumulation", _perf_counter() - start)
 
     return EnsembleResult(
         times=times,
         rho_t=rho_t,
         trajectories=None,
+        state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
     )
 
 
@@ -1030,8 +1045,24 @@ def _normalize_numpy_state(state: ArrayC) -> ArrayC:
     return np.asarray(state / norm, dtype=np.complex128)
 
 
-def _density_matrix_from_state_matrix(states: ArrayC) -> ArrayC:
+def density_matrix_from_state_matrix(states: ArrayC) -> ArrayC:
+    """Return the ensemble density matrix represented by state columns.
+
+    ``states[:, trajectory_index]`` is one normalized MCWF trajectory state.
+    The returned matrix is the average projector over columns.
+    """
+    states = np.asarray(states, dtype=np.complex128)
+    if states.ndim != 2:
+        raise ValueError("states must be a 2D array with one state per column.")
+
+    if states.shape[1] == 0:
+        raise ValueError("states must contain at least one trajectory column.")
+
     return (states @ states.conj().T) / float(states.shape[1])
+
+
+def _density_matrix_from_state_matrix(states: ArrayC) -> ArrayC:
+    return density_matrix_from_state_matrix(states)
 
 
 def sample_lindblad_mcwf(
@@ -1073,8 +1104,8 @@ def sample_lindblad_mcwf(
     Returns
     -------
     EnsembleResult
-        Contains ensemble-averaged density matrices rho_t and optionally the
-        individual trajectories.
+        Contains ensemble-averaged density matrices ``rho_t`` when requested,
+        optional low-rank state snapshots, and optional individual trajectories.
     """
     if options is None:
         options = McwfOptions()
@@ -1123,7 +1154,16 @@ def sample_lindblad_mcwf(
             rng=generator,
         )
 
-    rho_t = [np.zeros((dim, dim), dtype=np.complex128) for _ in range(times.size)]
+    rho_t = (
+        [np.zeros((dim, dim), dtype=np.complex128) for _ in range(times.size)]
+        if options.store_density_matrices
+        else []
+    )
+    state_snapshots = (
+        [np.zeros((dim, options.n_trajectories), dtype=np.complex128) for _ in range(times.size)]
+        if options.store_state_snapshots
+        else None
+    )
 
     stored_trajectories: list[TrajectoryResult] | None
     if options.store_trajectories:
@@ -1138,13 +1178,9 @@ def sample_lindblad_mcwf(
         dtype=np.int64,
     )
 
-    def accumulate_density_matrix(time_index: int, state: Any) -> None:
-        state_numpy = _state_to_numpy(state, backend=backend_obj)
-        rho_t[time_index] += projector(state_numpy)
-
     store_trajectory_states = bool(options.store_trajectories and options.store_states)
 
-    for child_seed in child_seeds:
+    for trajectory_index, child_seed in enumerate(child_seeds):
         trajectory_rng = np.random.default_rng(int(child_seed))
 
         trajectory_state_initial = _initial_state_for_trajectory(
@@ -1154,6 +1190,19 @@ def sample_lindblad_mcwf(
             rng=trajectory_rng,
         )
 
+        state_callback: Callable[[int, Any], None] | None = None
+        if options.store_density_matrices or state_snapshots is not None:
+
+            def collect_ensemble_output(time_index: int, state: Any) -> None:
+                state_numpy = _state_to_numpy(state, backend=backend_obj)
+                if options.store_density_matrices:
+                    rho_t[time_index] += projector(state_numpy)
+
+                if state_snapshots is not None:
+                    state_snapshots[time_index][:, trajectory_index] = state_numpy
+
+            state_callback = collect_ensemble_output
+
         trajectory = _run_quantum_jump_trajectory_prepared(
             prepared=prepared,
             state_initial=trajectory_state_initial,
@@ -1161,7 +1210,7 @@ def sample_lindblad_mcwf(
             rng=trajectory_rng,
             return_backend_arrays=options.return_backend_arrays,
             store_states=store_trajectory_states,
-            state_callback=accumulate_density_matrix,
+            state_callback=state_callback,
             normalize_each_step=options.normalize_each_step,
             max_jump_probability=options.max_jump_probability,
             adaptive_time_step=options.adaptive_time_step,
@@ -1173,12 +1222,14 @@ def sample_lindblad_mcwf(
         if stored_trajectories is not None:
             stored_trajectories.append(trajectory)
 
-    rho_t = [density_matrix / float(options.n_trajectories) for density_matrix in rho_t]
+    if options.store_density_matrices:
+        rho_t = [density_matrix / float(options.n_trajectories) for density_matrix in rho_t]
 
     return EnsembleResult(
         times=times,
         rho_t=rho_t,
         trajectories=(tuple(stored_trajectories) if stored_trajectories is not None else None),
+        state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
     )
 
 

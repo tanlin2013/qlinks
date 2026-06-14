@@ -323,6 +323,8 @@ def run_open_system_benchmark(
     mcwf_max_jump_probability: float,
     mcwf_prefer_sparse_operators: bool,
     mcwf_prefer_sparse_rate_evaluator: bool,
+    mcwf_store_density_matrices: bool,
+    mcwf_store_state_snapshots: bool,
 ) -> OpenSystemBenchmarkResult:
     liouvillian_shape: tuple[int, int] | None = None
     liouvillian_nnz: int | None = None
@@ -419,6 +421,8 @@ def run_open_system_benchmark(
             max_jump_probability=mcwf_max_jump_probability,
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
             prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
+            store_density_matrices=mcwf_store_density_matrices,
+            store_state_snapshots=mcwf_store_state_snapshots,
             timing_collector=stage_seconds,
         )
         result, elapsed = _time_call(
@@ -433,6 +437,11 @@ def run_open_system_benchmark(
         n_trajectories_result = n_trajectories
         details = {
             "n_rho": len(result.rho_t),
+            "n_state_snapshots": (
+                0 if result.state_snapshots is None else len(result.state_snapshots)
+            ),
+            "store_density_matrices": mcwf_store_density_matrices,
+            "store_state_snapshots": mcwf_store_state_snapshots,
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
@@ -620,6 +629,19 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--mcwf-skip-density-matrices",
+        action="store_true",
+        help="Skip full ensemble density-matrix accumulation for MCWF benchmarks.",
+    )
+    parser.add_argument(
+        "--mcwf-store-state-snapshots",
+        action="store_true",
+        help=(
+            "Store low-rank MCWF ensemble state snapshots with one trajectory "
+            "state per column at each output time."
+        ),
+    )
+    parser.add_argument(
         "--json",
         type=str,
         default=None,
@@ -674,6 +696,8 @@ def main() -> None:
                     mcwf_max_jump_probability=args.mcwf_max_jump_probability,
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
                     mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
+                    mcwf_store_density_matrices=(not args.mcwf_skip_density_matrices),
+                    mcwf_store_state_snapshots=args.mcwf_store_state_snapshots,
                 )
             except NotImplementedError as exc:
                 print(f"  skipped: {exc}")
