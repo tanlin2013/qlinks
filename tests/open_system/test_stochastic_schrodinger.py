@@ -1907,6 +1907,7 @@ def test_event_driven_survival_threshold_carries_across_output_intervals(qubit_o
         survival_thresholds=thresholds,
         step_size=1.0,
         effective_hamiltonian_matrix=effective_hamiltonian,
+        total_jump_rate_operator=jump.conj().T @ jump,
         jump_operators=(jump,),
         sparse_jump_rate_evaluator=None,
         rng=np.random.default_rng(123),
@@ -1940,6 +1941,7 @@ def test_event_driven_survival_threshold_jump_uses_norm_crossing(qubit_ops):
         survival_thresholds=thresholds,
         step_size=1.0,
         effective_hamiltonian_matrix=effective_hamiltonian,
+        total_jump_rate_operator=jump.conj().T @ jump,
         jump_operators=(jump,),
         sparse_jump_rate_evaluator=None,
         rng=np.random.default_rng(123),
@@ -1971,6 +1973,7 @@ def test_event_driven_substeps_zero_rate_hamiltonian_mixing(qubit_ops):
         survival_thresholds=thresholds,
         step_size=2.0,
         effective_hamiltonian_matrix=effective_hamiltonian,
+        total_jump_rate_operator=jump.conj().T @ jump,
         jump_operators=(jump,),
         sparse_jump_rate_evaluator=None,
         rng=np.random.default_rng(123),
@@ -1983,3 +1986,42 @@ def test_event_driven_substeps_zero_rate_hamiltonian_mixing(qubit_ops):
 
     assert timing["mcwf.channel_rate_evaluation"] > 0.0
     assert timing["mcwf.selected_jump_application"] > 0.0
+
+
+def test_event_driven_segment_limit_uses_jump_active_derivative_only():
+    from qlinks.open_system.stochastic_schrodinger import _event_driven_segment_limits
+
+    remaining_times = np.asarray([10.0, 10.0], dtype=np.float64)
+    total_rates = np.asarray([0.0, 0.0], dtype=np.float64)
+    jump_derivative_norms = np.asarray([0.0, 2.0], dtype=np.float64)
+
+    segment_limits = _event_driven_segment_limits(
+        remaining_times=remaining_times,
+        total_rates=total_rates,
+        jump_derivative_norms=jump_derivative_norms,
+        max_jump_probability=0.1,
+        adaptive_safety_factor=0.8,
+    )
+
+    assert segment_limits[0] == 10.0
+    assert 0.0 < segment_limits[1] < 10.0
+
+
+def test_jump_derivative_norms_ignore_dark_subspace_phase_rotation(qubit_ops):
+    from qlinks.open_system.stochastic_schrodinger import (
+        _jump_derivative_norms_state_matrix_numpy,
+    )
+
+    jump = qubit_ops["sigma_minus"]
+    total_jump_rate_operator = jump.conj().T @ jump
+    derivatives = (-1j * qubit_ops["ket0"]).reshape(2, 1)
+
+    jump_derivative_norms = _jump_derivative_norms_state_matrix_numpy(
+        derivatives,
+        total_jump_rate_operator=total_jump_rate_operator,
+        jump_operators=(jump,),
+        sparse_jump_rate_evaluator=None,
+        timing_collector={},
+    )
+
+    np.testing.assert_allclose(jump_derivative_norms, [0.0], atol=1e-14)

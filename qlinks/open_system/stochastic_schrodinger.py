@@ -1206,6 +1206,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                 survival_thresholds=event_survival_thresholds,
                 step_size=interval_stop - interval_start,
                 effective_hamiltonian_matrix=effective_hamiltonian_matrix,
+                total_jump_rate_operator=total_jump_rate_operator,
                 jump_operators=jump_operators,
                 sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
                 rng=rng,
@@ -1500,7 +1501,7 @@ def _event_driven_segment_limits(
     *,
     remaining_times: NDArray[np.float64],
     total_rates: NDArray[np.float64],
-    derivative_norms: NDArray[np.float64],
+    jump_derivative_norms: NDArray[np.float64],
     max_jump_probability: float,
     adaptive_safety_factor: float,
 ) -> NDArray[np.float64]:
@@ -1510,13 +1511,15 @@ def _event_driven_segment_limits(
     propagator used to evaluate the survival norm.  A single large first-order
     Euler step can make ``||psi_tilde||^2`` increase because of its quadratic
     term, which suppresses norm crossings.  This helper caps each event segment
-    using both the instantaneous total jump rate and the full no-jump derivative
-    norm.  The derivative cap is important for states with zero instantaneous
-    jump rate that are rotated into jump-active subspaces by the Hamiltonian.
+    using both the instantaneous total jump rate and the jump-active part of
+    the no-jump derivative.  The derivative cap is important for states with
+    zero instantaneous jump rate that are rotated into jump-active subspaces
+    by the Hamiltonian, but it should not penalize harmless coherent phase
+    rotation inside the dark subspace.
     """
     remaining_times = np.asarray(remaining_times, dtype=np.float64)
     total_rates = np.asarray(total_rates, dtype=np.float64)
-    derivative_norms = np.asarray(derivative_norms, dtype=np.float64)
+    jump_derivative_norms = np.asarray(jump_derivative_norms, dtype=np.float64)
     segment_limits = remaining_times.copy()
     probability_cap = max_jump_probability * adaptive_safety_factor
 
@@ -1528,18 +1531,67 @@ def _event_driven_segment_limits(
             rate_limited_steps,
         )
 
-    positive_derivative_mask = derivative_norms > 0.0
-    if np.any(positive_derivative_mask):
+    positive_jump_derivative_mask = jump_derivative_norms > 0.0
+    if np.any(positive_jump_derivative_mask):
         derivative_limited_steps = (
-            np.sqrt(probability_cap) / derivative_norms[positive_derivative_mask]
+            np.sqrt(probability_cap) / jump_derivative_norms[positive_jump_derivative_mask]
         )
-        segment_limits[positive_derivative_mask] = np.minimum(
-            segment_limits[positive_derivative_mask],
+        segment_limits[positive_jump_derivative_mask] = np.minimum(
+            segment_limits[positive_jump_derivative_mask],
             derivative_limited_steps,
         )
 
     np.maximum(segment_limits, 0.0, out=segment_limits)
     return segment_limits
+
+
+def _jump_derivative_norms_state_matrix_numpy(
+    derivatives: ArrayC,
+    *,
+    total_jump_rate_operator: Any | None,
+    jump_operators: tuple[Any, ...],
+    sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None,
+    timing_collector: MutableMapping[str, float] | None,
+) -> NDArray[np.float64]:
+    """Return ``sqrt(<dpsi|Gamma|dpsi>)`` for event-segment limiting.
+
+    The event-driven first-order propagator only needs an extra segment cap
+    when the no-jump derivative moves a state into a jump-active subspace.
+    Using the full derivative norm is much too conservative for dark states
+    with coherent phase rotation, because that norm includes harmless unitary
+    motion.  This helper measures only the jump-active derivative component.
+    """
+    if derivatives.shape[1] == 0 or not jump_operators:
+        return np.zeros(derivatives.shape[1], dtype=np.float64)
+
+    start = _perf_counter()
+    if total_jump_rate_operator is not None:
+        derivative_rates = _evaluate_total_jump_rates_state_matrix_numpy(
+            derivatives,
+            total_jump_rate_operator,
+        )
+    elif sparse_jump_rate_evaluator is not None:
+        derivative_rates = np.sum(
+            _evaluate_sparse_jump_rates_state_matrix_numpy(
+                derivatives,
+                sparse_jump_rate_evaluator,
+            ),
+            axis=0,
+        )
+    else:
+        derivative_rates = np.sum(
+            _evaluate_jump_rates_state_matrix_numpy(derivatives, jump_operators),
+            axis=0,
+        )
+
+    _add_timing(
+        timing_collector,
+        "mcwf.event_segment_limit_rate_evaluation",
+        _perf_counter() - start,
+    )
+    derivative_rates = np.asarray(derivative_rates, dtype=np.float64)
+    np.maximum(derivative_rates, 0.0, out=derivative_rates)
+    return np.sqrt(derivative_rates)
 
 
 def _advance_state_matrix_event_driven_numpy(
@@ -1548,6 +1600,7 @@ def _advance_state_matrix_event_driven_numpy(
     survival_thresholds: NDArray[np.float64],
     step_size: float,
     effective_hamiltonian_matrix: Any,
+    total_jump_rate_operator: Any | None,
     jump_operators: tuple[Any, ...],
     sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None,
     rng: np.random.Generator,
@@ -1621,11 +1674,17 @@ def _advance_state_matrix_event_driven_numpy(
             thresholds=active_thresholds,
             max_times=active_remaining,
         )
-        derivative_norms = np.linalg.norm(derivatives, axis=0)
+        jump_derivative_norms = _jump_derivative_norms_state_matrix_numpy(
+            derivatives,
+            total_jump_rate_operator=total_jump_rate_operator,
+            jump_operators=jump_operators,
+            sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
+            timing_collector=timing_collector,
+        )
         segment_limits = _event_driven_segment_limits(
             remaining_times=active_remaining,
             total_rates=total_rates,
-            derivative_norms=derivative_norms,
+            jump_derivative_norms=jump_derivative_norms,
             max_jump_probability=max_jump_probability,
             adaptive_safety_factor=adaptive_safety_factor,
         )
