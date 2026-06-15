@@ -422,6 +422,7 @@ class McwfOptions:
     store_state_snapshots: bool = False
     trajectory_chunk_size: int | None = None
     trajectory_chunk_workers: int | None = None
+    adaptive_trajectory_block_size: int | None = None
     fidelity_targets: Mapping[str, Any] | None = None
     timing_collector: MutableMapping[str, float] | None = None
 
@@ -440,6 +441,12 @@ class McwfOptions:
 
         if self.trajectory_chunk_workers is not None and self.trajectory_chunk_workers <= 0:
             raise ValueError("trajectory_chunk_workers must be positive when set.")
+
+        if (
+            self.adaptive_trajectory_block_size is not None
+            and self.adaptive_trajectory_block_size <= 0
+        ):
+            raise ValueError("adaptive_trajectory_block_size must be positive when set.")
 
         if self.max_jump_probability <= 0.0:
             raise ValueError("max_jump_probability must be positive.")
@@ -1258,6 +1265,19 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     rng: np.random.Generator,
 ) -> EnsembleResult:
     """Sample an MCWF ensemble with trajectory states stored as columns."""
+    adaptive_block_size = _effective_adaptive_trajectory_block_size(options)
+    if adaptive_block_size is not None:
+        return _sample_lindblad_mcwf_adaptive_blocked_vectorized_scipy(
+            prepared=prepared,
+            dim=dim,
+            times=times,
+            state_initial=state_initial,
+            state_sampler=state_sampler,
+            options=options,
+            rng=rng,
+            adaptive_block_size=adaptive_block_size,
+        )
+
     timing_collector = options.timing_collector
 
     start = _perf_counter()
@@ -2109,6 +2129,103 @@ def _advance_state_matrix_event_driven_numpy(
     return states, survival_thresholds
 
 
+def _sample_lindblad_mcwf_adaptive_blocked_vectorized_scipy(
+    *,
+    prepared: _McwfPreparedOperators,
+    dim: int,
+    times: NDArray[np.float64],
+    state_initial: Any | None,
+    state_sampler: StateSampler | None,
+    options: McwfOptions,
+    rng: np.random.Generator,
+    adaptive_block_size: int,
+) -> EnsembleResult:
+    """Run Bernoulli MCWF in smaller adaptive-rate blocks inside one worker.
+
+    The normal vectorized adaptive sampler uses a single global step size for
+    every trajectory column in the current worker chunk.  One high-rate column
+    can therefore force all other columns to take the same tiny step.  This
+    helper preserves process-level trajectory chunks but splits the state matrix
+    into smaller sequential blocks, so each block chooses its own adaptive
+    substeps while still retaining BLAS/sparse-matmul batching inside the block.
+    """
+    timing_collector = options.timing_collector
+    n_trajectories = int(options.n_trajectories)
+    block_slices = _trajectory_chunk_slices(n_trajectories, adaptive_block_size)
+    block_seeds = rng.integers(
+        low=0,
+        high=np.iinfo(np.int64).max,
+        size=len(block_slices),
+        dtype=np.int64,
+    )
+
+    rho_t = (
+        [np.zeros((dim, dim), dtype=np.complex128) for _ in range(times.size)]
+        if options.store_density_matrices
+        else []
+    )
+    state_snapshots = (
+        [np.empty((dim, n_trajectories), dtype=np.complex128) for _ in range(times.size)]
+        if options.store_state_snapshots
+        else None
+    )
+    target_names, _ = _prepare_fidelity_target_matrix(
+        dim=dim,
+        fidelity_targets=options.fidelity_targets,
+    )
+    target_fidelity_series = (
+        {target_name: np.zeros(times.size, dtype=np.float64) for target_name in target_names}
+        if target_names
+        else None
+    )
+
+    block_start_time = _perf_counter()
+    for (block_start, block_stop), block_seed in zip(block_slices, block_seeds, strict=True):
+        block_n = int(block_stop - block_start)
+        block_options = replace(
+            options,
+            n_trajectories=block_n,
+            trajectory_chunk_size=None,
+            trajectory_chunk_workers=None,
+            adaptive_trajectory_block_size=None,
+        )
+        block_rng = np.random.default_rng(int(block_seed))
+
+        block_result = _sample_lindblad_mcwf_vectorized_scipy(
+            prepared=prepared,
+            dim=dim,
+            times=times,
+            state_initial=state_initial,
+            state_sampler=state_sampler,
+            options=block_options,
+            rng=block_rng,
+        )
+
+        _merge_mcwf_chunk_result(
+            parent_rho_t=rho_t,
+            parent_state_snapshots=state_snapshots,
+            parent_target_fidelities=target_fidelity_series,
+            chunk_result=block_result,
+            chunk_start=block_start,
+            chunk_stop=block_stop,
+            n_trajectories=n_trajectories,
+            timing_collector=timing_collector,
+        )
+        _add_counter(timing_collector, "mcwf.count.adaptive_trajectory_blocks", 1.0)
+
+    _add_timing(
+        timing_collector, "mcwf.adaptive_trajectory_block_wall", _perf_counter() - block_start_time
+    )
+
+    return EnsembleResult(
+        times=times,
+        rho_t=rho_t,
+        trajectories=None,
+        state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
+        target_fidelities=_finalize_streamed_target_fidelities(target_fidelity_series),
+    )
+
+
 def _sample_lindblad_mcwf_chunked_vectorized_scipy(
     *,
     prepared: _McwfPreparedOperators,
@@ -2357,6 +2474,21 @@ def _effective_trajectory_chunk_workers(options: McwfOptions, *, n_chunks: int) 
         return 1
 
     return min(int(workers), int(n_chunks))
+
+
+def _effective_adaptive_trajectory_block_size(options: McwfOptions) -> int | None:
+    block_size = options.adaptive_trajectory_block_size
+    if block_size is None:
+        return None
+
+    if (
+        not options.adaptive_time_step
+        or options.use_event_driven_jumps
+        or block_size >= options.n_trajectories
+    ):
+        return None
+
+    return int(block_size)
 
 
 def _trajectory_chunk_slices(

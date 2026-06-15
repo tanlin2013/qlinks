@@ -726,6 +726,7 @@ def run_open_system_benchmark(
     mcwf_store_state_snapshots: bool,
     mcwf_trajectory_chunk_size: int | None,
     mcwf_trajectory_chunk_workers: int | None,
+    mcwf_adaptive_trajectory_block_size: int | None,
 ) -> OpenSystemBenchmarkResult:
     liouvillian_shape: tuple[int, int] | None = None
     liouvillian_nnz: int | None = None
@@ -839,6 +840,7 @@ def run_open_system_benchmark(
             store_state_snapshots=mcwf_store_state_snapshots,
             trajectory_chunk_size=mcwf_trajectory_chunk_size,
             trajectory_chunk_workers=mcwf_trajectory_chunk_workers,
+            adaptive_trajectory_block_size=mcwf_adaptive_trajectory_block_size,
             fidelity_targets=(
                 {"target": case.target_state} if case.target_state is not None else None
             ),
@@ -870,6 +872,7 @@ def run_open_system_benchmark(
             "store_state_snapshots": mcwf_store_state_snapshots,
             "trajectory_chunk_size": mcwf_trajectory_chunk_size,
             "trajectory_chunk_workers": mcwf_trajectory_chunk_workers,
+            "adaptive_trajectory_block_size": mcwf_adaptive_trajectory_block_size,
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
@@ -1185,6 +1188,17 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--mcwf-adaptive-trajectory-block-size",
+        type=int,
+        default=None,
+        help=(
+            "For adaptive Bernoulli MCWF, split each vectorized worker chunk "
+            "into adaptive-rate blocks of this many trajectories. This keeps "
+            "multiprocessing chunks large while preventing one high-rate "
+            "trajectory from throttling the whole chunk."
+        ),
+    )
+    parser.add_argument(
         "--json",
         type=str,
         default=None,
@@ -1336,6 +1350,7 @@ def main() -> None:
                     mcwf_store_state_snapshots=args.mcwf_store_state_snapshots,
                     mcwf_trajectory_chunk_size=args.mcwf_trajectory_chunk_size,
                     mcwf_trajectory_chunk_workers=args.mcwf_trajectory_chunk_workers,
+                    mcwf_adaptive_trajectory_block_size=args.mcwf_adaptive_trajectory_block_size,
                 )
             except NotImplementedError as exc:
                 print(f"  skipped: {exc}")

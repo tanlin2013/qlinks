@@ -2141,3 +2141,44 @@ def test_mcwf_options_reject_unknown_event_no_jump_propagator():
 
     with pytest.raises(ValueError, match="event_no_jump_propagator"):
         McwfOptions(event_no_jump_propagator="bad").validate()
+
+
+def test_sample_lindblad_mcwf_adaptive_trajectory_blocks_streamed_target_fidelity(qubit_ops):
+    from qlinks.open_system.stochastic_schrodinger import (
+        McwfOptions,
+        sample_lindblad_mcwf,
+    )
+
+    times = np.linspace(0.0, 0.2, 3)
+    timing_collector: dict[str, float] = {}
+    options = McwfOptions(
+        n_trajectories=6,
+        seed=123,
+        store_density_matrices=False,
+        store_state_snapshots=False,
+        adaptive_time_step=True,
+        adaptive_trajectory_block_size=2,
+        fidelity_targets={"target": qubit_ops["ket1"]},
+        timing_collector=timing_collector,
+    )
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=np.zeros((2, 2), dtype=np.complex128),
+        jumps=[],
+        state_initial=qubit_ops["ket1"],
+        times=times,
+        options=options,
+    )
+
+    assert result.rho_t == []
+    assert result.state_snapshots is None
+    assert result.target_fidelities is not None
+    np.testing.assert_allclose(result.target_fidelities["target"], np.ones(times.size))
+    assert timing_collector["mcwf.count.adaptive_trajectory_blocks"] == 3.0
+
+
+def test_mcwf_options_reject_nonpositive_adaptive_trajectory_block_size():
+    from qlinks.open_system.stochastic_schrodinger import McwfOptions
+
+    with pytest.raises(ValueError, match="adaptive_trajectory_block_size"):
+        McwfOptions(adaptive_trajectory_block_size=0).validate()
