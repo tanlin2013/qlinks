@@ -18,6 +18,18 @@ from qlinks.caging.classification import (
     support_key_for_zero_report,
 )
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
+from qlinks.caging.local_search import (
+    LocalQDMCageRecord,
+    LocalQDMCageSearchConfig,
+    LocalQDMCageSearcher,
+    LocalQDMCageSearchResult,
+    LocalQDMRegion,
+    build_qdm_local_kinetic_matrix,
+    build_qdm_local_region_from_links,
+    build_qdm_local_region_from_plaquettes,
+    enumerate_qdm_local_basis,
+    qdm_local_self_loop_values,
+)
 from qlinks.caging.localization import (
     IPRLocalizationConfig,
     LocalizedState,
@@ -136,6 +148,16 @@ __all__ = [
     "signature_from_energy_and_self_loop",
     "IPRLocalizationConfig",
     "LocalizedState",
+    "LocalQDMCageRecord",
+    "LocalQDMCageSearcher",
+    "LocalQDMCageSearchConfig",
+    "LocalQDMCageSearchResult",
+    "LocalQDMRegion",
+    "build_qdm_local_region_from_links",
+    "build_qdm_local_region_from_plaquettes",
+    "build_qdm_local_kinetic_matrix",
+    "enumerate_qdm_local_basis",
+    "qdm_local_self_loop_values",
     "exact_compact_states_from_support",
     "inverse_participation_ratio",
     "localized_basis_by_many_start_ipr",
