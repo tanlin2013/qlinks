@@ -415,6 +415,7 @@ class McwfOptions:
     prefer_sparse_rate_evaluator: bool = True
     use_total_rate_first: bool = True
     use_event_driven_jumps: bool = False
+    event_segment_probability_cap: float | None = None
     store_density_matrices: bool = True
     store_state_snapshots: bool = False
     trajectory_chunk_size: int | None = None
@@ -440,6 +441,12 @@ class McwfOptions:
 
         if self.max_jump_probability <= 0.0:
             raise ValueError("max_jump_probability must be positive.")
+
+        if (
+            self.event_segment_probability_cap is not None
+            and self.event_segment_probability_cap <= 0.0
+        ):
+            raise ValueError("event_segment_probability_cap must be positive when set.")
 
         if not (0.0 < self.adaptive_safety_factor <= 1.0):
             raise ValueError("adaptive_safety_factor must be in (0, 1].")
@@ -1321,6 +1328,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                 max_substeps=options.max_substeps_per_interval,
                 min_step_size=options.min_step_size,
                 max_jump_probability=options.max_jump_probability,
+                event_segment_probability_cap=options.event_segment_probability_cap,
                 adaptive_safety_factor=options.adaptive_safety_factor,
                 timing_collector=timing_collector,
             )
@@ -1687,8 +1695,9 @@ def _event_driven_segment_limits(
     remaining_times: NDArray[np.float64],
     total_rates: NDArray[np.float64],
     jump_derivative_norms: NDArray[np.float64],
-    max_jump_probability: float,
     adaptive_safety_factor: float,
+    segment_probability_cap: float | None = None,
+    max_jump_probability: float | None = None,
 ) -> NDArray[np.float64]:
     """Choose stable first-order no-jump segment lengths.
 
@@ -1705,8 +1714,13 @@ def _event_driven_segment_limits(
     remaining_times = np.asarray(remaining_times, dtype=np.float64)
     total_rates = np.asarray(total_rates, dtype=np.float64)
     jump_derivative_norms = np.asarray(jump_derivative_norms, dtype=np.float64)
+    if segment_probability_cap is None:
+        if max_jump_probability is None:
+            raise ValueError("segment_probability_cap must be provided.")
+        segment_probability_cap = max_jump_probability
+
     segment_limits = remaining_times.copy()
-    probability_cap = max_jump_probability * adaptive_safety_factor
+    probability_cap = float(segment_probability_cap) * adaptive_safety_factor
 
     positive_rate_mask = total_rates > 0.0
     if np.any(positive_rate_mask):
@@ -1792,7 +1806,8 @@ def _advance_state_matrix_event_driven_numpy(
     max_substeps: int,
     min_step_size: float,
     max_jump_probability: float,
-    adaptive_safety_factor: float,
+    event_segment_probability_cap: float | None = None,
+    adaptive_safety_factor: float = 0.8,
     timing_collector: MutableMapping[str, float] | None,
 ) -> tuple[ArrayC, NDArray[np.float64]]:
     """Advance a vectorized MCWF ensemble with norm-threshold jump times.
@@ -1825,6 +1840,12 @@ def _advance_state_matrix_event_driven_numpy(
 
     if step_size == 0.0:
         return states, survival_thresholds
+
+    segment_probability_cap = (
+        max_jump_probability
+        if event_segment_probability_cap is None
+        else float(event_segment_probability_cap)
+    )
 
     if not jump_operators:
         start = _perf_counter()
@@ -1869,8 +1890,8 @@ def _advance_state_matrix_event_driven_numpy(
             remaining_times=active_remaining,
             total_rates=survival_polynomial.total_rates,
             jump_derivative_norms=jump_derivative_norms,
-            max_jump_probability=max_jump_probability,
             adaptive_safety_factor=adaptive_safety_factor,
+            segment_probability_cap=segment_probability_cap,
         )
         crossing_mask, crossing_times = _first_order_crossing_times_from_polynomial(
             survival_polynomial,

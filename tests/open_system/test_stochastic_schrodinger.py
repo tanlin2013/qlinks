@@ -686,6 +686,25 @@ def test_sample_lindblad_mcwf_rejects_nonpositive_trajectories(qubit_ops):
         )
 
 
+def test_sample_lindblad_mcwf_rejects_nonpositive_event_segment_cap(qubit_ops):
+    hamiltonian = np.zeros((2, 2), dtype=np.complex128)
+    jumps: list[np.ndarray] = []
+    times = np.array([0.0, 0.1], dtype=np.float64)
+
+    with pytest.raises(ValueError, match="event_segment_probability_cap"):
+        sample_lindblad_mcwf(
+            hamiltonian=hamiltonian,
+            jumps=jumps,
+            state_initial=qubit_ops["ket0"],
+            times=times,
+            options=McwfOptions(
+                n_trajectories=1,
+                use_event_driven_jumps=True,
+                event_segment_probability_cap=0.0,
+            ),
+        )
+
+
 def test_sample_lindblad_mcwf_decay_relaxes_toward_ground_state_on_average(qubit_ops):
     hamiltonian = np.zeros((2, 2), dtype=np.complex128)
     decay_rate = 1.0

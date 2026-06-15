@@ -716,6 +716,7 @@ def run_open_system_benchmark(
     rk4_step_policy: str,
     mcwf_adaptive_time_step: bool,
     mcwf_max_jump_probability: float,
+    mcwf_event_segment_probability_cap: float | None,
     mcwf_prefer_sparse_operators: bool,
     mcwf_prefer_sparse_rate_evaluator: bool,
     mcwf_use_total_rate_first: bool,
@@ -827,6 +828,7 @@ def run_open_system_benchmark(
             store_states=False,
             adaptive_time_step=mcwf_adaptive_time_step,
             max_jump_probability=mcwf_max_jump_probability,
+            event_segment_probability_cap=mcwf_event_segment_probability_cap,
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
             prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
             use_total_rate_first=mcwf_use_total_rate_first,
@@ -871,6 +873,7 @@ def run_open_system_benchmark(
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
             "use_total_rate_first": mcwf_use_total_rate_first,
             "use_event_driven_jumps": mcwf_use_event_driven_jumps,
+            "event_segment_probability_cap": mcwf_event_segment_probability_cap,
         }
         if final_target_fidelity is not None:
             details["final_target_fidelity"] = final_target_fidelity
@@ -1077,6 +1080,16 @@ def main() -> None:
         type=float,
         default=0.1,
         help="Maximum first-order jump probability per MCWF step.",
+    )
+    parser.add_argument(
+        "--mcwf-event-segment-probability-cap",
+        type=float,
+        default=None,
+        help=(
+            "Maximum first-order probability scale used only for event-driven "
+            "internal segment limiting. Defaults to --mcwf-max-jump-probability. "
+            "Larger values reduce no-jump subsegments but are a performance/accuracy knob."
+        ),
     )
     parser.add_argument(
         "--mcwf-dense-operators",
@@ -1287,6 +1300,7 @@ def main() -> None:
                     rk4_step_policy=args.rk4_step_policy,
                     mcwf_adaptive_time_step=args.mcwf_adaptive_time_step,
                     mcwf_max_jump_probability=args.mcwf_max_jump_probability,
+                    mcwf_event_segment_probability_cap=args.mcwf_event_segment_probability_cap,
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
                     mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
                     mcwf_use_total_rate_first=(not args.mcwf_disable_total_rate_first),
