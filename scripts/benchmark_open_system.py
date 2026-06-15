@@ -733,6 +733,8 @@ def run_open_system_benchmark(
     mcwf_prefer_sparse_operators: bool,
     mcwf_prefer_sparse_rate_evaluator: bool,
     mcwf_use_total_rate_first: bool,
+    mcwf_compress_collinear_jumps: bool,
+    mcwf_jump_compression_tolerance: float,
     mcwf_store_density_matrices: bool,
     mcwf_store_state_snapshots: bool,
     mcwf_trajectory_chunk_size: int | None,
@@ -844,6 +846,8 @@ def run_open_system_benchmark(
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
             prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
             use_total_rate_first=mcwf_use_total_rate_first,
+            compress_collinear_jumps=mcwf_compress_collinear_jumps,
+            jump_compression_tolerance=mcwf_jump_compression_tolerance,
             store_density_matrices=mcwf_store_density_matrices,
             store_state_snapshots=mcwf_store_state_snapshots,
             trajectory_chunk_size=mcwf_trajectory_chunk_size,
@@ -885,7 +889,15 @@ def run_open_system_benchmark(
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
             "use_total_rate_first": mcwf_use_total_rate_first,
+            "compress_collinear_jumps": mcwf_compress_collinear_jumps,
+            "jump_compression_tolerance": mcwf_jump_compression_tolerance,
         }
+        if "mcwf.count.compressed_jumps" in stage_seconds:
+            details["prepared_n_jumps"] = int(stage_seconds["mcwf.count.compressed_jumps"])
+        if "mcwf.count.compressed_jump_reduction" in stage_seconds:
+            details["compressed_jump_reduction"] = int(
+                stage_seconds["mcwf.count.compressed_jump_reduction"]
+            )
         if final_target_fidelity is not None:
             details["final_target_fidelity"] = final_target_fidelity
 
@@ -1123,6 +1135,21 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--mcwf-compress-collinear-jumps",
+        action="store_true",
+        help=(
+            "Before MCWF sampling, merge zero and Hilbert-Schmidt-collinear "
+            "jump operators. This preserves the Lindblad generator while keeping "
+            "the sparse support of a representative jump."
+        ),
+    )
+    parser.add_argument(
+        "--mcwf-jump-compression-tolerance",
+        type=float,
+        default=1.0e-10,
+        help="Tolerance used by --mcwf-compress-collinear-jumps.",
+    )
+    parser.add_argument(
         "--mcwf-skip-density-matrices",
         action="store_true",
         help="Skip full ensemble density-matrix accumulation for MCWF benchmarks.",
@@ -1310,6 +1337,8 @@ def main() -> None:
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
                     mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
                     mcwf_use_total_rate_first=(not args.mcwf_disable_total_rate_first),
+                    mcwf_compress_collinear_jumps=args.mcwf_compress_collinear_jumps,
+                    mcwf_jump_compression_tolerance=args.mcwf_jump_compression_tolerance,
                     mcwf_store_density_matrices=(not args.mcwf_skip_density_matrices),
                     mcwf_store_state_snapshots=args.mcwf_store_state_snapshots,
                     mcwf_trajectory_chunk_size=args.mcwf_trajectory_chunk_size,

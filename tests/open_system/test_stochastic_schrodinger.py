@@ -1917,3 +1917,47 @@ def test_mcwf_options_reject_nonpositive_adaptive_trajectory_block_size():
 
     with pytest.raises(ValueError, match="adaptive_trajectory_block_size"):
         McwfOptions(adaptive_trajectory_block_size=0).validate()
+
+
+def test_prepare_mcwf_operators_compresses_collinear_sparse_jumps(qubit_ops):
+    scipy_sparse = pytest.importorskip("scipy.sparse")
+
+    hamiltonian = scipy_sparse.csr_array(np.zeros((2, 2), dtype=np.complex128))
+    base_jump = scipy_sparse.csr_array(qubit_ops["sigma_minus"])
+    jumps = [base_jump, 2.0 * base_jump, scipy_sparse.csr_array(qubit_ops["sigma_plus"])]
+
+    from qlinks.open_system.stochastic_schrodinger import _prepare_mcwf_operators
+
+    uncompressed = _prepare_mcwf_operators(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        backend="scipy",
+        prefer_sparse_operators=True,
+        prefer_sparse_rate_evaluator=False,
+    )
+    compressed = _prepare_mcwf_operators(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        backend="scipy",
+        prefer_sparse_operators=True,
+        prefer_sparse_rate_evaluator=False,
+        compress_collinear_jumps=True,
+    )
+
+    assert compressed.jump_compression_summary is not None
+    assert compressed.jump_compression_summary.original_n_jumps == 3
+    assert compressed.jump_compression_summary.compressed_n_jumps == 2
+    assert compressed.jump_compression_summary.reduced_jump_count == 1
+    assert all(scipy_sparse.issparse(jump) for jump in compressed.jumps)
+    assert compressed.jump_compression_summary.compressed_total_nnz == 2
+
+    np.testing.assert_allclose(
+        compressed.total_jump_rate_operator.toarray(),
+        uncompressed.total_jump_rate_operator.toarray(),
+        atol=1e-14,
+    )
+
+
+def test_mcwf_options_rejects_nonpositive_jump_compression_tolerance():
+    with pytest.raises(ValueError, match="jump_compression_tolerance"):
+        McwfOptions(jump_compression_tolerance=0.0).validate()

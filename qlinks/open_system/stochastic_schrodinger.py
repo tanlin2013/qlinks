@@ -45,6 +45,41 @@ class _SparseJumpRateEvaluator:
 
 
 @dataclass(frozen=True, slots=True)
+class _JumpCompressionSummary:
+    original_n_jumps: int
+    compressed_n_jumps: int
+    removed_zero_jumps: int
+    collinear_group_count: int
+    original_total_nnz: int | None
+    compressed_total_nnz: int | None
+    tolerance: float
+
+    @property
+    def reduced_jump_count(self) -> int:
+        return self.original_n_jumps - self.compressed_n_jumps
+
+    @property
+    def compression_ratio(self) -> float:
+        if self.original_n_jumps == 0:
+            return 0.0
+
+        return self.compressed_n_jumps / float(self.original_n_jumps)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "original_n_jumps": self.original_n_jumps,
+            "compressed_n_jumps": self.compressed_n_jumps,
+            "reduced_jump_count": self.reduced_jump_count,
+            "removed_zero_jumps": self.removed_zero_jumps,
+            "collinear_group_count": self.collinear_group_count,
+            "compression_ratio": self.compression_ratio,
+            "original_total_nnz": self.original_total_nnz,
+            "compressed_total_nnz": self.compressed_total_nnz,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class _McwfPreparedOperators:
     backend: OpenSystemBackend
     hamiltonian: Any
@@ -54,6 +89,7 @@ class _McwfPreparedOperators:
     sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None = None
     uses_sparse_operators: bool = False
     uses_sparse_rate_evaluator: bool = False
+    jump_compression_summary: _JumpCompressionSummary | None = None
 
     def __getstate__(self) -> tuple[Any, ...]:
         return (
@@ -65,6 +101,7 @@ class _McwfPreparedOperators:
             self.sparse_jump_rate_evaluator,
             self.uses_sparse_operators,
             self.uses_sparse_rate_evaluator,
+            self.jump_compression_summary,
         )
 
     def __setstate__(self, state: tuple[Any, ...]) -> None:
@@ -77,6 +114,7 @@ class _McwfPreparedOperators:
             sparse_jump_rate_evaluator,
             uses_sparse_operators,
             uses_sparse_rate_evaluator,
+            jump_compression_summary,
         ) = state
         object.__setattr__(self, "backend", get_open_system_backend(backend_name))
         object.__setattr__(self, "hamiltonian", hamiltonian)
@@ -86,6 +124,7 @@ class _McwfPreparedOperators:
         object.__setattr__(self, "sparse_jump_rate_evaluator", sparse_jump_rate_evaluator)
         object.__setattr__(self, "uses_sparse_operators", uses_sparse_operators)
         object.__setattr__(self, "uses_sparse_rate_evaluator", uses_sparse_rate_evaluator)
+        object.__setattr__(self, "jump_compression_summary", jump_compression_summary)
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,14 +150,46 @@ def _prepare_mcwf_operators(
     backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
     prefer_sparse_operators: bool = True,
     prefer_sparse_rate_evaluator: bool = True,
+    compress_collinear_jumps: bool = False,
+    jump_compression_tolerance: float = 1.0e-10,
+    timing_collector: MutableMapping[str, float] | None = None,
 ) -> _McwfPreparedOperators:
+    jump_input: tuple[Any, ...] = tuple(jumps)
+    jump_compression_summary: _JumpCompressionSummary | None = None
+    if compress_collinear_jumps:
+        compression_start = _perf_counter()
+        jump_input, jump_compression_summary = _compress_collinear_jump_operators(
+            jump_input,
+            tolerance=jump_compression_tolerance,
+        )
+        _add_timing(
+            timing_collector,
+            "mcwf.jump_compression",
+            _perf_counter() - compression_start,
+        )
+        _add_counter(
+            timing_collector,
+            "mcwf.count.original_jumps",
+            float(jump_compression_summary.original_n_jumps),
+        )
+        _add_counter(
+            timing_collector,
+            "mcwf.count.compressed_jumps",
+            float(jump_compression_summary.compressed_n_jumps),
+        )
+        _add_counter(
+            timing_collector,
+            "mcwf.count.compressed_jump_reduction",
+            float(jump_compression_summary.reduced_jump_count),
+        )
+
     backend_obj = get_open_system_backend(backend)
     use_sparse_operators = (
         backend_obj.name == "scipy"
         and prefer_sparse_operators
         and (
             _is_sparse_like_operator(hamiltonian)
-            or any(_is_sparse_like_operator(jump) for jump in jumps)
+            or any(_is_sparse_like_operator(jump) for jump in jump_input)
         )
     )
 
@@ -136,7 +207,7 @@ def _prepare_mcwf_operators(
                 format="csr",
                 dtype=np.complex128,
             )
-            for jump in jumps
+            for jump in jump_input
         )
     else:
         hamiltonian_backend = as_backend_dense_array(
@@ -150,7 +221,7 @@ def _prepare_mcwf_operators(
                 backend=backend_obj,
                 dtype=np.complex128,
             )
-            for jump in jumps
+            for jump in jump_input
         )
 
     total_jump_rate_operator = _total_jump_rate_operator(
@@ -177,6 +248,7 @@ def _prepare_mcwf_operators(
         sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
         uses_sparse_operators=use_sparse_operators,
         uses_sparse_rate_evaluator=sparse_jump_rate_evaluator is not None,
+        jump_compression_summary=jump_compression_summary,
     )
 
 
@@ -199,6 +271,147 @@ def _as_numpy_or_scipy_sparse(operator: Any) -> Any:
         return operator.asformat("csr").astype(np.complex128)
 
     return np.asarray(operator, dtype=np.complex128)
+
+
+def _compress_collinear_jump_operators(
+    jumps: tuple[Any, ...],
+    *,
+    tolerance: float,
+) -> tuple[tuple[Any, ...], _JumpCompressionSummary]:
+    """Merge zero and Hilbert-Schmidt-collinear jump operators.
+
+    If several jumps satisfy ``J_j = c_j J_ref``, replacing them by
+    ``sqrt(sum_j |c_j|^2) J_ref`` preserves both the recycling term
+    ``sum_j J_j rho J_j†`` and the total rate operator ``sum_j J_j† J_j``.
+    Unlike a full SVD rotation of the jump span, this compression preserves the
+    sparse support of the representative jump and therefore cannot densify the
+    Cage-Lindblad jump list.
+    """
+    original_n_jumps = len(jumps)
+    if not jumps:
+        return (), _JumpCompressionSummary(
+            original_n_jumps=0,
+            compressed_n_jumps=0,
+            removed_zero_jumps=0,
+            collinear_group_count=0,
+            original_total_nnz=0,
+            compressed_total_nnz=0,
+            tolerance=float(tolerance),
+        )
+
+    if tolerance <= 0.0:
+        raise ValueError("jump_compression_tolerance must be positive.")
+
+    jump_tuple = tuple(_as_numpy_or_scipy_sparse(jump) for jump in jumps)
+    shapes = {tuple(int(axis) for axis in jump.shape) for jump in jump_tuple}
+    if len(shapes) != 1:
+        raise ValueError("All jump operators must have the same shape for compression.")
+
+    gram_matrix = _hilbert_schmidt_gram_matrix(jump_tuple)
+    norm_squares = np.maximum(np.real(np.diag(gram_matrix)), 0.0)
+    largest_norm_square = float(np.max(norm_squares)) if norm_squares.size else 0.0
+    zero_threshold = float(tolerance) * max(largest_norm_square, 1.0)
+    assigned = np.zeros(original_n_jumps, dtype=bool)
+    compressed_jumps: list[Any] = []
+    removed_zero_jumps = 0
+    collinear_group_count = 0
+
+    for representative_index, representative in enumerate(jump_tuple):
+        if assigned[representative_index]:
+            continue
+
+        representative_norm_square = float(norm_squares[representative_index])
+        if representative_norm_square <= zero_threshold:
+            assigned[representative_index] = True
+            removed_zero_jumps += 1
+            continue
+
+        group_indices = [representative_index]
+        assigned[representative_index] = True
+        scale_square = 1.0
+
+        for candidate_index in range(representative_index + 1, original_n_jumps):
+            if assigned[candidate_index]:
+                continue
+
+            candidate_norm_square = float(norm_squares[candidate_index])
+            if candidate_norm_square <= zero_threshold:
+                assigned[candidate_index] = True
+                removed_zero_jumps += 1
+                continue
+
+            overlap = complex(gram_matrix[representative_index, candidate_index])
+            residual_square = candidate_norm_square - abs(overlap) ** 2 / representative_norm_square
+            residual_tolerance = float(tolerance) * max(candidate_norm_square, 1.0)
+            if residual_square <= residual_tolerance:
+                assigned[candidate_index] = True
+                group_indices.append(candidate_index)
+                coefficient = overlap / representative_norm_square
+                scale_square += abs(coefficient) ** 2
+
+        if len(group_indices) > 1:
+            collinear_group_count += 1
+            compressed_jumps.append(_scale_jump_operator(representative, np.sqrt(scale_square)))
+        else:
+            compressed_jumps.append(representative)
+
+    compressed_tuple = tuple(compressed_jumps)
+    return compressed_tuple, _JumpCompressionSummary(
+        original_n_jumps=original_n_jumps,
+        compressed_n_jumps=len(compressed_tuple),
+        removed_zero_jumps=removed_zero_jumps,
+        collinear_group_count=collinear_group_count,
+        original_total_nnz=_total_operator_nnz(jump_tuple),
+        compressed_total_nnz=_total_operator_nnz(compressed_tuple),
+        tolerance=float(tolerance),
+    )
+
+
+def _hilbert_schmidt_gram_matrix(jumps: tuple[Any, ...]) -> NDArray[np.complex128]:
+    n_jumps = len(jumps)
+    gram_matrix = np.zeros((n_jumps, n_jumps), dtype=np.complex128)
+    for row_index, jump_left in enumerate(jumps):
+        for column_index in range(row_index, n_jumps):
+            value = _hilbert_schmidt_inner_product(jump_left, jumps[column_index])
+            gram_matrix[row_index, column_index] = value
+            if column_index != row_index:
+                gram_matrix[column_index, row_index] = value.conjugate()
+
+    return gram_matrix
+
+
+def _hilbert_schmidt_inner_product(left: Any, right: Any) -> complex:
+    if scipy_sparse.issparse(left) and scipy_sparse.issparse(right):
+        return complex(left.conjugate().multiply(right).sum())
+
+    if scipy_sparse.issparse(left):
+        return complex(np.vdot(left.toarray(), np.asarray(right, dtype=np.complex128)))
+
+    if scipy_sparse.issparse(right):
+        return complex(np.vdot(np.asarray(left, dtype=np.complex128), right.toarray()))
+
+    return complex(
+        np.vdot(np.asarray(left, dtype=np.complex128), np.asarray(right, dtype=np.complex128))
+    )
+
+
+def _scale_jump_operator(jump: Any, scale: float) -> Any:
+    if scipy_sparse.issparse(jump):
+        scaled = (float(scale) * jump).tocsr()
+        scaled.eliminate_zeros()
+        return scaled
+
+    return np.asarray(jump, dtype=np.complex128) * float(scale)
+
+
+def _total_operator_nnz(operators: tuple[Any, ...]) -> int | None:
+    if not operators:
+        return 0
+
+    if all(scipy_sparse.issparse(operator) for operator in operators):
+        return int(sum(int(operator.nnz) for operator in operators))
+
+    return None
 
 
 def _build_sparse_jump_rate_evaluator(
@@ -414,6 +627,8 @@ class McwfOptions:
     prefer_sparse_operators: bool = True
     prefer_sparse_rate_evaluator: bool = True
     use_total_rate_first: bool = True
+    compress_collinear_jumps: bool = False
+    jump_compression_tolerance: float = 1.0e-10
     store_density_matrices: bool = True
     store_state_snapshots: bool = False
     trajectory_chunk_size: int | None = None
@@ -446,6 +661,9 @@ class McwfOptions:
 
         if self.max_jump_probability <= 0.0:
             raise ValueError("max_jump_probability must be positive.")
+
+        if self.jump_compression_tolerance <= 0.0:
+            raise ValueError("jump_compression_tolerance must be positive.")
 
         if not (0.0 < self.adaptive_safety_factor <= 1.0):
             raise ValueError("adaptive_safety_factor must be in (0, 1].")
@@ -2270,6 +2488,9 @@ def sample_lindblad_mcwf(
         backend=options.backend,
         prefer_sparse_operators=options.prefer_sparse_operators,
         prefer_sparse_rate_evaluator=options.prefer_sparse_rate_evaluator,
+        compress_collinear_jumps=options.compress_collinear_jumps,
+        jump_compression_tolerance=options.jump_compression_tolerance,
+        timing_collector=options.timing_collector,
     )
     _add_timing(options.timing_collector, "mcwf.operator_preparation", _perf_counter() - start)
     backend_obj = prepared.backend
