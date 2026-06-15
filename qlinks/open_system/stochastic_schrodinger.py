@@ -1496,6 +1496,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     _add_timing(timing_collector, "mcwf.initial_state_matrix", _perf_counter() - start)
 
     start = _perf_counter()
+    hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.hamiltonian)
     effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
     total_jump_rate_operator = (
         _as_numpy_or_scipy_sparse(prepared.total_jump_rate_operator)
@@ -1504,6 +1505,10 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     )
     jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
     sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
+    reuse_total_rate_action_for_no_jump = _should_reuse_total_rate_action_for_no_jump(
+        hamiltonian_matrix,
+        effective_hamiltonian_matrix,
+    )
     _add_timing(timing_collector, "mcwf.operator_view_conversion", _perf_counter() - start)
 
     target_names, target_matrix = _prepare_fidelity_target_matrix(
@@ -1544,6 +1549,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
             probabilities = np.zeros((0, options.n_trajectories), dtype=np.float64)
             total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
             rates: NDArray[np.float64] | None = None
+            total_jump_rate_action: ArrayC | None = None
 
             if jump_operators:
                 rate_step_size = step_size
@@ -1551,6 +1557,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     probabilities,
                     total_jump_probabilities,
                     rates,
+                    total_jump_rate_action,
                 ) = _evaluate_vectorized_jump_probabilities_numpy(
                     states=states,
                     step_size=rate_step_size,
@@ -1615,7 +1622,20 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                 )
 
             start = _perf_counter()
-            next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
+            if reuse_total_rate_action_for_no_jump and total_jump_rate_action is not None:
+                # The total-rate-first path already computed Gamma @ psi to get
+                # <psi|Gamma|psi>.  Reuse that action in the no-jump Euler
+                # update instead of applying H_eff = H - i Gamma/2, which
+                # would traverse Gamma a second time in the same substep.
+                hamiltonian_action = hamiltonian_matrix @ states
+                next_states = (
+                    states
+                    - 1j * step_size * hamiltonian_action
+                    - 0.5 * step_size * total_jump_rate_action
+                )
+                _add_counter(timing_collector, "mcwf.count.total_rate_action_reuses", 1.0)
+            else:
+                next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
             _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
 
             if jump_operators:
@@ -2099,7 +2119,12 @@ def _evaluate_vectorized_jump_probabilities_numpy(
     total_jump_rate_operator: Any | None,
     use_total_rate_first: bool,
     timing_collector: MutableMapping[str, float] | None,
-) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64] | None]:
+) -> tuple[
+    NDArray[np.float64],
+    NDArray[np.float64],
+    NDArray[np.float64] | None,
+    ArrayC | None,
+]:
     """Return first-order jump probabilities for the vectorized MCWF path."""
     start = _perf_counter()
     if _should_use_total_rate_first(
@@ -2107,7 +2132,10 @@ def _evaluate_vectorized_jump_probabilities_numpy(
         total_jump_rate_operator=total_jump_rate_operator,
         sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
     ):
-        total_rates = _evaluate_total_jump_rates_state_matrix_numpy(
+        (
+            total_rates,
+            total_jump_rate_action,
+        ) = _evaluate_total_jump_rates_and_action_state_matrix_numpy(
             states,
             total_jump_rate_operator,
         )
@@ -2119,6 +2147,7 @@ def _evaluate_vectorized_jump_probabilities_numpy(
             np.zeros((0, states.shape[1]), dtype=np.float64),
             total_jump_probabilities,
             None,
+            total_jump_rate_action,
         )
 
     if sparse_jump_rate_evaluator is not None:
@@ -2133,7 +2162,7 @@ def _evaluate_vectorized_jump_probabilities_numpy(
     elapsed = _perf_counter() - start
     _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
     _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
-    return probabilities, total_jump_probabilities, rates
+    return probabilities, total_jump_probabilities, rates, None
 
 
 def _should_use_total_rate_first(
@@ -2182,6 +2211,18 @@ def _evaluate_total_jump_rates_state_matrix_numpy(
     total_jump_rate_operator: Any,
 ) -> NDArray[np.float64]:
     """Return ``<psi_a|Gamma|psi_a>`` for state columns."""
+    rates, _ = _evaluate_total_jump_rates_and_action_state_matrix_numpy(
+        states,
+        total_jump_rate_operator,
+    )
+    return rates
+
+
+def _evaluate_total_jump_rates_and_action_state_matrix_numpy(
+    states: ArrayC,
+    total_jump_rate_operator: Any,
+) -> tuple[NDArray[np.float64], ArrayC]:
+    """Return ``<psi_a|Gamma|psi_a>`` and ``Gamma @ psi_a``."""
     acted_states = total_jump_rate_operator @ states
     rates = np.einsum(
         "ij,ij->j",
@@ -2191,7 +2232,7 @@ def _evaluate_total_jump_rates_state_matrix_numpy(
     ).real
     rates = np.asarray(rates, dtype=np.float64)
     np.maximum(rates, 0.0, out=rates)
-    return rates
+    return rates, np.asarray(acted_states, dtype=np.complex128)
 
 
 def _evaluate_total_jump_rate_numpy(
@@ -2283,6 +2324,25 @@ def _evaluate_sparse_jump_rates_state_matrix_numpy(
 
     np.maximum(rates, 0.0, out=rates)
     return rates
+
+
+def _should_reuse_total_rate_action_for_no_jump(
+    hamiltonian_matrix: Any,
+    effective_hamiltonian_matrix: Any,
+) -> bool:
+    """Return whether cached ``Gamma @ states`` should be reused in no-jump updates.
+
+    The reuse path replaces one ``H_eff @ states`` sparse product by
+    ``H @ states`` plus the already-computed ``Gamma @ states`` from the
+    total-rate step.  It is only an obvious win when both operators are sparse
+    and ``H`` has fewer stored entries than ``H_eff``.  Dense arrays are left on
+    the single-matmul path to avoid extra Python/NumPy overhead.
+    """
+    return (
+        scipy_sparse.issparse(hamiltonian_matrix)
+        and scipy_sparse.issparse(effective_hamiltonian_matrix)
+        and int(hamiltonian_matrix.nnz) < int(effective_hamiltonian_matrix.nnz)
+    )
 
 
 def _evaluate_jump_rates_state_matrix_numpy(

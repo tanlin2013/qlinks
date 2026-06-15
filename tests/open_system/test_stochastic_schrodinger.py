@@ -1961,3 +1961,43 @@ def test_prepare_mcwf_operators_compresses_collinear_sparse_jumps(qubit_ops):
 def test_mcwf_options_rejects_nonpositive_jump_compression_tolerance():
     with pytest.raises(ValueError, match="jump_compression_tolerance"):
         McwfOptions(jump_compression_tolerance=0.0).validate()
+
+
+def test_total_rate_action_reuse_matches_effective_hamiltonian_update(qubit_ops):
+    import scipy.sparse as scipy_sparse
+
+    from qlinks.open_system.stochastic_schrodinger import (
+        _effective_hamiltonian_from_total_rate_operator,
+        _evaluate_total_jump_rates_and_action_state_matrix_numpy,
+        _total_jump_rate_operator,
+    )
+
+    hamiltonian = scipy_sparse.csr_array(0.37 * qubit_ops["sigma_x"])
+    jumps = (
+        scipy_sparse.csr_array(np.sqrt(0.23) * qubit_ops["sigma_minus"]),
+        scipy_sparse.csr_array(np.sqrt(0.11) * qubit_ops["sigma_z"]),
+    )
+    states = np.array(
+        [[1.0, 0.0, 1.0j], [0.0, 1.0, 1.0]],
+        dtype=np.complex128,
+    )
+    states /= np.sqrt(np.sum(np.abs(states) ** 2, axis=0)).reshape(1, -1)
+    step_size = 0.031
+
+    total_rate_operator = _total_jump_rate_operator(jumps, shape=hamiltonian.shape)
+    assert total_rate_operator is not None
+    effective_hamiltonian_matrix = _effective_hamiltonian_from_total_rate_operator(
+        hamiltonian,
+        total_rate_operator,
+    )
+
+    _, total_rate_action = _evaluate_total_jump_rates_and_action_state_matrix_numpy(
+        states,
+        total_rate_operator,
+    )
+    reused_action_update = (
+        states - 1j * step_size * (hamiltonian @ states) - 0.5 * step_size * total_rate_action
+    )
+    effective_hamiltonian_update = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
+
+    np.testing.assert_allclose(reused_action_update, effective_hamiltonian_update, atol=1e-14)
