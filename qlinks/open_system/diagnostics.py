@@ -83,7 +83,7 @@ class JumpSpanDiagnostics:
 
 
 def diagnose_jump_span(
-    jumps: Sequence[npt.ArrayLike] | Sequence[Any],
+    jumps: Sequence[Any],
     *,
     rank_tolerance: float = 1.0e-10,
 ) -> JumpSpanDiagnostics:
@@ -241,10 +241,10 @@ def _normalized_gram_offdiagonal_values(gram_matrix: np.ndarray) -> np.ndarray:
 
 
 def analyze_lindblad_evolution(
-    density_matrices: Sequence[npt.ArrayLike] | None = None,
+    density_matrices: Sequence[Any] | None = None,
     *,
     ensemble_result: Any | None = None,
-    state_snapshots: Sequence[npt.ArrayLike] | None = None,
+    state_snapshots: Sequence[Any] | None = None,
     trajectories: Sequence[Any] | None = None,
     times: npt.ArrayLike | None = None,
     target_state: npt.ArrayLike | None = None,
@@ -382,7 +382,7 @@ def analyze_lindblad_evolution(
 
 
 def _analyze_density_matrix_sequence(
-    density_matrices: Sequence[npt.ArrayLike],
+    density_matrices: Sequence[Any],
     *,
     target_state: npt.ArrayLike | None,
     hamiltonian: Any,
@@ -451,14 +451,14 @@ def _analyze_density_matrix_sequence(
 
 def _resolve_lindblad_evolution_inputs(
     *,
-    density_matrices: Sequence[npt.ArrayLike] | None,
+    density_matrices: Sequence[Any] | None,
     ensemble_result: Any | None,
-    state_snapshots: Sequence[npt.ArrayLike] | None,
+    state_snapshots: Sequence[Any] | None,
     trajectories: Sequence[Any] | None,
     times: npt.ArrayLike | None,
 ) -> tuple[
-    Sequence[npt.ArrayLike] | None,
-    Sequence[npt.ArrayLike] | None,
+    Sequence[Any] | None,
+    Sequence[Any] | None,
     np.ndarray | None,
     str,
 ]:
