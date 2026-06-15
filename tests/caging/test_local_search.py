@@ -176,6 +176,47 @@ def test_local_qdm_plaquette_region_uses_small_relaxed_basis() -> None:
     assert isinstance(local_result.region.unresolved_boundary_plaquette_ids, np.ndarray)
 
 
+def test_local_qdm_square_4x4_ipr_degenerate_policy_finds_compact_supports() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    localized_result = LocalQDMCageSearcher.full_model_region(
+        model,
+        config=LocalQDMCageSearchConfig(
+            tolerance=1.0e-10,
+            degenerate_basis_strategy="ipr",
+            ipr_candidate_count=256,
+            ipr_random_seed=0,
+        ),
+    ).run()
+
+    plain_result = LocalQDMCageSearcher.full_model_region(
+        model,
+        config=LocalQDMCageSearchConfig(tolerance=1.0e-10),
+    ).run()
+
+    localized_support_sizes = sorted(
+        record.cage_state.support_size for record in localized_result.records
+    )
+    plain_support_sizes = sorted(record.cage_state.support_size for record in plain_result.records)
+
+    assert localized_result.counts_by_signature == plain_result.counts_by_signature
+    assert localized_support_sizes[0] < plain_support_sizes[0]
+    assert localized_support_sizes[:8] == [4] * 8
+    assert any(
+        record.cage_state.metadata.get("degenerate_basis_strategy") == "ipr"
+        for record in localized_result.records
+    )
+
+
 def test_local_qdm_full_square_4x4_certifies_to_cage_search_result_protocol() -> None:
     model = SquareQDMModel(
         lx=4,

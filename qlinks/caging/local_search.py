@@ -35,6 +35,7 @@ from qlinks.caging.search import (
     signature_from_energy_and_self_loop,
 )
 from qlinks.caging.solver import CageSolverConfig, solve_candidate_for_kinetic_targets
+from qlinks.caging.types import DegenerateBasisStrategy
 from qlinks.models.couplings import DirectedPlaquetteCoupling
 from qlinks.operators.plaquette import alternating_binary_patterns
 
@@ -86,6 +87,20 @@ class LocalQDMCageSearchConfig:
     max_local_states: int | None = None
     sort_basis: bool = True
     validate_full_residual: bool = True
+
+    # Degenerate local cage handling.  ``"ipr"`` rotates a degenerate
+    # fixed-kappa nullspace toward compact high-IPR representatives before
+    # support trimming, preventing one large mixed support from representing
+    # several smaller cages.
+    degenerate_basis_strategy: DegenerateBasisStrategy = "none"
+    ipr_n_restarts: int = 128
+    ipr_max_iter: int = 1000
+    ipr_step_size: float = 0.1
+    ipr_candidate_count: int = 64
+    ipr_rank_completion_patience: int | None = None
+    ipr_batch_size: int = 16
+    ipr_random_seed: int | None = None
+
     deduplicate_by_rank: bool = True
     rank_tolerance_factor: float = 100.0
     signature_tolerance_factor: float = 10.0
@@ -98,6 +113,20 @@ class LocalQDMCageSearchConfig:
             raise ValueError("boundary_mode must be 'relaxed' or 'closed'.")
         if self.max_local_states is not None and self.max_local_states < 0:
             raise ValueError("max_local_states must be non-negative or None.")
+        if self.degenerate_basis_strategy not in {"none", "ipr"}:
+            raise ValueError("degenerate_basis_strategy must be 'none' or 'ipr'.")
+        if self.ipr_n_restarts < 0:
+            raise ValueError("ipr_n_restarts must be non-negative.")
+        if self.ipr_max_iter < 0:
+            raise ValueError("ipr_max_iter must be non-negative.")
+        if self.ipr_step_size <= 0:
+            raise ValueError("ipr_step_size must be positive.")
+        if self.ipr_candidate_count < 0:
+            raise ValueError("ipr_candidate_count must be non-negative.")
+        if self.ipr_rank_completion_patience is not None and self.ipr_rank_completion_patience < 0:
+            raise ValueError("ipr_rank_completion_patience must be non-negative or None.")
+        if self.ipr_batch_size <= 0:
+            raise ValueError("ipr_batch_size must be positive.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -501,6 +530,14 @@ class LocalQDMCageSearcher:
         solver_config = CageSolverConfig(
             tolerance=self.config.tolerance,
             validate_full_residual=self.config.validate_full_residual,
+            degenerate_basis_strategy=self.config.degenerate_basis_strategy,
+            ipr_n_restarts=self.config.ipr_n_restarts,
+            ipr_max_iter=self.config.ipr_max_iter,
+            ipr_step_size=self.config.ipr_step_size,
+            ipr_candidate_count=self.config.ipr_candidate_count,
+            ipr_rank_completion_patience=self.config.ipr_rank_completion_patience,
+            ipr_batch_size=self.config.ipr_batch_size,
+            ipr_random_seed=self.config.ipr_random_seed,
         )
 
         records: list[LocalQDMCageRecord] = []
