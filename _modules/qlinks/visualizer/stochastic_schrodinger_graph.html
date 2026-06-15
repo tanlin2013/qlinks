@@ -322,6 +322,8 @@
     <span class="n">HamiltonianGraphVisualizer</span><span class="p">,</span>
     <span class="n">LayoutName</span><span class="p">,</span>
     <span class="n">NodeColorRule</span><span class="p">,</span>
+    <span class="n">_networkx_layout</span><span class="p">,</span>
+    <span class="n">_scalar_values_to_colors</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">TrajectoryNodeColorRule</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
@@ -517,17 +519,51 @@
         <span class="n">repeat</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">colorbar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">redraw_each_frame</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Animate the trajectory on a fixed graph layout.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">redraw_each_frame</span> <span class="ow">or</span> <span class="n">colorbar</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_animate_redraw_each_frame</span><span class="p">(</span>
+                <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
+                <span class="n">edge_color_by</span><span class="o">=</span><span class="n">edge_color_by</span><span class="p">,</span>
+                <span class="n">interval</span><span class="o">=</span><span class="n">interval</span><span class="p">,</span>
+                <span class="n">repeat</span><span class="o">=</span><span class="n">repeat</span><span class="p">,</span>
+                <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
+                <span class="n">colorbar</span><span class="o">=</span><span class="n">colorbar</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_animate_cached_networkx</span><span class="p">(</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span>
+            <span class="n">edge_color_by</span><span class="o">=</span><span class="n">edge_color_by</span><span class="p">,</span>
+            <span class="n">interval</span><span class="o">=</span><span class="n">interval</span><span class="p">,</span>
+            <span class="n">repeat</span><span class="o">=</span><span class="n">repeat</span><span class="p">,</span>
+            <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_animate_redraw_each_frame</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">LayoutName</span><span class="p">,</span>
+        <span class="n">color_by</span><span class="p">:</span> <span class="n">TrajectoryNodeColorRule</span><span class="p">,</span>
+        <span class="n">edge_color_by</span><span class="p">:</span> <span class="n">EdgeColorRule</span><span class="p">,</span>
+        <span class="n">interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">repeat</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">colorbar</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Animate by redrawing every frame. Kept for full compatibility.&quot;&quot;&quot;</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.animation</span><span class="w"> </span><span class="kn">import</span> <span class="n">FuncAnimation</span>
 
-        <span class="c1"># Reuse the existing layout helper indirectly by drawing the first frame.</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">figure_size</span><span class="p">)</span>
 
-        <span class="c1"># Simpler first implementation: redraw each frame.</span>
-        <span class="c1"># Later we can optimize by updating PathCollection colors only.</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="n">frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
@@ -572,8 +608,131 @@
         <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">animation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">save_path</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">animation</span></div>
-</div>
+        <span class="k">return</span> <span class="n">animation</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_animate_cached_networkx</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">LayoutName</span><span class="p">,</span>
+        <span class="n">color_by</span><span class="p">:</span> <span class="n">TrajectoryNodeColorRule</span><span class="p">,</span>
+        <span class="n">edge_color_by</span><span class="p">:</span> <span class="n">EdgeColorRule</span><span class="p">,</span>
+        <span class="n">interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">repeat</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Animate by caching layout, edges, labels, and updating node colors.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.animation</span><span class="w"> </span><span class="kn">import</span> <span class="n">FuncAnimation</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">figure_size</span><span class="p">)</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">to_networkx</span><span class="p">()</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">_networkx_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="o">**</span><span class="n">layout_kwargs</span><span class="p">)</span>
+
+        <span class="n">node_color_rule</span> <span class="o">=</span> <span class="n">_trajectory_color_to_node_color</span><span class="p">(</span><span class="n">color_by</span><span class="p">)</span>
+        <span class="n">initial_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_values_for_frame</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">node_color_rule</span><span class="o">=</span><span class="n">node_color_rule</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">node_colors</span> <span class="o">=</span> <span class="n">_scalar_values_to_colors</span><span class="p">(</span>
+            <span class="n">initial_values</span><span class="p">,</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+            <span class="n">color_by</span><span class="o">=</span><span class="n">node_color_rule</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">node_collection</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span>
+            <span class="n">positions</span><span class="p">,</span>
+            <span class="n">node_color</span><span class="o">=</span><span class="n">node_colors</span><span class="p">,</span>
+            <span class="n">node_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">vertex_size</span> <span class="o">*</span> <span class="mi">12</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">edge_colors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">_edge_colors_for_matplotlib</span><span class="p">(</span>
+            <span class="n">edge_color_by</span><span class="o">=</span><span class="n">edge_color_by</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">edge_alpha</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">edge_color_by</span> <span class="o">==</span> <span class="s2">&quot;weight_complex&quot;</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">edge_alpha</span>
+        <span class="p">)</span>
+        <span class="n">edge_collection</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edges</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span>
+            <span class="n">positions</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">edge_width</span><span class="p">,</span>
+            <span class="n">edge_color</span><span class="o">=</span><span class="n">edge_colors</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">edge_alpha</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">label_artists</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">label_vertices</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">local_index</span><span class="p">:</span> <span class="n">label</span>
+                <span class="k">for</span> <span class="n">local_index</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">vertex_display_labels</span><span class="p">())</span>
+            <span class="p">}</span>
+            <span class="n">label_artists</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_labels</span><span class="p">(</span>
+                <span class="n">graph</span><span class="p">,</span>
+                <span class="n">positions</span><span class="p">,</span>
+                <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+                <span class="n">font_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">vertex_label_size</span><span class="p">,</span>
+                <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+        <span class="n">title_artist</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="n">frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_values_for_frame</span><span class="p">(</span>
+                <span class="n">frame</span><span class="p">,</span>
+                <span class="n">node_color_rule</span><span class="o">=</span><span class="n">node_color_rule</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">node_collection</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span>
+                <span class="n">_scalar_values_to_colors</span><span class="p">(</span>
+                    <span class="n">values</span><span class="p">,</span>
+                    <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+                    <span class="n">color_by</span><span class="o">=</span><span class="n">node_color_rule</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">frame</span><span class="p">)])</span>
+            <span class="n">title_artist</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;stochastic trajectory, t=</span><span class="si">{</span><span class="n">time</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">artists</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_collection</span><span class="p">,</span> <span class="n">title_artist</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">edge_collection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">edge_collection</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">artists</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">edge_collection</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">artists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_collection</span><span class="p">)</span>
+            <span class="n">artists</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">label_artists</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">artists</span>
+
+        <span class="n">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">animation</span> <span class="o">=</span> <span class="n">FuncAnimation</span><span class="p">(</span>
+            <span class="n">fig</span><span class="p">,</span>
+            <span class="n">update</span><span class="p">,</span>
+            <span class="n">frames</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">n_times</span><span class="p">,</span>
+            <span class="n">interval</span><span class="o">=</span><span class="n">interval</span><span class="p">,</span>
+            <span class="n">repeat</span><span class="o">=</span><span class="n">repeat</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">animation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">save_path</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">animation</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_node_values_for_frame</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">node_color_rule</span><span class="p">:</span> <span class="n">NodeColorRule</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph_visualizer</span><span class="o">.</span><span class="n">node_values</span><span class="p">(</span>
+                <span class="n">color_by</span><span class="o">=</span><span class="n">node_color_rule</span><span class="p">,</span>
+                <span class="n">state_vector</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">state_at</span><span class="p">(</span><span class="n">frame</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 

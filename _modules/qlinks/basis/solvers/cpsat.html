@@ -311,7 +311,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ortools.sat.python</span><span class="w"> </span><span class="kn">import</span> <span class="n">cp_model</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ortools.sat.python</span><span class="w"> </span><span class="kn">import</span> <span class="n">cp_model</span>
+<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - exercised when optional extra is absent.</span>
+    <span class="n">cp_model</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.basis.basis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Basis</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -368,6 +372,13 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Basis</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cp_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">&quot;CPSATBasisSolver requires the optional &#39;ortools&#39; dependency. &quot;</span>
+                <span class="s2">&quot;Install qlinks with the cpsat extra or add ortools to your &quot;</span>
+                <span class="s2">&quot;environment to use this solver.&quot;</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_states</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_states must be non-negative or None.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">max_states</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
