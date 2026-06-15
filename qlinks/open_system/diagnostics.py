@@ -8,12 +8,11 @@ import numpy as np
 import numpy.typing as npt
 import scipy.linalg as scipy_linalg
 import scipy.sparse as scipy_sparse
+from scipy.sparse.csgraph import connected_components
 
 from qlinks.open_system.backend import (
     OpenSystemBackend,
     OpenSystemBackendName,
-    as_backend_dense_array,
-    get_open_system_backend,
 )
 from qlinks.open_system.operators import (
     build_liouvillian,
@@ -934,29 +933,10 @@ def diagnose_dark_subspace(
     The Liouvillian spectrum check is dense and should only be used for small
     Hilbert spaces.
     """
-    backend_obj = get_open_system_backend(backend)
+    # _backend_obj = get_open_system_backend(backend)
 
-    hamiltonian_dense = as_backend_dense_array(
-        hamiltonian,
-        backend=backend_obj,
-        dtype=np.complex128,
-    )
-    jump_dense = tuple(
-        as_backend_dense_array(
-            jump,
-            backend=backend_obj,
-            dtype=np.complex128,
-        )
-        for jump in jumps
-    )
-
-    hamiltonian_numpy = np.asarray(
-        backend_obj.to_numpy(hamiltonian_dense),
-        dtype=np.complex128,
-    )
-    jumps_numpy = tuple(
-        np.asarray(backend_obj.to_numpy(jump), dtype=np.complex128) for jump in jump_dense
-    )
+    hamiltonian_sparse = _as_scipy_csr_matrix(hamiltonian)
+    jumps_sparse = tuple(_as_scipy_csr_matrix(jump) for jump in jumps)
 
     target = np.asarray(target_state, dtype=np.complex128)
     if target.ndim != 1:
@@ -969,20 +949,21 @@ def diagnose_dark_subspace(
     target = target / target_norm
     dim = int(target.size)
 
-    if hamiltonian_numpy.shape != (dim, dim):
+    if hamiltonian_sparse.shape != (dim, dim):
         raise ValueError("hamiltonian shape must be compatible with target_state.")
 
-    for jump in jumps_numpy:
+    for jump in jumps_sparse:
         if jump.shape != (dim, dim):
             raise ValueError(
                 "Every jump operator must have shape " "(len(target_state), len(target_state))."
             )
 
-    target_jump_residuals = tuple(float(np.linalg.norm(jump @ target)) for jump in jumps_numpy)
+    target_jump_vectors = tuple(jump @ target for jump in jumps_sparse)
+    target_jump_residuals = tuple(float(np.linalg.norm(vector)) for vector in target_jump_vectors)
     max_target_jump_residual = max(target_jump_residuals) if target_jump_residuals else 0.0
 
-    common_kernel_basis = _common_jump_kernel_basis(
-        jumps=jumps_numpy,
+    common_kernel_basis = _common_jump_kernel_basis_from_sparse_jumps(
+        jumps=jumps_sparse,
         dim=dim,
         tolerance=kernel_tolerance,
     )
@@ -1017,14 +998,12 @@ def diagnose_dark_subspace(
         for index in range(bad_common_kernel_basis.shape[1])
     )
 
-    target_density_matrix = np.outer(target, target.conj())
-    target_rhs = lindblad_rhs_density_matrix(
-        target_density_matrix,
-        hamiltonian=hamiltonian_numpy,
-        jumps=list(jumps_numpy),
-        backend="scipy",
+    target_liouvillian_residual = _rank_one_lindblad_rhs_norm(
+        hamiltonian=hamiltonian_sparse,
+        jumps=jumps_sparse,
+        target=target,
+        precomputed_jump_targets=target_jump_vectors,
     )
-    target_liouvillian_residual = float(np.linalg.norm(target_rhs))
 
     liouvillian_zero_mode_count: int | None = None
     liouvillian_spectral_gap: float | None = None
@@ -1043,8 +1022,8 @@ def diagnose_dark_subspace(
             )
 
         liouvillian = build_liouvillian(
-            hamiltonian_numpy,
-            list(jumps_numpy),
+            hamiltonian_sparse,
+            list(jumps_sparse),
             backend="scipy",
             sparse_format="csr",
         )
@@ -1081,7 +1060,7 @@ def diagnose_dark_subspace(
 
     return DarkSubspaceDiagnostics(
         dim=dim,
-        n_jumps=len(jumps_numpy),
+        n_jumps=len(jumps_sparse),
         target_norm=target_norm,
         target_jump_residuals=target_jump_residuals,
         max_target_jump_residual=max_target_jump_residual,
@@ -1283,29 +1262,10 @@ def diagnose_absorbing_projector_symmetry(
     inflow from psi_perp into psi. Equivalently, P_psi is conserved by the
     Heisenberg-picture Lindbladian.
     """
-    backend_obj = get_open_system_backend(backend)
+    # _backend_obj = get_open_system_backend(backend)
 
-    hamiltonian_dense = as_backend_dense_array(
-        hamiltonian,
-        backend=backend_obj,
-        dtype=np.complex128,
-    )
-    jump_dense = tuple(
-        as_backend_dense_array(
-            jump,
-            backend=backend_obj,
-            dtype=np.complex128,
-        )
-        for jump in jumps
-    )
-
-    hamiltonian_numpy = np.asarray(
-        backend_obj.to_numpy(hamiltonian_dense),
-        dtype=np.complex128,
-    )
-    jumps_numpy = tuple(
-        np.asarray(backend_obj.to_numpy(jump), dtype=np.complex128) for jump in jump_dense
-    )
+    hamiltonian_sparse = _as_scipy_csr_matrix(hamiltonian)
+    jumps_sparse = tuple(_as_scipy_csr_matrix(jump) for jump in jumps)
 
     target = np.asarray(target_state, dtype=np.complex128)
     if target.ndim != 1:
@@ -1318,56 +1278,62 @@ def diagnose_absorbing_projector_symmetry(
     target = target / target_norm
     dim = int(target.size)
 
-    if hamiltonian_numpy.shape != (dim, dim):
+    if hamiltonian_sparse.shape != (dim, dim):
         raise ValueError("hamiltonian shape must be compatible with target_state.")
 
-    for jump in jumps_numpy:
+    for jump in jumps_sparse:
         if jump.shape != (dim, dim):
             raise ValueError(
                 "Every jump operator must have shape " "(len(target_state), len(target_state))."
             )
 
-    projector_target = np.outer(target, target.conj())
-    identity = np.eye(dim, dtype=np.complex128)
-    projector_orthogonal = identity - projector_target
-
-    hamiltonian_commutator = (
-        hamiltonian_numpy @ projector_target - projector_target @ hamiltonian_numpy
+    hamiltonian_target = hamiltonian_sparse @ target
+    hamiltonian_commutator_norm = _low_rank_operator_frobenius_norm(
+        (
+            (1.0, hamiltonian_target, target),
+            (-1.0, target, hamiltonian_target),
+        )
     )
-    hamiltonian_commutator_norm = float(np.linalg.norm(hamiltonian_commutator))
 
     jump_diagnostics: list[AbsorbingProjectorJumpDiagnostics] = []
 
-    liouvillian_adjoint_projector = 1j * (
-        hamiltonian_numpy @ projector_target - projector_target @ hamiltonian_numpy
-    )
+    liouvillian_adjoint_terms: list[tuple[complex, np.ndarray, np.ndarray]] = [
+        (1j, hamiltonian_target, target),
+        (-1j, target, hamiltonian_target),
+    ]
 
-    for jump_index, jump in enumerate(jumps_numpy):
-        target_residual = float(np.linalg.norm(jump @ target))
+    for jump_index, jump in enumerate(jumps_sparse):
+        jump_target = jump @ target
+        jump_dagger_target = jump.conj().T @ target
+        jump_dagger_jump_target = jump.conj().T @ jump_target
 
-        outflow = projector_orthogonal @ jump @ projector_target
-        inflow = projector_target @ jump @ projector_orthogonal
-        commutator = jump @ projector_target - projector_target @ jump
-
-        jump_dagger = jump.conj().T
-        jump_dagger_jump = jump_dagger @ jump
-
-        dissipator_adjoint_projector = jump_dagger @ projector_target @ jump - 0.5 * (
-            jump_dagger_jump @ projector_target + projector_target @ jump_dagger_jump
+        target_residual = float(np.linalg.norm(jump_target))
+        outflow_norm = _orthogonal_component_norm(jump_target, target)
+        inflow_norm = _orthogonal_component_norm(jump_dagger_target, target)
+        commutator_norm = _low_rank_operator_frobenius_norm(
+            (
+                (1.0, jump_target, target),
+                (-1.0, target, jump_dagger_target),
+            )
         )
 
-        liouvillian_adjoint_projector = liouvillian_adjoint_projector + dissipator_adjoint_projector
+        dissipator_terms = (
+            (1.0, jump_dagger_target, jump_dagger_target),
+            (-0.5, jump_dagger_jump_target, target),
+            (-0.5, target, jump_dagger_jump_target),
+        )
+        dissipator_adjoint_projector_norm = _low_rank_operator_frobenius_norm(dissipator_terms)
+
+        liouvillian_adjoint_terms.extend(dissipator_terms)
 
         jump_diagnostics.append(
             AbsorbingProjectorJumpDiagnostics(
                 jump_index=jump_index,
                 target_residual=target_residual,
-                outflow_norm=float(np.linalg.norm(outflow)),
-                inflow_norm=float(np.linalg.norm(inflow)),
-                commutator_norm=float(np.linalg.norm(commutator)),
-                dissipator_adjoint_projector_norm=float(
-                    np.linalg.norm(dissipator_adjoint_projector)
-                ),
+                outflow_norm=outflow_norm,
+                inflow_norm=inflow_norm,
+                commutator_norm=commutator_norm,
+                dissipator_adjoint_projector_norm=dissipator_adjoint_projector_norm,
             )
         )
 
@@ -1388,7 +1354,9 @@ def diagnose_absorbing_projector_symmetry(
         default=0.0,
     )
 
-    liouvillian_adjoint_projector_norm = float(np.linalg.norm(liouvillian_adjoint_projector))
+    liouvillian_adjoint_projector_norm = _low_rank_operator_frobenius_norm(
+        tuple(liouvillian_adjoint_terms)
+    )
 
     target_is_dark = max_target_residual <= tolerance
     has_recycling_inflow = max_inflow_norm > tolerance
@@ -1400,7 +1368,7 @@ def diagnose_absorbing_projector_symmetry(
 
     return AbsorbingProjectorSymmetryDiagnostics(
         dim=dim,
-        n_jumps=len(jumps_numpy),
+        n_jumps=len(jumps_sparse),
         hamiltonian_commutator_norm=hamiltonian_commutator_norm,
         liouvillian_adjoint_projector_norm=liouvillian_adjoint_projector_norm,
         max_target_residual=max_target_residual,
@@ -1413,6 +1381,125 @@ def diagnose_absorbing_projector_symmetry(
         has_recycling_inflow=has_recycling_inflow,
         has_absorbing_projector_symmetry=(has_absorbing_projector_symmetry),
     )
+
+
+def _as_scipy_csr_matrix(matrix: Any) -> scipy_sparse.csr_array:
+    if scipy_sparse.issparse(matrix):
+        return matrix.tocsr().astype(np.complex128)
+
+    if hasattr(matrix, "get"):
+        matrix = matrix.get()
+
+    if hasattr(matrix, "toarray"):
+        return scipy_sparse.csr_array(matrix.toarray(), dtype=np.complex128)
+
+    if hasattr(matrix, "tocsr"):
+        return matrix.tocsr().astype(np.complex128)
+
+    return scipy_sparse.csr_array(np.asarray(matrix, dtype=np.complex128))
+
+
+def _common_jump_kernel_basis_from_sparse_jumps(
+    *,
+    jumps: tuple[scipy_sparse.spmatrix, ...] | tuple[scipy_sparse.sparray, ...],
+    dim: int,
+    tolerance: float,
+) -> np.ndarray:
+    if len(jumps) == 0:
+        return np.eye(dim, dtype=np.complex128)
+
+    jump_rate_operator = scipy_sparse.csr_array((dim, dim), dtype=np.complex128)
+    for jump in jumps:
+        jump_rate_operator = jump_rate_operator + jump.conj().T @ jump
+
+    jump_rate_operator = jump_rate_operator.tocsr()
+    graph = (abs(jump_rate_operator) > tolerance).astype(np.int8)
+    graph = (graph + graph.T).astype(np.int8)
+    n_components, labels = connected_components(graph, directed=False)
+    eigenvalue_threshold = max(tolerance, tolerance * tolerance)
+    kernel_vectors: list[np.ndarray] = []
+
+    for component_index in range(n_components):
+        component_indices = np.flatnonzero(labels == component_index)
+        if component_indices.size == 0:
+            continue
+
+        block = jump_rate_operator[np.ix_(component_indices, component_indices)].toarray()
+        block = 0.5 * (block + block.conj().T)
+
+        if component_indices.size == 1:
+            if float(np.real(block[0, 0])) <= eigenvalue_threshold:
+                vector = np.zeros(dim, dtype=np.complex128)
+                vector[component_indices[0]] = 1.0
+                kernel_vectors.append(vector)
+            continue
+
+        eigenvalues, eigenvectors = np.linalg.eigh(block)
+        for local_index in np.flatnonzero(eigenvalues <= eigenvalue_threshold):
+            vector = np.zeros(dim, dtype=np.complex128)
+            vector[component_indices] = eigenvectors[:, local_index]
+            kernel_vectors.append(vector)
+
+    if not kernel_vectors:
+        return np.zeros((dim, 0), dtype=np.complex128)
+
+    return np.column_stack(kernel_vectors).astype(np.complex128, copy=False)
+
+
+def _rank_one_lindblad_rhs_norm(
+    *,
+    hamiltonian: scipy_sparse.spmatrix | scipy_sparse.sparray,
+    jumps: tuple[scipy_sparse.spmatrix, ...] | tuple[scipy_sparse.sparray, ...],
+    target: np.ndarray,
+    precomputed_jump_targets: tuple[np.ndarray, ...] | None = None,
+) -> float:
+    hamiltonian_target = hamiltonian @ target
+    terms: list[tuple[complex, np.ndarray, np.ndarray]] = [
+        (-1j, hamiltonian_target, target),
+        (1j, target, hamiltonian_target),
+    ]
+
+    if precomputed_jump_targets is None:
+        jump_targets = tuple(jump @ target for jump in jumps)
+    else:
+        jump_targets = precomputed_jump_targets
+
+    for jump, jump_target in zip(jumps, jump_targets):
+        jump_dagger_jump_target = jump.conj().T @ jump_target
+        terms.extend(
+            (
+                (1.0, jump_target, jump_target),
+                (-0.5, jump_dagger_jump_target, target),
+                (-0.5, target, jump_dagger_jump_target),
+            )
+        )
+
+    return _low_rank_operator_frobenius_norm(tuple(terms))
+
+
+def _orthogonal_component_norm(vector: np.ndarray, basis_vector: np.ndarray) -> float:
+    vector_norm_squared = float(np.real(np.vdot(vector, vector)))
+    projection = np.vdot(basis_vector, vector)
+    return float(np.sqrt(max(0.0, vector_norm_squared - abs(projection) ** 2)))
+
+
+def _low_rank_operator_frobenius_norm(
+    terms: Sequence[tuple[complex, np.ndarray, np.ndarray]],
+) -> float:
+    if len(terms) == 0:
+        return 0.0
+
+    norm_squared = 0.0 + 0.0j
+    for coefficient_i, left_i, right_i in terms:
+        for coefficient_j, left_j, right_j in terms:
+            norm_squared += (
+                np.conj(coefficient_i)
+                * coefficient_j
+                * np.vdot(left_i, left_j)
+                * np.vdot(right_j, right_i)
+            )
+
+    return float(np.sqrt(max(0.0, float(np.real(norm_squared)))))
 
 
 def _common_jump_kernel_basis(
