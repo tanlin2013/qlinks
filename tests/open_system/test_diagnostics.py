@@ -8,9 +8,48 @@ from qlinks.open_system import (
     density_matrix_from_state,
     diagnose_absorbing_projector_symmetry,
     diagnose_dark_subspace,
+    diagnose_jump_span,
     verify_density_matrix,
     verify_lindblad_final_state,
 )
+
+
+def test_diagnose_jump_span_detects_dense_dependencies():
+    jump_a = np.array([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128)
+    jump_b = 2.0 * jump_a
+    jump_c = np.array([[0.0, 0.0], [1.0, 0.0]], dtype=np.complex128)
+
+    diagnostics = diagnose_jump_span([jump_a, jump_b, jump_c])
+
+    assert diagnostics.n_jumps == 3
+    assert diagnostics.dim == 2
+    assert diagnostics.span_rank == 2
+    assert diagnostics.dependent_jump_count == 1
+    assert diagnostics.has_exact_dependencies
+    assert diagnostics.compression_ratio == pytest.approx(2.0 / 3.0)
+    assert diagnostics.max_normalized_overlap == pytest.approx(1.0)
+
+
+def test_diagnose_jump_span_accepts_sparse_jumps():
+    scipy_sparse = pytest.importorskip("scipy.sparse")
+    jump_a = scipy_sparse.csr_array(
+        ([1.0], ([0], [1])),
+        shape=(2, 2),
+        dtype=np.complex128,
+    )
+    jump_b = scipy_sparse.csr_array(
+        ([1.0], ([1], [0])),
+        shape=(2, 2),
+        dtype=np.complex128,
+    )
+
+    diagnostics = diagnose_jump_span([jump_a, jump_b])
+
+    assert diagnostics.span_rank == 2
+    assert diagnostics.dependent_jump_count == 0
+    assert diagnostics.total_jump_nnz == 2
+    assert diagnostics.span_matrix_nnz == 2
+    assert diagnostics.to_summary_dict()["span_rank"] == 2
 
 
 def test_verify_density_matrix_for_target_pure_state():

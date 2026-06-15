@@ -15,6 +15,7 @@ from qlinks.open_system import (
     LindbladEvolutionOptions,
     LindbladProblem,
     McwfOptions,
+    diagnose_jump_span,
     prepare_dense_lindblad_operators,
     prepare_sparse_lindblad_operators,
     pure_density_matrix,
@@ -445,6 +446,10 @@ def _make_qdm_cage_lindblad_mcwf_case(
         )
     )
     summary = construction.to_summary_dict()
+    jump_span_diagnostics, jump_span_seconds = _time_call(
+        lambda: diagnose_jump_span(construction.jumps)
+    )
+    jump_span_summary = jump_span_diagnostics.to_summary_dict()
     state_initial = _initial_state_for_cage_lindblad_benchmark(
         target_state=state_vector,
         mode=initial_state_mode,
@@ -458,6 +463,15 @@ def _make_qdm_cage_lindblad_mcwf_case(
         "initial_target_fidelity": float(abs(np.vdot(state_vector, state_initial)) ** 2),
         "n_states": build_result.basis.n_states,
         "n_jumps": construction.n_jumps,
+        "jump_span_rank": jump_span_diagnostics.span_rank,
+        "jump_span_dependent_count": jump_span_diagnostics.dependent_jump_count,
+        "jump_span_compression_ratio": jump_span_diagnostics.compression_ratio,
+        "jump_span_effective_rank": jump_span_diagnostics.effective_rank,
+        "jump_span_participation_rank": jump_span_diagnostics.participation_rank,
+        "jump_span_max_normalized_overlap": jump_span_diagnostics.max_normalized_overlap,
+        "jump_span_mean_normalized_overlap": jump_span_diagnostics.mean_normalized_overlap,
+        "jump_span_seconds": jump_span_seconds,
+        "jump_span_summary": jump_span_summary,
         "n_component_jumps": construction.n_component_jumps,
         "n_global_jump_terms": construction.n_global_jump_terms,
         "n_recycling_jumps": construction.n_recycling_jumps,
@@ -716,12 +730,9 @@ def run_open_system_benchmark(
     rk4_step_policy: str,
     mcwf_adaptive_time_step: bool,
     mcwf_max_jump_probability: float,
-    mcwf_event_segment_probability_cap: float | None,
-    mcwf_event_no_jump_propagator: str,
     mcwf_prefer_sparse_operators: bool,
     mcwf_prefer_sparse_rate_evaluator: bool,
     mcwf_use_total_rate_first: bool,
-    mcwf_use_event_driven_jumps: bool,
     mcwf_store_density_matrices: bool,
     mcwf_store_state_snapshots: bool,
     mcwf_trajectory_chunk_size: int | None,
@@ -830,12 +841,9 @@ def run_open_system_benchmark(
             store_states=False,
             adaptive_time_step=mcwf_adaptive_time_step,
             max_jump_probability=mcwf_max_jump_probability,
-            event_segment_probability_cap=mcwf_event_segment_probability_cap,
-            event_no_jump_propagator=mcwf_event_no_jump_propagator,
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
             prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
             use_total_rate_first=mcwf_use_total_rate_first,
-            use_event_driven_jumps=mcwf_use_event_driven_jumps,
             store_density_matrices=mcwf_store_density_matrices,
             store_state_snapshots=mcwf_store_state_snapshots,
             trajectory_chunk_size=mcwf_trajectory_chunk_size,
@@ -877,9 +885,6 @@ def run_open_system_benchmark(
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
             "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
             "use_total_rate_first": mcwf_use_total_rate_first,
-            "use_event_driven_jumps": mcwf_use_event_driven_jumps,
-            "event_segment_probability_cap": mcwf_event_segment_probability_cap,
-            "event_no_jump_propagator": mcwf_event_no_jump_propagator,
         }
         if final_target_fidelity is not None:
             details["final_target_fidelity"] = final_target_fidelity
@@ -930,8 +935,6 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
         "grid_steps",
         "grid_jumps",
         "rate_reuse",
-        "segments",
-        "events",
         "final_F",
         "details",
     ]
@@ -956,8 +959,6 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
             _format_counter((result.stage_seconds or {}).get("mcwf.count.grid_substeps")),
             _format_counter((result.stage_seconds or {}).get("mcwf.count.grid_jumps")),
             _format_counter((result.stage_seconds or {}).get("mcwf.count.adaptive_rate_reuses")),
-            _format_counter((result.stage_seconds or {}).get("mcwf.count.event_segments")),
-            _format_counter((result.stage_seconds or {}).get("mcwf.count.event_crossings")),
             _format_seconds(result.final_target_fidelity),
             _details_text(result.details),
         ]
@@ -997,8 +998,6 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
         "grid_steps",
         "grid_jumps",
         "rate_reuse",
-        "segments",
-        "events",
         "final_F",
         "details",
     ]
@@ -1023,8 +1022,6 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
             _format_counter((result.stage_seconds or {}).get("mcwf.count.grid_substeps")),
             _format_counter((result.stage_seconds or {}).get("mcwf.count.grid_jumps")),
             _format_counter((result.stage_seconds or {}).get("mcwf.count.adaptive_rate_reuses")),
-            _format_counter((result.stage_seconds or {}).get("mcwf.count.event_segments")),
-            _format_counter((result.stage_seconds or {}).get("mcwf.count.event_crossings")),
             _format_seconds(result.final_target_fidelity),
             _details_text(result.details),
         ]
@@ -1100,27 +1097,6 @@ def main() -> None:
         help="Maximum first-order jump probability per MCWF step.",
     )
     parser.add_argument(
-        "--mcwf-event-segment-probability-cap",
-        type=float,
-        default=None,
-        help=(
-            "Maximum first-order probability scale used only for event-driven "
-            "internal segment limiting. Defaults to --mcwf-max-jump-probability. "
-            "Larger values reduce no-jump subsegments but are a performance/accuracy knob."
-        ),
-    )
-    parser.add_argument(
-        "--mcwf-event-no-jump-propagator",
-        default="first_order",
-        choices=["first_order", "krylov"],
-        help=(
-            "No-jump propagator used by --mcwf-event-driven-jumps. "
-            "'first_order' uses the existing Euler segment update; 'krylov' "
-            "uses scipy.sparse.linalg.expm_multiply for each event segment group. "
-            "The Krylov mode is experimental and exposes mcwf.krylov_* timings."
-        ),
-    )
-    parser.add_argument(
         "--mcwf-dense-operators",
         action="store_true",
         help=(
@@ -1144,15 +1120,6 @@ def main() -> None:
             "Disable total-rate-first MCWF sampling. By default, MCWF evaluates "
             "the total rate <psi|sum J†J|psi> every step and only evaluates "
             "per-channel rates for trajectories that actually jump."
-        ),
-    )
-    parser.add_argument(
-        "--mcwf-event-driven-jumps",
-        action="store_true",
-        help=(
-            "Use piecewise-constant event-driven jump-time sampling in the "
-            "vectorized MCWF ensemble path. This is experimental and is aimed "
-            "at long time-stop runs with coarse output grids."
         ),
     )
     parser.add_argument(
@@ -1340,12 +1307,9 @@ def main() -> None:
                     rk4_step_policy=args.rk4_step_policy,
                     mcwf_adaptive_time_step=args.mcwf_adaptive_time_step,
                     mcwf_max_jump_probability=args.mcwf_max_jump_probability,
-                    mcwf_event_segment_probability_cap=args.mcwf_event_segment_probability_cap,
-                    mcwf_event_no_jump_propagator=args.mcwf_event_no_jump_propagator,
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
                     mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
                     mcwf_use_total_rate_first=(not args.mcwf_disable_total_rate_first),
-                    mcwf_use_event_driven_jumps=args.mcwf_event_driven_jumps,
                     mcwf_store_density_matrices=(not args.mcwf_skip_density_matrices),
                     mcwf_store_state_snapshots=args.mcwf_store_state_snapshots,
                     mcwf_trajectory_chunk_size=args.mcwf_trajectory_chunk_size,
