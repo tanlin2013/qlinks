@@ -1371,13 +1371,14 @@ def _sample_lindblad_mcwf_vectorized_scipy(
             rates: NDArray[np.float64] | None = None
 
             if jump_operators:
+                rate_step_size = step_size
                 (
                     probabilities,
                     total_jump_probabilities,
                     rates,
                 ) = _evaluate_vectorized_jump_probabilities_numpy(
                     states=states,
-                    step_size=step_size,
+                    step_size=rate_step_size,
                     jump_operators=jump_operators,
                     sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
                     total_jump_rate_operator=total_jump_rate_operator,
@@ -1406,19 +1407,23 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     if step_size >= remaining_step:
                         step_size = remaining_step
 
-                    (
-                        probabilities,
-                        total_jump_probabilities,
-                        rates,
-                    ) = _evaluate_vectorized_jump_probabilities_numpy(
-                        states=states,
-                        step_size=step_size,
-                        jump_operators=jump_operators,
-                        sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
-                        total_jump_rate_operator=total_jump_rate_operator,
-                        use_total_rate_first=options.use_total_rate_first,
-                        timing_collector=timing_collector,
-                    )
+                    # Jump rates do not depend on the time step.  The adaptive
+                    # path used to call the rate evaluator a second time after
+                    # shrinking ``step_size``.  Reusing the first rates removes
+                    # one sparse Gamma/rate evaluation from almost every
+                    # adaptive substep in the Bernoulli-per-grid-step sampler.
+                    if rates is None:
+                        if rate_step_size <= 0.0:
+                            total_jump_probabilities = np.zeros_like(total_jump_probabilities)
+                        else:
+                            total_jump_probabilities = (
+                                step_size / rate_step_size
+                            ) * total_jump_probabilities
+                    else:
+                        probabilities = step_size * rates
+                        total_jump_probabilities = np.sum(probabilities, axis=0)
+                    _add_counter(timing_collector, "mcwf.count.adaptive_rate_reuses", 1.0)
+
                     max_total_jump_probability = float(np.max(total_jump_probabilities))
                     if max_total_jump_probability > options.max_jump_probability:
                         raise RuntimeError(
@@ -1471,17 +1476,19 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                         total_probabilities=selected_total_probabilities,
                         rng=rng,
                     )
-                    selected_jump_indices = np.zeros(options.n_trajectories, dtype=np.int64)
-                    selected_jump_indices[jump_mask] = selected_for_active
+                    jump_columns = np.flatnonzero(jump_mask).astype(np.int64, copy=False)
+                    _add_counter(
+                        timing_collector, "mcwf.count.grid_jumps", float(jump_columns.size)
+                    )
                     _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
 
                     start = _perf_counter()
-                    _apply_selected_jumps_to_state_matrix_numpy(
+                    _apply_selected_jumps_to_state_columns_numpy(
                         next_states=next_states,
-                        states=states,
+                        source_states=states[:, jump_columns],
+                        destination_columns=jump_columns,
                         jumps=jump_operators,
-                        jump_mask=jump_mask,
-                        selected_jump_indices=selected_jump_indices,
+                        selected_jump_indices=selected_for_active,
                     )
                     _add_timing(
                         timing_collector,
@@ -1492,17 +1499,21 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     _add_timing(timing_collector, "mcwf.jump_selection", _perf_counter() - start)
 
             start = _perf_counter()
-            norms = np.linalg.norm(next_states, axis=0)
-            if np.any(norms == 0.0):
+            norm_squares = np.einsum(
+                "ij,ij->j", next_states.conj(), next_states, optimize=True
+            ).real
+            if np.any(norm_squares == 0.0):
                 raise RuntimeError(
                     "At least one MCWF state reached zero norm. " "Try a smaller time step."
                 )
 
-            states = next_states / norms.reshape(1, -1)
+            next_states /= np.sqrt(norm_squares).reshape(1, -1)
+            states = next_states
             _add_timing(timing_collector, "mcwf.normalization", _perf_counter() - start)
 
             current_time += step_size
             substeps += 1
+            _add_counter(timing_collector, "mcwf.count.grid_substeps", 1.0)
             if substeps > options.max_substeps_per_interval:
                 raise RuntimeError(
                     "Adaptive MCWF exceeded max_substeps_per_interval. "

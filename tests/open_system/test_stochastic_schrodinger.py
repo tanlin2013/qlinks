@@ -584,6 +584,8 @@ def test_sample_lindblad_mcwf_vectorized_adaptive_step_succeeds(qubit_ops):
     assert result.trajectories is None
     assert result.rho_t == []
     assert timing["mcwf.rate_evaluation"] > 0.0
+    assert timing["mcwf.count.adaptive_rate_reuses"] > 0.0
+    assert timing["mcwf.count.grid_substeps"] > 0.0
 
 
 def test_sample_lindblad_mcwf_reproducible_with_seed(qubit_ops):
