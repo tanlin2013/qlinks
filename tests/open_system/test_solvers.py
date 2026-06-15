@@ -181,3 +181,50 @@ def test_lindblad_problem_reuses_prepared_sparse_operators_and_liouvillian(monke
 
     assert call_count == 1
     assert liouvillian_1 is liouvillian_2
+
+
+def test_solve_lindblad_rk4_sparse_matrix_matches_liouville():
+    hamiltonian = np.array(
+        [[1.0, 0.2], [0.2, -1.0]],
+        dtype=np.complex128,
+    )
+    jump = np.array(
+        [[0.0, 1.0], [0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    density_matrix_initial = initial_density_matrix(2, kind="mixed", rng=0)
+    times = np.linspace(0.0, 0.05, 4)
+
+    sparse_result = solve_lindblad(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        density_matrix_initial=density_matrix_initial,
+        times=times,
+        method="rk4_sparse_matrix",
+        backend="scipy",
+        options=LindbladEvolutionOptions(
+            method="rk4_sparse_matrix",
+            backend="scipy",
+            rk4_step_policy="ignore",
+        ),
+    )
+    liouville_result = solve_lindblad(
+        hamiltonian=hamiltonian,
+        jumps=[jump],
+        density_matrix_initial=density_matrix_initial,
+        times=times,
+        method="rk4_liouville",
+        backend="scipy",
+        options=LindbladEvolutionOptions(
+            method="rk4_liouville",
+            backend="scipy",
+            rk4_step_policy="ignore",
+        ),
+    )
+
+    assert sparse_result.method == "rk4_sparse_matrix"
+    np.testing.assert_allclose(
+        sparse_result.density_matrices[-1],
+        liouville_result.density_matrices[-1],
+        atol=1e-12,
+    )

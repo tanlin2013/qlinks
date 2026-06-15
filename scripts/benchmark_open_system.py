@@ -31,6 +31,7 @@ OpenSystemOperation = Literal[
     "prepare_sparse",
     "liouvillian",
     "rk4_matrix",
+    "rk4_sparse_matrix",
     "rk4_liouville",
     "krylov",
     "single_trajectory",
@@ -42,6 +43,7 @@ _OPERATION_ORDER: tuple[str, ...] = (
     "prepare_sparse",
     "liouvillian",
     "rk4_matrix",
+    "rk4_sparse_matrix",
     "rk4_liouville",
     "krylov",
     "single_trajectory",
@@ -59,6 +61,7 @@ _CAGE_COMPARE_ALLOWED_OPERATIONS: tuple[str, ...] = (
     "liouvillian",
     "krylov",
     "rk4_liouville",
+    "rk4_sparse_matrix",
     "rk4_matrix",
     "mcwf",
 )
@@ -785,7 +788,7 @@ def run_open_system_benchmark(
         liouvillian_nnz = int(liouvillian.nnz)
         details = {"format": sparse_format}
 
-    elif operation in {"rk4_matrix", "rk4_liouville", "krylov"}:
+    elif operation in {"rk4_matrix", "rk4_sparse_matrix", "rk4_liouville", "krylov"}:
         result, elapsed = _time_call(
             lambda: _run_solver_operation(
                 case=case,
@@ -1244,7 +1247,7 @@ def main() -> None:
         help=(
             "Comma-separated operation list for --operation cage_compare. "
             "Use 'default' for liouvillian,krylov,rk4_liouville,mcwf; "
-            "use 'all' to also include rk4_matrix."
+            "use 'all' to also include rk4_sparse_matrix and rk4_matrix."
         ),
     )
     parser.add_argument(

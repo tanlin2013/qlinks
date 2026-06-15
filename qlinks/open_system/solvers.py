@@ -19,6 +19,7 @@ from qlinks.open_system.operators import (
     build_liouvillian_from_prepared,
     estimate_lindblad_scale_prepared,
     lindblad_rhs_density_matrix_prepared,
+    lindblad_rhs_density_matrix_sparse_prepared,
     prepare_dense_lindblad_operators,
     prepare_sparse_lindblad_operators,
     unvectorize_density_matrix,
@@ -29,6 +30,7 @@ LindbladSolverMethod = Literal[
     "auto",
     "krylov",
     "rk4_matrix",
+    "rk4_sparse_matrix",
     "rk4_liouville",
 ]
 
@@ -124,6 +126,12 @@ class LindbladProblem:
             dense_operators=self.dense_operators,
         )
 
+    def sparse_rhs(self, density_matrix: Any):
+        return lindblad_rhs_density_matrix_sparse_prepared(
+            density_matrix,
+            sparse_operators=self.sparse_operators(sparse_format="csr"),
+        )
+
     def evolve(
         self,
         density_matrix_initial: Any,
@@ -146,6 +154,14 @@ class LindbladProblem:
 
         if method == "krylov":
             return _evolve_krylov(
+                problem=self,
+                density_matrix_initial=density_matrix_initial,
+                times=times,
+                options=options,
+            )
+
+        if method == "rk4_sparse_matrix":
+            return _evolve_rk4_sparse_matrix(
                 problem=self,
                 density_matrix_initial=density_matrix_initial,
                 times=times,
@@ -227,7 +243,7 @@ def _choose_method(
     if dim <= options.max_dimension_for_liouvillian:
         return "rk4_liouville"
 
-    return "rk4_matrix"
+    return "rk4_sparse_matrix"
 
 
 def _rk4_step_matrix(problem: LindbladProblem, density_matrix: Any, step_size: float):
@@ -320,6 +336,126 @@ def _check_rk4_step_size(
 
     if options.rk4_step_policy == "warn":
         warnings.warn(message, RuntimeWarning, stacklevel=2)
+
+
+def _rk4_step_sparse_matrix(problem: LindbladProblem, density_matrix: Any, step_size: float):
+    rhs = problem.sparse_rhs
+
+    slope_1 = rhs(density_matrix)
+    slope_2 = rhs(density_matrix + 0.5 * step_size * slope_1)
+    slope_3 = rhs(density_matrix + 0.5 * step_size * slope_2)
+    slope_4 = rhs(density_matrix + step_size * slope_3)
+
+    return density_matrix + (step_size / 6.0) * (slope_1 + 2.0 * slope_2 + 2.0 * slope_3 + slope_4)
+
+
+def _rk4_step_sparse_matrix_adaptive(
+    problem: LindbladProblem,
+    density_matrix: Any,
+    step_size: float,
+    *,
+    tolerance: float,
+    max_substeps: int,
+):
+    substeps = 1
+
+    while substeps <= max_substeps:
+        coarse_step = step_size / substeps
+        fine_step = coarse_step / 2.0
+
+        coarse_state = density_matrix
+        for _ in range(substeps):
+            coarse_state = _rk4_step_sparse_matrix(problem, coarse_state, coarse_step)
+
+        fine_state = density_matrix
+        for _ in range(2 * substeps):
+            fine_state = _rk4_step_sparse_matrix(problem, fine_state, fine_step)
+
+        error = problem.backend.norm(fine_state - coarse_state)
+
+        if error <= tolerance:
+            return fine_state, 2 * substeps, error
+
+        substeps *= 2
+
+    raise RuntimeError(
+        "Adaptive sparse-matrix RK4 failed to reach the requested tolerance. "
+        f"Last step_size={step_size}, tolerance={tolerance}, "
+        f"max_substeps={max_substeps}."
+    )
+
+
+def _evolve_rk4_sparse_matrix(
+    *,
+    problem: LindbladProblem,
+    density_matrix_initial: Any,
+    times: np.ndarray,
+    options: LindbladEvolutionOptions,
+) -> LindbladEvolutionResult:
+    backend = problem.backend
+    density_matrix = backend.asarray(density_matrix_initial)
+
+    # Populate the sparse-operator cache before timing-heavy loops.
+    problem.sparse_operators(sparse_format="csr")
+
+    density_matrices = [density_matrix.copy()]
+    diagnostics = []
+    substeps_used: list[int] = []
+
+    if options.check_density_matrix:
+        diagnostics.append(
+            verify_density_matrix(
+                backend.to_numpy(density_matrix),
+            )
+        )
+
+    scale = problem.rk4_scale
+
+    for time_index in range(times.size - 1):
+        step_size = float(times[time_index + 1] - times[time_index])
+
+        if options.rk4_step_policy == "adaptive":
+            density_matrix, n_substeps, _error = _rk4_step_sparse_matrix_adaptive(
+                problem,
+                density_matrix,
+                step_size,
+                tolerance=options.adaptive_tolerance,
+                max_substeps=options.max_substeps,
+            )
+        else:
+            _check_rk4_step_size(
+                step_size=step_size,
+                scale=scale,
+                options=options,
+            )
+            density_matrix = _rk4_step_sparse_matrix(problem, density_matrix, step_size)
+            n_substeps = 1
+
+        density_matrix = _postprocess_density_matrix(
+            density_matrix,
+            backend=backend,
+            enforce_hermiticity=options.enforce_hermiticity,
+            renormalize_trace=options.renormalize_trace,
+        )
+
+        density_matrices.append(density_matrix.copy())
+        substeps_used.append(n_substeps)
+
+        if options.check_density_matrix:
+            diagnostics.append(
+                verify_density_matrix(
+                    backend.to_numpy(density_matrix),
+                )
+            )
+
+    return LindbladEvolutionResult(
+        times=times,
+        density_matrices=density_matrices,
+        method="rk4_sparse_matrix",
+        backend=backend.name,
+        diagnostics=diagnostics,
+        n_substeps_per_interval=tuple(substeps_used),
+    )
 
 
 def _evolve_rk4_matrix(

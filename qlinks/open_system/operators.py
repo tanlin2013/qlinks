@@ -239,6 +239,51 @@ def lindblad_rhs_density_matrix_prepared(
     return array_module.asarray(derivative, dtype=array_module.complex128)
 
 
+def _right_sparse_multiply(dense_matrix: Any, sparse_matrix: Any) -> Any:
+    """Return dense_matrix @ sparse_matrix without densifying sparse_matrix."""
+    return (sparse_matrix.T @ dense_matrix.T).T
+
+
+def lindblad_rhs_density_matrix_sparse_prepared(
+    density_matrix: Any,
+    *,
+    sparse_operators: SparseLindbladOperators,
+):
+    """Evaluate the Lindblad RHS using sparse operators on a dense rho.
+
+    This is the matrix-free Liouville action in density-matrix form.  It avoids
+    constructing the dim^2 x dim^2 Liouvillian and also avoids densifying sparse
+    Hamiltonian/jump operators.  It is useful for intermediate dimensions where
+    the explicit Liouvillian is too large but the density matrix itself still
+    fits in memory.
+    """
+    backend_obj = sparse_operators.backend
+    array_module = backend_obj.array_module
+
+    density_matrix = as_backend_dense_array(
+        density_matrix,
+        backend=backend_obj,
+        dtype=np.complex128,
+    )
+    hamiltonian = sparse_operators.hamiltonian
+
+    left_hamiltonian = hamiltonian @ density_matrix
+    right_hamiltonian = _right_sparse_multiply(density_matrix, hamiltonian)
+    derivative = -1j * (left_hamiltonian - right_hamiltonian)
+
+    for jump_operator, jump_dagger_jump in zip(
+        sparse_operators.jumps,
+        sparse_operators.jump_dagger_jumps,
+    ):
+        jump_density = jump_operator @ density_matrix
+        gain = _right_sparse_multiply(jump_density, jump_operator.conj().T)
+        left_loss = jump_dagger_jump @ density_matrix
+        right_loss = _right_sparse_multiply(density_matrix, jump_dagger_jump)
+        derivative = derivative + gain - 0.5 * (left_loss + right_loss)
+
+    return array_module.asarray(derivative, dtype=array_module.complex128)
+
+
 def estimate_lindblad_scale(
     *,
     hamiltonian: Any,
