@@ -2103,3 +2103,39 @@ def test_sample_lindblad_mcwf_chunked_streamed_target_fidelity(qubit_ops):
     assert result.state_snapshots is None
     assert result.target_fidelities is not None
     np.testing.assert_allclose(result.target_fidelities["target"], np.ones(times.size))
+
+
+def test_sample_lindblad_mcwf_event_krylov_no_jump_matches_unitary(qubit_ops):
+    from qlinks.open_system.stochastic_schrodinger import (
+        McwfOptions,
+        sample_lindblad_mcwf,
+    )
+
+    times = np.asarray([0.0, np.pi / 2.0], dtype=np.float64)
+    options = McwfOptions(
+        n_trajectories=3,
+        seed=123,
+        store_density_matrices=False,
+        store_state_snapshots=False,
+        use_event_driven_jumps=True,
+        event_no_jump_propagator="krylov",
+        fidelity_targets={"target": qubit_ops["ket1"]},
+    )
+
+    result = sample_lindblad_mcwf(
+        hamiltonian=qubit_ops["sigma_x"],
+        jumps=[],
+        state_initial=qubit_ops["ket0"],
+        times=times,
+        options=options,
+    )
+
+    assert result.target_fidelities is not None
+    np.testing.assert_allclose(result.target_fidelities["target"][-1], 1.0, atol=1e-12)
+
+
+def test_mcwf_options_reject_unknown_event_no_jump_propagator():
+    from qlinks.open_system.stochastic_schrodinger import McwfOptions
+
+    with pytest.raises(ValueError, match="event_no_jump_propagator"):
+        McwfOptions(event_no_jump_propagator="bad").validate()

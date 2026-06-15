@@ -717,6 +717,7 @@ def run_open_system_benchmark(
     mcwf_adaptive_time_step: bool,
     mcwf_max_jump_probability: float,
     mcwf_event_segment_probability_cap: float | None,
+    mcwf_event_no_jump_propagator: str,
     mcwf_prefer_sparse_operators: bool,
     mcwf_prefer_sparse_rate_evaluator: bool,
     mcwf_use_total_rate_first: bool,
@@ -829,6 +830,7 @@ def run_open_system_benchmark(
             adaptive_time_step=mcwf_adaptive_time_step,
             max_jump_probability=mcwf_max_jump_probability,
             event_segment_probability_cap=mcwf_event_segment_probability_cap,
+            event_no_jump_propagator=mcwf_event_no_jump_propagator,
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
             prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
             use_total_rate_first=mcwf_use_total_rate_first,
@@ -874,6 +876,7 @@ def run_open_system_benchmark(
             "use_total_rate_first": mcwf_use_total_rate_first,
             "use_event_driven_jumps": mcwf_use_event_driven_jumps,
             "event_segment_probability_cap": mcwf_event_segment_probability_cap,
+            "event_no_jump_propagator": mcwf_event_no_jump_propagator,
         }
         if final_target_fidelity is not None:
             details["final_target_fidelity"] = final_target_fidelity
@@ -1092,6 +1095,17 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--mcwf-event-no-jump-propagator",
+        default="first_order",
+        choices=["first_order", "krylov"],
+        help=(
+            "No-jump propagator used by --mcwf-event-driven-jumps. "
+            "'first_order' uses the existing Euler segment update; 'krylov' "
+            "uses scipy.sparse.linalg.expm_multiply for each event segment group. "
+            "The Krylov mode is experimental and exposes mcwf.krylov_* timings."
+        ),
+    )
+    parser.add_argument(
         "--mcwf-dense-operators",
         action="store_true",
         help=(
@@ -1301,6 +1315,7 @@ def main() -> None:
                     mcwf_adaptive_time_step=args.mcwf_adaptive_time_step,
                     mcwf_max_jump_probability=args.mcwf_max_jump_probability,
                     mcwf_event_segment_probability_cap=args.mcwf_event_segment_probability_cap,
+                    mcwf_event_no_jump_propagator=args.mcwf_event_no_jump_propagator,
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
                     mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
                     mcwf_use_total_rate_first=(not args.mcwf_disable_total_rate_first),
