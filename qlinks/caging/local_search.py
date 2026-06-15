@@ -28,6 +28,9 @@ from qlinks.caging.candidate import CandidateSubgraph
 from qlinks.caging.partition import type1_candidates_from_bipartite_self_loops
 from qlinks.caging.results import CageState
 from qlinks.caging.search import (
+    CageRecord,
+    CageSearchConfig,
+    CageSearchResult,
     bipartition_labels,
     signature_from_energy_and_self_loop,
 )
@@ -155,6 +158,133 @@ class LocalQDMCageRecord:
         return self.cage_state.local_state
 
 
+@dataclass(frozen=True, slots=True)
+class LocalQDMPaddingConfig:
+    """Configuration for global padding/certification of local QDM cages.
+
+    The first certification backend is intentionally conservative: it searches
+    for a single shared exterior product configuration that can be tensored with
+    every local support configuration of the cage state.  It then verifies the
+    resulting global state by applying all QDM plaquette flips reachable in one
+    kinetic step from the support, keyed by configurations rather than by a
+    globally enumerated Hilbert space.
+    """
+
+    max_paddings_per_record: int = 1
+    max_dfs_nodes: int | None = None
+    include_sectors: bool = True
+    require_static_exterior: bool = False
+    tolerance: float = 1.0e-10
+    sort_limited_basis: bool = True
+    store_full_states: bool = True
+
+    def __post_init__(self) -> None:
+        if self.max_paddings_per_record < 0:
+            raise ValueError("max_paddings_per_record must be non-negative.")
+        if self.max_dfs_nodes is not None and self.max_dfs_nodes < 0:
+            raise ValueError("max_dfs_nodes must be non-negative or None.")
+        if self.tolerance < 0:
+            raise ValueError("tolerance must be non-negative.")
+
+
+@dataclass(frozen=True, slots=True)
+class LocalQDMPadding:
+    """One shared-exterior padding of a local QDM cage record."""
+
+    exterior_link_ids: npt.NDArray[np.int64]
+    exterior_config: npt.NDArray[np.int64]
+    global_support_configs: npt.NDArray[np.int64]
+
+
+@dataclass(frozen=True, slots=True)
+class LocalQDMCertificationReport:
+    """Numerical certificate for one padded local QDM cage."""
+
+    local_record_index: int
+    padding_index: int
+    signature: tuple[int, int]
+    energy: complex
+    kinetic_eigenvalue: complex
+    self_loop_value: complex
+    support_size: int
+    one_hop_shell_size: int
+    leakage_residual: float
+    support_kinetic_residual: float
+    support_hamiltonian_residual: float
+    full_residual: float
+    padding: LocalQDMPadding
+    leakage_configs: npt.NDArray[np.int64]
+
+
+@dataclass
+class CertifiedLocalQDMCageSearchResult:
+    """A certified local-first result with CageSearchResult-compatible records.
+
+    ``cage_search_result`` is an ordinary :class:`CageSearchResult` whose
+    Hilbert space is the limited certified basis, not the full global Hilbert
+    space.  The companion ``basis``, ``kinetic_matrix``, and ``self_loop_values``
+    are the limited objects needed by visualizers/classifiers/adapters.
+    """
+
+    cage_search_result: CageSearchResult
+    basis: Basis
+    kinetic_matrix: scipy_sparse.csr_array
+    self_loop_values: npt.NDArray[np.complex128]
+    reports: list[LocalQDMCertificationReport]
+    padding_config: LocalQDMPaddingConfig
+
+    def __len__(self) -> int:
+        return len(self.cage_search_result)
+
+    def __iter__(self):
+        return iter(self.cage_search_result)
+
+    def __getitem__(self, index):
+        return self.cage_search_result[index]
+
+    @property
+    def records(self) -> list[CageRecord]:
+        return self.cage_search_result.records
+
+    @property
+    def hilbert_size(self) -> int:
+        return self.cage_search_result.hilbert_size
+
+    @property
+    def config(self) -> CageSearchConfig:
+        return self.cage_search_result.config
+
+    @property
+    def counts_by_signature(self) -> dict[tuple[int, int], int]:
+        return self.cage_search_result.counts_by_signature
+
+    @property
+    def signatures(self) -> list[tuple[int, int]]:
+        return self.cage_search_result.signatures
+
+    def records_by_signature(self, signature: tuple[int, int]) -> list[CageRecord]:
+        return self.cage_search_result.records_by_signature(signature)
+
+    def by_signature(self, signature: tuple[int, int]):
+        return self.cage_search_result.by_signature(signature)
+
+    def first(self, signature: tuple[int, int] | None = None) -> CageRecord:
+        return self.cage_search_result.first(signature)
+
+    def full_state_matrix(
+        self,
+        signature: tuple[int, int] | None = None,
+    ) -> npt.NDArray[np.complex128]:
+        return self.cage_search_result.full_state_matrix(signature)
+
+    def cage_states(self) -> list[CageState]:
+        return self.cage_search_result.cage_states()
+
+    def as_cage_search_result(self) -> CageSearchResult:
+        """Return the underlying ordinary CageSearchResult."""
+        return self.cage_search_result
+
+
 @dataclass
 class LocalQDMCageSearchResult:
     """Result of a local QDM cage search."""
@@ -165,6 +295,7 @@ class LocalQDMCageSearchResult:
     kinetic_matrix: scipy_sparse.csr_array
     self_loop_values: npt.NDArray[np.complex128]
     config: LocalQDMCageSearchConfig
+    model: object | None = None
     type1_candidates: list[CandidateSubgraph] = field(default_factory=list)
 
     def __len__(self) -> int:
@@ -191,6 +322,25 @@ class LocalQDMCageSearchResult:
     def records_by_signature(self, signature: tuple[int, int]) -> list[LocalQDMCageRecord]:
         normalized = (int(signature[0]), int(signature[1]))
         return [record for record in self.records if record.signature == normalized]
+
+    def certify_paddings(
+        self,
+        *,
+        config: LocalQDMPaddingConfig | None = None,
+    ) -> CertifiedLocalQDMCageSearchResult:
+        """Globally certify local records using shared-exterior QDM padding.
+
+        The returned object carries ordinary ``CageRecord`` entries on a
+        limited global basis containing the certified support states and their
+        one-hop interference-zero shell.
+        """
+        if self.model is None:
+            raise ValueError(
+                "This LocalQDMCageSearchResult does not carry a model reference. "
+                "Use LocalQDMCageSearcher.run() from the current API or call "
+                "certify_qdm_local_result(..., model=...)."
+            )
+        return certify_qdm_local_result(self.model, self, config=config)
 
 
 @dataclass
@@ -303,6 +453,7 @@ class LocalQDMCageSearcher:
                 kinetic_matrix=kinetic_matrix,
                 self_loop_values=self_loop_values,
                 config=self.config,
+                model=self.model,
                 type1_candidates=[],
             )
 
@@ -328,6 +479,7 @@ class LocalQDMCageSearcher:
             kinetic_matrix=kinetic_matrix,
             self_loop_values=self_loop_values,
             config=self.config,
+            model=self.model,
             type1_candidates=candidates,
         )
 
@@ -716,6 +868,669 @@ def qdm_local_self_loop_values(
         values[basis_index] = total
 
     return values
+
+
+def certify_qdm_local_result(
+    model: object,
+    local_result: LocalQDMCageSearchResult,
+    *,
+    config: LocalQDMPaddingConfig | None = None,
+) -> CertifiedLocalQDMCageSearchResult:
+    """Pad and certify all local QDM records without a full basis/Hamiltonian.
+
+    The certification uses a limited global basis made from the union of each
+    certified support and its one-hop kinetic shell.  It returns ordinary
+    ``CageRecord`` objects inside a ``CageSearchResult`` so downstream code that
+    only depends on the cage-result protocol can consume the output.
+    """
+    padding_config = LocalQDMPaddingConfig() if config is None else config
+
+    certified_items: list[tuple[LocalQDMCageRecord, LocalQDMCertificationReport]] = []
+    limited_config_keys: set[tuple[int, ...]] = set()
+
+    for local_record_index, local_record in enumerate(local_result.records):
+        reports = certify_qdm_local_record(
+            model,
+            local_record,
+            local_record_index=local_record_index,
+            config=padding_config,
+        )
+        for report in reports:
+            certified_items.append((local_record, report))
+            for config_row in report.padding.global_support_configs:
+                limited_config_keys.add(_config_key(config_row))
+            for config_row in report.leakage_configs:
+                limited_config_keys.add(_config_key(config_row))
+
+    layout = model.layout
+
+    if not certified_items:
+        limited_basis = Basis.empty(layout)
+        empty_matrix = scipy_sparse.csr_array((0, 0), dtype=np.complex128)
+        search_config = _cage_search_config_from_local_and_padding(
+            local_result.config,
+            padding_config,
+        )
+        return CertifiedLocalQDMCageSearchResult(
+            cage_search_result=CageSearchResult(
+                records=[],
+                hilbert_size=0,
+                config=search_config,
+                type1_candidates=[],
+                type2_candidates=[],
+                search_stage_seconds={},
+            ),
+            basis=limited_basis,
+            kinetic_matrix=empty_matrix,
+            self_loop_values=np.zeros(0, dtype=np.complex128),
+            reports=[],
+            padding_config=padding_config,
+        )
+
+    limited_configs = np.asarray([list(key) for key in limited_config_keys], dtype=np.int64)
+    if padding_config.sort_limited_basis:
+        order = np.lexsort(limited_configs.T[::-1])
+        limited_configs = limited_configs[order]
+
+    limited_basis = Basis.from_states(layout, limited_configs)
+    limited_index = {_config_key(row): i for i, row in enumerate(limited_basis.states)}
+    limited_kinetic = build_qdm_global_limited_kinetic_matrix(model, limited_basis)
+    limited_self_loops = qdm_global_self_loop_values(model, limited_basis.states)
+
+    search_config = _cage_search_config_from_local_and_padding(
+        local_result.config,
+        padding_config,
+    )
+
+    cage_records: list[CageRecord] = []
+    candidate_by_signature: dict[tuple[int, int], list[CandidateSubgraph]] = defaultdict(list)
+
+    for item_index, (local_record, report) in enumerate(certified_items):
+        support_indices: list[int] = []
+        support_amplitudes: list[complex] = []
+        for config_row, amplitude in zip(
+            report.padding.global_support_configs,
+            local_record.local_state,
+            strict=True,
+        ):
+            support_indices.append(int(limited_index[_config_key(config_row)]))
+            support_amplitudes.append(complex(amplitude))
+
+        support_arr = np.asarray(support_indices, dtype=np.int64)
+        amplitude_arr = np.asarray(support_amplitudes, dtype=np.complex128)
+        support_order = np.argsort(support_arr)
+        support_arr = support_arr[support_order]
+        amplitude_arr = amplitude_arr[support_order]
+
+        norm = float(np.linalg.norm(amplitude_arr))
+        if norm == 0.0:
+            continue
+        amplitude_arr = amplitude_arr / norm
+
+        candidate = CandidateSubgraph(
+            vertices=support_arr,
+            label=f"local_qdm_certified_{item_index}",
+            metadata={
+                "source": "LocalQDMCageSearcher",
+                "local_signature": local_record.signature,
+                "local_link_ids": local_record.local_link_ids.copy(),
+                "active_plaquette_ids": local_record.active_plaquette_ids.copy(),
+                "scoring_plaquette_ids": local_record.scoring_plaquette_ids.copy(),
+                "unresolved_boundary_plaquette_ids": (
+                    local_record.unresolved_boundary_plaquette_ids.copy()
+                ),
+                "padding_exterior_link_ids": report.padding.exterior_link_ids.copy(),
+                "padding_index": report.padding_index,
+                "one_hop_shell_size": report.one_hop_shell_size,
+            },
+        )
+        candidate_by_signature[report.signature].append(candidate)
+
+        cage_state = CageState(
+            energy=complex(report.energy),
+            local_state=amplitude_arr,
+            support=support_arr,
+            boundary_residual=float(report.leakage_residual),
+            eigen_residual=float(report.support_hamiltonian_residual),
+            full_residual=float(report.full_residual),
+            metadata={
+                "source": "LocalQDMCageSearcher.certify_paddings",
+                "local_record_index": report.local_record_index,
+                "padding_index": report.padding_index,
+                "kinetic_eigenvalue": report.kinetic_eigenvalue,
+                "self_loop_value": report.self_loop_value,
+                "support_kinetic_residual": report.support_kinetic_residual,
+                "support_hamiltonian_residual": report.support_hamiltonian_residual,
+                "one_hop_shell_size": report.one_hop_shell_size,
+            },
+        )
+
+        full_state = None
+        if padding_config.store_full_states:
+            full_state = np.zeros(int(limited_basis.n_states), dtype=np.complex128)
+            full_state[support_arr] = amplitude_arr
+
+        cage_records.append(
+            CageRecord(
+                cage_state=cage_state,
+                signature=report.signature,
+                candidate=candidate,
+                full_state=full_state,
+            )
+        )
+
+    return CertifiedLocalQDMCageSearchResult(
+        cage_search_result=CageSearchResult(
+            records=cage_records,
+            hilbert_size=int(limited_basis.n_states),
+            config=search_config,
+            type1_candidates=[
+                candidate
+                for signature in sorted(candidate_by_signature)
+                for candidate in candidate_by_signature[signature]
+            ],
+            type2_candidates=[],
+            search_stage_seconds={},
+        ),
+        basis=limited_basis,
+        kinetic_matrix=limited_kinetic,
+        self_loop_values=limited_self_loops,
+        reports=[report for _record, report in certified_items],
+        padding_config=padding_config,
+    )
+
+
+def certify_qdm_local_record(
+    model: object,
+    local_record: LocalQDMCageRecord,
+    *,
+    local_record_index: int = 0,
+    config: LocalQDMPaddingConfig | None = None,
+) -> list[LocalQDMCertificationReport]:
+    """Return certified shared-exterior paddings for one local QDM record."""
+    padding_config = LocalQDMPaddingConfig() if config is None else config
+    if padding_config.max_paddings_per_record == 0:
+        return []
+
+    paddings = find_shared_qdm_exterior_paddings(
+        model,
+        local_record,
+        config=padding_config,
+    )
+
+    reports: list[LocalQDMCertificationReport] = []
+    for padding_index, padding in enumerate(paddings):
+        report = _certify_qdm_padding(
+            model,
+            local_record,
+            padding,
+            local_record_index=local_record_index,
+            padding_index=padding_index,
+            config=padding_config,
+        )
+        if report is not None:
+            reports.append(report)
+
+    return reports
+
+
+def find_shared_qdm_exterior_paddings(
+    model: object,
+    local_record: LocalQDMCageRecord,
+    *,
+    config: LocalQDMPaddingConfig | None = None,
+) -> list[LocalQDMPadding]:
+    """Find shared exterior configurations compatible with a local QDM cage.
+
+    A shared exterior is a single assignment on all nonlocal links such that
+    every local support configuration becomes a full valid dimer covering.  This
+    is the simplest product padding that preserves the local superposition.
+    """
+    padding_config = LocalQDMPaddingConfig() if config is None else config
+    local_link_ids = np.asarray(local_record.local_link_ids, dtype=np.int64)
+    local_link_set = set(int(link_id) for link_id in local_link_ids)
+    local_index_by_link = {int(link_id): i for i, link_id in enumerate(local_link_ids)}
+
+    n_global_links = int(model.lattice.num_links)
+    exterior_link_ids = np.asarray(
+        [link_id for link_id in range(n_global_links) if link_id not in local_link_set],
+        dtype=np.int64,
+    )
+    exterior_index_by_link = {int(link_id): i for i, link_id in enumerate(exterior_link_ids)}
+    n_exterior = int(exterior_link_ids.size)
+
+    support_configs = np.asarray(local_record.support_configs, dtype=np.int64)
+    if support_configs.ndim != 2:
+        raise ValueError("local_record.support_configs must have shape (support, n_local_links).")
+
+    required_count = int(getattr(model, "required_count", 1))
+    site_targets: dict[int, int] = {}
+    site_exterior_links: dict[int, npt.NDArray[np.int64]] = {}
+
+    for site_id in range(int(model.lattice.num_sites)):
+        incident = [int(link_id) for link_id in model.lattice.incident_links(int(site_id))]
+        local_incident = [
+            local_index_by_link[link_id] for link_id in incident if link_id in local_index_by_link
+        ]
+        exterior_incident = [
+            exterior_index_by_link[link_id]
+            for link_id in incident
+            if link_id in exterior_index_by_link
+        ]
+
+        if local_incident:
+            local_counts = np.sum(support_configs[:, local_incident], axis=1).astype(np.int64)
+        else:
+            local_counts = np.zeros(support_configs.shape[0], dtype=np.int64)
+
+        if np.unique(local_counts).size != 1:
+            return []
+
+        target = required_count - int(local_counts[0])
+        if target < 0 or target > len(exterior_incident):
+            return []
+
+        site_targets[int(site_id)] = int(target)
+        site_exterior_links[int(site_id)] = np.asarray(exterior_incident, dtype=np.int64)
+
+    if n_exterior == 0:
+        exterior_config = np.zeros(0, dtype=np.int64)
+        padding = _make_qdm_padding_from_exterior(
+            model,
+            local_record,
+            exterior_link_ids=exterior_link_ids,
+            exterior_config=exterior_config,
+        )
+        if _padding_passes_global_filters(model, padding, local_record, padding_config):
+            return [padding]
+        return []
+
+    scores = np.zeros(n_exterior, dtype=np.int64)
+    for site_id, exterior_indices in site_exterior_links.items():
+        target = site_targets[int(site_id)]
+        weight = 2 if target in {0, len(exterior_indices)} else 1
+        for exterior_index in exterior_indices:
+            scores[int(exterior_index)] += weight
+    variable_order = np.lexsort((np.arange(n_exterior), -scores)).astype(np.int64)
+
+    exterior_config = np.zeros(n_exterior, dtype=np.int64)
+    assigned = np.zeros(n_exterior, dtype=bool)
+    sites_by_exterior_variable: list[list[int]] = [[] for _ in range(n_exterior)]
+    for site_id, exterior_indices in site_exterior_links.items():
+        for exterior_index in exterior_indices:
+            sites_by_exterior_variable[int(exterior_index)].append(int(site_id))
+
+    paddings: list[LocalQDMPadding] = []
+    nodes_visited = 0
+
+    def partial_site_check(site_id: int) -> bool:
+        exterior_indices = site_exterior_links[site_id]
+        target = site_targets[site_id]
+        if exterior_indices.size == 0:
+            return target == 0
+        assigned_local = assigned[exterior_indices]
+        occupied = int(np.sum(exterior_config[exterior_indices[assigned_local]]))
+        unassigned = int(exterior_indices.size - np.count_nonzero(assigned_local))
+        if occupied > target:
+            return False
+        if occupied + unassigned < target:
+            return False
+        if unassigned == 0 and occupied != target:
+            return False
+        return True
+
+    def full_check() -> bool:
+        for site_id in range(int(model.lattice.num_sites)):
+            if not partial_site_check(int(site_id)):
+                return False
+        return True
+
+    def dfs(depth: int) -> None:
+        nonlocal nodes_visited
+        if len(paddings) >= padding_config.max_paddings_per_record:
+            return
+        if (
+            padding_config.max_dfs_nodes is not None
+            and nodes_visited >= padding_config.max_dfs_nodes
+        ):
+            return
+        nodes_visited += 1
+
+        if depth == n_exterior:
+            if full_check():
+                padding = _make_qdm_padding_from_exterior(
+                    model,
+                    local_record,
+                    exterior_link_ids=exterior_link_ids,
+                    exterior_config=exterior_config.copy(),
+                )
+                if _padding_passes_global_filters(model, padding, local_record, padding_config):
+                    paddings.append(padding)
+            return
+
+        exterior_variable = int(variable_order[depth])
+        for value in (0, 1):
+            if len(paddings) >= padding_config.max_paddings_per_record:
+                return
+            exterior_config[exterior_variable] = value
+            assigned[exterior_variable] = True
+            touched_sites = sites_by_exterior_variable[exterior_variable]
+            if all(partial_site_check(site_id) for site_id in touched_sites):
+                dfs(depth + 1)
+            assigned[exterior_variable] = False
+            exterior_config[exterior_variable] = 0
+
+    dfs(0)
+    return paddings
+
+
+def build_qdm_global_limited_kinetic_matrix(
+    model: object,
+    basis: Basis,
+) -> scipy_sparse.csr_array:
+    """Build QDM kinetic transitions restricted to an explicitly supplied basis."""
+    n = int(basis.n_states)
+    if n == 0:
+        return scipy_sparse.csr_array((0, 0), dtype=np.complex128)
+
+    config_to_index = {_config_key(config): i for i, config in enumerate(basis.states)}
+    rows: list[int] = []
+    cols: list[int] = []
+    data: list[complex] = []
+
+    for col, config_row in enumerate(basis.states):
+        for plaquette_id in model.plaquette_ids():
+            transition = _qdm_flip_transition(model, config_row, int(plaquette_id))
+            if transition is None:
+                continue
+            final_config, coefficient = transition
+            row = config_to_index.get(_config_key(final_config))
+            if row is None:
+                continue
+            rows.append(int(row))
+            cols.append(int(col))
+            data.append(complex(coefficient))
+
+    return scipy_sparse.coo_array(
+        (np.asarray(data, dtype=np.complex128), (rows, cols)),
+        shape=(n, n),
+        dtype=np.complex128,
+    ).tocsr()
+
+
+def qdm_global_self_loop_values(
+    model: object,
+    configs: npt.ArrayLike,
+) -> npt.NDArray[np.complex128]:
+    """Compute full QDM potential/self-loop values for explicit configs."""
+    arr = np.asarray(configs, dtype=np.int64)
+    if arr.ndim == 1:
+        arr = arr.reshape(1, -1)
+    values = np.zeros(arr.shape[0], dtype=np.complex128)
+    for row_index, config_row in enumerate(arr):
+        values[row_index] = _qdm_global_self_loop_value(model, config_row)
+    return values
+
+
+def _certify_qdm_padding(
+    model: object,
+    local_record: LocalQDMCageRecord,
+    padding: LocalQDMPadding,
+    *,
+    local_record_index: int,
+    padding_index: int,
+    config: LocalQDMPaddingConfig,
+) -> LocalQDMCertificationReport | None:
+    amplitudes = np.asarray(local_record.local_state, dtype=np.complex128)
+    norm = float(np.linalg.norm(amplitudes))
+    if norm == 0.0:
+        return None
+    amplitudes = amplitudes / norm
+
+    support_configs = np.asarray(padding.global_support_configs, dtype=np.int64)
+    support_keys = [_config_key(config_row) for config_row in support_configs]
+    support_amplitude_by_key = {
+        key: complex(amplitude) for key, amplitude in zip(support_keys, amplitudes, strict=True)
+    }
+
+    action_by_key: dict[tuple[int, ...], complex] = defaultdict(complex)
+    touched_keys: set[tuple[int, ...]] = set(support_keys)
+
+    for source_config, source_amplitude in zip(support_configs, amplitudes, strict=True):
+        for plaquette_id in model.plaquette_ids():
+            transition = _qdm_flip_transition(model, source_config, int(plaquette_id))
+            if transition is None:
+                continue
+            final_config, coefficient = transition
+            final_key = _config_key(final_config)
+            action_by_key[final_key] += complex(coefficient) * complex(source_amplitude)
+            touched_keys.add(final_key)
+
+    kappa = complex(local_record.kappa)
+    support_kinetic_residuals: list[complex] = []
+    leakage_values: list[complex] = []
+    leakage_configs: list[npt.NDArray[np.int64]] = []
+
+    for key in sorted(touched_keys):
+        action = complex(action_by_key.get(key, 0.0 + 0.0j))
+        if key in support_amplitude_by_key:
+            expected = kappa * support_amplitude_by_key[key]
+            support_kinetic_residuals.append(action - expected)
+        else:
+            leakage_values.append(action)
+            leakage_configs.append(np.asarray(key, dtype=np.int64))
+
+    support_kinetic_residual = float(np.linalg.norm(np.asarray(support_kinetic_residuals)))
+    leakage_residual = float(np.linalg.norm(np.asarray(leakage_values, dtype=np.complex128)))
+
+    if leakage_residual > config.tolerance:
+        return None
+    if support_kinetic_residual > config.tolerance:
+        return None
+
+    support_self_loops = qdm_global_self_loop_values(model, support_configs)
+    self_loop_value = complex(support_self_loops[0]) if support_self_loops.size else 0.0 + 0.0j
+    if np.linalg.norm(support_self_loops - self_loop_value) > config.tolerance:
+        return None
+
+    energy = self_loop_value + kappa
+    support_h_residuals = []
+    for key, amplitude, self_loop in zip(
+        support_keys,
+        amplitudes,
+        support_self_loops,
+        strict=True,
+    ):
+        kinetic_action = complex(action_by_key.get(key, 0.0 + 0.0j))
+        support_h_residuals.append(
+            kinetic_action + complex(self_loop) * amplitude - energy * amplitude
+        )
+    support_hamiltonian_residual = float(
+        np.linalg.norm(np.asarray(support_h_residuals, dtype=np.complex128))
+    )
+    full_residual = float(np.hypot(support_hamiltonian_residual, leakage_residual))
+    if full_residual > config.tolerance:
+        return None
+
+    signature = signature_from_energy_and_self_loop(
+        energy,
+        self_loop_value,
+        tolerance=max(config.tolerance, 1.0e-15) * 10.0,
+        potential_unit=_infer_potential_unit_from_model(model),
+    )
+    if signature is None:
+        return None
+
+    leakage_arr = (
+        np.asarray(leakage_configs, dtype=np.int64)
+        if leakage_configs
+        else np.empty((0, int(model.lattice.num_links)), dtype=np.int64)
+    )
+
+    return LocalQDMCertificationReport(
+        local_record_index=int(local_record_index),
+        padding_index=int(padding_index),
+        signature=signature,
+        energy=energy,
+        kinetic_eigenvalue=kappa,
+        self_loop_value=self_loop_value,
+        support_size=int(support_configs.shape[0]),
+        one_hop_shell_size=int(len(touched_keys)),
+        leakage_residual=leakage_residual,
+        support_kinetic_residual=support_kinetic_residual,
+        support_hamiltonian_residual=support_hamiltonian_residual,
+        full_residual=full_residual,
+        padding=padding,
+        leakage_configs=leakage_arr,
+    )
+
+
+def _make_qdm_padding_from_exterior(
+    model: object,
+    local_record: LocalQDMCageRecord,
+    *,
+    exterior_link_ids: npt.NDArray[np.int64],
+    exterior_config: npt.NDArray[np.int64],
+) -> LocalQDMPadding:
+    local_link_ids = np.asarray(local_record.local_link_ids, dtype=np.int64)
+    support_configs = np.asarray(local_record.support_configs, dtype=np.int64)
+    full_configs = np.zeros(
+        (support_configs.shape[0], int(model.lattice.num_links)),
+        dtype=np.int64,
+    )
+    full_configs[:, local_link_ids] = support_configs
+    if exterior_link_ids.size:
+        full_configs[:, exterior_link_ids] = np.asarray(exterior_config, dtype=np.int64)
+    return LocalQDMPadding(
+        exterior_link_ids=np.asarray(exterior_link_ids, dtype=np.int64).copy(),
+        exterior_config=np.asarray(exterior_config, dtype=np.int64).copy(),
+        global_support_configs=full_configs,
+    )
+
+
+def _padding_passes_global_filters(
+    model: object,
+    padding: LocalQDMPadding,
+    local_record: LocalQDMCageRecord,
+    config: LocalQDMPaddingConfig,
+) -> bool:
+    if not _padding_satisfies_qdm_constraints(model, padding):
+        return False
+    if config.include_sectors and not _padding_satisfies_model_sectors(model, padding):
+        return False
+    if config.require_static_exterior and not _padding_has_static_exterior(
+        model,
+        padding,
+        local_record,
+    ):
+        return False
+    return True
+
+
+def _padding_satisfies_qdm_constraints(model: object, padding: LocalQDMPadding) -> bool:
+    required_count = int(getattr(model, "required_count", 1))
+    for config_row in padding.global_support_configs:
+        for site_id in range(int(model.lattice.num_sites)):
+            incident = np.asarray(model.lattice.incident_links(int(site_id)), dtype=np.int64)
+            if int(np.sum(config_row[incident])) != required_count:
+                return False
+    return True
+
+
+def _padding_satisfies_model_sectors(model: object, padding: LocalQDMPadding) -> bool:
+    sectors = tuple(model.make_sectors())
+    if not sectors:
+        return True
+    for config_row in padding.global_support_configs:
+        for sector in sectors:
+            if not sector.is_satisfied(config_row):
+                return False
+    return True
+
+
+def _padding_has_static_exterior(
+    model: object,
+    padding: LocalQDMPadding,
+    local_record: LocalQDMCageRecord,
+) -> bool:
+    local_link_set = set(int(link_id) for link_id in local_record.local_link_ids)
+    for plaquette_id in model.plaquette_ids():
+        plaquette_links = set(
+            int(link_id) for link_id in model.lattice.plaquette_links(int(plaquette_id))
+        )
+        if plaquette_links.intersection(local_link_set):
+            continue
+        for config_row in padding.global_support_configs:
+            if _qdm_flip_transition(model, config_row, int(plaquette_id)) is not None:
+                return False
+    return True
+
+
+def _qdm_flip_transition(
+    model: object,
+    config_row: npt.ArrayLike,
+    plaquette_id: int,
+) -> tuple[npt.NDArray[np.int64], complex] | None:
+    config_arr = np.asarray(config_row, dtype=np.int64)
+    links = np.asarray(model.lattice.plaquette_links(int(plaquette_id)), dtype=np.int64)
+    values = config_arr[links]
+    p0, p1 = alternating_binary_patterns(links.size)
+    coupling = model._coup_kin_at(int(plaquette_id))
+
+    if np.array_equal(values, p0):
+        final = config_arr.copy()
+        final[links] = p1
+        return final, _forward_coefficient(coupling)
+    if np.array_equal(values, p1):
+        final = config_arr.copy()
+        final[links] = p0
+        return final, _backward_coefficient(coupling)
+    return None
+
+
+def _qdm_global_self_loop_value(model: object, config_row: npt.ArrayLike) -> complex:
+    config_arr = np.asarray(config_row, dtype=np.int64)
+    total = 0.0 + 0.0j
+    for plaquette_id in model.plaquette_ids():
+        links = np.asarray(model.lattice.plaquette_links(int(plaquette_id)), dtype=np.int64)
+        values = config_arr[links]
+        p0, p1 = alternating_binary_patterns(links.size)
+        if np.array_equal(values, p0) or np.array_equal(values, p1):
+            total += complex(model._coup_pot_at(int(plaquette_id)))
+    return complex(total)
+
+
+def _config_key(config_row: npt.ArrayLike) -> tuple[int, ...]:
+    return tuple(int(x) for x in np.asarray(config_row, dtype=np.int64))
+
+
+def _cage_search_config_from_local_and_padding(
+    local_config: LocalQDMCageSearchConfig,
+    padding_config: LocalQDMPaddingConfig,
+) -> CageSearchConfig:
+    return CageSearchConfig(
+        search_type="type1",
+        tolerance=min(local_config.tolerance, padding_config.tolerance),
+        min_component_size=local_config.min_component_size,
+        validate_full_residual=local_config.validate_full_residual,
+        type1_kappas=local_config.allowed_kappas,
+        deduplicate_by_rank=False,
+        potential_signature_unit=local_config.potential_signature_unit,
+        store_full_states=padding_config.store_full_states,
+    )
+
+
+def _infer_potential_unit_from_model(model: object) -> complex:
+    coupling = getattr(model, "coup_pot", None)
+    if coupling is None or callable(coupling) or isinstance(coupling, dict):
+        return 1.0 + 0.0j
+    try:
+        value = complex(coupling)
+    except (TypeError, ValueError):
+        return 1.0 + 0.0j
+    if value == 0:
+        return 1.0 + 0.0j
+    return value
 
 
 def _deduplicate_local_records(
