@@ -225,6 +225,20 @@ def test_diagnose_dark_subspace_amplitude_damping_unique_ground_state():
     assert diagnostics.likely_unique_dark_state is True
 
 
+def test_diagnose_dark_subspace_eigenstate_residual_avoids_energy_cancellation():
+    hamiltonian = np.diag([12345.0, -2.0, 7.0]).astype(np.complex128)
+    target = np.array([1.0, 0.0, 0.0], dtype=np.complex128)
+
+    diagnostics = diagnose_dark_subspace(
+        hamiltonian=hamiltonian,
+        jumps=[],
+        target_state=target,
+        check_liouvillian_spectrum=False,
+    )
+
+    assert diagnostics.target_liouvillian_residual < 1e-12
+
+
 def test_diagnose_dark_subspace_no_jumps_not_unique():
     hamiltonian = np.zeros((2, 2), dtype=np.complex128)
     target = np.array([1.0, 0.0], dtype=np.complex128)

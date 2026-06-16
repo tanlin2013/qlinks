@@ -1766,9 +1766,20 @@ def _rank_one_lindblad_rhs_norm(
     precomputed_jump_targets: tuple[np.ndarray, ...] | None = None,
 ) -> float:
     hamiltonian_target = hamiltonian @ target
+
+    # Evaluate the Hamiltonian commutator using only the component orthogonal
+    # to the rank-one projector.  Writing the two commutator terms as
+    # ``-i H|psi><psi| + i |psi><psi|H`` suffers from catastrophic
+    # cancellation when ``|psi>`` is an eigenstate with a nonzero energy.  In
+    # that case the two large rank-one terms cancel exactly, but the low-rank
+    # Frobenius contraction can leave a spurious residual around sqrt(eps).
+    # Subtracting the Rayleigh quotient first preserves the same commutator and
+    # makes exact eigenstates numerically dark.
+    target_energy = np.vdot(target, hamiltonian_target)
+    hamiltonian_target_perp = hamiltonian_target - target_energy * target
     terms: list[tuple[complex, np.ndarray, np.ndarray]] = [
-        (-1j, hamiltonian_target, target),
-        (1j, target, hamiltonian_target),
+        (-1j, hamiltonian_target_perp, target),
+        (1j, target, hamiltonian_target_perp),
     ]
 
     if precomputed_jump_targets is None:
