@@ -1277,6 +1277,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--cage-lindblad-jump-design",
+        "--cagecage-lindblad-jump-design",
         default="kinetic_outside_monitor_inside",
         choices=[
             "kinetic_times_monitor",
@@ -1304,12 +1305,19 @@ def main() -> None:
     parser.add_argument(
         "--cage-lindblad-monitor-recycler-hamiltonian-closure-source",
         default="global_hamiltonian",
-        choices=["global_hamiltonian", "local_hamiltonian_terms"],
+        choices=[
+            "global_hamiltonian",
+            "local_hamiltonian_terms",
+            "boundary_hamiltonian_terms",
+            "touching_hamiltonian_terms",
+        ],
         help=(
             "Operator source used in monitor-recycler closure jumps. "
             "'global_hamiltonian' builds P_i(H-E)^k, while "
             "'local_hamiltonian_terms' builds P_i(h_{R_i}-epsilon_i)^k from "
-            "local Hamiltonian terms strictly supported on the monitor region."
+            "local Hamiltonian terms strictly supported on the monitor region; "
+            "'boundary_hamiltonian_terms' uses terms touching but not contained in "
+            "the monitor region; 'touching_hamiltonian_terms' uses both."
         ),
     )
     parser.add_argument(
