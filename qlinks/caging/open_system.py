@@ -69,6 +69,7 @@ JumpPlaquettePolicy = Literal[
     "outside_or_crossing",
     "not_strictly_inside",
 ]
+MonitorRecyclerHamiltonianShift = Literal["none", "target_energy"]
 
 
 def _record_construction_stage(
@@ -652,6 +653,8 @@ class LocalRecyclerReadout:
     n_matrix_unit_terms: int
     matrix_unit_terms: tuple[LocalMatrixUnitTerm, ...]
     matrix_unit_terms_truncated: bool
+    hamiltonian_closure_orders: tuple[int, ...] = ()
+    n_hamiltonian_closure_jumps: int = 0
 
     def to_summary_dict(self) -> dict[str, object]:
         return {
@@ -673,6 +676,8 @@ class LocalRecyclerReadout:
             "has_two_pattern_structure": self.two_pattern_structure is not None,
             "n_matrix_unit_terms": self.n_matrix_unit_terms,
             "matrix_unit_terms_truncated": self.matrix_unit_terms_truncated,
+            "hamiltonian_closure_orders": self.hamiltonian_closure_orders,
+            "n_hamiltonian_closure_jumps": self.n_hamiltonian_closure_jumps,
             "matrix_unit_terms": tuple(
                 {
                     "coefficient": term.coefficient,
@@ -734,6 +739,9 @@ class CageLindbladConstruction:
     max_jump_residual: float
     jump_residuals: tuple[float, ...]
     liouvillian_residual: float | None = None
+    monitor_recycler_hamiltonian_closure_order: int = 0
+    monitor_recycler_hamiltonian_shift: MonitorRecyclerHamiltonianShift = "target_energy"
+    monitor_recycler_jump_closure_orders: tuple[int, ...] = ()
 
     def __repr__(self) -> str:
         return (
@@ -746,6 +754,9 @@ class CageLindbladConstruction:
             f"n_component_jumps={self.n_component_jumps}, "
             f"n_global_jump_terms={self.n_global_jump_terms}, "
             f"n_recycling_jumps={self.n_recycling_jumps}, "
+            f"monitor_recycler_hamiltonian_closure_order={
+                self.monitor_recycler_hamiltonian_closure_order
+            }, "
             f"monitor_residual={self.monitor_residual:.3e}, "
             f"max_jump_residual={self.max_jump_residual:.3e}, "
             f"liouvillian_residual={self.liouvillian_residual!r}"
@@ -758,6 +769,11 @@ class CageLindbladConstruction:
             "region_size": self.region.region_size,
             "monitor_source": self.monitor_source,
             "jump_operator_design": self.jump_operator_design,
+            "monitor_recycler_hamiltonian_closure_order": (
+                self.monitor_recycler_hamiltonian_closure_order
+            ),
+            "monitor_recycler_hamiltonian_shift": self.monitor_recycler_hamiltonian_shift,
+            "monitor_recycler_jump_closure_orders": self.monitor_recycler_jump_closure_orders,
             "monitor_plaquette_policy": self.monitor_plaquette_policy,
             "jump_plaquette_policy": self.jump_plaquette_policy,
             "n_inside_plaquettes": len(self.inside_plaquette_ids),
@@ -1183,6 +1199,8 @@ def build_type1_cage_lindblad_construction(
     recycling_inflow_tolerance: float = 1e-12,
     recycling_prefer_sparse: bool = True,
     recycling_two_pattern_tolerance: float = 1e-8,
+    monitor_recycler_hamiltonian_closure_order: int = 0,
+    monitor_recycler_hamiltonian_shift: MonitorRecyclerHamiltonianShift = "target_energy",
     include_q_empty: bool = True,
     include_closed_by_known_zeros: bool = True,
     include_projector_like: bool = True,
@@ -1205,6 +1223,9 @@ def build_type1_cage_lindblad_construction(
         raise ValueError("cage_state must be nonzero.")
 
     psi = psi / norm
+
+    if monitor_recycler_hamiltonian_closure_order < 0:
+        raise ValueError("monitor_recycler_hamiltonian_closure_order must be nonnegative.")
 
     stage_start = time.perf_counter()
     region = extract_cage_region_support(
@@ -1454,6 +1475,7 @@ def build_type1_cage_lindblad_construction(
     recycling_build_result = None
     recycling_jumps: tuple[Any, ...] = ()
     monitor_recycler_component_jumps = False
+    monitor_recycler_jump_closure_orders: tuple[int, ...] = ()
 
     if jump_operator_design == "monitor_recycler":
         basis_configs = basis_configs_from_build_result(build_result)
@@ -1462,9 +1484,14 @@ def build_type1_cage_lindblad_construction(
             monitor=monitor,
             monitor_components=monitor_components,
         )
-        jumps, recycling_build_result = _build_monitor_recycler_jump_operators(
+        (
+            jumps,
+            recycling_build_result,
+            monitor_recycler_jump_closure_orders,
+        ) = _build_monitor_recycler_jump_operators(
             basis_configs=basis_configs,
             state=psi,
+            hamiltonian=build_result.hamiltonian,
             region_specs=region_specs,
             source=recycling_jump_source,
             max_jumps_per_region=max_recycling_jumps_per_region,
@@ -1473,6 +1500,8 @@ def build_type1_cage_lindblad_construction(
             inflow_tolerance=recycling_inflow_tolerance,
             prefer_sparse=recycling_prefer_sparse,
             two_pattern_tolerance=recycling_two_pattern_tolerance,
+            hamiltonian_closure_order=monitor_recycler_hamiltonian_closure_order,
+            hamiltonian_shift=monitor_recycler_hamiltonian_shift,
         )
         monitor_recycler_component_jumps = True
     elif component_jumps is not None:
@@ -1667,6 +1696,9 @@ def build_type1_cage_lindblad_construction(
         max_jump_residual=max_jump_residual,
         jump_residuals=jump_residuals,
         liouvillian_residual=liouvillian_residual,
+        monitor_recycler_hamiltonian_closure_order=int(monitor_recycler_hamiltonian_closure_order),
+        monitor_recycler_hamiltonian_shift=monitor_recycler_hamiltonian_shift,
+        monitor_recycler_jump_closure_orders=monitor_recycler_jump_closure_orders,
     )
 
 
@@ -2085,6 +2117,7 @@ def _build_monitor_recycler_jump_operators(
     *,
     basis_configs: NDArray[np.integer],
     state: NDArray[np.complex128],
+    hamiltonian: Any | None = None,
     region_specs: tuple[tuple[tuple[int, ...], Any], ...],
     source: RecyclingJumpSource,
     max_jumps_per_region: int,
@@ -2093,13 +2126,39 @@ def _build_monitor_recycler_jump_operators(
     inflow_tolerance: float,
     prefer_sparse: bool,
     two_pattern_tolerance: float,
-) -> tuple[tuple[Any, ...], LocalRecyclingBuildResult]:
+    hamiltonian_closure_order: int = 0,
+    hamiltonian_shift: MonitorRecyclerHamiltonianShift = "target_energy",
+) -> tuple[tuple[Any, ...], LocalRecyclingBuildResult, tuple[int, ...]]:
     if source == "none":
         raise ValueError(
             "jump_operator_design='monitor_recycler' requires "
             "recycling_jump_source to be 'local_rdm_two_pattern' or "
             "'local_rdm_rank_one'."
         )
+
+    if hamiltonian_closure_order < 0:
+        raise ValueError("hamiltonian_closure_order must be nonnegative.")
+    if hamiltonian_closure_order > 0 and hamiltonian is None:
+        raise ValueError("hamiltonian_closure_order > 0 requires a hamiltonian operator.")
+
+    shifted_hamiltonian = None
+    if hamiltonian_closure_order > 0:
+        hamiltonian_csr = _as_csr_matrix(hamiltonian)
+        if hamiltonian_shift == "target_energy":
+            target_energy = complex(np.vdot(state, hamiltonian_csr @ state))
+            shifted_hamiltonian = (
+                hamiltonian_csr
+                - target_energy
+                * sp.identity(
+                    hamiltonian_csr.shape[0],
+                    format="csr",
+                    dtype=np.complex128,
+                )
+            ).tocsr()
+        elif hamiltonian_shift == "none":
+            shifted_hamiltonian = hamiltonian_csr
+        else:
+            raise ValueError(f"Unknown hamiltonian_shift: {hamiltonian_shift!r}")
 
     regions = tuple(region for region, _ in region_specs)
     recycling_build_result = build_local_recycling_jumps_from_regions(
@@ -2121,6 +2180,7 @@ def _build_monitor_recycler_jump_operators(
         selections_by_region.setdefault(region_key, []).append(selection)
 
     jumps: list[Any] = []
+    jump_closure_orders: list[int] = []
     missing_regions: list[tuple[int, ...]] = []
 
     for region_key, component_monitor in region_specs:
@@ -2129,13 +2189,24 @@ def _build_monitor_recycler_jump_operators(
             missing_regions.append(region_key)
             continue
 
+        monitor_for_order = _as_csr_matrix(component_monitor)
+        monitors_by_order = [monitor_for_order]
+        for _ in range(hamiltonian_closure_order):
+            if shifted_hamiltonian is None:
+                raise RuntimeError("shifted_hamiltonian was not initialized.")
+            monitor_for_order = (monitor_for_order @ shifted_hamiltonian).tocsr()
+            monitors_by_order.append(monitor_for_order)
+
         for selection in selections:
-            jumps.append(
-                _left_multiply_sparse_csr(
-                    selection.candidate.jump,
-                    component_monitor,
+            recycler = selection.candidate.jump
+            for closure_order, monitor_factor in enumerate(monitors_by_order):
+                jumps.append(
+                    _left_multiply_sparse_csr(
+                        recycler,
+                        monitor_factor,
+                    )
                 )
-            )
+                jump_closure_orders.append(int(closure_order))
 
     if missing_regions:
         preview = ", ".join(str(region) for region in missing_regions[:4])
@@ -2146,7 +2217,7 @@ def _build_monitor_recycler_jump_operators(
             "max_recycling_jumps_per_region."
         )
 
-    return tuple(jumps), recycling_build_result
+    return tuple(jumps), recycling_build_result, tuple(jump_closure_orders)
 
 
 # Reduced-IZ report selection and support/decomposition grouping live in

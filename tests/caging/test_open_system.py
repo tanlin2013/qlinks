@@ -250,7 +250,7 @@ def test_build_monitor_recycler_jump_operators_uses_local_rdm_recycler():
     target_state = np.asarray([1.0, 0.0], dtype=np.complex128)
     monitor = sp.csr_array(np.diag([0.0, 1.0]).astype(np.complex128))
 
-    jumps, recycling_result = _build_monitor_recycler_jump_operators(
+    jumps, recycling_result, closure_orders = _build_monitor_recycler_jump_operators(
         basis_configs=basis_configs,
         state=target_state,
         region_specs=(((0,), monitor),),
@@ -264,10 +264,43 @@ def test_build_monitor_recycler_jump_operators_uses_local_rdm_recycler():
     )
 
     assert recycling_result.n_jumps == 1
+    assert closure_orders == (0,)
     assert len(jumps) == 1
     np.testing.assert_allclose(jumps[0] @ target_state, np.zeros(2, dtype=np.complex128))
     np.testing.assert_allclose(
         jumps[0].toarray(),
+        np.asarray([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128),
+    )
+
+
+def test_build_monitor_recycler_jump_operators_can_add_hamiltonian_closure():
+    basis_configs = np.asarray([[0], [1]], dtype=np.int64)
+    target_state = np.asarray([1.0, 0.0], dtype=np.complex128)
+    monitor = sp.csr_array(np.diag([0.0, 1.0]).astype(np.complex128))
+    hamiltonian = sp.csr_array(np.diag([2.0, 3.0]).astype(np.complex128))
+
+    jumps, recycling_result, closure_orders = _build_monitor_recycler_jump_operators(
+        basis_configs=basis_configs,
+        state=target_state,
+        hamiltonian=hamiltonian,
+        region_specs=(((0,), monitor),),
+        source="local_rdm_rank_one",
+        max_jumps_per_region=1,
+        rdm_tolerance=1e-10,
+        dark_tolerance=1e-10,
+        inflow_tolerance=1e-12,
+        prefer_sparse=True,
+        two_pattern_tolerance=1e-8,
+        hamiltonian_closure_order=1,
+    )
+
+    assert recycling_result.n_jumps == 1
+    assert closure_orders == (0, 1)
+    assert len(jumps) == 2
+    np.testing.assert_allclose(jumps[0] @ target_state, np.zeros(2, dtype=np.complex128))
+    np.testing.assert_allclose(jumps[1] @ target_state, np.zeros(2, dtype=np.complex128))
+    np.testing.assert_allclose(
+        jumps[1].toarray(),
         np.asarray([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128),
     )
 
