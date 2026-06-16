@@ -317,6 +317,7 @@ def _make_qdm_cage_lindblad_mcwf_case(
     jump_operator_design: str = "kinetic_outside_monitor_inside",
     monitor_recycler_hamiltonian_closure_order: int = 0,
     monitor_recycler_hamiltonian_shift: str = "target_energy",
+    monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
 ) -> OpenSystemBenchmarkCase:
     """Build a QDM Cage-Lindblad problem used for real MCWF timing."""
     from qlinks.basis import basis_configs_from_build_result
@@ -449,6 +450,9 @@ def _make_qdm_cage_lindblad_mcwf_case(
             max_recycling_jumps_per_region=1,
             monitor_recycler_hamiltonian_closure_order=(monitor_recycler_hamiltonian_closure_order),
             monitor_recycler_hamiltonian_shift=monitor_recycler_hamiltonian_shift,
+            monitor_recycler_hamiltonian_closure_source=(
+                monitor_recycler_hamiltonian_closure_source
+            ),
             check_liouvillian=check_liouvillian,
             timing_collector=construction_stage_seconds,
         )
@@ -472,6 +476,9 @@ def _make_qdm_cage_lindblad_mcwf_case(
         "jump_operator_design": jump_operator_design,
         "monitor_recycler_hamiltonian_closure_order": (monitor_recycler_hamiltonian_closure_order),
         "monitor_recycler_hamiltonian_shift": monitor_recycler_hamiltonian_shift,
+        "monitor_recycler_hamiltonian_closure_source": (
+            monitor_recycler_hamiltonian_closure_source
+        ),
         "n_states": build_result.basis.n_states,
         "n_jumps": construction.n_jumps,
         "jump_span_rank": jump_span_diagnostics.span_rank,
@@ -526,6 +533,7 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
     jump_operator_design: str = "kinetic_outside_monitor_inside",
     monitor_recycler_hamiltonian_closure_order: int = 0,
     monitor_recycler_hamiltonian_shift: str = "target_energy",
+    monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
 ) -> OpenSystemBenchmarkCase:
     return _make_qdm_cage_lindblad_mcwf_case(
         cage_lindblad_case="square_qdm_pbc_w00",
@@ -555,6 +563,7 @@ def make_benchmark_cases(
     cage_lindblad_jump_operator_design: str = "kinetic_outside_monitor_inside",
     cage_lindblad_monitor_recycler_hamiltonian_closure_order: int = 0,
     cage_lindblad_monitor_recycler_hamiltonian_shift: str = "target_energy",
+    cage_lindblad_monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
 ) -> list[OpenSystemBenchmarkCase]:
     ops = _pauli_and_ladder_operators()
     sigma_minus = ops["sigma_minus"]
@@ -660,6 +669,9 @@ def make_benchmark_cases(
                 ),
                 monitor_recycler_hamiltonian_shift=(
                     cage_lindblad_monitor_recycler_hamiltonian_shift
+                ),
+                monitor_recycler_hamiltonian_closure_source=(
+                    cage_lindblad_monitor_recycler_hamiltonian_closure_source
                 ),
             )
         )
@@ -1290,12 +1302,24 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--cage-lindblad-monitor-recycler-hamiltonian-closure-source",
+        default="global_hamiltonian",
+        choices=["global_hamiltonian", "local_hamiltonian_terms"],
+        help=(
+            "Operator source used in monitor-recycler closure jumps. "
+            "'global_hamiltonian' builds P_i(H-E)^k, while "
+            "'local_hamiltonian_terms' builds P_i(h_{R_i}-epsilon_i)^k from "
+            "local Hamiltonian terms strictly supported on the monitor region."
+        ),
+    )
+    parser.add_argument(
         "--cage-lindblad-monitor-recycler-hamiltonian-shift",
         default="target_energy",
-        choices=["target_energy", "none"],
+        choices=["target_energy", "local_expectation", "none"],
         help=(
             "Hamiltonian shift used in monitor-recycler closure jumps. "
-            "'target_energy' uses H-E_target, while 'none' uses H."
+            "'target_energy' uses global H-E_target, "
+            "'local_expectation' uses h_R-<h_R>, and 'none' uses no shift."
         ),
     )
     parser.add_argument(
@@ -1379,6 +1403,9 @@ def main() -> None:
         ),
         cage_lindblad_monitor_recycler_hamiltonian_shift=(
             args.cage_lindblad_monitor_recycler_hamiltonian_shift
+        ),
+        cage_lindblad_monitor_recycler_hamiltonian_closure_source=(
+            args.cage_lindblad_monitor_recycler_hamiltonian_closure_source
         ),
     ):
         if only_filter is not None and only_filter not in case.name:

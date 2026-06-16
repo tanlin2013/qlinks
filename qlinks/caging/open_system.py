@@ -69,7 +69,8 @@ JumpPlaquettePolicy = Literal[
     "outside_or_crossing",
     "not_strictly_inside",
 ]
-MonitorRecyclerHamiltonianShift = Literal["none", "target_energy"]
+MonitorRecyclerHamiltonianShift = Literal["none", "target_energy", "local_expectation"]
+MonitorRecyclerHamiltonianClosureSource = Literal["global_hamiltonian", "local_hamiltonian_terms"]
 
 
 def _record_construction_stage(
@@ -654,6 +655,7 @@ class LocalRecyclerReadout:
     matrix_unit_terms: tuple[LocalMatrixUnitTerm, ...]
     matrix_unit_terms_truncated: bool
     hamiltonian_closure_orders: tuple[int, ...] = ()
+    hamiltonian_closure_source: MonitorRecyclerHamiltonianClosureSource = "global_hamiltonian"
     n_hamiltonian_closure_jumps: int = 0
 
     def to_summary_dict(self) -> dict[str, object]:
@@ -677,6 +679,7 @@ class LocalRecyclerReadout:
             "n_matrix_unit_terms": self.n_matrix_unit_terms,
             "matrix_unit_terms_truncated": self.matrix_unit_terms_truncated,
             "hamiltonian_closure_orders": self.hamiltonian_closure_orders,
+            "hamiltonian_closure_source": self.hamiltonian_closure_source,
             "n_hamiltonian_closure_jumps": self.n_hamiltonian_closure_jumps,
             "matrix_unit_terms": tuple(
                 {
@@ -741,6 +744,9 @@ class CageLindbladConstruction:
     liouvillian_residual: float | None = None
     monitor_recycler_hamiltonian_closure_order: int = 0
     monitor_recycler_hamiltonian_shift: MonitorRecyclerHamiltonianShift = "target_energy"
+    monitor_recycler_hamiltonian_closure_source: MonitorRecyclerHamiltonianClosureSource = (
+        "global_hamiltonian"
+    )
     monitor_recycler_jump_closure_orders: tuple[int, ...] = ()
 
     def __repr__(self) -> str:
@@ -773,6 +779,9 @@ class CageLindbladConstruction:
                 self.monitor_recycler_hamiltonian_closure_order
             ),
             "monitor_recycler_hamiltonian_shift": self.monitor_recycler_hamiltonian_shift,
+            "monitor_recycler_hamiltonian_closure_source": (
+                self.monitor_recycler_hamiltonian_closure_source
+            ),
             "monitor_recycler_jump_closure_orders": self.monitor_recycler_jump_closure_orders,
             "monitor_plaquette_policy": self.monitor_plaquette_policy,
             "jump_plaquette_policy": self.jump_plaquette_policy,
@@ -891,6 +900,17 @@ class CageLindbladConstruction:
                     n_matrix_unit_terms=len(matrix_unit_terms),
                     matrix_unit_terms=tuple(shown_terms),
                     matrix_unit_terms_truncated=bool(truncated),
+                    hamiltonian_closure_orders=(
+                        tuple(range(int(self.monitor_recycler_hamiltonian_closure_order) + 1))
+                        if self.jump_operator_design == "monitor_recycler"
+                        else ()
+                    ),
+                    hamiltonian_closure_source=(self.monitor_recycler_hamiltonian_closure_source),
+                    n_hamiltonian_closure_jumps=(
+                        int(self.monitor_recycler_hamiltonian_closure_order) + 1
+                        if self.jump_operator_design == "monitor_recycler"
+                        else 0
+                    ),
                 )
             )
 
@@ -1201,6 +1221,9 @@ def build_type1_cage_lindblad_construction(
     recycling_two_pattern_tolerance: float = 1e-8,
     monitor_recycler_hamiltonian_closure_order: int = 0,
     monitor_recycler_hamiltonian_shift: MonitorRecyclerHamiltonianShift = "target_energy",
+    monitor_recycler_hamiltonian_closure_source: (
+        MonitorRecyclerHamiltonianClosureSource
+    ) = "global_hamiltonian",
     include_q_empty: bool = True,
     include_closed_by_known_zeros: bool = True,
     include_projector_like: bool = True,
@@ -1226,6 +1249,32 @@ def build_type1_cage_lindblad_construction(
 
     if monitor_recycler_hamiltonian_closure_order < 0:
         raise ValueError("monitor_recycler_hamiltonian_closure_order must be nonnegative.")
+    if monitor_recycler_hamiltonian_closure_source not in {
+        "global_hamiltonian",
+        "local_hamiltonian_terms",
+    }:
+        raise ValueError(
+            'monitor_recycler_hamiltonian_closure_source must be "global_hamiltonian" '
+            'or "local_hamiltonian_terms".'
+        )
+    if (
+        monitor_recycler_hamiltonian_closure_source == "global_hamiltonian"
+        and monitor_recycler_hamiltonian_shift == "local_expectation"
+    ):
+        raise ValueError(
+            'monitor_recycler_hamiltonian_shift="local_expectation" is only '
+            "valid with monitor_recycler_hamiltonian_closure_source="
+            '"local_hamiltonian_terms".'
+        )
+    if (
+        monitor_recycler_hamiltonian_closure_source == "local_hamiltonian_terms"
+        and monitor_recycler_hamiltonian_shift == "target_energy"
+    ):
+        raise ValueError(
+            'monitor_recycler_hamiltonian_shift="target_energy" is only valid '
+            'for global-H closure. Use "local_expectation" or "none" '
+            "with local-H closure."
+        )
 
     stage_start = time.perf_counter()
     region = extract_cage_region_support(
@@ -1484,6 +1533,27 @@ def build_type1_cage_lindblad_construction(
             monitor=monitor,
             monitor_components=monitor_components,
         )
+        local_closure_operators_by_region = None
+        if (
+            monitor_recycler_hamiltonian_closure_order > 0
+            and monitor_recycler_hamiltonian_closure_source == "local_hamiltonian_terms"
+        ):
+            local_closure_operators_by_region = (
+                _build_monitor_recycler_local_hamiltonian_closure_operators(
+                    model=model,
+                    build_result=build_result,
+                    regions=tuple(region_key for region_key, _ in region_specs),
+                    kinetic_terms=kinetic_terms,
+                    potential_terms=potential_terms,
+                    builder=builder,
+                    backend=backend,
+                    shape=shape,
+                    state=psi,
+                    hamiltonian_shift=monitor_recycler_hamiltonian_shift,
+                    local_term_cache=local_term_cache,
+                )
+            )
+
         (
             jumps,
             recycling_build_result,
@@ -1492,6 +1562,7 @@ def build_type1_cage_lindblad_construction(
             basis_configs=basis_configs,
             state=psi,
             hamiltonian=build_result.hamiltonian,
+            local_closure_operators_by_region=local_closure_operators_by_region,
             region_specs=region_specs,
             source=recycling_jump_source,
             max_jumps_per_region=max_recycling_jumps_per_region,
@@ -1502,6 +1573,7 @@ def build_type1_cage_lindblad_construction(
             two_pattern_tolerance=recycling_two_pattern_tolerance,
             hamiltonian_closure_order=monitor_recycler_hamiltonian_closure_order,
             hamiltonian_shift=monitor_recycler_hamiltonian_shift,
+            hamiltonian_closure_source=monitor_recycler_hamiltonian_closure_source,
         )
         monitor_recycler_component_jumps = True
     elif component_jumps is not None:
@@ -1698,6 +1770,7 @@ def build_type1_cage_lindblad_construction(
         liouvillian_residual=liouvillian_residual,
         monitor_recycler_hamiltonian_closure_order=int(monitor_recycler_hamiltonian_closure_order),
         monitor_recycler_hamiltonian_shift=monitor_recycler_hamiltonian_shift,
+        monitor_recycler_hamiltonian_closure_source=(monitor_recycler_hamiltonian_closure_source),
         monitor_recycler_jump_closure_orders=monitor_recycler_jump_closure_orders,
     )
 
@@ -2113,11 +2186,76 @@ def _monitor_recycler_region_specs(
     )
 
 
+def _build_monitor_recycler_local_hamiltonian_closure_operators(
+    *,
+    model: Any,
+    build_result: ModelBuildResult,
+    regions: tuple[tuple[int, ...], ...],
+    kinetic_terms: tuple[LocalTermDescriptor, ...],
+    potential_terms: tuple[LocalTermDescriptor, ...],
+    builder: HamiltonianBuilderName,
+    backend: SparseBackendName,
+    shape: tuple[int, int],
+    state: NDArray[np.complex128],
+    hamiltonian_shift: MonitorRecyclerHamiltonianShift,
+    local_term_cache: _LocalTermMatrixCache | None = None,
+) -> dict[tuple[int, ...], sp.csr_array]:
+    """Build local Hamiltonian closure factors for monitor-recycler jumps.
+
+    For a monitor component on support ``R_i``, this returns the sum of
+    plaquette kinetic and potential terms strictly supported in ``R_i``.
+    The resulting closure jump is ``V_i P_i h_{R_i}`` (or powers thereof).
+
+    Unlike the global ``P_i(H-E)`` closure, local closure is not guaranteed by
+    global eigenstate-ness alone; downstream jump residuals therefore remain the
+    authoritative dark-state check.
+    """
+    if hamiltonian_shift not in {"none", "local_expectation"}:
+        raise ValueError(
+            "local Hamiltonian closure supports hamiltonian_shift='none' or " "'local_expectation'."
+        )
+
+    kinetic_term_supports = _term_support_sets(kinetic_terms)
+    potential_term_supports = _term_support_sets(potential_terms)
+    identity = sp.identity(shape[0], format="csr", dtype=np.complex128)
+    closure_operators: dict[tuple[int, ...], sp.csr_array] = {}
+
+    for region in regions:
+        region_key = tuple(int(index) for index in region)
+        region_support = frozenset(region_key)
+        local_kinetic_terms = _select_terms_inside_cached_supports(
+            kinetic_term_supports,
+            region_support,
+        )
+        local_potential_terms = _select_terms_inside_cached_supports(
+            potential_term_supports,
+            region_support,
+        )
+        local_hamiltonian = _sum_local_terms(
+            model=model,
+            build_result=build_result,
+            terms=local_kinetic_terms + local_potential_terms,
+            builder=builder,
+            backend=backend,
+            shape=shape,
+            local_term_cache=local_term_cache,
+        ).tocsr()
+
+        if hamiltonian_shift == "local_expectation":
+            local_expectation = complex(np.vdot(state, local_hamiltonian @ state))
+            local_hamiltonian = (local_hamiltonian - local_expectation * identity).tocsr()
+
+        closure_operators[region_key] = local_hamiltonian
+
+    return closure_operators
+
+
 def _build_monitor_recycler_jump_operators(
     *,
     basis_configs: NDArray[np.integer],
     state: NDArray[np.complex128],
     hamiltonian: Any | None = None,
+    local_closure_operators_by_region: dict[tuple[int, ...], Any] | None = None,
     region_specs: tuple[tuple[tuple[int, ...], Any], ...],
     source: RecyclingJumpSource,
     max_jumps_per_region: int,
@@ -2128,6 +2266,7 @@ def _build_monitor_recycler_jump_operators(
     two_pattern_tolerance: float,
     hamiltonian_closure_order: int = 0,
     hamiltonian_shift: MonitorRecyclerHamiltonianShift = "target_energy",
+    hamiltonian_closure_source: MonitorRecyclerHamiltonianClosureSource = "global_hamiltonian",
 ) -> tuple[tuple[Any, ...], LocalRecyclingBuildResult, tuple[int, ...]]:
     if source == "none":
         raise ValueError(
@@ -2138,11 +2277,19 @@ def _build_monitor_recycler_jump_operators(
 
     if hamiltonian_closure_order < 0:
         raise ValueError("hamiltonian_closure_order must be nonnegative.")
-    if hamiltonian_closure_order > 0 and hamiltonian is None:
-        raise ValueError("hamiltonian_closure_order > 0 requires a hamiltonian operator.")
+    if hamiltonian_closure_order > 0:
+        if hamiltonian_closure_source == "global_hamiltonian" and hamiltonian is None:
+            raise ValueError("global Hamiltonian closure requires a hamiltonian operator.")
+        if (
+            hamiltonian_closure_source == "local_hamiltonian_terms"
+            and local_closure_operators_by_region is None
+        ):
+            raise ValueError(
+                "local Hamiltonian closure requires local_closure_operators_by_region."
+            )
 
     shifted_hamiltonian = None
-    if hamiltonian_closure_order > 0:
+    if hamiltonian_closure_order > 0 and hamiltonian_closure_source == "global_hamiltonian":
         hamiltonian_csr = _as_csr_matrix(hamiltonian)
         if hamiltonian_shift == "target_energy":
             target_energy = complex(np.vdot(state, hamiltonian_csr @ state))
@@ -2191,11 +2338,23 @@ def _build_monitor_recycler_jump_operators(
 
         monitor_for_order = _as_csr_matrix(component_monitor)
         monitors_by_order = [monitor_for_order]
-        for _ in range(hamiltonian_closure_order):
-            if shifted_hamiltonian is None:
-                raise RuntimeError("shifted_hamiltonian was not initialized.")
-            monitor_for_order = (monitor_for_order @ shifted_hamiltonian).tocsr()
-            monitors_by_order.append(monitor_for_order)
+        if hamiltonian_closure_order > 0:
+            if hamiltonian_closure_source == "global_hamiltonian":
+                if shifted_hamiltonian is None:
+                    raise RuntimeError("shifted_hamiltonian was not initialized.")
+                closure_factor = shifted_hamiltonian
+            elif hamiltonian_closure_source == "local_hamiltonian_terms":
+                if local_closure_operators_by_region is None:
+                    raise RuntimeError("local_closure_operators_by_region was not initialized.")
+                closure_factor = _as_csr_matrix(local_closure_operators_by_region[region_key])
+            else:
+                raise ValueError(
+                    f"Unknown hamiltonian_closure_source: {hamiltonian_closure_source!r}"
+                )
+
+            for _ in range(hamiltonian_closure_order):
+                monitor_for_order = (monitor_for_order @ closure_factor).tocsr()
+                monitors_by_order.append(monitor_for_order)
 
         for selection in selections:
             recycler = selection.candidate.jump
