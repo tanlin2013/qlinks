@@ -35,6 +35,11 @@ from qlinks.encoded import BinaryEncodedBasis
 from qlinks.models import LocalTermDescriptor
 from qlinks.open_system import (
     LindbladEvolutionOptions,
+    LocalRecyclingBuildResult,
+    LocalRecyclingCandidate,
+    LocalRecyclingScanResult,
+    LocalRecyclingSelection,
+    LocalReducedDensityMatrix,
     initial_density_matrix,
 )
 from qlinks.variables import LocalSpace, VariableLayout
@@ -784,3 +789,93 @@ def test_lazy_reduced_iz_monitor_materializes_only_when_requested():
     )
     assert monitor._matrix is not None
     assert total._matrix is not None
+
+
+def test_cage_lindblad_construction_recycler_readouts_describe_selected_recycler():
+    ket0 = np.array([1.0, 0.0], dtype=np.complex128)
+    zero = sp.csr_array((2, 2), dtype=np.complex128)
+    jump = sp.csr_array(np.array([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128))
+    density_matrix = np.diag([1.0, 0.0]).astype(np.complex128)
+    reduced_density_matrix = LocalReducedDensityMatrix(
+        variable_indices=(0,),
+        local_patterns=((0,), (1,)),
+        density_matrix=density_matrix,
+        eigenvalues=np.asarray([0.0, 1.0], dtype=np.float64),
+        support_basis=np.asarray([[1.0], [0.0]], dtype=np.complex128),
+        null_basis=np.asarray([[0.0], [1.0]], dtype=np.complex128),
+    )
+    candidate = LocalRecyclingCandidate(
+        variable_indices=(0,),
+        alpha_index=0,
+        beta_index=0,
+        jump=jump,
+        target_residual=0.0,
+        inflow_norm=1.0,
+        outflow_norm=0.0,
+        projector_commutator_norm=1.0,
+        local_alpha_vector=np.asarray([1.0, 0.0], dtype=np.complex128),
+        local_beta_vector=np.asarray([0.0, 1.0], dtype=np.complex128),
+    )
+    scan_result = LocalRecyclingScanResult(
+        reduced_density_matrix=reduced_density_matrix,
+        candidates=(candidate,),
+    )
+    selection = LocalRecyclingSelection(
+        candidate=candidate,
+        two_pattern_structure=None,
+        score=(0.0,),
+    )
+    recycling_build_result = LocalRecyclingBuildResult(
+        scan_results=(scan_result,),
+        selections=(selection,),
+    )
+
+    construction = CageLindbladConstruction(
+        cage_state=ket0,
+        region=_FakeRegion(),  # type: ignore[arg-type]
+        z_value=None,
+        inside_plaquette_ids=(),
+        outside_plaquette_ids=(),
+        crossing_plaquette_ids=(),
+        monitor=zero,
+        jumps=(jump,),
+        n_jumps=1,
+        n_component_jumps=1,
+        n_global_jump_terms=0,
+        open_system_backend="scipy",
+        monitor_source="reduced_iz_operators",
+        reduced_iz_monitor_decomposition="single_sum",
+        reduced_iz_monitor_content="offdiagonal_only",
+        n_reduced_iz_monitor_terms=0,
+        reduced_iz_monitor_zero_indices=(),
+        monitor_components=(),
+        component_z_values=(),
+        jump_operator_design="monitor_recycler",
+        monitor_plaquette_policy="strict_inside",
+        jump_plaquette_policy="outside_or_crossing",
+        monitor_plaquette_ids=(),
+        jump_plaquette_ids=(),
+        kinetic_terms_monitor=(),
+        potential_terms_monitor=(),
+        kinetic_terms_jump=(),
+        recycling_jump_source="local_rdm_rank_one",
+        n_recycling_jumps=1,
+        recycling_jump_variable_indices=((0,),),
+        recycling_jump_alpha_beta_indices=((0, 0),),
+        recycling_two_pattern_count=0,
+        recycling_build_result=recycling_build_result,
+        monitor_residual=0.0,
+        max_jump_residual=0.0,
+        jump_residuals=(0.0,),
+        liouvillian_residual=0.0,
+    )
+
+    readout = construction.recycler_readouts()[0]
+
+    assert readout.variable_indices == (0,)
+    assert readout.alpha_support_patterns == ((0,),)
+    assert readout.beta_support_patterns == ((1,),)
+    assert readout.n_matrix_unit_terms == 1
+    assert readout.matrix_unit_terms[0].target_pattern == (0,)
+    assert readout.matrix_unit_terms[0].source_pattern == (1,)
+    assert construction.recycler_summary()[0]["jump_nnz"] == 1

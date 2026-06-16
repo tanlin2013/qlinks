@@ -9,6 +9,7 @@ from qlinks.open_system import (
     diagnose_absorbing_projector_symmetry,
     diagnose_dark_subspace,
     diagnose_jump_span,
+    diagnose_monitor_kernel_closure,
     verify_density_matrix,
     verify_lindblad_final_state,
 )
@@ -388,3 +389,31 @@ def test_analyze_lindblad_evolution_accepts_streamed_target_fidelities_only():
     assert diagnostics.density_check_mode == "streamed_fidelity"
     np.testing.assert_allclose(diagnostics.fidelities, [0.0, 0.5, 1.0])
     assert np.isnan(diagnostics.purities).all()
+
+
+def test_diagnose_monitor_kernel_closure_detects_hamiltonian_leakage():
+    # M = |1><1| cannot see |0>, but H couples |0> to |1>.  Therefore the
+    # monitor kernel is two-dimensional after including target + bad |0>, while
+    # the first Hamiltonian closure removes the bad direction.
+    monitor = np.diag([0.0, 1.0, 0.0]).astype(np.complex128)
+    hamiltonian = np.array(
+        [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    target = np.array([0.0, 0.0, 1.0], dtype=np.complex128)
+
+    diagnostics = diagnose_monitor_kernel_closure(
+        hamiltonian=hamiltonian,
+        monitors=[monitor],
+        target_state=target,
+        closure_order=1,
+    )
+
+    assert diagnostics.max_target_monitor_residual < 1e-12
+    assert diagnostics.monitor_kernel_dimension == 2
+    assert diagnostics.bad_monitor_kernel_dimension == 1
+    assert diagnostics.min_bad_kernel_hamiltonian_leakage_norm is not None
+    assert diagnostics.min_bad_kernel_hamiltonian_leakage_norm > 0.9
+    assert diagnostics.closure_kernel_dimension == 1
+    assert diagnostics.bad_closure_kernel_dimension == 0
+    assert diagnostics.target_in_closure_kernel

@@ -31,6 +31,7 @@ from qlinks.models.base import (
 from qlinks.models.local_terms import LocalTermDescriptor
 from qlinks.open_system import (
     LindbladProblem,
+    LocalMatrixUnitTerm,
     LocalRecyclingBuildResult,
     OpenSystemBackendName,
     RecyclingJumpSource,
@@ -38,7 +39,9 @@ from qlinks.open_system import (
     density_matrix_from_state,
     diagnose_absorbing_projector_symmetry,
     diagnose_dark_subspace,
+    diagnose_monitor_kernel_closure,
     lindblad_rhs_density_matrix,
+    local_rank_one_matrix_unit_expansion,
     verify_lindblad_final_state,
 )
 
@@ -619,6 +622,69 @@ class ReducedIZMonitorComponent:
 
 
 @dataclass(frozen=True, slots=True)
+class LocalRecyclerReadout:
+    """Notebook-friendly description of one selected local recycler.
+
+    The local recycler is a rank-one operator ``|alpha><beta|`` embedded in the
+    constrained global basis.  ``alpha`` lies in the local support of the target
+    reduced density matrix, while ``beta`` lies in the local null space.  For a
+    monitor-recycler jump, the actual Lindblad jump is ``|alpha><beta| P_i``.
+    """
+
+    recycler_index: int
+    component_index: int | None
+    variable_indices: tuple[int, ...]
+    alpha_index: int
+    beta_index: int
+    local_patterns: tuple[tuple[int, ...], ...]
+    local_alpha_vector: NDArray[np.complex128]
+    local_beta_vector: NDArray[np.complex128]
+    alpha_support_indices: tuple[int, ...]
+    beta_support_indices: tuple[int, ...]
+    alpha_support_patterns: tuple[tuple[int, ...], ...]
+    beta_support_patterns: tuple[tuple[int, ...], ...]
+    inflow_norm: float
+    outflow_norm: float
+    target_residual: float
+    projector_commutator_norm: float
+    jump_nnz: int
+    two_pattern_structure: Any | None
+    n_matrix_unit_terms: int
+    matrix_unit_terms: tuple[LocalMatrixUnitTerm, ...]
+    matrix_unit_terms_truncated: bool
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "recycler_index": self.recycler_index,
+            "component_index": self.component_index,
+            "variable_indices": self.variable_indices,
+            "alpha_index": self.alpha_index,
+            "beta_index": self.beta_index,
+            "n_local_patterns": len(self.local_patterns),
+            "alpha_support_indices": self.alpha_support_indices,
+            "beta_support_indices": self.beta_support_indices,
+            "alpha_support_patterns": self.alpha_support_patterns,
+            "beta_support_patterns": self.beta_support_patterns,
+            "inflow_norm": self.inflow_norm,
+            "outflow_norm": self.outflow_norm,
+            "target_residual": self.target_residual,
+            "projector_commutator_norm": self.projector_commutator_norm,
+            "jump_nnz": self.jump_nnz,
+            "has_two_pattern_structure": self.two_pattern_structure is not None,
+            "n_matrix_unit_terms": self.n_matrix_unit_terms,
+            "matrix_unit_terms_truncated": self.matrix_unit_terms_truncated,
+            "matrix_unit_terms": tuple(
+                {
+                    "coefficient": term.coefficient,
+                    "target_pattern": term.target_pattern,
+                    "source_pattern": term.source_pattern,
+                }
+                for term in self.matrix_unit_terms
+            ),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class CageLindbladConstruction:
     """Open-system construction associated with one cage state."""
 
@@ -732,6 +798,112 @@ class CageLindbladConstruction:
             "max_jump_residual": self.max_jump_residual,
             "liouvillian_residual": self.liouvillian_residual,
         }
+
+    def recycler_readouts(
+        self,
+        *,
+        tolerance: float = 1e-10,
+        max_matrix_unit_terms: int = 64,
+    ) -> tuple[LocalRecyclerReadout, ...]:
+        """Return notebook-friendly descriptions of selected local recyclers.
+
+        For ``jump_operator_design='monitor_recycler'``, these readouts describe
+        the ``V_i`` factors in ``L_i = V_i P_i``.  For older jump designs, they
+        describe any appended local recycling jumps.
+        """
+        if self.recycling_build_result is None:
+            return ()
+
+        component_index_by_region = {
+            tuple(int(index) for index in component.support_variables): component_index
+            for component_index, component in enumerate(self.monitor_components)
+        }
+
+        readouts: list[LocalRecyclerReadout] = []
+        for recycler_index, selection in enumerate(self.recycling_build_result.selections):
+            candidate = selection.candidate
+            variable_indices = tuple(int(index) for index in candidate.variable_indices)
+            scan_result = _find_recycling_scan_result(
+                self.recycling_build_result,
+                variable_indices=variable_indices,
+            )
+            local_patterns = scan_result.reduced_density_matrix.local_patterns
+            alpha_support_indices = _local_vector_support_indices(
+                candidate.local_alpha_vector,
+                tolerance=tolerance,
+            )
+            beta_support_indices = _local_vector_support_indices(
+                candidate.local_beta_vector,
+                tolerance=tolerance,
+            )
+            matrix_unit_terms = local_rank_one_matrix_unit_expansion(
+                local_patterns=local_patterns,
+                alpha=candidate.local_alpha_vector,
+                beta=candidate.local_beta_vector,
+                tolerance=tolerance,
+            )
+            truncated = len(matrix_unit_terms) > int(max_matrix_unit_terms)
+            if truncated:
+                shown_terms = matrix_unit_terms[: int(max_matrix_unit_terms)]
+            else:
+                shown_terms = matrix_unit_terms
+
+            readouts.append(
+                LocalRecyclerReadout(
+                    recycler_index=int(recycler_index),
+                    component_index=component_index_by_region.get(variable_indices),
+                    variable_indices=variable_indices,
+                    alpha_index=int(candidate.alpha_index),
+                    beta_index=int(candidate.beta_index),
+                    local_patterns=local_patterns,
+                    local_alpha_vector=candidate.local_alpha_vector,
+                    local_beta_vector=candidate.local_beta_vector,
+                    alpha_support_indices=alpha_support_indices,
+                    beta_support_indices=beta_support_indices,
+                    alpha_support_patterns=tuple(
+                        local_patterns[index] for index in alpha_support_indices
+                    ),
+                    beta_support_patterns=tuple(
+                        local_patterns[index] for index in beta_support_indices
+                    ),
+                    inflow_norm=float(candidate.inflow_norm),
+                    outflow_norm=float(candidate.outflow_norm),
+                    target_residual=float(candidate.target_residual),
+                    projector_commutator_norm=float(candidate.projector_commutator_norm),
+                    jump_nnz=int(candidate.jump.nnz),
+                    two_pattern_structure=selection.two_pattern_structure,
+                    n_matrix_unit_terms=len(matrix_unit_terms),
+                    matrix_unit_terms=tuple(shown_terms),
+                    matrix_unit_terms_truncated=bool(truncated),
+                )
+            )
+
+        return tuple(readouts)
+
+    def recycler_summary(self, *, tolerance: float = 1e-10) -> tuple[dict[str, object], ...]:
+        """Return compact dictionaries describing the selected local recyclers."""
+        return tuple(
+            readout.to_summary_dict() for readout in self.recycler_readouts(tolerance=tolerance)
+        )
+
+    def diagnose_monitor_kernel_closure(
+        self,
+        *,
+        hamiltonian: Any,
+        closure_order: int = 1,
+        tolerance: float = 1e-10,
+    ):
+        """Diagnose monitor-kernel closure for this construction."""
+        monitors = tuple(component.monitor for component in self.monitor_components)
+        if len(monitors) == 0:
+            monitors = (self.monitor,)
+        return diagnose_monitor_kernel_closure(
+            hamiltonian=hamiltonian,
+            monitors=monitors,
+            target_state=self.cage_state,
+            closure_order=closure_order,
+            tolerance=tolerance,
+        )
 
     def to_rich(self):
         """Return a rich renderable summary of the construction."""
@@ -1861,6 +2033,29 @@ def _component_jump_residuals_from_components(
     return tuple(
         float(residual) for component in components for residual in component.jump_residuals
     )
+
+
+def _find_recycling_scan_result(
+    recycling_build_result: LocalRecyclingBuildResult,
+    *,
+    variable_indices: tuple[int, ...],
+):
+    for scan_result in recycling_build_result.scan_results:
+        if (
+            tuple(int(index) for index in scan_result.reduced_density_matrix.variable_indices)
+            == variable_indices
+        ):
+            return scan_result
+
+    raise KeyError(f"No local recycling scan result for region {variable_indices}.")
+
+
+def _local_vector_support_indices(
+    vector: NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> tuple[int, ...]:
+    return tuple(int(index) for index in np.flatnonzero(np.abs(vector) > tolerance))
 
 
 def _monitor_recycler_region_specs(
