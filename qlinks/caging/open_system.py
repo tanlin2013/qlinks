@@ -40,8 +40,10 @@ from qlinks.open_system import (
     diagnose_absorbing_projector_symmetry,
     diagnose_dark_subspace,
     diagnose_monitor_kernel_closure,
+    embed_local_pattern_operator,
     lindblad_rhs_density_matrix,
     local_rank_one_matrix_unit_expansion,
+    local_reduced_density_matrix_from_state,
     verify_lindblad_final_state,
 )
 
@@ -62,6 +64,7 @@ JumpOperatorDesign = Literal[
     "kinetic_outside_monitor_inside",
     "hamiltonian_outside_monitor_inside",
     "monitor_recycler",
+    "local_rdm_parent_projector",
 ]
 JumpPlaquettePolicy = Literal[
     "disjoint_outside",
@@ -1536,7 +1539,22 @@ def build_type1_cage_lindblad_construction(
     monitor_recycler_component_jumps = False
     monitor_recycler_jump_closure_orders: tuple[int, ...] = ()
 
-    if jump_operator_design == "monitor_recycler":
+    if jump_operator_design == "local_rdm_parent_projector":
+        basis_configs = basis_configs_from_build_result(build_result)
+        region_specs = _monitor_recycler_region_specs(
+            region=region,
+            monitor=monitor,
+            monitor_components=monitor_components,
+        )
+        jumps = _build_local_rdm_parent_projector_jump_operators(
+            basis_configs=basis_configs,
+            state=psi,
+            region_specs=region_specs,
+            rdm_tolerance=recycling_rdm_tolerance,
+        )
+        monitor_recycler_component_jumps = True
+
+    elif jump_operator_design == "monitor_recycler":
         basis_configs = basis_configs_from_build_result(build_result)
         region_specs = _monitor_recycler_region_specs(
             region=region,
@@ -1626,7 +1644,10 @@ def build_type1_cage_lindblad_construction(
     )
 
     stage_start = time.perf_counter()
-    if jump_operator_design != "monitor_recycler" and recycling_jump_source != "none":
+    if (
+        jump_operator_design not in {"monitor_recycler", "local_rdm_parent_projector"}
+        and recycling_jump_source != "none"
+    ):
         basis_configs = basis_configs_from_build_result(build_result)
 
         recycling_build_result = build_local_recycling_jumps_from_regions(
@@ -1730,7 +1751,7 @@ def build_type1_cage_lindblad_construction(
             f"max_p ||J_p psi||={max_jump_residual:.3e}."
         )
 
-    if jump_operator_design == "monitor_recycler":
+    if jump_operator_design in {"monitor_recycler", "local_rdm_parent_projector"}:
         n_component_jumps = len(jumps)
         n_global_jump_terms = 0
     else:
@@ -1852,9 +1873,9 @@ def _build_jump_operators(
 
         return tuple(jumps)
 
-    if jump_operator_design == "monitor_recycler":
+    if jump_operator_design in {"monitor_recycler", "local_rdm_parent_projector"}:
         raise ValueError(
-            "monitor_recycler jumps are assembled from local RDM recyclers, "
+            f"{jump_operator_design} jumps are assembled from local RDM data, "
             "not plaquette kinetic terms."
         )
 
@@ -1933,9 +1954,9 @@ def _build_component_decomposition_jump_operators(
 
         return component_jumps + outside_jumps
 
-    if jump_operator_design == "monitor_recycler":
+    if jump_operator_design in {"monitor_recycler", "local_rdm_parent_projector"}:
         raise ValueError(
-            "monitor_recycler component jumps are assembled directly from " "local RDM recyclers."
+            f"{jump_operator_design} component jumps are assembled directly from " "local RDM data."
         )
 
     if jump_operator_design == "hamiltonian_outside_monitor_inside":
@@ -2274,6 +2295,69 @@ def _build_monitor_recycler_local_hamiltonian_closure_operators(
         closure_operators[region_key] = local_hamiltonian
 
     return closure_operators
+
+
+def _build_local_rdm_parent_projector_jump_operators(
+    *,
+    basis_configs: NDArray[np.integer],
+    state: NDArray[np.complex128],
+    region_specs: tuple[tuple[tuple[int, ...], Any], ...],
+    rdm_tolerance: float,
+) -> tuple[sp.csr_array, ...]:
+    """Build local parent-projector jumps from target local-RDM kernels.
+
+    For each monitor component support ``R_i``, compute the local reduced
+    density matrix ``rho_i`` of the target cage state and embed the local null
+    projector
+
+        Q_i = I_{R_i} - projector(support(rho_i))
+
+    as a global constrained-basis jump.  The target is dark by construction,
+    and ``ker(Q_i)`` preserves the full local-RDM support instead of applying a
+    rank-one recycler.  This is a parent-Hamiltonian-style dissipator: it is
+    usually less microscopic than a single matrix-unit recycler, but it is much
+    less lossy and can remove the large common-kernel degeneracy seen in
+    ``V_i P_i`` monitor-recycler jumps.
+    """
+    jumps_by_region: dict[tuple[int, ...], sp.csr_array] = {}
+    ordered_regions: list[tuple[int, ...]] = []
+
+    for region, _ in region_specs:
+        region_key = tuple(int(index) for index in region)
+        if region_key in jumps_by_region:
+            continue
+
+        reduced_density_matrix = local_reduced_density_matrix_from_state(
+            basis_configs=basis_configs,
+            state=state,
+            variable_indices=region_key,
+            tolerance=rdm_tolerance,
+        )
+
+        if reduced_density_matrix.nullity == 0:
+            parent_projector = sp.csr_array(
+                (basis_configs.shape[0], basis_configs.shape[0]),
+                dtype=np.complex128,
+            )
+        else:
+            local_null_projector = (
+                reduced_density_matrix.null_basis @ reduced_density_matrix.null_basis.conj().T
+            )
+            parent_projector = embed_local_pattern_operator(
+                basis_configs=basis_configs,
+                variable_indices=region_key,
+                local_patterns=reduced_density_matrix.local_patterns,
+                local_operator=local_null_projector.astype(np.complex128, copy=False),
+            ).tocsr()
+
+        jumps_by_region[region_key] = parent_projector
+        ordered_regions.append(region_key)
+
+    jumps = tuple(jumps_by_region[region] for region in ordered_regions)
+    if not jumps:
+        raise ValueError("local_rdm_parent_projector produced no jump operators.")
+
+    return jumps
 
 
 def _build_monitor_recycler_jump_operators(

@@ -1292,6 +1292,7 @@ def main() -> None:
             "kinetic_outside_monitor_inside",
             "hamiltonian_outside_monitor_inside",
             "monitor_recycler",
+            "local_rdm_parent_projector",
         ],
         help=(
             "Jump-operator design for the optional QDM Cage-Lindblad case. "
