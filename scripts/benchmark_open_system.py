@@ -318,6 +318,7 @@ def _make_qdm_cage_lindblad_mcwf_case(
     monitor_recycler_hamiltonian_closure_order: int = 0,
     monitor_recycler_hamiltonian_shift: str = "target_energy",
     monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
+    cage_lindblad_recycling_jump_source: str = "local_rdm_two_pattern",
 ) -> OpenSystemBenchmarkCase:
     """Build a QDM Cage-Lindblad problem used for real MCWF timing."""
     from qlinks.basis import basis_configs_from_build_result
@@ -446,7 +447,7 @@ def _make_qdm_cage_lindblad_mcwf_case(
             reduced_iz_monitor_decomposition="exact_support",
             jump_operator_design=jump_operator_design,
             jump_plaquette_policy="outside_or_crossing",
-            recycling_jump_source="local_rdm_two_pattern",
+            recycling_jump_source=cage_lindblad_recycling_jump_source,
             max_recycling_jumps_per_region=1,
             monitor_recycler_hamiltonian_closure_order=(monitor_recycler_hamiltonian_closure_order),
             monitor_recycler_hamiltonian_shift=monitor_recycler_hamiltonian_shift,
@@ -504,7 +505,7 @@ def _make_qdm_cage_lindblad_mcwf_case(
         "construction_seconds": construction_seconds,
         "construction_stage_seconds": dict(construction_stage_seconds),
         "check_liouvillian": check_liouvillian,
-        "recycling_jump_source": "local_rdm_two_pattern",
+        "recycling_jump_source": cage_lindblad_recycling_jump_source,
         "ipr_candidate_count": ipr_candidate_count,
         "ipr_max_iter": ipr_max_iter,
         "ipr_batch_size": ipr_batch_size,
@@ -534,6 +535,7 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
     monitor_recycler_hamiltonian_closure_order: int = 0,
     monitor_recycler_hamiltonian_shift: str = "target_energy",
     monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
+    cage_lindblad_recycling_jump_source: str = "local_rdm_two_pattern",
 ) -> OpenSystemBenchmarkCase:
     return _make_qdm_cage_lindblad_mcwf_case(
         cage_lindblad_case="square_qdm_pbc_w00",
@@ -545,6 +547,10 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
         record_index=record_index,
         initial_state_mode=initial_state_mode,
         jump_operator_design=jump_operator_design,
+        monitor_recycler_hamiltonian_closure_order=monitor_recycler_hamiltonian_closure_order,
+        monitor_recycler_hamiltonian_shift=monitor_recycler_hamiltonian_shift,
+        monitor_recycler_hamiltonian_closure_source=monitor_recycler_hamiltonian_closure_source,
+        cage_lindblad_recycling_jump_source=cage_lindblad_recycling_jump_source,
     )
 
 
@@ -564,6 +570,7 @@ def make_benchmark_cases(
     cage_lindblad_monitor_recycler_hamiltonian_closure_order: int = 0,
     cage_lindblad_monitor_recycler_hamiltonian_shift: str = "target_energy",
     cage_lindblad_monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
+    cage_lindblad_recycling_jump_source: str = "local_rdm_two_pattern",
 ) -> list[OpenSystemBenchmarkCase]:
     ops = _pauli_and_ladder_operators()
     sigma_minus = ops["sigma_minus"]
@@ -673,6 +680,7 @@ def make_benchmark_cases(
                 monitor_recycler_hamiltonian_closure_source=(
                     cage_lindblad_monitor_recycler_hamiltonian_closure_source
                 ),
+                cage_lindblad_recycling_jump_source=cage_lindblad_recycling_jump_source,
             )
         )
 
@@ -1321,6 +1329,21 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--cage-lindblad-recycling-jump-source",
+        default="local_rdm_two_pattern",
+        choices=[
+            "local_rdm_two_pattern",
+            "local_rdm_rank_one",
+            "local_rdm_null_basis",
+        ],
+        help=(
+            "Local-RDM recycler source used by Cage-Lindblad construction. "
+            "For monitor_recycler, 'local_rdm_null_basis' selects one reset "
+            "map for each local-RDM null direction so V_i P_i loses less "
+            "monitor information than a single rank-one recycler."
+        ),
+    )
+    parser.add_argument(
         "--cage-lindblad-monitor-recycler-hamiltonian-shift",
         default="target_energy",
         choices=["target_energy", "local_expectation", "none"],
@@ -1415,6 +1438,7 @@ def main() -> None:
         cage_lindblad_monitor_recycler_hamiltonian_closure_source=(
             args.cage_lindblad_monitor_recycler_hamiltonian_closure_source
         ),
+        cage_lindblad_recycling_jump_source=args.cage_lindblad_recycling_jump_source,
     ):
         if only_filter is not None and only_filter not in case.name:
             continue

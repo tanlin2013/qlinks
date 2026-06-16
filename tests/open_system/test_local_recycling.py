@@ -237,3 +237,21 @@ def test_build_local_recycling_jumps_reuses_duplicate_region_scan() -> None:
     assert len(result.scan_results) == 2
     assert result.scan_results[0] is result.scan_results[1]
     assert result.n_jumps == 2
+
+
+def test_build_local_recycling_jumps_null_basis_selects_all_null_directions() -> None:
+    basis_configs = np.arange(4, dtype=np.int64).reshape(4, 1)
+    state = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
+
+    result = build_local_recycling_jumps_from_regions(
+        basis_configs=basis_configs,
+        target_state=state,
+        regions=((0,),),
+        source="local_rdm_null_basis",
+        max_jumps_per_region=1,
+        inflow_tolerance=1e-12,
+    )
+
+    assert result.scan_results[0].reduced_density_matrix.nullity == 3
+    assert result.n_jumps == 3
+    assert sorted(selection.candidate.beta_index for selection in result.selections) == [0, 1, 2]

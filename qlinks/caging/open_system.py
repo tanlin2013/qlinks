@@ -2296,9 +2296,9 @@ def _build_monitor_recycler_jump_operators(
 ) -> tuple[tuple[Any, ...], LocalRecyclingBuildResult, tuple[int, ...]]:
     if source == "none":
         raise ValueError(
-            "jump_operator_design='monitor_recycler' requires "
-            "recycling_jump_source to be 'local_rdm_two_pattern' or "
-            "'local_rdm_rank_one'."
+            "jump_operator_design='monitor_recycler' requires recycling_jump_source "
+            "to be 'local_rdm_two_pattern', 'local_rdm_rank_one', or "
+            "'local_rdm_null_basis'."
         )
 
     if hamiltonian_closure_order < 0:
@@ -2407,8 +2407,8 @@ def _build_monitor_recycler_jump_operators(
         raise ValueError(
             "Could not construct monitor-recycler jumps for "
             f"{len(missing_regions)} monitor region(s): {preview}. "
-            "Try recycling_jump_source='local_rdm_rank_one' or increase "
-            "max_recycling_jumps_per_region."
+            "Try recycling_jump_source='local_rdm_rank_one' or "
+            "recycling_jump_source='local_rdm_null_basis'."
         )
 
     return tuple(jumps), recycling_build_result, tuple(jump_closure_orders)

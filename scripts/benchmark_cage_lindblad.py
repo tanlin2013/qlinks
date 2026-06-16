@@ -683,7 +683,7 @@ def main() -> None:
     parser.add_argument(
         "--recycling-jump-source",
         default="none",
-        choices=["none", "local_rdm_rank_one", "local_rdm_two_pattern"],
+        choices=["none", "local_rdm_rank_one", "local_rdm_two_pattern", "local_rdm_null_basis"],
         help="Build local reduced-density-matrix recycling jumps during construction.",
     )
     parser.add_argument(

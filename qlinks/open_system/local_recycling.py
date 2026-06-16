@@ -11,6 +11,7 @@ RecyclingJumpSource = Literal[
     "none",
     "local_rdm_rank_one",
     "local_rdm_two_pattern",
+    "local_rdm_null_basis",
 ]
 
 
@@ -738,9 +739,50 @@ def select_local_recycling_candidates(
     prefer_sparse: bool = True,
     two_pattern_tolerance: float = 1e-8,
 ) -> tuple[LocalRecyclingSelection, ...]:
-    """Select recycling candidates from one scan result."""
+    """Select recycling candidates from one scan result.
+
+    ``local_rdm_rank_one`` and ``local_rdm_two_pattern`` keep the historical
+    behavior: they choose the best few rank-one reset maps ``|alpha><beta|``.
+
+    ``local_rdm_null_basis`` is designed for monitor-recycler jumps
+    ``L=V P``.  A single rank-one recycler can make ``V P`` much more singular
+    than the monitor ``P`` itself, because it only tests one local ``beta``
+    direction.  This source instead selects one good target-support vector
+    ``alpha`` for every local-RDM null vector ``beta``.  The resulting jump
+    family preserves the full local null-space information detected by the
+    monitor, while still recycling into the target local support.  The
+    ``max_candidates`` argument is intentionally ignored for this source; the
+    number of selected jumps is the local-RDM nullity.
+    """
     if source == "none":
         return ()
+
+    if source == "local_rdm_null_basis":
+        best_by_beta: dict[int, LocalRecyclingSelection] = {}
+
+        for candidate in scan_result.candidates:
+            structure = detect_two_pattern_recycling_structure(
+                candidate=candidate,
+                local_patterns=scan_result.reduced_density_matrix.local_patterns,
+                tolerance=two_pattern_tolerance,
+            )
+            nnz = candidate.jump.nnz if hasattr(candidate.jump, "nnz") else np.inf
+            score = (
+                -float(candidate.inflow_norm),
+                float(candidate.target_residual),
+                float(nnz) if prefer_sparse else 0.0,
+                int(candidate.alpha_index),
+            )
+            selection = LocalRecyclingSelection(
+                candidate=candidate,
+                two_pattern_structure=structure,
+                score=score,
+            )
+            previous = best_by_beta.get(int(candidate.beta_index))
+            if previous is None or selection.score < previous.score:
+                best_by_beta[int(candidate.beta_index)] = selection
+
+        return tuple(best_by_beta[index] for index in sorted(best_by_beta))
 
     selections: list[LocalRecyclingSelection] = []
 
