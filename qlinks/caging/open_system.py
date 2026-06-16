@@ -70,7 +70,12 @@ JumpPlaquettePolicy = Literal[
     "not_strictly_inside",
 ]
 MonitorRecyclerHamiltonianShift = Literal["none", "target_energy", "local_expectation"]
-MonitorRecyclerHamiltonianClosureSource = Literal["global_hamiltonian", "local_hamiltonian_terms"]
+MonitorRecyclerHamiltonianClosureSource = Literal[
+    "global_hamiltonian",
+    "local_hamiltonian_terms",
+    "boundary_hamiltonian_terms",
+    "touching_hamiltonian_terms",
+]
 
 
 def _record_construction_stage(
@@ -1249,13 +1254,19 @@ def build_type1_cage_lindblad_construction(
 
     if monitor_recycler_hamiltonian_closure_order < 0:
         raise ValueError("monitor_recycler_hamiltonian_closure_order must be nonnegative.")
+    local_hamiltonian_closure_sources = {
+        "local_hamiltonian_terms",
+        "boundary_hamiltonian_terms",
+        "touching_hamiltonian_terms",
+    }
     if monitor_recycler_hamiltonian_closure_source not in {
         "global_hamiltonian",
-        "local_hamiltonian_terms",
+        *local_hamiltonian_closure_sources,
     }:
         raise ValueError(
-            'monitor_recycler_hamiltonian_closure_source must be "global_hamiltonian" '
-            'or "local_hamiltonian_terms".'
+            'monitor_recycler_hamiltonian_closure_source must be "global_hamiltonian", '
+            '"local_hamiltonian_terms", "boundary_hamiltonian_terms", or '
+            '"touching_hamiltonian_terms".'
         )
     if (
         monitor_recycler_hamiltonian_closure_source == "global_hamiltonian"
@@ -1263,11 +1274,10 @@ def build_type1_cage_lindblad_construction(
     ):
         raise ValueError(
             'monitor_recycler_hamiltonian_shift="local_expectation" is only '
-            "valid with monitor_recycler_hamiltonian_closure_source="
-            '"local_hamiltonian_terms".'
+            "valid with local monitor-recycler Hamiltonian closure sources."
         )
     if (
-        monitor_recycler_hamiltonian_closure_source == "local_hamiltonian_terms"
+        monitor_recycler_hamiltonian_closure_source in local_hamiltonian_closure_sources
         and monitor_recycler_hamiltonian_shift == "target_energy"
     ):
         raise ValueError(
@@ -1536,7 +1546,12 @@ def build_type1_cage_lindblad_construction(
         local_closure_operators_by_region = None
         if (
             monitor_recycler_hamiltonian_closure_order > 0
-            and monitor_recycler_hamiltonian_closure_source == "local_hamiltonian_terms"
+            and monitor_recycler_hamiltonian_closure_source
+            in {
+                "local_hamiltonian_terms",
+                "boundary_hamiltonian_terms",
+                "touching_hamiltonian_terms",
+            }
         ):
             local_closure_operators_by_region = (
                 _build_monitor_recycler_local_hamiltonian_closure_operators(
@@ -1550,6 +1565,7 @@ def build_type1_cage_lindblad_construction(
                     shape=shape,
                     state=psi,
                     hamiltonian_shift=monitor_recycler_hamiltonian_shift,
+                    hamiltonian_closure_source=monitor_recycler_hamiltonian_closure_source,
                     local_term_cache=local_term_cache,
                 )
             )
@@ -2198,13 +2214,21 @@ def _build_monitor_recycler_local_hamiltonian_closure_operators(
     shape: tuple[int, int],
     state: NDArray[np.complex128],
     hamiltonian_shift: MonitorRecyclerHamiltonianShift,
+    hamiltonian_closure_source: MonitorRecyclerHamiltonianClosureSource,
     local_term_cache: _LocalTermMatrixCache | None = None,
 ) -> dict[tuple[int, ...], sp.csr_array]:
     """Build local Hamiltonian closure factors for monitor-recycler jumps.
 
     For a monitor component on support ``R_i``, this returns the sum of
-    plaquette kinetic and potential terms strictly supported in ``R_i``.
-    The resulting closure jump is ``V_i P_i h_{R_i}`` (or powers thereof).
+    plaquette kinetic and potential terms selected by
+    ``hamiltonian_closure_source``:
+
+    * ``local_hamiltonian_terms``: terms strictly supported in ``R_i``;
+    * ``boundary_hamiltonian_terms``: terms overlapping ``R_i`` but not
+      strictly contained in it;
+    * ``touching_hamiltonian_terms``: both of the above.
+
+    The resulting closure jump is ``V_i P_i h`` (or powers thereof).
 
     Unlike the global ``P_i(H-E)`` closure, local closure is not guaranteed by
     global eigenstate-ness alone; downstream jump residuals therefore remain the
@@ -2223,13 +2247,15 @@ def _build_monitor_recycler_local_hamiltonian_closure_operators(
     for region in regions:
         region_key = tuple(int(index) for index in region)
         region_support = frozenset(region_key)
-        local_kinetic_terms = _select_terms_inside_cached_supports(
+        local_kinetic_terms = _select_monitor_recycler_closure_terms(
             kinetic_term_supports,
             region_support,
+            hamiltonian_closure_source=hamiltonian_closure_source,
         )
-        local_potential_terms = _select_terms_inside_cached_supports(
+        local_potential_terms = _select_monitor_recycler_closure_terms(
             potential_term_supports,
             region_support,
+            hamiltonian_closure_source=hamiltonian_closure_source,
         )
         local_hamiltonian = _sum_local_terms(
             model=model,
@@ -2281,7 +2307,12 @@ def _build_monitor_recycler_jump_operators(
         if hamiltonian_closure_source == "global_hamiltonian" and hamiltonian is None:
             raise ValueError("global Hamiltonian closure requires a hamiltonian operator.")
         if (
-            hamiltonian_closure_source == "local_hamiltonian_terms"
+            hamiltonian_closure_source
+            in {
+                "local_hamiltonian_terms",
+                "boundary_hamiltonian_terms",
+                "touching_hamiltonian_terms",
+            }
             and local_closure_operators_by_region is None
         ):
             raise ValueError(
@@ -2343,7 +2374,11 @@ def _build_monitor_recycler_jump_operators(
                 if shifted_hamiltonian is None:
                     raise RuntimeError("shifted_hamiltonian was not initialized.")
                 closure_factor = shifted_hamiltonian
-            elif hamiltonian_closure_source == "local_hamiltonian_terms":
+            elif hamiltonian_closure_source in {
+                "local_hamiltonian_terms",
+                "boundary_hamiltonian_terms",
+                "touching_hamiltonian_terms",
+            }:
                 if local_closure_operators_by_region is None:
                     raise RuntimeError("local_closure_operators_by_region was not initialized.")
                 closure_factor = _as_csr_matrix(local_closure_operators_by_region[region_key])
@@ -3165,6 +3200,32 @@ def _select_terms_inside_cached_supports(
     variable_support: frozenset[int],
 ) -> tuple[LocalTermDescriptor, ...]:
     return tuple(term for term, support in term_supports if support <= variable_support)
+
+
+def _select_monitor_recycler_closure_terms(
+    term_supports: tuple[tuple[LocalTermDescriptor, frozenset[int]], ...],
+    variable_support: frozenset[int],
+    *,
+    hamiltonian_closure_source: MonitorRecyclerHamiltonianClosureSource,
+) -> tuple[LocalTermDescriptor, ...]:
+    if hamiltonian_closure_source == "local_hamiltonian_terms":
+        return tuple(term for term, support in term_supports if support <= variable_support)
+
+    if hamiltonian_closure_source == "boundary_hamiltonian_terms":
+        return tuple(
+            term
+            for term, support in term_supports
+            if bool(support & variable_support) and not support <= variable_support
+        )
+
+    if hamiltonian_closure_source == "touching_hamiltonian_terms":
+        return tuple(term for term, support in term_supports if bool(support & variable_support))
+
+    raise ValueError(
+        "Local monitor-recycler closure source must be one of "
+        "'local_hamiltonian_terms', 'boundary_hamiltonian_terms', or "
+        "'touching_hamiltonian_terms'."
+    )
 
 
 def _plaquette_ids_inside_cached_supports(
