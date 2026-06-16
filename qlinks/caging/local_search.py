@@ -15,9 +15,9 @@ one or more global winding sectors.
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field, replace
-from typing import Literal
+from typing import Literal, Protocol
 
 import numpy as np
 import numpy.typing as npt
@@ -325,6 +325,7 @@ class LocalQDMCageSearchResult:
     self_loop_values: npt.NDArray[np.complex128]
     config: LocalQDMCageSearchConfig
     model: object | None = None
+    adapter: LocalCageModelAdapter | None = None
     type1_candidates: list[CandidateSubgraph] = field(default_factory=list)
 
     def __len__(self) -> int:
@@ -365,27 +366,318 @@ class LocalQDMCageSearchResult:
         """
         if self.model is None:
             raise ValueError(
-                "This LocalQDMCageSearchResult does not carry a model reference. "
-                "Use LocalQDMCageSearcher.run() from the current API or call "
-                "certify_qdm_local_result(..., model=...)."
+                "This local cage result does not carry a model reference. "
+                "Use LocalCageSearcher.run() from the current API or call the "
+                "model-specific certification helper directly."
             )
-        return certify_qdm_local_result(self.model, self, config=config)
+        adapter = self.adapter or local_cage_adapter_for_model(self.model)
+        return adapter.certify_result(self, config=config)
+
+
+class LocalCageModelAdapter(Protocol):
+    """Model-specific local variable interface used by :class:`LocalCageSearcher`.
+
+    The generic local searcher owns the caging algebra.  The adapter owns the
+    model/lattice details: how to build a local region, enumerate compatible
+    local configurations, construct local kinetic transitions, and compute the
+    local diagonal/self-loop values.  New models should add an adapter rather
+    than adding branches to ``LocalCageSearcher``.
+    """
+
+    model: object
+    source_label: str
+
+    def normalize_config(
+        self,
+        config: LocalQDMCageSearchConfig,
+    ) -> LocalQDMCageSearchConfig:
+        """Return a model-normalized search config."""
+        ...
+
+    def build_region_from_plaquettes(
+        self,
+        *,
+        plaquette_ids: Sequence[int] | npt.ArrayLike,
+        config: LocalQDMCageSearchConfig,
+        scoring_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
+    ) -> LocalQDMRegion:
+        """Build a local region from seed plaquettes/local kinetic terms."""
+        ...
+
+    def build_region_from_links(
+        self,
+        *,
+        link_ids: Sequence[int] | npt.ArrayLike,
+        config: LocalQDMCageSearchConfig,
+        active_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
+        scoring_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
+    ) -> LocalQDMRegion:
+        """Build a local region from explicit local variables."""
+        ...
+
+    def full_model_region(
+        self,
+        *,
+        config: LocalQDMCageSearchConfig,
+    ) -> LocalQDMRegion:
+        """Build the full-model region for exact-regression mode."""
+        ...
+
+    def enumerate_local_basis(
+        self,
+        region: LocalQDMRegion,
+        config: LocalQDMCageSearchConfig,
+    ) -> Basis:
+        """Enumerate locally valid configurations for ``region``."""
+        ...
+
+    def build_local_kinetic_matrix(
+        self,
+        region: LocalQDMRegion,
+        local_basis: Basis,
+    ) -> scipy_sparse.csr_array:
+        """Build the local kinetic matrix on ``local_basis``."""
+        ...
+
+    def local_self_loop_values(
+        self,
+        region: LocalQDMRegion,
+        local_basis: Basis,
+    ) -> npt.NDArray[np.complex128]:
+        """Compute local diagonal/self-loop values."""
+        ...
+
+    def make_local_record(
+        self,
+        *,
+        cage_state: CageState,
+        signature: tuple[int, int],
+        candidate: CandidateSubgraph,
+        local_basis: Basis,
+        region: LocalQDMRegion,
+    ) -> LocalQDMCageRecord:
+        """Wrap one solved local cage state in a model-specific record."""
+        ...
+
+    def certify_result(
+        self,
+        local_result: LocalQDMCageSearchResult,
+        *,
+        config: LocalQDMPaddingConfig | None = None,
+    ) -> CertifiedLocalQDMCageSearchResult:
+        """Pad/certify local records for this model, when available."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class QDMLocalCageAdapter:
+    """QDM implementation of the local variable interface.
+
+    This is intentionally the only place where the generic local searcher needs
+    to know how QDM variables/plaquette flips are represented.  Later QLM/PXP
+    adapters can implement the same protocol without modifying the solver core.
+    """
+
+    model: object
+    source_label: str = "qdm"
+
+    def normalize_config(
+        self,
+        config: LocalQDMCageSearchConfig,
+    ) -> LocalQDMCageSearchConfig:
+        return _with_inferred_potential_signature_unit(config, self.model)
+
+    def build_region_from_plaquettes(
+        self,
+        *,
+        plaquette_ids: Sequence[int] | npt.ArrayLike,
+        config: LocalQDMCageSearchConfig,
+        scoring_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
+    ) -> LocalQDMRegion:
+        return build_qdm_local_region_from_plaquettes(
+            self.model,
+            plaquette_ids=plaquette_ids,
+            halo_layers=config.halo_layers,
+            boundary_mode=config.boundary_mode,
+            scoring_plaquette_ids=scoring_plaquette_ids,
+        )
+
+    def build_region_from_links(
+        self,
+        *,
+        link_ids: Sequence[int] | npt.ArrayLike,
+        config: LocalQDMCageSearchConfig,
+        active_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
+        scoring_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
+    ) -> LocalQDMRegion:
+        return build_qdm_local_region_from_links(
+            self.model,
+            link_ids=link_ids,
+            boundary_mode=config.boundary_mode,
+            active_plaquette_ids=active_plaquette_ids,
+            scoring_plaquette_ids=scoring_plaquette_ids,
+        )
+
+    def full_model_region(
+        self,
+        *,
+        config: LocalQDMCageSearchConfig,
+    ) -> LocalQDMRegion:
+        return self.build_region_from_links(
+            link_ids=np.arange(self.model.lattice.num_links, dtype=np.int64),
+            active_plaquette_ids=self.model.plaquette_ids(),
+            scoring_plaquette_ids=self.model.plaquette_ids(),
+            config=config,
+        )
+
+    def enumerate_local_basis(
+        self,
+        region: LocalQDMRegion,
+        config: LocalQDMCageSearchConfig,
+    ) -> Basis:
+        return enumerate_qdm_local_basis(
+            self.model,
+            region,
+            include_sectors_when_full=config.include_sectors_when_full,
+            max_states=config.max_local_states,
+            sort=config.sort_basis,
+        )
+
+    def build_local_kinetic_matrix(
+        self,
+        region: LocalQDMRegion,
+        local_basis: Basis,
+    ) -> scipy_sparse.csr_array:
+        return build_qdm_local_kinetic_matrix(self.model, region, local_basis)
+
+    def local_self_loop_values(
+        self,
+        region: LocalQDMRegion,
+        local_basis: Basis,
+    ) -> npt.NDArray[np.complex128]:
+        return qdm_local_self_loop_values(self.model, region, local_basis)
+
+    def make_local_record(
+        self,
+        *,
+        cage_state: CageState,
+        signature: tuple[int, int],
+        candidate: CandidateSubgraph,
+        local_basis: Basis,
+        region: LocalQDMRegion,
+    ) -> LocalQDMCageRecord:
+        support_configs = np.asarray(local_basis.states[cage_state.support], dtype=np.int64)
+        return LocalQDMCageRecord(
+            cage_state=cage_state,
+            signature=signature,
+            candidate=candidate,
+            support_configs=support_configs,
+            local_link_ids=region.link_ids.copy(),
+            active_plaquette_ids=region.active_plaquette_ids.copy(),
+            scoring_plaquette_ids=region.scoring_plaquette_ids.copy(),
+            unresolved_boundary_plaquette_ids=region.unresolved_boundary_plaquette_ids.copy(),
+        )
+
+    def certify_result(
+        self,
+        local_result: LocalQDMCageSearchResult,
+        *,
+        config: LocalQDMPaddingConfig | None = None,
+    ) -> CertifiedLocalQDMCageSearchResult:
+        return certify_qdm_local_result(self.model, local_result, config=config)
+
+
+LocalCageAdapterFactory = Callable[[object], LocalCageModelAdapter | None]
+_LOCAL_CAGE_ADAPTER_FACTORIES: list[LocalCageAdapterFactory] = []
+
+
+def register_local_cage_adapter_factory(
+    factory: LocalCageAdapterFactory,
+    *,
+    prepend: bool = False,
+) -> None:
+    """Register a factory that can adapt models for ``LocalCageSearcher``.
+
+    Factories receive a model and return either a ``LocalCageModelAdapter`` or
+    ``None`` when they do not support that model.  The built-in QDM factory is
+    registered by default; future model families can register their adapters
+    without branching inside the solver core.
+    """
+    if prepend:
+        _LOCAL_CAGE_ADAPTER_FACTORIES.insert(0, factory)
+    else:
+        _LOCAL_CAGE_ADAPTER_FACTORIES.append(factory)
+
+
+def local_cage_adapter_for_model(
+    model: object,
+    adapter: LocalCageModelAdapter | None = None,
+) -> LocalCageModelAdapter:
+    """Return a local-search adapter for ``model``.
+
+    Passing ``adapter`` is the explicit, model-generic path.  Without an
+    explicit adapter, the registered factories are tried in order.
+    """
+    if adapter is not None:
+        return adapter
+    for factory in _LOCAL_CAGE_ADAPTER_FACTORIES:
+        candidate = factory(model)
+        if candidate is not None:
+            return candidate
+    raise ValueError(
+        "No LocalCageModelAdapter is registered for this model. "
+        "Pass adapter=... explicitly or register a factory with "
+        "register_local_cage_adapter_factory(...)."
+    )
+
+
+def _qdm_local_cage_adapter_factory(model: object) -> LocalCageModelAdapter | None:
+    lattice = getattr(model, "lattice", None)
+    if lattice is None:
+        return None
+    required_model_attrs = (
+        "plaquette_ids",
+        "make_sectors",
+        "_coup_kin_at",
+        "_coup_pot_at",
+    )
+    required_lattice_attrs = (
+        "num_links",
+        "num_sites",
+        "incident_links",
+        "plaquette_links",
+        "link_endpoints",
+    )
+    if not all(hasattr(model, name) for name in required_model_attrs):
+        return None
+    if not all(hasattr(lattice, name) for name in required_lattice_attrs):
+        return None
+    if not hasattr(model, "required_count"):
+        return None
+    return QDMLocalCageAdapter(model)
+
+
+register_local_cage_adapter_factory(_qdm_local_cage_adapter_factory)
 
 
 @dataclass
-class LocalQDMCageSearcher:
-    """Local-first type-1 cage searcher for QDM models.
+class LocalCageSearcher:
+    """Local-first type-1 cage searcher over a model adapter.
 
-    The searcher consumes a QDM model object and a local region.  It does not
-    call ``model.build()`` and does not assemble the full Hilbert-space
-    Hamiltonian.  It only enumerates local dimer configurations on the chosen
-    links and builds a small local kinetic matrix from plaquette flips whose
-    support is contained in that local link set.
+    The searcher owns only the generic caging algebra: build a local kinetic
+    graph, find bipartite/uniform-self-loop type-1 candidates, and solve the
+    fixed-kappa cage problem.  The adapter owns all model/lattice details such
+    as local variable ids, constraints, local kinetic moves, and padding.
     """
 
     model: object
     region: LocalQDMRegion
     config: LocalQDMCageSearchConfig = field(default_factory=LocalQDMCageSearchConfig)
+    adapter: LocalCageModelAdapter | None = None
+
+    def __post_init__(self) -> None:
+        self.adapter = local_cage_adapter_for_model(self.model, self.adapter)
+        self.config = self.adapter.normalize_config(self.config)
 
     @classmethod
     def from_plaquettes(
@@ -395,18 +687,18 @@ class LocalQDMCageSearcher:
         *,
         config: LocalQDMCageSearchConfig | None = None,
         scoring_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
-    ) -> LocalQDMCageSearcher:
-        """Construct a local searcher from seed plaquettes."""
+        adapter: LocalCageModelAdapter | None = None,
+    ) -> LocalCageSearcher:
+        """Construct a local searcher from seed plaquettes/local kinetic terms."""
+        adapter = local_cage_adapter_for_model(model, adapter)
         search_config = LocalQDMCageSearchConfig() if config is None else config
-        search_config = _with_inferred_potential_signature_unit(search_config, model)
-        region = build_qdm_local_region_from_plaquettes(
-            model,
+        search_config = adapter.normalize_config(search_config)
+        region = adapter.build_region_from_plaquettes(
             plaquette_ids=plaquette_ids,
-            halo_layers=search_config.halo_layers,
-            boundary_mode=search_config.boundary_mode,
+            config=search_config,
             scoring_plaquette_ids=scoring_plaquette_ids,
         )
-        return cls(model=model, region=region, config=search_config)
+        return cls(model=model, region=region, config=search_config, adapter=adapter)
 
     @classmethod
     def from_links(
@@ -417,18 +709,19 @@ class LocalQDMCageSearcher:
         config: LocalQDMCageSearchConfig | None = None,
         active_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
         scoring_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
-    ) -> LocalQDMCageSearcher:
-        """Construct a local searcher from explicit link ids."""
+        adapter: LocalCageModelAdapter | None = None,
+    ) -> LocalCageSearcher:
+        """Construct a local searcher from explicit local variable ids."""
+        adapter = local_cage_adapter_for_model(model, adapter)
         search_config = LocalQDMCageSearchConfig() if config is None else config
-        search_config = _with_inferred_potential_signature_unit(search_config, model)
-        region = build_qdm_local_region_from_links(
-            model,
+        search_config = adapter.normalize_config(search_config)
+        region = adapter.build_region_from_links(
             link_ids=link_ids,
-            boundary_mode=search_config.boundary_mode,
+            config=search_config,
             active_plaquette_ids=active_plaquette_ids,
             scoring_plaquette_ids=scoring_plaquette_ids,
         )
-        return cls(model=model, region=region, config=search_config)
+        return cls(model=model, region=region, config=search_config, adapter=adapter)
 
     @classmethod
     def full_model_region(
@@ -436,43 +729,26 @@ class LocalQDMCageSearcher:
         model: object,
         *,
         config: LocalQDMCageSearchConfig | None = None,
-    ) -> LocalQDMCageSearcher:
+        adapter: LocalCageModelAdapter | None = None,
+    ) -> LocalCageSearcher:
         """Construct a local searcher whose region is the full model.
 
         This is mostly useful as a regression bridge: the implementation path is
         still local-first/no-full-Hamiltonian, but the local region happens to
-        contain every link and plaquette.
+        contain every variable and local kinetic term.
         """
+        adapter = local_cage_adapter_for_model(model, adapter)
         search_config = LocalQDMCageSearchConfig() if config is None else config
-        search_config = _with_inferred_potential_signature_unit(search_config, model)
-        return cls.from_links(
-            model,
-            link_ids=np.arange(model.lattice.num_links, dtype=np.int64),
-            active_plaquette_ids=model.plaquette_ids(),
-            scoring_plaquette_ids=model.plaquette_ids(),
-            config=search_config,
-        )
+        search_config = adapter.normalize_config(search_config)
+        region = adapter.full_model_region(config=search_config)
+        return cls(model=model, region=region, config=search_config, adapter=adapter)
 
     def run(self) -> LocalQDMCageSearchResult:
         """Run the local type-1 cage search."""
-        local_basis = enumerate_qdm_local_basis(
-            self.model,
-            self.region,
-            include_sectors_when_full=self.config.include_sectors_when_full,
-            max_states=self.config.max_local_states,
-            sort=self.config.sort_basis,
-        )
-
-        kinetic_matrix = build_qdm_local_kinetic_matrix(
-            self.model,
-            self.region,
-            local_basis,
-        )
-        self_loop_values = qdm_local_self_loop_values(
-            self.model,
-            self.region,
-            local_basis,
-        )
+        adapter = local_cage_adapter_for_model(self.model, self.adapter)
+        local_basis = adapter.enumerate_local_basis(self.region, self.config)
+        kinetic_matrix = adapter.build_local_kinetic_matrix(self.region, local_basis)
+        self_loop_values = adapter.local_self_loop_values(self.region, local_basis)
 
         if local_basis.n_states == 0:
             return LocalQDMCageSearchResult(
@@ -483,6 +759,7 @@ class LocalQDMCageSearcher:
                 self_loop_values=self_loop_values,
                 config=self.config,
                 model=self.model,
+                adapter=adapter,
                 type1_candidates=[],
             )
 
@@ -509,6 +786,7 @@ class LocalQDMCageSearcher:
             self_loop_values=self_loop_values,
             config=self.config,
             model=self.model,
+            adapter=adapter,
             type1_candidates=candidates,
         )
 
@@ -564,19 +842,14 @@ class LocalQDMCageSearcher:
                 if signature is None or signature[0] not in self.config.allowed_kappas:
                     continue
 
-                support_configs = np.asarray(local_basis.states[cage_state.support], dtype=np.int64)
+                adapter = local_cage_adapter_for_model(self.model, self.adapter)
                 records.append(
-                    LocalQDMCageRecord(
+                    adapter.make_local_record(
                         cage_state=cage_state,
                         signature=signature,
                         candidate=candidate,
-                        support_configs=support_configs,
-                        local_link_ids=self.region.link_ids.copy(),
-                        active_plaquette_ids=self.region.active_plaquette_ids.copy(),
-                        scoring_plaquette_ids=self.region.scoring_plaquette_ids.copy(),
-                        unresolved_boundary_plaquette_ids=(
-                            self.region.unresolved_boundary_plaquette_ids.copy()
-                        ),
+                        local_basis=local_basis,
+                        region=self.region,
                     )
                 )
 
@@ -588,6 +861,25 @@ class LocalQDMCageSearcher:
             )
 
         return records
+
+
+class LocalQDMCageSearcher(LocalCageSearcher):
+    """Backward-compatible QDM name for :class:`LocalCageSearcher`.
+
+    New code should prefer ``LocalCageSearcher``.  The old name remains as a
+    thin subclass so existing notebooks/tests keep working while the core
+    solver is routed through the model-adapter interface.
+    """
+
+
+# Generic public names.  The current implementation still returns the QDM
+# concrete record/region/result classes, but the solver consumes them through
+# ``LocalCageModelAdapter`` rather than by branching on a model type.
+LocalCageSearchConfig = LocalQDMCageSearchConfig
+LocalCageRegion = LocalQDMRegion
+LocalCageRecord = LocalQDMCageRecord
+LocalCageSearchResult = LocalQDMCageSearchResult
+CertifiedLocalCageSearchResult = CertifiedLocalQDMCageSearchResult
 
 
 def build_qdm_local_region_from_plaquettes(

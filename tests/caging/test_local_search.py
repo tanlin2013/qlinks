@@ -8,12 +8,78 @@ from qlinks.caging import (
     CageSearchConfig,
     CageSearcher,
     CageSearchResult,
+    LocalCageSearchConfig,
+    LocalCageSearcher,
     LocalQDMCageSearchConfig,
     LocalQDMCageSearcher,
     LocalQDMPaddingConfig,
+    QDMLocalCageAdapter,
     classify_cage_state,
 )
 from qlinks.models import HoneycombQDMModel, SquareQDMModel, TriangularQDMModel
+
+
+def test_generic_local_cage_searcher_replaces_qdm_wrapper_on_full_square() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    generic_result = LocalCageSearcher.full_model_region(
+        model,
+        config=LocalCageSearchConfig(
+            tolerance=1.0e-10,
+            degenerate_basis_strategy="ipr",
+            ipr_candidate_count=128,
+            ipr_random_seed=0,
+        ),
+    ).run()
+    wrapper_result = LocalQDMCageSearcher.full_model_region(
+        model,
+        config=LocalQDMCageSearchConfig(
+            tolerance=1.0e-10,
+            degenerate_basis_strategy="ipr",
+            ipr_candidate_count=128,
+            ipr_random_seed=0,
+        ),
+    ).run()
+
+    assert generic_result.counts_by_signature == wrapper_result.counts_by_signature
+    assert generic_result.counts_by_signature == {(0, 4): 9, (0, 6): 1}
+
+
+def test_generic_local_cage_searcher_accepts_explicit_qdm_adapter() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    searcher = LocalCageSearcher.from_plaquettes(
+        model,
+        plaquette_ids=[0],
+        config=LocalCageSearchConfig(
+            halo_layers=1,
+            boundary_mode="relaxed",
+            tolerance=1.0e-10,
+        ),
+        adapter=QDMLocalCageAdapter(model),
+    )
+    result = searcher.run()
+
+    assert result.local_hilbert_size > 0
+    assert result.region.link_ids.size < model.lattice.num_links
 
 
 def test_local_qdm_full_square_4x4_matches_exact_type1_counts() -> None:
