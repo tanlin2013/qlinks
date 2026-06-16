@@ -12,6 +12,7 @@ from qlinks.caging.classification import (
 from qlinks.caging.open_system import (
     CageLindbladConstruction,
     _build_component_decomposition_jump_operators,
+    _build_monitor_recycler_jump_operators,
     _build_reduced_iz_monitor_from_reports,
     _build_reduced_iz_operator_matrix,
     _group_local_transitions_by_source,
@@ -237,6 +238,33 @@ def test_left_multiply_sparse_csr_handles_general_sparse_left_factor():
     expected = left @ right
 
     np.testing.assert_allclose(actual.toarray(), expected.toarray())
+
+
+def test_build_monitor_recycler_jump_operators_uses_local_rdm_recycler():
+    basis_configs = np.asarray([[0], [1]], dtype=np.int64)
+    target_state = np.asarray([1.0, 0.0], dtype=np.complex128)
+    monitor = sp.csr_array(np.diag([0.0, 1.0]).astype(np.complex128))
+
+    jumps, recycling_result = _build_monitor_recycler_jump_operators(
+        basis_configs=basis_configs,
+        state=target_state,
+        region_specs=(((0,), monitor),),
+        source="local_rdm_rank_one",
+        max_jumps_per_region=1,
+        rdm_tolerance=1e-10,
+        dark_tolerance=1e-10,
+        inflow_tolerance=1e-12,
+        prefer_sparse=True,
+        two_pattern_tolerance=1e-8,
+    )
+
+    assert recycling_result.n_jumps == 1
+    assert len(jumps) == 1
+    np.testing.assert_allclose(jumps[0] @ target_state, np.zeros(2, dtype=np.complex128))
+    np.testing.assert_allclose(
+        jumps[0].toarray(),
+        np.asarray([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128),
+    )
 
 
 def test_left_multiply_sparse_csr_sums_duplicate_entries():

@@ -58,6 +58,7 @@ JumpOperatorDesign = Literal[
     "kinetic_times_monitor",
     "kinetic_outside_monitor_inside",
     "hamiltonian_outside_monitor_inside",
+    "monitor_recycler",
 ]
 JumpPlaquettePolicy = Literal[
     "disjoint_outside",
@@ -1278,7 +1279,31 @@ def build_type1_cage_lindblad_construction(
     _record_construction_stage(timing_collector, "monitor_assembly", stage_start)
 
     stage_start = time.perf_counter()
-    if component_jumps is not None:
+    recycling_build_result = None
+    recycling_jumps: tuple[Any, ...] = ()
+    monitor_recycler_component_jumps = False
+
+    if jump_operator_design == "monitor_recycler":
+        basis_configs = basis_configs_from_build_result(build_result)
+        region_specs = _monitor_recycler_region_specs(
+            region=region,
+            monitor=monitor,
+            monitor_components=monitor_components,
+        )
+        jumps, recycling_build_result = _build_monitor_recycler_jump_operators(
+            basis_configs=basis_configs,
+            state=psi,
+            region_specs=region_specs,
+            source=recycling_jump_source,
+            max_jumps_per_region=max_recycling_jumps_per_region,
+            rdm_tolerance=recycling_rdm_tolerance,
+            dark_tolerance=recycling_dark_tolerance,
+            inflow_tolerance=recycling_inflow_tolerance,
+            prefer_sparse=recycling_prefer_sparse,
+            two_pattern_tolerance=recycling_two_pattern_tolerance,
+        )
+        monitor_recycler_component_jumps = True
+    elif component_jumps is not None:
         jumps = _build_component_decomposition_jump_operators(
             model=model,
             build_result=build_result,
@@ -1306,15 +1331,13 @@ def build_type1_cage_lindblad_construction(
 
     _record_construction_stage(timing_collector, "jump_assembly", stage_start)
 
-    recycling_build_result = None
-    recycling_jumps: tuple[Any, ...] = ()
     recycling_regions = _recycling_regions_from_construction_context(
         region=region,
         monitor_components=monitor_components,
     )
 
     stage_start = time.perf_counter()
-    if recycling_jump_source != "none":
+    if jump_operator_design != "monitor_recycler" and recycling_jump_source != "none":
         basis_configs = basis_configs_from_build_result(build_result)
 
         recycling_build_result = build_local_recycling_jumps_from_regions(
@@ -1341,7 +1364,7 @@ def build_type1_cage_lindblad_construction(
         monitor_state = monitor @ psi
     monitor_residual = float(np.linalg.norm(monitor_state))
     if compute_jump_residuals:
-        if component_jumps is None:
+        if component_jumps is None or monitor_recycler_component_jumps:
             jump_residuals = _jump_residuals(
                 state=psi,
                 jumps=jumps,
@@ -1418,17 +1441,21 @@ def build_type1_cage_lindblad_construction(
             f"max_p ||J_p psi||={max_jump_residual:.3e}."
         )
 
-    n_component_jumps = len(component_jumps) if component_jumps is not None else 0
-    n_global_jump_terms = (
-        len(jump_kinetic_terms)
-        if component_jumps is not None
-        and jump_operator_design
-        in {
-            "kinetic_outside_monitor_inside",
-            "hamiltonian_outside_monitor_inside",
-        }
-        else 0
-    )
+    if jump_operator_design == "monitor_recycler":
+        n_component_jumps = len(jumps)
+        n_global_jump_terms = 0
+    else:
+        n_component_jumps = len(component_jumps) if component_jumps is not None else 0
+        n_global_jump_terms = (
+            len(jump_kinetic_terms)
+            if component_jumps is not None
+            and jump_operator_design
+            in {
+                "kinetic_outside_monitor_inside",
+                "hamiltonian_outside_monitor_inside",
+            }
+            else 0
+        )
 
     return CageLindbladConstruction(
         cage_state=psi,
@@ -1532,6 +1559,12 @@ def _build_jump_operators(
 
         return tuple(jumps)
 
+    if jump_operator_design == "monitor_recycler":
+        raise ValueError(
+            "monitor_recycler jumps are assembled from local RDM recyclers, "
+            "not plaquette kinetic terms."
+        )
+
     if jump_operator_design == "hamiltonian_outside_monitor_inside":
         monitor_terms_by_id = {int(term.term_id): term for term in monitor_kinetic_terms}
         jump_terms_by_id = {int(term.term_id): term for term in jump_kinetic_terms}
@@ -1606,6 +1639,11 @@ def _build_component_decomposition_jump_operators(
         )
 
         return component_jumps + outside_jumps
+
+    if jump_operator_design == "monitor_recycler":
+        raise ValueError(
+            "monitor_recycler component jumps are assembled directly from " "local RDM recyclers."
+        )
 
     if jump_operator_design == "hamiltonian_outside_monitor_inside":
         outside_jumps = tuple(
@@ -1823,6 +1861,97 @@ def _component_jump_residuals_from_components(
     return tuple(
         float(residual) for component in components for residual in component.jump_residuals
     )
+
+
+def _monitor_recycler_region_specs(
+    *,
+    region: CageRegionSupport,
+    monitor: Any,
+    monitor_components: tuple[ReducedIZMonitorComponent, ...],
+) -> tuple[tuple[tuple[int, ...], Any], ...]:
+    if len(monitor_components) == 0:
+        return (
+            (
+                tuple(sorted(int(index) for index in region.variable_index_set)),
+                monitor,
+            ),
+        )
+
+    return tuple(
+        (
+            tuple(int(index) for index in component.support_variables),
+            component.monitor,
+        )
+        for component in monitor_components
+    )
+
+
+def _build_monitor_recycler_jump_operators(
+    *,
+    basis_configs: NDArray[np.integer],
+    state: NDArray[np.complex128],
+    region_specs: tuple[tuple[tuple[int, ...], Any], ...],
+    source: RecyclingJumpSource,
+    max_jumps_per_region: int,
+    rdm_tolerance: float,
+    dark_tolerance: float,
+    inflow_tolerance: float,
+    prefer_sparse: bool,
+    two_pattern_tolerance: float,
+) -> tuple[tuple[Any, ...], LocalRecyclingBuildResult]:
+    if source == "none":
+        raise ValueError(
+            "jump_operator_design='monitor_recycler' requires "
+            "recycling_jump_source to be 'local_rdm_two_pattern' or "
+            "'local_rdm_rank_one'."
+        )
+
+    regions = tuple(region for region, _ in region_specs)
+    recycling_build_result = build_local_recycling_jumps_from_regions(
+        basis_configs=basis_configs,
+        target_state=state,
+        regions=regions,
+        source=source,
+        max_jumps_per_region=max_jumps_per_region,
+        rdm_tolerance=rdm_tolerance,
+        dark_tolerance=dark_tolerance,
+        inflow_tolerance=inflow_tolerance,
+        prefer_sparse=prefer_sparse,
+        two_pattern_tolerance=two_pattern_tolerance,
+    )
+
+    selections_by_region: dict[tuple[int, ...], list[Any]] = {}
+    for selection in recycling_build_result.selections:
+        region_key = tuple(int(index) for index in selection.candidate.variable_indices)
+        selections_by_region.setdefault(region_key, []).append(selection)
+
+    jumps: list[Any] = []
+    missing_regions: list[tuple[int, ...]] = []
+
+    for region_key, component_monitor in region_specs:
+        selections = selections_by_region.get(region_key, [])
+        if len(selections) == 0:
+            missing_regions.append(region_key)
+            continue
+
+        for selection in selections:
+            jumps.append(
+                _left_multiply_sparse_csr(
+                    selection.candidate.jump,
+                    component_monitor,
+                )
+            )
+
+    if missing_regions:
+        preview = ", ".join(str(region) for region in missing_regions[:4])
+        raise ValueError(
+            "Could not construct monitor-recycler jumps for "
+            f"{len(missing_regions)} monitor region(s): {preview}. "
+            "Try recycling_jump_source='local_rdm_rank_one' or increase "
+            "max_recycling_jumps_per_region."
+        )
+
+    return tuple(jumps), recycling_build_result
 
 
 # Reduced-IZ report selection and support/decomposition grouping live in

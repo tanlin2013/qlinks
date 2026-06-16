@@ -314,6 +314,7 @@ def _make_qdm_cage_lindblad_mcwf_case(
     ipr_rank_completion_patience: int | None,
     record_index: int,
     initial_state_mode: str = "target",
+    jump_operator_design: str = "kinetic_outside_monitor_inside",
 ) -> OpenSystemBenchmarkCase:
     """Build a QDM Cage-Lindblad problem used for real MCWF timing."""
     from qlinks.basis import basis_configs_from_build_result
@@ -440,7 +441,7 @@ def _make_qdm_cage_lindblad_mcwf_case(
             monitor_source="reduced_iz_operators",
             reduced_iz_monitor_content="offdiagonal_only",
             reduced_iz_monitor_decomposition="exact_support",
-            jump_operator_design="kinetic_outside_monitor_inside",
+            jump_operator_design=jump_operator_design,
             jump_plaquette_policy="outside_or_crossing",
             recycling_jump_source="local_rdm_two_pattern",
             max_recycling_jumps_per_region=1,
@@ -464,6 +465,7 @@ def _make_qdm_cage_lindblad_mcwf_case(
         "record_index": record_index,
         "initial_state_mode": initial_state_mode,
         "initial_target_fidelity": float(abs(np.vdot(state_vector, state_initial)) ** 2),
+        "jump_operator_design": jump_operator_design,
         "n_states": build_result.basis.n_states,
         "n_jumps": construction.n_jumps,
         "jump_span_rank": jump_span_diagnostics.span_rank,
@@ -515,6 +517,7 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
     ipr_rank_completion_patience: int | None,
     record_index: int,
     initial_state_mode: str = "target",
+    jump_operator_design: str = "kinetic_outside_monitor_inside",
 ) -> OpenSystemBenchmarkCase:
     return _make_qdm_cage_lindblad_mcwf_case(
         cage_lindblad_case="square_qdm_pbc_w00",
@@ -525,6 +528,7 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
         ipr_rank_completion_patience=ipr_rank_completion_patience,
         record_index=record_index,
         initial_state_mode=initial_state_mode,
+        jump_operator_design=jump_operator_design,
     )
 
 
@@ -540,6 +544,7 @@ def make_benchmark_cases(
     cage_lindblad_ipr_rank_completion_patience: int | None = 0,
     cage_lindblad_initial_state: str = "target",
     cage_lindblad_case: str = "square_qdm_pbc_w00",
+    cage_lindblad_jump_operator_design: str = "kinetic_outside_monitor_inside",
 ) -> list[OpenSystemBenchmarkCase]:
     ops = _pauli_and_ladder_operators()
     sigma_minus = ops["sigma_minus"]
@@ -639,6 +644,7 @@ def make_benchmark_cases(
                 ipr_rank_completion_patience=cage_lindblad_ipr_rank_completion_patience,
                 record_index=cage_lindblad_record_index,
                 initial_state_mode=cage_lindblad_initial_state,
+                jump_operator_design=cage_lindblad_jump_operator_design,
             )
         )
 
@@ -1242,6 +1248,22 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--cage-lindblad-jump-design",
+        default="kinetic_outside_monitor_inside",
+        choices=[
+            "kinetic_times_monitor",
+            "kinetic_outside_monitor_inside",
+            "hamiltonian_outside_monitor_inside",
+            "monitor_recycler",
+        ],
+        help=(
+            "Jump-operator design for the optional QDM Cage-Lindblad case. "
+            "'monitor_recycler' builds local L_i = V_i P_i jumps from the "
+            "monitor components and local-RDM recyclers, with no outside-region "
+            "plaquette jumps."
+        ),
+    )
+    parser.add_argument(
         "--cage-compare-operations",
         default="default",
         help=(
@@ -1316,6 +1338,7 @@ def main() -> None:
         cage_lindblad_ipr_rank_completion_patience=cage_lindblad_patience,
         cage_lindblad_initial_state=cage_lindblad_initial_state,
         cage_lindblad_case=args.cage_lindblad_case,
+        cage_lindblad_jump_operator_design=args.cage_lindblad_jump_design,
     ):
         if only_filter is not None and only_filter not in case.name:
             continue
