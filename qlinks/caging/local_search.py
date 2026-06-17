@@ -78,6 +78,14 @@ class LocalQDMCageSearchConfig:
         sector conditions during local basis generation.  For genuine local
         regions sector checks are deferred to the padding/global-certification
         layer.
+
+    prune_inactive_local_basis_states:
+        For genuine local regions, ask the shared DFS to prune branches that can
+        no longer produce a configuration flippable on any active plaquette.
+        Such configurations are isolated in the local kinetic graph and cannot
+        enter a nontrivial type-1 component when ``min_component_size > 1``.  It
+        is opt-in because observer calls add Python overhead on very small
+        regions.
     """
 
     tolerance: float = 1.0e-10
@@ -86,6 +94,7 @@ class LocalQDMCageSearchConfig:
     halo_layers: int = 1
     boundary_mode: LocalBoundaryMode = "relaxed"
     include_sectors_when_full: bool = True
+    prune_inactive_local_basis_states: bool = False
     max_local_states: int | None = None
     sort_basis: bool = True
     validate_full_residual: bool = True
@@ -541,6 +550,9 @@ class QDMLocalCageAdapter:
             self.model,
             region,
             include_sectors_when_full=config.include_sectors_when_full,
+            prune_inactive_states=(
+                config.prune_inactive_local_basis_states and config.min_component_size > 1
+            ),
             max_states=config.max_local_states,
             sort=config.sort_basis,
         )
@@ -1110,6 +1122,97 @@ class _LocalQDMCountConstraint:
         return ConstraintPropagation(forced_assignments=tuple(sorted(forced_by_variable.items())))
 
 
+@dataclass(frozen=True, slots=True)
+class _LocalQDMActivePlaquetteObserver:
+    """DFS observer that keeps only locally kinetic-relevant QDM states.
+
+    A local QDM configuration with no flippable active plaquette is isolated in
+    the local kinetic graph.  For local cage searches with nontrivial component
+    size requirements, those states can be filtered before the local kinetic
+    matrix is built.  The partial-branch check is stronger: if no active
+    plaquette is still compatible with either alternating pattern, no completion
+    of this branch can be kinetic-relevant.
+    """
+
+    plaquette_variable_indices: tuple[npt.NDArray[np.int64], ...]
+    plaquette_patterns: tuple[
+        tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]],
+        ...,
+    ]
+    name: str = "local_qdm_active_plaquette_viability"
+
+    def can_continue(
+        self,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+        changed_variables: Sequence[int],
+    ) -> bool:
+        del changed_variables
+        return self._has_viable_active_plaquette(config, assigned_mask)
+
+    def accept_solution(
+        self,
+        config: npt.NDArray[np.int64],
+    ) -> bool:
+        assigned_mask = np.ones_like(np.asarray(config, dtype=np.int64), dtype=bool)
+        return self._has_viable_active_plaquette(np.asarray(config, dtype=np.int64), assigned_mask)
+
+    def _has_viable_active_plaquette(
+        self,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+    ) -> bool:
+        if not self.plaquette_variable_indices:
+            return True
+
+        arr = np.asarray(config, dtype=np.int64)
+        assigned = np.asarray(assigned_mask, dtype=bool)
+
+        for variable_indices, (pattern0, pattern1) in zip(
+            self.plaquette_variable_indices,
+            self.plaquette_patterns,
+            strict=True,
+        ):
+            local_assigned = assigned[variable_indices]
+            local_values = arr[variable_indices]
+            if np.all(local_values[local_assigned] == pattern0[local_assigned]):
+                return True
+            if np.all(local_values[local_assigned] == pattern1[local_assigned]):
+                return True
+
+        return False
+
+
+def _qdm_active_plaquette_observer(
+    model: object,
+    region: LocalQDMRegion,
+) -> _LocalQDMActivePlaquetteObserver | None:
+    local_index_by_link = {int(link_id): i for i, link_id in enumerate(region.link_ids)}
+    variable_indices_by_plaquette: list[npt.NDArray[np.int64]] = []
+    patterns_by_plaquette: list[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]] = []
+
+    for plaquette_id in region.active_plaquette_ids:
+        local_variables = _plaquette_local_indices(model, int(plaquette_id), local_index_by_link)
+        if local_variables.size == 0:
+            continue
+        pattern0, pattern1 = alternating_binary_patterns(int(local_variables.size))
+        variable_indices_by_plaquette.append(np.asarray(local_variables, dtype=np.int64))
+        patterns_by_plaquette.append(
+            (
+                np.asarray(pattern0, dtype=np.int64),
+                np.asarray(pattern1, dtype=np.int64),
+            )
+        )
+
+    if not variable_indices_by_plaquette:
+        return None
+
+    return _LocalQDMActivePlaquetteObserver(
+        plaquette_variable_indices=tuple(variable_indices_by_plaquette),
+        plaquette_patterns=tuple(patterns_by_plaquette),
+    )
+
+
 def _qdm_local_basis_constraints(
     model: object,
     region: LocalQDMRegion,
@@ -1160,6 +1263,7 @@ def enumerate_qdm_local_basis(
     region: LocalQDMRegion,
     *,
     include_sectors_when_full: bool,
+    prune_inactive_states: bool = False,
     max_states: int | None = None,
     sort: bool = True,
 ) -> Basis:
@@ -1192,10 +1296,16 @@ def enumerate_qdm_local_basis(
         tuple(model.make_sectors()) if (include_sectors_when_full and full_link_region) else ()
     )
 
+    observers = ()
+    if prune_inactive_states and not full_link_region:
+        observer = _qdm_active_plaquette_observer(model, region)
+        observers = () if observer is None else (observer,)
+
     return DFSBasisSolver(sort=sort).solve(
         layout,
         constraints=constraints,
         sectors=sectors,
+        observers=observers,
         max_states=max_states,
     )
 

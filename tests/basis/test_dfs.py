@@ -1017,3 +1017,82 @@ def test_dfs_dynamic_order_matches_static_sorted_basis() -> None:
     ).solve(layout, constraints=constraints)
 
     np.testing.assert_array_equal(dynamic_basis.states, static_basis.states)
+
+
+@dataclass(frozen=True, slots=True)
+class PrefixObserver:
+    name: str = "prefix_observer"
+
+    def can_continue(
+        self,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+        changed_variables,
+    ) -> bool:
+        del changed_variables
+        # Search only branches that can still begin with 10.
+        if assigned_mask[0] and int(config[0]) != 1:
+            return False
+        if assigned_mask[1] and int(config[1]) != 0:
+            return False
+        return True
+
+    def accept_solution(self, config: npt.NDArray[np.int64]) -> bool:
+        # Filter one complete solution after branch pruning has done most work.
+        return int(config[2]) == 1
+
+
+def test_dfs_observer_prunes_branches_and_filters_solutions() -> None:
+    layout = _binary_site_layout(3)
+    basis, statistics = DFSBasisSolver(sort=True).solve_with_statistics(
+        layout,
+        observers=(PrefixObserver(),),
+    )
+
+    np.testing.assert_array_equal(basis.states, np.array([[1, 0, 1]], dtype=np.int64))
+    assert statistics.observer_call_count > 0
+    assert statistics.observer_prune_count > 0
+    assert statistics.observer_solution_reject_count == 1
+    assert statistics.solution_count == 1
+
+
+def test_dfs_observer_works_with_propagation() -> None:
+    layout = _binary_site_layout(4)
+    constraint = BoundedLocalCountConstraint.exact(
+        layout=layout,
+        variable_indices=np.array([0, 1, 2], dtype=np.int64),
+        count=1,
+        name="first_three_exactly_one",
+    )
+
+    @dataclass(frozen=True, slots=True)
+    class PrefixOnlyObserver:
+        name: str = "prefix_only_observer"
+
+        def can_continue(
+            self,
+            config: npt.NDArray[np.int64],
+            assigned_mask: npt.NDArray[np.bool_],
+            changed_variables,
+        ) -> bool:
+            del changed_variables
+            if assigned_mask[0] and int(config[0]) != 1:
+                return False
+            if assigned_mask[1] and int(config[1]) != 0:
+                return False
+            return True
+
+        def accept_solution(self, config: npt.NDArray[np.int64]) -> bool:
+            del config
+            return True
+
+    basis = DFSBasisSolver(sort=True).solve(
+        layout,
+        constraints=(constraint,),
+        observers=(PrefixOnlyObserver(),),
+    )
+
+    np.testing.assert_array_equal(
+        basis.states,
+        np.array([[1, 0, 0, 0], [1, 0, 0, 1]], dtype=np.int64),
+    )

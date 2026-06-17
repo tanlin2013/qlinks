@@ -15,8 +15,10 @@ from qlinks.caging import (
     LocalQDMPaddingConfig,
     QDMLocalCageAdapter,
     classify_cage_state,
+    enumerate_qdm_local_basis,
 )
 from qlinks.models import HoneycombQDMModel, SquareQDMModel, TriangularQDMModel
+from qlinks.operators.plaquette import alternating_binary_patterns
 
 
 def test_generic_local_cage_searcher_replaces_qdm_wrapper_on_full_square() -> None:
@@ -199,6 +201,56 @@ def test_local_qdm_basis_enumeration_respects_shared_dfs_limits() -> None:
     ).run()
 
     assert local_result.local_hilbert_size == 3
+
+
+def test_local_qdm_active_plaquette_hook_prunes_kinetically_inactive_states() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    adapter = QDMLocalCageAdapter(model)
+    config = LocalQDMCageSearchConfig(
+        halo_layers=0,
+        boundary_mode="relaxed",
+        tolerance=1.0e-10,
+    )
+    region = adapter.build_region_from_plaquettes(
+        plaquette_ids=[0],
+        config=config,
+    )
+
+    unpruned = enumerate_qdm_local_basis(
+        model,
+        region,
+        include_sectors_when_full=False,
+        prune_inactive_states=False,
+        sort=True,
+    )
+    pruned = enumerate_qdm_local_basis(
+        model,
+        region,
+        include_sectors_when_full=False,
+        prune_inactive_states=True,
+        sort=True,
+    )
+
+    assert 0 < pruned.n_states < unpruned.n_states
+
+    local_index_by_link = {int(link_id): i for i, link_id in enumerate(region.link_ids)}
+    plaquette_variables = np.asarray(
+        [local_index_by_link[int(link_id)] for link_id in model.lattice.plaquette_links(0)],
+        dtype=np.int64,
+    )
+    pattern0, pattern1 = alternating_binary_patterns(int(plaquette_variables.size))
+    for state in pruned.states:
+        local_values = state[plaquette_variables]
+        assert np.array_equal(local_values, pattern0) or np.array_equal(local_values, pattern1)
 
 
 @pytest.mark.manual

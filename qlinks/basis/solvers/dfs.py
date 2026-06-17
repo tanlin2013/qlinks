@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal, Sequence
+from typing import Literal, Protocol, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -28,6 +28,31 @@ ValueOrderStrategy = Literal[
 ]
 
 
+class DFSSearchObserver(Protocol):
+    """Read-only branch/solution observer for :class:`DFSBasisSolver`.
+
+    Observers are intended for search-specific pruning that is not naturally a
+    model constraint.  They may inspect the mutable DFS arrays but must not
+    mutate them.  Returning ``False`` from ``can_continue`` prunes the current
+    partial branch; returning ``False`` from ``accept_solution`` filters the
+    complete configuration.
+    """
+
+    name: str
+
+    def can_continue(
+        self,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+        changed_variables: Sequence[int],
+    ) -> bool: ...
+
+    def accept_solution(
+        self,
+        config: npt.NDArray[np.int64],
+    ) -> bool: ...
+
+
 @dataclass(slots=True)
 class DFSStatistics:
     """Execution counters for :class:`DFSBasisSolver`.
@@ -47,6 +72,9 @@ class DFSStatistics:
     propagator_call_count: int = 0
     dynamic_variable_selection_count: int = 0
     dynamic_value_ordering_count: int = 0
+    observer_call_count: int = 0
+    observer_prune_count: int = 0
+    observer_solution_reject_count: int = 0
     max_depth: int = 0
 
 
@@ -84,12 +112,14 @@ class DFSBasisSolver:
         sectors: Sequence[SectorCondition] = (),
         *,
         max_states: int | None = None,
+        observers: Sequence[DFSSearchObserver] = (),
     ) -> Basis:
         basis, _ = self._solve(
             layout=layout,
             constraints=constraints,
             sectors=sectors,
             max_states=max_states,
+            observers=observers,
             collect_statistics=False,
         )
         return basis
@@ -101,6 +131,7 @@ class DFSBasisSolver:
         sectors: Sequence[SectorCondition] = (),
         *,
         max_states: int | None = None,
+        observers: Sequence[DFSSearchObserver] = (),
     ) -> tuple[Basis, DFSStatistics]:
         """Solve and return lightweight DFS execution statistics."""
         basis, statistics = self._solve(
@@ -108,6 +139,7 @@ class DFSBasisSolver:
             constraints=constraints,
             sectors=sectors,
             max_states=max_states,
+            observers=observers,
             collect_statistics=True,
         )
         assert statistics is not None
@@ -120,9 +152,11 @@ class DFSBasisSolver:
         sectors: Sequence[SectorCondition] = (),
         *,
         max_states: int | None = None,
+        observers: Sequence[DFSSearchObserver] = (),
         collect_statistics: bool = False,
     ) -> tuple[Basis, DFSStatistics | None]:
         statistics = DFSStatistics() if collect_statistics else None
+        observers = tuple(observers)
 
         if max_states is not None and max_states < 0:
             raise ValueError("max_states must be non-negative or None.")
@@ -197,7 +231,37 @@ class DFSBasisSolver:
 
         has_propagators = any(propagators_by_variable) or bool(root_propagators)
 
+        def observers_can_continue(changed_variables: Sequence[int]) -> bool:
+            if not observers:
+                return True
+
+            for observer in observers:
+                if statistics is not None:
+                    statistics.observer_call_count += 1
+                if not observer.can_continue(config, assigned_mask, changed_variables):
+                    if statistics is not None:
+                        statistics.observer_prune_count += 1
+                    return False
+
+            return True
+
+        def observers_accept_solution() -> bool:
+            if not observers:
+                return True
+
+            for observer in observers:
+                if statistics is not None:
+                    statistics.observer_call_count += 1
+                if not observer.accept_solution(config):
+                    if statistics is not None:
+                        statistics.observer_solution_reject_count += 1
+                    return False
+
+            return True
+
         def record_solution() -> None:
+            if not observers_accept_solution():
+                return
             states.append(config.copy())
             if statistics is not None:
                 statistics.solution_count += 1
@@ -245,15 +309,16 @@ class DFSBasisSolver:
                     config[variable_index] = int(value)
                     assigned_mask[variable_index] = True
 
-                    if self._partial_check_after_assignment(
+                    partial_ok = self._partial_check_after_assignment(
                         config=config,
                         assigned_mask=assigned_mask,
                         partial_checks=partial_checks_by_depth[depth],
                         statistics=statistics,
-                    ):
-                        dfs_without_propagation(depth + 1)
-                    else:
+                    )
+                    if not partial_ok:
                         record_contradiction()
+                    elif observers_can_continue((variable_index,)):
+                        dfs_without_propagation(depth + 1)
 
                     assigned_mask[variable_index] = False
 
@@ -342,6 +407,9 @@ class DFSBasisSolver:
                 ):
                     return Basis.empty(layout), statistics
 
+            if not observers_can_continue(tuple(root_changed_variables)):
+                return Basis.empty(layout), statistics
+
             def dfs_with_static_order(depth: int) -> None:
                 if max_states is not None and len(states) >= max_states:
                     return
@@ -379,7 +447,11 @@ class DFSBasisSolver:
 
                     record_branch()
                     changed_variables: list[int] = []
-                    if assign_with_propagation(variable_index, int(value), changed_variables):
+                    if assign_with_propagation(
+                        variable_index,
+                        int(value),
+                        changed_variables,
+                    ) and observers_can_continue(tuple(changed_variables)):
                         dfs_with_static_order(depth + 1)
 
                     undo(changed_variables)
@@ -424,7 +496,11 @@ class DFSBasisSolver:
 
                     record_branch()
                     changed_variables: list[int] = []
-                    if assign_with_propagation(variable_index, int(value), changed_variables):
+                    if assign_with_propagation(
+                        variable_index,
+                        int(value),
+                        changed_variables,
+                    ) and observers_can_continue(tuple(changed_variables)):
                         dfs_with_dynamic_order()
 
                     undo(changed_variables)
