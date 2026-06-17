@@ -1096,3 +1096,82 @@ def test_dfs_observer_works_with_propagation() -> None:
         basis.states,
         np.array([[1, 0, 0, 0], [1, 0, 0, 1]], dtype=np.int64),
     )
+
+
+def test_dfs_incremental_observer_callbacks_are_balanced() -> None:
+    @dataclass(slots=True)
+    class AtMostOneAssignedOneObserver:
+        name: str = "at_most_one_assigned_one_observer"
+        ones_count: int = 0
+        event_count: int = 0
+
+        def reset(
+            self,
+            config: npt.NDArray[np.int64],
+            assigned_mask: npt.NDArray[np.bool_],
+        ) -> None:
+            self.ones_count = int(np.sum(config[np.asarray(assigned_mask, dtype=bool)]))
+            self.event_count = 0
+
+        def on_assign(
+            self,
+            config: npt.NDArray[np.int64],
+            assigned_mask: npt.NDArray[np.bool_],
+            variable_index: int,
+            value: int,
+            forced_assignment: bool,
+        ) -> None:
+            del config, assigned_mask, variable_index, forced_assignment
+            self.event_count += 1
+            if int(value) == 1:
+                self.ones_count += 1
+
+        def on_unassign(
+            self,
+            config: npt.NDArray[np.int64],
+            assigned_mask: npt.NDArray[np.bool_],
+            variable_index: int,
+            value: int,
+        ) -> None:
+            del config, assigned_mask, variable_index
+            self.event_count += 1
+            if int(value) == 1:
+                self.ones_count -= 1
+            assert self.ones_count >= 0
+
+        def can_continue(
+            self,
+            config: npt.NDArray[np.int64],
+            assigned_mask: npt.NDArray[np.bool_],
+            changed_variables,
+        ) -> bool:
+            del config, assigned_mask, changed_variables
+            return self.ones_count <= 1
+
+        def accept_solution(self, config: npt.NDArray[np.int64]) -> bool:
+            del config
+            return True
+
+    layout = _binary_site_layout(3)
+    observer = AtMostOneAssignedOneObserver()
+    basis, statistics = DFSBasisSolver(sort=True).solve_with_statistics(
+        layout,
+        observers=(observer,),
+    )
+
+    np.testing.assert_array_equal(
+        basis.states,
+        np.array(
+            [
+                [0, 0, 0],
+                [0, 0, 1],
+                [0, 1, 0],
+                [1, 0, 0],
+            ],
+            dtype=np.int64,
+        ),
+    )
+    assert observer.ones_count == 0
+    assert observer.event_count > 0
+    assert statistics.observer_update_count == observer.event_count + 1  # reset + callbacks
+    assert statistics.observer_prune_count > 0

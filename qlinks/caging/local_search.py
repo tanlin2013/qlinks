@@ -1122,16 +1122,18 @@ class _LocalQDMCountConstraint:
         return ConstraintPropagation(forced_assignments=tuple(sorted(forced_by_variable.items())))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class _LocalQDMActivePlaquetteObserver:
-    """DFS observer that keeps only locally kinetic-relevant QDM states.
+    """Incremental DFS observer for locally kinetic-relevant QDM states.
 
     A local QDM configuration with no flippable active plaquette is isolated in
     the local kinetic graph.  For local cage searches with nontrivial component
     size requirements, those states can be filtered before the local kinetic
-    matrix is built.  The partial-branch check is stronger: if no active
-    plaquette is still compatible with either alternating pattern, no completion
-    of this branch can be kinetic-relevant.
+    matrix is built.
+
+    The observer maintains per-plaquette incompatibility counters for the two
+    alternating patterns.  Therefore ``can_continue`` is O(1) rather than
+    rescanning every active plaquette after each DFS assignment.
     """
 
     plaquette_variable_indices: tuple[npt.NDArray[np.int64], ...]
@@ -1140,6 +1142,96 @@ class _LocalQDMActivePlaquetteObserver:
         ...,
     ]
     name: str = "local_qdm_active_plaquette_viability"
+    variable_to_plaquette_entries: tuple[tuple[tuple[int, int], ...], ...] = field(
+        init=False,
+        repr=False,
+    )
+    conflict_counts: npt.NDArray[np.int64] = field(init=False, repr=False)
+    viable_plaquette_count: int = field(init=False, default=0)
+
+    def __post_init__(self) -> None:
+        if len(self.plaquette_variable_indices) != len(self.plaquette_patterns):
+            raise ValueError("plaquette_variable_indices and plaquette_patterns must align.")
+
+        max_variable = -1
+        entries_by_variable: dict[int, list[tuple[int, int]]] = defaultdict(list)
+
+        for plaquette_index, (variable_indices, (pattern0, pattern1)) in enumerate(
+            zip(
+                self.plaquette_variable_indices,
+                self.plaquette_patterns,
+                strict=True,
+            )
+        ):
+            variable_indices = np.asarray(variable_indices, dtype=np.int64)
+            pattern0 = np.asarray(pattern0, dtype=np.int64)
+            pattern1 = np.asarray(pattern1, dtype=np.int64)
+
+            if variable_indices.ndim != 1:
+                raise ValueError("Each plaquette variable-index array must be one-dimensional.")
+            if pattern0.shape != variable_indices.shape or pattern1.shape != variable_indices.shape:
+                raise ValueError("Each active-plaquette pattern must match its variable support.")
+
+            for local_position, variable_index in enumerate(variable_indices):
+                variable_index = int(variable_index)
+                if variable_index < 0:
+                    raise ValueError("Local variable indices must be non-negative.")
+                max_variable = max(max_variable, variable_index)
+                entries_by_variable[variable_index].append(
+                    (int(plaquette_index), int(local_position))
+                )
+
+        variable_to_plaquette_entries: list[tuple[tuple[int, int], ...]] = []
+        for variable_index in range(max_variable + 1):
+            variable_to_plaquette_entries.append(tuple(entries_by_variable.get(variable_index, ())))
+
+        self.variable_to_plaquette_entries = tuple(variable_to_plaquette_entries)
+        self.conflict_counts = np.zeros((len(self.plaquette_variable_indices), 2), dtype=np.int64)
+        self.viable_plaquette_count = int(len(self.plaquette_variable_indices))
+
+    def reset(
+        self,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+    ) -> None:
+        self.conflict_counts.fill(0)
+        self.viable_plaquette_count = int(len(self.plaquette_variable_indices))
+
+        assigned_variables = np.flatnonzero(np.asarray(assigned_mask, dtype=bool))
+        for variable_index in assigned_variables:
+            self._update_variable_assignment(
+                int(variable_index),
+                int(config[int(variable_index)]),
+                delta=1,
+            )
+
+    def on_assignments(
+        self,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+        changed_variables: Sequence[int],
+    ) -> None:
+        del assigned_mask
+        for variable_index in changed_variables:
+            self._update_variable_assignment(
+                int(variable_index),
+                int(config[int(variable_index)]),
+                delta=1,
+            )
+
+    def on_unassignments(
+        self,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+        changed_variables: Sequence[int],
+    ) -> None:
+        del assigned_mask
+        for variable_index in changed_variables:
+            self._update_variable_assignment(
+                int(variable_index),
+                int(config[int(variable_index)]),
+                delta=-1,
+            )
 
     def can_continue(
         self,
@@ -1147,40 +1239,45 @@ class _LocalQDMActivePlaquetteObserver:
         assigned_mask: npt.NDArray[np.bool_],
         changed_variables: Sequence[int],
     ) -> bool:
-        del changed_variables
-        return self._has_viable_active_plaquette(config, assigned_mask)
+        del config, assigned_mask, changed_variables
+        return self.viable_plaquette_count > 0
 
     def accept_solution(
         self,
         config: npt.NDArray[np.int64],
     ) -> bool:
-        assigned_mask = np.ones_like(np.asarray(config, dtype=np.int64), dtype=bool)
-        return self._has_viable_active_plaquette(np.asarray(config, dtype=np.int64), assigned_mask)
+        del config
+        return self.viable_plaquette_count > 0
 
-    def _has_viable_active_plaquette(
-        self,
-        config: npt.NDArray[np.int64],
-        assigned_mask: npt.NDArray[np.bool_],
-    ) -> bool:
+    def _update_variable_assignment(self, variable_index: int, value: int, *, delta: int) -> None:
         if not self.plaquette_variable_indices:
-            return True
+            return
+        if variable_index >= len(self.variable_to_plaquette_entries):
+            return
 
-        arr = np.asarray(config, dtype=np.int64)
-        assigned = np.asarray(assigned_mask, dtype=bool)
+        for plaquette_index, local_position in self.variable_to_plaquette_entries[variable_index]:
+            pattern0, pattern1 = self.plaquette_patterns[plaquette_index]
+            was_viable = self._plaquette_is_viable(plaquette_index)
 
-        for variable_indices, (pattern0, pattern1) in zip(
-            self.plaquette_variable_indices,
-            self.plaquette_patterns,
-            strict=True,
-        ):
-            local_assigned = assigned[variable_indices]
-            local_values = arr[variable_indices]
-            if np.all(local_values[local_assigned] == pattern0[local_assigned]):
-                return True
-            if np.all(local_values[local_assigned] == pattern1[local_assigned]):
-                return True
+            if int(value) != int(pattern0[local_position]):
+                self.conflict_counts[plaquette_index, 0] += int(delta)
+            if int(value) != int(pattern1[local_position]):
+                self.conflict_counts[plaquette_index, 1] += int(delta)
 
-        return False
+            if np.any(self.conflict_counts[plaquette_index] < 0):
+                raise RuntimeError("Active-plaquette observer received an unbalanced undo.")
+
+            is_viable = self._plaquette_is_viable(plaquette_index)
+            if was_viable and not is_viable:
+                self.viable_plaquette_count -= 1
+            elif not was_viable and is_viable:
+                self.viable_plaquette_count += 1
+
+    def _plaquette_is_viable(self, plaquette_index: int) -> bool:
+        return bool(
+            self.conflict_counts[int(plaquette_index), 0] == 0
+            or self.conflict_counts[int(plaquette_index), 1] == 0
+        )
 
 
 def _qdm_active_plaquette_observer(

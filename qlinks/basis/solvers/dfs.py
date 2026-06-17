@@ -36,6 +36,21 @@ class DFSSearchObserver(Protocol):
     mutate them.  Returning ``False`` from ``can_continue`` prunes the current
     partial branch; returning ``False`` from ``accept_solution`` filters the
     complete configuration.
+
+    Stateful observers may additionally implement any of these optional
+    methods, which DFSBasisSolver discovers with ``getattr`` so existing
+    read-only observers remain valid::
+
+        reset(config, assigned_mask)
+        on_assignments(config, assigned_mask, changed_variables)
+        on_unassignments(config, assigned_mask, changed_variables)
+        on_assign(config, assigned_mask, variable_index, value, forced_assignment)
+        on_unassign(config, assigned_mask, variable_index, value)
+
+    Assignment callbacks run after the DFS arrays have been updated; unassign
+    callbacks run just before ``assigned_mask[variable_index]`` is cleared.
+    Batched callbacks are preferred for observers that maintain incremental
+    state over many variables.
     """
 
     name: str
@@ -73,6 +88,7 @@ class DFSStatistics:
     dynamic_variable_selection_count: int = 0
     dynamic_value_ordering_count: int = 0
     observer_call_count: int = 0
+    observer_update_count: int = 0
     observer_prune_count: int = 0
     observer_solution_reject_count: int = 0
     max_depth: int = 0
@@ -231,6 +247,89 @@ class DFSBasisSolver:
 
         has_propagators = any(propagators_by_variable) or bool(root_propagators)
 
+        observer_reset_callbacks = tuple(
+            callback
+            for observer in observers
+            if callable(callback := getattr(observer, "reset", None))
+        )
+        observer_assign_callbacks = tuple(
+            callback
+            for observer in observers
+            if callable(callback := getattr(observer, "on_assign", None))
+        )
+        observer_unassign_callbacks = tuple(
+            callback
+            for observer in observers
+            if callable(callback := getattr(observer, "on_unassign", None))
+        )
+        observer_assignments_callbacks = tuple(
+            callback
+            for observer in observers
+            if callable(callback := getattr(observer, "on_assignments", None))
+        )
+        observer_unassignments_callbacks = tuple(
+            callback
+            for observer in observers
+            if callable(callback := getattr(observer, "on_unassignments", None))
+        )
+
+        def notify_observers_reset() -> None:
+            for reset in observer_reset_callbacks:
+                if statistics is not None:
+                    statistics.observer_update_count += 1
+                reset(config, assigned_mask)
+
+        def notify_observers_assigned(
+            changed_assignments: Sequence[tuple[int, int, bool]],
+        ) -> None:
+            if not changed_assignments:
+                return
+
+            changed_variables = tuple(int(variable) for variable, _, _ in changed_assignments)
+
+            for on_assignments in observer_assignments_callbacks:
+                if statistics is not None:
+                    statistics.observer_update_count += 1
+                on_assignments(config, assigned_mask, changed_variables)
+
+            for variable_index, value, forced_assignment in changed_assignments:
+                for on_assign in observer_assign_callbacks:
+                    if statistics is not None:
+                        statistics.observer_update_count += 1
+                    on_assign(
+                        config,
+                        assigned_mask,
+                        int(variable_index),
+                        int(value),
+                        bool(forced_assignment),
+                    )
+
+        def notify_observers_unassigned(
+            changed_assignments: Sequence[tuple[int, int, bool]],
+        ) -> None:
+            if not changed_assignments:
+                return
+
+            changed_variables = tuple(
+                int(variable) for variable, _, _ in reversed(changed_assignments)
+            )
+
+            for on_unassignments in observer_unassignments_callbacks:
+                if statistics is not None:
+                    statistics.observer_update_count += 1
+                on_unassignments(config, assigned_mask, changed_variables)
+
+            for variable_index, value, _ in reversed(changed_assignments):
+                for on_unassign in observer_unassign_callbacks:
+                    if statistics is not None:
+                        statistics.observer_update_count += 1
+                    on_unassign(
+                        config,
+                        assigned_mask,
+                        int(variable_index),
+                        int(value),
+                    )
+
         def observers_can_continue(changed_variables: Sequence[int]) -> bool:
             if not observers:
                 return True
@@ -258,6 +357,8 @@ class DFSBasisSolver:
                     return False
 
             return True
+
+        notify_observers_reset()
 
         def record_solution() -> None:
             if not observers_accept_solution():
@@ -308,6 +409,7 @@ class DFSBasisSolver:
                     record_branch()
                     config[variable_index] = int(value)
                     assigned_mask[variable_index] = True
+                    changed_assignments = ((variable_index, int(value), False),)
 
                     partial_ok = self._partial_check_after_assignment(
                         config=config,
@@ -317,8 +419,11 @@ class DFSBasisSolver:
                     )
                     if not partial_ok:
                         record_contradiction()
-                    elif observers_can_continue((variable_index,)):
-                        dfs_without_propagation(depth + 1)
+                    else:
+                        notify_observers_assigned(changed_assignments)
+                        if observers_can_continue((variable_index,)):
+                            dfs_without_propagation(depth + 1)
+                        notify_observers_unassigned(changed_assignments)
 
                     assigned_mask[variable_index] = False
 
@@ -328,7 +433,7 @@ class DFSBasisSolver:
             def assign_with_propagation(
                 variable_index: int,
                 value: int,
-                changed_variables: list[int],
+                changed_assignments: list[tuple[int, int, bool]],
                 *,
                 forced_assignment: bool = False,
             ) -> bool:
@@ -348,7 +453,7 @@ class DFSBasisSolver:
 
                     config[current_variable] = current_value
                     assigned_mask[current_variable] = True
-                    changed_variables.append(current_variable)
+                    changed_assignments.append((current_variable, current_value, current_forced))
                     if statistics is not None:
                         if current_forced:
                             statistics.propagated_assignment_count += 1
@@ -383,8 +488,15 @@ class DFSBasisSolver:
 
                 return True
 
-            def undo(changed_variables: Sequence[int]) -> None:
-                for variable_index in reversed(changed_variables):
+            def undo(
+                changed_assignments: Sequence[tuple[int, int, bool]],
+                *,
+                notify_observers: bool,
+            ) -> None:
+                if notify_observers:
+                    notify_observers_unassigned(changed_assignments)
+
+                for variable_index, _, _ in reversed(changed_assignments):
                     assigned_mask[int(variable_index)] = False
 
             initial_propagation = self._propagate_after_assignment(
@@ -397,17 +509,21 @@ class DFSBasisSolver:
                 record_contradiction()
                 return Basis.empty(layout), statistics
 
-            root_changed_variables: list[int] = []
+            root_changed_assignments: list[tuple[int, int, bool]] = []
             for forced_variable, forced_value in initial_propagation.forced_assignments:
                 if not assign_with_propagation(
                     int(forced_variable),
                     int(forced_value),
-                    root_changed_variables,
+                    root_changed_assignments,
                     forced_assignment=True,
                 ):
                     return Basis.empty(layout), statistics
 
-            if not observers_can_continue(tuple(root_changed_variables)):
+            root_changed_variables = tuple(
+                int(variable_index) for variable_index, _, _ in root_changed_assignments
+            )
+            notify_observers_assigned(root_changed_assignments)
+            if not observers_can_continue(root_changed_variables):
                 return Basis.empty(layout), statistics
 
             def dfs_with_static_order(depth: int) -> None:
@@ -446,15 +562,21 @@ class DFSBasisSolver:
                         return
 
                     record_branch()
-                    changed_variables: list[int] = []
-                    if assign_with_propagation(
+                    changed_assignments: list[tuple[int, int, bool]] = []
+                    assignment_ok = assign_with_propagation(
                         variable_index,
                         int(value),
-                        changed_variables,
-                    ) and observers_can_continue(tuple(changed_variables)):
-                        dfs_with_static_order(depth + 1)
+                        changed_assignments,
+                    )
+                    if assignment_ok:
+                        changed_variables = tuple(
+                            int(variable_index) for variable_index, _, _ in changed_assignments
+                        )
+                        notify_observers_assigned(changed_assignments)
+                        if observers_can_continue(changed_variables):
+                            dfs_with_static_order(depth + 1)
 
-                    undo(changed_variables)
+                    undo(changed_assignments, notify_observers=assignment_ok)
 
             def dfs_with_dynamic_order() -> None:
                 if max_states is not None and len(states) >= max_states:
@@ -495,15 +617,21 @@ class DFSBasisSolver:
                         return
 
                     record_branch()
-                    changed_variables: list[int] = []
-                    if assign_with_propagation(
+                    changed_assignments: list[tuple[int, int, bool]] = []
+                    assignment_ok = assign_with_propagation(
                         variable_index,
                         int(value),
-                        changed_variables,
-                    ) and observers_can_continue(tuple(changed_variables)):
-                        dfs_with_dynamic_order()
+                        changed_assignments,
+                    )
+                    if assignment_ok:
+                        changed_variables = tuple(
+                            int(variable_index) for variable_index, _, _ in changed_assignments
+                        )
+                        notify_observers_assigned(changed_assignments)
+                        if observers_can_continue(changed_variables):
+                            dfs_with_dynamic_order()
 
-                    undo(changed_variables)
+                    undo(changed_assignments, notify_observers=assignment_ok)
 
             if use_dynamic_order:
                 dfs_with_dynamic_order()
