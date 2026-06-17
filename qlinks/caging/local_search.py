@@ -1250,6 +1250,273 @@ LocalCageSearchResult = LocalQDMCageSearchResult
 CertifiedLocalCageSearchResult = CertifiedLocalQDMCageSearchResult
 
 
+@dataclass(frozen=True, slots=True)
+class LocalRegionProposalSearchRecord:
+    """Result for one local region emitted by a proposal."""
+
+    proposal_index: int
+    region_index: int
+    region: LocalQDMRegion
+    result: LocalQDMCageSearchResult
+    proposal_record: object | None = None
+
+    @property
+    def records(self) -> list[LocalQDMCageRecord]:
+        return self.result.records
+
+    @property
+    def local_hilbert_size(self) -> int:
+        return self.result.local_hilbert_size
+
+    @property
+    def counts_by_signature(self) -> dict[tuple[int, int], int]:
+        return self.result.counts_by_signature
+
+
+@dataclass(frozen=True, slots=True)
+class LocalRegionProposalSearchResult:
+    """Container returned by proposal-driven local cage scans."""
+
+    records: list[LocalRegionProposalSearchRecord]
+
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __iter__(self):
+        return iter(self.records)
+
+    def __getitem__(self, index):
+        return self.records[index]
+
+    @property
+    def local_results(self) -> list[LocalQDMCageSearchResult]:
+        return [record.result for record in self.records]
+
+    @property
+    def cage_records(self) -> list[LocalQDMCageRecord]:
+        return [cage_record for record in self.records for cage_record in record.result.records]
+
+    @property
+    def counts_by_signature(self) -> dict[tuple[int, int], int]:
+        counts: dict[tuple[int, int], int] = {}
+        for cage_record in self.cage_records:
+            counts[cage_record.signature] = counts.get(cage_record.signature, 0) + 1
+        return counts
+
+    @property
+    def nonempty_records(self) -> list[LocalRegionProposalSearchRecord]:
+        return [record for record in self.records if len(record.result) > 0]
+
+    def qdm_cage_blocks(
+        self,
+        model: object | None = None,
+        *,
+        block_id_start: int = 0,
+        signatures: Sequence[tuple[int, int]] | None = None,
+        max_records_per_region: int | None = None,
+        max_blocks: int | None = None,
+        skip_incompatible_blocks: bool = True,
+    ) -> list[LocalQDMCageBlock]:
+        """Convert compatible local QDM records from this scan into blocks.
+
+        Records whose boundary site contribution changes across support
+        configurations are not independent product blocks.  They are skipped by
+        default because such records may still be valid local cages, just not
+        valid Lego blocks for the current independent multi-padding ansatz.
+        """
+        if block_id_start < 0:
+            raise ValueError("block_id_start must be non-negative.")
+        if max_records_per_region is not None and max_records_per_region < 0:
+            raise ValueError("max_records_per_region must be non-negative or None.")
+        if max_blocks is not None and max_blocks < 0:
+            raise ValueError("max_blocks must be non-negative or None.")
+
+        signature_filter = None
+        if signatures is not None:
+            signature_filter = {(int(kappa), int(potential)) for kappa, potential in signatures}
+
+        blocks: list[LocalQDMCageBlock] = []
+        next_block_id = int(block_id_start)
+        for proposal_record in self.records:
+            block_model = model if model is not None else proposal_record.result.model
+            if block_model is None:
+                raise ValueError("A model is required to convert proposal records into QDM blocks.")
+
+            region_records = proposal_record.result.records
+            if signature_filter is not None:
+                region_records = [
+                    record for record in region_records if record.signature in signature_filter
+                ]
+            if max_records_per_region is not None:
+                region_records = region_records[:max_records_per_region]
+
+            for local_record in region_records:
+                if max_blocks is not None and len(blocks) >= max_blocks:
+                    return blocks
+                try:
+                    block = make_qdm_cage_block(
+                        block_model,
+                        local_record,
+                        block_id=next_block_id,
+                    )
+                except ValueError:
+                    if skip_incompatible_blocks:
+                        continue
+                    raise
+                blocks.append(block)
+                next_block_id += 1
+
+        return blocks
+
+
+def run_local_region_proposal(
+    proposal: LocalRegionProposal,
+    *,
+    model: object | None = None,
+    config: LocalQDMCageSearchConfig | None = None,
+    adapter: LocalCageModelAdapter | None = None,
+    max_regions: int | None = None,
+) -> LocalRegionProposalSearchResult:
+    """Run the local cage searcher over every region emitted by one proposal."""
+    return run_local_region_proposals(
+        [proposal],
+        model=model,
+        config=config,
+        adapter=adapter,
+        max_regions=max_regions,
+    )
+
+
+def run_local_region_proposals(
+    proposals: Sequence[LocalRegionProposal],
+    *,
+    model: object | None = None,
+    config: LocalQDMCageSearchConfig | None = None,
+    adapter: LocalCageModelAdapter | None = None,
+    max_regions: int | None = None,
+) -> LocalRegionProposalSearchResult:
+    """Run local cage searches over a stream of proposal-generated regions.
+
+    The helper is intentionally lightweight: proposal objects only need to
+    provide ``iter_regions()``.  If they provide richer ``iter_records()``
+    records with a ``region`` attribute, that metadata is retained in the scan
+    result.  ``StripeRegionProposal`` follows this richer path.
+    """
+    if max_regions is not None and max_regions < 0:
+        raise ValueError("max_regions must be non-negative or None.")
+
+    search_records: list[LocalRegionProposalSearchRecord] = []
+    emitted = 0
+    for proposal_index, proposal in enumerate(proposals):
+        proposal_model = _model_for_region_proposal(proposal, model)
+        proposal_adapter = _adapter_for_region_proposal(proposal, adapter)
+        proposal_config = _config_for_region_proposal(proposal, config)
+
+        for region_index, proposal_record, region in _iter_region_proposal_records(proposal):
+            if max_regions is not None and emitted >= max_regions:
+                return LocalRegionProposalSearchResult(records=search_records)
+            result = LocalCageSearcher(
+                model=proposal_model,
+                region=region,
+                config=proposal_config,
+                adapter=proposal_adapter,
+            ).run()
+            search_records.append(
+                LocalRegionProposalSearchRecord(
+                    proposal_index=proposal_index,
+                    region_index=region_index,
+                    region=region,
+                    result=result,
+                    proposal_record=proposal_record,
+                )
+            )
+            emitted += 1
+
+    return LocalRegionProposalSearchResult(records=search_records)
+
+
+def collect_qdm_cage_blocks_from_region_proposals(
+    proposals: Sequence[LocalRegionProposal],
+    *,
+    model: object | None = None,
+    config: LocalQDMCageSearchConfig | None = None,
+    adapter: LocalCageModelAdapter | None = None,
+    signatures: Sequence[tuple[int, int]] | None = None,
+    max_regions: int | None = None,
+    max_records_per_region: int | None = None,
+    max_blocks: int | None = None,
+    block_id_start: int = 0,
+    skip_incompatible_blocks: bool = True,
+) -> list[LocalQDMCageBlock]:
+    """Run proposal searches and return a QDM block pool for multi-padding."""
+    scan = run_local_region_proposals(
+        proposals,
+        model=model,
+        config=config,
+        adapter=adapter,
+        max_regions=max_regions,
+    )
+    return scan.qdm_cage_blocks(
+        model=model,
+        block_id_start=block_id_start,
+        signatures=signatures,
+        max_records_per_region=max_records_per_region,
+        max_blocks=max_blocks,
+        skip_incompatible_blocks=skip_incompatible_blocks,
+    )
+
+
+collect_qdm_cage_blocks_from_proposals = collect_qdm_cage_blocks_from_region_proposals
+
+
+def _model_for_region_proposal(
+    proposal: LocalRegionProposal,
+    model: object | None,
+) -> object:
+    if model is not None:
+        return model
+    proposal_model = getattr(proposal, "model", None)
+    if proposal_model is None:
+        raise ValueError("model must be provided when proposal has no model attribute.")
+    return proposal_model
+
+
+def _adapter_for_region_proposal(
+    proposal: LocalRegionProposal,
+    adapter: LocalCageModelAdapter | None,
+) -> LocalCageModelAdapter | None:
+    if adapter is not None:
+        return adapter
+    return getattr(proposal, "adapter", None)
+
+
+def _config_for_region_proposal(
+    proposal: LocalRegionProposal,
+    config: LocalQDMCageSearchConfig | None,
+) -> LocalQDMCageSearchConfig:
+    if config is not None:
+        return config
+    proposal_config = getattr(proposal, "config", None)
+    if proposal_config is None:
+        return LocalQDMCageSearchConfig()
+    return proposal_config
+
+
+def _iter_region_proposal_records(
+    proposal: LocalRegionProposal,
+) -> Iterator[tuple[int, object | None, LocalQDMRegion]]:
+    if hasattr(proposal, "iter_records"):
+        for region_index, proposal_record in enumerate(proposal.iter_records()):
+            region = getattr(proposal_record, "region", None)
+            if region is None:
+                raise ValueError("proposal iter_records() entries must carry a region attribute.")
+            yield region_index, proposal_record, region
+        return
+
+    for region_index, region in enumerate(proposal.iter_regions()):
+        yield region_index, None, region
+
+
 def build_qdm_local_region_from_plaquettes(
     model: object,
     *,
