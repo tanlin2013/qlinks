@@ -8,15 +8,23 @@ from qlinks.caging import (
     CageSearchConfig,
     CageSearcher,
     CageSearchResult,
+    CageState,
+    CandidateSubgraph,
     LocalCageSearchConfig,
     LocalCageSearcher,
+    LocalQDMCageRecord,
     LocalQDMCageSearchConfig,
     LocalQDMCageSearcher,
+    LocalQDMMultiPaddingConfig,
     LocalQDMPaddingConfig,
+    MultiLocalQDMPadding,
     QDMLocalCageAdapter,
     StripeRegionProposal,
+    certify_qdm_multi_block_padding,
     classify_cage_state,
     enumerate_qdm_local_basis,
+    find_multi_qdm_block_paddings,
+    make_qdm_cage_block,
 )
 from qlinks.models import HoneycombQDMModel, SquareQDMModel, TriangularQDMModel
 from qlinks.operators.plaquette import alternating_binary_patterns
@@ -522,3 +530,181 @@ def test_local_qdm_certified_result_can_feed_classification_on_limited_basis() -
 
     assert report.support_size == record.cage_state.support_size
     assert report.n_nontrivial_zeros >= 0
+
+
+def _first_static_qdm_config(model: SquareQDMModel) -> np.ndarray:
+    build = model.build(
+        basis_solver="dfs",
+        builder="sparse",
+        backend="scipy",
+        sort_basis=True,
+    )
+    for config in build.basis.states:
+        if all(_qdm_flip_is_absent(model, config, int(pid)) for pid in model.plaquette_ids()):
+            return np.asarray(config, dtype=np.int64)
+    raise AssertionError("Expected at least one static QDM configuration.")
+
+
+def _qdm_flip_is_absent(model: SquareQDMModel, config: np.ndarray, plaquette_id: int) -> bool:
+    links = np.asarray(model.lattice.plaquette_links(int(plaquette_id)), dtype=np.int64)
+    values = np.asarray(config, dtype=np.int64)[links]
+    pattern0, pattern1 = alternating_binary_patterns(int(links.size))
+    return not (np.array_equal(values, pattern0) or np.array_equal(values, pattern1))
+
+
+def _static_local_record_from_global_config(
+    global_config: np.ndarray,
+    link_ids: list[int],
+) -> LocalQDMCageRecord:
+    local_link_ids = np.asarray(link_ids, dtype=np.int64)
+    return LocalQDMCageRecord(
+        cage_state=CageState(
+            energy=0.0 + 0.0j,
+            local_state=np.ones(1, dtype=np.complex128),
+            support=np.asarray([0], dtype=np.int64),
+            boundary_residual=0.0,
+            eigen_residual=0.0,
+            full_residual=0.0,
+        ),
+        signature=(0, 0),
+        candidate=CandidateSubgraph(vertices=np.asarray([0], dtype=np.int64)),
+        support_configs=np.asarray(global_config[local_link_ids], dtype=np.int64).reshape(1, -1),
+        local_link_ids=local_link_ids,
+        active_plaquette_ids=np.empty(0, dtype=np.int64),
+        scoring_plaquette_ids=np.empty(0, dtype=np.int64),
+        unresolved_boundary_plaquette_ids=np.empty(0, dtype=np.int64),
+    )
+
+
+def test_qdm_multi_block_padding_finds_and_certifies_static_lego_blocks() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    static_config = _first_static_qdm_config(model)
+
+    # Two occupied links far enough apart that no plaquette touches both blocks.
+    blocks = [
+        make_qdm_cage_block(
+            model,
+            _static_local_record_from_global_config(static_config, [4]),
+            block_id=0,
+        ),
+        make_qdm_cage_block(
+            model,
+            _static_local_record_from_global_config(static_config, [16]),
+            block_id=1,
+        ),
+    ]
+
+    config = LocalQDMMultiPaddingConfig(
+        min_blocks=2,
+        max_blocks=2,
+        max_paddings=1,
+        max_paddings_per_packing=1,
+        include_sectors=False,
+        require_static_exterior=True,
+        tolerance=1.0e-9,
+    )
+    paddings = find_multi_qdm_block_paddings(model, blocks, config=config)
+
+    assert len(paddings) == 1
+    assert paddings[0].block_ids == (0, 1)
+    assert paddings[0].global_support_configs.shape == (1, model.lattice.num_links)
+    assert paddings[0].global_amplitudes.shape == (1,)
+
+    report = certify_qdm_multi_block_padding(model, blocks, paddings[0], config=config)
+    assert report is not None
+    assert report.block_ids == (0, 1)
+    assert report.signature == (0, 0)
+    assert report.full_residual < 1.0e-9
+    assert report.support_size == 1
+
+
+def test_qdm_multi_block_padding_certifies_explicit_static_exterior() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    static_config = _first_static_qdm_config(model)
+    blocks = [
+        make_qdm_cage_block(
+            model,
+            _static_local_record_from_global_config(static_config, [4]),
+            block_id=0,
+        ),
+        make_qdm_cage_block(
+            model,
+            _static_local_record_from_global_config(static_config, [16]),
+            block_id=1,
+        ),
+    ]
+
+    owned_links = {int(link_id) for block in blocks for link_id in block.link_ids}
+    exterior_link_ids = np.asarray(
+        [link_id for link_id in range(model.lattice.num_links) if link_id not in owned_links],
+        dtype=np.int64,
+    )
+    padding = MultiLocalQDMPadding(
+        block_ids=(0, 1),
+        exterior_link_ids=exterior_link_ids,
+        exterior_config=static_config[exterior_link_ids],
+        global_support_configs=static_config.reshape(1, -1),
+        global_amplitudes=np.ones(1, dtype=np.complex128),
+        block_support_indices=np.zeros((1, 2), dtype=np.int64),
+    )
+
+    report = certify_qdm_multi_block_padding(
+        model,
+        blocks,
+        padding,
+        config=LocalQDMMultiPaddingConfig(
+            min_blocks=2,
+            max_blocks=2,
+            include_sectors=False,
+            require_static_exterior=True,
+            tolerance=1.0e-9,
+        ),
+    )
+
+    assert report is not None
+    assert report.signature == (0, 0)
+    assert report.leakage_residual == 0.0
+    assert report.support_kinetic_residual == 0.0
+
+
+def test_make_qdm_cage_block_rejects_support_dependent_site_counts() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    link_ids = np.asarray([4], dtype=np.int64)
+    record = LocalQDMCageRecord(
+        cage_state=CageState(
+            energy=0.0 + 0.0j,
+            local_state=np.ones(2, dtype=np.complex128) / np.sqrt(2.0),
+            support=np.asarray([0, 1], dtype=np.int64),
+            boundary_residual=0.0,
+            eigen_residual=0.0,
+            full_residual=0.0,
+        ),
+        signature=(0, 0),
+        candidate=CandidateSubgraph(vertices=np.asarray([0, 1], dtype=np.int64)),
+        support_configs=np.asarray([[0], [1]], dtype=np.int64),
+        local_link_ids=link_ids,
+        active_plaquette_ids=np.empty(0, dtype=np.int64),
+        scoring_plaquette_ids=np.empty(0, dtype=np.int64),
+        unresolved_boundary_plaquette_ids=np.empty(0, dtype=np.int64),
+    )
+
+    with pytest.raises(ValueError, match="site occupation contribution changes"):
+        make_qdm_cage_block(model, record, block_id=0)

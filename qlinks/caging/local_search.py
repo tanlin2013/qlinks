@@ -14,6 +14,7 @@ one or more global winding sectors.
 
 from __future__ import annotations
 
+import itertools
 from collections import defaultdict
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field, replace
@@ -404,6 +405,189 @@ class LocalQDMPadding:
     exterior_link_ids: npt.NDArray[np.int64]
     exterior_config: npt.NDArray[np.int64]
     global_support_configs: npt.NDArray[np.int64]
+
+
+@dataclass(frozen=True, slots=True)
+class LocalQDMMultiPaddingConfig:
+    """Configuration for Lego-style multi-block QDM padding.
+
+    The multi-block path chooses compatible, disjoint local cage blocks from a
+    pool, solves one shared static exterior for the union of their fixed
+    boundary charges, and then certifies the resulting product state by applying
+    all global QDM flips.  Every selected block must have support-independent
+    site counts; otherwise an independent tensor-product block cannot be padded
+    by one shared exterior configuration.
+    """
+
+    min_blocks: int = 2
+    max_blocks: int | None = None
+    max_paddings: int = 1
+    max_paddings_per_packing: int = 1
+    max_dfs_nodes: int | None = None
+    include_sectors: bool = True
+    require_static_exterior: bool = False
+    tolerance: float = 1.0e-10
+    max_product_support_size: int | None = 512
+    require_kinetic_separation: bool = True
+    sort_limited_basis: bool = True
+    store_full_states: bool = True
+
+    def __post_init__(self) -> None:
+        if self.min_blocks < 1:
+            raise ValueError("min_blocks must be positive.")
+        if self.max_blocks is not None and self.max_blocks < self.min_blocks:
+            raise ValueError("max_blocks must be None or at least min_blocks.")
+        if self.max_paddings < 0:
+            raise ValueError("max_paddings must be non-negative.")
+        if self.max_paddings_per_packing < 0:
+            raise ValueError("max_paddings_per_packing must be non-negative.")
+        if self.max_dfs_nodes is not None and self.max_dfs_nodes < 0:
+            raise ValueError("max_dfs_nodes must be non-negative or None.")
+        if self.tolerance < 0:
+            raise ValueError("tolerance must be non-negative.")
+        if self.max_product_support_size is not None and self.max_product_support_size < 1:
+            raise ValueError("max_product_support_size must be None or positive.")
+
+    def as_single_padding_config(self) -> LocalQDMPaddingConfig:
+        """Return the shared options in the single-block padding config form."""
+        return LocalQDMPaddingConfig(
+            max_paddings_per_record=self.max_paddings_per_packing,
+            max_dfs_nodes=self.max_dfs_nodes,
+            include_sectors=self.include_sectors,
+            require_static_exterior=self.require_static_exterior,
+            tolerance=self.tolerance,
+            sort_limited_basis=self.sort_limited_basis,
+            store_full_states=self.store_full_states,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class LocalQDMCageBlock:
+    """A placed local QDM cage usable as one independent padding block."""
+
+    block_id: int
+    record: LocalQDMCageRecord
+    link_ids: npt.NDArray[np.int64]
+    active_plaquette_ids: npt.NDArray[np.int64]
+    guard_plaquette_ids: npt.NDArray[np.int64]
+    support_configs: npt.NDArray[np.int64]
+    amplitudes: npt.NDArray[np.complex128]
+    site_counts: npt.NDArray[np.int64]
+
+    def __post_init__(self) -> None:
+        link_ids = np.asarray(self.link_ids, dtype=np.int64)
+        if link_ids.ndim != 1:
+            raise ValueError("link_ids must be one-dimensional.")
+        if np.unique(link_ids).size != link_ids.size:
+            raise ValueError("link_ids must not contain duplicates.")
+        object.__setattr__(self, "link_ids", link_ids.copy())
+
+        for field_name in ("active_plaquette_ids", "guard_plaquette_ids"):
+            arr = np.asarray(getattr(self, field_name), dtype=np.int64)
+            if arr.ndim != 1:
+                raise ValueError(f"{field_name} must be one-dimensional.")
+            object.__setattr__(self, field_name, np.unique(arr).astype(np.int64))
+
+        support_configs = np.asarray(self.support_configs, dtype=np.int64)
+        if support_configs.ndim != 2:
+            raise ValueError("support_configs must have shape (support, n_block_links).")
+        if support_configs.shape[1] != np.asarray(self.link_ids).size:
+            raise ValueError("support_configs width must match link_ids size.")
+        object.__setattr__(self, "support_configs", support_configs.copy())
+
+        amplitudes = np.asarray(self.amplitudes, dtype=np.complex128)
+        if amplitudes.ndim != 1 or amplitudes.size != support_configs.shape[0]:
+            raise ValueError("amplitudes must have one entry per support configuration.")
+        norm = float(np.linalg.norm(amplitudes))
+        if norm == 0.0:
+            raise ValueError("block amplitudes must have nonzero norm.")
+        object.__setattr__(self, "amplitudes", (amplitudes / norm).astype(np.complex128))
+
+        site_counts = np.asarray(self.site_counts, dtype=np.int64)
+        if site_counts.ndim != 1:
+            raise ValueError("site_counts must be one-dimensional.")
+        if np.any(site_counts < 0):
+            raise ValueError("site_counts must be non-negative.")
+        object.__setattr__(self, "site_counts", site_counts.copy())
+
+    @property
+    def support_size(self) -> int:
+        return int(self.support_configs.shape[0])
+
+    @property
+    def kappa(self) -> int:
+        return int(self.record.kappa)
+
+    @property
+    def potential_value(self) -> int:
+        return int(self.record.potential_value)
+
+    @property
+    def signature(self) -> tuple[int, int]:
+        return self.record.signature
+
+
+@dataclass(frozen=True, slots=True)
+class MultiLocalQDMPadding:
+    """One shared-exterior padding for a product of several local QDM blocks."""
+
+    block_ids: tuple[int, ...]
+    exterior_link_ids: npt.NDArray[np.int64]
+    exterior_config: npt.NDArray[np.int64]
+    global_support_configs: npt.NDArray[np.int64]
+    global_amplitudes: npt.NDArray[np.complex128]
+    block_support_indices: npt.NDArray[np.int64]
+
+    def __post_init__(self) -> None:
+        for field_name in ("exterior_link_ids", "exterior_config"):
+            arr = np.asarray(getattr(self, field_name), dtype=np.int64)
+            if arr.ndim != 1:
+                raise ValueError(f"{field_name} must be one-dimensional.")
+            object.__setattr__(self, field_name, arr.copy())
+
+        configs = np.asarray(self.global_support_configs, dtype=np.int64)
+        if configs.ndim != 2:
+            raise ValueError("global_support_configs must be two-dimensional.")
+        object.__setattr__(self, "global_support_configs", configs.copy())
+
+        amplitudes = np.asarray(self.global_amplitudes, dtype=np.complex128)
+        if amplitudes.ndim != 1 or amplitudes.size != configs.shape[0]:
+            raise ValueError("global_amplitudes must have one entry per global support config.")
+        norm = float(np.linalg.norm(amplitudes))
+        if norm == 0.0 and amplitudes.size:
+            raise ValueError("global_amplitudes must have nonzero norm.")
+        if norm != 0.0:
+            amplitudes = amplitudes / norm
+        object.__setattr__(self, "global_amplitudes", amplitudes.astype(np.complex128))
+
+        indices = np.asarray(self.block_support_indices, dtype=np.int64)
+        if indices.ndim != 2:
+            raise ValueError("block_support_indices must be two-dimensional.")
+        if indices.shape[0] != configs.shape[0]:
+            raise ValueError("block_support_indices must align with global support configs.")
+        if indices.shape[1] != len(self.block_ids):
+            raise ValueError("block_support_indices width must match block_ids length.")
+        object.__setattr__(self, "block_support_indices", indices.copy())
+
+
+@dataclass(frozen=True, slots=True)
+class MultiLocalQDMCertificationReport:
+    """Numerical certificate for one multi-block QDM padding."""
+
+    block_ids: tuple[int, ...]
+    padding_index: int
+    signature: tuple[int, int]
+    energy: complex
+    kinetic_eigenvalue: complex
+    self_loop_value: complex
+    support_size: int
+    one_hop_shell_size: int
+    leakage_residual: float
+    support_kinetic_residual: float
+    support_hamiltonian_residual: float
+    full_residual: float
+    padding: MultiLocalQDMPadding
+    leakage_configs: npt.NDArray[np.int64]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1854,6 +2038,649 @@ def certify_qdm_local_record(
             reports.append(report)
 
     return reports
+
+
+def make_qdm_cage_block(
+    model: object,
+    local_record: LocalQDMCageRecord,
+    *,
+    block_id: int = 0,
+    guard_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None,
+) -> LocalQDMCageBlock:
+    """Create a constant-boundary Lego block from a local QDM cage record.
+
+    Independent product padding requires the number of dimers contributed by
+    the block at every global site to be independent of the local support
+    configuration.  If this fails, one shared exterior cannot tensor with the
+    entire block support, so this function raises ``ValueError``.
+    """
+    link_ids = np.asarray(local_record.local_link_ids, dtype=np.int64)
+    support_configs = np.asarray(local_record.support_configs, dtype=np.int64)
+    if support_configs.ndim != 2:
+        raise ValueError("local_record.support_configs must have shape (support, n_local_links).")
+    if support_configs.shape[1] != link_ids.size:
+        raise ValueError("local_record support width must match local_link_ids size.")
+
+    site_counts = _constant_qdm_block_site_counts(model, link_ids, support_configs)
+    if site_counts is None:
+        raise ValueError(
+            "Local cage record is not an independent padding block: "
+            "its site occupation contribution changes across support configs."
+        )
+
+    if guard_plaquette_ids is None:
+        guard = np.unique(
+            np.concatenate(
+                [
+                    np.asarray(local_record.active_plaquette_ids, dtype=np.int64),
+                    np.asarray(local_record.unresolved_boundary_plaquette_ids, dtype=np.int64),
+                ]
+            )
+        ).astype(np.int64)
+    else:
+        guard = _unique_int_array(guard_plaquette_ids, name="guard_plaquette_ids")
+        _validate_plaquette_ids(model, guard)
+
+    return LocalQDMCageBlock(
+        block_id=int(block_id),
+        record=local_record,
+        link_ids=link_ids.copy(),
+        active_plaquette_ids=np.asarray(local_record.active_plaquette_ids, dtype=np.int64).copy(),
+        guard_plaquette_ids=guard,
+        support_configs=support_configs.copy(),
+        amplitudes=np.asarray(local_record.local_state, dtype=np.complex128).copy(),
+        site_counts=site_counts,
+    )
+
+
+def find_multi_qdm_block_paddings(
+    model: object,
+    block_pool: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> list[MultiLocalQDMPadding]:
+    """Find shared-exterior paddings built from a pool of local QDM blocks.
+
+    This is the Lego-builder counterpart of
+    :func:`find_shared_qdm_exterior_paddings`: instead of one local record, it
+    chooses compatible disjoint blocks, combines their fixed site-count
+    contributions, and runs an exterior DFS for the remaining links.
+    """
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    if multi_config.max_paddings == 0:
+        return []
+
+    blocks = tuple(block_pool)
+    if not blocks:
+        return []
+
+    block_ids = [int(block.block_id) for block in blocks]
+    if len(block_ids) != len(set(block_ids)):
+        raise ValueError("block_pool contains duplicate block_id values.")
+
+    required_count = int(getattr(model, "required_count", 1))
+    max_blocks = multi_config.max_blocks if multi_config.max_blocks is not None else len(blocks)
+    max_blocks = min(int(max_blocks), len(blocks))
+
+    paddings: list[MultiLocalQDMPadding] = []
+    selected: list[LocalQDMCageBlock] = []
+    used_links: set[int] = set()
+    site_counts = np.zeros(int(model.lattice.num_sites), dtype=np.int64)
+    product_support_size = 1
+
+    def can_add(block: LocalQDMCageBlock) -> bool:
+        block_link_set = set(int(link_id) for link_id in block.link_ids)
+        if used_links.intersection(block_link_set):
+            return False
+        if np.any(site_counts + block.site_counts > required_count):
+            return False
+        if multi_config.max_product_support_size is not None:
+            next_size = int(product_support_size) * int(block.support_size)
+            if next_size > multi_config.max_product_support_size:
+                return False
+        if multi_config.require_kinetic_separation and not _qdm_block_is_kinetically_separated(
+            model,
+            tuple(selected),
+            block,
+        ):
+            return False
+        return True
+
+    def emit_current_selection() -> None:
+        if len(paddings) >= multi_config.max_paddings:
+            return
+        fixed_blocks = tuple(selected)
+        found = _find_qdm_exterior_paddings_for_blocks(
+            model,
+            fixed_blocks,
+            config=multi_config,
+        )
+        remaining = multi_config.max_paddings - len(paddings)
+        paddings.extend(found[:remaining])
+
+    def dfs(start: int) -> None:
+        nonlocal product_support_size, site_counts
+        if len(paddings) >= multi_config.max_paddings:
+            return
+        if len(selected) >= multi_config.min_blocks:
+            emit_current_selection()
+            if len(paddings) >= multi_config.max_paddings:
+                return
+        if len(selected) >= max_blocks:
+            return
+
+        for block_index in range(start, len(blocks)):
+            block = blocks[block_index]
+            if not can_add(block):
+                continue
+            block_link_set = set(int(link_id) for link_id in block.link_ids)
+            selected.append(block)
+            used_links.update(block_link_set)
+            old_site_counts = site_counts.copy()
+            site_counts = site_counts + block.site_counts
+            old_product_support_size = product_support_size
+            product_support_size *= int(block.support_size)
+            try:
+                dfs(block_index + 1)
+            finally:
+                product_support_size = old_product_support_size
+                site_counts = old_site_counts
+                used_links.difference_update(block_link_set)
+                selected.pop()
+            if len(paddings) >= multi_config.max_paddings:
+                return
+
+    dfs(0)
+    return paddings
+
+
+# Backward-compatible/readable alias matching the wording used in design notes.
+find_qdm_multi_block_paddings = find_multi_qdm_block_paddings
+
+
+def certify_qdm_multi_block_padding(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    padding: MultiLocalQDMPadding,
+    *,
+    padding_index: int = 0,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> MultiLocalQDMCertificationReport | None:
+    """Certify one multi-block QDM padding by explicit global one-hop action."""
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    return _certify_qdm_multi_padding(
+        model,
+        tuple(blocks),
+        padding,
+        padding_index=padding_index,
+        config=multi_config,
+    )
+
+
+def certify_qdm_multi_block_paddings(
+    model: object,
+    block_pool: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> list[MultiLocalQDMCertificationReport]:
+    """Find and certify Lego-style multi-block QDM paddings from a block pool."""
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    paddings = find_multi_qdm_block_paddings(model, block_pool, config=multi_config)
+    block_by_id = {int(block.block_id): block for block in block_pool}
+
+    reports: list[MultiLocalQDMCertificationReport] = []
+    for padding_index, padding in enumerate(paddings):
+        blocks = tuple(block_by_id[int(block_id)] for block_id in padding.block_ids)
+        report = _certify_qdm_multi_padding(
+            model,
+            blocks,
+            padding,
+            padding_index=padding_index,
+            config=multi_config,
+        )
+        if report is not None:
+            reports.append(report)
+    return reports
+
+
+def _find_qdm_exterior_paddings_for_blocks(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig,
+) -> list[MultiLocalQDMPadding]:
+    fixed_blocks = tuple(blocks)
+    if not fixed_blocks:
+        return []
+    if config.max_paddings_per_packing == 0:
+        return []
+    if not _qdm_blocks_are_pairwise_link_disjoint(fixed_blocks):
+        return []
+    if config.require_kinetic_separation and not _qdm_blocks_are_kinetically_separated(
+        model,
+        fixed_blocks,
+    ):
+        return []
+
+    required_count = int(getattr(model, "required_count", 1))
+    total_site_counts = np.zeros(int(model.lattice.num_sites), dtype=np.int64)
+    block_link_set: set[int] = set()
+    for block in fixed_blocks:
+        total_site_counts += np.asarray(block.site_counts, dtype=np.int64)
+        block_link_set.update(int(link_id) for link_id in block.link_ids)
+    if np.any(total_site_counts > required_count):
+        return []
+
+    n_global_links = int(model.lattice.num_links)
+    exterior_link_ids = np.asarray(
+        [link_id for link_id in range(n_global_links) if link_id not in block_link_set],
+        dtype=np.int64,
+    )
+    exterior_index_by_link = {int(link_id): i for i, link_id in enumerate(exterior_link_ids)}
+    n_exterior = int(exterior_link_ids.size)
+
+    site_targets: dict[int, int] = {}
+    site_exterior_links: dict[int, npt.NDArray[np.int64]] = {}
+    for site_id in range(int(model.lattice.num_sites)):
+        incident = [int(link_id) for link_id in model.lattice.incident_links(int(site_id))]
+        exterior_incident = [
+            exterior_index_by_link[link_id]
+            for link_id in incident
+            if link_id in exterior_index_by_link
+        ]
+        target = required_count - int(total_site_counts[int(site_id)])
+        if target < 0 or target > len(exterior_incident):
+            return []
+        site_targets[int(site_id)] = int(target)
+        site_exterior_links[int(site_id)] = np.asarray(exterior_incident, dtype=np.int64)
+
+    if n_exterior == 0:
+        exterior_config = np.zeros(0, dtype=np.int64)
+        padding = _make_qdm_multi_padding_from_exterior(
+            model,
+            fixed_blocks,
+            exterior_link_ids=exterior_link_ids,
+            exterior_config=exterior_config,
+        )
+        if _multi_padding_passes_global_filters(model, padding, fixed_blocks, config):
+            return [padding]
+        return []
+
+    scores = np.zeros(n_exterior, dtype=np.int64)
+    for site_id, exterior_indices in site_exterior_links.items():
+        target = site_targets[int(site_id)]
+        weight = 2 if target in {0, len(exterior_indices)} else 1
+        for exterior_index in exterior_indices:
+            scores[int(exterior_index)] += weight
+    variable_order = np.lexsort((np.arange(n_exterior), -scores)).astype(np.int64)
+
+    exterior_config = np.zeros(n_exterior, dtype=np.int64)
+    assigned = np.zeros(n_exterior, dtype=bool)
+    sites_by_exterior_variable: list[list[int]] = [[] for _ in range(n_exterior)]
+    for site_id, exterior_indices in site_exterior_links.items():
+        for exterior_index in exterior_indices:
+            sites_by_exterior_variable[int(exterior_index)].append(int(site_id))
+
+    paddings: list[MultiLocalQDMPadding] = []
+    nodes_visited = 0
+
+    def partial_site_check(site_id: int) -> bool:
+        exterior_indices = site_exterior_links[site_id]
+        target = site_targets[site_id]
+        if exterior_indices.size == 0:
+            return target == 0
+        assigned_local = assigned[exterior_indices]
+        occupied = int(np.sum(exterior_config[exterior_indices[assigned_local]]))
+        unassigned = int(exterior_indices.size - np.count_nonzero(assigned_local))
+        if occupied > target:
+            return False
+        if occupied + unassigned < target:
+            return False
+        if unassigned == 0 and occupied != target:
+            return False
+        return True
+
+    def full_check() -> bool:
+        for site_id in range(int(model.lattice.num_sites)):
+            if not partial_site_check(int(site_id)):
+                return False
+        return True
+
+    def dfs(depth: int) -> None:
+        nonlocal nodes_visited
+        if len(paddings) >= config.max_paddings_per_packing:
+            return
+        if config.max_dfs_nodes is not None and nodes_visited >= config.max_dfs_nodes:
+            return
+        nodes_visited += 1
+
+        if depth == n_exterior:
+            if full_check():
+                padding = _make_qdm_multi_padding_from_exterior(
+                    model,
+                    fixed_blocks,
+                    exterior_link_ids=exterior_link_ids,
+                    exterior_config=exterior_config.copy(),
+                )
+                if _multi_padding_passes_global_filters(model, padding, fixed_blocks, config):
+                    paddings.append(padding)
+            return
+
+        exterior_variable = int(variable_order[depth])
+        for value in (0, 1):
+            if len(paddings) >= config.max_paddings_per_packing:
+                return
+            exterior_config[exterior_variable] = value
+            assigned[exterior_variable] = True
+            touched_sites = sites_by_exterior_variable[exterior_variable]
+            if all(partial_site_check(site_id) for site_id in touched_sites):
+                dfs(depth + 1)
+            assigned[exterior_variable] = False
+            exterior_config[exterior_variable] = 0
+
+    dfs(0)
+    return paddings
+
+
+def _certify_qdm_multi_padding(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    padding: MultiLocalQDMPadding,
+    *,
+    padding_index: int,
+    config: LocalQDMMultiPaddingConfig,
+) -> MultiLocalQDMCertificationReport | None:
+    fixed_blocks = tuple(blocks)
+    if tuple(int(block.block_id) for block in fixed_blocks) != tuple(
+        int(x) for x in padding.block_ids
+    ):
+        raise ValueError("blocks must match padding.block_ids and order.")
+
+    amplitudes = np.asarray(padding.global_amplitudes, dtype=np.complex128)
+    norm = float(np.linalg.norm(amplitudes))
+    if norm == 0.0:
+        return None
+    amplitudes = amplitudes / norm
+
+    support_configs = np.asarray(padding.global_support_configs, dtype=np.int64)
+    support_keys = [_config_key(config_row) for config_row in support_configs]
+    support_amplitude_by_key = {
+        key: complex(amplitude) for key, amplitude in zip(support_keys, amplitudes, strict=True)
+    }
+
+    action_by_key: dict[tuple[int, ...], complex] = defaultdict(complex)
+    touched_keys: set[tuple[int, ...]] = set(support_keys)
+
+    for source_config, source_amplitude in zip(support_configs, amplitudes, strict=True):
+        for plaquette_id in model.plaquette_ids():
+            transition = _qdm_flip_transition(model, source_config, int(plaquette_id))
+            if transition is None:
+                continue
+            final_config, coefficient = transition
+            final_key = _config_key(final_config)
+            action_by_key[final_key] += complex(coefficient) * complex(source_amplitude)
+            touched_keys.add(final_key)
+
+    kappa = complex(sum(int(block.kappa) for block in fixed_blocks))
+    support_kinetic_residuals: list[complex] = []
+    leakage_values: list[complex] = []
+    leakage_configs: list[npt.NDArray[np.int64]] = []
+
+    for key in sorted(touched_keys):
+        action = complex(action_by_key.get(key, 0.0 + 0.0j))
+        if key in support_amplitude_by_key:
+            expected = kappa * support_amplitude_by_key[key]
+            support_kinetic_residuals.append(action - expected)
+        else:
+            leakage_values.append(action)
+            leakage_configs.append(np.asarray(key, dtype=np.int64))
+
+    support_kinetic_residual = float(np.linalg.norm(np.asarray(support_kinetic_residuals)))
+    leakage_residual = float(np.linalg.norm(np.asarray(leakage_values, dtype=np.complex128)))
+
+    if leakage_residual > config.tolerance:
+        return None
+    if support_kinetic_residual > config.tolerance:
+        return None
+
+    support_self_loops = qdm_global_self_loop_values(model, support_configs)
+    self_loop_value = complex(support_self_loops[0]) if support_self_loops.size else 0.0 + 0.0j
+    if np.linalg.norm(support_self_loops - self_loop_value) > config.tolerance:
+        return None
+
+    energy = self_loop_value + kappa
+    support_h_residuals = []
+    for key, amplitude, self_loop in zip(
+        support_keys,
+        amplitudes,
+        support_self_loops,
+        strict=True,
+    ):
+        kinetic_action = complex(action_by_key.get(key, 0.0 + 0.0j))
+        support_h_residuals.append(
+            kinetic_action + complex(self_loop) * amplitude - energy * amplitude
+        )
+    support_hamiltonian_residual = float(
+        np.linalg.norm(np.asarray(support_h_residuals, dtype=np.complex128))
+    )
+    full_residual = float(np.hypot(support_hamiltonian_residual, leakage_residual))
+    if full_residual > config.tolerance:
+        return None
+
+    signature = signature_from_energy_and_self_loop(
+        energy,
+        self_loop_value,
+        tolerance=max(config.tolerance, 1.0e-15) * 10.0,
+        potential_unit=_infer_potential_unit_from_model(model),
+    )
+    if signature is None:
+        return None
+
+    leakage_arr = (
+        np.asarray(leakage_configs, dtype=np.int64)
+        if leakage_configs
+        else np.empty((0, int(model.lattice.num_links)), dtype=np.int64)
+    )
+
+    return MultiLocalQDMCertificationReport(
+        block_ids=tuple(int(block.block_id) for block in fixed_blocks),
+        padding_index=int(padding_index),
+        signature=signature,
+        energy=energy,
+        kinetic_eigenvalue=kappa,
+        self_loop_value=self_loop_value,
+        support_size=int(support_configs.shape[0]),
+        one_hop_shell_size=int(len(touched_keys)),
+        leakage_residual=leakage_residual,
+        support_kinetic_residual=support_kinetic_residual,
+        support_hamiltonian_residual=support_hamiltonian_residual,
+        full_residual=full_residual,
+        padding=padding,
+        leakage_configs=leakage_arr,
+    )
+
+
+def _constant_qdm_block_site_counts(
+    model: object,
+    link_ids: npt.ArrayLike,
+    support_configs: npt.ArrayLike,
+) -> npt.NDArray[np.int64] | None:
+    local_link_ids = np.asarray(link_ids, dtype=np.int64)
+    support_arr = np.asarray(support_configs, dtype=np.int64)
+    local_index_by_link = {int(link_id): i for i, link_id in enumerate(local_link_ids)}
+    site_counts = np.zeros(int(model.lattice.num_sites), dtype=np.int64)
+
+    for site_id in range(int(model.lattice.num_sites)):
+        local_incident = [
+            local_index_by_link[int(link_id)]
+            for link_id in model.lattice.incident_links(int(site_id))
+            if int(link_id) in local_index_by_link
+        ]
+        if local_incident:
+            counts = np.sum(support_arr[:, local_incident], axis=1).astype(np.int64)
+        else:
+            counts = np.zeros(support_arr.shape[0], dtype=np.int64)
+        unique_counts = np.unique(counts)
+        if unique_counts.size != 1:
+            return None
+        site_counts[int(site_id)] = int(unique_counts[0])
+
+    return site_counts
+
+
+def _qdm_blocks_are_pairwise_link_disjoint(blocks: Sequence[LocalQDMCageBlock]) -> bool:
+    used: set[int] = set()
+    for block in blocks:
+        block_links = set(int(link_id) for link_id in block.link_ids)
+        if used.intersection(block_links):
+            return False
+        used.update(block_links)
+    return True
+
+
+def _qdm_block_is_kinetically_separated(
+    model: object,
+    existing_blocks: Sequence[LocalQDMCageBlock],
+    new_block: LocalQDMCageBlock,
+) -> bool:
+    return _qdm_blocks_are_kinetically_separated(model, tuple(existing_blocks) + (new_block,))
+
+
+def _qdm_blocks_are_kinetically_separated(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+) -> bool:
+    link_owner: dict[int, int] = {}
+    for block_position, block in enumerate(blocks):
+        for link_id in block.link_ids:
+            link_owner[int(link_id)] = int(block_position)
+
+    for plaquette_id in model.plaquette_ids():
+        owners = {
+            link_owner[int(link_id)]
+            for link_id in model.lattice.plaquette_links(int(plaquette_id))
+            if int(link_id) in link_owner
+        }
+        if len(owners) > 1:
+            return False
+    return True
+
+
+def _make_qdm_multi_padding_from_exterior(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    *,
+    exterior_link_ids: npt.NDArray[np.int64],
+    exterior_config: npt.NDArray[np.int64],
+) -> MultiLocalQDMPadding:
+    fixed_blocks = tuple(blocks)
+    support_ranges = [range(int(block.support_size)) for block in fixed_blocks]
+    support_tuples = list(itertools.product(*support_ranges))
+    n_support = len(support_tuples)
+    n_global_links = int(model.lattice.num_links)
+
+    full_configs = np.zeros((n_support, n_global_links), dtype=np.int64)
+    amplitudes = np.ones(n_support, dtype=np.complex128)
+    block_support_indices = np.zeros((n_support, len(fixed_blocks)), dtype=np.int64)
+    exterior_link_ids = np.asarray(exterior_link_ids, dtype=np.int64)
+    exterior_config = np.asarray(exterior_config, dtype=np.int64)
+
+    for row_index, support_tuple in enumerate(support_tuples):
+        if exterior_link_ids.size:
+            full_configs[row_index, exterior_link_ids] = exterior_config
+        for block_position, (block, support_index) in enumerate(
+            zip(fixed_blocks, support_tuple, strict=True)
+        ):
+            support_index = int(support_index)
+            full_configs[row_index, np.asarray(block.link_ids, dtype=np.int64)] = (
+                block.support_configs[support_index]
+            )
+            amplitudes[row_index] *= complex(block.amplitudes[support_index])
+            block_support_indices[row_index, block_position] = support_index
+
+    return MultiLocalQDMPadding(
+        block_ids=tuple(int(block.block_id) for block in fixed_blocks),
+        exterior_link_ids=exterior_link_ids.copy(),
+        exterior_config=exterior_config.copy(),
+        global_support_configs=full_configs,
+        global_amplitudes=amplitudes,
+        block_support_indices=block_support_indices,
+    )
+
+
+def _multi_padding_passes_global_filters(
+    model: object,
+    padding: MultiLocalQDMPadding,
+    blocks: Sequence[LocalQDMCageBlock],
+    config: LocalQDMMultiPaddingConfig,
+) -> bool:
+    if not _global_configs_satisfy_qdm_constraints(model, padding.global_support_configs):
+        return False
+    if config.include_sectors and not _global_configs_satisfy_model_sectors(
+        model,
+        padding.global_support_configs,
+    ):
+        return False
+    if config.require_static_exterior and not _multi_padding_has_static_exterior(
+        model,
+        padding,
+        blocks,
+    ):
+        return False
+    return True
+
+
+def _global_configs_satisfy_qdm_constraints(
+    model: object,
+    configs: npt.ArrayLike,
+) -> bool:
+    required_count = int(getattr(model, "required_count", 1))
+    arr = np.asarray(configs, dtype=np.int64)
+    if arr.ndim == 1:
+        arr = arr.reshape(1, -1)
+    for config_row in arr:
+        for site_id in range(int(model.lattice.num_sites)):
+            incident = np.asarray(model.lattice.incident_links(int(site_id)), dtype=np.int64)
+            if int(np.sum(config_row[incident])) != required_count:
+                return False
+    return True
+
+
+def _global_configs_satisfy_model_sectors(
+    model: object,
+    configs: npt.ArrayLike,
+) -> bool:
+    sectors = tuple(model.make_sectors())
+    if not sectors:
+        return True
+    arr = np.asarray(configs, dtype=np.int64)
+    if arr.ndim == 1:
+        arr = arr.reshape(1, -1)
+    for config_row in arr:
+        for sector in sectors:
+            if not sector.is_satisfied(config_row):
+                return False
+    return True
+
+
+def _multi_padding_has_static_exterior(
+    model: object,
+    padding: MultiLocalQDMPadding,
+    blocks: Sequence[LocalQDMCageBlock],
+) -> bool:
+    block_link_set = {
+        int(link_id) for block in blocks for link_id in np.asarray(block.link_ids, dtype=np.int64)
+    }
+    for plaquette_id in model.plaquette_ids():
+        plaquette_links = set(
+            int(link_id) for link_id in model.lattice.plaquette_links(int(plaquette_id))
+        )
+        if plaquette_links.intersection(block_link_set):
+            continue
+        for config_row in padding.global_support_configs:
+            if _qdm_flip_transition(model, config_row, int(plaquette_id)) is not None:
+                return False
+    return True
 
 
 def find_shared_qdm_exterior_paddings(
