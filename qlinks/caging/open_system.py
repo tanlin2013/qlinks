@@ -65,6 +65,7 @@ JumpOperatorDesign = Literal[
     "hamiltonian_outside_monitor_inside",
     "monitor_recycler",
     "local_rdm_parent_projector",
+    "local_rdm_parent_projector_recycling",
 ]
 JumpPlaquettePolicy = Literal[
     "disjoint_outside",
@@ -1539,19 +1540,47 @@ def build_type1_cage_lindblad_construction(
     monitor_recycler_component_jumps = False
     monitor_recycler_jump_closure_orders: tuple[int, ...] = ()
 
-    if jump_operator_design == "local_rdm_parent_projector":
+    if jump_operator_design in {
+        "local_rdm_parent_projector",
+        "local_rdm_parent_projector_recycling",
+    }:
         basis_configs = basis_configs_from_build_result(build_result)
         region_specs = _monitor_recycler_region_specs(
             region=region,
             monitor=monitor,
             monitor_components=monitor_components,
         )
-        jumps = _build_local_rdm_parent_projector_jump_operators(
+        parent_projector_jumps = _build_local_rdm_parent_projector_jump_operators(
             basis_configs=basis_configs,
             state=psi,
             region_specs=region_specs,
             rdm_tolerance=recycling_rdm_tolerance,
         )
+        jumps = parent_projector_jumps
+
+        if jump_operator_design == "local_rdm_parent_projector_recycling":
+            if recycling_jump_source == "none":
+                raise ValueError(
+                    "jump_operator_design='local_rdm_parent_projector_recycling' "
+                    "requires recycling_jump_source to be local_rdm_rank_one, "
+                    "local_rdm_two_pattern, or local_rdm_null_basis."
+                )
+
+            recycling_build_result = build_local_recycling_jumps_from_regions(
+                basis_configs=basis_configs,
+                target_state=psi,
+                regions=tuple(region_key for region_key, _ in region_specs),
+                source=recycling_jump_source,
+                max_jumps_per_region=max_recycling_jumps_per_region,
+                rdm_tolerance=recycling_rdm_tolerance,
+                dark_tolerance=recycling_dark_tolerance,
+                inflow_tolerance=recycling_inflow_tolerance,
+                prefer_sparse=recycling_prefer_sparse,
+                two_pattern_tolerance=recycling_two_pattern_tolerance,
+            )
+            recycling_jumps = recycling_build_result.jumps
+            jumps = tuple(parent_projector_jumps) + tuple(recycling_jumps)
+
         monitor_recycler_component_jumps = True
 
     elif jump_operator_design == "monitor_recycler":
@@ -1645,7 +1674,12 @@ def build_type1_cage_lindblad_construction(
 
     stage_start = time.perf_counter()
     if (
-        jump_operator_design not in {"monitor_recycler", "local_rdm_parent_projector"}
+        jump_operator_design
+        not in {
+            "monitor_recycler",
+            "local_rdm_parent_projector",
+            "local_rdm_parent_projector_recycling",
+        }
         and recycling_jump_source != "none"
     ):
         basis_configs = basis_configs_from_build_result(build_result)
@@ -1751,7 +1785,11 @@ def build_type1_cage_lindblad_construction(
             f"max_p ||J_p psi||={max_jump_residual:.3e}."
         )
 
-    if jump_operator_design in {"monitor_recycler", "local_rdm_parent_projector"}:
+    if jump_operator_design in {
+        "monitor_recycler",
+        "local_rdm_parent_projector",
+        "local_rdm_parent_projector_recycling",
+    }:
         n_component_jumps = len(jumps)
         n_global_jump_terms = 0
     else:
@@ -1873,7 +1911,11 @@ def _build_jump_operators(
 
         return tuple(jumps)
 
-    if jump_operator_design in {"monitor_recycler", "local_rdm_parent_projector"}:
+    if jump_operator_design in {
+        "monitor_recycler",
+        "local_rdm_parent_projector",
+        "local_rdm_parent_projector_recycling",
+    }:
         raise ValueError(
             f"{jump_operator_design} jumps are assembled from local RDM data, "
             "not plaquette kinetic terms."
@@ -1954,7 +1996,11 @@ def _build_component_decomposition_jump_operators(
 
         return component_jumps + outside_jumps
 
-    if jump_operator_design in {"monitor_recycler", "local_rdm_parent_projector"}:
+    if jump_operator_design in {
+        "monitor_recycler",
+        "local_rdm_parent_projector",
+        "local_rdm_parent_projector_recycling",
+    }:
         raise ValueError(
             f"{jump_operator_design} component jumps are assembled directly from " "local RDM data."
         )

@@ -1293,12 +1293,15 @@ def main() -> None:
             "hamiltonian_outside_monitor_inside",
             "monitor_recycler",
             "local_rdm_parent_projector",
+            "local_rdm_parent_projector_recycling",
         ],
         help=(
             "Jump-operator design for the optional QDM Cage-Lindblad case. "
             "'monitor_recycler' builds local L_i = V_i P_i jumps from the "
             "monitor components and local-RDM recyclers, with no outside-region "
-            "plaquette jumps."
+            "plaquette jumps. 'local_rdm_parent_projector_recycling' combines "
+            "local-RDM parent projectors with local-RDM recycler jumps to enforce "
+            "a unique local dark state while breaking absorbing-projector symmetry."
         ),
     )
     parser.add_argument(
