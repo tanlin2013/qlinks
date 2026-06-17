@@ -13,6 +13,7 @@ from qlinks.basis.solvers import (
     BruteForceBasisSolver,
     CPSATBasisSolver,
     DFSBasisSolver,
+    DFSStatistics,
     SolverInput,
 )
 
@@ -22,6 +23,7 @@ __all__ = [
     "BruteForceBasisSolver",
     "CPSATBasisSolver",
     "DFSBasisSolver",
+    "DFSStatistics",
     "SolverInput",
     "full_basis_from_layout",
     "basis_configs_from_basis",

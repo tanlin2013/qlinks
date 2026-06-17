@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from qlinks.basis import BruteForceBasisSolver, DFSBasisSolver
+from qlinks.basis import BruteForceBasisSolver, DFSBasisSolver, DFSStatistics
 from qlinks.constraints import (
     BaseConstraint,
     BoundedLocalCountConstraint,
@@ -898,3 +898,122 @@ def test_dfs_applies_root_propagation_before_first_branch() -> None:
         basis.states,
         np.array([[0, 0, 0]], dtype=np.int64),
     )
+
+
+def test_dfs_solve_with_statistics_reports_core_counters() -> None:
+    layout = _binary_site_layout(3)
+    constraint = BoundedLocalCountConstraint.exact(
+        layout=layout,
+        variable_indices=np.array([0, 1, 2], dtype=np.int64),
+        count=1,
+        name="exactly_one",
+    )
+
+    basis, statistics = DFSBasisSolver(
+        sort=True,
+        variable_order=np.array([0, 1, 2], dtype=np.int64),
+    ).solve_with_statistics(layout, constraints=(constraint,))
+
+    assert isinstance(statistics, DFSStatistics)
+    assert basis.n_states == 3
+    assert statistics.solution_count == basis.n_states
+    assert statistics.branch_count > 0
+    assert statistics.propagated_assignment_count > 0
+    assert statistics.propagation_round_count > 0
+    assert statistics.max_depth == layout.n_variables
+
+
+def test_dfs_dynamic_variable_selection_prioritizes_tight_active_support() -> None:
+    layout = _binary_site_layout(4)
+    conditions = (SupportOnlyConstraint(layout, affected=(0, 1, 2)),)
+    solver = DFSBasisSolver(variable_order_strategy="dynamic")
+    condition_infos = solver._build_condition_infos(
+        n_variables=layout.n_variables,
+        conditions=conditions,
+    )
+    supports = tuple(info.affected_variables for info in condition_infos)
+    condition_ids_by_variable = solver._build_condition_id_lookup(
+        n_variables=layout.n_variables,
+        condition_infos=condition_infos,
+    )
+    base_scores = solver._weighted_degree_scores(
+        n_variables=layout.n_variables,
+        supports=supports,
+    )
+    static_ranks = solver._static_ranks(
+        variable_order=np.array([0, 1, 2, 3], dtype=np.int64),
+        n_variables=layout.n_variables,
+    )
+    assigned_mask = np.array([True, True, False, False], dtype=bool)
+
+    variable_index = solver._select_dynamic_variable(
+        layout=layout,
+        assigned_mask=assigned_mask,
+        supports=supports,
+        condition_ids_by_variable=condition_ids_by_variable,
+        base_scores=base_scores,
+        static_ranks=static_ranks,
+    )
+
+    assert variable_index == 2
+
+
+def test_dfs_propagation_value_ordering_prefers_values_that_force_more() -> None:
+    layout = _binary_site_layout(3)
+    constraint = BoundedLocalCountConstraint.exact(
+        layout=layout,
+        variable_indices=np.array([0, 1, 2], dtype=np.int64),
+        count=1,
+        name="exactly_one",
+    )
+    solver = DFSBasisSolver(value_order_strategy="propagation")
+    condition_infos = solver._build_condition_infos(
+        n_variables=layout.n_variables,
+        conditions=(constraint,),
+    )
+    partial_checks_by_variable = solver._build_partial_check_lookup(
+        n_variables=layout.n_variables,
+        condition_infos=condition_infos,
+    )
+    propagators_by_variable = solver._build_propagator_lookup(
+        n_variables=layout.n_variables,
+        condition_infos=condition_infos,
+    )
+    ordered_values = solver._ordered_values_for_variable(
+        variable_index=0,
+        local_values_by_variable=solver._local_values_by_variable(layout=layout),
+        config=layout.default_config(),
+        assigned_mask=np.zeros(layout.n_variables, dtype=bool),
+        partial_checks_by_variable=partial_checks_by_variable,
+        propagators_by_variable=propagators_by_variable,
+        value_order_strategy="propagation",
+    )
+
+    np.testing.assert_array_equal(ordered_values, np.array([1, 0], dtype=np.int64))
+
+
+def test_dfs_dynamic_order_matches_static_sorted_basis() -> None:
+    layout = _binary_site_layout(4)
+    constraints = (
+        BoundedLocalCountConstraint.exact(
+            layout=layout,
+            variable_indices=np.array([0, 1, 2], dtype=np.int64),
+            count=1,
+            name="first_three_exactly_one",
+        ),
+        BoundedLocalCountConstraint.at_most(
+            layout=layout,
+            variable_indices=np.array([2, 3], dtype=np.int64),
+            max_count=1,
+            name="tail_at_most_one",
+        ),
+    )
+
+    static_basis = DFSBasisSolver(sort=True).solve(layout, constraints=constraints)
+    dynamic_basis = DFSBasisSolver(
+        sort=True,
+        variable_order_strategy="dynamic",
+        value_order_strategy="propagation",
+    ).solve(layout, constraints=constraints)
+
+    np.testing.assert_array_equal(dynamic_basis.states, static_basis.states)
