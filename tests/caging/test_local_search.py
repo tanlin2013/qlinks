@@ -177,6 +177,30 @@ def test_local_qdm_full_triangular_small_matches_exact_type1_counts() -> None:
     assert local_result.counts_by_signature == exact_result.counts_by_signature == {(0, 2): 2}
 
 
+def test_local_qdm_basis_enumeration_respects_shared_dfs_limits() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    local_result = LocalQDMCageSearcher.full_model_region(
+        model,
+        config=LocalQDMCageSearchConfig(
+            tolerance=1.0e-10,
+            max_local_states=3,
+            sort_basis=False,
+        ),
+    ).run()
+
+    assert local_result.local_hilbert_size == 3
+
+
 @pytest.mark.manual
 @pytest.mark.skip(reason="Triangular 4x4 full local/exact comparison is a slow manual regression.")
 def test_local_qdm_full_triangular_4x4_matches_exact_type1_counts_manual() -> None:

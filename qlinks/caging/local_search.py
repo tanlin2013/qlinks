@@ -23,7 +23,7 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as scipy_sparse
 
-from qlinks.basis import Basis
+from qlinks.basis import Basis, DFSBasisSolver
 from qlinks.caging.candidate import CandidateSubgraph
 from qlinks.caging.partition import type1_candidates_from_bipartite_self_loops
 from qlinks.caging.results import CageState
@@ -36,8 +36,10 @@ from qlinks.caging.search import (
 )
 from qlinks.caging.solver import CageSolverConfig, solve_candidate_for_kinetic_targets
 from qlinks.caging.types import DegenerateBasisStrategy
+from qlinks.constraints import ConstraintResult
 from qlinks.models.couplings import DirectedPlaquetteCoupling
 from qlinks.operators.plaquette import alternating_binary_patterns
+from qlinks.variables import VariableLayout
 
 LocalBoundaryMode = Literal["relaxed", "closed"]
 
@@ -989,24 +991,111 @@ def build_qdm_local_region_from_links(
     )
 
 
-def enumerate_qdm_local_basis(
+@dataclass(frozen=True, slots=True)
+class _LocalQDMCountConstraint:
+    """Local dimer-count rule for a site in a local QDM region.
+
+    ``min_count=None`` means only the upper bound is enforced.  This is used at
+    open local-region boundary sites, where exterior links may later complete
+    the dimer covering.  Closed sites use ``min_count=max_count=required_count``.
+    """
+
+    layout: VariableLayout
+    site_id: int
+    variable_indices: npt.NDArray[np.int64]
+    min_count: int | None
+    max_count: int
+    name: str = "local_qdm_site_count"
+
+    def __post_init__(self) -> None:
+        variable_indices = np.asarray(self.variable_indices, dtype=np.int64)
+        if variable_indices.ndim != 1:
+            raise ValueError("variable_indices must be one-dimensional.")
+        if variable_indices.size and (
+            np.any(variable_indices < 0) or np.any(variable_indices >= self.layout.n_variables)
+        ):
+            raise ValueError("variable_indices contains indices outside the local layout.")
+        if self.min_count is not None and self.min_count < 0:
+            raise ValueError("min_count must be non-negative or None.")
+        if self.max_count < 0:
+            raise ValueError("max_count must be non-negative.")
+        if self.min_count is not None and self.min_count > self.max_count:
+            raise ValueError("min_count cannot exceed max_count.")
+        object.__setattr__(self, "variable_indices", variable_indices)
+        object.__setattr__(self, "site_id", int(self.site_id))
+        object.__setattr__(self, "max_count", int(self.max_count))
+        if self.min_count is not None:
+            object.__setattr__(self, "min_count", int(self.min_count))
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return self.variable_indices.copy()
+
+    def value(self, config: npt.ArrayLike) -> int:
+        arr = np.asarray(config, dtype=np.int64)
+        if arr.shape != self.layout.shape:
+            raise ValueError(f"Expected config shape {self.layout.shape}, got {arr.shape}.")
+        return int(np.sum(arr[self.variable_indices]))
+
+    def check(self, config: npt.ArrayLike) -> ConstraintResult:
+        occupied = self.value(config)
+        satisfied = occupied <= self.max_count and (
+            self.min_count is None or occupied >= self.min_count
+        )
+        if self.min_count is None:
+            rule = f"count<={self.max_count}"
+        elif self.min_count == self.max_count:
+            rule = f"count={self.min_count}"
+        else:
+            rule = f"{self.min_count}<=count<={self.max_count}"
+        return ConstraintResult(
+            satisfied=satisfied,
+            name=self.name,
+            residual=occupied,
+            message=f"{self.name}(site={self.site_id}): count={occupied}, rule={rule}",
+        )
+
+    def is_satisfied(self, config: npt.ArrayLike) -> bool:
+        return self.check(config).satisfied
+
+    def partial_check(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> bool:
+        arr = np.asarray(config, dtype=np.int64)
+        assigned = np.asarray(assigned_mask, dtype=bool)
+        variable_indices = self.variable_indices
+
+        assigned_local = assigned[variable_indices]
+        assigned_values = arr[variable_indices[assigned_local]]
+        occupied = int(np.sum(assigned_values))
+        unassigned = int(variable_indices.size - np.count_nonzero(assigned_local))
+
+        if occupied > self.max_count:
+            return False
+
+        if self.min_count is not None:
+            if occupied + unassigned < self.min_count:
+                return False
+            if unassigned == 0 and occupied < self.min_count:
+                return False
+
+        if unassigned == 0:
+            return occupied <= self.max_count
+
+        return True
+
+
+def _qdm_local_basis_constraints_and_order(
     model: object,
     region: LocalQDMRegion,
     *,
-    include_sectors_when_full: bool,
-    max_states: int | None = None,
-    sort: bool = True,
-) -> Basis:
-    """Enumerate local dimer configurations on ``region.link_ids``."""
-    if max_states is not None and max_states < 0:
-        raise ValueError("max_states must be non-negative or None.")
-    if max_states == 0:
-        return Basis.empty(_local_binary_layout(region.link_ids.size))
-
+    layout: VariableLayout,
+) -> tuple[tuple[_LocalQDMCountConstraint, ...], npt.NDArray[np.int64]]:
+    """Build DFS constraints/order for local QDM basis enumeration."""
     link_ids = np.asarray(region.link_ids, dtype=np.int64)
     local_index_by_link = {int(link_id): i for i, link_id in enumerate(link_ids)}
     n_local = int(link_ids.size)
-    layout = _local_binary_layout(n_local)
 
     touched_sites = np.unique(
         np.asarray(
@@ -1015,19 +1104,36 @@ def enumerate_qdm_local_basis(
         )
     )
     closed_site_set = set(int(site_id) for site_id in region.closed_site_ids)
-    boundary_site_set = set(int(site_id) for site_id in region.boundary_site_ids)
-
     required_count = int(getattr(model, "required_count", 1))
+
     site_local_links: dict[int, npt.NDArray[np.int64]] = {}
+    constraints: list[_LocalQDMCountConstraint] = []
     for site_id in touched_sites:
         incident_local = [
             local_index_by_link[int(link_id)]
             for link_id in model.lattice.incident_links(int(site_id))
             if int(link_id) in local_index_by_link
         ]
-        site_local_links[int(site_id)] = np.asarray(incident_local, dtype=np.int64)
+        local_indices = np.asarray(incident_local, dtype=np.int64)
+        site_local_links[int(site_id)] = local_indices
 
-    # Degree order helps close/highly constrain sites earlier while remaining deterministic.
+        is_closed = int(site_id) in closed_site_set
+        constraints.append(
+            _LocalQDMCountConstraint(
+                layout=layout,
+                site_id=int(site_id),
+                variable_indices=local_indices,
+                min_count=required_count if is_closed else None,
+                max_count=required_count,
+                name=(
+                    "local_qdm_closed_site_count" if is_closed else "local_qdm_boundary_site_count"
+                ),
+            )
+        )
+
+    # Keep the previous local-search heuristic but pass it into the shared DFS.
+    # Closed sites get a larger weight because they have exact lower/upper
+    # bounds; boundary sites only impose the local at-most rule.
     scores = np.zeros(n_local, dtype=np.int64)
     for site_id in touched_sites:
         weight = 2 if int(site_id) in closed_site_set else 1
@@ -1035,9 +1141,37 @@ def enumerate_qdm_local_basis(
             scores[int(local_index)] += weight
     variable_order = np.lexsort((np.arange(n_local), -scores)).astype(np.int64)
 
-    config = np.zeros(n_local, dtype=np.int64)
-    assigned = np.zeros(n_local, dtype=bool)
-    states: list[npt.NDArray[np.int64]] = []
+    return tuple(constraints), variable_order
+
+
+def enumerate_qdm_local_basis(
+    model: object,
+    region: LocalQDMRegion,
+    *,
+    include_sectors_when_full: bool,
+    max_states: int | None = None,
+    sort: bool = True,
+) -> Basis:
+    """Enumerate local dimer configurations on ``region.link_ids``.
+
+    The local-search layer deliberately reuses :class:`DFSBasisSolver` rather
+    than maintaining a separate DFS.  QDM-specific local rules are represented
+    as lightweight constraints on the local binary-link layout, so future DFS
+    optimizations immediately benefit both full-basis enumeration and local cage
+    searches.
+    """
+    if max_states is not None and max_states < 0:
+        raise ValueError("max_states must be non-negative or None.")
+
+    link_ids = np.asarray(region.link_ids, dtype=np.int64)
+    n_local = int(link_ids.size)
+    layout = _local_binary_layout(n_local)
+
+    constraints, variable_order = _qdm_local_basis_constraints_and_order(
+        model,
+        region,
+        layout=layout,
+    )
 
     full_link_region = n_local == int(model.lattice.num_links) and np.array_equal(
         np.sort(link_ids),
@@ -1047,81 +1181,15 @@ def enumerate_qdm_local_basis(
         tuple(model.make_sectors()) if (include_sectors_when_full and full_link_region) else ()
     )
 
-    def partial_site_check(site_id: int) -> bool:
-        local = site_local_links[site_id]
-        if local.size == 0:
-            return True
-        assigned_local = assigned[local]
-        assigned_values = config[local[assigned_local]]
-        occupied = int(np.sum(assigned_values))
-        unassigned = int(local.size - np.count_nonzero(assigned_local))
-
-        if occupied > required_count:
-            return False
-
-        if site_id in closed_site_set:
-            if occupied + unassigned < required_count:
-                return False
-            if unassigned == 0 and occupied != required_count:
-                return False
-
-        # Boundary sites can be completed by exterior links, so only the at-most
-        # part is local.  If all incident links are local, they would have been
-        # classified as closed above.
-        return True
-
-    sites_by_variable: list[list[int]] = [[] for _ in range(n_local)]
-    for site_id, local_indices in site_local_links.items():
-        for local_index in local_indices:
-            sites_by_variable[int(local_index)].append(int(site_id))
-
-    def full_check() -> bool:
-        for site_id in closed_site_set:
-            local = site_local_links[site_id]
-            if int(np.sum(config[local])) != required_count:
-                return False
-        for site_id in boundary_site_set:
-            local = site_local_links[site_id]
-            if int(np.sum(config[local])) > required_count:
-                return False
-        if sectors:
-            # In a full-link QDM region, local link order equals global link order.
-            for sector in sectors:
-                if not sector.is_satisfied(config):
-                    return False
-        return True
-
-    def dfs(depth: int) -> None:
-        if max_states is not None and len(states) >= max_states:
-            return
-        if depth == n_local:
-            if full_check():
-                states.append(config.copy())
-            return
-
-        local_variable = int(variable_order[depth])
-        for value in (0, 1):
-            if max_states is not None and len(states) >= max_states:
-                return
-            config[local_variable] = value
-            assigned[local_variable] = True
-
-            if all(partial_site_check(site_id) for site_id in sites_by_variable[local_variable]):
-                dfs(depth + 1)
-
-            assigned[local_variable] = False
-            config[local_variable] = 0
-
-    dfs(0)
-
-    if not states:
-        return Basis.empty(layout)
-
-    arr = np.asarray(states, dtype=np.int64)
-    if sort:
-        order = np.lexsort(arr.T[::-1])
-        arr = arr[order]
-    return Basis.from_states(layout, arr)
+    return DFSBasisSolver(
+        sort=sort,
+        variable_order=variable_order,
+    ).solve(
+        layout,
+        constraints=constraints,
+        sectors=sectors,
+        max_states=max_states,
+    )
 
 
 def build_qdm_local_kinetic_matrix(
