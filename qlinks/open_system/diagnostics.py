@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import numpy.typing as npt
 import scipy.linalg as scipy_linalg
 import scipy.sparse as scipy_sparse
+import scipy.sparse.linalg as scipy_sparse_linalg
 from scipy.sparse.csgraph import connected_components
 
 from qlinks.open_system.backend import (
@@ -1076,7 +1077,11 @@ class DarkSubspaceDiagnostics:
     bad_common_jump_kernel_iprs: tuple[float, ...]
 
     liouvillian_zero_mode_count: int | None
+    liouvillian_zero_mode_count_is_lower_bound: bool
     liouvillian_spectral_gap: float | None
+    liouvillian_decay_gap: float | None
+    liouvillian_peripheral_mode_count: int | None
+    liouvillian_spectrum_method: str
     liouvillian_eigenvalues: tuple[complex, ...]
 
     likely_unique_dark_state: bool | None
@@ -1094,7 +1099,13 @@ class DarkSubspaceDiagnostics:
             "bad_common_jump_kernel_dimension": (self.bad_common_jump_kernel_dimension),
             "bad_common_jump_kernel_iprs": self.bad_common_jump_kernel_iprs,
             "liouvillian_zero_mode_count": self.liouvillian_zero_mode_count,
+            "liouvillian_zero_mode_count_is_lower_bound": (
+                self.liouvillian_zero_mode_count_is_lower_bound
+            ),
             "liouvillian_spectral_gap": self.liouvillian_spectral_gap,
+            "liouvillian_decay_gap": self.liouvillian_decay_gap,
+            "liouvillian_peripheral_mode_count": self.liouvillian_peripheral_mode_count,
+            "liouvillian_spectrum_method": self.liouvillian_spectrum_method,
             "likely_unique_dark_state": self.likely_unique_dark_state,
         }
 
@@ -1175,12 +1186,31 @@ class DarkSubspaceDiagnostics:
             (
                 "not checked"
                 if self.liouvillian_zero_mode_count is None
-                else str(self.liouvillian_zero_mode_count)
+                else (
+                    str(self.liouvillian_zero_mode_count)
+                    + ("+" if self.liouvillian_zero_mode_count_is_lower_bound else "")
+                )
             ),
         )
         liouvillian.add_row(
-            "spectral gap",
+            "spectrum method",
+            self.liouvillian_spectrum_method,
+        )
+        liouvillian.add_row(
+            "absolute spectral gap",
             _format_float_or_none(self.liouvillian_spectral_gap),
+        )
+        liouvillian.add_row(
+            "decay gap",
+            _format_float_or_none(self.liouvillian_decay_gap),
+        )
+        liouvillian.add_row(
+            "peripheral mode count",
+            (
+                "not checked"
+                if self.liouvillian_peripheral_mode_count is None
+                else str(self.liouvillian_peripheral_mode_count)
+            ),
         )
 
         return Panel(
@@ -1200,6 +1230,8 @@ def diagnose_dark_subspace(
     liouvillian_zero_tolerance: float = 1e-9,
     check_liouvillian_spectrum: bool = True,
     max_liouvillian_dense_dimension: int = 4096,
+    liouvillian_spectrum_method: Literal["auto", "dense", "sparse", "none"] = "auto",
+    sparse_liouvillian_eigenvalue_count: int = 16,
 ) -> DarkSubspaceDiagnostics:
     """Diagnose whether a dark target is likely unique/attractive.
 
@@ -1211,8 +1243,11 @@ def diagnose_dark_subspace(
         4. target Liouvillian residual ||L(|psi><psi|)||;
         5. optional Liouvillian zero-mode count.
 
-    The Liouvillian spectrum check is dense and should only be used for small
-    Hilbert spaces.
+    The Liouvillian spectrum check uses a dense solver for small Liouvillians and
+    a sparse shift-invert Arnoldi solver for larger ones when
+    ``liouvillian_spectrum_method="auto"``.  The sparse zero-mode count is a
+    lower bound if all requested eigenvalues are numerically zero; increase
+    ``sparse_liouvillian_eigenvalue_count`` to resolve more zero modes.
     """
     # _backend_obj = get_open_system_backend(backend)
 
@@ -1287,47 +1322,65 @@ def diagnose_dark_subspace(
     )
 
     liouvillian_zero_mode_count: int | None = None
+    liouvillian_zero_mode_count_is_lower_bound = False
     liouvillian_spectral_gap: float | None = None
+    liouvillian_decay_gap: float | None = None
+    liouvillian_peripheral_mode_count: int | None = None
     liouvillian_eigenvalues: tuple[complex, ...] = ()
+    actual_liouvillian_spectrum_method = "none"
 
-    if check_liouvillian_spectrum:
+    if check_liouvillian_spectrum and liouvillian_spectrum_method != "none":
         liouvillian_dimension = dim * dim
-
-        if liouvillian_dimension > max_liouvillian_dense_dimension:
-            raise ValueError(
-                "Dense Liouvillian spectrum check is too expensive: "
-                f"dim^2={liouvillian_dimension}, "
-                f"max_liouvillian_dense_dimension="
-                f"{max_liouvillian_dense_dimension}. "
-                "Set check_liouvillian_spectrum=False or increase the limit."
-            )
-
         liouvillian = build_liouvillian(
             hamiltonian_sparse,
             list(jumps_sparse),
             backend="scipy",
             sparse_format="csr",
         )
-        liouvillian_dense = liouvillian.toarray()
-        eigenvalues = scipy_linalg.eigvals(liouvillian_dense)
 
-        eigenvalues = np.asarray(eigenvalues, dtype=np.complex128)
-        eigenvalue_abs = np.abs(eigenvalues)
-
-        liouvillian_zero_mode_count = int(
-            np.count_nonzero(eigenvalue_abs <= liouvillian_zero_tolerance)
-        )
-
-        nonzero_abs = eigenvalue_abs[eigenvalue_abs > liouvillian_zero_tolerance]
-        if nonzero_abs.size == 0:
-            liouvillian_spectral_gap = None
+        if liouvillian_spectrum_method == "auto":
+            actual_liouvillian_spectrum_method = (
+                "dense" if liouvillian_dimension <= max_liouvillian_dense_dimension else "sparse"
+            )
         else:
-            liouvillian_spectral_gap = float(np.min(nonzero_abs))
+            actual_liouvillian_spectrum_method = liouvillian_spectrum_method
 
-        # Store the smallest few eigenvalues for inspection.
-        order = np.argsort(eigenvalue_abs)
-        liouvillian_eigenvalues = tuple(
-            complex(eigenvalues[index]) for index in order[: min(16, eigenvalues.size)]
+        if actual_liouvillian_spectrum_method == "dense":
+            if liouvillian_dimension > max_liouvillian_dense_dimension:
+                raise ValueError(
+                    "Dense Liouvillian spectrum check is too expensive: "
+                    f"dim^2={liouvillian_dimension}, "
+                    f"max_liouvillian_dense_dimension="
+                    f"{max_liouvillian_dense_dimension}. "
+                    "Use liouvillian_spectrum_method='sparse' or 'auto', "
+                    "or set check_liouvillian_spectrum=False."
+                )
+
+            eigenvalues = scipy_linalg.eigvals(liouvillian.toarray())
+            eigenvalues = np.asarray(eigenvalues, dtype=np.complex128)
+        elif actual_liouvillian_spectrum_method == "sparse":
+            eigenvalues = _sparse_liouvillian_near_zero_eigenvalues(
+                liouvillian,
+                n_eigenvalues=sparse_liouvillian_eigenvalue_count,
+                zero_tolerance=liouvillian_zero_tolerance,
+            )
+        else:
+            raise ValueError(
+                "liouvillian_spectrum_method must be 'auto', 'dense', 'sparse', or 'none'."
+            )
+
+        (
+            liouvillian_zero_mode_count,
+            liouvillian_zero_mode_count_is_lower_bound,
+            liouvillian_spectral_gap,
+            liouvillian_decay_gap,
+            liouvillian_peripheral_mode_count,
+            liouvillian_eigenvalues,
+        ) = _summarize_liouvillian_eigenvalues(
+            eigenvalues,
+            zero_tolerance=liouvillian_zero_tolerance,
+            is_partial_spectrum=(actual_liouvillian_spectrum_method == "sparse"),
+            requested_count=sparse_liouvillian_eigenvalue_count,
         )
 
     likely_unique_dark_state: bool | None
@@ -1353,9 +1406,96 @@ def diagnose_dark_subspace(
         bad_common_jump_kernel_dimension=bad_common_jump_kernel_dimension,
         bad_common_jump_kernel_iprs=bad_common_jump_kernel_iprs,
         liouvillian_zero_mode_count=liouvillian_zero_mode_count,
+        liouvillian_zero_mode_count_is_lower_bound=bool(liouvillian_zero_mode_count_is_lower_bound),
         liouvillian_spectral_gap=liouvillian_spectral_gap,
+        liouvillian_decay_gap=liouvillian_decay_gap,
+        liouvillian_peripheral_mode_count=liouvillian_peripheral_mode_count,
+        liouvillian_spectrum_method=actual_liouvillian_spectrum_method,
         liouvillian_eigenvalues=liouvillian_eigenvalues,
         likely_unique_dark_state=likely_unique_dark_state,
+    )
+
+
+def _sparse_liouvillian_near_zero_eigenvalues(
+    liouvillian: Any,
+    *,
+    n_eigenvalues: int,
+    zero_tolerance: float,
+) -> np.ndarray:
+    """Return a partial spectrum close to zero for a sparse Liouvillian."""
+    matrix = (
+        liouvillian.tocsr()
+        if hasattr(liouvillian, "tocsr")
+        else scipy_sparse.csr_array(liouvillian)
+    )
+    dimension = int(matrix.shape[0])
+    if dimension <= 2:
+        return scipy_linalg.eigvals(matrix.toarray())
+
+    k = max(1, min(int(n_eigenvalues), dimension - 2))
+
+    # Shift-invert close to zero is usually far more reliable than ``which='SM'``
+    # for non-Hermitian Liouvillians, but sigma=0 can fail because the
+    # Liouvillian is singular.  Use a tiny positive real shift and fall back to
+    # smallest-magnitude Arnoldi if the factorization is ill-conditioned.
+    sigma = max(float(zero_tolerance) * 0.1, 1.0e-14)
+    try:
+        values = scipy_sparse_linalg.eigs(
+            matrix,
+            k=k,
+            sigma=sigma,
+            which="LM",
+            return_eigenvectors=False,
+        )
+    except Exception:
+        values = scipy_sparse_linalg.eigs(
+            matrix,
+            k=k,
+            which="SM",
+            return_eigenvectors=False,
+        )
+
+    return np.asarray(values, dtype=np.complex128)
+
+
+def _summarize_liouvillian_eigenvalues(
+    eigenvalues: npt.ArrayLike,
+    *,
+    zero_tolerance: float,
+    is_partial_spectrum: bool,
+    requested_count: int,
+) -> tuple[int, bool, float | None, float | None, int | None, tuple[complex, ...]]:
+    values = np.asarray(eigenvalues, dtype=np.complex128)
+    if values.size == 0:
+        return 0, False, None, None, None, ()
+
+    abs_values = np.abs(values)
+    zero_mask = abs_values <= zero_tolerance
+    zero_count = int(np.count_nonzero(zero_mask))
+    zero_count_is_lower_bound = bool(
+        is_partial_spectrum and zero_count >= min(int(requested_count), values.size)
+    )
+
+    nonzero_abs = abs_values[~zero_mask]
+    absolute_gap = float(np.min(nonzero_abs)) if nonzero_abs.size else None
+
+    nonzero_real_parts = np.real(values[~zero_mask])
+    decaying = nonzero_real_parts < -zero_tolerance
+    decay_gap = float(-np.max(nonzero_real_parts[decaying])) if np.any(decaying) else None
+
+    peripheral_mask = (~zero_mask) & (np.abs(np.real(values)) <= zero_tolerance)
+    peripheral_count = int(np.count_nonzero(peripheral_mask))
+
+    order = np.lexsort((np.real(values), abs_values))
+    shown = tuple(complex(values[index]) for index in order[: min(16, values.size)])
+
+    return (
+        zero_count,
+        zero_count_is_lower_bound,
+        absolute_gap,
+        decay_gap,
+        peripheral_count,
+        shown,
     )
 
 

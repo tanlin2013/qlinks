@@ -292,7 +292,29 @@ def test_diagnose_dark_subspace_raises_when_liouvillian_too_large():
             target_state=target,
             check_liouvillian_spectrum=True,
             max_liouvillian_dense_dimension=8,
+            liouvillian_spectrum_method="dense",
         )
+
+
+def test_diagnose_dark_subspace_sparse_liouvillian_spectrum_for_intermediate_size():
+    dim = 5
+    hamiltonian = np.zeros((dim, dim), dtype=np.complex128)
+    target = np.zeros(dim, dtype=np.complex128)
+    target[0] = 1.0
+
+    diagnostics = diagnose_dark_subspace(
+        hamiltonian=hamiltonian,
+        jumps=[],
+        target_state=target,
+        check_liouvillian_spectrum=True,
+        max_liouvillian_dense_dimension=8,
+        liouvillian_spectrum_method="auto",
+        sparse_liouvillian_eigenvalue_count=4,
+    )
+
+    assert diagnostics.liouvillian_spectrum_method == "sparse"
+    assert diagnostics.liouvillian_zero_mode_count is not None
+    assert diagnostics.liouvillian_zero_mode_count_is_lower_bound is True
 
 
 def test_diagnose_dark_subspace_can_skip_liouvillian_spectrum():
