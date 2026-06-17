@@ -12,6 +12,7 @@ from qlinks.caging.classification import (
 from qlinks.caging.open_system import (
     CageLindbladConstruction,
     _build_component_decomposition_jump_operators,
+    _build_local_rdm_block_reset_jump_operators,
     _build_local_rdm_parent_projector_jump_operators,
     _build_monitor_recycler_jump_operators,
     _build_reduced_iz_monitor_from_reports,
@@ -272,6 +273,31 @@ def test_build_local_rdm_parent_projector_jump_operators_preserves_target_suppor
     singular_values = np.linalg.svd(jumps[0].toarray(), compute_uv=False)
     kernel_dimension = int(np.count_nonzero(singular_values <= 1.0e-10))
     assert kernel_dimension == 1
+
+
+def test_build_local_rdm_block_reset_jump_operators_cover_null_space():
+    basis_configs = np.asarray(
+        [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [1, 1],
+        ],
+        dtype=np.int64,
+    )
+    target = np.asarray([1.0, 0.0, 0.0, 1.0], dtype=np.complex128) / np.sqrt(2.0)
+
+    jumps = _build_local_rdm_block_reset_jump_operators(
+        basis_configs=basis_configs,
+        state=target,
+        region_specs=(((0, 1), sp.identity(4, format="csr", dtype=np.complex128)),),
+        rdm_tolerance=1.0e-10,
+    )
+
+    assert len(jumps) == 3
+    for jump in jumps:
+        np.testing.assert_allclose(jump @ target, np.zeros_like(target), atol=1.0e-12)
+        assert np.linalg.norm(jump.conj().T @ target) > 0.0
 
 
 def test_build_monitor_recycler_jump_operators_uses_local_rdm_recycler():

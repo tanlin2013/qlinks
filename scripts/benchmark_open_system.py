@@ -319,6 +319,8 @@ def _make_qdm_cage_lindblad_mcwf_case(
     monitor_recycler_hamiltonian_shift: str = "target_energy",
     monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
     cage_lindblad_recycling_jump_source: str = "local_rdm_two_pattern",
+    cage_lindblad_local_rdm_parent_projector_rate: float = 1.0,
+    cage_lindblad_local_rdm_reset_rate: float = 1.0,
 ) -> OpenSystemBenchmarkCase:
     """Build a QDM Cage-Lindblad problem used for real MCWF timing."""
     from qlinks.basis import basis_configs_from_build_result
@@ -454,6 +456,8 @@ def _make_qdm_cage_lindblad_mcwf_case(
             monitor_recycler_hamiltonian_closure_source=(
                 monitor_recycler_hamiltonian_closure_source
             ),
+            local_rdm_parent_projector_rate=cage_lindblad_local_rdm_parent_projector_rate,
+            local_rdm_reset_rate=cage_lindblad_local_rdm_reset_rate,
             check_liouvillian=check_liouvillian,
             timing_collector=construction_stage_seconds,
         )
@@ -494,6 +498,16 @@ def _make_qdm_cage_lindblad_mcwf_case(
         "n_component_jumps": construction.n_component_jumps,
         "n_global_jump_terms": construction.n_global_jump_terms,
         "n_recycling_jumps": construction.n_recycling_jumps,
+        "local_rdm_parent_projector_rate": cage_lindblad_local_rdm_parent_projector_rate,
+        "local_rdm_reset_rate": cage_lindblad_local_rdm_reset_rate,
+        "n_local_rdm_parent_projector_jumps": summary.get(
+            "n_local_rdm_parent_projector_jumps",
+            0,
+        ),
+        "n_local_rdm_block_reset_jumps": summary.get(
+            "n_local_rdm_block_reset_jumps",
+            0,
+        ),
         "region_size": summary["region_size"],
         "monitor_residual": summary["monitor_residual"],
         "max_jump_residual": summary["max_jump_residual"],
@@ -536,6 +550,8 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
     monitor_recycler_hamiltonian_shift: str = "target_energy",
     monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
     cage_lindblad_recycling_jump_source: str = "local_rdm_two_pattern",
+    cage_lindblad_local_rdm_parent_projector_rate: float = 1.0,
+    cage_lindblad_local_rdm_reset_rate: float = 1.0,
 ) -> OpenSystemBenchmarkCase:
     return _make_qdm_cage_lindblad_mcwf_case(
         cage_lindblad_case="square_qdm_pbc_w00",
@@ -551,6 +567,10 @@ def _make_square_qdm_cage_lindblad_mcwf_case(
         monitor_recycler_hamiltonian_shift=monitor_recycler_hamiltonian_shift,
         monitor_recycler_hamiltonian_closure_source=monitor_recycler_hamiltonian_closure_source,
         cage_lindblad_recycling_jump_source=cage_lindblad_recycling_jump_source,
+        cage_lindblad_local_rdm_parent_projector_rate=(
+            cage_lindblad_local_rdm_parent_projector_rate
+        ),
+        cage_lindblad_local_rdm_reset_rate=cage_lindblad_local_rdm_reset_rate,
     )
 
 
@@ -571,6 +591,8 @@ def make_benchmark_cases(
     cage_lindblad_monitor_recycler_hamiltonian_shift: str = "target_energy",
     cage_lindblad_monitor_recycler_hamiltonian_closure_source: str = "global_hamiltonian",
     cage_lindblad_recycling_jump_source: str = "local_rdm_two_pattern",
+    cage_lindblad_local_rdm_parent_projector_rate: float = 1.0,
+    cage_lindblad_local_rdm_reset_rate: float = 1.0,
 ) -> list[OpenSystemBenchmarkCase]:
     ops = _pauli_and_ladder_operators()
     sigma_minus = ops["sigma_minus"]
@@ -681,6 +703,10 @@ def make_benchmark_cases(
                     cage_lindblad_monitor_recycler_hamiltonian_closure_source
                 ),
                 cage_lindblad_recycling_jump_source=cage_lindblad_recycling_jump_source,
+                cage_lindblad_local_rdm_parent_projector_rate=(
+                    cage_lindblad_local_rdm_parent_projector_rate
+                ),
+                cage_lindblad_local_rdm_reset_rate=cage_lindblad_local_rdm_reset_rate,
             )
         )
 
@@ -1294,6 +1320,7 @@ def main() -> None:
             "monitor_recycler",
             "local_rdm_parent_projector",
             "local_rdm_parent_projector_recycling",
+            "local_rdm_parent_projector_block_reset",
         ],
         help=(
             "Jump-operator design for the optional QDM Cage-Lindblad case. "
@@ -1356,6 +1383,18 @@ def main() -> None:
             "'target_energy' uses global H-E_target, "
             "'local_expectation' uses h_R-<h_R>, and 'none' uses no shift."
         ),
+    )
+    parser.add_argument(
+        "--cage-lindblad-local-rdm-parent-projector-rate",
+        type=float,
+        default=1.0,
+        help="Rate multiplier gamma_Q for local-RDM parent-projector jumps.",
+    )
+    parser.add_argument(
+        "--cage-lindblad-local-rdm-reset-rate",
+        type=float,
+        default=1.0,
+        help="Rate multiplier gamma_R for local-RDM recycling/reset jumps.",
     )
     parser.add_argument(
         "--cage-compare-operations",
@@ -1443,6 +1482,10 @@ def main() -> None:
             args.cage_lindblad_monitor_recycler_hamiltonian_closure_source
         ),
         cage_lindblad_recycling_jump_source=args.cage_lindblad_recycling_jump_source,
+        cage_lindblad_local_rdm_parent_projector_rate=(
+            args.cage_lindblad_local_rdm_parent_projector_rate
+        ),
+        cage_lindblad_local_rdm_reset_rate=args.cage_lindblad_local_rdm_reset_rate,
     ):
         if only_filter is not None and only_filter not in case.name:
             continue

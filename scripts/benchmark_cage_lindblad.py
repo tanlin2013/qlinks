@@ -660,6 +660,10 @@ def main() -> None:
             "kinetic_times_monitor",
             "kinetic_outside_monitor_inside",
             "hamiltonian_outside_monitor_inside",
+            "monitor_recycler",
+            "local_rdm_parent_projector",
+            "local_rdm_parent_projector_recycling",
+            "local_rdm_parent_projector_block_reset",
         ],
     )
     parser.add_argument(

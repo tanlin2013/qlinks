@@ -66,6 +66,7 @@ JumpOperatorDesign = Literal[
     "monitor_recycler",
     "local_rdm_parent_projector",
     "local_rdm_parent_projector_recycling",
+    "local_rdm_parent_projector_block_reset",
 ]
 JumpPlaquettePolicy = Literal[
     "disjoint_outside",
@@ -750,6 +751,10 @@ class CageLindbladConstruction:
     monitor_residual: float
     max_jump_residual: float
     jump_residuals: tuple[float, ...]
+    local_rdm_parent_projector_rate: float = 1.0
+    local_rdm_reset_rate: float = 1.0
+    n_local_rdm_parent_projector_jumps: int = 0
+    n_local_rdm_block_reset_jumps: int = 0
     liouvillian_residual: float | None = None
     monitor_recycler_hamiltonian_closure_order: int = 0
     monitor_recycler_hamiltonian_shift: MonitorRecyclerHamiltonianShift = "target_energy"
@@ -828,6 +833,10 @@ class CageLindbladConstruction:
             "recycling_jump_variable_indices": self.recycling_jump_variable_indices,
             "recycling_jump_alpha_beta_indices": self.recycling_jump_alpha_beta_indices,
             "recycling_two_pattern_count": self.recycling_two_pattern_count,
+            "local_rdm_parent_projector_rate": self.local_rdm_parent_projector_rate,
+            "local_rdm_reset_rate": self.local_rdm_reset_rate,
+            "n_local_rdm_parent_projector_jumps": self.n_local_rdm_parent_projector_jumps,
+            "n_local_rdm_block_reset_jumps": self.n_local_rdm_block_reset_jumps,
             "monitor_residual": self.monitor_residual,
             "max_jump_residual": self.max_jump_residual,
             "liouvillian_residual": self.liouvillian_residual,
@@ -1118,6 +1127,8 @@ class CageLindbladConstruction:
         liouvillian_zero_tolerance: float = 1e-9,
         check_liouvillian_spectrum: bool = True,
         max_liouvillian_dense_dimension: int = 4096,
+        liouvillian_spectrum_method: str = "auto",
+        sparse_liouvillian_eigenvalue_count: int = 16,
     ):
         return diagnose_dark_subspace(
             hamiltonian=hamiltonian,
@@ -1128,6 +1139,8 @@ class CageLindbladConstruction:
             liouvillian_zero_tolerance=liouvillian_zero_tolerance,
             check_liouvillian_spectrum=check_liouvillian_spectrum,
             max_liouvillian_dense_dimension=max_liouvillian_dense_dimension,
+            liouvillian_spectrum_method=liouvillian_spectrum_method,
+            sparse_liouvillian_eigenvalue_count=sparse_liouvillian_eigenvalue_count,
         )
 
     def diagnose_absorbing_projector_symmetry(
@@ -1233,6 +1246,8 @@ def build_type1_cage_lindblad_construction(
     monitor_recycler_hamiltonian_closure_source: (
         MonitorRecyclerHamiltonianClosureSource
     ) = "global_hamiltonian",
+    local_rdm_parent_projector_rate: float = 1.0,
+    local_rdm_reset_rate: float = 1.0,
     include_q_empty: bool = True,
     include_closed_by_known_zeros: bool = True,
     include_projector_like: bool = True,
@@ -1255,6 +1270,11 @@ def build_type1_cage_lindblad_construction(
         raise ValueError("cage_state must be nonzero.")
 
     psi = psi / norm
+
+    if local_rdm_parent_projector_rate < 0.0:
+        raise ValueError("local_rdm_parent_projector_rate must be nonnegative.")
+    if local_rdm_reset_rate < 0.0:
+        raise ValueError("local_rdm_reset_rate must be nonnegative.")
 
     if monitor_recycler_hamiltonian_closure_order < 0:
         raise ValueError("monitor_recycler_hamiltonian_closure_order must be nonnegative.")
@@ -1540,9 +1560,13 @@ def build_type1_cage_lindblad_construction(
     monitor_recycler_component_jumps = False
     monitor_recycler_jump_closure_orders: tuple[int, ...] = ()
 
+    n_local_rdm_parent_projector_jumps = 0
+    n_local_rdm_block_reset_jumps = 0
+
     if jump_operator_design in {
         "local_rdm_parent_projector",
         "local_rdm_parent_projector_recycling",
+        "local_rdm_parent_projector_block_reset",
     }:
         basis_configs = basis_configs_from_build_result(build_result)
         region_specs = _monitor_recycler_region_specs(
@@ -1555,7 +1579,9 @@ def build_type1_cage_lindblad_construction(
             state=psi,
             region_specs=region_specs,
             rdm_tolerance=recycling_rdm_tolerance,
+            rate=local_rdm_parent_projector_rate,
         )
+        n_local_rdm_parent_projector_jumps = len(parent_projector_jumps)
         jumps = parent_projector_jumps
 
         if jump_operator_design == "local_rdm_parent_projector_recycling":
@@ -1579,7 +1605,22 @@ def build_type1_cage_lindblad_construction(
                 two_pattern_tolerance=recycling_two_pattern_tolerance,
             )
             recycling_jumps = recycling_build_result.jumps
+            if local_rdm_reset_rate != 1.0:
+                reset_scale = float(np.sqrt(local_rdm_reset_rate))
+                recycling_jumps = tuple((reset_scale * jump).tocsr() for jump in recycling_jumps)
             jumps = tuple(parent_projector_jumps) + tuple(recycling_jumps)
+
+        elif jump_operator_design == "local_rdm_parent_projector_block_reset":
+            block_reset_jumps = _build_local_rdm_block_reset_jump_operators(
+                basis_configs=basis_configs,
+                state=psi,
+                region_specs=region_specs,
+                rdm_tolerance=recycling_rdm_tolerance,
+                rate=local_rdm_reset_rate,
+            )
+            n_local_rdm_block_reset_jumps = len(block_reset_jumps)
+            recycling_jumps = block_reset_jumps
+            jumps = tuple(parent_projector_jumps) + tuple(block_reset_jumps)
 
         monitor_recycler_component_jumps = True
 
@@ -1679,6 +1720,7 @@ def build_type1_cage_lindblad_construction(
             "monitor_recycler",
             "local_rdm_parent_projector",
             "local_rdm_parent_projector_recycling",
+            "local_rdm_parent_projector_block_reset",
         }
         and recycling_jump_source != "none"
     ):
@@ -1739,7 +1781,7 @@ def build_type1_cage_lindblad_construction(
         )
 
     if recycling_build_result is None:
-        n_recycling_jumps = 0
+        n_recycling_jumps = len(recycling_jumps)
         recycling_jump_variable_indices = ()
         recycling_jump_alpha_beta_indices = ()
         recycling_two_pattern_count = 0
@@ -1789,6 +1831,7 @@ def build_type1_cage_lindblad_construction(
         "monitor_recycler",
         "local_rdm_parent_projector",
         "local_rdm_parent_projector_recycling",
+        "local_rdm_parent_projector_block_reset",
     }:
         n_component_jumps = len(jumps)
         n_global_jump_terms = 0
@@ -1839,6 +1882,10 @@ def build_type1_cage_lindblad_construction(
         recycling_jump_alpha_beta_indices=recycling_jump_alpha_beta_indices,
         recycling_two_pattern_count=int(recycling_two_pattern_count),
         recycling_build_result=recycling_build_result,
+        local_rdm_parent_projector_rate=float(local_rdm_parent_projector_rate),
+        local_rdm_reset_rate=float(local_rdm_reset_rate),
+        n_local_rdm_parent_projector_jumps=int(n_local_rdm_parent_projector_jumps),
+        n_local_rdm_block_reset_jumps=int(n_local_rdm_block_reset_jumps),
         monitor_residual=monitor_residual,
         max_jump_residual=max_jump_residual,
         jump_residuals=jump_residuals,
@@ -1915,6 +1962,7 @@ def _build_jump_operators(
         "monitor_recycler",
         "local_rdm_parent_projector",
         "local_rdm_parent_projector_recycling",
+        "local_rdm_parent_projector_block_reset",
     }:
         raise ValueError(
             f"{jump_operator_design} jumps are assembled from local RDM data, "
@@ -2000,6 +2048,7 @@ def _build_component_decomposition_jump_operators(
         "monitor_recycler",
         "local_rdm_parent_projector",
         "local_rdm_parent_projector_recycling",
+        "local_rdm_parent_projector_block_reset",
     }:
         raise ValueError(
             f"{jump_operator_design} component jumps are assembled directly from " "local RDM data."
@@ -2349,6 +2398,7 @@ def _build_local_rdm_parent_projector_jump_operators(
     state: NDArray[np.complex128],
     region_specs: tuple[tuple[tuple[int, ...], Any], ...],
     rdm_tolerance: float,
+    rate: float = 1.0,
 ) -> tuple[sp.csr_array, ...]:
     """Build local parent-projector jumps from target local-RDM kernels.
 
@@ -2396,6 +2446,9 @@ def _build_local_rdm_parent_projector_jump_operators(
                 local_operator=local_null_projector.astype(np.complex128, copy=False),
             ).tocsr()
 
+        if rate != 1.0:
+            parent_projector = (float(np.sqrt(rate)) * parent_projector).tocsr()
+
         jumps_by_region[region_key] = parent_projector
         ordered_regions.append(region_key)
 
@@ -2404,6 +2457,71 @@ def _build_local_rdm_parent_projector_jump_operators(
         raise ValueError("local_rdm_parent_projector produced no jump operators.")
 
     return jumps
+
+
+def _build_local_rdm_block_reset_jump_operators(
+    *,
+    basis_configs: NDArray[np.integer],
+    state: NDArray[np.complex128],
+    region_specs: tuple[tuple[tuple[int, ...], Any], ...],
+    rdm_tolerance: float,
+    rate: float = 1.0,
+) -> tuple[sp.csr_array, ...]:
+    """Build minimal local-RDM block-reset jumps for each monitor region.
+
+    For a local target support ``S_i`` and null space ``N_i``, the block reset
+    maps disjoint blocks of null vectors into the target support.  Each reset
+    jump has local form ``sum_a |s_a><n_{b+a}|``.  Thus the number of reset
+    jumps for a region is ``ceil(dim(N_i) / dim(S_i))``, the minimal number of
+    local reset channels able to cover all null directions without leaving the
+    target support.
+    """
+    jumps_by_region: dict[tuple[int, ...], list[sp.csr_array]] = {}
+    ordered_regions: list[tuple[int, ...]] = []
+    reset_scale = float(np.sqrt(rate))
+
+    for region, _ in region_specs:
+        region_key = tuple(int(index) for index in region)
+        if region_key in jumps_by_region:
+            continue
+
+        reduced_density_matrix = local_reduced_density_matrix_from_state(
+            basis_configs=basis_configs,
+            state=state,
+            variable_indices=region_key,
+            tolerance=rdm_tolerance,
+        )
+
+        support_basis = reduced_density_matrix.support_basis
+        null_basis = reduced_density_matrix.null_basis
+        support_rank = int(support_basis.shape[1])
+        nullity = int(null_basis.shape[1])
+
+        region_jumps: list[sp.csr_array] = []
+        if support_rank > 0 and nullity > 0 and rate > 0.0:
+            for start in range(0, nullity, support_rank):
+                block = null_basis[:, start : start + support_rank]
+                block_rank = int(block.shape[1])
+                local_operator = support_basis[:, :block_rank] @ block.conj().T
+                reset_jump = embed_local_pattern_operator(
+                    basis_configs=basis_configs,
+                    variable_indices=region_key,
+                    local_patterns=reduced_density_matrix.local_patterns,
+                    local_operator=(reset_scale * local_operator).astype(
+                        np.complex128,
+                        copy=False,
+                    ),
+                ).tocsr()
+                region_jumps.append(reset_jump)
+
+        jumps_by_region[region_key] = region_jumps
+        ordered_regions.append(region_key)
+
+    jumps: list[sp.csr_array] = []
+    for region_key in ordered_regions:
+        jumps.extend(jumps_by_region[region_key])
+
+    return tuple(jumps)
 
 
 def _build_monitor_recycler_jump_operators(
