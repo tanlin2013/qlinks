@@ -8,7 +8,12 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.constraints.base import BaseSectorCondition, ConstraintResult
+from qlinks.constraints.base import (
+    BaseSectorCondition,
+    ConstraintPropagation,
+    ConstraintResult,
+)
+from qlinks.constraints.sectors import _propagate_discrete_sum, _unique_extremal_value
 from qlinks.lattice import BoundaryCondition, HoneycombLattice, SquareLattice
 from qlinks.variables import VariableLayout
 
@@ -358,6 +363,64 @@ class WindingCutData:
     variable_indices: npt.NDArray[np.int64]
 
 
+def _signed_contribution_extrema(
+    *,
+    layout: VariableLayout,
+    variable_indices: npt.NDArray[np.int64],
+    signs: npt.NDArray[np.int64],
+    value_transform,
+) -> tuple[
+    npt.NDArray[np.int64],
+    npt.NDArray[np.int64],
+    npt.NDArray[np.int64],
+    npt.NDArray[np.int64],
+    npt.NDArray[np.bool_],
+    npt.NDArray[np.bool_],
+]:
+    min_contributions: list[int] = []
+    max_contributions: list[int] = []
+    min_values: list[int] = []
+    max_values: list[int] = []
+    min_value_is_unique: list[bool] = []
+    max_value_is_unique: list[bool] = []
+
+    for sign, variable_index in zip(signs, variable_indices, strict=True):
+        values = np.asarray(
+            layout.local_space(int(variable_index)).values,
+            dtype=np.int64,
+        )
+        transformed_values = np.asarray(value_transform(values), dtype=np.int64)
+        signed_values = int(sign) * transformed_values
+        min_contribution = int(np.min(signed_values))
+        max_contribution = int(np.max(signed_values))
+        min_unique, min_value = _unique_extremal_value(
+            values=values,
+            contributions=signed_values,
+            extremum=min_contribution,
+        )
+        max_unique, max_value = _unique_extremal_value(
+            values=values,
+            contributions=signed_values,
+            extremum=max_contribution,
+        )
+
+        min_contributions.append(min_contribution)
+        max_contributions.append(max_contribution)
+        min_values.append(min_value)
+        max_values.append(max_value)
+        min_value_is_unique.append(min_unique)
+        max_value_is_unique.append(max_unique)
+
+    return (
+        np.asarray(min_contributions, dtype=np.int64),
+        np.asarray(max_contributions, dtype=np.int64),
+        np.asarray(min_values, dtype=np.int64),
+        np.asarray(max_values, dtype=np.int64),
+        np.asarray(min_value_is_unique, dtype=bool),
+        np.asarray(max_value_is_unique, dtype=bool),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class SquareWindingSector(BaseSectorCondition):
     """Square-lattice electric winding sector.
@@ -398,10 +461,26 @@ class SquareWindingSector(BaseSectorCondition):
             flux_normalization=self.flux_normalization,
         )
 
-        min_contributions, max_contributions = self._signed_local_value_bounds()
+        (
+            min_contributions,
+            max_contributions,
+            min_values,
+            max_values,
+            min_value_is_unique,
+            max_value_is_unique,
+        ) = _signed_contribution_extrema(
+            layout=self.layout,
+            variable_indices=cut.variable_indices,
+            signs=cut.signs,
+            value_transform=lambda values: values,
+        )
         object.__setattr__(self, "_internal_target", self._infer_internal_target())
         object.__setattr__(self, "_min_contributions", min_contributions)
         object.__setattr__(self, "_max_contributions", max_contributions)
+        object.__setattr__(self, "_min_values", min_values)
+        object.__setattr__(self, "_max_values", max_values)
+        object.__setattr__(self, "_min_value_is_unique", min_value_is_unique)
+        object.__setattr__(self, "_max_value_is_unique", max_value_is_unique)
 
     @classmethod
     def cut_data(
@@ -472,26 +551,6 @@ class SquareWindingSector(BaseSectorCondition):
             flux_normalization="integer_flux",
         )
 
-    def _signed_local_value_bounds(
-        self,
-    ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]:
-        min_contributions: list[int] = []
-        max_contributions: list[int] = []
-
-        for sign, variable_index in zip(self._signs, self._variable_indices, strict=True):
-            values = np.asarray(
-                self.layout.local_space(int(variable_index)).values,
-                dtype=np.int64,
-            )
-            signed_values = int(sign) * values
-            min_contributions.append(int(np.min(signed_values)))
-            max_contributions.append(int(np.max(signed_values)))
-
-        return (
-            np.asarray(min_contributions, dtype=np.int64),
-            np.asarray(max_contributions, dtype=np.int64),
-        )
-
     def internal_target(self) -> int:
         return int(self._internal_target)
 
@@ -513,36 +572,28 @@ class SquareWindingSector(BaseSectorCondition):
         )
 
     def partial_check(self, config, assigned_mask) -> bool:
+        return self.propagate(config, assigned_mask).consistent
+
+    def propagate(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> ConstraintPropagation:
         arr = np.asarray(config, dtype=np.int64)
-        assigned = np.asarray(assigned_mask, dtype=bool)
-
-        variable_indices = self._variable_indices
-        signs = self._signs
-
-        assigned_local = assigned[variable_indices]
-        current = int(
-            np.dot(
-                signs[assigned_local],
-                arr[variable_indices[assigned_local]],
-            )
+        contributions = self._signs * arr[self._variable_indices]
+        return _propagate_discrete_sum(
+            config=config,
+            assigned_mask=assigned_mask,
+            variable_indices=self._variable_indices,
+            contributions=contributions,
+            target=int(self._internal_target),
+            min_contributions=self._min_contributions,
+            max_contributions=self._max_contributions,
+            min_values=self._min_values,
+            max_values=self._max_values,
+            min_value_is_unique=self._min_value_is_unique,
+            max_value_is_unique=self._max_value_is_unique,
         )
-
-        unassigned_local = ~assigned_local
-        min_remaining = int(np.sum(self._min_contributions[unassigned_local]))
-        max_remaining = int(np.sum(self._max_contributions[unassigned_local]))
-
-        target = self._internal_target
-
-        if target < current + min_remaining:
-            return False
-
-        if target > current + max_remaining:
-            return False
-
-        if not np.any(unassigned_local):
-            return current == target
-
-        return True
 
     @classmethod
     def allowed_internal_targets(
@@ -679,8 +730,27 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
             direction=self.direction,
         )
 
+        (
+            min_contributions,
+            max_contributions,
+            min_values,
+            max_values,
+            min_value_is_unique,
+            max_value_is_unique,
+        ) = _signed_contribution_extrema(
+            layout=self.layout,
+            variable_indices=cut.variable_indices,
+            signs=cut.signs,
+            value_transform=lambda values: 2 * values - 1,
+        )
         object.__setattr__(self, "_internal_target", int(self.target))
         object.__setattr__(self, "_n_cut_links", int(cut.variable_indices.size))
+        object.__setattr__(self, "_min_contributions", min_contributions)
+        object.__setattr__(self, "_max_contributions", max_contributions)
+        object.__setattr__(self, "_min_values", min_values)
+        object.__setattr__(self, "_max_values", max_values)
+        object.__setattr__(self, "_min_value_is_unique", min_value_is_unique)
+        object.__setattr__(self, "_max_value_is_unique", max_value_is_unique)
 
     @classmethod
     def cut_data(
@@ -768,37 +838,29 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
         config: npt.ArrayLike,
         assigned_mask: npt.ArrayLike,
     ) -> bool:
+        return self.propagate(config, assigned_mask).consistent
+
+    def propagate(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> ConstraintPropagation:
         arr = np.asarray(config, dtype=np.int64)
-        assigned = np.asarray(assigned_mask, dtype=bool)
-
-        variable_indices = self._variable_indices
-        signs = self._signs
-
-        assigned_local = assigned[variable_indices]
-
-        assigned_indices = variable_indices[assigned_local]
-        assigned_signs = signs[assigned_local]
-
-        n = arr[assigned_indices]
-        current = int(np.sum(assigned_signs * (2 * n - 1)))
-
-        remaining_count = self._n_cut_links - int(np.count_nonzero(assigned_local))
-
-        min_remaining = -remaining_count
-        max_remaining = remaining_count
-
-        target = self._internal_target
-
-        if target < current + min_remaining:
-            return False
-
-        if target > current + max_remaining:
-            return False
-
-        if remaining_count == 0:
-            return current == target
-
-        return True
+        n = arr[self._variable_indices]
+        contributions = self._signs * (2 * n - 1)
+        return _propagate_discrete_sum(
+            config=config,
+            assigned_mask=assigned_mask,
+            variable_indices=self._variable_indices,
+            contributions=contributions,
+            target=int(self._internal_target),
+            min_contributions=self._min_contributions,
+            max_contributions=self._max_contributions,
+            min_values=self._min_values,
+            max_values=self._max_values,
+            min_value_is_unique=self._min_value_is_unique,
+            max_value_is_unique=self._max_value_is_unique,
+        )
 
     @classmethod
     def allowed_targets(
@@ -933,8 +995,27 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
             flux_normalization=self.flux_normalization,
         )
 
+        (
+            min_contributions,
+            max_contributions,
+            min_values,
+            max_values,
+            min_value_is_unique,
+            max_value_is_unique,
+        ) = _signed_contribution_extrema(
+            layout=self.layout,
+            variable_indices=cut.variable_indices,
+            signs=cut.signs,
+            value_transform=self._electric_values,
+        )
         object.__setattr__(self, "_internal_target", self._infer_internal_target())
         object.__setattr__(self, "_n_cut_links", int(cut.variable_indices.size))
+        object.__setattr__(self, "_min_contributions", min_contributions)
+        object.__setattr__(self, "_max_contributions", max_contributions)
+        object.__setattr__(self, "_min_values", min_values)
+        object.__setattr__(self, "_max_values", max_values)
+        object.__setattr__(self, "_min_value_is_unique", min_value_is_unique)
+        object.__setattr__(self, "_max_value_is_unique", max_value_is_unique)
 
     @classmethod
     def cut_data(
@@ -1029,35 +1110,29 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
         config: npt.ArrayLike,
         assigned_mask: npt.ArrayLike,
     ) -> bool:
+        return self.propagate(config, assigned_mask).consistent
+
+    def propagate(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> ConstraintPropagation:
         arr = np.asarray(config, dtype=np.int64)
-        assigned = np.asarray(assigned_mask, dtype=bool)
-
-        variable_indices = self._variable_indices
-        assigned_local = assigned[variable_indices]
-
-        assigned_values = arr[variable_indices[assigned_local]]
-        assigned_signs = self._signs[assigned_local]
-        current = int(np.sum(assigned_signs * self._electric_values(assigned_values)))
-
-        remaining = self._n_cut_links - int(np.count_nonzero(assigned_local))
-
-        # Each unassigned link contributes either -1 or +1 after multiplying
-        # by the cut sign.
-        min_possible = current - remaining
-        max_possible = current + remaining
-
-        target = self._internal_target
-
-        if target < min_possible:
-            return False
-
-        if target > max_possible:
-            return False
-
-        if remaining == 0:
-            return current == target
-
-        return True
+        electric = self._electric_values(arr[self._variable_indices])
+        contributions = self._signs * electric
+        return _propagate_discrete_sum(
+            config=config,
+            assigned_mask=assigned_mask,
+            variable_indices=self._variable_indices,
+            contributions=contributions,
+            target=int(self._internal_target),
+            min_contributions=self._min_contributions,
+            max_contributions=self._max_contributions,
+            min_values=self._min_values,
+            max_values=self._max_values,
+            min_value_is_unique=self._min_value_is_unique,
+            max_value_is_unique=self._max_value_is_unique,
+        )
 
     @staticmethod
     def electric_values_from_convention(

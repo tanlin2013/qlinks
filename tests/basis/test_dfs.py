@@ -878,3 +878,23 @@ def test_dfs_basis_solver_respects_max_states() -> None:
     )
 
     assert basis.n_states == 1
+
+
+def test_dfs_applies_root_propagation_before_first_branch() -> None:
+    layout = _binary_site_layout(3)
+    constraint = BoundedLocalCountConstraint.exact(
+        layout=layout,
+        variable_indices=np.array([0, 1, 2], dtype=np.int64),
+        count=0,
+        name="all_empty",
+    )
+
+    basis = DFSBasisSolver(
+        sort=True,
+        variable_order=np.array([0, 1, 2], dtype=np.int64),
+    ).solve(layout, constraints=(constraint,))
+
+    np.testing.assert_array_equal(
+        basis.states,
+        np.array([[0, 0, 0]], dtype=np.int64),
+    )

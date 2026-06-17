@@ -75,6 +75,7 @@ class DFSBasisSolver:
             n_variables=n,
             condition_infos=condition_infos,
         )
+        root_propagators = self._build_root_propagators(condition_infos=condition_infos)
 
         # Conditions with no affected variables are global constants.
         # They should be checked once before DFS starts.
@@ -102,7 +103,7 @@ class DFSBasisSolver:
             variable_order=variable_order,
         )
 
-        has_propagators = any(propagators_by_variable)
+        has_propagators = any(propagators_by_variable) or bool(root_propagators)
 
         if not has_propagators:
             partial_checks_by_depth = tuple(
@@ -185,6 +186,23 @@ class DFSBasisSolver:
             def undo(changed_variables: Sequence[int]) -> None:
                 for variable_index in reversed(changed_variables):
                     assigned_mask[int(variable_index)] = False
+
+            initial_propagation = self._propagate_after_assignment(
+                config=config,
+                assigned_mask=assigned_mask,
+                propagators=root_propagators,
+            )
+            if not initial_propagation.consistent:
+                return Basis.empty(layout)
+
+            root_changed_variables: list[int] = []
+            for forced_variable, forced_value in initial_propagation.forced_assignments:
+                if not assign_with_propagation(
+                    int(forced_variable),
+                    int(forced_value),
+                    root_changed_variables,
+                ):
+                    return Basis.empty(layout)
 
             def dfs_with_propagation(depth: int) -> None:
                 if max_states is not None and len(states) >= max_states:
@@ -526,6 +544,27 @@ class DFSBasisSolver:
                 lookup[int(variable_index)].append(propagate)
 
         return tuple(tuple(propagators) for propagators in lookup)
+
+    @staticmethod
+    def _build_root_propagators(
+        *,
+        condition_infos: Sequence[_ConditionInfo],
+    ) -> tuple[Propagator, ...]:
+        """Return every propagator once for root-level propagation.
+
+        Per-variable lookup only runs a propagator after one of its support
+        variables has been assigned.  Some structured constraints can already
+        force values from the empty partial assignment, such as fixed-value
+        constraints or fixed-sum sectors with an extremal target.
+        """
+        propagators: list[Propagator] = []
+
+        for info in condition_infos:
+            propagate = getattr(info.condition, "propagate", None)
+            if callable(propagate):
+                propagators.append(propagate)
+
+        return tuple(propagators)
 
     @staticmethod
     def _zero_variable_conditions_are_satisfied(

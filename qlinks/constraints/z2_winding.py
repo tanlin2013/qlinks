@@ -6,7 +6,7 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.constraints.base import BaseSectorCondition
+from qlinks.constraints.base import BaseSectorCondition, ConstraintPropagation
 from qlinks.lattice import BoundaryCondition, TriangularLattice
 from qlinks.variables import VariableLayout
 
@@ -188,30 +188,48 @@ class TriangularZ2WindingSector(BaseSectorCondition):
         config: npt.ArrayLike,
         assigned_mask: npt.ArrayLike,
     ) -> bool:
-        """
-        Z2 parity generally cannot be pruned until all cut variables are assigned.
+        return self.propagate(config, assigned_mask).consistent
 
-        If unassigned variables remain, either parity is still possible unless
-        one adds a more detailed parity-reachability check. The safe behavior is
-        to wait.
-        """
+    def propagate(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> ConstraintPropagation:
+        arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)
         assigned_local = assigned[self._variable_indices]
 
-        if int(np.count_nonzero(assigned_local)) != self._n_cut_links:
-            return True
+        values = arr[self._variable_indices[assigned_local]]
+        current_parity = int(np.sum(self._occupation_values(values)) % 2)
 
-        arr = np.asarray(config, dtype=np.int64)
-        values = arr[self._variable_indices]
+        unassigned_variables = self._variable_indices[~assigned_local]
 
-        if self.value_convention == "binary":
-            parity = int(np.sum(values) % 2)
-        elif self.value_convention == "flux_pm":
-            parity = int(np.sum((values + 1) // 2) % 2)
-        else:
-            raise ValueError(f"Unsupported value convention: {self.value_convention}")
+        if unassigned_variables.size == 0:
+            if current_parity != int(self.target):
+                return ConstraintPropagation.contradiction()
+            return ConstraintPropagation.no_change()
 
-        return parity == self.target
+        # When one cut variable remains, the Z2 target determines its
+        # occupation parity.  Force it for the usual binary / flux_pm local
+        # spaces when the needed parity selects a unique local value.
+        if unassigned_variables.size == 1:
+            variable_index = int(unassigned_variables[0])
+            needed_parity = (int(self.target) - current_parity) % 2
+            local_values = np.asarray(
+                self.layout.local_space(variable_index).values,
+                dtype=np.int64,
+            )
+            local_occupations = self._occupation_values(local_values)
+            allowed_values = local_values[(local_occupations % 2) == needed_parity]
+            unique_allowed_values = np.unique(allowed_values.astype(np.int64, copy=False))
+            if unique_allowed_values.size == 0:
+                return ConstraintPropagation.contradiction()
+            if unique_allowed_values.size == 1:
+                return ConstraintPropagation(
+                    forced_assignments=((variable_index, int(unique_allowed_values[0])),)
+                )
+
+        return ConstraintPropagation.no_change()
 
     @classmethod
     def allowed_targets(
