@@ -14,6 +14,7 @@ from qlinks.caging import (
     LocalQDMCageSearcher,
     LocalQDMPaddingConfig,
     QDMLocalCageAdapter,
+    StripeRegionProposal,
     classify_cage_state,
     enumerate_qdm_local_basis,
 )
@@ -201,6 +202,106 @@ def test_local_qdm_basis_enumeration_respects_shared_dfs_limits() -> None:
     ).run()
 
     assert local_result.local_hilbert_size == 3
+
+
+def test_stripe_region_proposal_generates_square_winding_stripes() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = StripeRegionProposal(
+        model,
+        directions=(0,),
+        width=1,
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            tolerance=1.0e-10,
+        ),
+    )
+    records = list(proposal.iter_records())
+
+    assert len(records) == model.ly
+    assert {record.direction for record in records} == {0}
+    assert all(record.width == 1 for record in records)
+    assert all(record.plaquette_kind == "square" for record in records)
+    assert all(record.plaquette_ids.size == model.lx for record in records)
+    assert all(
+        record.region.active_plaquette_ids.tolist() == record.plaquette_ids.tolist()
+        for record in records
+    )
+    assert all(record.region.link_ids.size < model.lattice.num_links for record in records)
+
+    stripe_y_values = []
+    for record in records:
+        cells = [model.lattice.plaquette_anchor_cell(int(pid)) for pid in record.plaquette_ids]
+        stripe_y_values.append(tuple(sorted({int(cell[1]) for cell in cells})))
+        assert len({int(cell[0]) for cell in cells}) == model.lx
+
+    assert sorted(stripe_y_values) == [(0,), (1,), (2,), (3,)]
+
+
+def test_stripe_region_proposal_yields_ready_local_searchers() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = StripeRegionProposal(
+        model,
+        directions=(0,),
+        width=1,
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            tolerance=1.0e-10,
+            prune_inactive_local_basis_states=True,
+        ),
+    )
+    searcher = next(proposal.iter_searchers())
+    result = searcher.run()
+
+    assert result.region.active_plaquette_ids.size == model.lx
+    assert result.local_hilbert_size > 0
+    assert result.region.link_ids.size < model.lattice.num_links
+
+
+def test_stripe_region_proposal_groups_triangular_rhombus_kinds() -> None:
+    model = TriangularQDMModel(
+        lx=3,
+        ly=3,
+        boundary_condition="periodic",
+        winding_a=0,
+        winding_b=0,
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = StripeRegionProposal(
+        model,
+        directions=(0,),
+        width=1,
+        plaquette_kinds=("rhombus_ab",),
+        config=LocalQDMCageSearchConfig(halo_layers=0, boundary_mode="relaxed"),
+    )
+    records = list(proposal.iter_records())
+
+    assert len(records) == model.ly
+    assert all(record.plaquette_kind == "rhombus_ab" for record in records)
+    assert all(record.plaquette_ids.size == model.lx for record in records)
 
 
 def test_local_qdm_active_plaquette_hook_prunes_kinetically_inactive_states() -> None:

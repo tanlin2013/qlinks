@@ -15,7 +15,7 @@ one or more global winding sectors.
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Literal, Protocol
 
@@ -166,6 +166,176 @@ class LocalQDMRegion:
             if values.ndim != 1:
                 raise ValueError(f"{field_name} must be one-dimensional.")
             object.__setattr__(self, field_name, np.unique(values).astype(np.int64))
+
+
+@dataclass(frozen=True, slots=True)
+class StripeRegionProposalRecord:
+    """One plaquette-stripe local-region proposal.
+
+    ``direction`` is the anchor-coordinate axis along which the stripe runs.
+    ``transverse_origin`` labels the first transverse coordinate included in the
+    band.  For periodic lattices and ``width > 1``, the band is thickened by
+    wrapping forward from this origin.
+    """
+
+    region: LocalQDMRegion
+    plaquette_ids: npt.NDArray[np.int64]
+    direction: int
+    transverse_origin: tuple[int, ...]
+    width: int
+    plaquette_kind: str
+
+    def __post_init__(self) -> None:
+        plaquette_ids = np.asarray(self.plaquette_ids, dtype=np.int64)
+        if plaquette_ids.ndim != 1:
+            raise ValueError("plaquette_ids must be one-dimensional.")
+        object.__setattr__(
+            self,
+            "plaquette_ids",
+            np.unique(plaquette_ids).astype(np.int64),
+        )
+        object.__setattr__(self, "direction", int(self.direction))
+        object.__setattr__(self, "width", int(self.width))
+        if self.width <= 0:
+            raise ValueError("width must be positive.")
+        object.__setattr__(
+            self,
+            "transverse_origin",
+            tuple(int(value) for value in self.transverse_origin),
+        )
+        object.__setattr__(self, "plaquette_kind", str(self.plaquette_kind))
+
+
+class LocalRegionProposal(Protocol):
+    """Protocol for objects that propose local regions to the local cage searcher."""
+
+    def iter_regions(self) -> Iterator[LocalQDMRegion]:
+        """Yield candidate local regions."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class StripeRegionProposal:
+    """Generate QDM stripe/band local regions from plaquette anchor coordinates.
+
+    A stripe is selected on the plaquette-anchor lattice.  For ``direction=0``
+    on a square torus, the proposal keeps all plaquettes along the x direction
+    at fixed y; for ``direction=1`` it keeps all plaquettes along y at fixed x.
+    ``width`` thickens the stripe in the transverse coordinate.
+
+    The default search config uses ``halo_layers=0`` because the stripe itself
+    is meant to be the active region.  Passing a config with ``halo_layers > 0``
+    intentionally asks for the old shared-link halo around each stripe.
+    """
+
+    model: object
+    config: LocalQDMCageSearchConfig = field(
+        default_factory=lambda: LocalQDMCageSearchConfig(halo_layers=0)
+    )
+    directions: tuple[int, ...] | None = None
+    width: int = 1
+    plaquette_kinds: tuple[str, ...] | None = None
+    adapter: LocalCageModelAdapter | None = None
+
+    def __post_init__(self) -> None:
+        if self.width <= 0:
+            raise ValueError("width must be positive.")
+
+        adapter = local_cage_adapter_for_model(self.model, self.adapter)
+        config = adapter.normalize_config(self.config)
+        object.__setattr__(self, "adapter", adapter)
+        object.__setattr__(self, "config", config)
+
+        if self.directions is not None:
+            directions = tuple(int(direction) for direction in self.directions)
+            if not directions:
+                raise ValueError("directions must be non-empty when provided.")
+            object.__setattr__(self, "directions", directions)
+
+        if self.plaquette_kinds is not None:
+            kinds = tuple(str(kind) for kind in self.plaquette_kinds)
+            if not kinds:
+                raise ValueError("plaquette_kinds must be non-empty when provided.")
+            object.__setattr__(self, "plaquette_kinds", kinds)
+
+    def iter_records(self) -> Iterator[StripeRegionProposalRecord]:
+        """Yield stripe proposal records, including metadata and regions."""
+        adapter = local_cage_adapter_for_model(self.model, self.adapter)
+        plaquette_data = _stripe_plaquette_data(self.model, self.plaquette_kinds)
+        if not plaquette_data:
+            return
+
+        directions = self.directions
+        if directions is None:
+            directions = _default_stripe_directions(plaquette_data)
+
+        seen: set[tuple[int, str, tuple[int, ...]]] = set()
+
+        for direction in directions:
+            direction = int(direction)
+            _validate_stripe_direction(direction, plaquette_data)
+
+            for kind in sorted({item[2] for item in plaquette_data}):
+                kind_items = [item for item in plaquette_data if item[2] == kind]
+                origins = sorted(
+                    {_transverse_coordinates(cell, direction) for _, cell, _ in kind_items}
+                )
+
+                for origin in origins:
+                    plaquette_ids = np.asarray(
+                        [
+                            plaquette_id
+                            for plaquette_id, cell, _ in kind_items
+                            if _cell_in_stripe_band(
+                                self.model,
+                                cell,
+                                direction=direction,
+                                transverse_origin=origin,
+                                width=self.width,
+                            )
+                        ],
+                        dtype=np.int64,
+                    )
+                    if plaquette_ids.size == 0:
+                        continue
+
+                    key = (
+                        direction,
+                        kind,
+                        tuple(int(pid) for pid in np.unique(plaquette_ids)),
+                    )
+                    if key in seen:
+                        continue
+                    seen.add(key)
+
+                    region = adapter.build_region_from_plaquettes(
+                        plaquette_ids=plaquette_ids,
+                        config=self.config,
+                        scoring_plaquette_ids=plaquette_ids,
+                    )
+                    yield StripeRegionProposalRecord(
+                        region=region,
+                        plaquette_ids=plaquette_ids,
+                        direction=direction,
+                        transverse_origin=origin,
+                        width=self.width,
+                        plaquette_kind=kind,
+                    )
+
+    def iter_regions(self) -> Iterator[LocalQDMRegion]:
+        """Yield only the local regions from :meth:`iter_records`."""
+        for record in self.iter_records():
+            yield record.region
+
+    def iter_searchers(self) -> Iterator[LocalCageSearcher]:
+        """Yield ready-to-run local cage searchers for each stripe region."""
+        for record in self.iter_records():
+            yield LocalCageSearcher(
+                model=self.model,
+                region=record.region,
+                config=self.config,
+                adapter=self.adapter,
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -2178,6 +2348,123 @@ def _deduplicate_local_records(
             kept.append(record)
 
     return kept
+
+
+def _stripe_plaquette_data(
+    model: object,
+    plaquette_kinds: tuple[str, ...] | None,
+) -> list[tuple[int, tuple[int, ...], str]]:
+    """Return ``(plaquette_id, anchor_cell, kind)`` entries for QDM stripe proposals."""
+    allowed_kinds = None if plaquette_kinds is None else set(str(kind) for kind in plaquette_kinds)
+    entries: list[tuple[int, tuple[int, ...], str]] = []
+
+    for plaquette_id in model.plaquette_ids():
+        plaquette_id = int(plaquette_id)
+        plaquette = model.lattice.plaquettes[plaquette_id]
+        kind = str(plaquette.kind)
+        if allowed_kinds is not None and kind not in allowed_kinds:
+            continue
+
+        entries.append(
+            (
+                plaquette_id,
+                _stripe_anchor_cell(model, plaquette_id),
+                kind,
+            )
+        )
+
+    return entries
+
+
+def _stripe_anchor_cell(model: object, plaquette_id: int) -> tuple[int, ...]:
+    """Return a stable plaquette cell used by stripe proposals.
+
+    Most lattices store ``anchor_cell`` directly.  Older triangular-rhombus
+    plaquettes did not, so we fall back to the first boundary site's cell, which
+    matches the construction anchor for those rhombi.
+    """
+    try:
+        return tuple(int(value) for value in model.lattice.plaquette_anchor_cell(int(plaquette_id)))
+    except ValueError:
+        plaquette = model.lattice.plaquettes[int(plaquette_id)]
+        first_site = model.lattice.sites[int(plaquette.sites[0])]
+        return tuple(int(value) for value in first_site.cell)
+
+
+def _default_stripe_directions(
+    plaquette_data: Sequence[tuple[int, tuple[int, ...], str]],
+) -> tuple[int, ...]:
+    ndim = max(len(cell) for _, cell, _ in plaquette_data)
+    directions: list[int] = []
+    for axis in range(ndim):
+        values = {int(cell[axis]) for _, cell, _ in plaquette_data if len(cell) > axis}
+        if len(values) > 1:
+            directions.append(axis)
+
+    if directions:
+        return tuple(directions)
+    return tuple(range(ndim))
+
+
+def _validate_stripe_direction(
+    direction: int,
+    plaquette_data: Sequence[tuple[int, tuple[int, ...], str]],
+) -> None:
+    if direction < 0:
+        raise ValueError("Stripe direction must be non-negative.")
+    if any(len(cell) <= direction for _, cell, _ in plaquette_data):
+        raise ValueError(f"Stripe direction {direction} is outside plaquette anchor dimension.")
+
+
+def _transverse_coordinates(cell: tuple[int, ...], direction: int) -> tuple[int, ...]:
+    return tuple(int(value) for axis, value in enumerate(cell) if axis != int(direction))
+
+
+def _cell_in_stripe_band(
+    model: object,
+    cell: tuple[int, ...],
+    *,
+    direction: int,
+    transverse_origin: tuple[int, ...],
+    width: int,
+) -> bool:
+    transverse_axes = [axis for axis in range(len(cell)) if axis != int(direction)]
+    if len(transverse_axes) != len(transverse_origin):
+        raise ValueError("transverse_origin has the wrong dimension for this stripe direction.")
+
+    periodic = _lattice_is_periodic(model)
+    for origin, axis in zip(transverse_origin, transverse_axes, strict=True):
+        value = int(cell[axis])
+        origin = int(origin)
+        period = _lattice_axis_period(model, axis) if periodic else None
+
+        if period is None:
+            if value < origin or value >= origin + int(width):
+                return False
+            continue
+
+        if int(width) >= period:
+            continue
+
+        distance = (value - origin) % period
+        if distance < 0 or distance >= int(width):
+            return False
+
+    return True
+
+
+def _lattice_is_periodic(model: object) -> bool:
+    boundary_condition = getattr(model.lattice, "boundary_condition", None)
+    value = getattr(boundary_condition, "value", boundary_condition)
+    return str(value) == "periodic"
+
+
+def _lattice_axis_period(model: object, axis: int) -> int | None:
+    if axis == 0 and hasattr(model.lattice, "lx"):
+        return int(model.lattice.lx)
+    if axis == 1 and hasattr(model.lattice, "ly"):
+        return int(model.lattice.ly)
+    return None
 
 
 def _unique_int_array(values: Sequence[int] | npt.ArrayLike, *, name: str) -> npt.NDArray[np.int64]:
