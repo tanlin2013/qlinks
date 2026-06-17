@@ -64,6 +64,7 @@ from qlinks.caging.nullspace import (
 )
 from qlinks.caging.open_system import (
     CageLindbladConstruction,
+    KineticJumpGrouping,
     LocalRecyclerReadout,
     build_type1_cage_lindblad_construction,
 )
@@ -225,6 +226,7 @@ __all__ = [
     "extract_cage_region_support",
     "reduced_iz_probe_support_from_report",
     "CageLindbladConstruction",
+    "KineticJumpGrouping",
     "LocalRecyclerReadout",
     "build_type1_cage_lindblad_construction",
 ]

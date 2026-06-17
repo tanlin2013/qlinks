@@ -75,6 +75,12 @@ JumpPlaquettePolicy = Literal[
     "outside_or_crossing",
     "not_strictly_inside",
 ]
+KineticJumpGrouping = Literal[
+    "individual",
+    "single_sum",
+    "fixed_size",
+    "support_greedy",
+]
 MonitorRecyclerHamiltonianShift = Literal["none", "target_energy", "local_expectation"]
 MonitorRecyclerHamiltonianClosureSource = Literal[
     "global_hamiltonian",
@@ -515,6 +521,61 @@ class _LazyLocalTermMonitorProductOperator:
         return self.tocsr() @ other
 
 
+@dataclass(slots=True)
+class _LazyLocalTermSumMonitorProductOperator:
+    """Lazy product ``(sum_p K_p) @ M_i`` for grouped kinetic jumps."""
+
+    model: Any
+    build_result: ModelBuildResult
+    terms: tuple[LocalTermDescriptor, ...]
+    builder: HamiltonianBuilderName
+    backend: SparseBackendName
+    local_term_cache: _LocalTermMatrixCache | None
+    monitor: Any
+    _matrix: sp.csr_array | None = field(default=None, init=False, repr=False)
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        return (int(self.build_result.hamiltonian.shape[0]), int(self.monitor.shape[1]))
+
+    @property
+    def dtype(self):
+        return np.complex128
+
+    @property
+    def T(self):
+        return self.tocsr().T
+
+    def tocsr(self) -> sp.csr_array:
+        if self._matrix is None:
+            kinetic_sum = _sum_local_terms(
+                model=self.model,
+                build_result=self.build_result,
+                terms=self.terms,
+                builder=self.builder,
+                backend=self.backend,
+                shape=self.build_result.hamiltonian.shape,
+                local_term_cache=self.local_term_cache,
+            )
+            self._matrix = _left_multiply_sparse_csr(kinetic_sum, self.monitor)
+        return self._matrix
+
+    def asformat(self, format: str):
+        return self.tocsr().asformat(format)
+
+    def astype(self, dtype):
+        return self.tocsr().astype(dtype)
+
+    def toarray(self):
+        return self.tocsr().toarray()
+
+    def conj(self):
+        return self.tocsr().conj()
+
+    def __matmul__(self, other):
+        return self.tocsr() @ other
+
+
 def _lazy_local_term_left_multiply_monitor(
     *,
     model: Any,
@@ -529,6 +590,38 @@ def _lazy_local_term_left_multiply_monitor(
         model=model,
         build_result=build_result,
         term=term,
+        builder=builder,
+        backend=backend,
+        local_term_cache=local_term_cache,
+        monitor=monitor,
+    )
+
+
+def _lazy_local_term_group_left_multiply_monitor(
+    *,
+    model: Any,
+    build_result: ModelBuildResult,
+    terms: tuple[LocalTermDescriptor, ...],
+    builder: HamiltonianBuilderName,
+    backend: SparseBackendName,
+    local_term_cache: _LocalTermMatrixCache | None,
+    monitor: Any,
+) -> _LazyLocalTermMonitorProductOperator | _LazyLocalTermSumMonitorProductOperator:
+    if len(terms) == 1:
+        return _lazy_local_term_left_multiply_monitor(
+            model=model,
+            build_result=build_result,
+            term=terms[0],
+            builder=builder,
+            backend=backend,
+            local_term_cache=local_term_cache,
+            monitor=monitor,
+        )
+
+    return _LazyLocalTermSumMonitorProductOperator(
+        model=model,
+        build_result=build_result,
+        terms=terms,
         builder=builder,
         backend=backend,
         local_term_cache=local_term_cache,
@@ -620,6 +713,7 @@ class ReducedIZMonitorComponent:
     n_potential_terms: int
     monitor_residual: float
     jump_residuals: tuple[float, ...]
+    jump_plaquette_id_groups: tuple[tuple[int, ...], ...] = ()
 
     @property
     def max_jump_residual(self) -> float:
@@ -631,6 +725,8 @@ class ReducedIZMonitorComponent:
 
     @property
     def n_jumps(self) -> int:
+        if self.jump_plaquette_id_groups:
+            return len(self.jump_plaquette_id_groups)
         return len(self.jump_plaquette_ids)
 
 
@@ -752,6 +848,11 @@ class CageLindbladConstruction:
     monitor_residual: float
     max_jump_residual: float
     jump_residuals: tuple[float, ...]
+    kinetic_jump_grouping: KineticJumpGrouping = "individual"
+    max_kinetic_terms_per_jump: int | None = None
+    max_kinetic_jump_support_size: int | None = None
+    monitor_jump_plaquette_id_groups: tuple[tuple[int, ...], ...] = ()
+    global_jump_plaquette_id_groups: tuple[tuple[int, ...], ...] = ()
     local_rdm_parent_projector_rate: float = 1.0
     local_rdm_reset_rate: float = 1.0
     n_local_rdm_parent_projector_jumps: int = 0
@@ -800,6 +901,15 @@ class CageLindbladConstruction:
             "monitor_recycler_jump_closure_orders": self.monitor_recycler_jump_closure_orders,
             "monitor_plaquette_policy": self.monitor_plaquette_policy,
             "jump_plaquette_policy": self.jump_plaquette_policy,
+            "kinetic_jump_grouping": self.kinetic_jump_grouping,
+            "max_kinetic_terms_per_jump": self.max_kinetic_terms_per_jump,
+            "max_kinetic_jump_support_size": self.max_kinetic_jump_support_size,
+            "n_kinetic_jump_groups": (
+                len(self.monitor_jump_plaquette_id_groups)
+                + len(self.global_jump_plaquette_id_groups)
+            ),
+            "monitor_jump_plaquette_id_groups": self.monitor_jump_plaquette_id_groups,
+            "global_jump_plaquette_id_groups": self.global_jump_plaquette_id_groups,
             "n_inside_plaquettes": len(self.inside_plaquette_ids),
             "n_outside_plaquettes": len(self.outside_plaquette_ids),
             "n_crossing_plaquettes": len(self.crossing_plaquette_ids),
@@ -1008,6 +1118,7 @@ class CageLindbladConstruction:
         overview.add_row("jump design", str(self.jump_operator_design))
         overview.add_row("monitor policy", str(self.monitor_plaquette_policy))
         overview.add_row("jump policy", str(self.jump_plaquette_policy))
+        overview.add_row("kinetic jump grouping", str(self.kinetic_jump_grouping))
         overview.add_row("z value", _format_complex_or_none(self.z_value))
         overview.add_row("open-system backend", str(self.open_system_backend))
 
@@ -1024,6 +1135,8 @@ class CageLindbladConstruction:
         geometry.add_row("jumps", str(self.n_jumps))
         geometry.add_row("component jumps", str(self.n_component_jumps))
         geometry.add_row("global outside/crossing jumps", str(self.n_global_jump_terms))
+        geometry.add_row("monitor kinetic groups", str(len(self.monitor_jump_plaquette_id_groups)))
+        geometry.add_row("global kinetic groups", str(len(self.global_jump_plaquette_id_groups)))
 
         diagnostics = Table(title="Dark-state diagnostics")
         diagnostics.add_column("quantity", style="bold")
@@ -1252,6 +1365,9 @@ def build_type1_cage_lindblad_construction(
     monitor_plaquette_policy: MonitorPlaquettePolicy = "strict_inside",
     jump_plaquette_policy: JumpPlaquettePolicy = "outside_or_crossing",
     jump_operator_design: JumpOperatorDesign = "kinetic_outside_monitor_inside",
+    kinetic_jump_grouping: KineticJumpGrouping = "individual",
+    max_kinetic_terms_per_jump: int | None = None,
+    max_kinetic_jump_support_size: int | None = None,
     recycling_jump_source: RecyclingJumpSource = "none",
     max_recycling_jumps_per_region: int = 1,
     deduplicate_recycling_regions: bool = False,
@@ -1294,6 +1410,12 @@ def build_type1_cage_lindblad_construction(
         raise ValueError("local_rdm_parent_projector_rate must be nonnegative.")
     if local_rdm_reset_rate < 0.0:
         raise ValueError("local_rdm_reset_rate must be nonnegative.")
+
+    _validate_kinetic_jump_grouping_options(
+        grouping=kinetic_jump_grouping,
+        max_terms_per_jump=max_kinetic_terms_per_jump,
+        max_support_size=max_kinetic_jump_support_size,
+    )
 
     if monitor_recycler_hamiltonian_closure_order < 0:
         raise ValueError("monitor_recycler_hamiltonian_closure_order must be nonnegative.")
@@ -1536,6 +1658,9 @@ def build_type1_cage_lindblad_construction(
                 include_collective_cancellation=include_collective_cancellation,
                 use_collective_coefficients=use_collective_coefficients,
                 compute_jump_residuals=compute_jump_residuals,
+                kinetic_jump_grouping=kinetic_jump_grouping,
+                max_kinetic_terms_per_jump=max_kinetic_terms_per_jump,
+                max_kinetic_jump_support_size=max_kinetic_jump_support_size,
                 timing_collector=timing_collector,
             )
 
@@ -1713,6 +1838,9 @@ def build_type1_cage_lindblad_construction(
             backend=backend,
             local_term_cache=local_term_cache,
             jump_operator_design=jump_operator_design,
+            kinetic_jump_grouping=kinetic_jump_grouping,
+            max_kinetic_terms_per_jump=max_kinetic_terms_per_jump,
+            max_kinetic_jump_support_size=max_kinetic_jump_support_size,
         )
     else:
         jumps = _build_jump_operators(
@@ -1726,6 +1854,9 @@ def build_type1_cage_lindblad_construction(
             backend=backend,
             local_term_cache=local_term_cache,
             jump_operator_design=jump_operator_design,
+            kinetic_jump_grouping=kinetic_jump_grouping,
+            max_kinetic_terms_per_jump=max_kinetic_terms_per_jump,
+            max_kinetic_jump_support_size=max_kinetic_jump_support_size,
         )
 
     _record_construction_stage(timing_collector, "jump_assembly", stage_start)
@@ -1858,18 +1989,22 @@ def build_type1_cage_lindblad_construction(
     }:
         n_component_jumps = len(jumps)
         n_global_jump_terms = 0
+        monitor_jump_plaquette_id_groups: tuple[tuple[int, ...], ...] = ()
+        global_jump_plaquette_id_groups: tuple[tuple[int, ...], ...] = ()
     else:
-        n_component_jumps = len(component_jumps) if component_jumps is not None else 0
-        n_global_jump_terms = (
-            len(jump_kinetic_terms)
-            if component_jumps is not None
-            and jump_operator_design
-            in {
-                "kinetic_outside_monitor_inside",
-                "hamiltonian_outside_monitor_inside",
-            }
-            else 0
+        monitor_jump_plaquette_id_groups, global_jump_plaquette_id_groups = (
+            _kinetic_jump_plaquette_groups_for_construction(
+                monitor_kinetic_terms=monitor_kinetic_terms,
+                jump_kinetic_terms=jump_kinetic_terms,
+                monitor_components=monitor_components if component_jumps is not None else None,
+                jump_operator_design=jump_operator_design,
+                kinetic_jump_grouping=kinetic_jump_grouping,
+                max_kinetic_terms_per_jump=max_kinetic_terms_per_jump,
+                max_kinetic_jump_support_size=max_kinetic_jump_support_size,
+            )
         )
+        n_component_jumps = len(component_jumps) if component_jumps is not None else 0
+        n_global_jump_terms = len(global_jump_plaquette_id_groups)
 
     return CageLindbladConstruction(
         cage_state=psi,
@@ -1899,6 +2034,11 @@ def build_type1_cage_lindblad_construction(
         jump_operator_design=jump_operator_design,
         monitor_plaquette_policy=monitor_plaquette_policy,
         jump_plaquette_policy=jump_plaquette_policy,
+        kinetic_jump_grouping=kinetic_jump_grouping,
+        max_kinetic_terms_per_jump=max_kinetic_terms_per_jump,
+        max_kinetic_jump_support_size=max_kinetic_jump_support_size,
+        monitor_jump_plaquette_id_groups=monitor_jump_plaquette_id_groups,
+        global_jump_plaquette_id_groups=global_jump_plaquette_id_groups,
         recycling_jump_source=recycling_jump_source,
         n_recycling_jumps=n_recycling_jumps,
         recycling_jump_variable_indices=recycling_jump_variable_indices,
@@ -1932,54 +2072,74 @@ def _build_jump_operators(
     backend: SparseBackendName,
     jump_operator_design: JumpOperatorDesign,
     local_term_cache: _LocalTermMatrixCache | None = None,
+    kinetic_jump_grouping: KineticJumpGrouping = "individual",
+    max_kinetic_terms_per_jump: int | None = None,
+    max_kinetic_jump_support_size: int | None = None,
 ) -> tuple[Any, ...]:
     if jump_operator_design == "kinetic_times_monitor":
+        term_groups = _group_kinetic_terms_for_jumps(
+            jump_kinetic_terms,
+            grouping=kinetic_jump_grouping,
+            max_terms_per_jump=max_kinetic_terms_per_jump,
+            max_support_size=max_kinetic_jump_support_size,
+        )
         return tuple(
-            _left_multiply_sparse_csr(
-                _local_term_matrix(
-                    model=model,
-                    build_result=build_result,
-                    term=term,
-                    builder=builder,
-                    backend=backend,
-                    local_term_cache=local_term_cache,
-                ),
-                monitor,
+            _lazy_local_term_group_left_multiply_monitor(
+                model=model,
+                build_result=build_result,
+                terms=term_group,
+                builder=builder,
+                backend=backend,
+                local_term_cache=local_term_cache,
+                monitor=monitor,
             )
-            for term in jump_kinetic_terms
+            for term_group in term_groups
         )
 
     if jump_operator_design == "kinetic_outside_monitor_inside":
-        monitor_terms_by_id = {int(term.term_id): term for term in monitor_kinetic_terms}
-        jump_terms_by_id = {int(term.term_id): term for term in jump_kinetic_terms}
-        all_jump_ids = sorted(set(monitor_terms_by_id) | set(jump_terms_by_id))
+        outside_terms = _jump_terms_excluding_monitor_terms(
+            jump_kinetic_terms=jump_kinetic_terms,
+            monitor_kinetic_terms=monitor_kinetic_terms,
+        )
+        monitor_term_groups = _group_kinetic_terms_for_jumps(
+            monitor_kinetic_terms,
+            grouping=kinetic_jump_grouping,
+            max_terms_per_jump=max_kinetic_terms_per_jump,
+            max_support_size=max_kinetic_jump_support_size,
+        )
+        outside_term_groups = _group_kinetic_terms_for_jumps(
+            outside_terms,
+            grouping=kinetic_jump_grouping,
+            max_terms_per_jump=max_kinetic_terms_per_jump,
+            max_support_size=max_kinetic_jump_support_size,
+        )
 
-        jumps: list[Any] = []
+        monitor_jumps = tuple(
+            _lazy_local_term_group_left_multiply_monitor(
+                model=model,
+                build_result=build_result,
+                terms=term_group,
+                builder=builder,
+                backend=backend,
+                local_term_cache=local_term_cache,
+                monitor=monitor,
+            )
+            for term_group in monitor_term_groups
+        )
+        outside_jumps = tuple(
+            _sum_local_term_group(
+                model=model,
+                build_result=build_result,
+                terms=term_group,
+                builder=builder,
+                backend=backend,
+                shape=build_result.hamiltonian.shape,
+                local_term_cache=local_term_cache,
+            )
+            for term_group in outside_term_groups
+        )
 
-        for plaquette_id in all_jump_ids:
-            if plaquette_id in monitor_terms_by_id:
-                kinetic = _local_term_matrix(
-                    model=model,
-                    build_result=build_result,
-                    term=monitor_terms_by_id[plaquette_id],
-                    builder=builder,
-                    backend=backend,
-                    local_term_cache=local_term_cache,
-                )
-                jumps.append(_left_multiply_sparse_csr(kinetic, monitor))
-            else:
-                jumps.append(
-                    _local_term_matrix(
-                        model=model,
-                        build_result=build_result,
-                        term=jump_terms_by_id[plaquette_id],
-                        builder=builder,
-                        backend=backend,
-                        local_term_cache=local_term_cache,
-                    )
-                )
-
-        return tuple(jumps)
+        return monitor_jumps + outside_jumps
 
     if jump_operator_design in {
         "monitor_recycler",
@@ -1993,37 +2153,49 @@ def _build_jump_operators(
         )
 
     if jump_operator_design == "hamiltonian_outside_monitor_inside":
-        monitor_terms_by_id = {int(term.term_id): term for term in monitor_kinetic_terms}
-        jump_terms_by_id = {int(term.term_id): term for term in jump_kinetic_terms}
-        all_jump_ids = sorted(set(monitor_terms_by_id) | set(jump_terms_by_id))
+        outside_terms = _jump_terms_excluding_monitor_terms(
+            jump_kinetic_terms=jump_kinetic_terms,
+            monitor_kinetic_terms=monitor_kinetic_terms,
+        )
+        monitor_term_groups = _group_kinetic_terms_for_jumps(
+            monitor_kinetic_terms,
+            grouping=kinetic_jump_grouping,
+            max_terms_per_jump=max_kinetic_terms_per_jump,
+            max_support_size=max_kinetic_jump_support_size,
+        )
+        outside_term_groups = _group_kinetic_terms_for_jumps(
+            outside_terms,
+            grouping=kinetic_jump_grouping,
+            max_terms_per_jump=max_kinetic_terms_per_jump,
+            max_support_size=max_kinetic_jump_support_size,
+        )
 
-        jumps: list[Any] = []
+        monitor_jumps = tuple(
+            _lazy_local_term_group_left_multiply_monitor(
+                model=model,
+                build_result=build_result,
+                terms=term_group,
+                builder=builder,
+                backend=backend,
+                local_term_cache=local_term_cache,
+                monitor=monitor,
+            )
+            for term_group in monitor_term_groups
+        )
+        outside_jumps = tuple(
+            _build_local_kinetic_plus_potential_group(
+                model=model,
+                build_result=build_result,
+                kinetic_terms=term_group,
+                potential_terms_by_plaquette_id=potential_terms_by_plaquette_id,
+                builder=builder,
+                backend=backend,
+                local_term_cache=local_term_cache,
+            )
+            for term_group in outside_term_groups
+        )
 
-        for plaquette_id in all_jump_ids:
-            if plaquette_id in monitor_terms_by_id:
-                kinetic = _local_term_matrix(
-                    model=model,
-                    build_result=build_result,
-                    term=monitor_terms_by_id[plaquette_id],
-                    builder=builder,
-                    backend=backend,
-                    local_term_cache=local_term_cache,
-                )
-                jumps.append(_left_multiply_sparse_csr(kinetic, monitor))
-            else:
-                kinetic_term = jump_terms_by_id[plaquette_id]
-                local_hamiltonian = _build_local_kinetic_plus_potential(
-                    model=model,
-                    build_result=build_result,
-                    kinetic_term=kinetic_term,
-                    potential_terms_by_plaquette_id=potential_terms_by_plaquette_id,
-                    builder=builder,
-                    backend=backend,
-                    local_term_cache=local_term_cache,
-                )
-                jumps.append(local_hamiltonian)
-
-        return tuple(jumps)
+        return monitor_jumps + outside_jumps
 
     raise ValueError(f"Unknown jump_operator_design: {jump_operator_design!r}")
 
@@ -2039,30 +2211,40 @@ def _build_component_decomposition_jump_operators(
     backend: SparseBackendName,
     jump_operator_design: JumpOperatorDesign,
     local_term_cache: _LocalTermMatrixCache | None = None,
+    kinetic_jump_grouping: KineticJumpGrouping = "individual",
+    max_kinetic_terms_per_jump: int | None = None,
+    max_kinetic_jump_support_size: int | None = None,
 ) -> tuple[Any, ...]:
     """Build jumps for frustration-free monitor decomposition.
 
     Component jumps already contain the dressed inside jumps
 
-        J_{p,i} = K_p M_{R_i}.
+        J_{G,i} = (sum_{p in G} K_p) M_{R_i}.
 
-    Depending on jump_operator_design, we may additionally add global
+    Depending on jump_operator_design, we may additionally add grouped global
     outside/crossing jumps selected by jump_kinetic_terms.
     """
     if jump_operator_design == "kinetic_times_monitor":
         return component_jumps
 
+    outside_term_groups = _group_kinetic_terms_for_jumps(
+        jump_kinetic_terms,
+        grouping=kinetic_jump_grouping,
+        max_terms_per_jump=max_kinetic_terms_per_jump,
+        max_support_size=max_kinetic_jump_support_size,
+    )
+
     if jump_operator_design == "kinetic_outside_monitor_inside":
         outside_jumps = tuple(
-            _local_term_matrix(
+            _sum_local_term_group(
                 model=model,
                 build_result=build_result,
-                term=kinetic_term,
+                terms=term_group,
                 builder=builder,
                 backend=backend,
                 local_term_cache=local_term_cache,
             )
-            for kinetic_term in jump_kinetic_terms
+            for term_group in outside_term_groups
         )
 
         return component_jumps + outside_jumps
@@ -2079,16 +2261,16 @@ def _build_component_decomposition_jump_operators(
 
     if jump_operator_design == "hamiltonian_outside_monitor_inside":
         outside_jumps = tuple(
-            _build_local_kinetic_plus_potential(
+            _build_local_kinetic_plus_potential_group(
                 model=model,
                 build_result=build_result,
-                kinetic_term=kinetic_term,
+                kinetic_terms=term_group,
                 potential_terms_by_plaquette_id=potential_terms_by_plaquette_id,
                 builder=builder,
                 backend=backend,
                 local_term_cache=local_term_cache,
             )
-            for kinetic_term in jump_kinetic_terms
+            for term_group in outside_term_groups
         )
 
         return component_jumps + outside_jumps
@@ -2221,6 +2403,260 @@ def _select_jump_terms(
     raise ValueError(f"Unknown jump plaquette policy: {policy!r}")
 
 
+def _validate_kinetic_jump_grouping_options(
+    *,
+    grouping: KineticJumpGrouping,
+    max_terms_per_jump: int | None,
+    max_support_size: int | None,
+) -> None:
+    if grouping not in {"individual", "single_sum", "fixed_size", "support_greedy"}:
+        raise ValueError(f"Unknown kinetic_jump_grouping: {grouping!r}")
+
+    if max_terms_per_jump is not None and max_terms_per_jump <= 0:
+        raise ValueError("max_kinetic_terms_per_jump must be positive when provided.")
+
+    if max_support_size is not None and max_support_size <= 0:
+        raise ValueError("max_kinetic_jump_support_size must be positive when provided.")
+
+    if grouping == "fixed_size" and max_terms_per_jump is None:
+        raise ValueError('kinetic_jump_grouping="fixed_size" requires max_kinetic_terms_per_jump.')
+
+    if grouping == "support_greedy" and max_terms_per_jump is None and max_support_size is None:
+        raise ValueError(
+            'kinetic_jump_grouping="support_greedy" requires at least one of '
+            "max_kinetic_terms_per_jump or max_kinetic_jump_support_size."
+        )
+
+
+def _kinetic_term_support_set(term: LocalTermDescriptor) -> frozenset[int]:
+    support = getattr(term, "support_link_set", None)
+    if support is not None:
+        return frozenset(int(index) for index in support)
+
+    support_links = getattr(term, "support_links", ())
+    return frozenset(int(index) for index in support_links)
+
+
+def _group_kinetic_terms_for_jumps(
+    terms: tuple[LocalTermDescriptor, ...],
+    *,
+    grouping: KineticJumpGrouping,
+    max_terms_per_jump: int | None = None,
+    max_support_size: int | None = None,
+) -> tuple[tuple[LocalTermDescriptor, ...], ...]:
+    """Group local kinetic terms into summed Lindblad jump left factors.
+
+    Grouping is deliberately a construction-level compression knob: replacing
+    many jumps ``K_p M`` by one jump ``(sum_p K_p) M`` preserves the target
+    dark condition, but it can enlarge the common kernel.  The default
+    ``individual`` mode therefore reproduces the old one-plaquette-one-jump
+    behavior exactly.
+    """
+
+    _validate_kinetic_jump_grouping_options(
+        grouping=grouping,
+        max_terms_per_jump=max_terms_per_jump,
+        max_support_size=max_support_size,
+    )
+
+    if len(terms) == 0:
+        return ()
+
+    if grouping == "individual":
+        return tuple((term,) for term in terms)
+
+    if grouping == "single_sum":
+        return (tuple(terms),)
+
+    if grouping == "fixed_size":
+        chunk_size = int(max_terms_per_jump)
+        return tuple(
+            tuple(terms[start : start + chunk_size]) for start in range(0, len(terms), chunk_size)
+        )
+
+    if grouping == "support_greedy":
+        groups: list[tuple[LocalTermDescriptor, ...]] = []
+        current: list[LocalTermDescriptor] = []
+        current_support: set[int] = set()
+
+        for term in terms:
+            term_support = set(_kinetic_term_support_set(term))
+            candidate_len = len(current) + 1
+            candidate_support = current_support | term_support
+
+            exceeds_terms = max_terms_per_jump is not None and candidate_len > max_terms_per_jump
+            exceeds_support = (
+                max_support_size is not None and len(candidate_support) > max_support_size
+            )
+
+            if current and (exceeds_terms or exceeds_support):
+                groups.append(tuple(current))
+                current = [term]
+                current_support = set(term_support)
+            else:
+                current.append(term)
+                current_support = candidate_support
+
+        if current:
+            groups.append(tuple(current))
+
+        return tuple(groups)
+
+    raise ValueError(f"Unknown kinetic_jump_grouping: {grouping!r}")
+
+
+def _plaquette_id_group_from_terms(
+    terms: tuple[LocalTermDescriptor, ...],
+) -> tuple[int, ...]:
+    return tuple(int(term.term_id) for term in terms)
+
+
+def _plaquette_id_groups_from_term_groups(
+    term_groups: tuple[tuple[LocalTermDescriptor, ...], ...],
+) -> tuple[tuple[int, ...], ...]:
+    return tuple(_plaquette_id_group_from_terms(group) for group in term_groups)
+
+
+def _jump_terms_excluding_monitor_terms(
+    *,
+    jump_kinetic_terms: tuple[LocalTermDescriptor, ...],
+    monitor_kinetic_terms: tuple[LocalTermDescriptor, ...],
+) -> tuple[LocalTermDescriptor, ...]:
+    monitor_ids = {int(term.term_id) for term in monitor_kinetic_terms}
+    return tuple(term for term in jump_kinetic_terms if int(term.term_id) not in monitor_ids)
+
+
+def _kinetic_jump_plaquette_groups_for_construction(
+    *,
+    monitor_kinetic_terms: tuple[LocalTermDescriptor, ...],
+    jump_kinetic_terms: tuple[LocalTermDescriptor, ...],
+    monitor_components: tuple[ReducedIZMonitorComponent, ...] | None,
+    jump_operator_design: JumpOperatorDesign,
+    kinetic_jump_grouping: KineticJumpGrouping,
+    max_kinetic_terms_per_jump: int | None,
+    max_kinetic_jump_support_size: int | None,
+) -> tuple[tuple[tuple[int, ...], ...], tuple[tuple[int, ...], ...]]:
+    if monitor_components is not None:
+        monitor_groups = tuple(
+            group
+            for component in monitor_components
+            for group in (
+                component.jump_plaquette_id_groups
+                if component.jump_plaquette_id_groups
+                else tuple((plaquette_id,) for plaquette_id in component.jump_plaquette_ids)
+            )
+        )
+    elif jump_operator_design == "kinetic_times_monitor":
+        monitor_groups = _plaquette_id_groups_from_term_groups(
+            _group_kinetic_terms_for_jumps(
+                jump_kinetic_terms,
+                grouping=kinetic_jump_grouping,
+                max_terms_per_jump=max_kinetic_terms_per_jump,
+                max_support_size=max_kinetic_jump_support_size,
+            )
+        )
+    elif jump_operator_design in {
+        "kinetic_outside_monitor_inside",
+        "hamiltonian_outside_monitor_inside",
+    }:
+        monitor_groups = _plaquette_id_groups_from_term_groups(
+            _group_kinetic_terms_for_jumps(
+                monitor_kinetic_terms,
+                grouping=kinetic_jump_grouping,
+                max_terms_per_jump=max_kinetic_terms_per_jump,
+                max_support_size=max_kinetic_jump_support_size,
+            )
+        )
+    else:
+        monitor_groups = ()
+
+    if jump_operator_design in {
+        "kinetic_outside_monitor_inside",
+        "hamiltonian_outside_monitor_inside",
+    }:
+        outside_terms = (
+            jump_kinetic_terms
+            if monitor_components is not None
+            else _jump_terms_excluding_monitor_terms(
+                jump_kinetic_terms=jump_kinetic_terms,
+                monitor_kinetic_terms=monitor_kinetic_terms,
+            )
+        )
+        global_groups = _plaquette_id_groups_from_term_groups(
+            _group_kinetic_terms_for_jumps(
+                outside_terms,
+                grouping=kinetic_jump_grouping,
+                max_terms_per_jump=max_kinetic_terms_per_jump,
+                max_support_size=max_kinetic_jump_support_size,
+            )
+        )
+    else:
+        global_groups = ()
+
+    return monitor_groups, global_groups
+
+
+def _sum_local_term_group(
+    *,
+    model: Any,
+    build_result: ModelBuildResult | None,
+    terms: tuple[LocalTermDescriptor, ...],
+    builder: HamiltonianBuilderName,
+    backend: SparseBackendName,
+    shape: tuple[int, int] | None = None,
+    local_term_cache: _LocalTermMatrixCache | None = None,
+) -> sp.csr_array:
+    if len(terms) == 0:
+        if shape is None:
+            raise ValueError("Cannot infer shape for an empty local term group.")
+        return sp.csr_array(shape, dtype=np.complex128)
+
+    matrices = tuple(
+        _local_term_matrix(
+            model=model,
+            build_result=build_result,
+            term=term,
+            builder=builder,
+            backend=backend,
+            local_term_cache=local_term_cache,
+        )
+        for term in terms
+    )
+
+    total = sp.csr_array(matrices[0].shape, dtype=np.complex128)
+    for matrix in matrices:
+        total = total + matrix
+
+    return total.tocsr()
+
+
+def _build_local_kinetic_plus_potential_group(
+    *,
+    model: Any,
+    build_result: ModelBuildResult | None,
+    kinetic_terms: tuple[LocalTermDescriptor, ...],
+    potential_terms_by_plaquette_id: dict[int, LocalTermDescriptor],
+    builder: HamiltonianBuilderName,
+    backend: SparseBackendName,
+    local_term_cache: _LocalTermMatrixCache | None = None,
+) -> sp.csr_array:
+    local_hamiltonian_terms: list[LocalTermDescriptor] = []
+    for kinetic_term in kinetic_terms:
+        local_hamiltonian_terms.append(kinetic_term)
+        potential_term = potential_terms_by_plaquette_id.get(int(kinetic_term.term_id))
+        if potential_term is not None:
+            local_hamiltonian_terms.append(potential_term)
+
+    return _sum_local_term_group(
+        model=model,
+        build_result=build_result,
+        terms=tuple(local_hamiltonian_terms),
+        builder=builder,
+        backend=backend,
+        local_term_cache=local_term_cache,
+    )
+
+
 def _sum_local_terms(
     *,
     model: Any,
@@ -2260,22 +2696,28 @@ def _jump_residuals(
 def _component_jump_residuals_from_monitor_state(
     *,
     monitor_state: NDArray[np.complex128],
-    kinetic_terms: tuple[LocalTermDescriptor, ...],
+    kinetic_terms: tuple[LocalTermDescriptor, ...] | None = None,
+    kinetic_term_groups: tuple[tuple[LocalTermDescriptor, ...], ...] | None = None,
     model: Any,
-    build_result: ModelBuildResult,
+    build_result: ModelBuildResult | None,
     builder: HamiltonianBuilderName,
     backend: SparseBackendName,
     local_term_cache: _LocalTermMatrixCache | None = None,
 ) -> tuple[float, ...]:
-    """Return ``||K_p M_i psi||`` without materializing ``K_p M_i``."""
+    """Return ``||(sum_p K_p) M_i psi||`` for grouped kinetic jumps."""
+
+    if kinetic_term_groups is None:
+        if kinetic_terms is None:
+            raise TypeError("kinetic_terms or kinetic_term_groups is required")
+        kinetic_term_groups = tuple((kinetic_term,) for kinetic_term in kinetic_terms)
 
     return tuple(
         float(
             np.linalg.norm(
-                _local_term_matrix(
+                _sum_local_term_group(
                     model=model,
                     build_result=build_result,
-                    term=kinetic_term,
+                    terms=kinetic_term_group,
                     builder=builder,
                     backend=backend,
                     local_term_cache=local_term_cache,
@@ -2283,7 +2725,7 @@ def _component_jump_residuals_from_monitor_state(
                 @ monitor_state
             )
         )
-        for kinetic_term in kinetic_terms
+        for kinetic_term_group in kinetic_term_groups
     )
 
 
@@ -3185,6 +3627,9 @@ def _build_reduced_iz_monitor_components(
     include_collective_cancellation: bool = True,
     use_collective_coefficients: bool = True,
     compute_jump_residuals: bool = True,
+    kinetic_jump_grouping: KineticJumpGrouping = "individual",
+    max_kinetic_terms_per_jump: int | None = None,
+    max_kinetic_jump_support_size: int | None = None,
     timing_collector: dict[str, float] | None = None,
 ) -> tuple[
     sp.csr_array,
@@ -3236,7 +3681,7 @@ def _build_reduced_iz_monitor_components(
     total_monitor_terms: list[Any] = []
     total_monitor_state = np.zeros(shape[0], dtype=np.complex128)
     component_specs: list[dict[str, Any]] = []
-    jump_specs: list[tuple[LocalTermDescriptor, Any]] = []
+    jump_specs: list[tuple[tuple[LocalTermDescriptor, ...], Any]] = []
 
     for component_group, report_group in zip(component_groups, report_groups, strict=True):
         component_id = int(component_group.component_id)
@@ -3288,6 +3733,12 @@ def _build_reduced_iz_monitor_components(
             kinetic_term_supports,
             component_support_set,
         )
+        component_kinetic_term_groups = _group_kinetic_terms_for_jumps(
+            component_kinetic_terms,
+            grouping=kinetic_jump_grouping,
+            max_terms_per_jump=max_kinetic_terms_per_jump,
+            max_support_size=max_kinetic_jump_support_size,
+        )
 
         component_potential_terms = _select_terms_inside_cached_supports(
             potential_term_supports,
@@ -3326,9 +3777,9 @@ def _build_reduced_iz_monitor_components(
             component_monitor_state = component_monitor @ state
 
         jump_indices: list[int] = []
-        for kinetic_term in component_kinetic_terms:
+        for kinetic_term_group in component_kinetic_term_groups:
             jump_indices.append(len(jump_specs))
-            jump_specs.append((kinetic_term, component_monitor))
+            jump_specs.append((kinetic_term_group, component_monitor))
 
         component_specs.append(
             {
@@ -3339,6 +3790,7 @@ def _build_reduced_iz_monitor_components(
                 "support": component_support,
                 "support_plaquette_ids": component_support_plaquette_ids,
                 "kinetic_terms": component_kinetic_terms,
+                "kinetic_term_groups": component_kinetic_term_groups,
                 "potential_terms": component_potential_terms,
                 "z_value": component_z_value,
                 "jump_indices": tuple(jump_indices),
@@ -3356,16 +3808,16 @@ def _build_reduced_iz_monitor_components(
 
     component_stage_start = time.perf_counter()
     jumps = [
-        _lazy_local_term_left_multiply_monitor(
+        _lazy_local_term_group_left_multiply_monitor(
             model=model,
             build_result=build_result,
-            term=kinetic_term,
+            terms=kinetic_term_group,
             builder=builder,
             backend=backend,
             local_term_cache=local_term_cache,
             monitor=component_monitor,
         )
-        for kinetic_term, component_monitor in jump_specs
+        for kinetic_term_group, component_monitor in jump_specs
     ]
     _record_construction_stage(
         timing_collector,
@@ -3381,15 +3833,16 @@ def _build_reduced_iz_monitor_components(
         component_monitor_residual = float(np.linalg.norm(component_monitor_state))
         report_group = component_spec["report_group"]
         component_kinetic_terms = component_spec["kinetic_terms"]
+        component_kinetic_term_groups = component_spec["kinetic_term_groups"]
         component_potential_terms = component_spec["potential_terms"]
 
         if compute_jump_residuals:
             if component_monitor_residual <= residual_tolerance:
-                component_jump_residuals = tuple(0.0 for _ in component_kinetic_terms)
+                component_jump_residuals = tuple(0.0 for _ in component_kinetic_term_groups)
             else:
                 component_jump_residuals = _component_jump_residuals_from_monitor_state(
                     monitor_state=component_monitor_state,
-                    kinetic_terms=component_kinetic_terms,
+                    kinetic_term_groups=component_kinetic_term_groups,
                     model=model,
                     build_result=build_result,
                     builder=builder,
@@ -3409,6 +3862,9 @@ def _build_reduced_iz_monitor_components(
                 monitor_plaquette_ids=tuple(int(term.term_id) for term in component_kinetic_terms),
                 jump_plaquette_ids=tuple(int(term.term_id) for term in component_kinetic_terms),
                 z_value=component_spec["z_value"],
+                jump_plaquette_id_groups=_plaquette_id_groups_from_term_groups(
+                    component_kinetic_term_groups
+                ),
                 n_potential_terms=(
                     len(component_potential_terms)
                     if reduced_iz_monitor_content == "offdiagonal_plus_potential"

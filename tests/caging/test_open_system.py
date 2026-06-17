@@ -12,11 +12,13 @@ from qlinks.caging.classification import (
 from qlinks.caging.open_system import (
     CageLindbladConstruction,
     _build_component_decomposition_jump_operators,
+    _build_jump_operators,
     _build_local_rdm_block_reset_jump_operators,
     _build_local_rdm_parent_projector_jump_operators,
     _build_monitor_recycler_jump_operators,
     _build_reduced_iz_monitor_from_reports,
     _build_reduced_iz_operator_matrix,
+    _group_kinetic_terms_for_jumps,
     _group_local_transitions_by_source,
     _group_reduced_iz_reports_for_monitor,
     _infer_sharp_potential_value,
@@ -79,8 +81,13 @@ def _fake_construction() -> CageLindbladConstruction:
         jump_operator_design="kinetic_times_monitor",
         monitor_plaquette_policy="strict_inside",
         jump_plaquette_policy="outside_or_crossing",
+        kinetic_jump_grouping="individual",
+        max_kinetic_terms_per_jump=None,
+        max_kinetic_jump_support_size=None,
         monitor_plaquette_ids=(),
         jump_plaquette_ids=(),
+        monitor_jump_plaquette_id_groups=(),
+        global_jump_plaquette_id_groups=(),
         kinetic_terms_monitor=(),
         potential_terms_monitor=(),
         kinetic_terms_jump=(),
@@ -573,6 +580,43 @@ def test_component_decomposition_kinetic_outside_appends_bare_kinetic():
     np.testing.assert_allclose(jumps[2].toarray(), 5.0 * np.eye(2))
 
 
+def test_group_kinetic_terms_for_jumps_fixed_size():
+    terms = (_FakeTerm(1), _FakeTerm(2), _FakeTerm(3), _FakeTerm(4), _FakeTerm(5))
+
+    groups = _group_kinetic_terms_for_jumps(
+        terms,
+        grouping="fixed_size",
+        max_terms_per_jump=2,
+    )
+
+    assert tuple(tuple(term.term_id for term in group) for group in groups) == (
+        (1, 2),
+        (3, 4),
+        (5,),
+    )
+
+
+def test_component_decomposition_kinetic_outside_can_group_bare_kinetic():
+    component_jump = sp.csr_array(np.eye(2, dtype=np.complex128))
+    model = _FakeModel()
+
+    jumps = _build_component_decomposition_jump_operators(
+        model=model,
+        build_result=None,
+        component_jumps=(component_jump,),
+        jump_kinetic_terms=(_FakeTerm(3), _FakeTerm(5)),
+        potential_terms_by_plaquette_id={},
+        builder="sparse",
+        backend="scipy",
+        jump_operator_design="kinetic_outside_monitor_inside",
+        kinetic_jump_grouping="single_sum",
+    )
+
+    assert len(jumps) == 2
+    np.testing.assert_allclose(jumps[0].toarray(), np.eye(2))
+    np.testing.assert_allclose(jumps[1].toarray(), 8.0 * np.eye(2))
+
+
 class _FakeHamiltonianModel:
     def build_local_term(self, term, build_result, *, builder, backend):
         del build_result, builder, backend
@@ -621,6 +665,52 @@ def test_component_decomposition_hamiltonian_outside_appends_kinetic_plus_potent
 
     expected_outside = 33.0 * np.eye(2, dtype=np.complex128)
     np.testing.assert_allclose(jumps[1].toarray(), expected_outside)
+
+
+def test_jump_operator_builder_groups_monitor_and_outside_jumps():
+    model = _FakeHamiltonianModel()
+    build_result = SimpleNamespace(
+        hamiltonian=sp.csr_array((2, 2), dtype=np.complex128),
+        basis=None,
+    )
+    monitor = sp.identity(2, format="csr", dtype=np.complex128)
+    monitor_terms = (
+        LocalTermDescriptor(
+            term_id=1,
+            term_kind="plaquette",
+            operator_kind="kinetic",
+            support_links=(0,),
+        ),
+        LocalTermDescriptor(
+            term_id=2,
+            term_kind="plaquette",
+            operator_kind="kinetic",
+            support_links=(1,),
+        ),
+    )
+    outside_term = LocalTermDescriptor(
+        term_id=3,
+        term_kind="plaquette",
+        operator_kind="kinetic",
+        support_links=(2,),
+    )
+
+    jumps = _build_jump_operators(
+        model=model,
+        build_result=build_result,
+        monitor=monitor,
+        monitor_kinetic_terms=monitor_terms,
+        jump_kinetic_terms=monitor_terms + (outside_term,),
+        potential_terms_by_plaquette_id={},
+        builder="sparse",
+        backend="scipy",
+        jump_operator_design="kinetic_outside_monitor_inside",
+        kinetic_jump_grouping="single_sum",
+    )
+
+    assert len(jumps) == 2
+    np.testing.assert_allclose(jumps[0].toarray(), 3.0 * np.eye(2))
+    np.testing.assert_allclose(jumps[1].toarray(), 3.0 * np.eye(2))
 
 
 def test_partition_plaquette_terms_by_region_separates_inside_crossing_outside():
@@ -941,8 +1031,13 @@ def test_cage_lindblad_construction_recycler_readouts_describe_selected_recycler
         jump_operator_design="monitor_recycler",
         monitor_plaquette_policy="strict_inside",
         jump_plaquette_policy="outside_or_crossing",
+        kinetic_jump_grouping="individual",
+        max_kinetic_terms_per_jump=None,
+        max_kinetic_jump_support_size=None,
         monitor_plaquette_ids=(),
         jump_plaquette_ids=(),
+        monitor_jump_plaquette_id_groups=(),
+        global_jump_plaquette_id_groups=(),
         kinetic_terms_monitor=(),
         potential_terms_monitor=(),
         kinetic_terms_jump=(),
