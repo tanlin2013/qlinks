@@ -13,7 +13,13 @@ from qlinks.variables import VariableLayout
 
 ConditionLike = Constraint | SectorCondition
 PartialCheck = Callable[[npt.NDArray[np.int64], npt.NDArray[np.bool_]], bool]
-VariableOrderStrategy = Literal["auto", "layout", "degree"]
+VariableOrderStrategy = Literal[
+    "auto",
+    "layout",
+    "degree",
+    "weighted_degree",
+    "constraint_closure",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,9 +35,11 @@ class DFSBasisSolver:
     # Explicit order. If provided, this overrides variable_order_strategy.
     variable_order: npt.ArrayLike | None = None
 
-    # "auto" currently aliases "degree".
+    # "auto" currently aliases "constraint_closure".
     # "layout" means [0, 1, 2, ...].
     # "degree" means variables appearing in more constraints/sectors first.
+    # "weighted_degree" favors variables in smaller constraint supports.
+    # "constraint_closure" greedily clusters variables that complete local constraints early.
     variable_order_strategy: VariableOrderStrategy = "auto"
 
     def solve(
@@ -97,8 +105,12 @@ class DFSBasisSolver:
                 return
 
             if depth == n:
-                if self._full_check(config, all_conditions):
-                    states.append(config.copy())
+                # Every non-empty condition support is checked exactly when the
+                # last variable in that support is assigned.  Zero-variable
+                # conditions are checked once before DFS starts.  Re-running all
+                # full checks at every leaf is therefore redundant and costly for
+                # large bases with many local constraints.
+                states.append(config.copy())
                 return
 
             variable_index = int(variable_order[depth])
@@ -156,7 +168,7 @@ class DFSBasisSolver:
         strategy: VariableOrderStrategy,
     ) -> npt.NDArray[np.int64]:
         if strategy == "auto":
-            strategy = "degree"
+            strategy = "constraint_closure"
 
         if strategy == "layout":
             return np.arange(layout.n_variables, dtype=np.int64)
@@ -167,7 +179,22 @@ class DFSBasisSolver:
                 condition_infos=condition_infos,
             )
 
-        raise ValueError("variable_order_strategy must be one of 'auto', 'layout', or 'degree'.")
+        if strategy == "weighted_degree":
+            return cls._weighted_degree_variable_order(
+                layout=layout,
+                condition_infos=condition_infos,
+            )
+
+        if strategy == "constraint_closure":
+            return cls._constraint_closure_variable_order(
+                layout=layout,
+                condition_infos=condition_infos,
+            )
+
+        raise ValueError(
+            "variable_order_strategy must be one of 'auto', 'layout', 'degree', "
+            "'weighted_degree', or 'constraint_closure'."
+        )
 
     @staticmethod
     def _condition_affected_variables(
@@ -214,6 +241,129 @@ class DFSBasisSolver:
 
         # Descending score, deterministic tie-break by variable index.
         return np.lexsort((np.arange(layout.n_variables), -scores)).astype(np.int64)
+
+    @classmethod
+    def _weighted_degree_variable_order(
+        cls,
+        *,
+        layout: VariableLayout,
+        condition_infos: Sequence[_ConditionInfo],
+    ) -> npt.NDArray[np.int64]:
+        """Static weighted-degree heuristic.
+
+        Compared with ``degree``, this gives more weight to small local
+        constraints.  Completing a small constraint early is usually more useful
+        for pruning than touching a very large sector condition early.
+        """
+        scores = np.zeros(layout.n_variables, dtype=np.float64)
+
+        for info in condition_infos:
+            support_size = int(info.affected_variables.size)
+            if support_size == 0:
+                continue
+            weight = 1.0 / float(support_size)
+            for variable_index in info.affected_variables:
+                scores[int(variable_index)] += weight
+
+        # Descending score, deterministic tie-break by variable index.
+        return np.lexsort((np.arange(layout.n_variables), -scores)).astype(np.int64)
+
+    @classmethod
+    def _constraint_closure_variable_order(
+        cls,
+        *,
+        layout: VariableLayout,
+        condition_infos: Sequence[_ConditionInfo],
+    ) -> npt.NDArray[np.int64]:
+        """Greedy support-closure heuristic.
+
+        Local constraints prune only after enough of their support is assigned.
+        A pure degree heuristic may scatter assignments across the lattice and
+        postpone those decisive checks.  This heuristic builds a deterministic
+        static order by repeatedly choosing the unassigned variable that most
+        strongly reduces the remaining support of nearby conditions, with a
+        large bonus for completing a condition support.
+        """
+        n_variables = int(layout.n_variables)
+        remaining_variables = set(range(n_variables))
+        order: list[int] = []
+
+        supports = tuple(
+            np.asarray(info.affected_variables, dtype=np.int64)
+            for info in condition_infos
+            if info.affected_variables.size != 0
+        )
+
+        if not supports:
+            return np.arange(n_variables, dtype=np.int64)
+
+        affected_condition_ids_by_variable: list[list[int]] = [[] for _ in range(n_variables)]
+        for condition_id, support in enumerate(supports):
+            for variable_index in support:
+                affected_condition_ids_by_variable[int(variable_index)].append(condition_id)
+
+        base_scores = cls._weighted_degree_scores(
+            n_variables=n_variables,
+            supports=supports,
+        )
+
+        remaining_support_sizes = np.asarray([support.size for support in supports], dtype=np.int64)
+
+        while remaining_variables:
+            best_key: tuple[float, float, float, int, int] | None = None
+            best_variable: int | None = None
+
+            for variable_index in remaining_variables:
+                completed = 0
+                closeness = 0.0
+                for condition_id in affected_condition_ids_by_variable[variable_index]:
+                    remaining_after = int(remaining_support_sizes[condition_id] - 1)
+                    if remaining_after == 0:
+                        completed += 1
+                    closeness += 1.0 / float(remaining_after + 1)
+
+                # Larger entries are better, except the final variable-index
+                # tie-break, where smaller is better.  The local-space term is a
+                # fail-first tie-break for heterogeneous layouts.
+                local_dimension = int(layout.local_space(variable_index).dim)
+                key = (
+                    float(completed),
+                    closeness,
+                    float(base_scores[variable_index]),
+                    -local_dimension,
+                    -variable_index,
+                )
+
+                if best_key is None or key > best_key:
+                    best_key = key
+                    best_variable = variable_index
+
+            assert best_variable is not None
+
+            order.append(best_variable)
+            remaining_variables.remove(best_variable)
+            for condition_id in affected_condition_ids_by_variable[best_variable]:
+                remaining_support_sizes[condition_id] -= 1
+
+        return np.asarray(order, dtype=np.int64)
+
+    @staticmethod
+    def _weighted_degree_scores(
+        *,
+        n_variables: int,
+        supports: Sequence[npt.NDArray[np.int64]],
+    ) -> npt.NDArray[np.float64]:
+        scores = np.zeros(n_variables, dtype=np.float64)
+
+        for support in supports:
+            support_size = int(support.size)
+            if support_size == 0:
+                continue
+            weight = 1.0 / float(support_size)
+            for variable_index in support:
+                scores[int(variable_index)] += weight
+
+        return scores
 
     @staticmethod
     def _ordered_local_values(

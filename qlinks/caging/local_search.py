@@ -1086,16 +1086,15 @@ class _LocalQDMCountConstraint:
         return True
 
 
-def _qdm_local_basis_constraints_and_order(
+def _qdm_local_basis_constraints(
     model: object,
     region: LocalQDMRegion,
     *,
     layout: VariableLayout,
-) -> tuple[tuple[_LocalQDMCountConstraint, ...], npt.NDArray[np.int64]]:
-    """Build DFS constraints/order for local QDM basis enumeration."""
+) -> tuple[_LocalQDMCountConstraint, ...]:
+    """Build DFS constraints for local QDM basis enumeration."""
     link_ids = np.asarray(region.link_ids, dtype=np.int64)
     local_index_by_link = {int(link_id): i for i, link_id in enumerate(link_ids)}
-    n_local = int(link_ids.size)
 
     touched_sites = np.unique(
         np.asarray(
@@ -1106,7 +1105,6 @@ def _qdm_local_basis_constraints_and_order(
     closed_site_set = set(int(site_id) for site_id in region.closed_site_ids)
     required_count = int(getattr(model, "required_count", 1))
 
-    site_local_links: dict[int, npt.NDArray[np.int64]] = {}
     constraints: list[_LocalQDMCountConstraint] = []
     for site_id in touched_sites:
         incident_local = [
@@ -1115,7 +1113,6 @@ def _qdm_local_basis_constraints_and_order(
             if int(link_id) in local_index_by_link
         ]
         local_indices = np.asarray(incident_local, dtype=np.int64)
-        site_local_links[int(site_id)] = local_indices
 
         is_closed = int(site_id) in closed_site_set
         constraints.append(
@@ -1131,17 +1128,7 @@ def _qdm_local_basis_constraints_and_order(
             )
         )
 
-    # Keep the previous local-search heuristic but pass it into the shared DFS.
-    # Closed sites get a larger weight because they have exact lower/upper
-    # bounds; boundary sites only impose the local at-most rule.
-    scores = np.zeros(n_local, dtype=np.int64)
-    for site_id in touched_sites:
-        weight = 2 if int(site_id) in closed_site_set else 1
-        for local_index in site_local_links[int(site_id)]:
-            scores[int(local_index)] += weight
-    variable_order = np.lexsort((np.arange(n_local), -scores)).astype(np.int64)
-
-    return tuple(constraints), variable_order
+    return tuple(constraints)
 
 
 def enumerate_qdm_local_basis(
@@ -1167,7 +1154,7 @@ def enumerate_qdm_local_basis(
     n_local = int(link_ids.size)
     layout = _local_binary_layout(n_local)
 
-    constraints, variable_order = _qdm_local_basis_constraints_and_order(
+    constraints = _qdm_local_basis_constraints(
         model,
         region,
         layout=layout,
@@ -1181,10 +1168,7 @@ def enumerate_qdm_local_basis(
         tuple(model.make_sectors()) if (include_sectors_when_full and full_link_region) else ()
     )
 
-    return DFSBasisSolver(
-        sort=sort,
-        variable_order=variable_order,
-    ).solve(
+    return DFSBasisSolver(sort=sort).solve(
         layout,
         constraints=constraints,
         sectors=sectors,

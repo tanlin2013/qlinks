@@ -398,6 +398,61 @@ def test_dfs_base_constraint_default_affects_all_variables() -> None:
     )
 
 
+@dataclass
+class LeafExplodingConstraint:
+    layout: VariableLayout
+    affected: tuple[int, ...]
+    target_sum: int
+    name: str = "leaf_exploding"
+
+    def __post_init__(self) -> None:
+        self.partial_calls = 0
+        self.full_calls = 0
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return np.asarray(self.affected, dtype=np.int64)
+
+    def check(self, config: npt.ArrayLike) -> ConstraintResult:
+        self.full_calls += 1
+        raise AssertionError("DFS should not re-run full leaf checks.")
+
+    def is_satisfied(self, config: npt.ArrayLike) -> bool:
+        return self.check(config).satisfied
+
+    def partial_check(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> bool:
+        self.partial_calls += 1
+        arr = np.asarray(config, dtype=np.int64)
+        assigned = np.asarray(assigned_mask, dtype=bool)
+        affected = np.asarray(self.affected, dtype=np.int64)
+
+        if np.all(assigned[affected]):
+            return int(np.sum(arr[affected])) == self.target_sum
+
+        return True
+
+
+def test_dfs_does_not_repeat_full_checks_at_leaves() -> None:
+    layout = _binary_site_layout(2)
+    constraint = LeafExplodingConstraint(
+        layout=layout,
+        affected=(0, 1),
+        target_sum=1,
+    )
+
+    basis = DFSBasisSolver(sort=True).solve(layout, constraints=(constraint,))
+
+    assert basis.n_states == 2
+    np.testing.assert_array_equal(
+        basis.states,
+        np.array([[0, 1], [1, 0]], dtype=np.int64),
+    )
+    assert constraint.full_calls == 0
+
+
 # ------------------------------------------------------------------
 # Test variable ordering strategies in DFSBasisSolver. The variable order can affect the number of
 # partial checks and thus the performance of the solver, but should not affect the final basis
@@ -484,6 +539,90 @@ def test_dfs_degree_variable_order_strategy() -> None:
         order,
         np.array([2, 0, 1, 3], dtype=np.int64),
     )
+
+
+def test_dfs_weighted_degree_variable_order_strategy() -> None:
+    layout = _binary_site_layout(4)
+
+    conditions = (
+        SupportOnlyConstraint(layout, affected=(0, 1, 2, 3)),
+        SupportOnlyConstraint(layout, affected=(2,)),
+    )
+
+    solver = DFSBasisSolver(variable_order_strategy="weighted_degree")
+    condition_infos = solver._build_condition_infos(
+        n_variables=layout.n_variables,
+        conditions=conditions,
+    )
+
+    order = solver._choose_variable_order(
+        layout=layout,
+        condition_infos=condition_infos,
+        strategy="weighted_degree",
+    )
+
+    np.testing.assert_array_equal(
+        order,
+        np.array([2, 0, 1, 3], dtype=np.int64),
+    )
+
+
+def test_dfs_constraint_closure_variable_order_strategy() -> None:
+    layout = _binary_site_layout(5)
+
+    conditions = (
+        SupportOnlyConstraint(layout, affected=(0, 1, 2)),
+        SupportOnlyConstraint(layout, affected=(2, 3)),
+        SupportOnlyConstraint(layout, affected=(3, 4)),
+    )
+
+    solver = DFSBasisSolver(variable_order_strategy="constraint_closure")
+    condition_infos = solver._build_condition_infos(
+        n_variables=layout.n_variables,
+        conditions=conditions,
+    )
+
+    order = solver._choose_variable_order(
+        layout=layout,
+        condition_infos=condition_infos,
+        strategy="constraint_closure",
+    )
+
+    # The greedy closure heuristic first picks the high weighted-degree bridge
+    # variable 3, then completes the size-2 supports before finishing the
+    # remaining size-3 support.
+    np.testing.assert_array_equal(
+        order,
+        np.array([3, 2, 4, 0, 1], dtype=np.int64),
+    )
+
+
+def test_dfs_auto_variable_order_uses_constraint_closure() -> None:
+    layout = _binary_site_layout(5)
+    conditions = (
+        SupportOnlyConstraint(layout, affected=(0, 1, 2)),
+        SupportOnlyConstraint(layout, affected=(2, 3)),
+        SupportOnlyConstraint(layout, affected=(3, 4)),
+    )
+
+    solver = DFSBasisSolver(variable_order_strategy="auto")
+    condition_infos = solver._build_condition_infos(
+        n_variables=layout.n_variables,
+        conditions=conditions,
+    )
+
+    auto_order = solver._choose_variable_order(
+        layout=layout,
+        condition_infos=condition_infos,
+        strategy="auto",
+    )
+    closure_order = solver._choose_variable_order(
+        layout=layout,
+        condition_infos=condition_infos,
+        strategy="constraint_closure",
+    )
+
+    np.testing.assert_array_equal(auto_order, closure_order)
 
 
 def test_dfs_explicit_variable_order_overrides_strategy() -> None:
