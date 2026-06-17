@@ -2,6 +2,7 @@ from qlinks.constraints.base import (
     BaseConstraint,
     BaseSectorCondition,
     Constraint,
+    ConstraintPropagation,
     ConstraintResult,
     SectorCondition,
     all_satisfied,
@@ -14,7 +15,11 @@ from qlinks.constraints.gauss_law import (
     GaussLawConstraint,
     internal_charge_value,
 )
-from qlinks.constraints.local import FixedValueConstraint, LocalSumConstraint
+from qlinks.constraints.local import (
+    BoundedLocalCountConstraint,
+    FixedValueConstraint,
+    LocalSumConstraint,
+)
 from qlinks.constraints.sectors import ParitySector, TotalValueSector
 from qlinks.constraints.winding import (
     FluxNormalization,
@@ -32,9 +37,11 @@ __all__ = [
     "ChargeNormalization",
     "Constraint",
     "ConstraintCollection",
+    "ConstraintPropagation",
     "ConstraintResult",
     "DimerCoveringConstraint",
     "FluxNormalization",
+    "BoundedLocalCountConstraint",
     "FixedValueConstraint",
     "GaussLawConstraint",
     "LocalSumConstraint",

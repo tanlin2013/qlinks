@@ -6,7 +6,11 @@ from typing import Sequence
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.constraints.base import BaseConstraint, ConstraintResult
+from qlinks.constraints.base import (
+    BaseConstraint,
+    ConstraintPropagation,
+    ConstraintResult,
+)
 from qlinks.lattice import LatticeGraph
 from qlinks.variables import VariableLayout
 
@@ -118,28 +122,54 @@ class DimerCoveringConstraint(BaseConstraint):
         config: npt.ArrayLike,
         assigned_mask: npt.ArrayLike,
     ) -> bool:
+        return self.propagate(config, assigned_mask).consistent
+
+    def propagate(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> ConstraintPropagation:
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)
 
         variable_indices = self._variable_indices
         assigned_local = assigned[variable_indices]
+        unassigned_variables = variable_indices[~assigned_local]
 
-        assigned_count = int(np.count_nonzero(assigned_local))
-        assigned_values = arr[variable_indices[assigned_local]]
-
-        occupied_so_far = int(np.sum(assigned_values))
-        unassigned_count = self._n_incident_links - assigned_count
+        occupied_so_far = int(np.sum(arr[variable_indices[assigned_local]]))
+        unassigned_count = int(unassigned_variables.size)
 
         # Too many dimers already touching this site.
         if occupied_so_far > self.required_count:
-            return False
+            return ConstraintPropagation.contradiction()
 
         # Even filling all remaining incident links cannot reach required_count.
         if occupied_so_far + unassigned_count < self.required_count:
-            return False
+            return ConstraintPropagation.contradiction()
 
-        # If fully assigned, require exact equality.
         if unassigned_count == 0:
-            return occupied_so_far == self.required_count
+            if occupied_so_far != self.required_count:
+                return ConstraintPropagation.contradiction()
+            return ConstraintPropagation.no_change()
 
-        return True
+        forced: list[tuple[int, int]] = []
+
+        # Already reached the required count: all remaining incident links must be empty.
+        if occupied_so_far == self.required_count:
+            forced.extend((int(variable_index), 0) for variable_index in unassigned_variables)
+
+        # Need every remaining incident link to reach the required count.
+        if occupied_so_far + unassigned_count == self.required_count:
+            forced.extend((int(variable_index), 1) for variable_index in unassigned_variables)
+
+        if not forced:
+            return ConstraintPropagation.no_change()
+
+        forced_by_variable: dict[int, int] = {}
+        for variable_index, value in forced:
+            previous = forced_by_variable.get(variable_index)
+            if previous is not None and previous != value:
+                return ConstraintPropagation.contradiction()
+            forced_by_variable[variable_index] = value
+
+        return ConstraintPropagation(forced_assignments=tuple(sorted(forced_by_variable.items())))

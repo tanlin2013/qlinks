@@ -8,11 +8,12 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.basis.basis import Basis
-from qlinks.constraints import Constraint, SectorCondition
+from qlinks.constraints import Constraint, ConstraintPropagation, SectorCondition
 from qlinks.variables import VariableLayout
 
 ConditionLike = Constraint | SectorCondition
 PartialCheck = Callable[[npt.NDArray[np.int64], npt.NDArray[np.bool_]], bool]
+Propagator = Callable[[npt.NDArray[np.int64], npt.NDArray[np.bool_]], ConstraintPropagation]
 VariableOrderStrategy = Literal[
     "auto",
     "layout",
@@ -70,6 +71,10 @@ class DFSBasisSolver:
             n_variables=n,
             condition_infos=condition_infos,
         )
+        propagators_by_variable = self._build_propagator_lookup(
+            n_variables=n,
+            condition_infos=condition_infos,
+        )
 
         # Conditions with no affected variables are global constants.
         # They should be checked once before DFS starts.
@@ -96,42 +101,120 @@ class DFSBasisSolver:
             layout=layout,
             variable_order=variable_order,
         )
-        partial_checks_by_depth = tuple(
-            partial_checks_by_variable[int(variable_index)] for variable_index in variable_order
-        )
 
-        def dfs(depth: int) -> None:
-            if max_states is not None and len(states) >= max_states:
-                return
+        has_propagators = any(propagators_by_variable)
 
-            if depth == n:
-                # Every non-empty condition support is checked exactly when the
-                # last variable in that support is assigned.  Zero-variable
-                # conditions are checked once before DFS starts.  Re-running all
-                # full checks at every leaf is therefore redundant and costly for
-                # large bases with many local constraints.
-                states.append(config.copy())
-                return
+        if not has_propagators:
+            partial_checks_by_depth = tuple(
+                partial_checks_by_variable[int(variable_index)] for variable_index in variable_order
+            )
 
-            variable_index = int(variable_order[depth])
-
-            for value in ordered_local_values[depth]:
+            def dfs_without_propagation(depth: int) -> None:
                 if max_states is not None and len(states) >= max_states:
                     return
 
-                config[variable_index] = int(value)
-                assigned_mask[variable_index] = True
+                if depth == n:
+                    # Every non-empty condition support is checked exactly when the
+                    # last variable in that support is assigned.  Zero-variable
+                    # conditions are checked once before DFS starts.  Re-running all
+                    # full checks at every leaf is therefore redundant and costly for
+                    # large bases with many local constraints.
+                    states.append(config.copy())
+                    return
 
-                if self._partial_check_after_assignment(
-                    config=config,
-                    assigned_mask=assigned_mask,
-                    partial_checks=partial_checks_by_depth[depth],
-                ):
-                    dfs(depth + 1)
+                variable_index = int(variable_order[depth])
 
-                assigned_mask[variable_index] = False
+                for value in ordered_local_values[depth]:
+                    if max_states is not None and len(states) >= max_states:
+                        return
 
-        dfs(0)
+                    config[variable_index] = int(value)
+                    assigned_mask[variable_index] = True
+
+                    if self._partial_check_after_assignment(
+                        config=config,
+                        assigned_mask=assigned_mask,
+                        partial_checks=partial_checks_by_depth[depth],
+                    ):
+                        dfs_without_propagation(depth + 1)
+
+                    assigned_mask[variable_index] = False
+
+            dfs_without_propagation(0)
+        else:
+
+            def assign_with_propagation(
+                variable_index: int,
+                value: int,
+                changed_variables: list[int],
+            ) -> bool:
+                """Assign one variable and close all forced local consequences."""
+                pending: list[tuple[int, int]] = [(int(variable_index), int(value))]
+
+                while pending:
+                    current_variable, current_value = pending.pop()
+
+                    if assigned_mask[current_variable]:
+                        if int(config[current_variable]) != current_value:
+                            return False
+                        continue
+
+                    config[current_variable] = current_value
+                    assigned_mask[current_variable] = True
+                    changed_variables.append(current_variable)
+
+                    if not self._partial_check_after_assignment(
+                        config=config,
+                        assigned_mask=assigned_mask,
+                        partial_checks=partial_checks_by_variable[current_variable],
+                    ):
+                        return False
+
+                    propagation = self._propagate_after_assignment(
+                        config=config,
+                        assigned_mask=assigned_mask,
+                        propagators=propagators_by_variable[current_variable],
+                    )
+                    if not propagation.consistent:
+                        return False
+
+                    pending.extend(propagation.forced_assignments)
+
+                return True
+
+            def undo(changed_variables: Sequence[int]) -> None:
+                for variable_index in reversed(changed_variables):
+                    assigned_mask[int(variable_index)] = False
+
+            def dfs_with_propagation(depth: int) -> None:
+                if max_states is not None and len(states) >= max_states:
+                    return
+
+                while depth < n and assigned_mask[int(variable_order[depth])]:
+                    depth += 1
+
+                if depth == n:
+                    # Every non-empty condition support is checked exactly when the
+                    # last variable in that support is assigned.  Zero-variable
+                    # conditions are checked once before DFS starts.  Re-running all
+                    # full checks at every leaf is therefore redundant and costly for
+                    # large bases with many local constraints.
+                    states.append(config.copy())
+                    return
+
+                variable_index = int(variable_order[depth])
+
+                for value in ordered_local_values[depth]:
+                    if max_states is not None and len(states) >= max_states:
+                        return
+
+                    changed_variables: list[int] = []
+                    if assign_with_propagation(variable_index, int(value), changed_variables):
+                        dfs_with_propagation(depth + 1)
+
+                    undo(changed_variables)
+
+            dfs_with_propagation(0)
 
         if len(states) == 0:
             return Basis.empty(layout)
@@ -414,11 +497,35 @@ class DFSBasisSolver:
         lookup: list[list[PartialCheck]] = [[] for _ in range(n_variables)]
 
         for info in condition_infos:
+            # Propagating conditions report both contradictions and forced
+            # assignments through propagate().  Do not also call their
+            # partial_check(), because in most structured constraints it simply
+            # delegates to propagate() and would duplicate the hot-path work.
+            if callable(getattr(info.condition, "propagate", None)):
+                continue
+
             partial_check = info.condition.partial_check
             for variable_index in info.affected_variables:
                 lookup[int(variable_index)].append(partial_check)
 
         return tuple(tuple(partial_checks) for partial_checks in lookup)
+
+    @staticmethod
+    def _build_propagator_lookup(
+        *,
+        n_variables: int,
+        condition_infos: Sequence[_ConditionInfo],
+    ) -> tuple[tuple[Propagator, ...], ...]:
+        lookup: list[list[Propagator]] = [[] for _ in range(n_variables)]
+
+        for info in condition_infos:
+            propagate = getattr(info.condition, "propagate", None)
+            if not callable(propagate):
+                continue
+            for variable_index in info.affected_variables:
+                lookup[int(variable_index)].append(propagate)
+
+        return tuple(tuple(propagators) for propagators in lookup)
 
     @staticmethod
     def _zero_variable_conditions_are_satisfied(
@@ -448,6 +555,35 @@ class DFSBasisSolver:
                 return False
 
         return True
+
+    @staticmethod
+    def _propagate_after_assignment(
+        *,
+        config: npt.NDArray[np.int64],
+        assigned_mask: npt.NDArray[np.bool_],
+        propagators: Sequence[Propagator],
+    ) -> ConstraintPropagation:
+        forced_assignments: list[tuple[int, int]] = []
+
+        for propagate in propagators:
+            result = propagate(config, assigned_mask)
+            if not result.consistent:
+                return ConstraintPropagation.contradiction()
+            forced_assignments.extend(result.forced_assignments)
+
+        if not forced_assignments:
+            return ConstraintPropagation.no_change()
+
+        forced_by_variable: dict[int, int] = {}
+        for variable_index, value in forced_assignments:
+            variable_index = int(variable_index)
+            value = int(value)
+            previous = forced_by_variable.get(variable_index)
+            if previous is not None and previous != value:
+                return ConstraintPropagation.contradiction()
+            forced_by_variable[variable_index] = value
+
+        return ConstraintPropagation(forced_assignments=tuple(sorted(forced_by_variable.items())))
 
     @staticmethod
     def _full_check(

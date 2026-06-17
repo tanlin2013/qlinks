@@ -9,6 +9,8 @@ import pytest
 from qlinks.basis import BruteForceBasisSolver, DFSBasisSolver
 from qlinks.constraints import (
     BaseConstraint,
+    BoundedLocalCountConstraint,
+    ConstraintPropagation,
     ConstraintResult,
     DimerCoveringConstraint,
     FixedValueConstraint,
@@ -451,6 +453,92 @@ def test_dfs_does_not_repeat_full_checks_at_leaves() -> None:
         np.array([[0, 1], [1, 0]], dtype=np.int64),
     )
     assert constraint.full_calls == 0
+
+
+class PropagationCountingCountConstraint(BoundedLocalCountConstraint):
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        object.__setattr__(self, "propagation_calls", 0)
+
+    def propagate(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> ConstraintPropagation:
+        object.__setattr__(self, "propagation_calls", self.propagation_calls + 1)
+        return super().propagate(config, assigned_mask)
+
+
+def test_dfs_propagates_bounded_local_count_constraint() -> None:
+    layout = _binary_site_layout(3)
+    constraint = PropagationCountingCountConstraint.exact(
+        layout=layout,
+        variable_indices=np.array([0, 1, 2], dtype=np.int64),
+        count=1,
+        name="exactly_one",
+    )
+
+    basis = DFSBasisSolver(
+        sort=True,
+        variable_order=np.array([0, 1, 2], dtype=np.int64),
+    ).solve(layout, constraints=(constraint,))
+
+    np.testing.assert_array_equal(
+        basis.states,
+        np.array(
+            [
+                [0, 0, 1],
+                [0, 1, 0],
+                [1, 0, 0],
+            ],
+            dtype=np.int64,
+        ),
+    )
+    assert constraint.propagation_calls > 0
+
+
+def test_dfs_propagation_respects_conflicting_forced_assignments() -> None:
+    layout = _binary_site_layout(2)
+    constraints = (
+        BoundedLocalCountConstraint.exact(
+            layout=layout,
+            variable_indices=np.array([0, 1], dtype=np.int64),
+            count=2,
+            name="both_occupied",
+        ),
+        FixedValueConstraint.single(layout, variable_index=1, value=0),
+    )
+
+    basis = DFSBasisSolver(sort=True).solve(layout, constraints=constraints)
+
+    assert basis.n_states == 0
+
+
+def test_dfs_propagated_assignments_are_undone_between_branches() -> None:
+    layout = _binary_site_layout(3)
+    constraint = BoundedLocalCountConstraint.exact(
+        layout=layout,
+        variable_indices=np.array([0, 1, 2], dtype=np.int64),
+        count=2,
+        name="exactly_two",
+    )
+
+    basis = DFSBasisSolver(
+        sort=True,
+        variable_order=np.array([0, 1, 2], dtype=np.int64),
+    ).solve(layout, constraints=(constraint,))
+
+    np.testing.assert_array_equal(
+        basis.states,
+        np.array(
+            [
+                [0, 1, 1],
+                [1, 0, 1],
+                [1, 1, 0],
+            ],
+            dtype=np.int64,
+        ),
+    )
 
 
 # ------------------------------------------------------------------

@@ -6,7 +6,11 @@ from typing import Literal, Sequence
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.constraints.base import BaseConstraint, ConstraintResult
+from qlinks.constraints.base import (
+    BaseConstraint,
+    ConstraintPropagation,
+    ConstraintResult,
+)
 from qlinks.lattice import LatticeGraph
 from qlinks.variables import VariableLayout
 
@@ -191,6 +195,13 @@ class GaussLawConstraint(BaseConstraint):
         config: npt.ArrayLike,
         assigned_mask: npt.ArrayLike,
     ) -> bool:
+        return self.propagate(config, assigned_mask).consistent
+
+    def propagate(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> ConstraintPropagation:
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)
 
@@ -198,7 +209,8 @@ class GaussLawConstraint(BaseConstraint):
         signs = self.signs
 
         assigned_local = assigned[variable_indices]
-        assigned_count = int(np.count_nonzero(assigned_local))
+        unassigned_variables = variable_indices[~assigned_local]
+        unassigned_signs = signs[~assigned_local]
 
         current = int(
             np.dot(
@@ -207,21 +219,53 @@ class GaussLawConstraint(BaseConstraint):
             )
         )
 
-        # For flux values {-1, +1}, every unassigned incident link can still
-        # contribute either -1 or +1 after multiplying by the incidence sign.
-        remaining_count = self._n_incident_links - assigned_count
+        # For spin-half flux values {-1, +1}, every unassigned incident link
+        # can still contribute either -1 or +1 after multiplying by the
+        # incidence sign.
+        remaining_count = int(unassigned_variables.size)
         min_remaining = -remaining_count
         max_remaining = remaining_count
 
         target = self._internal_charge
+        missing = int(target - current)
 
-        if target < current + min_remaining:
-            return False
+        if missing < min_remaining:
+            return ConstraintPropagation.contradiction()
 
-        if target > current + max_remaining:
-            return False
+        if missing > max_remaining:
+            return ConstraintPropagation.contradiction()
+
+        # Sum of remaining +/-1 contributions must have the same parity as the
+        # number of remaining links.  This prunes impossible charge sectors
+        # before the site is fully assigned.
+        if (missing + remaining_count) % 2 != 0:
+            return ConstraintPropagation.contradiction()
 
         if remaining_count == 0:
-            return current == target
+            if missing != 0:
+                return ConstraintPropagation.contradiction()
+            return ConstraintPropagation.no_change()
 
-        return True
+        if missing == remaining_count:
+            # Every remaining signed contribution must be +1, so value=sign.
+            return ConstraintPropagation(
+                forced_assignments=tuple(
+                    (int(variable_index), int(sign))
+                    for variable_index, sign in zip(
+                        unassigned_variables, unassigned_signs, strict=True
+                    )
+                )
+            )
+
+        if missing == -remaining_count:
+            # Every remaining signed contribution must be -1, so value=-sign.
+            return ConstraintPropagation(
+                forced_assignments=tuple(
+                    (int(variable_index), int(-sign))
+                    for variable_index, sign in zip(
+                        unassigned_variables, unassigned_signs, strict=True
+                    )
+                )
+            )
+
+        return ConstraintPropagation.no_change()

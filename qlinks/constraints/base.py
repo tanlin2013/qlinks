@@ -24,6 +24,28 @@ class ConstraintResult:
         return self.satisfied
 
 
+@dataclass(frozen=True, slots=True)
+class ConstraintPropagation:
+    """Result of one incremental constraint-propagation step.
+
+    ``forced_assignments`` contains ``(variable_index, value)`` pairs that must
+    hold in every completion of the current partial configuration.  Generic
+    constraints do not need to implement propagation; DFSBasisSolver treats
+    this as an optional fast path and falls back to ``partial_check``.
+    """
+
+    consistent: bool = True
+    forced_assignments: tuple[tuple[int, int], ...] = ()
+
+    @classmethod
+    def contradiction(cls) -> ConstraintPropagation:
+        return cls(consistent=False)
+
+    @classmethod
+    def no_change(cls) -> ConstraintPropagation:
+        return cls()
+
+
 class Constraint(Protocol):
     """
     General constraint interface.

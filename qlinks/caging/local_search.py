@@ -36,7 +36,7 @@ from qlinks.caging.search import (
 )
 from qlinks.caging.solver import CageSolverConfig, solve_candidate_for_kinetic_targets
 from qlinks.caging.types import DegenerateBasisStrategy
-from qlinks.constraints import ConstraintResult
+from qlinks.constraints import ConstraintPropagation, ConstraintResult
 from qlinks.models.couplings import DirectedPlaquetteCoupling
 from qlinks.operators.plaquette import alternating_binary_patterns
 from qlinks.variables import VariableLayout
@@ -1062,28 +1062,52 @@ class _LocalQDMCountConstraint:
         config: npt.ArrayLike,
         assigned_mask: npt.ArrayLike,
     ) -> bool:
+        return self.propagate(config, assigned_mask).consistent
+
+    def propagate(
+        self,
+        config: npt.ArrayLike,
+        assigned_mask: npt.ArrayLike,
+    ) -> ConstraintPropagation:
         arr = np.asarray(config, dtype=np.int64)
         assigned = np.asarray(assigned_mask, dtype=bool)
         variable_indices = self.variable_indices
 
         assigned_local = assigned[variable_indices]
-        assigned_values = arr[variable_indices[assigned_local]]
-        occupied = int(np.sum(assigned_values))
-        unassigned = int(variable_indices.size - np.count_nonzero(assigned_local))
+        unassigned_variables = variable_indices[~assigned_local]
+        occupied = int(np.sum(arr[variable_indices[assigned_local]]))
+        unassigned = int(unassigned_variables.size)
 
         if occupied > self.max_count:
-            return False
+            return ConstraintPropagation.contradiction()
 
-        if self.min_count is not None:
-            if occupied + unassigned < self.min_count:
-                return False
-            if unassigned == 0 and occupied < self.min_count:
-                return False
+        if self.min_count is not None and occupied + unassigned < self.min_count:
+            return ConstraintPropagation.contradiction()
 
         if unassigned == 0:
-            return occupied <= self.max_count
+            if self.min_count is not None and occupied < self.min_count:
+                return ConstraintPropagation.contradiction()
+            return ConstraintPropagation.no_change()
 
-        return True
+        forced: list[tuple[int, int]] = []
+
+        if occupied == self.max_count:
+            forced.extend((int(variable_index), 0) for variable_index in unassigned_variables)
+
+        if self.min_count is not None and occupied + unassigned == self.min_count:
+            forced.extend((int(variable_index), 1) for variable_index in unassigned_variables)
+
+        if not forced:
+            return ConstraintPropagation.no_change()
+
+        forced_by_variable: dict[int, int] = {}
+        for variable_index, value in forced:
+            previous = forced_by_variable.get(variable_index)
+            if previous is not None and previous != value:
+                return ConstraintPropagation.contradiction()
+            forced_by_variable[variable_index] = value
+
+        return ConstraintPropagation(forced_assignments=tuple(sorted(forced_by_variable.items())))
 
 
 def _qdm_local_basis_constraints(
