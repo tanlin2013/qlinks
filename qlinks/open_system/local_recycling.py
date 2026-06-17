@@ -12,6 +12,7 @@ RecyclingJumpSource = Literal[
     "local_rdm_rank_one",
     "local_rdm_two_pattern",
     "local_rdm_null_basis",
+    "local_rdm_block_reset",
 ]
 
 
@@ -103,7 +104,16 @@ class TwoPatternRecyclingStructure:
 
 @dataclass(frozen=True, slots=True)
 class LocalRecyclingCandidate:
-    """One embedded local RDM recycling jump candidate."""
+    """One embedded local RDM recycling jump candidate.
+
+    Most candidates are rank-one maps ``|alpha><beta|`` between the local
+    support and null spaces of the target reduced density matrix.  A compressed
+    block-reset candidate can instead carry a higher-rank ``local_operator``
+    that maps several null directions into the local target support with one
+    Lindblad channel.  The ``local_alpha_vector`` and ``local_beta_vector``
+    fields are retained for rank-one readouts and hold representative support
+    and null vectors for block-reset candidates.
+    """
 
     variable_indices: tuple[int, ...]
     alpha_index: int
@@ -115,6 +125,7 @@ class LocalRecyclingCandidate:
     projector_commutator_norm: float
     local_alpha_vector: npt.NDArray[np.complex128]
     local_beta_vector: npt.NDArray[np.complex128]
+    local_operator: npt.NDArray[np.complex128] | None = None
 
     @property
     def is_dark(self) -> bool:
@@ -618,6 +629,48 @@ def local_rank_one_matrix_unit_expansion(
     return tuple(terms)
 
 
+def local_operator_matrix_unit_expansion(
+    *,
+    local_patterns: tuple[tuple[int, ...], ...],
+    local_operator: npt.ArrayLike,
+    tolerance: float = 1e-10,
+) -> tuple[LocalMatrixUnitTerm, ...]:
+    """Expand a local operator into matrix-unit terms.
+
+    This is the higher-rank analogue of
+    :func:`local_rank_one_matrix_unit_expansion` and is useful for compressed
+    block-reset recyclers, where one jump can map several local null directions
+    into the target local support.
+    """
+    operator = np.asarray(local_operator, dtype=np.complex128)
+
+    local_dim = len(local_patterns)
+    if operator.shape != (local_dim, local_dim):
+        raise ValueError(
+            "local_operator shape must match the number of local patterns: "
+            f"{operator.shape} != {(local_dim, local_dim)}."
+        )
+
+    terms: list[LocalMatrixUnitTerm] = []
+
+    for target_index, target_pattern in enumerate(local_patterns):
+        for source_index, source_pattern in enumerate(local_patterns):
+            coefficient = operator[target_index, source_index]
+
+            if abs(coefficient) <= tolerance:
+                continue
+
+            terms.append(
+                LocalMatrixUnitTerm(
+                    coefficient=complex(coefficient),
+                    target_pattern=tuple(int(value) for value in target_pattern),
+                    source_pattern=tuple(int(value) for value in source_pattern),
+                )
+            )
+
+    return tuple(terms)
+
+
 def _detect_two_pattern_recycling_structure_from_vectors(
     *,
     variable_indices: tuple[int, ...],
@@ -748,14 +801,33 @@ def select_local_recycling_candidates(
     ``L=V P``.  A single rank-one recycler can make ``V P`` much more singular
     than the monitor ``P`` itself, because it only tests one local ``beta``
     direction.  This source instead selects one good target-support vector
-    ``alpha`` for every local-RDM null vector ``beta``.  The resulting jump
-    family preserves the full local null-space information detected by the
-    monitor, while still recycling into the target local support.  The
-    ``max_candidates`` argument is intentionally ignored for this source; the
-    number of selected jumps is the local-RDM nullity.
+    ``alpha`` for every local-RDM null vector ``beta``.
+
+    ``local_rdm_block_reset`` is the compressed version: it groups up to
+    ``rank(rho_R)`` null vectors into each reset channel.  The
+    ``max_candidates`` argument is intentionally ignored for both null-basis and
+    block-reset sources, because their counts are determined by the local RDM
+    ranks.
     """
     if source == "none":
         return ()
+
+    if source == "local_rdm_block_reset":
+        selections = []
+        for candidate in scan_result.candidates:
+            nnz = candidate.jump.nnz if hasattr(candidate.jump, "nnz") else np.inf
+            selections.append(
+                LocalRecyclingSelection(
+                    candidate=candidate,
+                    two_pattern_structure=None,
+                    score=(
+                        int(candidate.beta_index),
+                        float(candidate.target_residual),
+                        float(nnz) if prefer_sparse else 0.0,
+                    ),
+                )
+            )
+        return tuple(sorted(selections, key=lambda selection: selection.score))
 
     if source == "local_rdm_null_basis":
         best_by_beta: dict[int, LocalRecyclingSelection] = {}
@@ -958,12 +1030,116 @@ def _scan_local_two_pattern_recycling_candidates(
     )
 
 
+def _scan_local_block_reset_recycling_candidates(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    target_state: npt.ArrayLike,
+    variable_indices: tuple[int, ...] | list[int],
+    rdm_tolerance: float = 1e-10,
+    dark_tolerance: float = 1e-10,
+    inflow_tolerance: float = 1e-10,
+) -> LocalRecyclingScanResult:
+    """Scan compressed block-reset local RDM recycling candidates.
+
+    For a local target support ``S`` and null space ``N``, rank-one null-basis
+    recycling uses one jump per null vector.  A block reset packs up to
+    ``dim(S)`` null vectors into one jump,
+
+        J_block = sum_a |s_a><n_{b+a}|,
+
+    so the number of jumps is ``ceil(dim(N) / dim(S))`` while preserving the
+    exact dark condition ``J_block |psi> = 0``.
+    """
+    basis_context = _local_pattern_basis_context_from_basis(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    reduced_density_matrix = _local_reduced_density_matrix_from_basis_context(
+        context=basis_context,
+        state=target_state,
+        tolerance=rdm_tolerance,
+    )
+
+    support_basis = reduced_density_matrix.support_basis
+    null_basis = reduced_density_matrix.null_basis
+    support_rank = int(support_basis.shape[1])
+    nullity = int(null_basis.shape[1])
+
+    if support_rank == 0 or nullity == 0:
+        return LocalRecyclingScanResult(
+            reduced_density_matrix=reduced_density_matrix,
+            candidates=(),
+        )
+
+    embedding_context = _embedding_context_from_basis_context(basis_context)
+    candidates: list[LocalRecyclingCandidate] = []
+
+    for start in range(0, nullity, support_rank):
+        block = null_basis[:, start : start + support_rank]
+        block_rank = int(block.shape[1])
+        local_operator = support_basis[:, :block_rank] @ block.conj().T
+        jump = _embed_local_pattern_operator_from_context(
+            context=embedding_context,
+            local_operator=local_operator.astype(np.complex128, copy=False),
+        )
+        (
+            target_residual,
+            inflow_norm,
+            outflow_norm,
+            projector_commutator_norm,
+        ) = score_recycling_jump(
+            jump=jump,
+            target_state=target_state,
+        )
+
+        if target_residual > dark_tolerance:
+            continue
+        if inflow_norm <= inflow_tolerance:
+            continue
+
+        alpha_vector = np.zeros(reduced_density_matrix.local_dim, dtype=np.complex128)
+        beta_vector = np.zeros(reduced_density_matrix.local_dim, dtype=np.complex128)
+        alpha_vector[:] = support_basis[:, 0]
+        beta_vector[:] = block[:, 0]
+
+        candidates.append(
+            LocalRecyclingCandidate(
+                variable_indices=reduced_density_matrix.variable_indices,
+                alpha_index=0,
+                beta_index=int(start),
+                jump=jump,
+                target_residual=target_residual,
+                inflow_norm=inflow_norm,
+                outflow_norm=outflow_norm,
+                projector_commutator_norm=projector_commutator_norm,
+                local_alpha_vector=alpha_vector,
+                local_beta_vector=beta_vector,
+                local_operator=local_operator.astype(np.complex128, copy=False),
+            )
+        )
+
+    candidates = sorted(
+        candidates,
+        key=lambda candidate: (
+            int(candidate.beta_index),
+            float(candidate.target_residual),
+            int(candidate.jump.nnz),
+        ),
+    )
+
+    return LocalRecyclingScanResult(
+        reduced_density_matrix=reduced_density_matrix,
+        candidates=tuple(candidates),
+    )
+
+
 def build_local_recycling_jumps_from_regions(
     *,
     basis_configs: npt.NDArray[np.integer],
     target_state: npt.ArrayLike,
     regions: tuple[tuple[int, ...], ...],
     source: RecyclingJumpSource = "local_rdm_two_pattern",
+    deduplicate_regions: bool = False,
     max_jumps_per_region: int = 1,
     rdm_tolerance: float = 1e-10,
     dark_tolerance: float = 1e-10,
@@ -972,16 +1148,26 @@ def build_local_recycling_jumps_from_regions(
     prefer_sparse: bool = True,
     two_pattern_tolerance: float = 1e-8,
 ) -> LocalRecyclingBuildResult:
-    """Scan several regions and return selected local recycling jumps."""
+    """Scan several regions and return selected local recycling jumps.
+
+    Set ``deduplicate_regions=True`` when repeated monitor components share the
+    same local support and should use one recycler family rather than one copy
+    per component.  The default keeps the historical behavior.
+    """
     scan_results: list[LocalRecyclingScanResult] = []
     selections: list[LocalRecyclingSelection] = []
     scan_result_cache: dict[tuple[int, ...], LocalRecyclingScanResult] = {}
+    selected_region_keys: set[tuple[int, ...]] = set()
 
     if source == "none":
         return LocalRecyclingBuildResult(scan_results=(), selections=())
 
     for region in regions:
         region_key = tuple(int(index) for index in region)
+        if deduplicate_regions and region_key in selected_region_keys:
+            continue
+        selected_region_keys.add(region_key)
+
         scan_result = scan_result_cache.get(region_key)
 
         if scan_result is None:
@@ -994,6 +1180,15 @@ def build_local_recycling_jumps_from_regions(
                     dark_tolerance=dark_tolerance,
                     inflow_tolerance=inflow_tolerance,
                     two_pattern_tolerance=two_pattern_tolerance,
+                )
+            elif source == "local_rdm_block_reset":
+                scan_result = _scan_local_block_reset_recycling_candidates(
+                    basis_configs=basis_configs,
+                    target_state=target_state,
+                    variable_indices=region_key,
+                    rdm_tolerance=rdm_tolerance,
+                    dark_tolerance=dark_tolerance,
+                    inflow_tolerance=inflow_tolerance,
                 )
             else:
                 scan_result = scan_local_recycling_candidates(

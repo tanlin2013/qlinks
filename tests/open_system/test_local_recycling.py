@@ -255,3 +255,69 @@ def test_build_local_recycling_jumps_null_basis_selects_all_null_directions() ->
     assert result.scan_results[0].reduced_density_matrix.nullity == 3
     assert result.n_jumps == 3
     assert sorted(selection.candidate.beta_index for selection in result.selections) == [0, 1, 2]
+
+
+def test_build_local_recycling_jumps_block_reset_packs_null_directions() -> None:
+    # Local patterns 0 and 1 appear in the target Schmidt support; patterns 2
+    # and 3 are locally forbidden.  A null-basis recycler would need two jumps,
+    # while a block reset maps both forbidden directions into the two-dimensional
+    # target support with one local channel.
+    basis_configs = np.array(
+        [
+            [0, 0],
+            [1, 1],
+            [2, 0],
+            [3, 1],
+        ],
+        dtype=np.int64,
+    )
+    state = np.array([1.0, 1.0, 0.0, 0.0], dtype=np.complex128) / np.sqrt(2.0)
+
+    null_basis_result = build_local_recycling_jumps_from_regions(
+        basis_configs=basis_configs,
+        target_state=state,
+        regions=((0,),),
+        source="local_rdm_null_basis",
+        inflow_tolerance=1e-12,
+    )
+    block_result = build_local_recycling_jumps_from_regions(
+        basis_configs=basis_configs,
+        target_state=state,
+        regions=((0,),),
+        source="local_rdm_block_reset",
+        inflow_tolerance=1e-12,
+    )
+
+    assert null_basis_result.n_jumps == 2
+    assert block_result.n_jumps == 1
+    assert block_result.selections[0].candidate.local_operator is not None
+    np.testing.assert_allclose(
+        block_result.jumps[0] @ state,
+        np.zeros_like(state),
+        atol=1e-12,
+    )
+    assert np.linalg.norm(block_result.jumps[0].conj().T @ state) > 0.0
+
+
+def test_build_local_recycling_jumps_can_deduplicate_regions() -> None:
+    basis_configs = np.array(
+        [
+            [0],
+            [1],
+        ],
+        dtype=np.int64,
+    )
+    state = np.array([1.0, -1.0], dtype=np.complex128) / np.sqrt(2.0)
+
+    result = build_local_recycling_jumps_from_regions(
+        basis_configs=basis_configs,
+        target_state=state,
+        regions=((0,), (0,)),
+        source="local_rdm_two_pattern",
+        max_jumps_per_region=1,
+        deduplicate_regions=True,
+        inflow_tolerance=1e-12,
+    )
+
+    assert len(result.scan_results) == 1
+    assert result.n_jumps == 1

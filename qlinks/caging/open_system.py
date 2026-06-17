@@ -42,6 +42,7 @@ from qlinks.open_system import (
     diagnose_monitor_kernel_closure,
     embed_local_pattern_operator,
     lindblad_rhs_density_matrix,
+    local_operator_matrix_unit_expansion,
     local_rank_one_matrix_unit_expansion,
     local_reduced_density_matrix_from_state,
     verify_lindblad_final_state,
@@ -871,20 +872,37 @@ class CageLindbladConstruction:
                 variable_indices=variable_indices,
             )
             local_patterns = scan_result.reduced_density_matrix.local_patterns
-            alpha_support_indices = _local_vector_support_indices(
-                candidate.local_alpha_vector,
-                tolerance=tolerance,
-            )
-            beta_support_indices = _local_vector_support_indices(
-                candidate.local_beta_vector,
-                tolerance=tolerance,
-            )
-            matrix_unit_terms = local_rank_one_matrix_unit_expansion(
-                local_patterns=local_patterns,
-                alpha=candidate.local_alpha_vector,
-                beta=candidate.local_beta_vector,
-                tolerance=tolerance,
-            )
+            local_operator = getattr(candidate, "local_operator", None)
+            if local_operator is None:
+                alpha_support_indices = _local_vector_support_indices(
+                    candidate.local_alpha_vector,
+                    tolerance=tolerance,
+                )
+                beta_support_indices = _local_vector_support_indices(
+                    candidate.local_beta_vector,
+                    tolerance=tolerance,
+                )
+                matrix_unit_terms = local_rank_one_matrix_unit_expansion(
+                    local_patterns=local_patterns,
+                    alpha=candidate.local_alpha_vector,
+                    beta=candidate.local_beta_vector,
+                    tolerance=tolerance,
+                )
+            else:
+                operator = np.asarray(local_operator, dtype=np.complex128)
+                alpha_support_indices = tuple(
+                    int(index)
+                    for index in np.flatnonzero(np.linalg.norm(operator, axis=1) > tolerance)
+                )
+                beta_support_indices = tuple(
+                    int(index)
+                    for index in np.flatnonzero(np.linalg.norm(operator, axis=0) > tolerance)
+                )
+                matrix_unit_terms = local_operator_matrix_unit_expansion(
+                    local_patterns=local_patterns,
+                    local_operator=operator,
+                    tolerance=tolerance,
+                )
             truncated = len(matrix_unit_terms) > int(max_matrix_unit_terms)
             if truncated:
                 shown_terms = matrix_unit_terms[: int(max_matrix_unit_terms)]
@@ -1236,6 +1254,7 @@ def build_type1_cage_lindblad_construction(
     jump_operator_design: JumpOperatorDesign = "kinetic_outside_monitor_inside",
     recycling_jump_source: RecyclingJumpSource = "none",
     max_recycling_jumps_per_region: int = 1,
+    deduplicate_recycling_regions: bool = False,
     recycling_rdm_tolerance: float = 1e-10,
     recycling_dark_tolerance: float = 1e-10,
     recycling_inflow_tolerance: float = 1e-12,
@@ -1589,7 +1608,8 @@ def build_type1_cage_lindblad_construction(
                 raise ValueError(
                     "jump_operator_design='local_rdm_parent_projector_recycling' "
                     "requires recycling_jump_source to be local_rdm_rank_one, "
-                    "local_rdm_two_pattern, or local_rdm_null_basis."
+                    "local_rdm_two_pattern, local_rdm_null_basis, or "
+                    "local_rdm_block_reset."
                 )
 
             recycling_build_result = build_local_recycling_jumps_from_regions(
@@ -1598,6 +1618,7 @@ def build_type1_cage_lindblad_construction(
                 regions=tuple(region_key for region_key, _ in region_specs),
                 source=recycling_jump_source,
                 max_jumps_per_region=max_recycling_jumps_per_region,
+                deduplicate_regions=deduplicate_recycling_regions,
                 rdm_tolerance=recycling_rdm_tolerance,
                 dark_tolerance=recycling_dark_tolerance,
                 inflow_tolerance=recycling_inflow_tolerance,
@@ -1670,6 +1691,7 @@ def build_type1_cage_lindblad_construction(
             region_specs=region_specs,
             source=recycling_jump_source,
             max_jumps_per_region=max_recycling_jumps_per_region,
+            deduplicate_regions=deduplicate_recycling_regions,
             rdm_tolerance=recycling_rdm_tolerance,
             dark_tolerance=recycling_dark_tolerance,
             inflow_tolerance=recycling_inflow_tolerance,
@@ -1732,6 +1754,7 @@ def build_type1_cage_lindblad_construction(
             regions=recycling_regions,
             source=recycling_jump_source,
             max_jumps_per_region=max_recycling_jumps_per_region,
+            deduplicate_regions=deduplicate_recycling_regions,
             rdm_tolerance=recycling_rdm_tolerance,
             dark_tolerance=recycling_dark_tolerance,
             inflow_tolerance=recycling_inflow_tolerance,
@@ -2538,6 +2561,7 @@ def _build_monitor_recycler_jump_operators(
     inflow_tolerance: float,
     prefer_sparse: bool,
     two_pattern_tolerance: float,
+    deduplicate_regions: bool = False,
     hamiltonian_closure_order: int = 0,
     hamiltonian_shift: MonitorRecyclerHamiltonianShift = "target_energy",
     hamiltonian_closure_source: MonitorRecyclerHamiltonianClosureSource = "global_hamiltonian",
@@ -2545,8 +2569,8 @@ def _build_monitor_recycler_jump_operators(
     if source == "none":
         raise ValueError(
             "jump_operator_design='monitor_recycler' requires recycling_jump_source "
-            "to be 'local_rdm_two_pattern', 'local_rdm_rank_one', or "
-            "'local_rdm_null_basis'."
+            "to be 'local_rdm_two_pattern', 'local_rdm_rank_one', "
+            "'local_rdm_null_basis', or 'local_rdm_block_reset'."
         )
 
     if hamiltonian_closure_order < 0:
@@ -2593,6 +2617,7 @@ def _build_monitor_recycler_jump_operators(
         regions=regions,
         source=source,
         max_jumps_per_region=max_jumps_per_region,
+        deduplicate_regions=deduplicate_regions,
         rdm_tolerance=rdm_tolerance,
         dark_tolerance=dark_tolerance,
         inflow_tolerance=inflow_tolerance,
@@ -2609,7 +2634,13 @@ def _build_monitor_recycler_jump_operators(
     jump_closure_orders: list[int] = []
     missing_regions: list[tuple[int, ...]] = []
 
+    emitted_region_keys: set[tuple[int, ...]] = set()
     for region_key, component_monitor in region_specs:
+        region_key = tuple(int(index) for index in region_key)
+        if deduplicate_regions and region_key in emitted_region_keys:
+            continue
+        emitted_region_keys.add(region_key)
+
         selections = selections_by_region.get(region_key, [])
         if len(selections) == 0:
             missing_regions.append(region_key)
@@ -2655,8 +2686,9 @@ def _build_monitor_recycler_jump_operators(
         raise ValueError(
             "Could not construct monitor-recycler jumps for "
             f"{len(missing_regions)} monitor region(s): {preview}. "
-            "Try recycling_jump_source='local_rdm_rank_one' or "
-            "recycling_jump_source='local_rdm_null_basis'."
+            "Try recycling_jump_source='local_rdm_rank_one', "
+            "recycling_jump_source='local_rdm_null_basis', or "
+            "recycling_jump_source='local_rdm_block_reset'."
         )
 
     return tuple(jumps), recycling_build_result, tuple(jump_closure_orders)
