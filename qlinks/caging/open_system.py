@@ -876,9 +876,8 @@ class CageLindbladConstruction:
             f"n_component_jumps={self.n_component_jumps}, "
             f"n_global_jump_terms={self.n_global_jump_terms}, "
             f"n_recycling_jumps={self.n_recycling_jumps}, "
-            f"monitor_recycler_hamiltonian_closure_order={
-                self.monitor_recycler_hamiltonian_closure_order
-            }, "
+            f"monitor_recycler_hamiltonian_closure_order="
+            f"{self.monitor_recycler_hamiltonian_closure_order}, "
             f"monitor_residual={self.monitor_residual:.3e}, "
             f"max_jump_residual={self.max_jump_residual:.3e}, "
             f"liouvillian_residual={self.liouvillian_residual!r}"
