@@ -75,7 +75,7 @@ jobs:
         env:
           POETRY_INSTALLER_NO_BINARY: pynauty
         run: |
-          poetry install -vvv --with dev,distributed,storage --sync
+          poetry install -vvv --with dev --all-extras --sync
 
       - name: Test
         shell: bash
