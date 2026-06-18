@@ -26,6 +26,7 @@ from qlinks.caging import (
     QDMLocalCageAdapter,
     QDMMultiPaddingDiagnostics,
     RobustQDMLocalCageSearchConfig,
+    RobustQDMLocalCageSearchContext,
     StripeRegionProposal,
     certified_qdm_result_from_multi_block_reports,
     certify_qdm_multi_block_padding,
@@ -562,29 +563,44 @@ def test_robust_qdm_local_cage_search_returns_certified_result_under_small_budge
         coup_pot=1.0,
     )
 
-    certified = robust_qdm_local_cage_search(
-        model,
-        config=RobustQDMLocalCageSearchConfig(
-            region_strategies=("stripe",),
-            stripe_widths=(1,),
-            stripe_directions=(0,),
-            max_regions_per_strategy=2,
-            block_signatures=((0, 2),),
-            max_records_per_region=2,
-            min_blocks=2,
-            max_blocks=2,
-            max_paddings_per_stage=2,
-            max_paddings_per_packing=1,
-            max_product_support_size=2048,
-            include_sectors=True,
-            padding_stages=("static",),
-            tolerance=1.0e-9,
-            store_full_states=False,
-        ),
+    robust_config = RobustQDMLocalCageSearchConfig(
+        region_strategies=("stripe",),
+        stripe_widths=(1,),
+        stripe_directions=(0,),
+        max_regions_per_strategy=2,
+        block_signatures=((0, 2),),
+        max_records_per_region=2,
+        min_blocks=2,
+        max_blocks=2,
+        max_paddings_per_stage=2,
+        max_paddings_per_packing=1,
+        max_product_support_size=2048,
+        include_sectors=True,
+        padding_stages=("static",),
+        tolerance=1.0e-9,
+        store_full_states=False,
     )
+
+    certified = robust_qdm_local_cage_search(model, config=robust_config)
 
     assert certified.hilbert_size == certified.basis.n_states
     assert isinstance(certified.counts_by_signature, dict)
+
+    certified_with_context, context = robust_qdm_local_cage_search(
+        model,
+        config=robust_config,
+        return_context=True,
+    )
+
+    assert certified_with_context.counts_by_signature == certified.counts_by_signature
+    assert isinstance(context, RobustQDMLocalCageSearchContext)
+    assert context.n_regions > 0
+    assert context.n_blocks >= 0
+    assert context.stage_names == ("static",)
+    assert set(context.n_paddings_by_stage) == {"static"}
+    assert set(context.n_certified_by_stage) == {"static"}
+    assert set(context.failure_counts_by_stage) == {"static"}
+    assert context.padding_config == robust_config.as_multi_padding_config()
 
 
 def test_local_qdm_active_plaquette_hook_prunes_kinetically_inactive_states() -> None:

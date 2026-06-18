@@ -1161,6 +1161,71 @@ class QDMMultiPaddingDiagnostics:
 
 
 @dataclass(frozen=True, slots=True)
+class RobustQDMLocalCageSearchContext:
+    """Debug context for :func:`robust_qdm_local_cage_search`.
+
+    The ordinary robust search returns a ``CertifiedLocalQDMCageSearchResult`` so
+    downstream tools can consume it directly.  When ``return_context=True``,
+    this companion object exposes the intermediate proposal scan, block pool,
+    and per-padding-stage diagnostics that explain where candidates were found
+    or rejected.
+    """
+
+    config: RobustQDMLocalCageSearchConfig
+    scan: LocalRegionProposalSearchResult
+    blocks: list[LocalQDMCageBlock]
+    padding_config: LocalQDMMultiPaddingConfig
+    diagnostics_by_stage: dict[str, QDMMultiPaddingDiagnostics]
+
+    @property
+    def n_regions(self) -> int:
+        return len(self.scan)
+
+    @property
+    def n_blocks(self) -> int:
+        return len(self.blocks)
+
+    @property
+    def stage_names(self) -> tuple[str, ...]:
+        return tuple(self.diagnostics_by_stage)
+
+    @property
+    def n_paddings_by_stage(self) -> dict[str, int]:
+        return {
+            stage: diagnostics.n_paddings
+            for stage, diagnostics in self.diagnostics_by_stage.items()
+        }
+
+    @property
+    def n_certified_by_stage(self) -> dict[str, int]:
+        return {
+            stage: diagnostics.n_certified
+            for stage, diagnostics in self.diagnostics_by_stage.items()
+        }
+
+    @property
+    def failure_counts_by_stage(self) -> dict[str, dict[str, int]]:
+        return {
+            stage: diagnostics.counts_by_failure_reason
+            for stage, diagnostics in self.diagnostics_by_stage.items()
+        }
+
+    @property
+    def reports_by_stage(self) -> dict[str, list[MultiLocalQDMCertificationReport]]:
+        return {
+            stage: diagnostics.reports for stage, diagnostics in self.diagnostics_by_stage.items()
+        }
+
+    @property
+    def reports(self) -> list[MultiLocalQDMCertificationReport]:
+        return [
+            report
+            for diagnostics in self.diagnostics_by_stage.values()
+            for report in diagnostics.reports
+        ]
+
+
+@dataclass(frozen=True, slots=True)
 class _QDMGlobalPlaquetteAction:
     """Cached data needed to test/apply one global QDM plaquette flip."""
 
@@ -3178,6 +3243,33 @@ def qdm_multi_padding_config_schedule(
     return scheduled
 
 
+def _qdm_multi_block_report_key(
+    report: MultiLocalQDMCertificationReport,
+) -> tuple[tuple[int, ...], tuple[tuple[int, ...], ...], tuple[int, int]]:
+    support_key = tuple(
+        sorted(_config_key(config_row) for config_row in report.padding.global_support_configs)
+    )
+    return (
+        tuple(int(block_id) for block_id in report.block_ids),
+        support_key,
+        report.signature,
+    )
+
+
+def _deduplicate_qdm_multi_block_reports(
+    reports: Sequence[MultiLocalQDMCertificationReport],
+) -> list[MultiLocalQDMCertificationReport]:
+    deduplicated: list[MultiLocalQDMCertificationReport] = []
+    seen: set[tuple[tuple[int, ...], tuple[tuple[int, ...], ...], tuple[int, int]]] = set()
+    for report in reports:
+        key = _qdm_multi_block_report_key(report)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduplicated.append(report)
+    return deduplicated
+
+
 def robust_certify_qdm_multi_block_result(
     model: object,
     blocks: Sequence[LocalQDMCageBlock],
@@ -3193,31 +3285,16 @@ def robust_certify_qdm_multi_block_result(
     """
     base_config = LocalQDMMultiPaddingConfig() if config is None else config
     all_reports: list[MultiLocalQDMCertificationReport] = []
-    seen: set[tuple[tuple[int, ...], tuple[tuple[int, ...], ...], tuple[int, int]]] = set()
 
     for _stage_name, stage_config in qdm_multi_padding_config_schedule(
         base_config,
         stages=stages,
     ):
-        for report in certify_qdm_multi_block_paddings(model, blocks, config=stage_config):
-            support_key = tuple(
-                sorted(
-                    _config_key(config_row) for config_row in report.padding.global_support_configs
-                )
-            )
-            key = (
-                tuple(int(block_id) for block_id in report.block_ids),
-                support_key,
-                report.signature,
-            )
-            if key in seen:
-                continue
-            seen.add(key)
-            all_reports.append(report)
+        all_reports.extend(certify_qdm_multi_block_paddings(model, blocks, config=stage_config))
 
     return certified_qdm_result_from_multi_block_reports(
         model,
-        all_reports,
+        _deduplicate_qdm_multi_block_reports(all_reports),
         config=base_config,
     )
 
@@ -3227,41 +3304,96 @@ def robust_qdm_local_cage_search(
     *,
     config: RobustQDMLocalCageSearchConfig | None = None,
     adapter: LocalCageModelAdapter | None = None,
-) -> CertifiedLocalQDMCageSearchResult:
+    return_context: bool = False,
+) -> (
+    CertifiedLocalQDMCageSearchResult
+    | tuple[
+        CertifiedLocalQDMCageSearchResult,
+        RobustQDMLocalCageSearchContext,
+    ]
+):
     """Run a budgeted robust local QDM cage search.
 
     The search builds a portfolio of region proposals, converts successful local
     records into independent Lego blocks, then certifies the block pool with a
-    permissive-to-strict padding schedule.  The returned result is the existing
-    ``CertifiedLocalQDMCageSearchResult`` container used by downstream tools.
+    permissive-to-strict padding schedule.  By default, the return value is the
+    existing ``CertifiedLocalQDMCageSearchResult`` container used by downstream
+    tools.  Pass ``return_context=True`` to also receive the intermediate scan,
+    block pool, and per-stage diagnostics for debugging.
     """
     robust_config = RobustQDMLocalCageSearchConfig() if config is None else config
     proposals = _robust_qdm_region_proposals(model, robust_config, adapter=adapter)
-    blocks = collect_qdm_cage_blocks_from_region_proposals(
+    padding_config = robust_config.as_multi_padding_config()
+
+    if not return_context:
+        blocks = collect_qdm_cage_blocks_from_region_proposals(
+            proposals,
+            model=model,
+            adapter=adapter,
+            signatures=robust_config.block_signatures,
+            max_regions=None,
+            max_records_per_region=robust_config.max_records_per_region,
+            max_blocks=robust_config.max_blocks,
+            skip_incompatible_blocks=robust_config.skip_incompatible_blocks,
+        )
+        if not blocks:
+            return certified_qdm_result_from_multi_block_reports(
+                model,
+                [],
+                config=padding_config,
+            )
+        return robust_certify_qdm_multi_block_result(
+            model,
+            blocks,
+            config=padding_config,
+            stages=robust_config.padding_stages,
+        )
+
+    scan = run_local_region_proposals(
         proposals,
         model=model,
+        config=robust_config.local_config,
         adapter=adapter,
+    )
+    blocks = scan.qdm_cage_blocks(
+        model=model,
         signatures=robust_config.block_signatures,
-        max_regions=None,
         max_records_per_region=robust_config.max_records_per_region,
         max_blocks=robust_config.max_blocks,
         skip_incompatible_blocks=robust_config.skip_incompatible_blocks,
     )
 
-    padding_config = robust_config.as_multi_padding_config()
-    if not blocks:
-        return certified_qdm_result_from_multi_block_reports(
-            model,
-            [],
-            config=padding_config,
-        )
-
-    return robust_certify_qdm_multi_block_result(
-        model,
-        blocks,
-        config=padding_config,
+    diagnostics_by_stage: dict[str, QDMMultiPaddingDiagnostics] = {}
+    all_reports: list[MultiLocalQDMCertificationReport] = []
+    for stage_name, stage_config in qdm_multi_padding_config_schedule(
+        padding_config,
         stages=robust_config.padding_stages,
+    ):
+        if blocks:
+            diagnostics = diagnose_qdm_multi_block_paddings(model, blocks, config=stage_config)
+        else:
+            diagnostics = QDMMultiPaddingDiagnostics(
+                paddings=[],
+                reports=[],
+                failures=[],
+                config=stage_config,
+            )
+        diagnostics_by_stage[stage_name] = diagnostics
+        all_reports.extend(diagnostics.reports)
+
+    certified = certified_qdm_result_from_multi_block_reports(
+        model,
+        _deduplicate_qdm_multi_block_reports(all_reports),
+        config=padding_config,
     )
+    context = RobustQDMLocalCageSearchContext(
+        config=robust_config,
+        scan=scan,
+        blocks=blocks,
+        padding_config=padding_config,
+        diagnostics_by_stage=diagnostics_by_stage,
+    )
+    return certified, context
 
 
 # Readable alias mirroring the generic-local naming style.
