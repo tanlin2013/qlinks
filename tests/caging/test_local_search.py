@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 
 from qlinks.caging import (
+    AdaptiveRegionProposal,
+    AdaptiveRegionProposalRecord,
     CageRecord,
     CageSearchConfig,
     CageSearcher,
@@ -384,6 +386,74 @@ def test_stripe_region_proposal_groups_triangular_rhombus_kinds() -> None:
     assert len(records) == model.ly
     assert all(record.plaquette_kind == "rhombus_ab" for record in records)
     assert all(record.plaquette_ids.size == model.lx for record in records)
+
+
+def test_adaptive_region_proposal_grows_from_seed_without_shape_assumption() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = AdaptiveRegionProposal(
+        model,
+        max_plaquettes=3,
+        seed_plaquette_ids=[0],
+        beam_width=2,
+        branch_factor=3,
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            tolerance=1.0e-10,
+        ),
+    )
+    records = list(proposal.iter_records())
+
+    assert records
+    assert all(isinstance(record, AdaptiveRegionProposalRecord) for record in records)
+    assert all(1 <= record.plaquette_ids.size <= 3 for record in records)
+    assert all(0 in set(int(pid) for pid in record.seed_plaquette_ids) for record in records)
+    assert any(record.plaquette_ids.size == 2 for record in records)
+    assert all(record.region.link_ids.size < model.lattice.num_links for record in records)
+
+
+def test_adaptive_region_proposal_runs_with_proposal_runner() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = AdaptiveRegionProposal(
+        model,
+        max_plaquettes=2,
+        seed_plaquette_ids=[0],
+        beam_width=2,
+        branch_factor=2,
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            prune_inactive_local_basis_states=True,
+            tolerance=1.0e-10,
+        ),
+    )
+
+    scan = run_local_region_proposal(proposal, max_regions=2)
+
+    assert len(scan) == 2
+    assert all(record.proposal_record is not None for record in scan)
+    assert all(hasattr(record.proposal_record, "score") for record in scan)
+    assert all(record.result.local_hilbert_size > 0 for record in scan)
 
 
 def test_local_qdm_active_plaquette_hook_prunes_kinetically_inactive_states() -> None:

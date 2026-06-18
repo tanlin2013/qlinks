@@ -19,6 +19,8 @@ from qlinks.caging.classification import (
 )
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
 from qlinks.caging.local_search import (
+    AdaptiveRegionProposal,
+    AdaptiveRegionProposalRecord,
     CertifiedLocalCageSearchResult,
     CertifiedLocalQDMCageSearchResult,
     LocalCageModelAdapter,
@@ -217,6 +219,8 @@ __all__ = [
     "MultiLocalQDMCertificationReport",
     "LocalQDMRegion",
     "QDMLocalCageAdapter",
+    "AdaptiveRegionProposal",
+    "AdaptiveRegionProposalRecord",
     "StripeRegionProposal",
     "StripeRegionProposalRecord",
     "build_qdm_global_limited_kinetic_matrix",

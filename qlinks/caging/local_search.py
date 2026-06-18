@@ -207,6 +207,71 @@ class StripeRegionProposalRecord:
         object.__setattr__(self, "plaquette_kind", str(self.plaquette_kind))
 
 
+@dataclass(frozen=True, slots=True)
+class AdaptiveRegionProposalRecord:
+    """One dynamically grown plaquette-region proposal.
+
+    The adaptive proposal stores the seed plaquettes, the selected plaquette set,
+    and the cheap heuristic score that was used by the beam search.  Optional
+    local-search feedback is filled only when ``use_search_feedback=True`` on
+    :class:`AdaptiveRegionProposal`.
+    """
+
+    region: LocalQDMRegion
+    plaquette_ids: npt.NDArray[np.int64]
+    seed_plaquette_ids: npt.NDArray[np.int64]
+    generation: int
+    score: float
+    link_count: int
+    unresolved_boundary_count: int
+    local_hilbert_size: int | None = None
+    n_records: int | None = None
+    counts_by_signature: dict[tuple[int, int], int] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        plaquette_ids = np.asarray(self.plaquette_ids, dtype=np.int64)
+        if plaquette_ids.ndim != 1:
+            raise ValueError("plaquette_ids must be one-dimensional.")
+        if plaquette_ids.size == 0:
+            raise ValueError("plaquette_ids must be non-empty.")
+        object.__setattr__(
+            self,
+            "plaquette_ids",
+            np.unique(plaquette_ids).astype(np.int64),
+        )
+
+        seed_ids = np.asarray(self.seed_plaquette_ids, dtype=np.int64)
+        if seed_ids.ndim != 1:
+            raise ValueError("seed_plaquette_ids must be one-dimensional.")
+        if seed_ids.size == 0:
+            raise ValueError("seed_plaquette_ids must be non-empty.")
+        object.__setattr__(
+            self,
+            "seed_plaquette_ids",
+            np.unique(seed_ids).astype(np.int64),
+        )
+        object.__setattr__(self, "generation", int(self.generation))
+        object.__setattr__(self, "score", float(self.score))
+        object.__setattr__(self, "link_count", int(self.link_count))
+        object.__setattr__(
+            self,
+            "unresolved_boundary_count",
+            int(self.unresolved_boundary_count),
+        )
+        if self.local_hilbert_size is not None:
+            object.__setattr__(self, "local_hilbert_size", int(self.local_hilbert_size))
+        if self.n_records is not None:
+            object.__setattr__(self, "n_records", int(self.n_records))
+        object.__setattr__(
+            self,
+            "counts_by_signature",
+            {
+                (int(signature[0]), int(signature[1])): int(count)
+                for signature, count in self.counts_by_signature.items()
+            },
+        )
+
+
 class LocalRegionProposal(Protocol):
     """Protocol for objects that propose local regions to the local cage searcher."""
 
@@ -337,6 +402,192 @@ class StripeRegionProposal:
                 config=self.config,
                 adapter=self.adapter,
             )
+
+
+@dataclass(frozen=True, slots=True)
+class AdaptiveRegionProposal:
+    """Dynamically grow local QDM regions with a beam-search heuristic.
+
+    Unlike :class:`StripeRegionProposal`, this strategy does not assume a fixed
+    region shape.  It starts from one seed plaquette at a time, repeatedly adds
+    neighboring plaquettes sharing links with the current region, and keeps only
+    the best-scoring partial regions under hard size limits.
+
+    ``use_search_feedback=False`` keeps proposal generation cheap and scores
+    regions by structural proxies: small kinetic boundary, moderate link count,
+    and compact shared-link connectivity.  Setting ``use_search_feedback=True``
+    additionally runs the local cage searcher while growing and boosts regions
+    that already contain candidate local cages.
+    """
+
+    model: object
+    max_plaquettes: int
+    config: LocalQDMCageSearchConfig = field(
+        default_factory=lambda: LocalQDMCageSearchConfig(halo_layers=0)
+    )
+    seed_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None
+    min_plaquettes: int = 1
+    beam_width: int = 8
+    branch_factor: int = 8
+    max_regions: int | None = None
+    max_links: int | None = None
+    use_search_feedback: bool = False
+    adapter: LocalCageModelAdapter | None = None
+
+    def __post_init__(self) -> None:
+        if self.max_plaquettes <= 0:
+            raise ValueError("max_plaquettes must be positive.")
+        if self.min_plaquettes <= 0:
+            raise ValueError("min_plaquettes must be positive.")
+        if self.min_plaquettes > self.max_plaquettes:
+            raise ValueError("min_plaquettes cannot exceed max_plaquettes.")
+        if self.beam_width <= 0:
+            raise ValueError("beam_width must be positive.")
+        if self.branch_factor <= 0:
+            raise ValueError("branch_factor must be positive.")
+        if self.max_regions is not None and self.max_regions < 0:
+            raise ValueError("max_regions must be non-negative or None.")
+        if self.max_links is not None and self.max_links <= 0:
+            raise ValueError("max_links must be positive or None.")
+
+        adapter = local_cage_adapter_for_model(self.model, self.adapter)
+        config = adapter.normalize_config(self.config)
+        object.__setattr__(self, "adapter", adapter)
+        object.__setattr__(self, "config", config)
+
+        if self.seed_plaquette_ids is not None:
+            seed_ids = _unique_int_array(self.seed_plaquette_ids, name="seed_plaquette_ids")
+            _validate_plaquette_ids(self.model, seed_ids)
+            object.__setattr__(self, "seed_plaquette_ids", seed_ids)
+
+    def iter_records(self) -> Iterator[AdaptiveRegionProposalRecord]:
+        """Yield adaptive proposal records in beam-search order."""
+        plaquette_ids = _adaptive_seed_plaquette_ids(self.model, self.seed_plaquette_ids)
+        neighbor_map = _plaquette_shared_link_neighbor_map(self.model)
+
+        beam: list[AdaptiveRegionProposalRecord] = []
+        for plaquette_id in plaquette_ids:
+            record = self._make_record(
+                plaquette_ids=(int(plaquette_id),),
+                seed_plaquette_ids=(int(plaquette_id),),
+                generation=1,
+                neighbor_map=neighbor_map,
+            )
+            if record is not None:
+                beam.append(record)
+
+        beam = _top_adaptive_records(beam, self.beam_width)
+        emitted: set[tuple[int, ...]] = set()
+        considered: set[tuple[int, ...]] = {
+            tuple(int(pid) for pid in record.plaquette_ids) for record in beam
+        }
+
+        for generation in range(1, int(self.max_plaquettes) + 1):
+            for record in beam:
+                key = tuple(int(pid) for pid in record.plaquette_ids)
+                if key in emitted or len(key) < int(self.min_plaquettes):
+                    continue
+                emitted.add(key)
+                yield record
+                if self.max_regions is not None and len(emitted) >= int(self.max_regions):
+                    return
+
+            if generation >= int(self.max_plaquettes):
+                break
+
+            next_records: list[AdaptiveRegionProposalRecord] = []
+            for parent in beam:
+                parent_set = frozenset(int(pid) for pid in parent.plaquette_ids)
+                expansions: list[AdaptiveRegionProposalRecord] = []
+                for plaquette_id in _adaptive_region_frontier(parent_set, neighbor_map):
+                    child = tuple(sorted((*parent_set, int(plaquette_id))))
+                    if child in considered:
+                        continue
+                    considered.add(child)
+                    record = self._make_record(
+                        plaquette_ids=child,
+                        seed_plaquette_ids=parent.seed_plaquette_ids,
+                        generation=generation + 1,
+                        neighbor_map=neighbor_map,
+                    )
+                    if record is not None:
+                        expansions.append(record)
+
+                next_records.extend(_top_adaptive_records(expansions, self.branch_factor))
+
+            beam = _top_adaptive_records(next_records, self.beam_width)
+            if not beam:
+                break
+
+    def iter_regions(self) -> Iterator[LocalQDMRegion]:
+        """Yield only the local regions from :meth:`iter_records`."""
+        for record in self.iter_records():
+            yield record.region
+
+    def iter_searchers(self) -> Iterator[LocalCageSearcher]:
+        """Yield ready-to-run local cage searchers for proposed regions."""
+        for record in self.iter_records():
+            yield LocalCageSearcher(
+                model=self.model,
+                region=record.region,
+                config=self.config,
+                adapter=self.adapter,
+            )
+
+    def _make_record(
+        self,
+        *,
+        plaquette_ids: Sequence[int],
+        seed_plaquette_ids: Sequence[int] | npt.ArrayLike,
+        generation: int,
+        neighbor_map: dict[int, frozenset[int]],
+    ) -> AdaptiveRegionProposalRecord | None:
+        selected = np.asarray(tuple(sorted({int(pid) for pid in plaquette_ids})), dtype=np.int64)
+        if selected.size == 0 or selected.size > int(self.max_plaquettes):
+            return None
+
+        region = self.adapter.build_region_from_plaquettes(
+            plaquette_ids=selected,
+            config=self.config,
+            scoring_plaquette_ids=selected,
+        )
+        if self.max_links is not None and region.link_ids.size > int(self.max_links):
+            return None
+
+        local_hilbert_size: int | None = None
+        n_records: int | None = None
+        counts_by_signature: dict[tuple[int, int], int] = {}
+        feedback_bonus = 0.0
+        if self.use_search_feedback:
+            result = LocalCageSearcher(
+                model=self.model,
+                region=region,
+                config=self.config,
+                adapter=self.adapter,
+            ).run()
+            local_hilbert_size = result.local_hilbert_size
+            n_records = len(result.records)
+            counts_by_signature = result.counts_by_signature
+            feedback_bonus = 10.0 * float(n_records)
+
+        score = _adaptive_region_score(
+            region,
+            plaquette_ids=selected,
+            neighbor_map=neighbor_map,
+            feedback_bonus=feedback_bonus,
+        )
+        return AdaptiveRegionProposalRecord(
+            region=region,
+            plaquette_ids=selected,
+            seed_plaquette_ids=np.asarray(seed_plaquette_ids, dtype=np.int64),
+            generation=int(generation),
+            score=score,
+            link_count=int(region.link_ids.size),
+            unresolved_boundary_count=int(region.unresolved_boundary_plaquette_ids.size),
+            local_hilbert_size=local_hilbert_size,
+            n_records=n_records,
+            counts_by_signature=counts_by_signature,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -3845,6 +4096,96 @@ def _lattice_axis_period(model: object, axis: int) -> int | None:
     if axis == 1 and hasattr(model.lattice, "ly"):
         return int(model.lattice.ly)
     return None
+
+
+def _adaptive_seed_plaquette_ids(
+    model: object,
+    seed_plaquette_ids: Sequence[int] | npt.ArrayLike | None,
+) -> npt.NDArray[np.int64]:
+    if seed_plaquette_ids is None:
+        ids = np.asarray([int(pid) for pid in model.plaquette_ids()], dtype=np.int64)
+    else:
+        ids = _unique_int_array(seed_plaquette_ids, name="seed_plaquette_ids")
+    _validate_plaquette_ids(model, ids)
+    return ids
+
+
+def _plaquette_shared_link_neighbor_map(model: object) -> dict[int, frozenset[int]]:
+    link_to_plaquettes: dict[int, list[int]] = defaultdict(list)
+    plaquette_ids = tuple(int(pid) for pid in model.plaquette_ids())
+    for plaquette_id in plaquette_ids:
+        for link_id in model.lattice.plaquette_links(int(plaquette_id)):
+            link_to_plaquettes[int(link_id)].append(int(plaquette_id))
+
+    neighbors: dict[int, set[int]] = {int(pid): set() for pid in plaquette_ids}
+    for incident_plaquettes in link_to_plaquettes.values():
+        for left in incident_plaquettes:
+            for right in incident_plaquettes:
+                if int(left) != int(right):
+                    neighbors[int(left)].add(int(right))
+
+    return {
+        int(plaquette_id): frozenset(sorted(neighbor_ids))
+        for plaquette_id, neighbor_ids in neighbors.items()
+    }
+
+
+def _adaptive_region_frontier(
+    plaquette_ids: frozenset[int],
+    neighbor_map: dict[int, frozenset[int]],
+) -> tuple[int, ...]:
+    frontier: set[int] = set()
+    for plaquette_id in plaquette_ids:
+        frontier.update(int(neighbor) for neighbor in neighbor_map.get(int(plaquette_id), ()))
+    frontier.difference_update(plaquette_ids)
+    return tuple(sorted(frontier))
+
+
+def _top_adaptive_records(
+    records: Sequence[AdaptiveRegionProposalRecord],
+    limit: int,
+) -> list[AdaptiveRegionProposalRecord]:
+    return sorted(
+        records,
+        key=lambda record: (
+            -float(record.score),
+            int(record.link_count),
+            tuple(int(pid) for pid in record.plaquette_ids),
+        ),
+    )[: int(limit)]
+
+
+def _adaptive_region_score(
+    region: LocalQDMRegion,
+    *,
+    plaquette_ids: npt.NDArray[np.int64],
+    neighbor_map: dict[int, frozenset[int]],
+    feedback_bonus: float,
+) -> float:
+    selected = {int(pid) for pid in np.asarray(plaquette_ids, dtype=np.int64)}
+    internal_edges = 0
+    for plaquette_id in selected:
+        internal_edges += sum(
+            1 for neighbor in neighbor_map.get(plaquette_id, ()) if neighbor in selected
+        )
+    internal_edges //= 2
+
+    n_plaquettes = int(len(selected))
+    n_links = int(region.link_ids.size)
+    n_unresolved = int(region.unresolved_boundary_plaquette_ids.size)
+    n_closed_sites = int(region.closed_site_ids.size)
+
+    # Cheap closure/compactness heuristic.  The weights are intentionally mild:
+    # hard limits still come from max_plaquettes/max_links, while this score
+    # merely ranks which growth paths survive the beam.
+    return float(
+        feedback_bonus
+        + 1.0 * n_plaquettes
+        + 0.75 * internal_edges
+        + 0.10 * n_closed_sites
+        - 1.0 * n_unresolved
+        - 0.05 * n_links
+    )
 
 
 def _unique_int_array(values: Sequence[int] | npt.ArrayLike, *, name: str) -> npt.NDArray[np.int64]:
