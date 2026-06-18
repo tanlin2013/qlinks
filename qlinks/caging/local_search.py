@@ -1275,6 +1275,16 @@ class _QDMGlobalPlaquetteAction:
 
 
 @dataclass(frozen=True, slots=True)
+class _QDMExteriorStaticPlaquette:
+    """Exterior-only plaquette represented in exterior-link coordinates."""
+
+    plaquette_id: int
+    exterior_indices: npt.NDArray[np.int64]
+    pattern0: npt.NDArray[np.int64]
+    pattern1: npt.NDArray[np.int64]
+
+
+@dataclass(frozen=True, slots=True)
 class LocalQDMCertificationReport:
     """Numerical certificate for one padded local QDM cage."""
 
@@ -3890,6 +3900,180 @@ def _qdm_multi_padding_failure_report(
     )
 
 
+def _qdm_exterior_variable_order(
+    model: object,
+    exterior_link_ids: npt.NDArray[np.int64],
+    site_exterior_links: dict[int, npt.NDArray[np.int64]],
+    site_targets: dict[int, int],
+    *,
+    fixed_link_sets: Sequence[set[int]],
+    require_static_exterior: bool,
+) -> npt.NDArray[np.int64]:
+    """Return a deterministic DFS order for exterior QDM padding links.
+
+    The first padding implementation used only local site-constraint scores.
+    That is correct, but it may enumerate many globally legal exterior
+    completions before touching the boundary/spacer links that decide whether a
+    candidate certifies.  This order prioritizes links on plaquettes touching
+    selected blocks, then links on exterior-only plaquettes when a static
+    exterior is requested, while preserving the old site-constraint preference
+    as a secondary signal.
+    """
+    n_exterior = int(exterior_link_ids.size)
+    exterior_index_by_link = {
+        int(link_id): int(exterior_index)
+        for exterior_index, link_id in enumerate(exterior_link_ids)
+    }
+    link_owner: dict[int, int] = {}
+    for owner, link_set in enumerate(fixed_link_sets):
+        for link_id in link_set:
+            link_owner[int(link_id)] = int(owner)
+
+    scores = np.zeros(n_exterior, dtype=np.int64)
+
+    for site_id, exterior_indices in site_exterior_links.items():
+        n_site_exterior = int(exterior_indices.size)
+        target = int(site_targets[int(site_id)])
+        if n_site_exterior == 0:
+            continue
+        if target in {0, n_site_exterior}:
+            weight = 256
+        elif target in {1, n_site_exterior - 1}:
+            weight = 96
+        else:
+            weight = 32
+        for exterior_index in exterior_indices:
+            scores[int(exterior_index)] += weight
+
+    for action in _qdm_global_plaquette_actions(model):
+        exterior_indices = [
+            exterior_index_by_link[int(link_id)]
+            for link_id in action.links
+            if int(link_id) in exterior_index_by_link
+        ]
+        if not exterior_indices:
+            continue
+
+        owners = {
+            link_owner[int(link_id)] for link_id in action.links if int(link_id) in link_owner
+        }
+        if len(owners) > 1:
+            # Spacer plaquettes between independent blocks are the most useful
+            # early decisions when kinetic separation is relaxed.
+            plaquette_weight = 4096
+        elif owners:
+            # Boundary plaquettes touching one selected block determine the
+            # one-hop leakage/certification pattern.
+            plaquette_weight = 2048
+        elif require_static_exterior:
+            # Exterior-only plaquettes must be frozen; decide their links before
+            # unrelated bulk variables so static branches are pruned earlier.
+            plaquette_weight = 512
+        else:
+            plaquette_weight = 16
+
+        for exterior_index in exterior_indices:
+            scores[int(exterior_index)] += plaquette_weight
+
+    # Use the physical link id, not the exterior-array position, as the final
+    # tie-breaker so the order is stable under equivalent array construction.
+    return np.lexsort((exterior_link_ids, -scores)).astype(np.int64)
+
+
+def _qdm_static_exterior_plaquettes_by_variable(
+    model: object,
+    exterior_link_ids: npt.NDArray[np.int64],
+    *,
+    fixed_link_set: set[int],
+) -> list[list[_QDMExteriorStaticPlaquette]]:
+    """Return exterior-only static plaquette checks touched by each variable."""
+    n_exterior = int(exterior_link_ids.size)
+    exterior_index_by_link = {
+        int(link_id): int(exterior_index)
+        for exterior_index, link_id in enumerate(exterior_link_ids)
+    }
+    by_variable: list[list[_QDMExteriorStaticPlaquette]] = [[] for _ in range(n_exterior)]
+
+    for action in _qdm_global_plaquette_actions(model):
+        action_links = [int(link_id) for link_id in action.links]
+        if any(link_id in fixed_link_set for link_id in action_links):
+            continue
+        if any(link_id not in exterior_index_by_link for link_id in action_links):
+            continue
+        exterior_indices = np.asarray(
+            [exterior_index_by_link[link_id] for link_id in action_links],
+            dtype=np.int64,
+        )
+        static_plaquette = _QDMExteriorStaticPlaquette(
+            plaquette_id=int(action.plaquette_id),
+            exterior_indices=exterior_indices,
+            pattern0=action.pattern0,
+            pattern1=action.pattern1,
+        )
+        for exterior_index in exterior_indices:
+            by_variable[int(exterior_index)].append(static_plaquette)
+
+    return by_variable
+
+
+def _qdm_static_exterior_checks_pass(
+    static_plaquettes: Sequence[_QDMExteriorStaticPlaquette],
+    *,
+    exterior_config: npt.NDArray[np.int64],
+    assigned: npt.NDArray[np.bool_],
+) -> bool:
+    """Reject a branch once a required-static exterior plaquette is flippable."""
+    for static_plaquette in static_plaquettes:
+        exterior_indices = static_plaquette.exterior_indices
+        if not bool(np.all(assigned[exterior_indices])):
+            continue
+        values = exterior_config[exterior_indices]
+        if np.array_equal(values, static_plaquette.pattern0) or np.array_equal(
+            values,
+            static_plaquette.pattern1,
+        ):
+            return False
+    return True
+
+
+def _qdm_exterior_value_order(
+    exterior_variable: int,
+    *,
+    exterior_config: npt.NDArray[np.int64],
+    assigned: npt.NDArray[np.bool_],
+    sites_by_exterior_variable: Sequence[Sequence[int]],
+    site_exterior_links: dict[int, npt.NDArray[np.int64]],
+    site_targets: dict[int, int],
+) -> tuple[int, ...]:
+    """Order binary choices so forced/tight site constraints are tried first."""
+    scored_values: list[tuple[int, int]] = []
+    for value in (0, 1):
+        score = 0
+        feasible = True
+        for site_id in sites_by_exterior_variable[int(exterior_variable)]:
+            exterior_indices = site_exterior_links[int(site_id)]
+            assigned_local = assigned[exterior_indices]
+            occupied = int(np.sum(exterior_config[exterior_indices[assigned_local]]))
+            unassigned = int(exterior_indices.size - np.count_nonzero(assigned_local))
+            remaining_need = int(site_targets[int(site_id)]) - occupied
+            remaining_after = unassigned - 1
+            next_need = remaining_need - int(value)
+            if next_need < 0 or next_need > remaining_after:
+                feasible = False
+                break
+            if next_need in {0, remaining_after}:
+                score += 4
+            if remaining_after == 0:
+                score += 8
+        if feasible:
+            scored_values.append((score, int(value)))
+
+    if not scored_values:
+        return (0, 1)
+    scored_values.sort(key=lambda item: (-item[0], item[1]))
+    return tuple(value for _, value in scored_values)
+
+
 def _iter_qdm_exterior_paddings_for_blocks(
     model: object,
     blocks: Sequence[LocalQDMCageBlock],
@@ -3953,13 +4137,14 @@ def _iter_qdm_exterior_paddings_for_blocks(
             yield padding
         return
 
-    scores = np.zeros(n_exterior, dtype=np.int64)
-    for site_id, exterior_indices in site_exterior_links.items():
-        target = site_targets[int(site_id)]
-        weight = 2 if target in {0, len(exterior_indices)} else 1
-        for exterior_index in exterior_indices:
-            scores[int(exterior_index)] += weight
-    variable_order = np.lexsort((np.arange(n_exterior), -scores)).astype(np.int64)
+    variable_order = _qdm_exterior_variable_order(
+        model,
+        exterior_link_ids,
+        site_exterior_links,
+        site_targets,
+        fixed_link_sets=[set(int(link_id) for link_id in block.link_ids) for block in fixed_blocks],
+        require_static_exterior=config.require_static_exterior,
+    )
 
     exterior_config = np.zeros(n_exterior, dtype=np.int64)
     assigned = np.zeros(n_exterior, dtype=bool)
@@ -3967,6 +4152,16 @@ def _iter_qdm_exterior_paddings_for_blocks(
     for site_id, exterior_indices in site_exterior_links.items():
         for exterior_index in exterior_indices:
             sites_by_exterior_variable[int(exterior_index)].append(int(site_id))
+
+    static_exterior_plaquettes_by_variable = (
+        _qdm_static_exterior_plaquettes_by_variable(
+            model,
+            exterior_link_ids,
+            fixed_link_set=block_link_set,
+        )
+        if config.require_static_exterior
+        else [[] for _ in range(n_exterior)]
+    )
 
     nodes_visited = 0
     yielded_count = 0
@@ -4015,13 +4210,28 @@ def _iter_qdm_exterior_paddings_for_blocks(
             return
 
         exterior_variable = int(variable_order[depth])
-        for value in (0, 1):
+        for value in _qdm_exterior_value_order(
+            exterior_variable,
+            exterior_config=exterior_config,
+            assigned=assigned,
+            sites_by_exterior_variable=sites_by_exterior_variable,
+            site_exterior_links=site_exterior_links,
+            site_targets=site_targets,
+        ):
             if yielded_count >= config.max_paddings_per_packing:
                 return
             exterior_config[exterior_variable] = value
             assigned[exterior_variable] = True
             touched_sites = sites_by_exterior_variable[exterior_variable]
-            if all(partial_site_check(site_id) for site_id in touched_sites):
+            touched_static_plaquettes = static_exterior_plaquettes_by_variable[exterior_variable]
+            if all(partial_site_check(site_id) for site_id in touched_sites) and (
+                not touched_static_plaquettes
+                or _qdm_static_exterior_checks_pass(
+                    touched_static_plaquettes,
+                    exterior_config=exterior_config,
+                    assigned=assigned,
+                )
+            ):
                 yield from dfs(depth + 1)
             assigned[exterior_variable] = False
             exterior_config[exterior_variable] = 0
@@ -4443,13 +4653,14 @@ def find_shared_qdm_exterior_paddings(
             return [padding]
         return []
 
-    scores = np.zeros(n_exterior, dtype=np.int64)
-    for site_id, exterior_indices in site_exterior_links.items():
-        target = site_targets[int(site_id)]
-        weight = 2 if target in {0, len(exterior_indices)} else 1
-        for exterior_index in exterior_indices:
-            scores[int(exterior_index)] += weight
-    variable_order = np.lexsort((np.arange(n_exterior), -scores)).astype(np.int64)
+    variable_order = _qdm_exterior_variable_order(
+        model,
+        exterior_link_ids,
+        site_exterior_links,
+        site_targets,
+        fixed_link_sets=[local_link_set],
+        require_static_exterior=padding_config.require_static_exterior,
+    )
 
     exterior_config = np.zeros(n_exterior, dtype=np.int64)
     assigned = np.zeros(n_exterior, dtype=bool)
@@ -4457,6 +4668,16 @@ def find_shared_qdm_exterior_paddings(
     for site_id, exterior_indices in site_exterior_links.items():
         for exterior_index in exterior_indices:
             sites_by_exterior_variable[int(exterior_index)].append(int(site_id))
+
+    static_exterior_plaquettes_by_variable = (
+        _qdm_static_exterior_plaquettes_by_variable(
+            model,
+            exterior_link_ids,
+            fixed_link_set=local_link_set,
+        )
+        if padding_config.require_static_exterior
+        else [[] for _ in range(n_exterior)]
+    )
 
     paddings: list[LocalQDMPadding] = []
     nodes_visited = 0
@@ -4507,13 +4728,28 @@ def find_shared_qdm_exterior_paddings(
             return
 
         exterior_variable = int(variable_order[depth])
-        for value in (0, 1):
+        for value in _qdm_exterior_value_order(
+            exterior_variable,
+            exterior_config=exterior_config,
+            assigned=assigned,
+            sites_by_exterior_variable=sites_by_exterior_variable,
+            site_exterior_links=site_exterior_links,
+            site_targets=site_targets,
+        ):
             if len(paddings) >= padding_config.max_paddings_per_record:
                 return
             exterior_config[exterior_variable] = value
             assigned[exterior_variable] = True
             touched_sites = sites_by_exterior_variable[exterior_variable]
-            if all(partial_site_check(site_id) for site_id in touched_sites):
+            touched_static_plaquettes = static_exterior_plaquettes_by_variable[exterior_variable]
+            if all(partial_site_check(site_id) for site_id in touched_sites) and (
+                not touched_static_plaquettes
+                or _qdm_static_exterior_checks_pass(
+                    touched_static_plaquettes,
+                    exterior_config=exterior_config,
+                    assigned=assigned,
+                )
+            ):
                 dfs(depth + 1)
             assigned[exterior_variable] = False
             exterior_config[exterior_variable] = 0
