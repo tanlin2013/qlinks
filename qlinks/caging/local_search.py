@@ -591,6 +591,19 @@ class MultiLocalQDMCertificationReport:
 
 
 @dataclass(frozen=True, slots=True)
+class _QDMGlobalPlaquetteAction:
+    """Cached data needed to test/apply one global QDM plaquette flip."""
+
+    plaquette_id: int
+    links: npt.NDArray[np.int64]
+    pattern0: npt.NDArray[np.int64]
+    pattern1: npt.NDArray[np.int64]
+    forward: complex
+    backward: complex
+    potential: complex
+
+
+@dataclass(frozen=True, slots=True)
 class LocalQDMCertificationReport:
     """Numerical certificate for one padded local QDM cage."""
 
@@ -2840,6 +2853,14 @@ def _certify_qdm_multi_padding(
     amplitudes = amplitudes / norm
 
     support_configs = np.asarray(padding.global_support_configs, dtype=np.int64)
+    if config.require_static_exterior and not _multi_padding_has_static_exterior(
+        model,
+        padding,
+        fixed_blocks,
+    ):
+        return None
+
+    plaquette_actions = _qdm_multi_block_certification_actions(model, fixed_blocks, config)
     support_keys = [_config_key(config_row) for config_row in support_configs]
     support_amplitude_by_key = {
         key: complex(amplitude) for key, amplitude in zip(support_keys, amplitudes, strict=True)
@@ -2849,8 +2870,8 @@ def _certify_qdm_multi_padding(
     touched_keys: set[tuple[int, ...]] = set(support_keys)
 
     for source_config, source_amplitude in zip(support_configs, amplitudes, strict=True):
-        for plaquette_id in model.plaquette_ids():
-            transition = _qdm_flip_transition(model, source_config, int(plaquette_id))
+        for action in plaquette_actions:
+            transition = _qdm_flip_transition_from_action(source_config, action)
             if transition is None:
                 continue
             final_config, coefficient = transition
@@ -2880,7 +2901,10 @@ def _certify_qdm_multi_padding(
     if support_kinetic_residual > config.tolerance:
         return None
 
-    support_self_loops = qdm_global_self_loop_values(model, support_configs)
+    support_self_loops = _qdm_global_self_loop_values_from_actions(
+        support_configs,
+        plaquette_actions,
+    )
     self_loop_value = complex(support_self_loops[0]) if support_self_loops.size else 0.0 + 0.0j
     if np.linalg.norm(support_self_loops - self_loop_value) > config.tolerance:
         return None
@@ -3100,6 +3124,25 @@ def _global_configs_satisfy_model_sectors(
     return True
 
 
+def _qdm_multi_block_certification_actions(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    config: LocalQDMMultiPaddingConfig,
+) -> tuple[_QDMGlobalPlaquetteAction, ...]:
+    actions = _qdm_global_plaquette_actions(model)
+    if not config.require_static_exterior:
+        return actions
+
+    block_link_set = {
+        int(link_id) for block in blocks for link_id in np.asarray(block.link_ids, dtype=np.int64)
+    }
+    return tuple(
+        action
+        for action in actions
+        if any(int(link_id) in block_link_set for link_id in action.links)
+    )
+
+
 def _multi_padding_has_static_exterior(
     model: object,
     padding: MultiLocalQDMPadding,
@@ -3108,15 +3151,18 @@ def _multi_padding_has_static_exterior(
     block_link_set = {
         int(link_id) for block in blocks for link_id in np.asarray(block.link_ids, dtype=np.int64)
     }
-    for plaquette_id in model.plaquette_ids():
-        plaquette_links = set(
-            int(link_id) for link_id in model.lattice.plaquette_links(int(plaquette_id))
-        )
-        if plaquette_links.intersection(block_link_set):
+    if padding.global_support_configs.shape[0] == 0:
+        return True
+
+    # Plaquettes disjoint from every block only see the shared exterior config,
+    # so one support row is enough.  Avoid constructing flipped configs here;
+    # we only need to know whether an exterior plaquette is flippable.
+    reference_config = padding.global_support_configs[0]
+    for action in _qdm_global_plaquette_actions(model):
+        if any(int(link_id) in block_link_set for link_id in action.links):
             continue
-        for config_row in padding.global_support_configs:
-            if _qdm_flip_transition(model, config_row, int(plaquette_id)) is not None:
-                return False
+        if _qdm_plaquette_is_flippable_from_action(reference_config, action):
+            return False
     return True
 
 
@@ -3284,9 +3330,10 @@ def build_qdm_global_limited_kinetic_matrix(
     cols: list[int] = []
     data: list[complex] = []
 
+    actions = _qdm_global_plaquette_actions(model)
     for col, config_row in enumerate(basis.states):
-        for plaquette_id in model.plaquette_ids():
-            transition = _qdm_flip_transition(model, config_row, int(plaquette_id))
+        for action in actions:
+            transition = _qdm_flip_transition_from_action(config_row, action)
             if transition is None:
                 continue
             final_config, coefficient = transition
@@ -3309,13 +3356,10 @@ def qdm_global_self_loop_values(
     configs: npt.ArrayLike,
 ) -> npt.NDArray[np.complex128]:
     """Compute full QDM potential/self-loop values for explicit configs."""
-    arr = np.asarray(configs, dtype=np.int64)
-    if arr.ndim == 1:
-        arr = arr.reshape(1, -1)
-    values = np.zeros(arr.shape[0], dtype=np.complex128)
-    for row_index, config_row in enumerate(arr):
-        values[row_index] = _qdm_global_self_loop_value(model, config_row)
-    return values
+    return _qdm_global_self_loop_values_from_actions(
+        configs,
+        _qdm_global_plaquette_actions(model),
+    )
 
 
 def _certify_qdm_padding(
@@ -3500,16 +3544,67 @@ def _padding_has_static_exterior(
     local_record: LocalQDMCageRecord,
 ) -> bool:
     local_link_set = set(int(link_id) for link_id in local_record.local_link_ids)
-    for plaquette_id in model.plaquette_ids():
-        plaquette_links = set(
-            int(link_id) for link_id in model.lattice.plaquette_links(int(plaquette_id))
-        )
-        if plaquette_links.intersection(local_link_set):
+    if padding.global_support_configs.shape[0] == 0:
+        return True
+
+    reference_config = padding.global_support_configs[0]
+    for action in _qdm_global_plaquette_actions(model):
+        if any(int(link_id) in local_link_set for link_id in action.links):
             continue
-        for config_row in padding.global_support_configs:
-            if _qdm_flip_transition(model, config_row, int(plaquette_id)) is not None:
-                return False
+        if _qdm_plaquette_is_flippable_from_action(reference_config, action):
+            return False
     return True
+
+
+def _qdm_global_plaquette_actions(
+    model: object,
+    plaquette_ids: Sequence[int] | None = None,
+) -> tuple[_QDMGlobalPlaquetteAction, ...]:
+    source_ids = model.plaquette_ids() if plaquette_ids is None else plaquette_ids
+    ids = tuple(int(pid) for pid in source_ids)
+    actions: list[_QDMGlobalPlaquetteAction] = []
+    for plaquette_id in ids:
+        links = np.asarray(model.lattice.plaquette_links(int(plaquette_id)), dtype=np.int64)
+        pattern0, pattern1 = alternating_binary_patterns(int(links.size))
+        coupling = model._coup_kin_at(int(plaquette_id))
+        actions.append(
+            _QDMGlobalPlaquetteAction(
+                plaquette_id=int(plaquette_id),
+                links=links,
+                pattern0=np.asarray(pattern0, dtype=np.int64),
+                pattern1=np.asarray(pattern1, dtype=np.int64),
+                forward=complex(_forward_coefficient(coupling)),
+                backward=complex(_backward_coefficient(coupling)),
+                potential=complex(model._coup_pot_at(int(plaquette_id))),
+            )
+        )
+    return tuple(actions)
+
+
+def _qdm_flip_transition_from_action(
+    config_row: npt.ArrayLike,
+    action: _QDMGlobalPlaquetteAction,
+) -> tuple[npt.NDArray[np.int64], complex] | None:
+    config_arr = np.asarray(config_row, dtype=np.int64)
+    values = config_arr[action.links]
+    if np.array_equal(values, action.pattern0):
+        final = config_arr.copy()
+        final[action.links] = action.pattern1
+        return final, action.forward
+    if np.array_equal(values, action.pattern1):
+        final = config_arr.copy()
+        final[action.links] = action.pattern0
+        return final, action.backward
+    return None
+
+
+def _qdm_plaquette_is_flippable_from_action(
+    config_row: npt.ArrayLike,
+    action: _QDMGlobalPlaquetteAction,
+) -> bool:
+    config_arr = np.asarray(config_row, dtype=np.int64)
+    values = config_arr[action.links]
+    return bool(np.array_equal(values, action.pattern0) or np.array_equal(values, action.pattern1))
 
 
 def _qdm_flip_transition(
@@ -3517,33 +3612,36 @@ def _qdm_flip_transition(
     config_row: npt.ArrayLike,
     plaquette_id: int,
 ) -> tuple[npt.NDArray[np.int64], complex] | None:
-    config_arr = np.asarray(config_row, dtype=np.int64)
-    links = np.asarray(model.lattice.plaquette_links(int(plaquette_id)), dtype=np.int64)
-    values = config_arr[links]
-    p0, p1 = alternating_binary_patterns(links.size)
-    coupling = model._coup_kin_at(int(plaquette_id))
+    action = _qdm_global_plaquette_actions(model, (int(plaquette_id),))[0]
+    return _qdm_flip_transition_from_action(config_row, action)
 
-    if np.array_equal(values, p0):
-        final = config_arr.copy()
-        final[links] = p1
-        return final, _forward_coefficient(coupling)
-    if np.array_equal(values, p1):
-        final = config_arr.copy()
-        final[links] = p0
-        return final, _backward_coefficient(coupling)
-    return None
+
+def _qdm_global_self_loop_values_from_actions(
+    configs: npt.ArrayLike,
+    actions: Sequence[_QDMGlobalPlaquetteAction],
+) -> npt.NDArray[np.complex128]:
+    arr = np.asarray(configs, dtype=np.int64)
+    if arr.ndim == 1:
+        arr = arr.reshape(1, -1)
+    values = np.zeros(arr.shape[0], dtype=np.complex128)
+    for action in actions:
+        local_values = arr[:, action.links]
+        flippable = np.all(local_values == action.pattern0, axis=1) | np.all(
+            local_values == action.pattern1,
+            axis=1,
+        )
+        if np.any(flippable):
+            values[flippable] += action.potential
+    return values
 
 
 def _qdm_global_self_loop_value(model: object, config_row: npt.ArrayLike) -> complex:
-    config_arr = np.asarray(config_row, dtype=np.int64)
-    total = 0.0 + 0.0j
-    for plaquette_id in model.plaquette_ids():
-        links = np.asarray(model.lattice.plaquette_links(int(plaquette_id)), dtype=np.int64)
-        values = config_arr[links]
-        p0, p1 = alternating_binary_patterns(links.size)
-        if np.array_equal(values, p0) or np.array_equal(values, p1):
-            total += complex(model._coup_pot_at(int(plaquette_id)))
-    return complex(total)
+    return complex(
+        _qdm_global_self_loop_values_from_actions(
+            config_row,
+            _qdm_global_plaquette_actions(model),
+        )[0]
+    )
 
 
 def _config_key(config_row: npt.ArrayLike) -> tuple[int, ...]:
