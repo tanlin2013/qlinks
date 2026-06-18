@@ -163,7 +163,10 @@ def map_tasks_ray(
     if num_gpus_per_task is not None:
         remote_options["num_gpus"] = num_gpus_per_task
 
-    remote_runner = ray.remote(**remote_options)(_run_indexed_task)
+    if remote_options:
+        remote_runner = ray.remote(**remote_options)(_run_indexed_task)
+    else:
+        remote_runner = ray.remote(_run_indexed_task)
 
     object_refs = [
         remote_runner.remote(
