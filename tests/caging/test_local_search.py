@@ -12,6 +12,8 @@ from qlinks.caging import (
     CageSearchResult,
     CageState,
     CandidateSubgraph,
+    ConnectedRegionProposal,
+    ConnectedRegionProposalRecord,
     LocalCageSearchConfig,
     LocalCageSearcher,
     LocalQDMCageRecord,
@@ -22,15 +24,21 @@ from qlinks.caging import (
     LocalRegionProposalSearchResult,
     MultiLocalQDMPadding,
     QDMLocalCageAdapter,
+    QDMMultiPaddingDiagnostics,
+    RobustQDMLocalCageSearchConfig,
     StripeRegionProposal,
     certified_qdm_result_from_multi_block_reports,
     certify_qdm_multi_block_padding,
     certify_qdm_multi_block_result,
     classify_cage_state,
     collect_qdm_cage_blocks_from_region_proposals,
+    diagnose_qdm_multi_block_paddings,
     enumerate_qdm_local_basis,
     find_multi_qdm_block_paddings,
     make_qdm_cage_block,
+    qdm_multi_padding_config_schedule,
+    robust_certify_qdm_multi_block_result,
+    robust_qdm_local_cage_search,
     run_local_region_proposal,
 )
 from qlinks.models import HoneycombQDMModel, SquareQDMModel, TriangularQDMModel
@@ -454,6 +462,129 @@ def test_adaptive_region_proposal_runs_with_proposal_runner() -> None:
     assert all(record.proposal_record is not None for record in scan)
     assert all(hasattr(record.proposal_record, "score") for record in scan)
     assert all(record.result.local_hilbert_size > 0 for record in scan)
+
+
+def test_connected_region_proposal_enumerates_connected_sets_under_budget() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = ConnectedRegionProposal(
+        model,
+        max_plaquettes=2,
+        seed_plaquette_ids=[0],
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            tolerance=1.0e-10,
+        ),
+    )
+    records = list(proposal.iter_records())
+
+    assert records
+    assert all(isinstance(record, ConnectedRegionProposalRecord) for record in records)
+    assert all(1 <= record.plaquette_ids.size <= 2 for record in records)
+    assert any(record.plaquette_ids.size == 2 for record in records)
+    assert all(record.seed_plaquette_id == 0 for record in records)
+    assert all(record.region.link_ids.size < model.lattice.num_links for record in records)
+
+
+def test_qdm_multi_block_diagnostics_and_schedule_report_successes() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    static_config = _first_static_qdm_config(model)
+    blocks = [
+        make_qdm_cage_block(
+            model,
+            _static_local_record_from_global_config(static_config, [4]),
+            block_id=0,
+        ),
+        make_qdm_cage_block(
+            model,
+            _static_local_record_from_global_config(static_config, [16]),
+            block_id=1,
+        ),
+    ]
+    config = LocalQDMMultiPaddingConfig(
+        min_blocks=2,
+        max_blocks=2,
+        max_paddings=1,
+        max_paddings_per_packing=1,
+        include_sectors=False,
+        require_static_exterior=True,
+        tolerance=1.0e-9,
+    )
+
+    scheduled = qdm_multi_padding_config_schedule(config, stages=("loose", "static", "strict"))
+    assert [name for name, _stage_config in scheduled] == ["loose", "static", "strict"]
+    assert scheduled[0][1].require_static_exterior is False
+    assert scheduled[1][1].require_static_exterior is True
+    assert scheduled[1][1].require_kinetic_separation is False
+    assert scheduled[2][1].require_kinetic_separation is True
+
+    diagnostics = diagnose_qdm_multi_block_paddings(model, blocks, config=config)
+    assert isinstance(diagnostics, QDMMultiPaddingDiagnostics)
+    assert diagnostics.n_paddings == 1
+    assert diagnostics.n_certified == 1
+    assert diagnostics.n_failed == 0
+    assert diagnostics.counts_by_failure_reason == {}
+
+    robust = robust_certify_qdm_multi_block_result(
+        model,
+        blocks,
+        config=config,
+        stages=("loose", "static"),
+    )
+    assert robust.counts_by_signature == {(0, 0): 1}
+
+
+def test_robust_qdm_local_cage_search_returns_certified_result_under_small_budget() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    certified = robust_qdm_local_cage_search(
+        model,
+        config=RobustQDMLocalCageSearchConfig(
+            region_strategies=("stripe",),
+            stripe_widths=(1,),
+            stripe_directions=(0,),
+            max_regions_per_strategy=2,
+            block_signatures=((0, 2),),
+            max_records_per_region=2,
+            min_blocks=2,
+            max_blocks=2,
+            max_paddings_per_stage=2,
+            max_paddings_per_packing=1,
+            max_product_support_size=2048,
+            include_sectors=True,
+            padding_stages=("static",),
+            tolerance=1.0e-9,
+            store_full_states=False,
+        ),
+    )
+
+    assert certified.hilbert_size == certified.basis.n_states
+    assert isinstance(certified.counts_by_signature, dict)
 
 
 def test_local_qdm_active_plaquette_hook_prunes_kinetically_inactive_states() -> None:

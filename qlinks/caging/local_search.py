@@ -272,6 +272,43 @@ class AdaptiveRegionProposalRecord:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class ConnectedRegionProposalRecord:
+    """One connected plaquette-set local-region proposal.
+
+    Unlike the adaptive beam proposal, this record comes from exhaustive
+    connected-region enumeration under explicit size limits.  It is intended as
+    a robust fallback when the cage shape is not known a priori.
+    """
+
+    region: LocalQDMRegion
+    plaquette_ids: npt.NDArray[np.int64]
+    seed_plaquette_id: int
+    size: int
+    link_count: int
+    unresolved_boundary_count: int
+
+    def __post_init__(self) -> None:
+        plaquette_ids = np.asarray(self.plaquette_ids, dtype=np.int64)
+        if plaquette_ids.ndim != 1:
+            raise ValueError("plaquette_ids must be one-dimensional.")
+        if plaquette_ids.size == 0:
+            raise ValueError("plaquette_ids must be non-empty.")
+        object.__setattr__(
+            self,
+            "plaquette_ids",
+            np.unique(plaquette_ids).astype(np.int64),
+        )
+        object.__setattr__(self, "seed_plaquette_id", int(self.seed_plaquette_id))
+        object.__setattr__(self, "size", int(self.size))
+        object.__setattr__(self, "link_count", int(self.link_count))
+        object.__setattr__(
+            self,
+            "unresolved_boundary_count",
+            int(self.unresolved_boundary_count),
+        )
+
+
 class LocalRegionProposal(Protocol):
     """Protocol for objects that propose local regions to the local cage searcher."""
 
@@ -591,6 +628,135 @@ class AdaptiveRegionProposal:
 
 
 @dataclass(frozen=True, slots=True)
+class ConnectedRegionProposal:
+    """Enumerate connected plaquette regions under explicit size budgets.
+
+    This is the robust, shape-agnostic counterpart of the stripe/adaptive
+    proposals.  It exhaustively enumerates connected plaquette sets on the
+    shared-link plaquette graph up to ``max_plaquettes`` and optionally
+    ``max_links``.  It is deliberately simple: the only physics assumption is
+    connectedness on the kinetic plaquette graph, while the local solver and
+    global certification decide which regions are useful.
+    """
+
+    model: object
+    max_plaquettes: int
+    config: LocalQDMCageSearchConfig = field(
+        default_factory=lambda: LocalQDMCageSearchConfig(halo_layers=0)
+    )
+    min_plaquettes: int = 1
+    seed_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None
+    max_regions: int | None = None
+    max_links: int | None = None
+    adapter: LocalCageModelAdapter | None = None
+
+    def __post_init__(self) -> None:
+        if self.max_plaquettes <= 0:
+            raise ValueError("max_plaquettes must be positive.")
+        if self.min_plaquettes <= 0:
+            raise ValueError("min_plaquettes must be positive.")
+        if self.min_plaquettes > self.max_plaquettes:
+            raise ValueError("min_plaquettes cannot exceed max_plaquettes.")
+        if self.max_regions is not None and self.max_regions < 0:
+            raise ValueError("max_regions must be non-negative or None.")
+        if self.max_links is not None and self.max_links <= 0:
+            raise ValueError("max_links must be positive or None.")
+
+        adapter = local_cage_adapter_for_model(self.model, self.adapter)
+        config = adapter.normalize_config(self.config)
+        object.__setattr__(self, "adapter", adapter)
+        object.__setattr__(self, "config", config)
+
+        if self.seed_plaquette_ids is not None:
+            seed_ids = _unique_int_array(self.seed_plaquette_ids, name="seed_plaquette_ids")
+            _validate_plaquette_ids(self.model, seed_ids)
+            object.__setattr__(self, "seed_plaquette_ids", seed_ids)
+
+    def iter_records(self) -> Iterator[ConnectedRegionProposalRecord]:
+        """Yield connected plaquette-set records in increasing size order."""
+        seeds = _adaptive_seed_plaquette_ids(self.model, self.seed_plaquette_ids)
+        neighbor_map = _plaquette_shared_link_neighbor_map(self.model)
+        emitted: set[tuple[int, ...]] = set()
+        queued: set[tuple[int, ...]] = set()
+        queue: list[tuple[int, tuple[int, ...]]] = []
+
+        for seed in seeds:
+            key = (int(seed),)
+            if key in queued:
+                continue
+            queued.add(key)
+            queue.append((int(seed), key))
+
+        yielded = 0
+        head = 0
+        while head < len(queue):
+            seed, current = queue[head]
+            head += 1
+
+            if len(current) >= int(self.min_plaquettes) and current not in emitted:
+                record = self._make_record(seed_plaquette_id=seed, plaquette_ids=current)
+                if record is not None:
+                    emitted.add(current)
+                    yield record
+                    yielded += 1
+                    if self.max_regions is not None and yielded >= int(self.max_regions):
+                        return
+
+            if len(current) >= int(self.max_plaquettes):
+                continue
+
+            current_set = frozenset(int(pid) for pid in current)
+            for plaquette_id in _adaptive_region_frontier(current_set, neighbor_map):
+                child = tuple(sorted((*current_set, int(plaquette_id))))
+                if child in queued:
+                    continue
+                queued.add(child)
+                queue.append((seed, child))
+
+    def iter_regions(self) -> Iterator[LocalQDMRegion]:
+        """Yield only local regions from :meth:`iter_records`."""
+        for record in self.iter_records():
+            yield record.region
+
+    def iter_searchers(self) -> Iterator[LocalCageSearcher]:
+        """Yield ready-to-run local cage searchers for enumerated regions."""
+        for record in self.iter_records():
+            yield LocalCageSearcher(
+                model=self.model,
+                region=record.region,
+                config=self.config,
+                adapter=self.adapter,
+            )
+
+    def _make_record(
+        self,
+        *,
+        seed_plaquette_id: int,
+        plaquette_ids: Sequence[int],
+    ) -> ConnectedRegionProposalRecord | None:
+        selected = np.asarray(tuple(sorted({int(pid) for pid in plaquette_ids})), dtype=np.int64)
+        if selected.size == 0 or selected.size > int(self.max_plaquettes):
+            return None
+
+        region = self.adapter.build_region_from_plaquettes(
+            plaquette_ids=selected,
+            config=self.config,
+            scoring_plaquette_ids=selected,
+        )
+        if self.max_links is not None and region.link_ids.size > int(self.max_links):
+            return None
+
+        return ConnectedRegionProposalRecord(
+            region=region,
+            plaquette_ids=selected,
+            seed_plaquette_id=int(seed_plaquette_id),
+            size=int(selected.size),
+            link_count=int(region.link_ids.size),
+            unresolved_boundary_count=int(region.unresolved_boundary_plaquette_ids.size),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class LocalQDMCageRecord:
     """One local cage certificate."""
 
@@ -707,6 +873,116 @@ class LocalQDMMultiPaddingConfig:
             include_sectors=self.include_sectors,
             require_static_exterior=self.require_static_exterior,
             tolerance=self.tolerance,
+            sort_limited_basis=self.sort_limited_basis,
+            store_full_states=self.store_full_states,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class RobustQDMLocalCageSearchConfig:
+    """Budget-oriented configuration for robust local QDM cage discovery.
+
+    This config intentionally exposes budgets and strategy choices rather than
+    delicate geometry assumptions.  ``robust_qdm_local_cage_search`` uses a
+    portfolio of region proposals, collects compatible local-cage blocks, then
+    runs a schedule of permissive-to-strict multi-block padding configurations
+    and lets global certification decide which candidates survive.
+    """
+
+    local_config: LocalQDMCageSearchConfig = field(
+        default_factory=lambda: LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            prune_inactive_local_basis_states=True,
+        )
+    )
+    region_strategies: tuple[str, ...] = ("stripe", "connected", "adaptive")
+    max_region_plaquettes: int = 6
+    min_region_plaquettes: int = 1
+    max_region_links: int | None = None
+    max_regions_per_strategy: int | None = 128
+    stripe_widths: tuple[int, ...] = (1, 2)
+    stripe_directions: tuple[int, ...] | None = None
+    adaptive_beam_width: int = 8
+    adaptive_branch_factor: int = 8
+    adaptive_seed_plaquette_ids: tuple[int, ...] | None = None
+    adaptive_use_search_feedback: bool = False
+    block_signatures: tuple[tuple[int, int], ...] | None = None
+    max_records_per_region: int | None = 2
+    max_blocks: int | None = 4
+    min_blocks: int = 1
+    max_product_support_size: int | None = 2048
+    max_paddings_per_stage: int = 64
+    max_paddings_per_packing: int = 4
+    max_dfs_nodes: int | None = None
+    include_sectors: bool = True
+    padding_stages: tuple[str, ...] = ("loose", "static", "strict")
+    tolerance: float = 1.0e-9
+    sort_limited_basis: bool = True
+    store_full_states: bool = True
+    skip_incompatible_blocks: bool = True
+
+    def __post_init__(self) -> None:
+        if self.max_region_plaquettes <= 0:
+            raise ValueError("max_region_plaquettes must be positive.")
+        if self.min_region_plaquettes <= 0:
+            raise ValueError("min_region_plaquettes must be positive.")
+        if self.min_region_plaquettes > self.max_region_plaquettes:
+            raise ValueError("min_region_plaquettes cannot exceed max_region_plaquettes.")
+        if self.max_region_links is not None and self.max_region_links <= 0:
+            raise ValueError("max_region_links must be positive or None.")
+        if self.max_regions_per_strategy is not None and self.max_regions_per_strategy < 0:
+            raise ValueError("max_regions_per_strategy must be non-negative or None.")
+        if not self.region_strategies:
+            raise ValueError("region_strategies must be non-empty.")
+        valid_strategies = {"stripe", "connected", "adaptive"}
+        bad_strategies = [
+            strategy for strategy in self.region_strategies if strategy not in valid_strategies
+        ]
+        if bad_strategies:
+            raise ValueError(f"Unsupported region strategies: {bad_strategies}.")
+        if not self.stripe_widths:
+            raise ValueError("stripe_widths must be non-empty.")
+        if any(int(width) <= 0 for width in self.stripe_widths):
+            raise ValueError("stripe_widths must contain positive integers.")
+        if self.adaptive_beam_width <= 0:
+            raise ValueError("adaptive_beam_width must be positive.")
+        if self.adaptive_branch_factor <= 0:
+            raise ValueError("adaptive_branch_factor must be positive.")
+        if self.max_records_per_region is not None and self.max_records_per_region < 0:
+            raise ValueError("max_records_per_region must be non-negative or None.")
+        if self.max_blocks is not None and self.max_blocks < self.min_blocks:
+            raise ValueError("max_blocks must be None or at least min_blocks.")
+        if self.min_blocks < 1:
+            raise ValueError("min_blocks must be positive.")
+        if self.max_product_support_size is not None and self.max_product_support_size < 1:
+            raise ValueError("max_product_support_size must be None or positive.")
+        if self.max_paddings_per_stage < 0:
+            raise ValueError("max_paddings_per_stage must be non-negative.")
+        if self.max_paddings_per_packing < 0:
+            raise ValueError("max_paddings_per_packing must be non-negative.")
+        if self.max_dfs_nodes is not None and self.max_dfs_nodes < 0:
+            raise ValueError("max_dfs_nodes must be non-negative or None.")
+        if self.tolerance < 0:
+            raise ValueError("tolerance must be non-negative.")
+        valid_stages = {"base", "loose", "static", "strict"}
+        bad_stages = [stage for stage in self.padding_stages if stage not in valid_stages]
+        if bad_stages:
+            raise ValueError(f"Unsupported padding stages: {bad_stages}.")
+
+    def as_multi_padding_config(self) -> LocalQDMMultiPaddingConfig:
+        """Return the base multi-padding budget used by the stage schedule."""
+        return LocalQDMMultiPaddingConfig(
+            min_blocks=self.min_blocks,
+            max_blocks=self.max_blocks,
+            max_paddings=self.max_paddings_per_stage,
+            max_paddings_per_packing=self.max_paddings_per_packing,
+            max_dfs_nodes=self.max_dfs_nodes,
+            include_sectors=self.include_sectors,
+            require_static_exterior=False,
+            tolerance=self.tolerance,
+            max_product_support_size=self.max_product_support_size,
+            require_kinetic_separation=False,
             sort_limited_basis=self.sort_limited_basis,
             store_full_states=self.store_full_states,
         )
@@ -839,6 +1115,49 @@ class MultiLocalQDMCertificationReport:
     full_residual: float
     padding: MultiLocalQDMPadding
     leakage_configs: npt.NDArray[np.int64]
+
+
+@dataclass(frozen=True, slots=True)
+class QDMMultiPaddingFailureReport:
+    """Reason one candidate multi-block padding failed certification."""
+
+    block_ids: tuple[int, ...]
+    padding_index: int
+    reason: str
+    padding: MultiLocalQDMPadding
+    leakage_residual: float | None = None
+    support_kinetic_residual: float | None = None
+    support_hamiltonian_residual: float | None = None
+    full_residual: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class QDMMultiPaddingDiagnostics:
+    """Certification diagnostics for a pool of multi-block padding candidates."""
+
+    paddings: list[MultiLocalQDMPadding]
+    reports: list[MultiLocalQDMCertificationReport]
+    failures: list[QDMMultiPaddingFailureReport]
+    config: LocalQDMMultiPaddingConfig
+
+    @property
+    def n_paddings(self) -> int:
+        return len(self.paddings)
+
+    @property
+    def n_certified(self) -> int:
+        return len(self.reports)
+
+    @property
+    def n_failed(self) -> int:
+        return len(self.failures)
+
+    @property
+    def counts_by_failure_reason(self) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for failure in self.failures:
+            counts[failure.reason] = counts.get(failure.reason, 0) + 1
+        return counts
 
 
 @dataclass(frozen=True, slots=True)
@@ -2774,6 +3093,181 @@ def certify_qdm_multi_block_paddings(
     return reports
 
 
+def diagnose_qdm_multi_block_paddings(
+    model: object,
+    block_pool: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> QDMMultiPaddingDiagnostics:
+    """Find multi-block paddings and report both successes and failures.
+
+    This is a debugging-oriented companion to
+    :func:`certify_qdm_multi_block_paddings`.  Failed candidates are retained
+    with a coarse reason so parameter sensitivity can be diagnosed without
+    manually re-running the certification internals.
+    """
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    paddings = find_multi_qdm_block_paddings(model, block_pool, config=multi_config)
+    block_by_id = {int(block.block_id): block for block in block_pool}
+
+    reports: list[MultiLocalQDMCertificationReport] = []
+    failures: list[QDMMultiPaddingFailureReport] = []
+    for padding_index, padding in enumerate(paddings):
+        blocks = tuple(block_by_id[int(block_id)] for block_id in padding.block_ids)
+        report = _certify_qdm_multi_padding(
+            model,
+            blocks,
+            padding,
+            padding_index=padding_index,
+            config=multi_config,
+        )
+        if report is not None:
+            reports.append(report)
+            continue
+        failures.append(
+            _qdm_multi_padding_failure_report(
+                model,
+                blocks,
+                padding,
+                padding_index=padding_index,
+                config=multi_config,
+            )
+        )
+
+    return QDMMultiPaddingDiagnostics(
+        paddings=paddings,
+        reports=reports,
+        failures=failures,
+        config=multi_config,
+    )
+
+
+def qdm_multi_padding_config_schedule(
+    config: LocalQDMMultiPaddingConfig | None = None,
+    *,
+    stages: Sequence[str] = ("loose", "static", "strict"),
+) -> list[tuple[str, LocalQDMMultiPaddingConfig]]:
+    """Return a permissive-to-strict schedule of multi-padding configs."""
+    base = LocalQDMMultiPaddingConfig() if config is None else config
+    scheduled: list[tuple[str, LocalQDMMultiPaddingConfig]] = []
+    for stage in stages:
+        stage = str(stage)
+        if stage == "base":
+            stage_config = base
+        elif stage == "loose":
+            stage_config = replace(
+                base,
+                require_static_exterior=False,
+                require_kinetic_separation=False,
+            )
+        elif stage == "static":
+            stage_config = replace(
+                base,
+                require_static_exterior=True,
+                require_kinetic_separation=False,
+            )
+        elif stage == "strict":
+            stage_config = replace(
+                base,
+                require_static_exterior=True,
+                require_kinetic_separation=True,
+            )
+        else:
+            raise ValueError(f"Unsupported multi-padding stage: {stage!r}.")
+        scheduled.append((stage, stage_config))
+    return scheduled
+
+
+def robust_certify_qdm_multi_block_result(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+    stages: Sequence[str] = ("loose", "static", "strict"),
+) -> CertifiedLocalQDMCageSearchResult:
+    """Certify a block pool with a multi-stage padding schedule.
+
+    The early stages are deliberately permissive; exact global certification is
+    still the only acceptance criterion.  Duplicate certified supports found at
+    multiple stages are deduplicated before wrapping into a limited-basis result.
+    """
+    base_config = LocalQDMMultiPaddingConfig() if config is None else config
+    all_reports: list[MultiLocalQDMCertificationReport] = []
+    seen: set[tuple[tuple[int, ...], tuple[tuple[int, ...], ...], tuple[int, int]]] = set()
+
+    for _stage_name, stage_config in qdm_multi_padding_config_schedule(
+        base_config,
+        stages=stages,
+    ):
+        for report in certify_qdm_multi_block_paddings(model, blocks, config=stage_config):
+            support_key = tuple(
+                sorted(
+                    _config_key(config_row) for config_row in report.padding.global_support_configs
+                )
+            )
+            key = (
+                tuple(int(block_id) for block_id in report.block_ids),
+                support_key,
+                report.signature,
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            all_reports.append(report)
+
+    return certified_qdm_result_from_multi_block_reports(
+        model,
+        all_reports,
+        config=base_config,
+    )
+
+
+def robust_qdm_local_cage_search(
+    model: object,
+    *,
+    config: RobustQDMLocalCageSearchConfig | None = None,
+    adapter: LocalCageModelAdapter | None = None,
+) -> CertifiedLocalQDMCageSearchResult:
+    """Run a budgeted robust local QDM cage search.
+
+    The search builds a portfolio of region proposals, converts successful local
+    records into independent Lego blocks, then certifies the block pool with a
+    permissive-to-strict padding schedule.  The returned result is the existing
+    ``CertifiedLocalQDMCageSearchResult`` container used by downstream tools.
+    """
+    robust_config = RobustQDMLocalCageSearchConfig() if config is None else config
+    proposals = _robust_qdm_region_proposals(model, robust_config, adapter=adapter)
+    blocks = collect_qdm_cage_blocks_from_region_proposals(
+        proposals,
+        model=model,
+        adapter=adapter,
+        signatures=robust_config.block_signatures,
+        max_regions=None,
+        max_records_per_region=robust_config.max_records_per_region,
+        max_blocks=robust_config.max_blocks,
+        skip_incompatible_blocks=robust_config.skip_incompatible_blocks,
+    )
+
+    padding_config = robust_config.as_multi_padding_config()
+    if not blocks:
+        return certified_qdm_result_from_multi_block_reports(
+            model,
+            [],
+            config=padding_config,
+        )
+
+    return robust_certify_qdm_multi_block_result(
+        model,
+        blocks,
+        config=padding_config,
+        stages=robust_config.padding_stages,
+    )
+
+
+# Readable alias mirroring the generic-local naming style.
+robust_local_qdm_cage_search = robust_qdm_local_cage_search
+
+
 def certified_qdm_result_from_multi_block_reports(
     model: object,
     reports: Sequence[MultiLocalQDMCertificationReport],
@@ -2941,6 +3435,212 @@ def certify_qdm_multi_block_result(
         model,
         reports,
         config=multi_config,
+    )
+
+
+def _robust_qdm_region_proposals(
+    model: object,
+    config: RobustQDMLocalCageSearchConfig,
+    *,
+    adapter: LocalCageModelAdapter | None = None,
+) -> list[LocalRegionProposal]:
+    proposals: list[LocalRegionProposal] = []
+    if "stripe" in config.region_strategies:
+        for width in config.stripe_widths:
+            proposals.append(
+                StripeRegionProposal(
+                    model,
+                    directions=config.stripe_directions,
+                    width=int(width),
+                    config=config.local_config,
+                    adapter=adapter,
+                )
+            )
+    if "connected" in config.region_strategies:
+        proposals.append(
+            ConnectedRegionProposal(
+                model,
+                max_plaquettes=config.max_region_plaquettes,
+                min_plaquettes=config.min_region_plaquettes,
+                max_regions=config.max_regions_per_strategy,
+                max_links=config.max_region_links,
+                config=config.local_config,
+                adapter=adapter,
+            )
+        )
+    if "adaptive" in config.region_strategies:
+        proposals.append(
+            AdaptiveRegionProposal(
+                model,
+                max_plaquettes=config.max_region_plaquettes,
+                seed_plaquette_ids=config.adaptive_seed_plaquette_ids,
+                min_plaquettes=config.min_region_plaquettes,
+                beam_width=config.adaptive_beam_width,
+                branch_factor=config.adaptive_branch_factor,
+                max_regions=config.max_regions_per_strategy,
+                max_links=config.max_region_links,
+                use_search_feedback=config.adaptive_use_search_feedback,
+                config=config.local_config,
+                adapter=adapter,
+            )
+        )
+    return proposals
+
+
+def _qdm_multi_padding_failure_report(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    padding: MultiLocalQDMPadding,
+    *,
+    padding_index: int,
+    config: LocalQDMMultiPaddingConfig,
+) -> QDMMultiPaddingFailureReport:
+    fixed_blocks = tuple(blocks)
+    if config.require_static_exterior and not _multi_padding_has_static_exterior(
+        model,
+        padding,
+        fixed_blocks,
+    ):
+        return QDMMultiPaddingFailureReport(
+            block_ids=tuple(int(block_id) for block_id in padding.block_ids),
+            padding_index=int(padding_index),
+            reason="static_exterior",
+            padding=padding,
+        )
+
+    amplitudes = np.asarray(padding.global_amplitudes, dtype=np.complex128)
+    norm = float(np.linalg.norm(amplitudes))
+    if norm == 0.0:
+        return QDMMultiPaddingFailureReport(
+            block_ids=tuple(int(block_id) for block_id in padding.block_ids),
+            padding_index=int(padding_index),
+            reason="zero_norm",
+            padding=padding,
+        )
+    amplitudes = amplitudes / norm
+
+    support_configs = np.asarray(padding.global_support_configs, dtype=np.int64)
+    plaquette_actions = _qdm_multi_block_certification_actions(model, fixed_blocks, config)
+    support_keys = [_config_key(config_row) for config_row in support_configs]
+    support_amplitude_by_key = {
+        key: complex(amplitude) for key, amplitude in zip(support_keys, amplitudes, strict=True)
+    }
+
+    action_by_key: dict[tuple[int, ...], complex] = defaultdict(complex)
+    touched_keys: set[tuple[int, ...]] = set(support_keys)
+    for source_config, source_amplitude in zip(support_configs, amplitudes, strict=True):
+        for action in plaquette_actions:
+            transition = _qdm_flip_transition_from_action(source_config, action)
+            if transition is None:
+                continue
+            final_config, coefficient = transition
+            final_key = _config_key(final_config)
+            action_by_key[final_key] += complex(coefficient) * complex(source_amplitude)
+            touched_keys.add(final_key)
+
+    kappa = complex(sum(int(block.kappa) for block in fixed_blocks))
+    support_kinetic_residuals: list[complex] = []
+    leakage_values: list[complex] = []
+    for key in sorted(touched_keys):
+        action_value = complex(action_by_key.get(key, 0.0 + 0.0j))
+        if key in support_amplitude_by_key:
+            support_kinetic_residuals.append(action_value - kappa * support_amplitude_by_key[key])
+        else:
+            leakage_values.append(action_value)
+
+    support_kinetic_residual = float(
+        np.linalg.norm(np.asarray(support_kinetic_residuals, dtype=np.complex128))
+    )
+    leakage_residual = float(np.linalg.norm(np.asarray(leakage_values, dtype=np.complex128)))
+    if leakage_residual > config.tolerance:
+        return QDMMultiPaddingFailureReport(
+            block_ids=tuple(int(block_id) for block_id in padding.block_ids),
+            padding_index=int(padding_index),
+            reason="leakage_residual",
+            padding=padding,
+            leakage_residual=leakage_residual,
+            support_kinetic_residual=support_kinetic_residual,
+        )
+    if support_kinetic_residual > config.tolerance:
+        return QDMMultiPaddingFailureReport(
+            block_ids=tuple(int(block_id) for block_id in padding.block_ids),
+            padding_index=int(padding_index),
+            reason="support_kinetic_residual",
+            padding=padding,
+            leakage_residual=leakage_residual,
+            support_kinetic_residual=support_kinetic_residual,
+        )
+
+    support_self_loops = _qdm_global_self_loop_values_from_actions(
+        support_configs,
+        plaquette_actions,
+    )
+    self_loop_value = complex(support_self_loops[0]) if support_self_loops.size else 0.0 + 0.0j
+    if np.linalg.norm(support_self_loops - self_loop_value) > config.tolerance:
+        return QDMMultiPaddingFailureReport(
+            block_ids=tuple(int(block_id) for block_id in padding.block_ids),
+            padding_index=int(padding_index),
+            reason="nonuniform_self_loop",
+            padding=padding,
+            leakage_residual=leakage_residual,
+            support_kinetic_residual=support_kinetic_residual,
+        )
+
+    energy = self_loop_value + kappa
+    support_h_residuals = []
+    for key, amplitude, self_loop in zip(
+        support_keys,
+        amplitudes,
+        support_self_loops,
+        strict=True,
+    ):
+        kinetic_action = complex(action_by_key.get(key, 0.0 + 0.0j))
+        support_h_residuals.append(
+            kinetic_action + complex(self_loop) * amplitude - energy * amplitude
+        )
+    support_hamiltonian_residual = float(
+        np.linalg.norm(np.asarray(support_h_residuals, dtype=np.complex128))
+    )
+    full_residual = float(np.hypot(support_hamiltonian_residual, leakage_residual))
+    if full_residual > config.tolerance:
+        return QDMMultiPaddingFailureReport(
+            block_ids=tuple(int(block_id) for block_id in padding.block_ids),
+            padding_index=int(padding_index),
+            reason="full_residual",
+            padding=padding,
+            leakage_residual=leakage_residual,
+            support_kinetic_residual=support_kinetic_residual,
+            support_hamiltonian_residual=support_hamiltonian_residual,
+            full_residual=full_residual,
+        )
+
+    signature = signature_from_energy_and_self_loop(
+        energy,
+        self_loop_value,
+        tolerance=max(config.tolerance, 1.0e-15) * 10.0,
+        potential_unit=_infer_potential_unit_from_model(model),
+    )
+    if signature is None:
+        return QDMMultiPaddingFailureReport(
+            block_ids=tuple(int(block_id) for block_id in padding.block_ids),
+            padding_index=int(padding_index),
+            reason="signature_inference_failed",
+            padding=padding,
+            leakage_residual=leakage_residual,
+            support_kinetic_residual=support_kinetic_residual,
+            support_hamiltonian_residual=support_hamiltonian_residual,
+            full_residual=full_residual,
+        )
+
+    return QDMMultiPaddingFailureReport(
+        block_ids=tuple(int(block_id) for block_id in padding.block_ids),
+        padding_index=int(padding_index),
+        reason="unknown",
+        padding=padding,
+        leakage_residual=leakage_residual,
+        support_kinetic_residual=support_kinetic_residual,
+        support_hamiltonian_residual=support_hamiltonian_residual,
+        full_residual=full_residual,
     )
 
 
