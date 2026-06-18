@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -602,6 +604,17 @@ def test_multi_block_padding_iterator_preserves_raw_padding_cap() -> None:
     assert len(raw_streamed) <= 8
     assert diagnostics.n_padding_attempts <= 8
     assert diagnostics.n_certified <= 2
+    assert diagnostics.leakage_failure_counts_by_class
+
+    uncapped_attempt_config = replace(config, max_padding_attempts=None)
+    uncapped_diagnostics = diagnose_qdm_multi_block_paddings(
+        model,
+        blocks,
+        config=uncapped_attempt_config,
+    )
+    assert uncapped_diagnostics.n_certified == 2
+    assert uncapped_diagnostics.n_padding_attempts >= diagnostics.n_certified
+    assert uncapped_diagnostics.first_certified_attempt_index is not None
 
 
 def test_robust_qdm_local_cage_search_returns_certified_result_under_small_budget() -> None:

@@ -1139,6 +1139,18 @@ class QDMMultiPaddingFailureReport:
     support_kinetic_residual: float | None = None
     support_hamiltonian_residual: float | None = None
     full_residual: float | None = None
+    leakage_counts_by_class: dict[str, int] = field(default_factory=dict)
+    leakage_norms_by_class: dict[str, float] = field(default_factory=dict)
+
+    @property
+    def dominant_leakage_class(self) -> str | None:
+        """Return the plaquette class with the largest leakage norm, if known."""
+        if not self.leakage_norms_by_class:
+            return None
+        return max(
+            self.leakage_norms_by_class,
+            key=lambda key: self.leakage_norms_by_class[key],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1180,6 +1192,28 @@ class QDMMultiPaddingDiagnostics:
         for failure in self.failures:
             counts[failure.reason] = counts.get(failure.reason, 0) + 1
         return counts
+
+    @property
+    def leakage_failure_counts_by_class(self) -> dict[str, int]:
+        """Count leakage failures by their dominant plaquette class."""
+        counts: dict[str, int] = {}
+        for failure in self.failures:
+            if failure.reason != "leakage_residual":
+                continue
+            leakage_class = failure.dominant_leakage_class or "unknown"
+            counts[leakage_class] = counts.get(leakage_class, 0) + 1
+        return counts
+
+    @property
+    def leakage_failure_norms_by_class(self) -> dict[str, float]:
+        """Sum leakage norms by plaquette class over all leakage failures."""
+        norms: dict[str, float] = {}
+        for failure in self.failures:
+            if failure.reason != "leakage_residual":
+                continue
+            for leakage_class, norm in failure.leakage_norms_by_class.items():
+                norms[leakage_class] = norms.get(leakage_class, 0.0) + float(norm)
+        return norms
 
 
 @dataclass(frozen=True, slots=True)
@@ -1247,6 +1281,20 @@ class RobustQDMLocalCageSearchContext:
         }
 
     @property
+    def leakage_failure_counts_by_stage(self) -> dict[str, dict[str, int]]:
+        return {
+            stage: diagnostics.leakage_failure_counts_by_class
+            for stage, diagnostics in self.diagnostics_by_stage.items()
+        }
+
+    @property
+    def leakage_failure_norms_by_stage(self) -> dict[str, dict[str, float]]:
+        return {
+            stage: diagnostics.leakage_failure_norms_by_class
+            for stage, diagnostics in self.diagnostics_by_stage.items()
+        }
+
+    @property
     def reports_by_stage(self) -> dict[str, list[MultiLocalQDMCertificationReport]]:
         return {
             stage: diagnostics.reports for stage, diagnostics in self.diagnostics_by_stage.items()
@@ -1282,6 +1330,17 @@ class _QDMExteriorStaticPlaquette:
     exterior_indices: npt.NDArray[np.int64]
     pattern0: npt.NDArray[np.int64]
     pattern1: npt.NDArray[np.int64]
+
+
+@dataclass(frozen=True, slots=True)
+class _QDMExteriorFlippabilityPreference:
+    """Possible flippable plaquette pattern in exterior-link coordinates."""
+
+    plaquette_id: int
+    plaquette_class: str
+    exterior_indices: npt.NDArray[np.int64]
+    dangerous_patterns: tuple[npt.NDArray[np.int64], ...]
+    weight: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -3208,9 +3267,16 @@ def certify_qdm_multi_block_padding(
 
 
 def _qdm_multi_padding_attempt_limit(config: LocalQDMMultiPaddingConfig) -> int | None:
-    if config.max_padding_attempts is not None:
-        return int(config.max_padding_attempts)
-    return int(config.max_paddings)
+    """Return the raw-padding attempt cap used by certification loops.
+
+    ``max_paddings`` caps certified successes.  ``max_padding_attempts`` is the
+    only raw-attempt cap; ``None`` means the finite padding iterator is allowed
+    to run until enough certified reports are found or the search space is
+    exhausted.
+    """
+    if config.max_padding_attempts is None:
+        return None
+    return int(config.max_padding_attempts)
 
 
 def certify_qdm_multi_block_paddings(
@@ -3224,8 +3290,7 @@ def certify_qdm_multi_block_paddings(
     Candidate padding generation is interleaved with certification.  The search
     stops after ``config.max_paddings`` certified reports or after
     ``config.max_padding_attempts`` raw padding attempts.  If
-    ``max_padding_attempts`` is ``None``, the attempt cap falls back to
-    ``max_paddings`` for backward-compatible behavior.
+    ``max_padding_attempts`` is ``None``, there is no separate raw-attempt cap.
     """
     multi_config = LocalQDMMultiPaddingConfig() if config is None else config
     if multi_config.max_paddings == 0:
@@ -3783,6 +3848,9 @@ def _qdm_multi_padding_failure_report(
     }
 
     action_by_key: dict[tuple[int, ...], complex] = defaultdict(complex)
+    action_by_key_and_class: dict[str, dict[tuple[int, ...], complex]] = defaultdict(
+        lambda: defaultdict(complex)
+    )
     touched_keys: set[tuple[int, ...]] = set(support_keys)
     for source_config, source_amplitude in zip(support_configs, amplitudes, strict=True):
         for action in plaquette_actions:
@@ -3791,23 +3859,38 @@ def _qdm_multi_padding_failure_report(
                 continue
             final_config, coefficient = transition
             final_key = _config_key(final_config)
-            action_by_key[final_key] += complex(coefficient) * complex(source_amplitude)
+            contribution = complex(coefficient) * complex(source_amplitude)
+            action_by_key[final_key] += contribution
+            action_class = _qdm_action_plaquette_class(action, fixed_blocks)
+            action_by_key_and_class[action_class][final_key] += contribution
             touched_keys.add(final_key)
 
     kappa = complex(sum(int(block.kappa) for block in fixed_blocks))
     support_kinetic_residuals: list[complex] = []
     leakage_values: list[complex] = []
+    leakage_values_by_class: dict[str, list[complex]] = defaultdict(list)
+    leakage_counts_by_class: dict[str, int] = defaultdict(int)
     for key in sorted(touched_keys):
         action_value = complex(action_by_key.get(key, 0.0 + 0.0j))
         if key in support_amplitude_by_key:
             support_kinetic_residuals.append(action_value - kappa * support_amplitude_by_key[key])
         else:
             leakage_values.append(action_value)
+            for action_class, class_action_by_key in action_by_key_and_class.items():
+                class_value = complex(class_action_by_key.get(key, 0.0 + 0.0j))
+                if abs(class_value) <= config.tolerance:
+                    continue
+                leakage_values_by_class[action_class].append(class_value)
+                leakage_counts_by_class[action_class] += 1
 
     support_kinetic_residual = float(
         np.linalg.norm(np.asarray(support_kinetic_residuals, dtype=np.complex128))
     )
     leakage_residual = float(np.linalg.norm(np.asarray(leakage_values, dtype=np.complex128)))
+    leakage_norms_by_class = {
+        action_class: float(np.linalg.norm(np.asarray(values, dtype=np.complex128)))
+        for action_class, values in leakage_values_by_class.items()
+    }
     if leakage_residual > config.tolerance:
         return QDMMultiPaddingFailureReport(
             block_ids=tuple(int(block_id) for block_id in padding.block_ids),
@@ -3816,6 +3899,8 @@ def _qdm_multi_padding_failure_report(
             padding=padding,
             leakage_residual=leakage_residual,
             support_kinetic_residual=support_kinetic_residual,
+            leakage_counts_by_class=dict(leakage_counts_by_class),
+            leakage_norms_by_class=leakage_norms_by_class,
         )
     if support_kinetic_residual > config.tolerance:
         return QDMMultiPaddingFailureReport(
@@ -3898,6 +3983,164 @@ def _qdm_multi_padding_failure_report(
         support_hamiltonian_residual=support_hamiltonian_residual,
         full_residual=full_residual,
     )
+
+
+def _qdm_action_plaquette_class(
+    action: _QDMGlobalPlaquetteAction,
+    blocks: Sequence[LocalQDMCageBlock],
+) -> str:
+    """Classify a plaquette action relative to selected local blocks."""
+    action_link_set = {int(link_id) for link_id in action.links}
+    owner_link_sets = [set(int(link_id) for link_id in block.link_ids) for block in blocks]
+    owners = {
+        owner
+        for owner, link_set in enumerate(owner_link_sets)
+        if action_link_set.intersection(link_set)
+    }
+    if len(owners) > 1:
+        return "multi_block_spacer"
+    if not owners:
+        return "pure_exterior"
+
+    owner = next(iter(owners))
+    if action_link_set.issubset(owner_link_sets[owner]):
+        active_ids = {int(pid) for pid in blocks[owner].active_plaquette_ids}
+        if int(action.plaquette_id) in active_ids:
+            return "single_block_active"
+        return "single_block_internal"
+    return "single_block_boundary"
+
+
+def _qdm_pattern_compatible_with_block_support(
+    block: LocalQDMCageBlock,
+    action: _QDMGlobalPlaquetteAction,
+    pattern: npt.NDArray[np.int64],
+) -> bool:
+    """Return whether a plaquette pattern can occur on one block support."""
+    local_index_by_link = {int(link_id): i for i, link_id in enumerate(block.link_ids)}
+    local_indices: list[int] = []
+    required_values: list[int] = []
+    for position, link_id in enumerate(action.links):
+        local_index = local_index_by_link.get(int(link_id))
+        if local_index is None:
+            continue
+        local_indices.append(int(local_index))
+        required_values.append(int(pattern[int(position)]))
+
+    if not local_indices:
+        return True
+
+    support_values = np.asarray(block.support_configs, dtype=np.int64)[:, local_indices]
+    required = np.asarray(required_values, dtype=np.int64)
+    return bool(np.any(np.all(support_values == required, axis=1)))
+
+
+def _qdm_exterior_flippability_preferences_by_variable(
+    model: object,
+    exterior_link_ids: npt.NDArray[np.int64],
+    blocks: Sequence[LocalQDMCageBlock],
+    *,
+    include_exterior_only: bool,
+) -> list[list[_QDMExteriorFlippabilityPreference]]:
+    """Return plaquette-flippability preferences touched by each exterior variable.
+
+    A preference stores exterior-link patterns that would allow a plaquette to be
+    flippable for at least one product-support configuration of the selected
+    blocks.  The DFS value ordering can then prefer assignments that destroy
+    these dangerous patterns early, especially on spacer/boundary plaquettes.
+    """
+    n_exterior = int(exterior_link_ids.size)
+    exterior_index_by_link = {
+        int(link_id): int(exterior_index)
+        for exterior_index, link_id in enumerate(exterior_link_ids)
+    }
+    preferences_by_variable: list[list[_QDMExteriorFlippabilityPreference]] = [
+        [] for _ in range(n_exterior)
+    ]
+
+    weight_by_class = {
+        "multi_block_spacer": 256,
+        "single_block_boundary": 96,
+        "pure_exterior": 16,
+        "single_block_active": 8,
+        "single_block_internal": 4,
+    }
+
+    for action in _qdm_global_plaquette_actions(model):
+        exterior_positions: list[int] = []
+        exterior_indices: list[int] = []
+        for position, link_id in enumerate(action.links):
+            exterior_index = exterior_index_by_link.get(int(link_id))
+            if exterior_index is None:
+                continue
+            exterior_positions.append(int(position))
+            exterior_indices.append(int(exterior_index))
+        if not exterior_indices:
+            continue
+
+        plaquette_class = _qdm_action_plaquette_class(action, blocks)
+        if plaquette_class == "pure_exterior" and not include_exterior_only:
+            continue
+
+        dangerous_patterns: list[tuple[int, ...]] = []
+        for pattern in (action.pattern0, action.pattern1):
+            if not all(
+                _qdm_pattern_compatible_with_block_support(block, action, pattern)
+                for block in blocks
+            ):
+                continue
+            dangerous_patterns.append(
+                tuple(int(pattern[position]) for position in exterior_positions)
+            )
+
+        if not dangerous_patterns:
+            continue
+        unique_patterns = tuple(
+            np.asarray(pattern, dtype=np.int64) for pattern in sorted(set(dangerous_patterns))
+        )
+        preference = _QDMExteriorFlippabilityPreference(
+            plaquette_id=int(action.plaquette_id),
+            plaquette_class=plaquette_class,
+            exterior_indices=np.asarray(exterior_indices, dtype=np.int64),
+            dangerous_patterns=unique_patterns,
+            weight=int(weight_by_class.get(plaquette_class, 1)),
+        )
+        for exterior_index in exterior_indices:
+            preferences_by_variable[int(exterior_index)].append(preference)
+
+    return preferences_by_variable
+
+
+def _qdm_count_compatible_dangerous_patterns(
+    preference: _QDMExteriorFlippabilityPreference,
+    *,
+    exterior_config: npt.NDArray[np.int64],
+    assigned: npt.NDArray[np.bool_],
+    trial_variable: int | None = None,
+    trial_value: int | None = None,
+) -> int:
+    """Count dangerous patterns still compatible with the current partial branch."""
+    count = 0
+    for pattern in preference.dangerous_patterns:
+        compatible = True
+        for exterior_index, required_value in zip(
+            preference.exterior_indices,
+            pattern,
+            strict=True,
+        ):
+            index = int(exterior_index)
+            if trial_variable is not None and index == int(trial_variable):
+                value = int(trial_value)  # type: ignore[arg-type]
+            elif bool(assigned[index]):
+                value = int(exterior_config[index])
+            else:
+                continue
+            if value != int(required_value):
+                compatible = False
+                break
+        if compatible:
+            count += 1
+    return count
 
 
 def _qdm_exterior_variable_order(
@@ -4044,9 +4287,18 @@ def _qdm_exterior_value_order(
     sites_by_exterior_variable: Sequence[Sequence[int]],
     site_exterior_links: dict[int, npt.NDArray[np.int64]],
     site_targets: dict[int, int],
+    flippability_preferences_by_variable: (
+        Sequence[Sequence[_QDMExteriorFlippabilityPreference]] | None
+    ) = None,
 ) -> tuple[int, ...]:
-    """Order binary choices so forced/tight site constraints are tried first."""
+    """Order binary choices by site constraints and spacer flippability risk."""
     scored_values: list[tuple[int, int]] = []
+    preferences = (
+        ()
+        if flippability_preferences_by_variable is None
+        else flippability_preferences_by_variable[int(exterior_variable)]
+    )
+
     for value in (0, 1):
         score = 0
         feasible = True
@@ -4065,8 +4317,30 @@ def _qdm_exterior_value_order(
                 score += 4
             if remaining_after == 0:
                 score += 8
-        if feasible:
-            scored_values.append((score, int(value)))
+        if not feasible:
+            continue
+
+        for preference in preferences:
+            before = _qdm_count_compatible_dangerous_patterns(
+                preference,
+                exterior_config=exterior_config,
+                assigned=assigned,
+            )
+            if before == 0:
+                continue
+            after = _qdm_count_compatible_dangerous_patterns(
+                preference,
+                exterior_config=exterior_config,
+                assigned=assigned,
+                trial_variable=int(exterior_variable),
+                trial_value=int(value),
+            )
+            killed = before - after
+            score += int(preference.weight) * int(killed)
+            if after == 0:
+                score += 2 * int(preference.weight)
+
+        scored_values.append((score, int(value)))
 
     if not scored_values:
         return (0, 1)
@@ -4162,6 +4436,12 @@ def _iter_qdm_exterior_paddings_for_blocks(
         if config.require_static_exterior
         else [[] for _ in range(n_exterior)]
     )
+    flippability_preferences_by_variable = _qdm_exterior_flippability_preferences_by_variable(
+        model,
+        exterior_link_ids,
+        fixed_blocks,
+        include_exterior_only=config.require_static_exterior,
+    )
 
     nodes_visited = 0
     yielded_count = 0
@@ -4217,6 +4497,7 @@ def _iter_qdm_exterior_paddings_for_blocks(
             sites_by_exterior_variable=sites_by_exterior_variable,
             site_exterior_links=site_exterior_links,
             site_targets=site_targets,
+            flippability_preferences_by_variable=flippability_preferences_by_variable,
         ):
             if yielded_count >= config.max_paddings_per_packing:
                 return
