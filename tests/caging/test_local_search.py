@@ -36,6 +36,7 @@ from qlinks.caging import (
     diagnose_qdm_multi_block_paddings,
     enumerate_qdm_local_basis,
     find_multi_qdm_block_paddings,
+    iter_multi_qdm_block_paddings,
     make_qdm_cage_block,
     qdm_multi_padding_config_schedule,
     robust_certify_qdm_multi_block_result,
@@ -549,6 +550,58 @@ def test_qdm_multi_block_diagnostics_and_schedule_report_successes() -> None:
         stages=("loose", "static"),
     )
     assert robust.counts_by_signature == {(0, 0): 1}
+
+
+def test_multi_block_padding_iterator_preserves_raw_padding_cap() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    proposal = StripeRegionProposal(
+        model,
+        directions=(0,),
+        width=1,
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            prune_inactive_local_basis_states=True,
+            tolerance=1.0e-10,
+            degenerate_basis_strategy="ipr",
+            ipr_random_seed=0,
+        ),
+    )
+    blocks = collect_qdm_cage_blocks_from_region_proposals(
+        [proposal],
+        model=model,
+        signatures=((0, 2),),
+        max_records_per_region=2,
+    )
+    config = LocalQDMMultiPaddingConfig(
+        min_blocks=2,
+        max_blocks=2,
+        max_paddings=2,
+        max_padding_attempts=8,
+        max_paddings_per_packing=4,
+        include_sectors=True,
+        require_static_exterior=True,
+        require_kinetic_separation=False,
+        tolerance=1.0e-9,
+    )
+
+    raw_limited = find_multi_qdm_block_paddings(model, blocks, config=config)
+    raw_streamed = list(iter_multi_qdm_block_paddings(model, blocks, config=config))
+    diagnostics = diagnose_qdm_multi_block_paddings(model, blocks, config=config)
+
+    assert len(raw_limited) == 2
+    assert len(raw_streamed) <= 8
+    assert diagnostics.n_padding_attempts <= 8
+    assert diagnostics.n_certified <= 2
 
 
 def test_robust_qdm_local_cage_search_returns_certified_result_under_small_budget() -> None:

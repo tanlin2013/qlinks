@@ -839,6 +839,7 @@ class LocalQDMMultiPaddingConfig:
     min_blocks: int = 2
     max_blocks: int | None = None
     max_paddings: int = 1
+    max_padding_attempts: int | None = None
     max_paddings_per_packing: int = 1
     max_dfs_nodes: int | None = None
     include_sectors: bool = True
@@ -856,6 +857,8 @@ class LocalQDMMultiPaddingConfig:
             raise ValueError("max_blocks must be None or at least min_blocks.")
         if self.max_paddings < 0:
             raise ValueError("max_paddings must be non-negative.")
+        if self.max_padding_attempts is not None and self.max_padding_attempts < 0:
+            raise ValueError("max_padding_attempts must be non-negative or None.")
         if self.max_paddings_per_packing < 0:
             raise ValueError("max_paddings_per_packing must be non-negative.")
         if self.max_dfs_nodes is not None and self.max_dfs_nodes < 0:
@@ -913,6 +916,7 @@ class RobustQDMLocalCageSearchConfig:
     min_blocks: int = 1
     max_product_support_size: int | None = 2048
     max_paddings_per_stage: int = 64
+    max_padding_attempts_per_stage: int | None = None
     max_paddings_per_packing: int = 4
     max_dfs_nodes: int | None = None
     include_sectors: bool = True
@@ -959,6 +963,11 @@ class RobustQDMLocalCageSearchConfig:
             raise ValueError("max_product_support_size must be None or positive.")
         if self.max_paddings_per_stage < 0:
             raise ValueError("max_paddings_per_stage must be non-negative.")
+        if (
+            self.max_padding_attempts_per_stage is not None
+            and self.max_padding_attempts_per_stage < 0
+        ):
+            raise ValueError("max_padding_attempts_per_stage must be non-negative or None.")
         if self.max_paddings_per_packing < 0:
             raise ValueError("max_paddings_per_packing must be non-negative.")
         if self.max_dfs_nodes is not None and self.max_dfs_nodes < 0:
@@ -976,6 +985,7 @@ class RobustQDMLocalCageSearchConfig:
             min_blocks=self.min_blocks,
             max_blocks=self.max_blocks,
             max_paddings=self.max_paddings_per_stage,
+            max_padding_attempts=self.max_padding_attempts_per_stage,
             max_paddings_per_packing=self.max_paddings_per_packing,
             max_dfs_nodes=self.max_dfs_nodes,
             include_sectors=self.include_sectors,
@@ -1139,10 +1149,22 @@ class QDMMultiPaddingDiagnostics:
     reports: list[MultiLocalQDMCertificationReport]
     failures: list[QDMMultiPaddingFailureReport]
     config: LocalQDMMultiPaddingConfig
+    padding_attempts: int | None = None
+    first_certified_padding_index: int | None = None
 
     @property
     def n_paddings(self) -> int:
         return len(self.paddings)
+
+    @property
+    def n_padding_attempts(self) -> int:
+        if self.padding_attempts is None:
+            return len(self.paddings)
+        return int(self.padding_attempts)
+
+    @property
+    def first_certified_attempt_index(self) -> int | None:
+        return self.first_certified_padding_index
 
     @property
     def n_certified(self) -> int:
@@ -1197,9 +1219,23 @@ class RobustQDMLocalCageSearchContext:
         }
 
     @property
+    def n_padding_attempts_by_stage(self) -> dict[str, int]:
+        return {
+            stage: diagnostics.n_padding_attempts
+            for stage, diagnostics in self.diagnostics_by_stage.items()
+        }
+
+    @property
     def n_certified_by_stage(self) -> dict[str, int]:
         return {
             stage: diagnostics.n_certified
+            for stage, diagnostics in self.diagnostics_by_stage.items()
+        }
+
+    @property
+    def first_certified_attempt_by_stage(self) -> dict[str, int | None]:
+        return {
+            stage: diagnostics.first_certified_attempt_index
             for stage, diagnostics in self.diagnostics_by_stage.items()
         }
 
@@ -3008,26 +3044,30 @@ def make_qdm_cage_block(
     )
 
 
-def find_multi_qdm_block_paddings(
+def iter_multi_qdm_block_paddings(
     model: object,
     block_pool: Sequence[LocalQDMCageBlock],
     *,
     config: LocalQDMMultiPaddingConfig | None = None,
-) -> list[MultiLocalQDMPadding]:
-    """Find shared-exterior paddings built from a pool of local QDM blocks.
+    max_yielded: int | None = None,
+) -> Iterator[MultiLocalQDMPadding]:
+    """Yield shared-exterior paddings built from a pool of QDM blocks.
 
-    This is the Lego-builder counterpart of
-    :func:`find_shared_qdm_exterior_paddings`: instead of one local record, it
-    chooses compatible disjoint blocks, combines their fixed site-count
-    contributions, and runs an exterior DFS for the remaining links.
+    This is the streaming counterpart of :func:`find_multi_qdm_block_paddings`.
+    It is intended for certification-in-the-loop workflows, where a caller may
+    want to keep trying raw exterior completions until enough *certified* cages
+    are found.  ``max_yielded`` limits the number of raw candidate paddings
+    yielded by this iterator; if omitted, ``config.max_padding_attempts`` is
+    used.
     """
     multi_config = LocalQDMMultiPaddingConfig() if config is None else config
-    if multi_config.max_paddings == 0:
-        return []
+    yielded_limit = multi_config.max_padding_attempts if max_yielded is None else max_yielded
+    if yielded_limit is not None and yielded_limit <= 0:
+        return
 
     blocks = tuple(block_pool)
     if not blocks:
-        return []
+        return
 
     block_ids = [int(block.block_id) for block in blocks]
     if len(block_ids) != len(set(block_ids)):
@@ -3037,11 +3077,14 @@ def find_multi_qdm_block_paddings(
     max_blocks = multi_config.max_blocks if multi_config.max_blocks is not None else len(blocks)
     max_blocks = min(int(max_blocks), len(blocks))
 
-    paddings: list[MultiLocalQDMPadding] = []
     selected: list[LocalQDMCageBlock] = []
     used_links: set[int] = set()
     site_counts = np.zeros(int(model.lattice.num_sites), dtype=np.int64)
     product_support_size = 1
+    yielded_count = 0
+
+    def can_yield_more() -> bool:
+        return yielded_limit is None or yielded_count < yielded_limit
 
     def can_add(block: LocalQDMCageBlock) -> bool:
         block_link_set = set(int(link_id) for link_id in block.link_ids)
@@ -3061,25 +3104,22 @@ def find_multi_qdm_block_paddings(
             return False
         return True
 
-    def emit_current_selection() -> None:
-        if len(paddings) >= multi_config.max_paddings:
-            return
-        fixed_blocks = tuple(selected)
-        found = _find_qdm_exterior_paddings_for_blocks(
-            model,
-            fixed_blocks,
-            config=multi_config,
-        )
-        remaining = multi_config.max_paddings - len(paddings)
-        paddings.extend(found[:remaining])
-
-    def dfs(start: int) -> None:
-        nonlocal product_support_size, site_counts
-        if len(paddings) >= multi_config.max_paddings:
+    def dfs(start: int) -> Iterator[MultiLocalQDMPadding]:
+        nonlocal product_support_size, site_counts, yielded_count
+        if not can_yield_more():
             return
         if len(selected) >= multi_config.min_blocks:
-            emit_current_selection()
-            if len(paddings) >= multi_config.max_paddings:
+            fixed_blocks = tuple(selected)
+            for padding in _iter_qdm_exterior_paddings_for_blocks(
+                model,
+                fixed_blocks,
+                config=multi_config,
+            ):
+                if not can_yield_more():
+                    return
+                yielded_count += 1
+                yield padding
+            if not can_yield_more():
                 return
         if len(selected) >= max_blocks:
             return
@@ -3096,17 +3136,42 @@ def find_multi_qdm_block_paddings(
             old_product_support_size = product_support_size
             product_support_size *= int(block.support_size)
             try:
-                dfs(block_index + 1)
+                yield from dfs(block_index + 1)
             finally:
                 product_support_size = old_product_support_size
                 site_counts = old_site_counts
                 used_links.difference_update(block_link_set)
                 selected.pop()
-            if len(paddings) >= multi_config.max_paddings:
+            if not can_yield_more():
                 return
 
-    dfs(0)
-    return paddings
+    yield from dfs(0)
+
+
+def find_multi_qdm_block_paddings(
+    model: object,
+    block_pool: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> list[MultiLocalQDMPadding]:
+    """Find shared-exterior paddings built from a pool of local QDM blocks.
+
+    This materialized API keeps the original raw-padding semantics:
+    ``config.max_paddings`` is the maximum number of candidate paddings returned.
+    Certification helpers use :func:`iter_multi_qdm_block_paddings` directly so
+    they can keep trying candidates until enough certified cages are found.
+    """
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    if multi_config.max_paddings == 0:
+        return []
+    return list(
+        iter_multi_qdm_block_paddings(
+            model,
+            block_pool,
+            config=multi_config,
+            max_yielded=multi_config.max_paddings,
+        )
+    )
 
 
 # Backward-compatible/readable alias matching the wording used in design notes.
@@ -3132,19 +3197,40 @@ def certify_qdm_multi_block_padding(
     )
 
 
+def _qdm_multi_padding_attempt_limit(config: LocalQDMMultiPaddingConfig) -> int | None:
+    if config.max_padding_attempts is not None:
+        return int(config.max_padding_attempts)
+    return int(config.max_paddings)
+
+
 def certify_qdm_multi_block_paddings(
     model: object,
     block_pool: Sequence[LocalQDMCageBlock],
     *,
     config: LocalQDMMultiPaddingConfig | None = None,
 ) -> list[MultiLocalQDMCertificationReport]:
-    """Find and certify Lego-style multi-block QDM paddings from a block pool."""
-    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
-    paddings = find_multi_qdm_block_paddings(model, block_pool, config=multi_config)
-    block_by_id = {int(block.block_id): block for block in block_pool}
+    """Find and certify Lego-style multi-block QDM paddings from a block pool.
 
+    Candidate padding generation is interleaved with certification.  The search
+    stops after ``config.max_paddings`` certified reports or after
+    ``config.max_padding_attempts`` raw padding attempts.  If
+    ``max_padding_attempts`` is ``None``, the attempt cap falls back to
+    ``max_paddings`` for backward-compatible behavior.
+    """
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    if multi_config.max_paddings == 0:
+        return []
+
+    block_by_id = {int(block.block_id): block for block in block_pool}
     reports: list[MultiLocalQDMCertificationReport] = []
-    for padding_index, padding in enumerate(paddings):
+    for padding_index, padding in enumerate(
+        iter_multi_qdm_block_paddings(
+            model,
+            block_pool,
+            config=multi_config,
+            max_yielded=_qdm_multi_padding_attempt_limit(multi_config),
+        )
+    ):
         blocks = tuple(block_by_id[int(block_id)] for block_id in padding.block_ids)
         report = _certify_qdm_multi_padding(
             model,
@@ -3155,6 +3241,8 @@ def certify_qdm_multi_block_paddings(
         )
         if report is not None:
             reports.append(report)
+            if len(reports) >= multi_config.max_paddings:
+                break
     return reports
 
 
@@ -3166,18 +3254,38 @@ def diagnose_qdm_multi_block_paddings(
 ) -> QDMMultiPaddingDiagnostics:
     """Find multi-block paddings and report both successes and failures.
 
-    This is a debugging-oriented companion to
-    :func:`certify_qdm_multi_block_paddings`.  Failed candidates are retained
-    with a coarse reason so parameter sensitivity can be diagnosed without
-    manually re-running the certification internals.
+    This diagnostic path uses the same interleaved padding/certification loop as
+    :func:`certify_qdm_multi_block_paddings`.  ``paddings`` stores the raw
+    candidates actually attempted, while ``n_padding_attempts`` records that
+    count explicitly for notebook/debug summaries.
     """
     multi_config = LocalQDMMultiPaddingConfig() if config is None else config
-    paddings = find_multi_qdm_block_paddings(model, block_pool, config=multi_config)
     block_by_id = {int(block.block_id): block for block in block_pool}
 
+    paddings: list[MultiLocalQDMPadding] = []
     reports: list[MultiLocalQDMCertificationReport] = []
     failures: list[QDMMultiPaddingFailureReport] = []
-    for padding_index, padding in enumerate(paddings):
+    first_certified_padding_index: int | None = None
+
+    if multi_config.max_paddings == 0:
+        return QDMMultiPaddingDiagnostics(
+            paddings=[],
+            reports=[],
+            failures=[],
+            config=multi_config,
+            padding_attempts=0,
+            first_certified_padding_index=None,
+        )
+
+    for padding_index, padding in enumerate(
+        iter_multi_qdm_block_paddings(
+            model,
+            block_pool,
+            config=multi_config,
+            max_yielded=_qdm_multi_padding_attempt_limit(multi_config),
+        )
+    ):
+        paddings.append(padding)
         blocks = tuple(block_by_id[int(block_id)] for block_id in padding.block_ids)
         report = _certify_qdm_multi_padding(
             model,
@@ -3188,6 +3296,10 @@ def diagnose_qdm_multi_block_paddings(
         )
         if report is not None:
             reports.append(report)
+            if first_certified_padding_index is None:
+                first_certified_padding_index = int(padding_index)
+            if len(reports) >= multi_config.max_paddings:
+                break
             continue
         failures.append(
             _qdm_multi_padding_failure_report(
@@ -3204,6 +3316,8 @@ def diagnose_qdm_multi_block_paddings(
         reports=reports,
         failures=failures,
         config=multi_config,
+        padding_attempts=len(paddings),
+        first_certified_padding_index=first_certified_padding_index,
     )
 
 
@@ -3776,24 +3890,24 @@ def _qdm_multi_padding_failure_report(
     )
 
 
-def _find_qdm_exterior_paddings_for_blocks(
+def _iter_qdm_exterior_paddings_for_blocks(
     model: object,
     blocks: Sequence[LocalQDMCageBlock],
     *,
     config: LocalQDMMultiPaddingConfig,
-) -> list[MultiLocalQDMPadding]:
+) -> Iterator[MultiLocalQDMPadding]:
     fixed_blocks = tuple(blocks)
     if not fixed_blocks:
-        return []
+        return
     if config.max_paddings_per_packing == 0:
-        return []
+        return
     if not _qdm_blocks_are_pairwise_link_disjoint(fixed_blocks):
-        return []
+        return
     if config.require_kinetic_separation and not _qdm_blocks_are_kinetically_separated(
         model,
         fixed_blocks,
     ):
-        return []
+        return
 
     required_count = int(getattr(model, "required_count", 1))
     total_site_counts = np.zeros(int(model.lattice.num_sites), dtype=np.int64)
@@ -3802,7 +3916,7 @@ def _find_qdm_exterior_paddings_for_blocks(
         total_site_counts += np.asarray(block.site_counts, dtype=np.int64)
         block_link_set.update(int(link_id) for link_id in block.link_ids)
     if np.any(total_site_counts > required_count):
-        return []
+        return
 
     n_global_links = int(model.lattice.num_links)
     exterior_link_ids = np.asarray(
@@ -3823,7 +3937,7 @@ def _find_qdm_exterior_paddings_for_blocks(
         ]
         target = required_count - int(total_site_counts[int(site_id)])
         if target < 0 or target > len(exterior_incident):
-            return []
+            return
         site_targets[int(site_id)] = int(target)
         site_exterior_links[int(site_id)] = np.asarray(exterior_incident, dtype=np.int64)
 
@@ -3836,8 +3950,8 @@ def _find_qdm_exterior_paddings_for_blocks(
             exterior_config=exterior_config,
         )
         if _multi_padding_passes_global_filters(model, padding, fixed_blocks, config):
-            return [padding]
-        return []
+            yield padding
+        return
 
     scores = np.zeros(n_exterior, dtype=np.int64)
     for site_id, exterior_indices in site_exterior_links.items():
@@ -3854,8 +3968,8 @@ def _find_qdm_exterior_paddings_for_blocks(
         for exterior_index in exterior_indices:
             sites_by_exterior_variable[int(exterior_index)].append(int(site_id))
 
-    paddings: list[MultiLocalQDMPadding] = []
     nodes_visited = 0
+    yielded_count = 0
 
     def partial_site_check(site_id: int) -> bool:
         exterior_indices = site_exterior_links[site_id]
@@ -3879,9 +3993,9 @@ def _find_qdm_exterior_paddings_for_blocks(
                 return False
         return True
 
-    def dfs(depth: int) -> None:
-        nonlocal nodes_visited
-        if len(paddings) >= config.max_paddings_per_packing:
+    def dfs(depth: int) -> Iterator[MultiLocalQDMPadding]:
+        nonlocal nodes_visited, yielded_count
+        if yielded_count >= config.max_paddings_per_packing:
             return
         if config.max_dfs_nodes is not None and nodes_visited >= config.max_dfs_nodes:
             return
@@ -3896,23 +4010,32 @@ def _find_qdm_exterior_paddings_for_blocks(
                     exterior_config=exterior_config.copy(),
                 )
                 if _multi_padding_passes_global_filters(model, padding, fixed_blocks, config):
-                    paddings.append(padding)
+                    yielded_count += 1
+                    yield padding
             return
 
         exterior_variable = int(variable_order[depth])
         for value in (0, 1):
-            if len(paddings) >= config.max_paddings_per_packing:
+            if yielded_count >= config.max_paddings_per_packing:
                 return
             exterior_config[exterior_variable] = value
             assigned[exterior_variable] = True
             touched_sites = sites_by_exterior_variable[exterior_variable]
             if all(partial_site_check(site_id) for site_id in touched_sites):
-                dfs(depth + 1)
+                yield from dfs(depth + 1)
             assigned[exterior_variable] = False
             exterior_config[exterior_variable] = 0
 
-    dfs(0)
-    return paddings
+    yield from dfs(0)
+
+
+def _find_qdm_exterior_paddings_for_blocks(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig,
+) -> list[MultiLocalQDMPadding]:
+    return list(_iter_qdm_exterior_paddings_for_blocks(model, blocks, config=config))
 
 
 def _certify_qdm_multi_padding(
