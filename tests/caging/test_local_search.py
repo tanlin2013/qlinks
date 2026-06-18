@@ -21,7 +21,9 @@ from qlinks.caging import (
     MultiLocalQDMPadding,
     QDMLocalCageAdapter,
     StripeRegionProposal,
+    certified_qdm_result_from_multi_block_reports,
     certify_qdm_multi_block_padding,
+    certify_qdm_multi_block_result,
     classify_cage_state,
     collect_qdm_cage_blocks_from_region_proposals,
     enumerate_qdm_local_basis,
@@ -749,6 +751,68 @@ def test_qdm_multi_block_padding_certifies_explicit_static_exterior() -> None:
     assert report.signature == (0, 0)
     assert report.leakage_residual == 0.0
     assert report.support_kinetic_residual == 0.0
+
+
+def test_qdm_multi_block_certified_result_reuses_limited_result_protocol() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    static_config = _first_static_qdm_config(model)
+    blocks = [
+        make_qdm_cage_block(
+            model,
+            _static_local_record_from_global_config(static_config, [4]),
+            block_id=0,
+        ),
+        make_qdm_cage_block(
+            model,
+            _static_local_record_from_global_config(static_config, [16]),
+            block_id=1,
+        ),
+    ]
+    config = LocalQDMMultiPaddingConfig(
+        min_blocks=2,
+        max_blocks=2,
+        max_paddings=1,
+        max_paddings_per_packing=1,
+        include_sectors=False,
+        require_static_exterior=True,
+        tolerance=1.0e-9,
+    )
+
+    certified = certify_qdm_multi_block_result(model, blocks, config=config)
+
+    assert len(certified) == 1
+    assert certified.counts_by_signature == {(0, 0): 1}
+    assert certified.hilbert_size == certified.basis.n_states
+    assert certified.kinetic_matrix.shape == (certified.hilbert_size, certified.hilbert_size)
+    assert certified.padding_config is config
+    assert len(certified.reports) == 1
+
+    record = certified.first((0, 0))
+    assert record.cage_state.support_size == 1
+    assert record.cage_state.full_residual is not None
+    assert record.cage_state.full_residual < 1.0e-9
+    assert record.full_state is not None
+
+    classification = classify_cage_state(
+        record.cage_state,
+        kinetic_matrix=certified.kinetic_matrix,
+        basis_configs=certified.basis.states,
+        hilbert_size=certified.hilbert_size,
+    )
+    assert classification.support_size == record.cage_state.support_size
+
+    from_reports = certified_qdm_result_from_multi_block_reports(
+        model,
+        certified.reports,
+        config=config,
+    )
+    assert from_reports.counts_by_signature == certified.counts_by_signature
 
 
 def test_make_qdm_cage_block_rejects_support_dependent_site_counts() -> None:

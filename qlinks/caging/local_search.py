@@ -624,8 +624,8 @@ class CertifiedLocalQDMCageSearchResult:
     basis: Basis
     kinetic_matrix: scipy_sparse.csr_array
     self_loop_values: npt.NDArray[np.complex128]
-    reports: list[LocalQDMCertificationReport]
-    padding_config: LocalQDMPaddingConfig
+    reports: list[LocalQDMCertificationReport | MultiLocalQDMCertificationReport]
+    padding_config: LocalQDMPaddingConfig | LocalQDMMultiPaddingConfig
 
     def __len__(self) -> int:
         return len(self.cage_search_result)
@@ -2510,6 +2510,176 @@ def certify_qdm_multi_block_paddings(
     return reports
 
 
+def certified_qdm_result_from_multi_block_reports(
+    model: object,
+    reports: Sequence[MultiLocalQDMCertificationReport],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> CertifiedLocalQDMCageSearchResult:
+    """Wrap multi-block QDM certificates as a limited-basis cage result.
+
+    The returned object uses the same ``CertifiedLocalQDMCageSearchResult``
+    container as the single-block local-padding path. Its basis is the limited
+    union of certified support configurations and their one-hop kinetic shell,
+    so downstream classification and visualization tools can consume it without
+    enumerating the full global Hilbert space.
+    """
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    report_list = list(reports)
+    limited_config_keys: set[tuple[int, ...]] = set()
+
+    for report in report_list:
+        for config_row in report.padding.global_support_configs:
+            limited_config_keys.add(_config_key(config_row))
+        for config_row in report.leakage_configs:
+            limited_config_keys.add(_config_key(config_row))
+
+    search_config = _cage_search_config_from_multi_padding(
+        model,
+        multi_config,
+        report_list,
+    )
+
+    if not limited_config_keys:
+        limited_basis = Basis.empty(model.layout)
+        empty_matrix = scipy_sparse.csr_array((0, 0), dtype=np.complex128)
+        return CertifiedLocalQDMCageSearchResult(
+            cage_search_result=CageSearchResult(
+                records=[],
+                hilbert_size=0,
+                config=search_config,
+                type1_candidates=[],
+                type2_candidates=[],
+                search_stage_seconds={},
+            ),
+            basis=limited_basis,
+            kinetic_matrix=empty_matrix,
+            self_loop_values=np.zeros(0, dtype=np.complex128),
+            reports=[],
+            padding_config=multi_config,
+        )
+
+    limited_configs = np.asarray([list(key) for key in limited_config_keys], dtype=np.int64)
+    if multi_config.sort_limited_basis:
+        order = np.lexsort(limited_configs.T[::-1])
+        limited_configs = limited_configs[order]
+
+    limited_basis = Basis.from_states(model.layout, limited_configs)
+    limited_index = {_config_key(row): i for i, row in enumerate(limited_basis.states)}
+    limited_kinetic = build_qdm_global_limited_kinetic_matrix(model, limited_basis)
+    limited_self_loops = qdm_global_self_loop_values(model, limited_basis.states)
+
+    cage_records: list[CageRecord] = []
+    type1_candidates: list[CandidateSubgraph] = []
+
+    for report_index, report in enumerate(report_list):
+        support_indices: list[int] = []
+        support_amplitudes: list[complex] = []
+        for config_row, amplitude in zip(
+            report.padding.global_support_configs,
+            report.padding.global_amplitudes,
+            strict=True,
+        ):
+            support_indices.append(int(limited_index[_config_key(config_row)]))
+            support_amplitudes.append(complex(amplitude))
+
+        support_arr = np.asarray(support_indices, dtype=np.int64)
+        amplitude_arr = np.asarray(support_amplitudes, dtype=np.complex128)
+        support_order = np.argsort(support_arr)
+        support_arr = support_arr[support_order]
+        amplitude_arr = amplitude_arr[support_order]
+
+        norm = float(np.linalg.norm(amplitude_arr))
+        if norm == 0.0:
+            continue
+        amplitude_arr = amplitude_arr / norm
+
+        candidate = CandidateSubgraph(
+            vertices=support_arr,
+            label=f"multi_qdm_certified_{report_index}",
+            metadata={
+                "source": "certified_qdm_result_from_multi_block_reports",
+                "block_ids": tuple(int(block_id) for block_id in report.block_ids),
+                "padding_index": report.padding_index,
+                "kinetic_eigenvalue": report.kinetic_eigenvalue,
+                "self_loop_value": report.self_loop_value,
+                "padding_exterior_link_ids": report.padding.exterior_link_ids.copy(),
+                "one_hop_shell_size": report.one_hop_shell_size,
+            },
+        )
+        type1_candidates.append(candidate)
+
+        cage_state = CageState(
+            energy=complex(report.energy),
+            local_state=amplitude_arr,
+            support=support_arr,
+            boundary_residual=float(report.leakage_residual),
+            eigen_residual=float(report.support_hamiltonian_residual),
+            full_residual=float(report.full_residual),
+            metadata={
+                "source": "certify_qdm_multi_block_result",
+                "block_ids": tuple(int(block_id) for block_id in report.block_ids),
+                "padding_index": report.padding_index,
+                "kinetic_eigenvalue": report.kinetic_eigenvalue,
+                "self_loop_value": report.self_loop_value,
+                "support_kinetic_residual": report.support_kinetic_residual,
+                "support_hamiltonian_residual": report.support_hamiltonian_residual,
+                "one_hop_shell_size": report.one_hop_shell_size,
+            },
+        )
+
+        full_state = None
+        if multi_config.store_full_states:
+            full_state = np.zeros(int(limited_basis.n_states), dtype=np.complex128)
+            full_state[support_arr] = amplitude_arr
+
+        cage_records.append(
+            CageRecord(
+                cage_state=cage_state,
+                signature=report.signature,
+                candidate=candidate,
+                full_state=full_state,
+            )
+        )
+
+    return CertifiedLocalQDMCageSearchResult(
+        cage_search_result=CageSearchResult(
+            records=cage_records,
+            hilbert_size=int(limited_basis.n_states),
+            config=search_config,
+            type1_candidates=type1_candidates,
+            type2_candidates=[],
+            search_stage_seconds={},
+        ),
+        basis=limited_basis,
+        kinetic_matrix=limited_kinetic,
+        self_loop_values=limited_self_loops,
+        reports=report_list,
+        padding_config=multi_config,
+    )
+
+
+def certify_qdm_multi_block_result(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> CertifiedLocalQDMCageSearchResult:
+    """Find/certify multi-block QDM paddings and return a certified result.
+
+    This is the multi-block analogue of ``certify_qdm_local_result``: it keeps
+    the basis limited to the certified product support plus one-hop shell, but
+    exposes ordinary ``CageRecord`` entries for existing tools.
+    """
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    reports = certify_qdm_multi_block_paddings(model, blocks, config=multi_config)
+    return certified_qdm_result_from_multi_block_reports(
+        model,
+        reports,
+        config=multi_config,
+    )
+
+
 def _find_qdm_exterior_paddings_for_blocks(
     model: object,
     blocks: Sequence[LocalQDMCageBlock],
@@ -3392,6 +3562,24 @@ def _cage_search_config_from_local_and_padding(
         type1_kappas=local_config.allowed_kappas,
         deduplicate_by_rank=False,
         potential_signature_unit=local_config.potential_signature_unit,
+        store_full_states=padding_config.store_full_states,
+    )
+
+
+def _cage_search_config_from_multi_padding(
+    model: object,
+    padding_config: LocalQDMMultiPaddingConfig,
+    reports: Sequence[MultiLocalQDMCertificationReport],
+) -> CageSearchConfig:
+    kappas = tuple(sorted({int(report.signature[0]) for report in reports})) or (0,)
+    return CageSearchConfig(
+        search_type="type1",
+        tolerance=padding_config.tolerance,
+        min_component_size=1,
+        validate_full_residual=True,
+        type1_kappas=kappas,
+        deduplicate_by_rank=False,
+        potential_signature_unit=_infer_potential_unit_from_model(model),
         store_full_states=padding_config.store_full_states,
     )
 
