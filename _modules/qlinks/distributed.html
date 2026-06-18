@@ -484,7 +484,10 @@
     <span class="k">if</span> <span class="n">num_gpus_per_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">remote_options</span><span class="p">[</span><span class="s2">&quot;num_gpus&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_gpus_per_task</span>
 
-    <span class="n">remote_runner</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="o">**</span><span class="n">remote_options</span><span class="p">)(</span><span class="n">_run_indexed_task</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">remote_options</span><span class="p">:</span>
+        <span class="n">remote_runner</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="o">**</span><span class="n">remote_options</span><span class="p">)(</span><span class="n">_run_indexed_task</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">remote_runner</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">_run_indexed_task</span><span class="p">)</span>
 
     <span class="n">object_refs</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">remote_runner</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span>
