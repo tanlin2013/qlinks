@@ -560,7 +560,7 @@ def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
         boundary_condition="periodic",
         coup_kin=coup_kin,
         coup_pot=0.0,
-    ).build(builder="sparse")
+    ).build(builder="sparse", sort_basis=True)
 
     bitmask_result = SquareQLMModel(
         lx=4,
@@ -568,8 +568,9 @@ def test_square_qdm_sparse_and_bitmask_match_with_peierls_phases() -> None:
         boundary_condition="periodic",
         coup_kin=coup_kin,
         coup_pot=0.0,
-    ).build(builder="bitmask", sort_basis=False)
+    ).build(builder="bitmask", sort_basis=True)
 
+    assert_same_physical_flux_basis_order(sparse_result, bitmask_result)
     assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
 
 
