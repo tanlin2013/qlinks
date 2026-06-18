@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks package &#8212; qlinks 1.0.0 documentation</title>
+    <title>qlinks package &#8212; qlinks 1.0.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=f9c1cefe"></script>
+    <script src="_static/documentation_options.js?v=423d4ce3"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="qlinks documentation" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.0" />
+  <meta name="docsearch:version" content="1.0.1" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.0 documentation</p>
+    <p class="title logo__title">qlinks 1.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -526,8 +526,36 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSSearchObserver"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSSearchObserver.name"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSSearchObserver.can_continue"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.can_continue()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSSearchObserver.accept_solution"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.accept_solution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSSearchObserver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics"><code class="docutils literal notranslate"><span class="pre">DFSStatistics</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.branch_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.branch_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.solution_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.solution_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.contradiction_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.contradiction_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.propagated_assignment_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagated_assignment_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.skipped_forced_variable_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.skipped_forced_variable_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.partial_check_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.partial_check_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.propagation_round_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagation_round_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.propagator_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagator_call_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.dynamic_variable_selection_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_variable_selection_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.dynamic_value_ordering_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_value_ordering_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.observer_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_call_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.observer_update_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_update_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.observer_prune_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_prune_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.observer_solution_reject_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_solution_reject_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.max_depth"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.max_depth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.DFSStatistics.__init__"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.__init__()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.basis.html#qlinks.basis.SolverInput"><code class="docutils literal notranslate"><span class="pre">SolverInput</span></code></a><ul>
@@ -687,6 +715,14 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.ConstraintResult.__init__"><code class="docutils literal notranslate"><span class="pre">ConstraintResult.__init__()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation.consistent"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.consistent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation.forced_assignments"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.forced_assignments</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation.contradiction"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.contradiction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation.no_change"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.no_change()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation.__init__"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint.name"><code class="docutils literal notranslate"><span class="pre">Constraint.name</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint.affected_variables"><code class="docutils literal notranslate"><span class="pre">Constraint.affected_variables()</span></code></a></li>
@@ -775,6 +811,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.dimer.DimerCoveringConstraint.value"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.value()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.dimer.DimerCoveringConstraint.check"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.dimer.DimerCoveringConstraint.partial_check"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.dimer.DimerCoveringConstraint.propagate"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.dimer.DimerCoveringConstraint.__init__"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -796,12 +833,29 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.gauss_law.GaussLawConstraint.value"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.value()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.gauss_law.GaussLawConstraint.check"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.gauss_law.GaussLawConstraint.partial_check"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.gauss_law.GaussLawConstraint.propagate"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.gauss_law.GaussLawConstraint.__init__"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.__init__()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.local">qlinks.constraints.local module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.layout"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.layout</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.variable_indices"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.variable_indices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.min_count"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.min_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.max_count"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.max_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.name"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.exact"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.exact()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.at_most"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.at_most()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.affected_variables"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.affected_variables()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.value"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.check"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.partial_check"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.propagate"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.propagate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.__init__"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.layout"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.layout</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.variable_indices"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.variable_indices</span></code></a></li>
@@ -810,6 +864,8 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.single"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.single()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.affected_variables"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.affected_variables()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.check"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.partial_check"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.propagate"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.__init__"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -834,7 +890,10 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.variable_indices"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.variable_indices</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.coefficients"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.coefficients</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.name"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.affected_variables"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.affected_variables()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.value"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.partial_check"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.propagate"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.__init__"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -843,7 +902,10 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.target"><code class="docutils literal notranslate"><span class="pre">ParitySector.target</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.variable_indices"><code class="docutils literal notranslate"><span class="pre">ParitySector.variable_indices</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.name"><code class="docutils literal notranslate"><span class="pre">ParitySector.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.affected_variables"><code class="docutils literal notranslate"><span class="pre">ParitySector.affected_variables()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.value"><code class="docutils literal notranslate"><span class="pre">ParitySector.value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.partial_check"><code class="docutils literal notranslate"><span class="pre">ParitySector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.propagate"><code class="docutils literal notranslate"><span class="pre">ParitySector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.__init__"><code class="docutils literal notranslate"><span class="pre">ParitySector.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -879,6 +941,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.internal_target"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.internal_target()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.check"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.propagate"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.allowed_internal_targets"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.allowed_internal_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.allowed_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.validate_target()</span></code></a></li>
@@ -900,6 +963,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareQDMElectricWindingSector.internal_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.internal_target()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareQDMElectricWindingSector.check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareQDMElectricWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareQDMElectricWindingSector.propagate"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareQDMElectricWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.allowed_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareQDMElectricWindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.validate_target()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.SquareQDMElectricWindingSector.__init__"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.__init__()</span></code></a></li>
@@ -920,6 +984,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.HoneycombElectricWindingSector.is_satisfied"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.is_satisfied()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.HoneycombElectricWindingSector.check"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.HoneycombElectricWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.HoneycombElectricWindingSector.propagate"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.HoneycombElectricWindingSector.electric_values_from_convention"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.electric_values_from_convention()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.HoneycombElectricWindingSector.allowed_internal_targets"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.allowed_internal_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.winding.HoneycombElectricWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.allowed_targets()</span></code></a></li>
@@ -950,6 +1015,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.z2_winding.TriangularZ2WindingSector.value"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.value()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.z2_winding.TriangularZ2WindingSector.is_satisfied"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.is_satisfied()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.z2_winding.TriangularZ2WindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.z2_winding.TriangularZ2WindingSector.propagate"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.z2_winding.TriangularZ2WindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.allowed_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.z2_winding.TriangularZ2WindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.validate_target()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.z2_winding.TriangularZ2WindingSector.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.__init__()</span></code></a></li>
@@ -1001,6 +1067,14 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintCollection.__init__"><code class="docutils literal notranslate"><span class="pre">ConstraintCollection.__init__()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintPropagation"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintPropagation.consistent"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.consistent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintPropagation.forced_assignments"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.forced_assignments</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintPropagation.contradiction"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.contradiction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintPropagation.no_change"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.no_change()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintPropagation.__init__"><code class="docutils literal notranslate"><span class="pre">ConstraintPropagation.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintResult"><code class="docutils literal notranslate"><span class="pre">ConstraintResult</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintResult.satisfied"><code class="docutils literal notranslate"><span class="pre">ConstraintResult.satisfied</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ConstraintResult.name"><code class="docutils literal notranslate"><span class="pre">ConstraintResult.name</span></code></a></li>
@@ -1021,7 +1095,24 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.DimerCoveringConstraint.value"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.value()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.DimerCoveringConstraint.check"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.DimerCoveringConstraint.partial_check"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.DimerCoveringConstraint.propagate"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.DimerCoveringConstraint.__init__"><code class="docutils literal notranslate"><span class="pre">DimerCoveringConstraint.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.layout"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.layout</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.variable_indices"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.variable_indices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.min_count"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.min_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.max_count"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.max_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.name"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.exact"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.exact()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.at_most"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.at_most()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.affected_variables"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.affected_variables()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.value"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.check"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.partial_check"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.propagate"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.propagate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.BoundedLocalCountConstraint.__init__"><code class="docutils literal notranslate"><span class="pre">BoundedLocalCountConstraint.__init__()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.FixedValueConstraint"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint</span></code></a><ul>
@@ -1032,6 +1123,8 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.FixedValueConstraint.single"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.single()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.FixedValueConstraint.affected_variables"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.affected_variables()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.FixedValueConstraint.check"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.FixedValueConstraint.partial_check"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.FixedValueConstraint.propagate"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.FixedValueConstraint.__init__"><code class="docutils literal notranslate"><span class="pre">FixedValueConstraint.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -1049,6 +1142,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.GaussLawConstraint.value"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.value()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.GaussLawConstraint.check"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.GaussLawConstraint.partial_check"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.GaussLawConstraint.propagate"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.GaussLawConstraint.__init__"><code class="docutils literal notranslate"><span class="pre">GaussLawConstraint.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -1082,7 +1176,10 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ParitySector.target"><code class="docutils literal notranslate"><span class="pre">ParitySector.target</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ParitySector.variable_indices"><code class="docutils literal notranslate"><span class="pre">ParitySector.variable_indices</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ParitySector.name"><code class="docutils literal notranslate"><span class="pre">ParitySector.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ParitySector.affected_variables"><code class="docutils literal notranslate"><span class="pre">ParitySector.affected_variables()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ParitySector.value"><code class="docutils literal notranslate"><span class="pre">ParitySector.value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ParitySector.partial_check"><code class="docutils literal notranslate"><span class="pre">ParitySector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ParitySector.propagate"><code class="docutils literal notranslate"><span class="pre">ParitySector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.ParitySector.__init__"><code class="docutils literal notranslate"><span class="pre">ParitySector.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -1112,6 +1209,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.internal_target"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.internal_target()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.check"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.propagate"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.allowed_internal_targets"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.allowed_internal_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.allowed_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">SquareWindingSector.validate_target()</span></code></a></li>
@@ -1133,6 +1231,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.internal_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.internal_target()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.propagate"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.allowed_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.validate_target()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.__init__"><code class="docutils literal notranslate"><span class="pre">SquareQDMElectricWindingSector.__init__()</span></code></a></li>
@@ -1144,7 +1243,10 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TotalValueSector.variable_indices"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.variable_indices</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TotalValueSector.coefficients"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.coefficients</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TotalValueSector.name"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TotalValueSector.affected_variables"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.affected_variables()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TotalValueSector.value"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TotalValueSector.partial_check"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TotalValueSector.propagate"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TotalValueSector.__init__"><code class="docutils literal notranslate"><span class="pre">TotalValueSector.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -1166,6 +1268,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.HoneycombElectricWindingSector.is_satisfied"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.is_satisfied()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.HoneycombElectricWindingSector.check"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.check()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.HoneycombElectricWindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.HoneycombElectricWindingSector.propagate"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.HoneycombElectricWindingSector.electric_values_from_convention"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.electric_values_from_convention()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.HoneycombElectricWindingSector.allowed_internal_targets"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.allowed_internal_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.HoneycombElectricWindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">HoneycombElectricWindingSector.allowed_targets()</span></code></a></li>
@@ -1187,6 +1290,7 @@
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TriangularZ2WindingSector.value"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.value()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TriangularZ2WindingSector.is_satisfied"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.is_satisfied()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TriangularZ2WindingSector.partial_check"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.partial_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TriangularZ2WindingSector.propagate"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.propagate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TriangularZ2WindingSector.allowed_targets"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.allowed_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TriangularZ2WindingSector.validate_target"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.validate_target()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.TriangularZ2WindingSector.__init__"><code class="docutils literal notranslate"><span class="pre">TriangularZ2WindingSector.__init__()</span></code></a></li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks.basis.solvers package &#8212; qlinks 1.0.0 documentation</title>
+    <title>qlinks.basis.solvers package &#8212; qlinks 1.0.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=f9c1cefe"></script>
+    <script src="_static/documentation_options.js?v=423d4ce3"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="qlinks.basis package" href="qlinks.basis.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.0" />
+  <meta name="docsearch:version" content="1.0.1" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.0 documentation</p>
+    <p class="title logo__title">qlinks 1.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -360,11 +360,39 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.solvers.dfs">qlinks.basis.solvers.dfs module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.name"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.can_continue"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.can_continue()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.accept_solution"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.accept_solution()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics"><code class="docutils literal notranslate"><span class="pre">DFSStatistics</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.branch_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.branch_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.solution_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.solution_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.contradiction_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.contradiction_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagated_assignment_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagated_assignment_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.skipped_forced_variable_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.skipped_forced_variable_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.partial_check_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.partial_check_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagation_round_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagation_round_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagator_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagator_call_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.dynamic_variable_selection_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_variable_selection_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.dynamic_value_ordering_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_value_ordering_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_call_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_update_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_update_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_prune_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_prune_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_solution_reject_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_solution_reject_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.max_depth"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.max_depth</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.__init__"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -395,8 +423,36 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver.name"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver.can_continue"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.can_continue()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver.accept_solution"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.accept_solution()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics"><code class="docutils literal notranslate"><span class="pre">DFSStatistics</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.branch_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.branch_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.solution_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.solution_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.contradiction_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.contradiction_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.propagated_assignment_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagated_assignment_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.skipped_forced_variable_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.skipped_forced_variable_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.partial_check_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.partial_check_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.propagation_round_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagation_round_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.propagator_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagator_call_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.dynamic_variable_selection_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_variable_selection_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.dynamic_value_ordering_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_value_ordering_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.observer_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_call_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.observer_update_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_update_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.observer_prune_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_prune_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.observer_solution_reject_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_solution_reject_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.max_depth"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.max_depth</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.__init__"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.__init__()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.SolverInput"><code class="docutils literal notranslate"><span class="pre">SolverInput</span></code></a><ul class="nav section-nav flex-column">
@@ -686,15 +742,217 @@ SquareWindingSector</p>
 <section id="module-qlinks.basis.solvers.dfs">
 <span id="qlinks-basis-solvers-dfs-module"></span><h2>qlinks.basis.solvers.dfs module<a class="headerlink" href="#module-qlinks.basis.solvers.dfs" title="Link to this heading">#</a></h2>
 <dl class="py class">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSSearchObserver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.solvers.dfs.</span></span><span class="sig-name descname"><span class="pre">DFSSearchObserver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSSearchObserver" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<p>Read-only branch/solution observer for <a class="reference internal" href="#qlinks.basis.solvers.dfs.DFSBasisSolver" title="qlinks.basis.solvers.dfs.DFSBasisSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a>.</p>
+<p>Observers are intended for search-specific pruning that is not naturally a
+model constraint.  They may inspect the mutable DFS arrays but must not
+mutate them.  Returning <code class="docutils literal notranslate"><span class="pre">False</span></code> from <code class="docutils literal notranslate"><span class="pre">can_continue</span></code> prunes the current
+partial branch; returning <code class="docutils literal notranslate"><span class="pre">False</span></code> from <code class="docutils literal notranslate"><span class="pre">accept_solution</span></code> filters the
+complete configuration.</p>
+<p>Stateful observers may additionally implement any of these optional
+methods, which DFSBasisSolver discovers with <code class="docutils literal notranslate"><span class="pre">getattr</span></code> so existing
+read-only observers remain valid:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reset</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">)</span>
+<span class="n">on_assignments</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">changed_variables</span><span class="p">)</span>
+<span class="n">on_unassignments</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">changed_variables</span><span class="p">)</span>
+<span class="n">on_assign</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">forced_assignment</span><span class="p">)</span>
+<span class="n">on_unassign</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Assignment callbacks run after the DFS arrays have been updated; unassign
+callbacks run just before <code class="docutils literal notranslate"><span class="pre">assigned_mask[variable_index]</span></code> is cleared.
+Batched callbacks are preferred for observers that maintain incremental
+state over many variables.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSSearchObserver.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSSearchObserver.can_continue">
+<span class="sig-name descname"><span class="pre">can_continue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assigned_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changed_variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver.can_continue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.can_continue" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>assigned_mask</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.bool" title="(in NumPy v2.4)"><em>bool</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>changed_variables</strong> (<em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSSearchObserver.accept_solution">
+<span class="sig-name descname"><span class="pre">accept_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver.accept_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.accept_solution" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSSearchObserver.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.solvers.dfs.</span></span><span class="sig-name descname"><span class="pre">DFSStatistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">branch_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solution_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contradiction_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagated_assignment_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped_forced_variable_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_check_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagation_round_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagator_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_variable_selection_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_value_ordering_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_update_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_prune_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_solution_reject_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSStatistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Execution counters for <a class="reference internal" href="#qlinks.basis.solvers.dfs.DFSBasisSolver" title="qlinks.basis.solvers.dfs.DFSBasisSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a>.</p>
+<p>The counters are intentionally lightweight and solver-centric.  They are
+meant for comparing pruning/order heuristics, not for proving exact search
+tree identities across implementation changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>branch_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>solution_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>contradiction_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagated_assignment_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>skipped_forced_variable_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>partial_check_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagation_round_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagator_call_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>dynamic_variable_selection_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>dynamic_value_ordering_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_call_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_update_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_prune_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_solution_reject_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>max_depth</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.branch_count">
+<span class="sig-name descname"><span class="pre">branch_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.branch_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.solution_count">
+<span class="sig-name descname"><span class="pre">solution_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.solution_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.contradiction_count">
+<span class="sig-name descname"><span class="pre">contradiction_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.contradiction_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.propagated_assignment_count">
+<span class="sig-name descname"><span class="pre">propagated_assignment_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagated_assignment_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.skipped_forced_variable_count">
+<span class="sig-name descname"><span class="pre">skipped_forced_variable_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.skipped_forced_variable_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.partial_check_count">
+<span class="sig-name descname"><span class="pre">partial_check_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.partial_check_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.propagation_round_count">
+<span class="sig-name descname"><span class="pre">propagation_round_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagation_round_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.propagator_call_count">
+<span class="sig-name descname"><span class="pre">propagator_call_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagator_call_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.dynamic_variable_selection_count">
+<span class="sig-name descname"><span class="pre">dynamic_variable_selection_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.dynamic_variable_selection_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.dynamic_value_ordering_count">
+<span class="sig-name descname"><span class="pre">dynamic_value_ordering_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.dynamic_value_ordering_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.observer_call_count">
+<span class="sig-name descname"><span class="pre">observer_call_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_call_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.observer_update_count">
+<span class="sig-name descname"><span class="pre">observer_update_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_update_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.observer_prune_count">
+<span class="sig-name descname"><span class="pre">observer_prune_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_prune_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.observer_solution_reject_count">
+<span class="sig-name descname"><span class="pre">observer_solution_reject_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_solution_reject_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.max_depth">
+<span class="sig-name descname"><span class="pre">max_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.max_depth" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSStatistics.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">branch_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solution_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contradiction_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagated_assignment_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped_forced_variable_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_check_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagation_round_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagator_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_variable_selection_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_value_ordering_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_update_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_prune_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_solution_reject_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSStatistics.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>branch_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>solution_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>contradiction_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagated_assignment_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>skipped_forced_variable_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>partial_check_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagation_round_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagator_call_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>dynamic_variable_selection_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>dynamic_value_ordering_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_call_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_update_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_prune_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_solution_reject_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>max_depth</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSBasisSolver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.solvers.dfs.</span></span><span class="sig-name descname"><span class="pre">DFSBasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'npt.ArrayLike</span> <span class="pre">|</span> <span class="pre">None'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'VariableOrderStrategy'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.solvers.dfs.</span></span><span class="sig-name descname"><span class="pre">DFSBasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'npt.ArrayLike</span> <span class="pre">|</span> <span class="pre">None'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'VariableOrderStrategy'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_order_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'ValueOrderStrategy'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'layout'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
 <li><p><strong>variable_order</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>]</em>)</p></li>
+<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>, </em><em>'weighted_degree'</em><em>, </em><em>'constraint_closure'</em><em>, </em><em>'dynamic'</em><em>]</em>)</p></li>
+<li><p><strong>value_order_strategy</strong> (<em>Literal</em><em>[</em><em>'layout'</em><em>, </em><em>'propagation'</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -710,12 +968,17 @@ SquareWindingSector</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order_strategy">
-<span class="sig-name descname"><span class="pre">variable_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'degree'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order_strategy" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">variable_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'degree'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'weighted_degree'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'constraint_closure'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'dynamic'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order_strategy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSBasisSolver.value_order_strategy">
+<span class="sig-name descname"><span class="pre">value_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'propagation'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.value_order_strategy" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSBasisSolver.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.solve" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -723,6 +986,7 @@ SquareWindingSector</p>
 <li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
 <li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
 <li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>observers</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#qlinks.basis.solvers.dfs.DFSSearchObserver" title="qlinks.basis.solvers.dfs.DFSSearchObserver"><em>DFSSearchObserver</em></a><em>]</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -732,14 +996,35 @@ SquareWindingSector</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSBasisSolver.solve_with_statistics">
+<span class="sig-name descname"><span class="pre">solve_with_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve_with_statistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.solve_with_statistics" title="Link to this definition">#</a></dt>
+<dd><p>Solve and return lightweight DFS execution statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
+<li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
+<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>observers</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#qlinks.basis.solvers.dfs.DFSSearchObserver" title="qlinks.basis.solvers.dfs.DFSSearchObserver"><em>DFSSearchObserver</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[<a class="reference internal" href="qlinks.basis.html#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a>, <a class="reference internal" href="#qlinks.basis.solvers.dfs.DFSStatistics" title="qlinks.basis.solvers.dfs.DFSStatistics"><em>DFSStatistics</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.solvers.dfs.DFSBasisSolver.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layout'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
 <li><p><strong>variable_order</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>]</em>)</p></li>
+<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>, </em><em>'weighted_degree'</em><em>, </em><em>'constraint_closure'</em><em>, </em><em>'dynamic'</em><em>]</em>)</p></li>
+<li><p><strong>value_order_strategy</strong> (<em>Literal</em><em>[</em><em>'layout'</em><em>, </em><em>'propagation'</em><em>]</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -923,14 +1208,15 @@ SquareWindingSector</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.solvers.DFSBasisSolver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.solvers.</span></span><span class="sig-name descname"><span class="pre">DFSBasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'npt.ArrayLike</span> <span class="pre">|</span> <span class="pre">None'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'VariableOrderStrategy'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.solvers.</span></span><span class="sig-name descname"><span class="pre">DFSBasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'npt.ArrayLike</span> <span class="pre">|</span> <span class="pre">None'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'VariableOrderStrategy'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_order_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'ValueOrderStrategy'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'layout'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
 <li><p><strong>variable_order</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>]</em>)</p></li>
+<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>, </em><em>'weighted_degree'</em><em>, </em><em>'constraint_closure'</em><em>, </em><em>'dynamic'</em><em>]</em>)</p></li>
+<li><p><strong>value_order_strategy</strong> (<em>Literal</em><em>[</em><em>'layout'</em><em>, </em><em>'propagation'</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -946,12 +1232,17 @@ SquareWindingSector</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.solvers.DFSBasisSolver.variable_order_strategy">
-<span class="sig-name descname"><span class="pre">variable_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'degree'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver.variable_order_strategy" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">variable_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'degree'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'weighted_degree'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'constraint_closure'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'dynamic'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver.variable_order_strategy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSBasisSolver.value_order_strategy">
+<span class="sig-name descname"><span class="pre">value_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'propagation'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver.value_order_strategy" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.solvers.DFSBasisSolver.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver.solve" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -959,6 +1250,7 @@ SquareWindingSector</p>
 <li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
 <li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
 <li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>observers</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#qlinks.basis.solvers.dfs.DFSSearchObserver" title="qlinks.basis.solvers.dfs.DFSSearchObserver"><em>DFSSearchObserver</em></a><em>]</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -968,14 +1260,236 @@ SquareWindingSector</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSBasisSolver.solve_with_statistics">
+<span class="sig-name descname"><span class="pre">solve_with_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve_with_statistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver.solve_with_statistics" title="Link to this definition">#</a></dt>
+<dd><p>Solve and return lightweight DFS execution statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
+<li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
+<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
+<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>observers</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#qlinks.basis.solvers.dfs.DFSSearchObserver" title="qlinks.basis.solvers.dfs.DFSSearchObserver"><em>DFSSearchObserver</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[<a class="reference internal" href="qlinks.basis.html#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a>, <a class="reference internal" href="#qlinks.basis.solvers.dfs.DFSStatistics" title="qlinks.basis.solvers.dfs.DFSStatistics"><em>DFSStatistics</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.solvers.DFSBasisSolver.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layout'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.solvers.DFSBasisSolver.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sort</strong> (<em>bool</em>)</p></li>
 <li><p><strong>variable_order</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>]</em>)</p></li>
+<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>, </em><em>'weighted_degree'</em><em>, </em><em>'constraint_closure'</em><em>, </em><em>'dynamic'</em><em>]</em>)</p></li>
+<li><p><strong>value_order_strategy</strong> (<em>Literal</em><em>[</em><em>'layout'</em><em>, </em><em>'propagation'</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSSearchObserver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.solvers.</span></span><span class="sig-name descname"><span class="pre">DFSSearchObserver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSSearchObserver" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<p>Read-only branch/solution observer for <a class="reference internal" href="#qlinks.basis.solvers.DFSBasisSolver" title="qlinks.basis.solvers.DFSBasisSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a>.</p>
+<p>Observers are intended for search-specific pruning that is not naturally a
+model constraint.  They may inspect the mutable DFS arrays but must not
+mutate them.  Returning <code class="docutils literal notranslate"><span class="pre">False</span></code> from <code class="docutils literal notranslate"><span class="pre">can_continue</span></code> prunes the current
+partial branch; returning <code class="docutils literal notranslate"><span class="pre">False</span></code> from <code class="docutils literal notranslate"><span class="pre">accept_solution</span></code> filters the
+complete configuration.</p>
+<p>Stateful observers may additionally implement any of these optional
+methods, which DFSBasisSolver discovers with <code class="docutils literal notranslate"><span class="pre">getattr</span></code> so existing
+read-only observers remain valid:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reset</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">)</span>
+<span class="n">on_assignments</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">changed_variables</span><span class="p">)</span>
+<span class="n">on_unassignments</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">changed_variables</span><span class="p">)</span>
+<span class="n">on_assign</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">forced_assignment</span><span class="p">)</span>
+<span class="n">on_unassign</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Assignment callbacks run after the DFS arrays have been updated; unassign
+callbacks run just before <code class="docutils literal notranslate"><span class="pre">assigned_mask[variable_index]</span></code> is cleared.
+Batched callbacks are preferred for observers that maintain incremental
+state over many variables.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSSearchObserver.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSSearchObserver.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSSearchObserver.can_continue">
+<span class="sig-name descname"><span class="pre">can_continue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assigned_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changed_variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver.can_continue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSSearchObserver.can_continue" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>assigned_mask</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.bool" title="(in NumPy v2.4)"><em>bool</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>changed_variables</strong> (<em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSSearchObserver.accept_solution">
+<span class="sig-name descname"><span class="pre">accept_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver.accept_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSSearchObserver.accept_solution" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSSearchObserver.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.solvers.DFSSearchObserver.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.solvers.</span></span><span class="sig-name descname"><span class="pre">DFSStatistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">branch_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solution_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contradiction_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagated_assignment_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped_forced_variable_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_check_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagation_round_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagator_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_variable_selection_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_value_ordering_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_update_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_prune_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_solution_reject_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSStatistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Execution counters for <a class="reference internal" href="#qlinks.basis.solvers.DFSBasisSolver" title="qlinks.basis.solvers.DFSBasisSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a>.</p>
+<p>The counters are intentionally lightweight and solver-centric.  They are
+meant for comparing pruning/order heuristics, not for proving exact search
+tree identities across implementation changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>branch_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>solution_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>contradiction_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagated_assignment_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>skipped_forced_variable_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>partial_check_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagation_round_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagator_call_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>dynamic_variable_selection_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>dynamic_value_ordering_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_call_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_update_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_prune_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_solution_reject_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>max_depth</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.branch_count">
+<span class="sig-name descname"><span class="pre">branch_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.branch_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.solution_count">
+<span class="sig-name descname"><span class="pre">solution_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.solution_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.contradiction_count">
+<span class="sig-name descname"><span class="pre">contradiction_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.contradiction_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.propagated_assignment_count">
+<span class="sig-name descname"><span class="pre">propagated_assignment_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.propagated_assignment_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.skipped_forced_variable_count">
+<span class="sig-name descname"><span class="pre">skipped_forced_variable_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.skipped_forced_variable_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.partial_check_count">
+<span class="sig-name descname"><span class="pre">partial_check_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.partial_check_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.propagation_round_count">
+<span class="sig-name descname"><span class="pre">propagation_round_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.propagation_round_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.propagator_call_count">
+<span class="sig-name descname"><span class="pre">propagator_call_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.propagator_call_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.dynamic_variable_selection_count">
+<span class="sig-name descname"><span class="pre">dynamic_variable_selection_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.dynamic_variable_selection_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.dynamic_value_ordering_count">
+<span class="sig-name descname"><span class="pre">dynamic_value_ordering_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.dynamic_value_ordering_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.observer_call_count">
+<span class="sig-name descname"><span class="pre">observer_call_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.observer_call_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.observer_update_count">
+<span class="sig-name descname"><span class="pre">observer_update_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.observer_update_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.observer_prune_count">
+<span class="sig-name descname"><span class="pre">observer_prune_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.observer_prune_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.observer_solution_reject_count">
+<span class="sig-name descname"><span class="pre">observer_solution_reject_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.observer_solution_reject_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.max_depth">
+<span class="sig-name descname"><span class="pre">max_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.max_depth" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.basis.solvers.DFSStatistics.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">branch_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solution_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contradiction_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagated_assignment_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped_forced_variable_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_check_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagation_round_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagator_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_variable_selection_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_value_ordering_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_update_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_prune_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_solution_reject_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.solvers.DFSStatistics.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>branch_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>solution_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>contradiction_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagated_assignment_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>skipped_forced_variable_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>partial_check_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagation_round_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>propagator_call_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>dynamic_variable_selection_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>dynamic_value_ordering_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_call_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_update_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_prune_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>observer_solution_reject_count</strong> (<em>int</em>)</p></li>
+<li><p><strong>max_depth</strong> (<em>int</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1156,11 +1670,39 @@ SquareWindingSector</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.solvers.dfs">qlinks.basis.solvers.dfs module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.name"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.can_continue"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.can_continue()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.accept_solution"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.accept_solution()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSSearchObserver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics"><code class="docutils literal notranslate"><span class="pre">DFSStatistics</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.branch_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.branch_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.solution_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.solution_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.contradiction_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.contradiction_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagated_assignment_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagated_assignment_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.skipped_forced_variable_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.skipped_forced_variable_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.partial_check_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.partial_check_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagation_round_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagation_round_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.propagator_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagator_call_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.dynamic_variable_selection_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_variable_selection_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.dynamic_value_ordering_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_value_ordering_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_call_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_update_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_update_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_prune_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_prune_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.observer_solution_reject_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_solution_reject_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.max_depth"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.max_depth</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSStatistics.__init__"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.dfs.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
 </ul>
 </li>
@@ -1191,8 +1733,36 @@ SquareWindingSector</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver.name"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver.can_continue"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.can_continue()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver.accept_solution"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.accept_solution()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSSearchObserver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics"><code class="docutils literal notranslate"><span class="pre">DFSStatistics</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.branch_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.branch_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.solution_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.solution_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.contradiction_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.contradiction_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.propagated_assignment_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagated_assignment_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.skipped_forced_variable_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.skipped_forced_variable_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.partial_check_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.partial_check_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.propagation_round_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagation_round_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.propagator_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagator_call_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.dynamic_variable_selection_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_variable_selection_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.dynamic_value_ordering_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_value_ordering_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.observer_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_call_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.observer_update_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_update_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.observer_prune_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_prune_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.observer_solution_reject_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_solution_reject_count</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.max_depth"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.max_depth</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.DFSStatistics.__init__"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.__init__()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.solvers.SolverInput"><code class="docutils literal notranslate"><span class="pre">SolverInput</span></code></a><ul class="nav section-nav flex-column">

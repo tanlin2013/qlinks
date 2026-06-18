@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qlinks.constraints.local &#8212; qlinks 1.0.0 documentation</title>
+    <title>qlinks.constraints.local &#8212; qlinks 1.0.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=f9c1cefe"></script>
+    <script src="../../../_static/documentation_options.js?v=423d4ce3"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -49,7 +49,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.0" />
+  <meta name="docsearch:version" content="1.0.1" />
   </head>
   
   
@@ -126,7 +126,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.0 documentation</p>
+    <p class="title logo__title">qlinks 1.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -312,8 +312,212 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseConstraint</span><span class="p">,</span> <span class="n">ConstraintResult</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaseConstraint</span><span class="p">,</span>
+    <span class="n">ConstraintPropagation</span><span class="p">,</span>
+    <span class="n">ConstraintResult</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">VariableLayout</span>
+
+
+<div class="viewcode-block" id="BoundedLocalCountConstraint">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BoundedLocalCountConstraint</span><span class="p">(</span><span class="n">BaseConstraint</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Binary local count constraint with incremental propagation.</span>
+
+<span class="sd">    The constraint enforces</span>
+
+<span class="sd">        min_count &lt;= sum(config[variable_indices]) &lt;= max_count</span>
+
+<span class="sd">    where ``min_count=None`` means there is no lower bound.  All participating</span>
+<span class="sd">    variables must have binary local space ``{0, 1}``.  Besides the usual</span>
+<span class="sd">    partial feasibility check, the constraint can force remaining variables:</span>
+
+<span class="sd">    * if the current count already reaches ``max_count``, every unassigned</span>
+<span class="sd">      variable in the support must be 0;</span>
+<span class="sd">    * if the lower bound can only be reached by occupying all remaining</span>
+<span class="sd">      variables, every unassigned variable in the support must be 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span>
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">min_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">max_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bounded_local_count&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">variable_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">variable_indices</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;variable_indices must be one-dimensional.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">variable_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one variable is required.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">variable_indices</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">variable_indices</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;variable_indices contains indices outside the layout.&quot;</span><span class="p">)</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">first_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">variable_indices</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">variable_indices</span> <span class="o">=</span> <span class="n">variable_indices</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">first_indices</span><span class="p">)]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">variable_indices</span><span class="p">:</span>
+            <span class="n">local_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;BoundedLocalCountConstraint requires binary local spaces with values [0, 1].&quot;</span>
+                <span class="p">)</span>
+
+        <span class="n">min_count</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_count</span><span class="p">)</span>
+        <span class="n">max_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_count</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">min_count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">min_count</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;min_count must be non-negative or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_count</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_count must be non-negative.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">min_count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">min_count</span> <span class="o">&gt;</span> <span class="n">max_count</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;min_count cannot exceed max_count.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">min_count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">min_count</span> <span class="o">&gt;</span> <span class="n">variable_indices</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;min_count cannot exceed the number of variables.&quot;</span><span class="p">)</span>
+
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;variable_indices&quot;</span><span class="p">,</span> <span class="n">variable_indices</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;min_count&quot;</span><span class="p">,</span> <span class="n">min_count</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;max_count&quot;</span><span class="p">,</span> <span class="n">max_count</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BoundedLocalCountConstraint.exact">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.exact">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exact</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;local_count&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BoundedLocalCountConstraint</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">variable_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">variable_indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="n">min_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">),</span>
+            <span class="n">max_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoundedLocalCountConstraint.at_most">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.at_most">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">at_most</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">max_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;local_count&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BoundedLocalCountConstraint</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">variable_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">variable_indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="n">min_count</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">max_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">max_count</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoundedLocalCountConstraint.affected_variables">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.affected_variables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">affected_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BoundedLocalCountConstraint.value">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="BoundedLocalCountConstraint.check">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstraintResult</span><span class="p">:</span>
+        <span class="n">occupied</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">satisfied</span> <span class="o">=</span> <span class="n">occupied</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_count</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">occupied</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rule</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;count&lt;=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_count</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_count</span><span class="p">:</span>
+            <span class="n">rule</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;count=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">min_count</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rule</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">min_count</span><span class="si">}</span><span class="s2">&lt;=count&lt;=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_count</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">ConstraintResult</span><span class="p">(</span>
+            <span class="n">satisfied</span><span class="o">=</span><span class="n">satisfied</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">residual</span><span class="o">=</span><span class="n">occupied</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: count=</span><span class="si">{</span><span class="n">occupied</span><span class="si">}</span><span class="s2">, rule=</span><span class="si">{</span><span class="n">rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoundedLocalCountConstraint.partial_check">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.partial_check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">partial_check</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">propagate</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">)</span><span class="o">.</span><span class="n">consistent</span></div>
+
+
+<div class="viewcode-block" id="BoundedLocalCountConstraint.propagate">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.BoundedLocalCountConstraint.propagate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">propagate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstraintPropagation</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">assigned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">assigned_mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="n">variable_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span>
+        <span class="n">assigned_local</span> <span class="o">=</span> <span class="n">assigned</span><span class="p">[</span><span class="n">variable_indices</span><span class="p">]</span>
+        <span class="n">unassigned_variables</span> <span class="o">=</span> <span class="n">variable_indices</span><span class="p">[</span><span class="o">~</span><span class="n">assigned_local</span><span class="p">]</span>
+
+        <span class="n">occupied</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">variable_indices</span><span class="p">[</span><span class="n">assigned_local</span><span class="p">]]))</span>
+        <span class="n">unassigned</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">unassigned_variables</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">occupied</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_count</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">occupied</span> <span class="o">+</span> <span class="n">unassigned</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">unassigned</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">occupied</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">no_change</span><span class="p">()</span>
+
+        <span class="n">forced</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">occupied</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_count</span><span class="p">:</span>
+            <span class="n">forced</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">unassigned_variables</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">occupied</span> <span class="o">+</span> <span class="n">unassigned</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_count</span><span class="p">:</span>
+            <span class="n">forced</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">unassigned_variables</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">forced</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">no_change</span><span class="p">()</span>
+
+        <span class="c1"># The two forcing rules can conflict only if the bounds are inconsistent</span>
+        <span class="c1"># with the current partial assignment; report that as a contradiction.</span>
+        <span class="n">forced_by_variable</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">:</span>
+            <span class="n">previous</span> <span class="o">=</span> <span class="n">forced_by_variable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">previous</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">previous</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+            <span class="n">forced_by_variable</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="p">(</span><span class="n">forced_assignments</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">forced_by_variable</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
+</div>
+
 
 
 <div class="viewcode-block" id="FixedValueConstraint">
@@ -383,6 +587,42 @@
             <span class="n">residual</span><span class="o">=</span><span class="n">actual</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
             <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: actual=</span><span class="si">{</span><span class="n">actual</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}</span><span class="s2">, target=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FixedValueConstraint.partial_check">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.partial_check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">partial_check</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">propagate</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">)</span><span class="o">.</span><span class="n">consistent</span></div>
+
+
+<div class="viewcode-block" id="FixedValueConstraint.propagate">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.local.FixedValueConstraint.propagate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">propagate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstraintPropagation</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">assigned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">assigned_mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="n">forced</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">assigned</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">variable_index</span><span class="p">])</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">forced</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">forced</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">no_change</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="p">(</span><span class="n">forced_assignments</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">forced</span><span class="p">))</span></div>
 </div>
 
 

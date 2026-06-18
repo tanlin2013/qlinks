@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qlinks.constraints.base &#8212; qlinks 1.0.0 documentation</title>
+    <title>qlinks.constraints.base &#8212; qlinks 1.0.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=f9c1cefe"></script>
+    <script src="../../../_static/documentation_options.js?v=423d4ce3"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -49,7 +49,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.0" />
+  <meta name="docsearch:version" content="1.0.1" />
   </head>
   
   
@@ -126,7 +126,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.0 documentation</p>
+    <p class="title logo__title">qlinks 1.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -331,6 +331,37 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">satisfied</span></div>
+
+
+
+<div class="viewcode-block" id="ConstraintPropagation">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConstraintPropagation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of one incremental constraint-propagation step.</span>
+
+<span class="sd">    ``forced_assignments`` contains ``(variable_index, value)`` pairs that must</span>
+<span class="sd">    hold in every completion of the current partial configuration.  Generic</span>
+<span class="sd">    constraints do not need to implement propagation; DFSBasisSolver treats</span>
+<span class="sd">    this as an optional fast path and falls back to ``partial_check``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">consistent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">forced_assignments</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+
+<div class="viewcode-block" id="ConstraintPropagation.contradiction">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation.contradiction">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">contradiction</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstraintPropagation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">consistent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ConstraintPropagation.no_change">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.base.ConstraintPropagation.no_change">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">no_change</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstraintPropagation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span></div>
+</div>
 
 
 

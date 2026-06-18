@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qlinks.basis.solvers.dfs &#8212; qlinks 1.0.0 documentation</title>
+    <title>qlinks.basis.solvers.dfs &#8212; qlinks 1.0.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=f9c1cefe"></script>
+    <script src="../../../../_static/documentation_options.js?v=423d4ce3"></script>
     <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -49,7 +49,7 @@
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.0" />
+  <meta name="docsearch:version" content="1.0.1" />
   </head>
   
   
@@ -126,7 +126,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.0 documentation</p>
+    <p class="title logo__title">qlinks 1.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -309,18 +309,108 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.basis.basis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Basis</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints</span><span class="w"> </span><span class="kn">import</span> <span class="n">Constraint</span><span class="p">,</span> <span class="n">SectorCondition</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints</span><span class="w"> </span><span class="kn">import</span> <span class="n">Constraint</span><span class="p">,</span> <span class="n">ConstraintPropagation</span><span class="p">,</span> <span class="n">SectorCondition</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">VariableLayout</span>
 
 <span class="n">ConditionLike</span> <span class="o">=</span> <span class="n">Constraint</span> <span class="o">|</span> <span class="n">SectorCondition</span>
 <span class="n">PartialCheck</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">]],</span> <span class="nb">bool</span><span class="p">]</span>
-<span class="n">VariableOrderStrategy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;degree&quot;</span><span class="p">]</span>
+<span class="n">Propagator</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">]],</span> <span class="n">ConstraintPropagation</span><span class="p">]</span>
+<span class="n">VariableOrderStrategy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;layout&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;degree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;weighted_degree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;constraint_closure&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dynamic&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">ValueOrderStrategy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;layout&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;propagation&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="DFSSearchObserver">
+<a class="viewcode-back" href="../../../../qlinks.basis.solvers.html#qlinks.basis.DFSSearchObserver">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DFSSearchObserver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read-only branch/solution observer for :class:`DFSBasisSolver`.</span>
+
+<span class="sd">    Observers are intended for search-specific pruning that is not naturally a</span>
+<span class="sd">    model constraint.  They may inspect the mutable DFS arrays but must not</span>
+<span class="sd">    mutate them.  Returning ``False`` from ``can_continue`` prunes the current</span>
+<span class="sd">    partial branch; returning ``False`` from ``accept_solution`` filters the</span>
+<span class="sd">    complete configuration.</span>
+
+<span class="sd">    Stateful observers may additionally implement any of these optional</span>
+<span class="sd">    methods, which DFSBasisSolver discovers with ``getattr`` so existing</span>
+<span class="sd">    read-only observers remain valid::</span>
+
+<span class="sd">        reset(config, assigned_mask)</span>
+<span class="sd">        on_assignments(config, assigned_mask, changed_variables)</span>
+<span class="sd">        on_unassignments(config, assigned_mask, changed_variables)</span>
+<span class="sd">        on_assign(config, assigned_mask, variable_index, value, forced_assignment)</span>
+<span class="sd">        on_unassign(config, assigned_mask, variable_index, value)</span>
+
+<span class="sd">    Assignment callbacks run after the DFS arrays have been updated; unassign</span>
+<span class="sd">    callbacks run just before ``assigned_mask[variable_index]`` is cleared.</span>
+<span class="sd">    Batched callbacks are preferred for observers that maintain incremental</span>
+<span class="sd">    state over many variables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+<div class="viewcode-block" id="DFSSearchObserver.can_continue">
+<a class="viewcode-back" href="../../../../qlinks.basis.solvers.html#qlinks.basis.DFSSearchObserver.can_continue">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">can_continue</span><span class="p">(</span></div>
+
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
+        <span class="n">changed_variables</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span> <span class="o">...</span>
+
+<div class="viewcode-block" id="DFSSearchObserver.accept_solution">
+<a class="viewcode-back" href="../../../../qlinks.basis.solvers.html#qlinks.basis.DFSSearchObserver.accept_solution">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">accept_solution</span><span class="p">(</span></div>
+
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span> <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="DFSStatistics">
+<a class="viewcode-back" href="../../../../qlinks.basis.solvers.html#qlinks.basis.DFSStatistics">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DFSStatistics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Execution counters for :class:`DFSBasisSolver`.</span>
+
+<span class="sd">    The counters are intentionally lightweight and solver-centric.  They are</span>
+<span class="sd">    meant for comparing pruning/order heuristics, not for proving exact search</span>
+<span class="sd">    tree identities across implementation changes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">branch_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">solution_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">contradiction_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">propagated_assignment_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">skipped_forced_variable_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">partial_check_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">propagation_round_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">propagator_call_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dynamic_variable_selection_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dynamic_value_ordering_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">observer_call_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">observer_update_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">observer_prune_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">observer_solution_reject_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
+
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -338,10 +428,19 @@
     <span class="c1"># Explicit order. If provided, this overrides variable_order_strategy.</span>
     <span class="n">variable_order</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="c1"># &quot;auto&quot; currently aliases &quot;degree&quot;.</span>
+    <span class="c1"># &quot;auto&quot; currently aliases &quot;constraint_closure&quot;.</span>
     <span class="c1"># &quot;layout&quot; means [0, 1, 2, ...].</span>
     <span class="c1"># &quot;degree&quot; means variables appearing in more constraints/sectors first.</span>
+    <span class="c1"># &quot;weighted_degree&quot; favors variables in smaller constraint supports.</span>
+    <span class="c1"># &quot;constraint_closure&quot; greedily clusters variables that complete local constraints early.</span>
+    <span class="c1"># &quot;dynamic&quot; chooses the next variable at each branch from the current propagated state.</span>
     <span class="n">variable_order_strategy</span><span class="p">:</span> <span class="n">VariableOrderStrategy</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span>
+
+    <span class="c1"># &quot;layout&quot; uses the local-space value order.  &quot;propagation&quot; is opt-in and</span>
+    <span class="c1"># tries values that survive the immediate local checks and force more</span>
+    <span class="c1"># assignments first; it can help max_states/first-solution workflows, but it</span>
+    <span class="c1"># is deliberately not the default for full enumeration.</span>
+    <span class="n">value_order_strategy</span><span class="p">:</span> <span class="n">ValueOrderStrategy</span> <span class="o">=</span> <span class="s2">&quot;layout&quot;</span>
 
 <div class="viewcode-block" id="DFSBasisSolver.solve">
 <a class="viewcode-back" href="../../../../qlinks.basis.solvers.html#qlinks.basis.DFSBasisSolver.solve">[docs]</a>
@@ -352,11 +451,60 @@
         <span class="n">sectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">SectorCondition</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">observers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">DFSSearchObserver</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Basis</span><span class="p">:</span>
+        <span class="n">basis</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve</span><span class="p">(</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">constraints</span><span class="o">=</span><span class="n">constraints</span><span class="p">,</span>
+            <span class="n">sectors</span><span class="o">=</span><span class="n">sectors</span><span class="p">,</span>
+            <span class="n">max_states</span><span class="o">=</span><span class="n">max_states</span><span class="p">,</span>
+            <span class="n">observers</span><span class="o">=</span><span class="n">observers</span><span class="p">,</span>
+            <span class="n">collect_statistics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">basis</span></div>
+
+
+<div class="viewcode-block" id="DFSBasisSolver.solve_with_statistics">
+<a class="viewcode-back" href="../../../../qlinks.basis.solvers.html#qlinks.basis.DFSBasisSolver.solve_with_statistics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_with_statistics</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">constraints</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Constraint</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">sectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">SectorCondition</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">observers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">DFSSearchObserver</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Basis</span><span class="p">,</span> <span class="n">DFSStatistics</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve and return lightweight DFS execution statistics.&quot;&quot;&quot;</span>
+        <span class="n">basis</span><span class="p">,</span> <span class="n">statistics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve</span><span class="p">(</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">constraints</span><span class="o">=</span><span class="n">constraints</span><span class="p">,</span>
+            <span class="n">sectors</span><span class="o">=</span><span class="n">sectors</span><span class="p">,</span>
+            <span class="n">max_states</span><span class="o">=</span><span class="n">max_states</span><span class="p">,</span>
+            <span class="n">observers</span><span class="o">=</span><span class="n">observers</span><span class="p">,</span>
+            <span class="n">collect_statistics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">basis</span><span class="p">,</span> <span class="n">statistics</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_solve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">constraints</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Constraint</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">sectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">SectorCondition</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">observers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">DFSSearchObserver</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">collect_statistics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Basis</span><span class="p">,</span> <span class="n">DFSStatistics</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="n">statistics</span> <span class="o">=</span> <span class="n">DFSStatistics</span><span class="p">()</span> <span class="k">if</span> <span class="n">collect_statistics</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">observers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">observers</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_states</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_states must be non-negative or None.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">max_states</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">),</span> <span class="n">statistics</span>
 
         <span class="n">n</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">default_config</span><span class="p">()</span>
@@ -373,6 +521,11 @@
             <span class="n">n_variables</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
             <span class="n">condition_infos</span><span class="o">=</span><span class="n">condition_infos</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">propagators_by_variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_propagator_lookup</span><span class="p">(</span>
+            <span class="n">n_variables</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">condition_infos</span><span class="o">=</span><span class="n">condition_infos</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">root_propagators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_root_propagators</span><span class="p">(</span><span class="n">condition_infos</span><span class="o">=</span><span class="n">condition_infos</span><span class="p">)</span>
 
         <span class="c1"># Conditions with no affected variables are global constants.</span>
         <span class="c1"># They should be checked once before DFS starts.</span>
@@ -380,8 +533,15 @@
             <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
             <span class="n">assigned_mask</span><span class="o">=</span><span class="n">assigned_mask</span><span class="p">,</span>
             <span class="n">condition_infos</span><span class="o">=</span><span class="n">condition_infos</span><span class="p">,</span>
+            <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
         <span class="p">):</span>
-            <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">statistics</span><span class="o">.</span><span class="n">contradiction_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">),</span> <span class="n">statistics</span>
+
+        <span class="n">use_dynamic_order</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variable_order</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_order_strategy</span> <span class="o">==</span> <span class="s2">&quot;dynamic&quot;</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">variable_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_choose_variable_order</span><span class="p">(</span>
@@ -399,49 +559,421 @@
             <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
             <span class="n">variable_order</span><span class="o">=</span><span class="n">variable_order</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">partial_checks_by_depth</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="n">partial_checks_by_variable</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span> <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">variable_order</span>
+        <span class="n">local_values_by_variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_values_by_variable</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
+
+        <span class="n">supports</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span> <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">condition_infos</span><span class="p">)</span>
+        <span class="n">condition_ids_by_variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_condition_id_lookup</span><span class="p">(</span>
+            <span class="n">n_variables</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">condition_infos</span><span class="o">=</span><span class="n">condition_infos</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">base_dynamic_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weighted_degree_scores</span><span class="p">(</span>
+            <span class="n">n_variables</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">supports</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">support</span> <span class="k">for</span> <span class="n">support</span> <span class="ow">in</span> <span class="n">supports</span> <span class="k">if</span> <span class="n">support</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">static_ranks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_static_ranks</span><span class="p">(</span><span class="n">variable_order</span><span class="o">=</span><span class="n">variable_order</span><span class="p">,</span> <span class="n">n_variables</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="n">has_propagators</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">propagators_by_variable</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="n">root_propagators</span><span class="p">)</span>
+
+        <span class="n">observer_reset_callbacks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">callback</span>
+            <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">observers</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">callback</span> <span class="o">:=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">observer</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">observer_assign_callbacks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">callback</span>
+            <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">observers</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">callback</span> <span class="o">:=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">observer</span><span class="p">,</span> <span class="s2">&quot;on_assign&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">observer_unassign_callbacks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">callback</span>
+            <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">observers</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">callback</span> <span class="o">:=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">observer</span><span class="p">,</span> <span class="s2">&quot;on_unassign&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">observer_assignments_callbacks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">callback</span>
+            <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">observers</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">callback</span> <span class="o">:=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">observer</span><span class="p">,</span> <span class="s2">&quot;on_assignments&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">observer_unassignments_callbacks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">callback</span>
+            <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">observers</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">callback</span> <span class="o">:=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">observer</span><span class="p">,</span> <span class="s2">&quot;on_unassignments&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">notify_observers_reset</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">reset</span> <span class="ow">in</span> <span class="n">observer_reset_callbacks</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">statistics</span><span class="o">.</span><span class="n">observer_update_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">reset</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">notify_observers_assigned</span><span class="p">(</span>
+            <span class="n">changed_assignments</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]],</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">changed_assignments</span><span class="p">:</span>
                 <span class="k">return</span>
 
-            <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_full_check</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">all_conditions</span><span class="p">):</span>
-                    <span class="n">states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="n">changed_variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span> <span class="k">for</span> <span class="n">variable</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">changed_assignments</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">on_assignments</span> <span class="ow">in</span> <span class="n">observer_assignments_callbacks</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">statistics</span><span class="o">.</span><span class="n">observer_update_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">on_assignments</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">changed_variables</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">forced_assignment</span> <span class="ow">in</span> <span class="n">changed_assignments</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">on_assign</span> <span class="ow">in</span> <span class="n">observer_assign_callbacks</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">statistics</span><span class="o">.</span><span class="n">observer_update_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">on_assign</span><span class="p">(</span>
+                        <span class="n">config</span><span class="p">,</span>
+                        <span class="n">assigned_mask</span><span class="p">,</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">),</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+                        <span class="nb">bool</span><span class="p">(</span><span class="n">forced_assignment</span><span class="p">),</span>
+                    <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">notify_observers_unassigned</span><span class="p">(</span>
+            <span class="n">changed_assignments</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]],</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">changed_assignments</span><span class="p">:</span>
                 <span class="k">return</span>
 
-            <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_order</span><span class="p">[</span><span class="n">depth</span><span class="p">])</span>
+            <span class="n">changed_variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span> <span class="k">for</span> <span class="n">variable</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">)</span>
+            <span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ordered_local_values</span><span class="p">[</span><span class="n">depth</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">on_unassignments</span> <span class="ow">in</span> <span class="n">observer_unassignments_callbacks</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">statistics</span><span class="o">.</span><span class="n">observer_update_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">on_unassignments</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">changed_variables</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">on_unassign</span> <span class="ow">in</span> <span class="n">observer_unassign_callbacks</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">statistics</span><span class="o">.</span><span class="n">observer_update_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">on_unassign</span><span class="p">(</span>
+                        <span class="n">config</span><span class="p">,</span>
+                        <span class="n">assigned_mask</span><span class="p">,</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">),</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+                    <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">observers_can_continue</span><span class="p">(</span><span class="n">changed_variables</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">observers</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">observers</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">statistics</span><span class="o">.</span><span class="n">observer_call_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">observer</span><span class="o">.</span><span class="n">can_continue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">,</span> <span class="n">changed_variables</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">statistics</span><span class="o">.</span><span class="n">observer_prune_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">observers_accept_solution</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">observers</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">observers</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">statistics</span><span class="o">.</span><span class="n">observer_call_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">observer</span><span class="o">.</span><span class="n">accept_solution</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">statistics</span><span class="o">.</span><span class="n">observer_solution_reject_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">notify_observers_reset</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">record_solution</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">observers_accept_solution</span><span class="p">():</span>
+                <span class="k">return</span>
+            <span class="n">states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">statistics</span><span class="o">.</span><span class="n">solution_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">statistics</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                    <span class="n">statistics</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">assigned_mask</span><span class="p">)),</span>
+                <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">record_branch</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">statistics</span><span class="o">.</span><span class="n">branch_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">record_contradiction</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">statistics</span><span class="o">.</span><span class="n">contradiction_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_propagators</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">use_dynamic_order</span><span class="p">:</span>
+            <span class="n">partial_checks_by_depth</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">partial_checks_by_variable</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span> <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">variable_order</span>
+            <span class="p">)</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">dfs_without_propagation</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
                     <span class="k">return</span>
 
-                <span class="n">config</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-                <span class="n">assigned_mask</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">statistics</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">statistics</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_check_after_assignment</span><span class="p">(</span>
+                <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+                    <span class="c1"># Every non-empty condition support is checked exactly when the</span>
+                    <span class="c1"># last variable in that support is assigned.  Zero-variable</span>
+                    <span class="c1"># conditions are checked once before DFS starts.  Re-running all</span>
+                    <span class="c1"># full checks at every leaf is therefore redundant and costly for</span>
+                    <span class="c1"># large bases with many local constraints.</span>
+                    <span class="n">record_solution</span><span class="p">()</span>
+                    <span class="k">return</span>
+
+                <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_order</span><span class="p">[</span><span class="n">depth</span><span class="p">])</span>
+
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ordered_local_values</span><span class="p">[</span><span class="n">depth</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
+                        <span class="k">return</span>
+
+                    <span class="n">record_branch</span><span class="p">()</span>
+                    <span class="n">config</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="n">assigned_mask</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">changed_assignments</span> <span class="o">=</span> <span class="p">((</span><span class="n">variable_index</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="kc">False</span><span class="p">),)</span>
+
+                    <span class="n">partial_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_check_after_assignment</span><span class="p">(</span>
+                        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                        <span class="n">assigned_mask</span><span class="o">=</span><span class="n">assigned_mask</span><span class="p">,</span>
+                        <span class="n">partial_checks</span><span class="o">=</span><span class="n">partial_checks_by_depth</span><span class="p">[</span><span class="n">depth</span><span class="p">],</span>
+                        <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">partial_ok</span><span class="p">:</span>
+                        <span class="n">record_contradiction</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">notify_observers_assigned</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">observers_can_continue</span><span class="p">((</span><span class="n">variable_index</span><span class="p">,)):</span>
+                            <span class="n">dfs_without_propagation</span><span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="n">notify_observers_unassigned</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">)</span>
+
+                    <span class="n">assigned_mask</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="n">dfs_without_propagation</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">assign_with_propagation</span><span class="p">(</span>
+                <span class="n">variable_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="n">changed_assignments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]],</span>
+                <span class="o">*</span><span class="p">,</span>
+                <span class="n">forced_assignment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Assign one variable and close all forced local consequences.&quot;&quot;&quot;</span>
+                <span class="n">pending</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">forced_assignment</span><span class="p">))</span>
+                <span class="p">]</span>
+
+                <span class="k">while</span> <span class="n">pending</span><span class="p">:</span>
+                    <span class="n">current_variable</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">current_forced</span> <span class="o">=</span> <span class="n">pending</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+                    <span class="k">if</span> <span class="n">assigned_mask</span><span class="p">[</span><span class="n">current_variable</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">current_variable</span><span class="p">])</span> <span class="o">!=</span> <span class="n">current_value</span><span class="p">:</span>
+                            <span class="n">record_contradiction</span><span class="p">()</span>
+                            <span class="k">return</span> <span class="kc">False</span>
+                        <span class="k">continue</span>
+
+                    <span class="n">config</span><span class="p">[</span><span class="n">current_variable</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_value</span>
+                    <span class="n">assigned_mask</span><span class="p">[</span><span class="n">current_variable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">changed_assignments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current_variable</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">current_forced</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">current_forced</span><span class="p">:</span>
+                            <span class="n">statistics</span><span class="o">.</span><span class="n">propagated_assignment_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">statistics</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                            <span class="n">statistics</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">assigned_mask</span><span class="p">)),</span>
+                        <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_check_after_assignment</span><span class="p">(</span>
+                        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                        <span class="n">assigned_mask</span><span class="o">=</span><span class="n">assigned_mask</span><span class="p">,</span>
+                        <span class="n">partial_checks</span><span class="o">=</span><span class="n">partial_checks_by_variable</span><span class="p">[</span><span class="n">current_variable</span><span class="p">],</span>
+                        <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
+                    <span class="p">):</span>
+                        <span class="n">record_contradiction</span><span class="p">()</span>
+                        <span class="k">return</span> <span class="kc">False</span>
+
+                    <span class="n">propagation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_after_assignment</span><span class="p">(</span>
+                        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                        <span class="n">assigned_mask</span><span class="o">=</span><span class="n">assigned_mask</span><span class="p">,</span>
+                        <span class="n">propagators</span><span class="o">=</span><span class="n">propagators_by_variable</span><span class="p">[</span><span class="n">current_variable</span><span class="p">],</span>
+                        <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">propagation</span><span class="o">.</span><span class="n">consistent</span><span class="p">:</span>
+                        <span class="n">record_contradiction</span><span class="p">()</span>
+                        <span class="k">return</span> <span class="kc">False</span>
+
+                    <span class="n">pending</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">forced_variable</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">forced_value</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">forced_variable</span><span class="p">,</span> <span class="n">forced_value</span> <span class="ow">in</span> <span class="n">propagation</span><span class="o">.</span><span class="n">forced_assignments</span>
+                    <span class="p">)</span>
+
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">undo</span><span class="p">(</span>
+                <span class="n">changed_assignments</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]],</span>
+                <span class="o">*</span><span class="p">,</span>
+                <span class="n">notify_observers</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">notify_observers</span><span class="p">:</span>
+                    <span class="n">notify_observers_unassigned</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">):</span>
+                    <span class="n">assigned_mask</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="n">initial_propagation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_after_assignment</span><span class="p">(</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                <span class="n">assigned_mask</span><span class="o">=</span><span class="n">assigned_mask</span><span class="p">,</span>
+                <span class="n">propagators</span><span class="o">=</span><span class="n">root_propagators</span><span class="p">,</span>
+                <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">initial_propagation</span><span class="o">.</span><span class="n">consistent</span><span class="p">:</span>
+                <span class="n">record_contradiction</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">),</span> <span class="n">statistics</span>
+
+            <span class="n">root_changed_assignments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">forced_variable</span><span class="p">,</span> <span class="n">forced_value</span> <span class="ow">in</span> <span class="n">initial_propagation</span><span class="o">.</span><span class="n">forced_assignments</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">assign_with_propagation</span><span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">forced_variable</span><span class="p">),</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">forced_value</span><span class="p">),</span>
+                    <span class="n">root_changed_assignments</span><span class="p">,</span>
+                    <span class="n">forced_assignment</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">),</span> <span class="n">statistics</span>
+
+            <span class="n">root_changed_variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">root_changed_assignments</span>
+            <span class="p">)</span>
+            <span class="n">notify_observers_assigned</span><span class="p">(</span><span class="n">root_changed_assignments</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">observers_can_continue</span><span class="p">(</span><span class="n">root_changed_variables</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">),</span> <span class="n">statistics</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">dfs_with_static_order</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
+                    <span class="k">return</span>
+
+                <span class="k">while</span> <span class="n">depth</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="ow">and</span> <span class="n">assigned_mask</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_order</span><span class="p">[</span><span class="n">depth</span><span class="p">])]:</span>
+                    <span class="n">depth</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">statistics</span><span class="o">.</span><span class="n">skipped_forced_variable_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+                    <span class="c1"># Every non-empty condition support is checked exactly when the</span>
+                    <span class="c1"># last variable in that support is assigned.  Zero-variable</span>
+                    <span class="c1"># conditions are checked once before DFS starts.  Re-running all</span>
+                    <span class="c1"># full checks at every leaf is therefore redundant and costly for</span>
+                    <span class="c1"># large bases with many local constraints.</span>
+                    <span class="n">record_solution</span><span class="p">()</span>
+                    <span class="k">return</span>
+
+                <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_order</span><span class="p">[</span><span class="n">depth</span><span class="p">])</span>
+
+                <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ordered_values_for_variable</span><span class="p">(</span>
+                    <span class="n">variable_index</span><span class="o">=</span><span class="n">variable_index</span><span class="p">,</span>
+                    <span class="n">local_values_by_variable</span><span class="o">=</span><span class="n">local_values_by_variable</span><span class="p">,</span>
                     <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
                     <span class="n">assigned_mask</span><span class="o">=</span><span class="n">assigned_mask</span><span class="p">,</span>
-                    <span class="n">partial_checks</span><span class="o">=</span><span class="n">partial_checks_by_depth</span><span class="p">[</span><span class="n">depth</span><span class="p">],</span>
-                <span class="p">):</span>
-                    <span class="n">dfs</span><span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">partial_checks_by_variable</span><span class="o">=</span><span class="n">partial_checks_by_variable</span><span class="p">,</span>
+                    <span class="n">propagators_by_variable</span><span class="o">=</span><span class="n">propagators_by_variable</span><span class="p">,</span>
+                    <span class="n">value_order_strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">value_order_strategy</span><span class="p">,</span>
+                    <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
+                <span class="p">)</span>
 
-                <span class="n">assigned_mask</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
+                        <span class="k">return</span>
 
-        <span class="n">dfs</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">record_branch</span><span class="p">()</span>
+                    <span class="n">changed_assignments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">assignment_ok</span> <span class="o">=</span> <span class="n">assign_with_propagation</span><span class="p">(</span>
+                        <span class="n">variable_index</span><span class="p">,</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+                        <span class="n">changed_assignments</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">assignment_ok</span><span class="p">:</span>
+                        <span class="n">changed_variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">changed_assignments</span>
+                        <span class="p">)</span>
+                        <span class="n">notify_observers_assigned</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">observers_can_continue</span><span class="p">(</span><span class="n">changed_variables</span><span class="p">):</span>
+                            <span class="n">dfs_with_static_order</span><span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+                    <span class="n">undo</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">,</span> <span class="n">notify_observers</span><span class="o">=</span><span class="n">assignment_ok</span><span class="p">)</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">dfs_with_dynamic_order</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
+                    <span class="k">return</span>
+
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">assigned_mask</span><span class="p">):</span>
+                    <span class="c1"># Every non-empty condition support is checked exactly when the</span>
+                    <span class="c1"># last variable in that support is assigned.  Zero-variable</span>
+                    <span class="c1"># conditions are checked once before DFS starts.  Re-running all</span>
+                    <span class="c1"># full checks at every leaf is therefore redundant and costly for</span>
+                    <span class="c1"># large bases with many local constraints.</span>
+                    <span class="n">record_solution</span><span class="p">()</span>
+                    <span class="k">return</span>
+
+                <span class="n">variable_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_dynamic_variable</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">assigned_mask</span><span class="o">=</span><span class="n">assigned_mask</span><span class="p">,</span>
+                    <span class="n">supports</span><span class="o">=</span><span class="n">supports</span><span class="p">,</span>
+                    <span class="n">condition_ids_by_variable</span><span class="o">=</span><span class="n">condition_ids_by_variable</span><span class="p">,</span>
+                    <span class="n">base_scores</span><span class="o">=</span><span class="n">base_dynamic_scores</span><span class="p">,</span>
+                    <span class="n">static_ranks</span><span class="o">=</span><span class="n">static_ranks</span><span class="p">,</span>
+                    <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ordered_values_for_variable</span><span class="p">(</span>
+                    <span class="n">variable_index</span><span class="o">=</span><span class="n">variable_index</span><span class="p">,</span>
+                    <span class="n">local_values_by_variable</span><span class="o">=</span><span class="n">local_values_by_variable</span><span class="p">,</span>
+                    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                    <span class="n">assigned_mask</span><span class="o">=</span><span class="n">assigned_mask</span><span class="p">,</span>
+                    <span class="n">partial_checks_by_variable</span><span class="o">=</span><span class="n">partial_checks_by_variable</span><span class="p">,</span>
+                    <span class="n">propagators_by_variable</span><span class="o">=</span><span class="n">propagators_by_variable</span><span class="p">,</span>
+                    <span class="n">value_order_strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">value_order_strategy</span><span class="p">,</span>
+                    <span class="n">statistics</span><span class="o">=</span><span class="n">statistics</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_states</span><span class="p">:</span>
+                        <span class="k">return</span>
+
+                    <span class="n">record_branch</span><span class="p">()</span>
+                    <span class="n">changed_assignments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">assignment_ok</span> <span class="o">=</span> <span class="n">assign_with_propagation</span><span class="p">(</span>
+                        <span class="n">variable_index</span><span class="p">,</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+                        <span class="n">changed_assignments</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">assignment_ok</span><span class="p">:</span>
+                        <span class="n">changed_variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">changed_assignments</span>
+                        <span class="p">)</span>
+                        <span class="n">notify_observers_assigned</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">observers_can_continue</span><span class="p">(</span><span class="n">changed_variables</span><span class="p">):</span>
+                            <span class="n">dfs_with_dynamic_order</span><span class="p">()</span>
+
+                    <span class="n">undo</span><span class="p">(</span><span class="n">changed_assignments</span><span class="p">,</span> <span class="n">notify_observers</span><span class="o">=</span><span class="n">assignment_ok</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">use_dynamic_order</span><span class="p">:</span>
+                <span class="n">dfs_with_dynamic_order</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dfs_with_static_order</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">layout</span><span class="p">),</span> <span class="n">statistics</span>
 
         <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort</span><span class="p">:</span>
             <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">T</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">from_states</span><span class="p">(</span><span class="n">layout</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span></div>
-
+        <span class="k">return</span> <span class="n">Basis</span><span class="o">.</span><span class="n">from_states</span><span class="p">(</span><span class="n">layout</span><span class="p">,</span> <span class="n">arr</span><span class="p">),</span> <span class="n">statistics</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_variable_order</span><span class="p">(</span>
@@ -468,7 +1000,12 @@
         <span class="n">strategy</span><span class="p">:</span> <span class="n">VariableOrderStrategy</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
-            <span class="n">strategy</span> <span class="o">=</span> <span class="s2">&quot;degree&quot;</span>
+            <span class="n">strategy</span> <span class="o">=</span> <span class="s2">&quot;constraint_closure&quot;</span>
+
+        <span class="c1"># Dynamic ordering still needs a deterministic static order as a</span>
+        <span class="c1"># tie-breaker and as a fallback when an explicit order is requested.</span>
+        <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;dynamic&quot;</span><span class="p">:</span>
+            <span class="n">strategy</span> <span class="o">=</span> <span class="s2">&quot;constraint_closure&quot;</span>
 
         <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;layout&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
@@ -479,7 +1016,22 @@
                 <span class="n">condition_infos</span><span class="o">=</span><span class="n">condition_infos</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;variable_order_strategy must be one of &#39;auto&#39;, &#39;layout&#39;, or &#39;degree&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;weighted_degree&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_weighted_degree_variable_order</span><span class="p">(</span>
+                <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                <span class="n">condition_infos</span><span class="o">=</span><span class="n">condition_infos</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;constraint_closure&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_constraint_closure_variable_order</span><span class="p">(</span>
+                <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                <span class="n">condition_infos</span><span class="o">=</span><span class="n">condition_infos</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;variable_order_strategy must be one of &#39;auto&#39;, &#39;layout&#39;, &#39;degree&#39;, &quot;</span>
+            <span class="s2">&quot;&#39;weighted_degree&#39;, &#39;constraint_closure&#39;, or &#39;dynamic&#39;.&quot;</span>
+        <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_condition_affected_variables</span><span class="p">(</span>
@@ -527,6 +1079,212 @@
         <span class="c1"># Descending score, deterministic tie-break by variable index.</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">),</span> <span class="o">-</span><span class="n">scores</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_weighted_degree_variable_order</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">condition_infos</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_ConditionInfo</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Static weighted-degree heuristic.</span>
+
+<span class="sd">        Compared with ``degree``, this gives more weight to small local</span>
+<span class="sd">        constraints.  Completing a small constraint early is usually more useful</span>
+<span class="sd">        for pruning than touching a very large sector condition early.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">condition_infos</span><span class="p">:</span>
+            <span class="n">support_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">support_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">support_size</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span><span class="p">:</span>
+                <span class="n">scores</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">weight</span>
+
+        <span class="c1"># Descending score, deterministic tie-break by variable index.</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">),</span> <span class="o">-</span><span class="n">scores</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_constraint_closure_variable_order</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">condition_infos</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_ConditionInfo</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Greedy support-closure heuristic.</span>
+
+<span class="sd">        Local constraints prune only after enough of their support is assigned.</span>
+<span class="sd">        A pure degree heuristic may scatter assignments across the lattice and</span>
+<span class="sd">        postpone those decisive checks.  This heuristic builds a deterministic</span>
+<span class="sd">        static order by repeatedly choosing the unassigned variable that most</span>
+<span class="sd">        strongly reduces the remaining support of nearby conditions, with a</span>
+<span class="sd">        large bonus for completing a condition support.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_variables</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">)</span>
+        <span class="n">remaining_variables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_variables</span><span class="p">))</span>
+        <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">supports</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">condition_infos</span>
+            <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">supports</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_variables</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="n">affected_condition_ids_by_variable</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_variables</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">condition_id</span><span class="p">,</span> <span class="n">support</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">supports</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">support</span><span class="p">:</span>
+                <span class="n">affected_condition_ids_by_variable</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">condition_id</span><span class="p">)</span>
+
+        <span class="n">base_scores</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_weighted_degree_scores</span><span class="p">(</span>
+            <span class="n">n_variables</span><span class="o">=</span><span class="n">n_variables</span><span class="p">,</span>
+            <span class="n">supports</span><span class="o">=</span><span class="n">supports</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">remaining_support_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">support</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">support</span> <span class="ow">in</span> <span class="n">supports</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">remaining_variables</span><span class="p">:</span>
+            <span class="n">best_key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">best_variable</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">remaining_variables</span><span class="p">:</span>
+                <span class="n">completed</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">closeness</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">for</span> <span class="n">condition_id</span> <span class="ow">in</span> <span class="n">affected_condition_ids_by_variable</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]:</span>
+                    <span class="n">remaining_after</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">remaining_support_sizes</span><span class="p">[</span><span class="n">condition_id</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">remaining_after</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">completed</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">closeness</span> <span class="o">+=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">remaining_after</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="c1"># Larger entries are better, except the final variable-index</span>
+                <span class="c1"># tie-break, where smaller is better.  The local-space term is a</span>
+                <span class="c1"># fail-first tie-break for heterogeneous layouts.</span>
+                <span class="n">local_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">completed</span><span class="p">),</span>
+                    <span class="n">closeness</span><span class="p">,</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">base_scores</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]),</span>
+                    <span class="o">-</span><span class="n">local_dimension</span><span class="p">,</span>
+                    <span class="o">-</span><span class="n">variable_index</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">best_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">&gt;</span> <span class="n">best_key</span><span class="p">:</span>
+                    <span class="n">best_key</span> <span class="o">=</span> <span class="n">key</span>
+                    <span class="n">best_variable</span> <span class="o">=</span> <span class="n">variable_index</span>
+
+            <span class="k">assert</span> <span class="n">best_variable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+            <span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">best_variable</span><span class="p">)</span>
+            <span class="n">remaining_variables</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">best_variable</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">condition_id</span> <span class="ow">in</span> <span class="n">affected_condition_ids_by_variable</span><span class="p">[</span><span class="n">best_variable</span><span class="p">]:</span>
+                <span class="n">remaining_support_sizes</span><span class="p">[</span><span class="n">condition_id</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_weighted_degree_scores</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">n_variables</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">supports</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_variables</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">support</span> <span class="ow">in</span> <span class="n">supports</span><span class="p">:</span>
+            <span class="n">support_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">support</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">support_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">support_size</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">support</span><span class="p">:</span>
+                <span class="n">scores</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">weight</span>
+
+        <span class="k">return</span> <span class="n">scores</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_static_ranks</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">variable_order</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">n_variables</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="n">ranks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_variables</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">variable_order</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+            <span class="n">ranks</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ranks</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_condition_id_lookup</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">n_variables</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">condition_infos</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_ConditionInfo</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">lookup</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_variables</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">condition_id</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">condition_infos</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span><span class="p">:</span>
+                <span class="n">lookup</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">condition_id</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="k">for</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">lookup</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_select_dynamic_variable</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
+        <span class="n">supports</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]],</span>
+        <span class="n">condition_ids_by_variable</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">base_scores</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="n">static_ranks</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+        <span class="n">statistics</span><span class="p">:</span> <span class="n">DFSStatistics</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Choose the next unassigned variable from the current partial state.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">statistics</span><span class="o">.</span><span class="n">dynamic_variable_selection_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">best_key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_variable</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">unassigned_variables</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="o">~</span><span class="n">assigned_mask</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">variable_index_raw</span> <span class="ow">in</span> <span class="n">unassigned_variables</span><span class="p">:</span>
+            <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_index_raw</span><span class="p">)</span>
+            <span class="n">completed</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">closeness</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">active_constraints</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">for</span> <span class="n">condition_id</span> <span class="ow">in</span> <span class="n">condition_ids_by_variable</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]:</span>
+                <span class="n">support</span> <span class="o">=</span> <span class="n">supports</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">condition_id</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="n">support</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">remaining</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="o">~</span><span class="n">assigned_mask</span><span class="p">[</span><span class="n">support</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">remaining</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">active_constraints</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">remaining_after</span> <span class="o">=</span> <span class="n">remaining</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">remaining_after</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">completed</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">closeness</span> <span class="o">+=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">remaining_after</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">local_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">completed</span><span class="p">),</span>
+                <span class="n">closeness</span><span class="p">,</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">active_constraints</span><span class="p">),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">base_scores</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]),</span>
+                <span class="o">-</span><span class="n">local_dimension</span><span class="p">,</span>
+                <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">static_ranks</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]),</span>
+                <span class="o">-</span><span class="n">variable_index</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">best_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">&gt;</span> <span class="n">best_key</span><span class="p">:</span>
+                <span class="n">best_key</span> <span class="o">=</span> <span class="n">key</span>
+                <span class="n">best_variable</span> <span class="o">=</span> <span class="n">variable_index</span>
+
+        <span class="k">assert</span> <span class="n">best_variable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">best_variable</span>
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_ordered_local_values</span><span class="p">(</span>
         <span class="o">*</span><span class="p">,</span>
@@ -548,6 +1306,80 @@
             <span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">order</span>
         <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_local_values_by_variable</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ordered_values_for_variable</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">variable_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">local_values_by_variable</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]],</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
+        <span class="n">partial_checks_by_variable</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">PartialCheck</span><span class="p">]],</span>
+        <span class="n">propagators_by_variable</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Propagator</span><span class="p">]],</span>
+        <span class="n">value_order_strategy</span><span class="p">:</span> <span class="n">ValueOrderStrategy</span><span class="p">,</span>
+        <span class="n">statistics</span><span class="p">:</span> <span class="n">DFSStatistics</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_values_by_variable</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value_order_strategy</span> <span class="o">==</span> <span class="s2">&quot;layout&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">values</span>
+
+        <span class="k">if</span> <span class="n">value_order_strategy</span> <span class="o">!=</span> <span class="s2">&quot;propagation&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;value_order_strategy must be one of &#39;layout&#39; or &#39;propagation&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">statistics</span><span class="o">.</span><span class="n">dynamic_value_ordering_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">value_position</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">trial_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">trial_assigned</span> <span class="o">=</span> <span class="n">assigned_mask</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">trial_config</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">trial_assigned</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">consistent</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_partial_check_after_assignment</span><span class="p">(</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">trial_config</span><span class="p">,</span>
+                <span class="n">assigned_mask</span><span class="o">=</span><span class="n">trial_assigned</span><span class="p">,</span>
+                <span class="n">partial_checks</span><span class="o">=</span><span class="n">partial_checks_by_variable</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)],</span>
+                <span class="n">statistics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">forced_count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">consistent</span><span class="p">:</span>
+                <span class="n">propagation</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_propagate_after_assignment</span><span class="p">(</span>
+                    <span class="n">config</span><span class="o">=</span><span class="n">trial_config</span><span class="p">,</span>
+                    <span class="n">assigned_mask</span><span class="o">=</span><span class="n">trial_assigned</span><span class="p">,</span>
+                    <span class="n">propagators</span><span class="o">=</span><span class="n">propagators_by_variable</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)],</span>
+                    <span class="n">statistics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">consistent</span> <span class="o">=</span> <span class="n">propagation</span><span class="o">.</span><span class="n">consistent</span>
+                <span class="k">if</span> <span class="n">consistent</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">forced_variable</span><span class="p">,</span> <span class="n">forced_value</span> <span class="ow">in</span> <span class="n">propagation</span><span class="o">.</span><span class="n">forced_assignments</span><span class="p">:</span>
+                        <span class="n">forced_variable</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">forced_variable</span><span class="p">)</span>
+                        <span class="n">forced_value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">forced_value</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">trial_assigned</span><span class="p">[</span><span class="n">forced_variable</span><span class="p">]:</span>
+                            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">trial_config</span><span class="p">[</span><span class="n">forced_variable</span><span class="p">])</span> <span class="o">!=</span> <span class="n">forced_value</span><span class="p">:</span>
+                                <span class="n">consistent</span> <span class="o">=</span> <span class="kc">False</span>
+                                <span class="k">break</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">forced_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># Sort by: immediately viable values first, then values that trigger</span>
+            <span class="c1"># more forced assignments, then the original local-space order.</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span> <span class="k">if</span> <span class="n">consistent</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">forced_count</span><span class="p">,</span> <span class="n">value_position</span><span class="p">))</span>
+
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">keys</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_condition_infos</span><span class="p">(</span>
@@ -576,6 +1408,13 @@
         <span class="n">lookup</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">PartialCheck</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_variables</span><span class="p">)]</span>
 
         <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">condition_infos</span><span class="p">:</span>
+            <span class="c1"># Propagating conditions report both contradictions and forced</span>
+            <span class="c1"># assignments through propagate().  Do not also call their</span>
+            <span class="c1"># partial_check(), because in most structured constraints it simply</span>
+            <span class="c1"># delegates to propagate() and would duplicate the hot-path work.</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">condition</span><span class="p">,</span> <span class="s2">&quot;propagate&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)):</span>
+                <span class="k">continue</span>
+
             <span class="n">partial_check</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">partial_check</span>
             <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span><span class="p">:</span>
                 <span class="n">lookup</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">partial_check</span><span class="p">)</span>
@@ -583,16 +1422,57 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">partial_checks</span><span class="p">)</span> <span class="k">for</span> <span class="n">partial_checks</span> <span class="ow">in</span> <span class="n">lookup</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_propagator_lookup</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">n_variables</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">condition_infos</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_ConditionInfo</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Propagator</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">lookup</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Propagator</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_variables</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">condition_infos</span><span class="p">:</span>
+            <span class="n">propagate</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">condition</span><span class="p">,</span> <span class="s2">&quot;propagate&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">propagate</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span><span class="p">:</span>
+                <span class="n">lookup</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">propagate</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">propagators</span><span class="p">)</span> <span class="k">for</span> <span class="n">propagators</span> <span class="ow">in</span> <span class="n">lookup</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_root_propagators</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">condition_infos</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_ConditionInfo</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Propagator</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return every propagator once for root-level propagation.</span>
+
+<span class="sd">        Per-variable lookup only runs a propagator after one of its support</span>
+<span class="sd">        variables has been assigned.  Some structured constraints can already</span>
+<span class="sd">        force values from the empty partial assignment, such as fixed-value</span>
+<span class="sd">        constraints or fixed-sum sectors with an extremal target.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">propagators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Propagator</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">condition_infos</span><span class="p">:</span>
+            <span class="n">propagate</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">condition</span><span class="p">,</span> <span class="s2">&quot;propagate&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">propagate</span><span class="p">):</span>
+                <span class="n">propagators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">propagate</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">propagators</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_zero_variable_conditions_are_satisfied</span><span class="p">(</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
         <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
         <span class="n">condition_infos</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_ConditionInfo</span><span class="p">],</span>
+        <span class="n">statistics</span><span class="p">:</span> <span class="n">DFSStatistics</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">condition_infos</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">affected_variables</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">continue</span>
 
+            <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">statistics</span><span class="o">.</span><span class="n">partial_check_count</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">info</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">partial_check</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
@@ -604,12 +1484,50 @@
         <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
         <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
         <span class="n">partial_checks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">PartialCheck</span><span class="p">],</span>
+        <span class="n">statistics</span><span class="p">:</span> <span class="n">DFSStatistics</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">partial_check</span> <span class="ow">in</span> <span class="n">partial_checks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">statistics</span><span class="o">.</span><span class="n">partial_check_count</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">partial_check</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_propagate_after_assignment</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
+        <span class="n">propagators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Propagator</span><span class="p">],</span>
+        <span class="n">statistics</span><span class="p">:</span> <span class="n">DFSStatistics</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstraintPropagation</span><span class="p">:</span>
+        <span class="n">forced_assignments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">propagators</span><span class="p">:</span>
+            <span class="n">statistics</span><span class="o">.</span><span class="n">propagation_round_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">propagate</span> <span class="ow">in</span> <span class="n">propagators</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">statistics</span><span class="o">.</span><span class="n">propagator_call_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">propagate</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">consistent</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+            <span class="n">forced_assignments</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">forced_assignments</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">forced_assignments</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">no_change</span><span class="p">()</span>
+
+        <span class="n">forced_by_variable</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">variable_index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">forced_assignments</span><span class="p">:</span>
+            <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">previous</span> <span class="o">=</span> <span class="n">forced_by_variable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">previous</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">previous</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+            <span class="n">forced_by_variable</span><span class="p">[</span><span class="n">variable_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="p">(</span><span class="n">forced_assignments</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">forced_by_variable</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_full_check</span><span class="p">(</span>
