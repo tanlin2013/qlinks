@@ -34,48 +34,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            gfortran \
-            libblas-dev \
-            liblapack-dev \
-            pkg-config \
-            libxml2-dev \
-            libxslt1-dev \
-            zlib1g-dev
-
-      - name: Install Poetry
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install "poetry==${{ needs.versions.outputs.poetry-version }}"
-          poetry config virtualenvs.in-project true
-
-      - name: Cache Poetry environment
-        uses: actions/cache@v4
-        with:
-          path: |
-            .venv
-            ~/.cache/pypoetry
-            ~/.cache/pip
-          key: >-
-            ${{ runner.os }}-py${{ matrix.python-version }}-poetry${{ needs.versions.outputs.poetry-version }}-
-            ${{ hashFiles('poetry.lock') }}-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-py${{ matrix.python-version }}-poetry${{ needs.versions.outputs.poetry-version }}-
-
-      - name: Install dependencies
+      - name: Set up Python and Poetry
+        uses: ./.github/actions/setup-python-poetry
         env:
           POETRY_INSTALLER_NO_BINARY: pynauty
-        run: |
-          poetry install -vvv --with dev --extras "distributed storage" --sync
+        with:
+          python-version: ${{ matrix.python-version }}
+          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          cache-prefix: test
+          compile-paths: qlinks tests
+          system-packages: >-
+            build-essential gfortran libblas-dev liblapack-dev pkg-config
+            libxml2-dev libxslt1-dev zlib1g-dev
+          install-command: poetry install -vvv --with dev --extras "distributed storage" --sync
 
       - name: Test
         shell: bash
