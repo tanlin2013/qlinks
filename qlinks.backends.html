@@ -448,7 +448,7 @@
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Any</em></p>
@@ -499,7 +499,7 @@
 <dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>_ScalarT</em>]]</p>
+<dd class="field-even"><p>NDArray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -549,7 +549,7 @@
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>_ScalarT</em>]]</p>
+<dd class="field-even"><p>NDArray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -559,10 +559,10 @@
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -573,15 +573,15 @@
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>_ScalarT</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>rows</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>cols</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>data</strong> (<em>NDArray</em>)</p></li>
+<li><p><strong>rows</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
+<li><p><strong>cols</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
 <li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
 <li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.17.0)"><em>csr_array</em></a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -597,7 +597,7 @@
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.17.0)"><em>csr_array</em></a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -610,7 +610,7 @@
 <dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>_ScalarT</em>]]</p>
+<dd class="field-even"><p>NDArray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -693,7 +693,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -735,7 +735,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>_ScalarT</em>]]</p>
+<dd class="field-even"><p>NDArray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -837,7 +837,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.CupySparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -879,7 +879,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>_ScalarT</em>]]</p>
+<dd class="field-even"><p>NDArray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -937,7 +937,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>_ScalarT</em>]]</p>
+<dd class="field-even"><p>NDArray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -947,10 +947,10 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -961,15 +961,15 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>_ScalarT</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>rows</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>cols</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>data</strong> (<em>NDArray</em>)</p></li>
+<li><p><strong>rows</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
+<li><p><strong>cols</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
 <li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
 <li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.17.0)"><em>csr_array</em></a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -985,7 +985,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.17.0)"><em>csr_array</em></a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -998,7 +998,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>_ScalarT</em>]]</p>
+<dd class="field-even"><p>NDArray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1062,7 +1062,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.SparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Any</em></p>
@@ -1113,7 +1113,7 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>_ScalarT</em>]]</p>
+<dd class="field-even"><p>NDArray</p>
 </dd>
 </dl>
 </dd></dl>

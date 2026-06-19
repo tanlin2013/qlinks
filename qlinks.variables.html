@@ -459,6 +459,12 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.ConfigView.__init__"><code class="docutils literal notranslate"><span class="pre">ConfigView.__init__()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.HasSiteLinkCounts"><code class="docutils literal notranslate"><span class="pre">HasSiteLinkCounts</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.HasSiteLinkCounts.num_sites"><code class="docutils literal notranslate"><span class="pre">HasSiteLinkCounts.num_sites</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.HasSiteLinkCounts.num_links"><code class="docutils literal notranslate"><span class="pre">HasSiteLinkCounts.num_links</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.HasSiteLinkCounts.__init__"><code class="docutils literal notranslate"><span class="pre">HasSiteLinkCounts.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace"><code class="docutils literal notranslate"><span class="pre">LocalSpace</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.from_values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.from_values()</span></code></a></li>
@@ -547,7 +553,7 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>array</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -558,7 +564,7 @@ cfg.set_link(3, -cfg.link(3))</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.array">
-<span class="sig-name descname"><span class="pre">array</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.config.ConfigView.array" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">array</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.config.ConfigView.array" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -726,7 +732,7 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -738,7 +744,7 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>array</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -799,7 +805,7 @@ encoder.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -880,7 +886,7 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1201,7 +1207,7 @@ It only needs to expose num_sites and/or num_links.</p>
 <span class="sig-name descname"><span class="pre">site_variable_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.site_variable_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.site_variable_indices" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1211,7 +1217,7 @@ It only needs to expose num_sites and/or num_links.</p>
 <span class="sig-name descname"><span class="pre">link_variable_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.link_variable_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.link_variable_indices" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1224,7 +1230,7 @@ It only needs to expose num_sites and/or num_links.</p>
 <dd class="field-odd"><p><strong>fill_value</strong> (<em>int</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1236,7 +1242,7 @@ It only needs to expose num_sites and/or num_links.</p>
 <p>For each variable, choose the first value in its local space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1312,12 +1318,12 @@ It only needs to expose num_sites and/or num_links.</p>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>values</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace.values">
-<span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><span class="pre">integer</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.values" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><span class="pre">integer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.values" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1451,7 +1457,7 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>values</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -1509,7 +1515,7 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1576,7 +1582,7 @@ encoder.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1627,7 +1633,7 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>array</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -1638,7 +1644,7 @@ cfg.set_link(3, -cfg.link(3))</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.array">
-<span class="sig-name descname"><span class="pre">array</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.ConfigView.array" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">array</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.ConfigView.array" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1806,7 +1812,7 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1818,7 +1824,7 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>array</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1826,6 +1832,30 @@ For QLM flux variables {-1, +1}, use negated().</p>
 </dd>
 </dl>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qlinks.variables.HasSiteLinkCounts">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">HasSiteLinkCounts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#HasSiteLinkCounts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<p>Minimal protocol expected from the future lattice layer.</p>
+<p>A concrete lattice does not need to inherit from this protocol.
+It only needs to expose num_sites and/or num_links.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.variables.HasSiteLinkCounts.num_sites">
+<span class="sig-name descname"><span class="pre">num_sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts.num_sites" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.variables.HasSiteLinkCounts.num_links">
+<span class="sig-name descname"><span class="pre">num_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts.num_links" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.variables.HasSiteLinkCounts.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1845,12 +1875,12 @@ For QLM flux variables {-1, +1}, use negated().</p>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>values</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace.values">
-<span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><span class="pre">integer</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.LocalSpace.values" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><span class="pre">integer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.LocalSpace.values" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1984,7 +2014,7 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.LocalSpace.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>values</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -2212,7 +2242,7 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">site_variable_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.site_variable_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.site_variable_indices" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2222,7 +2252,7 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">link_variable_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.link_variable_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.link_variable_indices" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2235,7 +2265,7 @@ by 2 only when evaluating physical observables.</p>
 <dd class="field-odd"><p><strong>fill_value</strong> (<em>int</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2247,7 +2277,7 @@ by 2 only when evaluating physical observables.</p>
 <p>For each variable, choose the first value in its local space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[tuple[<em>Any</em>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>int64</em>]]</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2547,6 +2577,12 @@ by 2 only when evaluating physical observables.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.ConfigView.negated"><code class="docutils literal notranslate"><span class="pre">ConfigView.negated()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.ConfigView.as_array"><code class="docutils literal notranslate"><span class="pre">ConfigView.as_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.ConfigView.__init__"><code class="docutils literal notranslate"><span class="pre">ConfigView.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.HasSiteLinkCounts"><code class="docutils literal notranslate"><span class="pre">HasSiteLinkCounts</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.HasSiteLinkCounts.num_sites"><code class="docutils literal notranslate"><span class="pre">HasSiteLinkCounts.num_sites</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.HasSiteLinkCounts.num_links"><code class="docutils literal notranslate"><span class="pre">HasSiteLinkCounts.num_links</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.HasSiteLinkCounts.__init__"><code class="docutils literal notranslate"><span class="pre">HasSiteLinkCounts.__init__()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace"><code class="docutils literal notranslate"><span class="pre">LocalSpace</span></code></a><ul class="nav section-nav flex-column">
