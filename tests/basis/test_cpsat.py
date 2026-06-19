@@ -1,4 +1,7 @@
+import importlib.util
+
 import numpy as np
+import pytest
 
 from qlinks.basis import BruteForceBasisSolver, CPSATBasisSolver
 from qlinks.constraints import (
@@ -10,6 +13,19 @@ from qlinks.constraints import (
 )
 from qlinks.lattice import ChainLattice
 from qlinks.variables import LocalSpace, VariableLayout
+
+
+def _has_ortools() -> bool:
+    try:
+        return importlib.util.find_spec("ortools.sat.python.cp_model") is not None
+    except ModuleNotFoundError:
+        return False
+
+
+pytestmark = pytest.mark.skipif(
+    not _has_ortools(),
+    reason="OR-Tools is an optional dependency; install qlinks[cpsat] to run CP-SAT tests.",
+)
 
 
 def assert_same_basis(basis_a, basis_b) -> None:
