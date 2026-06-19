@@ -3,7 +3,10 @@ from importlib import metadata as _metadata
 
 # -- Version -----------------------------------------------------------------
 
-__version__ = _metadata.version(__name__)
+try:
+    __version__ = _metadata.version(__name__)
+except _metadata.PackageNotFoundError:  # pragma: no cover - source-tree fallback
+    __version__ = "0+unknown"
 
 # -- Define logger and the associated formatter and handler ------------------
 
