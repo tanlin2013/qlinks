@@ -14,7 +14,7 @@ from qlinks.visualizer import (
     automatic_grid_shape,
     plot_basis_grid,
 )
-from qlinks.visualizer.basis import BasisGridRenderCache, _zero_indices_for_mechanism
+from qlinks.visualizer.basis import _BasisGridRenderCache, _zero_indices_for_mechanism
 
 matplotlib.use("Agg")
 
@@ -361,7 +361,7 @@ def test_basis_grid_render_cache_is_reusable() -> None:
         plaquette_symbols="none",
     )
 
-    assert isinstance(render_cache, BasisGridRenderCache)
+    assert isinstance(render_cache, _BasisGridRenderCache)
     assert render_cache.mode == "dimers"
     assert render_cache.plaquette_symbol_style == "none"
 

@@ -5,6 +5,7 @@ from qlinks.builders.optimized_sparse import (
     build_optimized_sparse_hamiltonian,
 )
 from qlinks.builders.sparse import (
+    MissingActionPolicy,
     SparseBuildResult,
     SparseBuildStats,
     SparseHamiltonianBuilder,
@@ -13,13 +14,14 @@ from qlinks.builders.sparse import (
 )
 
 __all__ = [
-    "SparseBuildResult",
-    "SparseBuildStats",
-    "SparseHamiltonianBuilder",
-    "build_sparse_hamiltonian",
-    "is_hermitian_sparse",
+    "MissingActionPolicy",
     "OptimizedSparseBuildResult",
     "OptimizedSparseBuildStats",
     "OptimizedSparseHamiltonianBuilder",
+    "SparseBuildResult",
+    "SparseBuildStats",
+    "SparseHamiltonianBuilder",
     "build_optimized_sparse_hamiltonian",
+    "build_sparse_hamiltonian",
+    "is_hermitian_sparse",
 ]

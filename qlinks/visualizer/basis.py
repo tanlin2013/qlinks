@@ -111,7 +111,7 @@ class _DrawPlaquette:
 
 
 @dataclass(frozen=True, slots=True)
-class BasisGridRenderCache:
+class _BasisGridRenderCache:
     """Reusable drawing cache for :class:`BasisGridVisualizer`.
 
     The cache stores geometry-only primitives plus resolved layout indices for
@@ -330,7 +330,7 @@ class BasisConfigurationVisualizer:
         reference_config: npt.ArrayLike,
         mode: LinkPlotMode = "auto",
         plaquette_symbols: PlaquetteSymbolStyle = "auto",
-    ) -> BasisGridRenderCache:
+    ) -> _BasisGridRenderCache:
         """Build a reusable cache for fast repeated grid plotting.
 
         The cache resolves the plotting mode once, precomputes visual geometry,
@@ -453,7 +453,7 @@ class BasisConfigurationVisualizer:
         else:
             plaquette_centers = np.empty((0, 2), dtype=float)
 
-        return BasisGridRenderCache(
+        return _BasisGridRenderCache(
             mode=resolved_mode,
             plaquette_symbol_style=resolved_plaquette_symbols,
             draw_nodes=draw_nodes,
@@ -670,7 +670,7 @@ class BasisConfigurationVisualizer:
         config: npt.NDArray[np.int64],
         *,
         ax,
-        render_cache: BasisGridRenderCache,
+        render_cache: _BasisGridRenderCache,
         show: bool = True,
         backend: VisualizerBackend = "matplotlib",
         with_site_labels: bool = True,
@@ -747,7 +747,7 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
-        render_cache: BasisGridRenderCache,
+        render_cache: _BasisGridRenderCache,
     ) -> None:
         if render_cache.mode == "arrows":
             values = config[render_cache.link_variable_indices]
@@ -826,7 +826,7 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
-        render_cache: BasisGridRenderCache,
+        render_cache: _BasisGridRenderCache,
         with_site_labels: bool,
         with_site_values: bool,
     ) -> None:
@@ -875,7 +875,7 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
-        render_cache: BasisGridRenderCache,
+        render_cache: _BasisGridRenderCache,
     ) -> None:
         values = config[render_cache.link_variable_indices]
 
@@ -900,7 +900,7 @@ class BasisConfigurationVisualizer:
         self,
         *,
         ax,
-        render_cache: BasisGridRenderCache,
+        render_cache: _BasisGridRenderCache,
     ) -> None:
         for midpoint, draw_link in zip(
             render_cache.link_midpoints,
@@ -929,7 +929,7 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
-        render_cache: BasisGridRenderCache,
+        render_cache: _BasisGridRenderCache,
         plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
     ) -> None:
         if render_cache.plaquette_symbol_style == "circulation":
@@ -959,7 +959,7 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
-        render_cache: BasisGridRenderCache,
+        render_cache: _BasisGridRenderCache,
         plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
     ) -> None:
         for index, draw_plaquette in enumerate(render_cache.draw_plaquettes):
@@ -1031,7 +1031,7 @@ class BasisConfigurationVisualizer:
         *,
         ax,
         config: npt.NDArray[np.int64],
-        render_cache: BasisGridRenderCache,
+        render_cache: _BasisGridRenderCache,
     ) -> None:
         text_items: list[tuple[Sequence[float], str, str]] = []
 
@@ -4100,7 +4100,7 @@ class BasisGridVisualizer:
         reference_config: npt.ArrayLike,
         mode: LinkPlotMode = "auto",
         plaquette_symbols: PlaquetteSymbolStyle = "auto",
-    ) -> BasisGridRenderCache:
+    ) -> _BasisGridRenderCache:
         """Build a reusable render cache for this grid visualizer.
 
         Pass the returned cache to :meth:`plot` when plotting several batches
@@ -4132,7 +4132,7 @@ class BasisGridVisualizer:
         suptitle_y: float = 0.995,
         tight_layout_rect: tuple[float, float, float, float] | None = None,
         single_plot_kwargs: dict | None = None,
-        render_cache: BasisGridRenderCache | None = None,
+        render_cache: _BasisGridRenderCache | None = None,
     ):
         """
         Plot a batch of basis states.
@@ -4454,7 +4454,7 @@ def plot_basis_grid(
     show: bool = True,
     suptitle: str | None = None,
     single_plot_kwargs: dict | None = None,
-    render_cache: BasisGridRenderCache | None = None,
+    render_cache: _BasisGridRenderCache | None = None,
 ):
     """
     Functional wrapper around BasisGridVisualizer.

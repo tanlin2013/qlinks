@@ -1,20 +1,25 @@
-import logging
-from importlib import metadata
+import logging as _logging
+from importlib import metadata as _metadata
 
 # -- Version -----------------------------------------------------------------
 
-__version__ = metadata.version(__name__)
+__version__ = _metadata.version(__name__)
 
 # -- Define logger and the associated formatter and handler ------------------
 
-formatter = logging.Formatter(
+_formatter = _logging.Formatter(
     "%(asctime)s [%(filename)s] %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
 )
 
-handler = logging.StreamHandler()
-handler.setLevel(logging.INFO)
-handler.setFormatter(formatter)
+_handler = _logging.StreamHandler()
+_handler.setLevel(_logging.INFO)
+_handler.setFormatter(_formatter)
 
-logger = logging.getLogger("qlinks")
-logger.setLevel(logging.INFO)
-logger.addHandler(handler)
+logger = _logging.getLogger("qlinks")
+logger.setLevel(_logging.INFO)
+logger.addHandler(_handler)
+
+__all__ = [
+    "__version__",
+    "logger",
+]

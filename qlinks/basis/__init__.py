@@ -1,4 +1,7 @@
-from qlinks.basis.basis import Basis, full_basis_from_layout
+from qlinks.basis.basis import (
+    Basis,
+    full_basis_from_layout,
+)
 from qlinks.basis.configs import (
     basis_configs_from_basis,
     basis_configs_from_build_result,
@@ -11,11 +14,16 @@ from qlinks.basis.sectors import (
 from qlinks.basis.solvers import (
     BasisSolver,
     BruteForceBasisSolver,
+    ConditionLike,
     CPSATBasisSolver,
     DFSBasisSolver,
     DFSSearchObserver,
     DFSStatistics,
+    PartialCheck,
+    Propagator,
     SolverInput,
+    ValueOrderStrategy,
+    VariableOrderStrategy,
 )
 
 __all__ = [
@@ -23,14 +31,19 @@ __all__ = [
     "BasisSolver",
     "BruteForceBasisSolver",
     "CPSATBasisSolver",
+    "ConditionLike",
     "DFSBasisSolver",
     "DFSSearchObserver",
     "DFSStatistics",
+    "PartialCheck",
+    "Propagator",
     "SolverInput",
-    "full_basis_from_layout",
+    "ValueOrderStrategy",
+    "VariableOrderStrategy",
     "basis_configs_from_basis",
     "basis_configs_from_build_result",
     "decode_basis_configs_with_layout",
+    "full_basis_from_layout",
     "sector_mask_from_build_result",
     "sector_mask_from_sectors",
 ]
