@@ -51,6 +51,8 @@ from qlinks.caging.local_search import (
     QDMMultiPaddingFailureReport,
     RobustQDMLocalCageSearchConfig,
     RobustQDMLocalCageSearchContext,
+    SnakeStripeRegionProposal,
+    SnakeStripeRegionProposalRecord,
     StripeRegionProposal,
     StripeRegionProposalRecord,
     build_qdm_global_limited_kinetic_matrix,
@@ -297,4 +299,6 @@ __all__ = [
     "robust_certify_qdm_multi_block_result",
     "robust_local_qdm_cage_search",
     "robust_qdm_local_cage_search",
+    "SnakeStripeRegionProposal",
+    "SnakeStripeRegionProposalRecord",
 ]

@@ -208,6 +208,46 @@ class StripeRegionProposalRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class SnakeStripeRegionProposalRecord:
+    """One width-one noncontractible snake-stripe region proposal.
+
+    Unlike :class:`StripeRegionProposalRecord`, this record is generated from
+    simple noncontractible cycles on the plaquette shared-link graph.  It is
+    useful on lattices where natural stripe cages wrap around the torus but do
+    not follow a straight anchor-coordinate line.
+    """
+
+    region: LocalQDMRegion
+    plaquette_ids: npt.NDArray[np.int64]
+    seed_plaquette_id: int
+    winding: tuple[int, ...]
+    length: int
+    turn_count: int
+    plaquette_kinds: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        plaquette_ids = np.asarray(self.plaquette_ids, dtype=np.int64)
+        if plaquette_ids.ndim != 1:
+            raise ValueError("plaquette_ids must be one-dimensional.")
+        if plaquette_ids.size == 0:
+            raise ValueError("plaquette_ids must be non-empty.")
+        object.__setattr__(
+            self,
+            "plaquette_ids",
+            np.unique(plaquette_ids).astype(np.int64),
+        )
+        object.__setattr__(self, "seed_plaquette_id", int(self.seed_plaquette_id))
+        object.__setattr__(self, "winding", tuple(int(value) for value in self.winding))
+        object.__setattr__(self, "length", int(self.length))
+        object.__setattr__(self, "turn_count", int(self.turn_count))
+        object.__setattr__(
+            self,
+            "plaquette_kinds",
+            tuple(str(kind) for kind in self.plaquette_kinds),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class AdaptiveRegionProposalRecord:
     """One dynamically grown plaquette-region proposal.
 
@@ -439,6 +479,200 @@ class StripeRegionProposal:
                 config=self.config,
                 adapter=self.adapter,
             )
+
+
+@dataclass(frozen=True, slots=True)
+class SnakeStripeRegionProposal:
+    """Generate width-one noncontractible snake stripes on the plaquette graph.
+
+    A snake stripe is a simple cycle of plaquettes, adjacent by shared links,
+    whose lifted anchor-cell displacement winds around a periodic lattice.  This
+    proposal does not assume the stripe is straight in anchor coordinates; it is
+    therefore a better first pass for honeycomb and triangular QDM where useful
+    width-one stripes can turn while wrapping the torus.
+
+    The enumeration is intentionally budgeted by ``max_plaquettes``,
+    ``max_links``, ``max_turns``, and ``max_records``.
+    """
+
+    model: object
+    max_plaquettes: int
+    config: LocalQDMCageSearchConfig = field(
+        default_factory=lambda: LocalQDMCageSearchConfig(halo_layers=0)
+    )
+    min_plaquettes: int = 3
+    seed_plaquette_ids: Sequence[int] | npt.ArrayLike | None = None
+    max_records: int | None = None
+    max_links: int | None = None
+    max_turns: int | None = None
+    plaquette_kinds: tuple[str, ...] | None = None
+    allow_kind_changes: bool = False
+    winding_vectors: tuple[tuple[int, ...], ...] | None = None
+    adapter: LocalCageModelAdapter | None = None
+
+    def __post_init__(self) -> None:
+        if self.max_plaquettes <= 0:
+            raise ValueError("max_plaquettes must be positive.")
+        if self.min_plaquettes <= 0:
+            raise ValueError("min_plaquettes must be positive.")
+        if self.min_plaquettes > self.max_plaquettes:
+            raise ValueError("min_plaquettes cannot exceed max_plaquettes.")
+        if self.max_records is not None and self.max_records < 0:
+            raise ValueError("max_records must be non-negative or None.")
+        if self.max_links is not None and self.max_links <= 0:
+            raise ValueError("max_links must be positive or None.")
+        if self.max_turns is not None and self.max_turns < 0:
+            raise ValueError("max_turns must be non-negative or None.")
+
+        adapter = local_cage_adapter_for_model(self.model, self.adapter)
+        config = adapter.normalize_config(self.config)
+        object.__setattr__(self, "adapter", adapter)
+        object.__setattr__(self, "config", config)
+
+        if self.seed_plaquette_ids is not None:
+            seed_ids = _unique_int_array(self.seed_plaquette_ids, name="seed_plaquette_ids")
+            _validate_plaquette_ids(self.model, seed_ids)
+            object.__setattr__(self, "seed_plaquette_ids", seed_ids)
+
+        if self.plaquette_kinds is not None:
+            kinds = tuple(str(kind) for kind in self.plaquette_kinds)
+            if not kinds:
+                raise ValueError("plaquette_kinds must be non-empty when provided.")
+            object.__setattr__(self, "plaquette_kinds", kinds)
+
+        if self.winding_vectors is not None:
+            windings = tuple(
+                tuple(int(value) for value in winding) for winding in self.winding_vectors
+            )
+            if not windings:
+                raise ValueError("winding_vectors must be non-empty when provided.")
+            object.__setattr__(self, "winding_vectors", windings)
+
+    def iter_records(self) -> Iterator[SnakeStripeRegionProposalRecord]:
+        """Yield snake-stripe records in deterministic DFS order."""
+        seed_ids = _adaptive_seed_plaquette_ids(self.model, self.seed_plaquette_ids)
+        edge_map = _plaquette_shared_link_neighbor_edges(
+            self.model,
+            plaquette_kinds=self.plaquette_kinds,
+            allow_kind_changes=self.allow_kind_changes,
+        )
+        allowed_windings = (
+            None
+            if self.winding_vectors is None
+            else {tuple(int(value) for value in winding) for winding in self.winding_vectors}
+        )
+
+        emitted: set[tuple[int, ...]] = set()
+        n_emitted = 0
+
+        for seed_id in seed_ids:
+            seed_id = int(seed_id)
+            if seed_id not in edge_map:
+                continue
+
+            stack: list[tuple[tuple[int, ...], tuple[int, ...], tuple[int, ...] | None, int]]
+            stack = [((seed_id,), _zero_cell_displacement(self.model), None, 0)]
+
+            while stack:
+                path, lifted_position, previous_step, turn_count = stack.pop()
+                current = int(path[-1])
+
+                for neighbor, step in reversed(edge_map.get(current, ())):
+                    neighbor = int(neighbor)
+                    step = tuple(int(value) for value in step)
+                    next_lifted = _add_cell_displacements(lifted_position, step)
+                    next_turn_count = turn_count + _snake_step_turn_increment(previous_step, step)
+                    if self.max_turns is not None and next_turn_count > int(self.max_turns):
+                        continue
+
+                    if neighbor == seed_id:
+                        if len(path) < int(self.min_plaquettes):
+                            continue
+                        winding = _winding_from_lifted_displacement(self.model, next_lifted)
+                        if winding is None or not any(int(value) != 0 for value in winding):
+                            continue
+                        if allowed_windings is not None and winding not in allowed_windings:
+                            continue
+
+                        key = tuple(sorted(int(pid) for pid in path))
+                        if key in emitted:
+                            continue
+
+                        record = self._make_record(
+                            plaquette_ids=path,
+                            seed_plaquette_id=seed_id,
+                            winding=winding,
+                            turn_count=next_turn_count,
+                        )
+                        if record is None:
+                            continue
+
+                        emitted.add(key)
+                        n_emitted += 1
+                        yield record
+                        if self.max_records is not None and n_emitted >= int(self.max_records):
+                            return
+                        continue
+
+                    if neighbor in path or len(path) >= int(self.max_plaquettes):
+                        continue
+
+                    stack.append(
+                        (
+                            (*path, neighbor),
+                            next_lifted,
+                            step,
+                            next_turn_count,
+                        )
+                    )
+
+    def iter_regions(self) -> Iterator[LocalQDMRegion]:
+        """Yield only the local regions from :meth:`iter_records`."""
+        for record in self.iter_records():
+            yield record.region
+
+    def iter_searchers(self) -> Iterator[LocalCageSearcher]:
+        """Yield ready-to-run local cage searchers for proposed regions."""
+        for record in self.iter_records():
+            yield LocalCageSearcher(
+                model=self.model,
+                region=record.region,
+                config=self.config,
+                adapter=self.adapter,
+            )
+
+    def _make_record(
+        self,
+        *,
+        plaquette_ids: Sequence[int],
+        seed_plaquette_id: int,
+        winding: tuple[int, ...],
+        turn_count: int,
+    ) -> SnakeStripeRegionProposalRecord | None:
+        selected = np.asarray(tuple(sorted({int(pid) for pid in plaquette_ids})), dtype=np.int64)
+        if selected.size == 0:
+            return None
+
+        region = self.adapter.build_region_from_plaquettes(
+            plaquette_ids=selected,
+            config=self.config,
+            scoring_plaquette_ids=selected,
+        )
+        if self.max_links is not None and region.link_ids.size > int(self.max_links):
+            return None
+
+        kinds = tuple(
+            sorted({str(self.model.lattice.plaquettes[int(pid)].kind) for pid in selected})
+        )
+        return SnakeStripeRegionProposalRecord(
+            region=region,
+            plaquette_ids=selected,
+            seed_plaquette_id=int(seed_plaquette_id),
+            winding=winding,
+            length=int(selected.size),
+            turn_count=int(turn_count),
+            plaquette_kinds=kinds,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -899,13 +1133,17 @@ class RobustQDMLocalCageSearchConfig:
             prune_inactive_local_basis_states=True,
         )
     )
-    region_strategies: tuple[str, ...] = ("stripe", "connected", "adaptive")
+    region_strategies: tuple[str, ...] = ("stripe", "snake_stripe", "connected", "adaptive")
     max_region_plaquettes: int = 6
     min_region_plaquettes: int = 1
     max_region_links: int | None = None
     max_regions_per_strategy: int | None = 128
     stripe_widths: tuple[int, ...] = (1, 2)
     stripe_directions: tuple[int, ...] | None = None
+    snake_stripe_max_turns: int | None = None
+    snake_stripe_allow_kind_changes: bool = False
+    snake_stripe_plaquette_kinds: tuple[str, ...] | None = None
+    snake_stripe_winding_vectors: tuple[tuple[int, ...], ...] | None = None
     adaptive_beam_width: int = 8
     adaptive_branch_factor: int = 8
     adaptive_seed_plaquette_ids: tuple[int, ...] | None = None
@@ -939,7 +1177,7 @@ class RobustQDMLocalCageSearchConfig:
             raise ValueError("max_regions_per_strategy must be non-negative or None.")
         if not self.region_strategies:
             raise ValueError("region_strategies must be non-empty.")
-        valid_strategies = {"stripe", "connected", "adaptive"}
+        valid_strategies = {"stripe", "snake_stripe", "connected", "adaptive"}
         bad_strategies = [
             strategy for strategy in self.region_strategies if strategy not in valid_strategies
         ]
@@ -949,6 +1187,12 @@ class RobustQDMLocalCageSearchConfig:
             raise ValueError("stripe_widths must be non-empty.")
         if any(int(width) <= 0 for width in self.stripe_widths):
             raise ValueError("stripe_widths must contain positive integers.")
+        if self.snake_stripe_max_turns is not None and self.snake_stripe_max_turns < 0:
+            raise ValueError("snake_stripe_max_turns must be non-negative or None.")
+        if self.snake_stripe_plaquette_kinds is not None and not self.snake_stripe_plaquette_kinds:
+            raise ValueError("snake_stripe_plaquette_kinds must be non-empty or None.")
+        if self.snake_stripe_winding_vectors is not None and not self.snake_stripe_winding_vectors:
+            raise ValueError("snake_stripe_winding_vectors must be non-empty or None.")
         if self.adaptive_beam_width <= 0:
             raise ValueError("adaptive_beam_width must be positive.")
         if self.adaptive_branch_factor <= 0:
@@ -3777,6 +4021,22 @@ def _robust_qdm_region_proposals(
                     adapter=adapter,
                 )
             )
+    if "snake_stripe" in config.region_strategies:
+        proposals.append(
+            SnakeStripeRegionProposal(
+                model,
+                max_plaquettes=config.max_region_plaquettes,
+                min_plaquettes=config.min_region_plaquettes,
+                max_records=config.max_regions_per_strategy,
+                max_links=config.max_region_links,
+                max_turns=config.snake_stripe_max_turns,
+                plaquette_kinds=config.snake_stripe_plaquette_kinds,
+                allow_kind_changes=config.snake_stripe_allow_kind_changes,
+                winding_vectors=config.snake_stripe_winding_vectors,
+                config=config.local_config,
+                adapter=adapter,
+            )
+        )
     if "connected" in config.region_strategies:
         proposals.append(
             ConnectedRegionProposal(
@@ -5600,6 +5860,183 @@ def _plaquette_shared_link_neighbor_map(model: object) -> dict[int, frozenset[in
         int(plaquette_id): frozenset(sorted(neighbor_ids))
         for plaquette_id, neighbor_ids in neighbors.items()
     }
+
+
+def _plaquette_shared_link_neighbor_edges(
+    model: object,
+    *,
+    plaquette_kinds: tuple[str, ...] | None,
+    allow_kind_changes: bool,
+) -> dict[int, tuple[tuple[int, tuple[int, ...]], ...]]:
+    """Return shared-link plaquette-neighbor edges with lifted-cell steps.
+
+    Each edge is ``(neighbor_plaquette_id, anchor_cell_displacement)``.  The
+    displacement is chosen as the short periodic step from the source
+    plaquette's anchor cell to the neighbor's anchor cell.
+    """
+    allowed_kinds = None if plaquette_kinds is None else set(str(kind) for kind in plaquette_kinds)
+    plaquette_ids = tuple(
+        int(plaquette_id)
+        for plaquette_id in model.plaquette_ids()
+        if allowed_kinds is None
+        or str(model.lattice.plaquettes[int(plaquette_id)].kind) in allowed_kinds
+    )
+    allowed_id_set = set(plaquette_ids)
+    if not allowed_id_set:
+        return {}
+
+    kind_by_id = {
+        int(plaquette_id): str(model.lattice.plaquettes[int(plaquette_id)].kind)
+        for plaquette_id in plaquette_ids
+    }
+    cell_by_id = {
+        int(plaquette_id): _stripe_anchor_cell(model, int(plaquette_id))
+        for plaquette_id in plaquette_ids
+    }
+
+    link_to_plaquettes: dict[int, list[int]] = defaultdict(list)
+    for plaquette_id in plaquette_ids:
+        for link_id in model.lattice.plaquette_links(int(plaquette_id)):
+            link_to_plaquettes[int(link_id)].append(int(plaquette_id))
+
+    edges: dict[int, set[tuple[int, tuple[int, ...]]]] = {
+        int(plaquette_id): set() for plaquette_id in plaquette_ids
+    }
+    for incident_plaquettes in link_to_plaquettes.values():
+        for source in incident_plaquettes:
+            source = int(source)
+            if source not in allowed_id_set:
+                continue
+            for target in incident_plaquettes:
+                target = int(target)
+                if target == source or target not in allowed_id_set:
+                    continue
+                if not allow_kind_changes and kind_by_id[int(source)] != kind_by_id[int(target)]:
+                    continue
+                step = _periodic_anchor_cell_displacement(
+                    model,
+                    cell_by_id[int(source)],
+                    cell_by_id[int(target)],
+                )
+                edges[int(source)].add((int(target), step))
+
+    return {
+        int(plaquette_id): tuple(
+            sorted(
+                edge_items,
+                key=lambda item: (
+                    _cell_displacement_norm(item[1]),
+                    tuple(int(value) for value in item[1]),
+                    int(item[0]),
+                ),
+            )
+        )
+        for plaquette_id, edge_items in edges.items()
+    }
+
+
+def _zero_cell_displacement(model: object) -> tuple[int, ...]:
+    ndim = _lattice_anchor_dimension(model)
+    return tuple(0 for _ in range(ndim))
+
+
+def _lattice_anchor_dimension(model: object) -> int:
+    cells = [_stripe_anchor_cell(model, int(pid)) for pid in model.plaquette_ids()]
+    if not cells:
+        return 0
+    return max(len(cell) for cell in cells)
+
+
+def _pad_cell(cell: tuple[int, ...], ndim: int) -> tuple[int, ...]:
+    if len(cell) > ndim:
+        raise ValueError("cell dimension exceeds requested dimension.")
+    return tuple(int(cell[axis]) if axis < len(cell) else 0 for axis in range(ndim))
+
+
+def _periodic_anchor_cell_displacement(
+    model: object,
+    source_cell: tuple[int, ...],
+    target_cell: tuple[int, ...],
+) -> tuple[int, ...]:
+    ndim = max(len(source_cell), len(target_cell), _lattice_anchor_dimension(model))
+    source = _pad_cell(source_cell, ndim)
+    target = _pad_cell(target_cell, ndim)
+    periodic = _lattice_is_periodic(model)
+
+    displacement: list[int] = []
+    for axis, (source_value, target_value) in enumerate(zip(source, target, strict=True)):
+        raw = int(target_value) - int(source_value)
+        period = _lattice_axis_period(model, axis) if periodic else None
+        if period is None or period <= 0:
+            displacement.append(raw)
+            continue
+
+        candidates = (raw - period, raw, raw + period)
+        best = min(
+            candidates,
+            key=lambda value: (abs(int(value)), 0 if int(value) >= 0 else 1),
+        )
+        displacement.append(int(best))
+
+    return tuple(displacement)
+
+
+def _add_cell_displacements(
+    left: tuple[int, ...],
+    right: tuple[int, ...],
+) -> tuple[int, ...]:
+    ndim = max(len(left), len(right))
+    left_padded = _pad_cell(left, ndim)
+    right_padded = _pad_cell(right, ndim)
+    return tuple(
+        int(left_value) + int(right_value)
+        for left_value, right_value in zip(left_padded, right_padded, strict=True)
+    )
+
+
+def _cell_displacement_norm(displacement: tuple[int, ...]) -> int:
+    return int(sum(abs(int(value)) for value in displacement))
+
+
+def _canonical_snake_step(step: tuple[int, ...]) -> tuple[int, ...]:
+    norm = _cell_displacement_norm(step)
+    if norm == 0:
+        return tuple(0 for _ in step)
+    # Keep the integer direction.  Shared-link plaquette steps on the current
+    # lattices are primitive, so no gcd reduction is needed for the intended use.
+    return tuple(int(value) for value in step)
+
+
+def _snake_step_turn_increment(
+    previous_step: tuple[int, ...] | None,
+    next_step: tuple[int, ...],
+) -> int:
+    if previous_step is None:
+        return 0
+    return int(_canonical_snake_step(previous_step) != _canonical_snake_step(next_step))
+
+
+def _winding_from_lifted_displacement(
+    model: object,
+    displacement: tuple[int, ...],
+) -> tuple[int, ...] | None:
+    periodic = _lattice_is_periodic(model)
+    if not periodic:
+        return None
+
+    winding: list[int] = []
+    for axis, value in enumerate(displacement):
+        period = _lattice_axis_period(model, axis)
+        if period is None or period <= 0:
+            if int(value) != 0:
+                return None
+            winding.append(0)
+            continue
+        if int(value) % int(period) != 0:
+            return None
+        winding.append(int(value) // int(period))
+
+    return tuple(winding)
 
 
 def _adaptive_region_frontier(

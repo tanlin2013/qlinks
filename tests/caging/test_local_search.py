@@ -29,6 +29,8 @@ from qlinks.caging import (
     QDMMultiPaddingDiagnostics,
     RobustQDMLocalCageSearchConfig,
     RobustQDMLocalCageSearchContext,
+    SnakeStripeRegionProposal,
+    SnakeStripeRegionProposalRecord,
     StripeRegionProposal,
     certified_qdm_result_from_multi_block_reports,
     certify_qdm_multi_block_padding,
@@ -398,6 +400,123 @@ def test_stripe_region_proposal_groups_triangular_rhombus_kinds() -> None:
     assert len(records) == model.ly
     assert all(record.plaquette_kind == "rhombus_ab" for record in records)
     assert all(record.plaquette_ids.size == model.lx for record in records)
+
+
+def test_snake_stripe_region_proposal_finds_square_noncontractible_cycles() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = SnakeStripeRegionProposal(
+        model,
+        max_plaquettes=4,
+        min_plaquettes=4,
+        max_records=16,
+        config=LocalQDMCageSearchConfig(halo_layers=0, boundary_mode="relaxed"),
+    )
+    records = list(proposal.iter_records())
+
+    assert records
+    assert all(isinstance(record, SnakeStripeRegionProposalRecord) for record in records)
+    assert all(record.length == 4 for record in records)
+    assert all(record.plaquette_ids.size == 4 for record in records)
+    assert all(any(value != 0 for value in record.winding) for record in records)
+    assert all(record.region.link_ids.size < model.lattice.num_links for record in records)
+    absolute_windings = {tuple(abs(value) for value in record.winding) for record in records}
+    assert {(1, 0), (0, 1)}.intersection(absolute_windings)
+
+
+def test_snake_stripe_region_proposal_finds_honeycomb_snakes() -> None:
+    model = HoneycombQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = SnakeStripeRegionProposal(
+        model,
+        max_plaquettes=4,
+        min_plaquettes=4,
+        max_records=16,
+        config=LocalQDMCageSearchConfig(halo_layers=0, boundary_mode="relaxed"),
+    )
+    records = list(proposal.iter_records())
+
+    assert records
+    assert all(record.plaquette_kinds == ("hexagon",) for record in records)
+    assert all(any(value != 0 for value in record.winding) for record in records)
+    assert all(
+        record.region.active_plaquette_ids.size == record.plaquette_ids.size for record in records
+    )
+
+
+def test_snake_stripe_region_proposal_finds_triangular_rhombus_snakes() -> None:
+    model = TriangularQDMModel(
+        lx=3,
+        ly=3,
+        boundary_condition="periodic",
+        winding_a=0,
+        winding_b=0,
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = SnakeStripeRegionProposal(
+        model,
+        max_plaquettes=3,
+        min_plaquettes=3,
+        max_records=16,
+        plaquette_kinds=("rhombus_ab",),
+        config=LocalQDMCageSearchConfig(halo_layers=0, boundary_mode="relaxed"),
+    )
+    records = list(proposal.iter_records())
+
+    assert records
+    assert all(record.plaquette_kinds == ("rhombus_ab",) for record in records)
+    assert all(any(value != 0 for value in record.winding) for record in records)
+    assert all(record.region.link_ids.size < model.lattice.num_links for record in records)
+
+
+def test_robust_config_can_use_snake_stripe_strategy() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    config = RobustQDMLocalCageSearchConfig(
+        region_strategies=("snake_stripe",),
+        max_region_plaquettes=4,
+        min_region_plaquettes=4,
+        max_regions_per_strategy=4,
+        max_records_per_region=0,
+        padding_stages=("static",),
+    )
+
+    certified, context = robust_qdm_local_cage_search(
+        model,
+        config=config,
+        return_context=True,
+    )
+
+    assert certified.counts_by_signature == {}
+    assert context.n_regions == 4
+    assert context.n_blocks == 0
 
 
 def test_adaptive_region_proposal_grows_from_seed_without_shape_assumption() -> None:
