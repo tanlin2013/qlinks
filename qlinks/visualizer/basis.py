@@ -110,6 +110,39 @@ class _DrawPlaquette:
     link_midpoints: tuple[tuple[float, float], ...] = ()
 
 
+@dataclass(frozen=True, slots=True)
+class BasisGridRenderCache:
+    """Reusable drawing cache for :class:`BasisGridVisualizer`.
+
+    The cache stores geometry-only primitives plus resolved layout indices for
+    one set of visualizer options.  It is useful when plotting many basis states
+    or repeatedly plotting multiple batches with the same lattice/layout/style.
+
+    Build instances with :meth:`BasisGridVisualizer.build_render_cache` rather
+    than constructing them manually.  Treat all attributes as read-only
+    implementation details.
+    """
+
+    mode: Literal["arrows", "dimers", "values"]
+    plaquette_symbol_style: PlaquetteSymbolStyle
+    draw_nodes: tuple[_DrawNode, ...]
+    draw_links: tuple[_DrawLink, ...]
+    draw_plaquettes: tuple[_DrawPlaquette, ...]
+    link_variable_indices: npt.NDArray[np.int64]
+    site_variable_indices: npt.NDArray[np.int64]
+    node_xy: npt.NDArray[np.float64]
+    link_source_xy: npt.NDArray[np.float64]
+    link_target_xy: npt.NDArray[np.float64]
+    link_segments: npt.NDArray[np.float64]
+    link_midpoints: npt.NDArray[np.float64]
+    site_labels: tuple[str, ...]
+    plaquette_link_variable_indices: tuple[tuple[int, ...], ...]
+    plaquette_orientations: tuple[tuple[int, ...], ...]
+    plaquette_centers: npt.NDArray[np.float64]
+    plaquette_midpoints: tuple[tuple[tuple[float, float], ...], ...]
+    square_qlm_link_variable_indices: tuple[tuple[int, ...] | None, ...]
+
+
 @dataclass(frozen=True)
 class BasisConfigurationVisualizer:
     """
@@ -257,6 +290,189 @@ class BasisConfigurationVisualizer:
             return True
 
         return self.layout.link_variable_indices().size > 0
+
+    def _link_variable_index(self, link_id: int) -> int:
+        if self.layout is None:
+            return int(link_id)
+
+        try:
+            return int(self.layout.variable_index(VariableKind.LINK, int(link_id)))
+        except KeyError:
+            return -1
+
+    def _site_variable_index_or_missing(self, site_id: int) -> int:
+        if self.layout is None:
+            return -1
+
+        try:
+            return int(self.layout.variable_index(VariableKind.SITE, int(site_id)))
+        except KeyError:
+            return -1
+
+    def _validate_config_batch_for_cached_grid(
+        self,
+        configs: npt.NDArray[np.int64],
+    ) -> None:
+        if configs.ndim != 2:
+            raise ValueError("states must have shape (n_variables,) or (n_states, n_variables).")
+
+        if self.layout is not None:
+            self.layout.validate_batch(configs)
+        elif configs.shape[1] < self.lattice.num_links:
+            raise ValueError(
+                "Without a VariableLayout, configs must contain at least "
+                f"{self.lattice.num_links} link values."
+            )
+
+    def build_grid_render_cache(
+        self,
+        *,
+        reference_config: npt.ArrayLike,
+        mode: LinkPlotMode = "auto",
+        plaquette_symbols: PlaquetteSymbolStyle = "auto",
+    ) -> BasisGridRenderCache:
+        """Build a reusable cache for fast repeated grid plotting.
+
+        The cache resolves the plotting mode once, precomputes visual geometry,
+        and converts physical site/link ids to raw configuration indices.  The
+        resulting object is specific to this visualizer's lattice/layout/style
+        options and to the resolved ``mode``/``plaquette_symbols`` pair.
+        """
+        reference = self._as_config(reference_config)
+        resolved_mode = self._resolve_link_plot_mode(
+            config=reference,
+            mode=mode,
+        )
+        resolved_plaquette_symbols = self._resolve_plaquette_symbol_style(
+            mode=resolved_mode,
+            plaquette_symbol_style=plaquette_symbols,
+        )
+
+        draw_nodes_list, draw_links_list = self._draw_primitives()
+        draw_nodes = tuple(draw_nodes_list)
+        draw_links = tuple(draw_links_list)
+
+        if resolved_plaquette_symbols == "none":
+            draw_plaquettes = ()
+        else:
+            draw_plaquettes = tuple(self._draw_plaquette_primitives())
+
+        link_variable_indices = np.asarray(
+            [self._link_variable_index(draw_link.link_id) for draw_link in draw_links],
+            dtype=np.int64,
+        )
+        site_variable_indices = np.asarray(
+            [self._site_variable_index_or_missing(node.site_id) for node in draw_nodes],
+            dtype=np.int64,
+        )
+
+        node_xy = np.asarray([self._xy(node.position) for node in draw_nodes], dtype=float)
+        link_source_xy = np.asarray(
+            [self._xy(draw_link.source_position) for draw_link in draw_links],
+            dtype=float,
+        )
+        link_target_xy = np.asarray(
+            [self._xy(draw_link.target_position) for draw_link in draw_links],
+            dtype=float,
+        )
+
+        if draw_links:
+            link_segments = np.stack((link_source_xy, link_target_xy), axis=1)
+            link_midpoints = 0.5 * (link_source_xy + link_target_xy)
+        else:
+            link_segments = np.empty((0, 2, 2), dtype=float)
+            link_midpoints = np.empty((0, 2), dtype=float)
+
+        site_labels = tuple(self._format_site_label(node.site_id) for node in draw_nodes)
+
+        plaquette_link_variable_indices: list[tuple[int, ...]] = []
+        plaquette_orientations: list[tuple[int, ...]] = []
+        plaquette_midpoints: list[tuple[tuple[float, float], ...]] = []
+        square_qlm_link_variable_indices: list[tuple[int, ...] | None] = []
+
+        for draw_plaquette in draw_plaquettes:
+            link_ids = tuple(int(link_id) for link_id in draw_plaquette.link_ids)
+
+            if len(link_ids) == 0:
+                plaquette = self.lattice.plaquettes[int(draw_plaquette.plaquette_id)]
+                link_ids = tuple(int(link_id) for link_id in plaquette.links)
+
+            plaquette_link_variable_indices.append(
+                tuple(self._link_variable_index(link_id) for link_id in link_ids)
+            )
+            plaquette_orientations.append(
+                tuple(int(orientation) for orientation in draw_plaquette.link_orientations)
+            )
+            plaquette_midpoints.append(
+                tuple((float(point[0]), float(point[1])) for point in draw_plaquette.link_midpoints)
+            )
+
+            if isinstance(self.lattice, SquareLattice) and len(draw_plaquette.link_ids) == 4:
+                if len(draw_plaquette.visual_cell) >= 2 and all(
+                    int(value) >= 0 for value in draw_plaquette.visual_cell[:2]
+                ):
+                    visual_cell = (
+                        int(draw_plaquette.visual_cell[0]),
+                        int(draw_plaquette.visual_cell[1]),
+                    )
+                else:
+                    visual_cell = self._square_visual_cell_from_center(
+                        draw_plaquette.center,
+                    )
+
+                bottom_link = self._square_visual_link_id(
+                    cell=visual_cell,
+                    kind="x",
+                )
+                left_link = self._square_visual_link_id(
+                    cell=visual_cell,
+                    kind="y",
+                )
+                right_link = self._square_visual_link_id(
+                    cell=(visual_cell[0] + 1, visual_cell[1]),
+                    kind="y",
+                )
+                top_link = self._square_visual_link_id(
+                    cell=(visual_cell[0], visual_cell[1] + 1),
+                    kind="x",
+                )
+                square_qlm_link_variable_indices.append(
+                    tuple(
+                        self._link_variable_index(link_id)
+                        for link_id in (bottom_link, left_link, right_link, top_link)
+                    )
+                )
+            else:
+                square_qlm_link_variable_indices.append(None)
+
+        if draw_plaquettes:
+            plaquette_centers = np.asarray(
+                [draw_plaquette.center[:2] for draw_plaquette in draw_plaquettes],
+                dtype=float,
+            )
+        else:
+            plaquette_centers = np.empty((0, 2), dtype=float)
+
+        return BasisGridRenderCache(
+            mode=resolved_mode,
+            plaquette_symbol_style=resolved_plaquette_symbols,
+            draw_nodes=draw_nodes,
+            draw_links=draw_links,
+            draw_plaquettes=draw_plaquettes,
+            link_variable_indices=link_variable_indices,
+            site_variable_indices=site_variable_indices,
+            node_xy=node_xy,
+            link_source_xy=link_source_xy,
+            link_target_xy=link_target_xy,
+            link_segments=link_segments,
+            link_midpoints=link_midpoints,
+            site_labels=site_labels,
+            plaquette_link_variable_indices=tuple(plaquette_link_variable_indices),
+            plaquette_orientations=tuple(plaquette_orientations),
+            plaquette_centers=plaquette_centers,
+            plaquette_midpoints=tuple(plaquette_midpoints),
+            square_qlm_link_variable_indices=tuple(square_qlm_link_variable_indices),
+        )
 
     def plot(
         self,
@@ -448,6 +664,440 @@ class BasisConfigurationVisualizer:
             plt.show()
 
         return ax
+
+    def _plot_with_grid_render_cache(
+        self,
+        config: npt.NDArray[np.int64],
+        *,
+        ax,
+        render_cache: BasisGridRenderCache,
+        show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
+        with_site_labels: bool = True,
+        with_site_values: bool = False,
+        with_link_values: bool = False,
+        with_link_ids: bool = False,
+        with_plaquette_symbols: bool = True,
+        plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
+        title: str | None = None,
+    ):
+        """Plot one already-validated config using cached grid geometry."""
+        if render_cache.mode in ("arrows", "dimers") and not self.has_link_variables():
+            raise ValueError(
+                f"mode='{render_cache.mode}' requires link variables in the layout. "
+                "For site-only layouts, use mode='values' with with_site_values=True."
+            )
+
+        if backend != "matplotlib":
+            self._draw_networkx(
+                ax=ax,
+                config=config,
+                draw_nodes=list(render_cache.draw_nodes),
+                draw_links=list(render_cache.draw_links),
+                draw_plaquettes=list(render_cache.draw_plaquettes),
+                mode=render_cache.mode,
+                with_site_labels=with_site_labels,
+                with_site_values=with_site_values,
+                with_link_values=with_link_values,
+                with_plaquette_symbols=with_plaquette_symbols,
+                plaquette_symbol_style=render_cache.plaquette_symbol_style,
+                title=None,
+            )
+        else:
+            self._draw_links_from_grid_render_cache(
+                ax=ax,
+                config=config,
+                render_cache=render_cache,
+            )
+            self._draw_nodes_from_grid_render_cache(
+                ax=ax,
+                config=config,
+                render_cache=render_cache,
+                with_site_labels=with_site_labels,
+                with_site_values=with_site_values,
+            )
+            if (with_link_values or render_cache.mode == "values") and self.has_link_variables():
+                self._draw_link_values_from_grid_render_cache(
+                    ax=ax,
+                    config=config,
+                    render_cache=render_cache,
+                )
+            if with_link_ids:
+                self._draw_link_ids_from_grid_render_cache(
+                    ax=ax,
+                    render_cache=render_cache,
+                )
+            if with_plaquette_symbols and render_cache.plaquette_symbol_style != "none":
+                self._draw_plaquette_symbols_from_grid_render_cache(
+                    ax=ax,
+                    config=config,
+                    render_cache=render_cache,
+                    plaquette_symbol_values=plaquette_symbol_values,
+                )
+
+        self._finish_axes(ax, title=title)
+
+        if show:
+            plt.show()
+
+        return ax
+
+    def _draw_links_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: BasisGridRenderCache,
+    ) -> None:
+        if render_cache.mode == "arrows":
+            values = config[render_cache.link_variable_indices]
+
+            for index, value in enumerate(values):
+                source = tuple(float(x) for x in render_cache.link_source_xy[index])
+                target = tuple(float(x) for x in render_cache.link_target_xy[index])
+
+                if not self._points_along_link(int(value)):
+                    source, target = target, source
+
+                arrow = FancyArrowPatch(
+                    source,
+                    target,
+                    arrowstyle="-|>",
+                    mutation_scale=self._resolved_arrow_mutation_scale(),
+                    linewidth=self.style.arrow_linewidth,
+                    color=self.style.edge_color,
+                    alpha=self.style.arrow_alpha,
+                    shrinkA=self._resolved_arrow_shrink_points(),
+                    shrinkB=self._resolved_arrow_shrink_points(),
+                    zorder=2,
+                )
+
+                ax.add_patch(arrow)
+            return
+
+        if render_cache.mode == "dimers":
+            values = config[render_cache.link_variable_indices]
+            occupied_mask = values != 0
+            empty_segments = render_cache.link_segments[~occupied_mask]
+            occupied_segments = render_cache.link_segments[occupied_mask]
+
+            if empty_segments.size:
+                ax.add_collection(
+                    LineCollection(
+                        empty_segments,
+                        colors=self.style.empty_edge_color,
+                        linewidths=self.style.empty_width,
+                        alpha=self.style.empty_alpha,
+                        capstyle="round",
+                        zorder=1,
+                    )
+                )
+
+            if occupied_segments.size:
+                ax.add_collection(
+                    LineCollection(
+                        occupied_segments,
+                        colors=self.style.edge_color,
+                        linewidths=self.style.occupied_width,
+                        alpha=self.style.occupied_alpha,
+                        capstyle="round",
+                        zorder=2,
+                    )
+                )
+            return
+
+        if render_cache.mode == "values":
+            if render_cache.link_segments.size:
+                ax.add_collection(
+                    LineCollection(
+                        render_cache.link_segments,
+                        colors=self.style.empty_edge_color,
+                        linewidths=self.style.empty_width,
+                        alpha=0.7,
+                        zorder=1,
+                    )
+                )
+            return
+
+        raise ValueError("mode must be one of 'arrows', 'dimers', or 'values'.")
+
+    def _draw_nodes_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: BasisGridRenderCache,
+        with_site_labels: bool,
+        with_site_values: bool,
+    ) -> None:
+        if render_cache.node_xy.size == 0:
+            return
+
+        x = render_cache.node_xy[:, 0]
+        y = render_cache.node_xy[:, 1]
+
+        ax.scatter(
+            x,
+            y,
+            s=self.style.node_size,
+            color=self.style.node_color,
+            zorder=3,
+        )
+
+        if not (with_site_labels or with_site_values):
+            return
+
+        for node_index, (px, py) in enumerate(zip(x, y, strict=True)):
+            pieces: list[str] = []
+
+            if with_site_labels:
+                pieces.append(render_cache.site_labels[node_index])
+
+            if with_site_values:
+                variable_index = int(render_cache.site_variable_indices[node_index])
+                if variable_index >= 0:
+                    pieces.append(str(int(config[variable_index])))
+
+            if pieces:
+                ax.text(
+                    float(px),
+                    float(py),
+                    "\n".join(pieces),
+                    ha="center",
+                    va="center",
+                    fontsize=self._resolved_site_label_fontsize(),
+                    color="black",
+                    zorder=4,
+                )
+
+    def _draw_link_values_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: BasisGridRenderCache,
+    ) -> None:
+        values = config[render_cache.link_variable_indices]
+
+        for midpoint, value in zip(render_cache.link_midpoints, values, strict=True):
+            ax.text(
+                float(midpoint[0]),
+                float(midpoint[1]),
+                str(int(value)),
+                ha="center",
+                va="center",
+                fontsize=self._resolved_link_label_fontsize(),
+                bbox={
+                    "boxstyle": "round,pad=0.15",
+                    "fc": "white",
+                    "ec": "none",
+                    "alpha": 0.8,
+                },
+                zorder=5,
+            )
+
+    def _draw_link_ids_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        render_cache: BasisGridRenderCache,
+    ) -> None:
+        for midpoint, draw_link in zip(
+            render_cache.link_midpoints,
+            render_cache.draw_links,
+            strict=True,
+        ):
+            ax.text(
+                float(midpoint[0]),
+                float(midpoint[1]),
+                str(int(draw_link.link_id)),
+                ha="center",
+                va="center",
+                fontsize=self._resolved_link_label_fontsize(),
+                color="purple",
+                zorder=20,
+                bbox={
+                    "boxstyle": "round,pad=0.1",
+                    "fc": "white",
+                    "ec": "none",
+                    "alpha": 0.7,
+                },
+            )
+
+    def _draw_plaquette_symbols_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: BasisGridRenderCache,
+        plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
+    ) -> None:
+        if render_cache.plaquette_symbol_style == "circulation":
+            self._draw_circulation_plaquette_symbols_from_grid_render_cache(
+                ax=ax,
+                config=config,
+                render_cache=render_cache,
+            )
+            return
+
+        if render_cache.plaquette_symbol_style == "resonance":
+            self._draw_resonance_plaquette_symbols_from_grid_render_cache(
+                ax=ax,
+                config=config,
+                render_cache=render_cache,
+                plaquette_symbol_values=plaquette_symbol_values,
+            )
+            return
+
+        if render_cache.plaquette_symbol_style != "none":
+            raise ValueError(
+                "plaquette_symbol_style must be 'auto', 'none', 'circulation', or 'resonance'."
+            )
+
+    def _draw_resonance_plaquette_symbols_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: BasisGridRenderCache,
+        plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
+    ) -> None:
+        for index, draw_plaquette in enumerate(render_cache.draw_plaquettes):
+            plaquette_id = int(draw_plaquette.plaquette_id)
+            center = render_cache.plaquette_centers[index]
+
+            if plaquette_symbol_values is not None:
+                symbol_info = plaquette_symbol_values.get(plaquette_id)
+
+                if symbol_info is None:
+                    continue
+
+                symbol, color = symbol_info
+                ax.annotate(
+                    symbol,
+                    xy=(float(center[0]), float(center[1])),
+                    xytext=self.style.plaquette_symbol_offset,
+                    textcoords="offset points",
+                    fontsize=self.style.plaquette_symbol_fontsize,
+                    color=color,
+                    ha="center",
+                    va="center",
+                    zorder=6,
+                )
+                continue
+
+            values = tuple(
+                int(config[variable_index])
+                for variable_index in render_cache.plaquette_link_variable_indices[index]
+            )
+
+            symbol_info = self._qdm_resonance_symbol(values)
+
+            if symbol_info is not None:
+                symbol, color = symbol_info
+                ax.annotate(
+                    symbol,
+                    xy=(float(center[0]), float(center[1])),
+                    xytext=self.style.plaquette_symbol_offset,
+                    textcoords="offset points",
+                    fontsize=self.style.plaquette_symbol_fontsize,
+                    color=color,
+                    ha="center",
+                    va="center",
+                    zorder=6,
+                )
+                continue
+
+            vulnerable_info = self._qdm_one_vulnerable_link(values)
+
+            if vulnerable_info is None:
+                continue
+
+            vulnerable_index, color = vulnerable_info
+            plaquette_midpoints = render_cache.plaquette_midpoints[index]
+
+            if vulnerable_index >= len(plaquette_midpoints):
+                continue
+
+            self._draw_vulnerable_link_arrow(
+                ax=ax,
+                center=center,
+                link_midpoint=plaquette_midpoints[vulnerable_index],
+                color=color,
+            )
+
+    def _draw_circulation_plaquette_symbols_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: BasisGridRenderCache,
+    ) -> None:
+        text_items: list[tuple[Sequence[float], str, str]] = []
+
+        for index, draw_plaquette in enumerate(render_cache.draw_plaquettes):
+            square_indices = render_cache.square_qlm_link_variable_indices[index]
+
+            if square_indices is not None:
+                values = tuple(int(config[variable_index]) for variable_index in square_indices)
+                key = self._plaquette_key(values)
+                payload = _SQUARE_QLM_PLAQUETTE_SYMBOLS.get(key)
+
+                if payload is None:
+                    continue
+
+                text_items.append(
+                    (
+                        render_cache.plaquette_centers[index],
+                        str(payload["s"]),
+                        str(payload["color"]),
+                    )
+                )
+                continue
+
+            values = tuple(
+                int(config[variable_index])
+                for variable_index in render_cache.plaquette_link_variable_indices[index]
+            )
+            orientations = render_cache.plaquette_orientations[index]
+
+            symbol_info = self._flux_circulation_symbol(values, orientations)
+
+            if symbol_info is not None:
+                symbol, color = symbol_info
+                text_items.append((render_cache.plaquette_centers[index], symbol, color))
+                continue
+
+            vulnerable_info = self._flux_one_vulnerable_link(values, orientations)
+
+            if vulnerable_info is None:
+                continue
+
+            vulnerable_index, color = vulnerable_info
+            plaquette_midpoints = render_cache.plaquette_midpoints[index]
+
+            if vulnerable_index >= len(plaquette_midpoints):
+                continue
+
+            self._draw_vulnerable_link_arrow(
+                ax=ax,
+                center=render_cache.plaquette_centers[index],
+                link_midpoint=plaquette_midpoints[vulnerable_index],
+                color=color,
+            )
+
+        for center, symbol, color in text_items:
+            ax.annotate(
+                symbol,
+                xy=(float(center[0]), float(center[1])),
+                xytext=self.style.plaquette_symbol_offset,
+                textcoords="offset points",
+                fontsize=self.style.plaquette_symbol_fontsize,
+                color=color,
+                ha="center",
+                va="center",
+                zorder=6,
+            )
 
     def save(
         self,
@@ -3432,6 +4082,36 @@ class BasisGridVisualizer:
     coordinate_transform: npt.ArrayLike | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
 
+    def _single_visualizer(self) -> BasisConfigurationVisualizer:
+        return BasisConfigurationVisualizer(
+            lattice=self.lattice,
+            layout=self.layout,
+            style=self.style,
+            periodic_image_mode=self.periodic_image_mode,
+            collapse_duplicate_visual_links=self.collapse_duplicate_visual_links,
+            coordinate_scale=self.coordinate_scale,
+            coordinate_transform=self.coordinate_transform,
+            site_label_style=self.site_label_style,
+        )
+
+    def build_render_cache(
+        self,
+        *,
+        reference_config: npt.ArrayLike,
+        mode: LinkPlotMode = "auto",
+        plaquette_symbols: PlaquetteSymbolStyle = "auto",
+    ) -> BasisGridRenderCache:
+        """Build a reusable render cache for this grid visualizer.
+
+        Pass the returned cache to :meth:`plot` when plotting several batches
+        with the same lattice/layout/style and plotting mode.
+        """
+        return self._single_visualizer().build_grid_render_cache(
+            reference_config=reference_config,
+            mode=mode,
+            plaquette_symbols=plaquette_symbols,
+        )
+
     def plot(
         self,
         states: npt.ArrayLike,
@@ -3452,6 +4132,7 @@ class BasisGridVisualizer:
         suptitle_y: float = 0.995,
         tight_layout_rect: tuple[float, float, float, float] | None = None,
         single_plot_kwargs: dict | None = None,
+        render_cache: BasisGridRenderCache | None = None,
     ):
         """
         Plot a batch of basis states.
@@ -3497,6 +4178,20 @@ class BasisGridVisualizer:
             raise ValueError("states must have shape (n_variables,) or (n_states, n_variables).")
 
         n_states = arr.shape[0]
+
+        if n_states == 0:
+            raise ValueError("states must contain at least one configuration.")
+
+        single_visualizer = self._single_visualizer()
+        single_visualizer._validate_config_batch_for_cached_grid(arr)
+
+        if render_cache is None:
+            render_cache = single_visualizer.build_grid_render_cache(
+                reference_config=arr[0],
+                mode=mode,
+                plaquette_symbols=plaquette_symbols,
+            )
+
         rows, cols = automatic_grid_shape(n_states, nrows=nrows, ncols=ncols)
 
         if labels is not None and len(labels) != n_states:
@@ -3507,36 +4202,7 @@ class BasisGridVisualizer:
 
         fig, axes = plt.subplots(rows, cols, figsize=figsize, squeeze=False)
 
-        single_visualizer = BasisConfigurationVisualizer(
-            lattice=self.lattice,
-            layout=self.layout,
-            style=self.style,
-            periodic_image_mode=self.periodic_image_mode,
-            collapse_duplicate_visual_links=self.collapse_duplicate_visual_links,
-            coordinate_scale=self.coordinate_scale,
-            coordinate_transform=self.coordinate_transform,
-            site_label_style=self.site_label_style,
-        )
-
-        if len(states) == 0:
-            raise ValueError("states must contain at least one configuration.")
-
-        first_state = np.asarray(states[0], dtype=np.int64)
-        resolved_mode = single_visualizer._resolve_link_plot_mode(
-            config=first_state,
-            mode=mode,
-        )
-        resolved_plaquette_symbols = single_visualizer._resolve_plaquette_symbol_style(
-            mode=resolved_mode,
-            plaquette_symbol_style=plaquette_symbols,
-        )
-
-        draw_nodes, draw_links = single_visualizer._draw_primitives()
-
-        if resolved_plaquette_symbols == "none":
-            draw_plaquettes = None
-        else:
-            draw_plaquettes = single_visualizer._draw_plaquette_primitives()
+        resolved_plaquette_symbols = render_cache.plaquette_symbol_style
 
         if single_plot_kwargs is None:
             single_plot_kwargs = {}
@@ -3588,22 +4254,18 @@ class BasisGridVisualizer:
                 if config_text:
                     title = f"{title}\n{config_text}"
 
-            single_visualizer._plot_with_primitives(
+            single_visualizer._plot_with_grid_render_cache(
                 config,
                 ax=ax,
-                draw_nodes=draw_nodes,
-                draw_links=draw_links,
-                draw_plaquettes=draw_plaquettes,
+                render_cache=render_cache,
                 show=False,
                 backend=backend,
-                mode=resolved_mode,
                 with_site_labels=with_site_labels,
                 with_site_values=with_site_values,
                 with_link_values=with_link_values,
                 with_link_ids=with_link_ids,
                 with_plaquette_symbols=with_plaquette_symbols
                 and resolved_plaquette_symbols != "none",
-                plaquette_symbol_style=resolved_plaquette_symbols,
                 plaquette_symbol_values=plaquette_symbol_values,
                 title=title,
                 **plot_kwargs,
@@ -3792,6 +4454,7 @@ def plot_basis_grid(
     show: bool = True,
     suptitle: str | None = None,
     single_plot_kwargs: dict | None = None,
+    render_cache: BasisGridRenderCache | None = None,
 ):
     """
     Functional wrapper around BasisGridVisualizer.
@@ -3824,4 +4487,5 @@ def plot_basis_grid(
         backend=backend,
         suptitle=suptitle,
         single_plot_kwargs=single_plot_kwargs,
+        render_cache=render_cache,
     )

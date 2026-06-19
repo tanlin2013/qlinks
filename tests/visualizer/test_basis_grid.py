@@ -14,7 +14,7 @@ from qlinks.visualizer import (
     automatic_grid_shape,
     plot_basis_grid,
 )
-from qlinks.visualizer.basis import _zero_indices_for_mechanism
+from qlinks.visualizer.basis import BasisGridRenderCache, _zero_indices_for_mechanism
 
 matplotlib.use("Agg")
 
@@ -341,3 +341,108 @@ def test_basis_grid_auto_mode_resolves_flux_layout() -> None:
 
     assert fig is not None
     plt.close(fig)
+
+
+def test_basis_grid_render_cache_is_reusable() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    states = np.array(
+        [
+            [1, 0, 1, 0],
+            [0, 1, 0, 1],
+        ],
+        dtype=np.int64,
+    )
+
+    grid = BasisGridVisualizer(lattice=lattice, layout=layout)
+    render_cache = grid.build_render_cache(
+        reference_config=states[0],
+        mode="dimers",
+        plaquette_symbols="none",
+    )
+
+    assert isinstance(render_cache, BasisGridRenderCache)
+    assert render_cache.mode == "dimers"
+    assert render_cache.plaquette_symbol_style == "none"
+
+    fig, axes = grid.plot(
+        states,
+        ncols=2,
+        mode="dimers",
+        plaquette_symbols="none",
+        render_cache=render_cache,
+        show=False,
+    )
+
+    assert axes.shape == (1, 2)
+    plt.close(fig)
+
+
+def test_basis_grid_cached_path_avoids_per_config_validation(monkeypatch) -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    states = np.array(
+        [
+            [1, 0, 1, 0],
+            [0, 1, 0, 1],
+            [1, 1, 0, 0],
+        ],
+        dtype=np.int64,
+    )
+
+    validate_config_calls = 0
+    validate_batch_calls = 0
+    original_validate_config = VariableLayout.validate_config
+    original_validate_batch = VariableLayout.validate_batch
+
+    def counted_validate_config(self, config):
+        nonlocal validate_config_calls
+        validate_config_calls += 1
+        return original_validate_config(self, config)
+
+    def counted_validate_batch(self, configs):
+        nonlocal validate_batch_calls
+        validate_batch_calls += 1
+        return original_validate_batch(self, configs)
+
+    monkeypatch.setattr(
+        VariableLayout,
+        "validate_config",
+        counted_validate_config,
+    )
+    monkeypatch.setattr(
+        VariableLayout,
+        "validate_batch",
+        counted_validate_batch,
+    )
+
+    fig, _ = plot_basis_grid(
+        lattice=lattice,
+        layout=layout,
+        states=states,
+        ncols=3,
+        mode="dimers",
+        plaquette_symbols="none",
+        show=False,
+    )
+
+    assert validate_batch_calls == 1
+    assert validate_config_calls == 1
+
+    plt.close(fig)
+
+
+def test_basis_grid_rejects_empty_states_before_creating_axes() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    states = np.empty((0, layout.n_variables), dtype=np.int64)
+
+    with pytest.raises(ValueError, match="at least one"):
+        plot_basis_grid(
+            lattice=lattice,
+            layout=layout,
+            states=states,
+            mode="dimers",
+            plaquette_symbols="none",
+            show=False,
+        )
