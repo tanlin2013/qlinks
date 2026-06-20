@@ -497,6 +497,59 @@ class CageClassificationReport:
             use_collective_coefficients=use_collective_coefficients,
         )
 
+    def reduced_iz_local_rdm_readouts(
+        self,
+        *,
+        basis_configs: NDArray[np.integer],
+        state: NDArray[np.complex128],
+        decomposition: ReducedIZMonitorDecomposition = "exact_support",
+        tolerance: float = 1e-10,
+        matrix_unit_tolerance: float | None = None,
+        max_matrix_unit_terms: int | None = 64,
+        include_empty_supports: bool = False,
+    ):
+        """Return local-RDM readouts for reduced-IZ component supports.
+
+        This is a convenience wrapper around
+        :func:`qlinks.caging.reduced_iz_local_rdm_readouts_from_report`.  It
+        makes the frustration-free reduced-IZ decompositions cached in the
+        classification report directly inspectable from notebooks.
+        """
+        from qlinks.caging.diagnostics import reduced_iz_local_rdm_readouts_from_report
+
+        return reduced_iz_local_rdm_readouts_from_report(
+            self,
+            basis_configs=basis_configs,
+            state=state,
+            decomposition=decomposition,
+            tolerance=tolerance,
+            matrix_unit_tolerance=matrix_unit_tolerance,
+            max_matrix_unit_terms=max_matrix_unit_terms,
+            include_empty_supports=include_empty_supports,
+        )
+
+    def frustration_free_local_rdm_readouts(
+        self,
+        *,
+        basis_configs: NDArray[np.integer],
+        state: NDArray[np.complex128],
+        decomposition: ReducedIZMonitorDecomposition = "exact_support",
+        tolerance: float = 1e-10,
+        matrix_unit_tolerance: float | None = None,
+        max_matrix_unit_terms: int | None = 64,
+        include_empty_supports: bool = False,
+    ):
+        """Alias for :meth:`reduced_iz_local_rdm_readouts`."""
+        return self.reduced_iz_local_rdm_readouts(
+            basis_configs=basis_configs,
+            state=state,
+            decomposition=decomposition,
+            tolerance=tolerance,
+            matrix_unit_tolerance=matrix_unit_tolerance,
+            max_matrix_unit_terms=max_matrix_unit_terms,
+            include_empty_supports=include_empty_supports,
+        )
+
     def to_rich(
         self,
         *,

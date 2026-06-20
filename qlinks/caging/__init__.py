@@ -25,6 +25,16 @@ from qlinks.caging.classification import (
     support_key_for_zero_report,
     support_key_from_mask,
 )
+from qlinks.caging.diagnostics import (
+    LocalMatrixUnitTerm,
+    LocalReducedDensityMatrix,
+    LocalReducedDensityMatrixReadout,
+    local_operator_matrix_unit_expansion,
+    local_rank_one_matrix_unit_expansion,
+    local_reduced_density_matrix_from_state,
+    local_reduced_density_matrix_readout_from_state,
+    reduced_iz_local_rdm_readouts_from_report,
+)
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
 from qlinks.caging.local_search import (
     AdaptiveRegionProposal,
@@ -228,6 +238,7 @@ __all__ = [
     "LocalCageSearchConfig",
     "LocalCageSearchResult",
     "LocalCageSearcher",
+    "LocalMatrixUnitTerm",
     "LocalQDMCageBlock",
     "LocalQDMCageRecord",
     "LocalQDMCageSearchConfig",
@@ -239,6 +250,8 @@ __all__ = [
     "LocalQDMPaddingConfig",
     "LocalQDMRegion",
     "LocalRecyclerReadout",
+    "LocalReducedDensityMatrix",
+    "LocalReducedDensityMatrixReadout",
     "LocalRegionProposal",
     "LocalRegionProposalSearchRecord",
     "LocalRegionProposalSearchResult",
@@ -312,6 +325,10 @@ __all__ = [
     "inverse_participation_ratio",
     "iter_multi_qdm_block_paddings",
     "local_cage_adapter_for_model",
+    "local_operator_matrix_unit_expansion",
+    "local_rank_one_matrix_unit_expansion",
+    "local_reduced_density_matrix_from_state",
+    "local_reduced_density_matrix_readout_from_state",
     "localized_basis_by_many_start_ipr",
     "make_qdm_cage_block",
     "make_type1_bipartite_prefilters",
@@ -324,6 +341,7 @@ __all__ = [
     "qdm_local_self_loop_values",
     "qdm_multi_padding_config_schedule",
     "reduced_iz_component_groups_from_reports",
+    "reduced_iz_local_rdm_readouts_from_report",
     "reduced_iz_probe_support_from_report",
     "register_local_cage_adapter_factory",
     "robust_certify_qdm_multi_block_result",
