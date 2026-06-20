@@ -84,6 +84,7 @@ line-length = 100
 
 [tool.isort]
 profile = "black"
+sort_reexports = true
 
 [tool.flake8]
 count = true
