@@ -81,9 +81,12 @@ markers = [
 
 [tool.black]
 line-length = 100
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
+line_length = 100
+py_version = 311
 sort_reexports = true
 
 [tool.flake8]
