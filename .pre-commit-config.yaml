@@ -12,13 +12,11 @@ repos:
     rev: 8.0.1
     hooks:
       - id: isort
-        args: [--profile=black]
 
 -   repo: https://github.com/psf/black
     rev: 26.5.1
     hooks:
     -   id: black
-        language_version: python3.14
 
 -   repo: https://github.com/PyCQA/flake8
     rev: 7.3.0
