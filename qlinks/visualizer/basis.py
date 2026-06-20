@@ -81,6 +81,25 @@ class LinkVisualStyle:
 
 
 @dataclass(frozen=True, slots=True)
+class LocalBasisShadowStyle:
+    """Visual style for variables outside a displayed local support.
+
+    ``LocalBasisGridVisualizer`` embeds local basis patterns into a full lattice
+    configuration.  Variables in the selected local support are drawn normally;
+    all other site/link variables are drawn with this shadow style so the global
+    lattice context remains visible without visually competing with the local
+    state.
+    """
+
+    shadow_node_color: str = "lightgray"
+    shadow_node_alpha: float = 0.18
+    shadow_link_color: str = "lightgray"
+    shadow_link_alpha: float = 0.22
+    shadow_link_width_scale: float = 0.75
+    label_shadowed_variables: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class _DrawNode:
     key: tuple[int, tuple[int, ...]]
     site_id: int
@@ -741,6 +760,344 @@ class BasisConfigurationVisualizer:
             plt.show()
 
         return ax
+
+    def _plot_local_basis_with_grid_render_cache(
+        self,
+        config: npt.NDArray[np.int64],
+        *,
+        ax,
+        render_cache: _BasisGridRenderCache,
+        active_link_mask: npt.NDArray[np.bool_],
+        active_node_mask: npt.NDArray[np.bool_],
+        shadow_style: LocalBasisShadowStyle,
+        show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
+        with_site_labels: bool = True,
+        with_site_values: bool = False,
+        with_link_values: bool = False,
+        with_link_ids: bool = False,
+        with_plaquette_symbols: bool = False,
+        plaquette_symbol_values: Mapping[int, tuple[str, str]] | None = None,
+        title: str | None = None,
+    ):
+        """Plot one embedded local-basis pattern using cached geometry.
+
+        The ``active_*_mask`` arrays select the site/link artists associated
+        with the local variable support.  The rest of the lattice is still drawn
+        using ``shadow_style``.
+        """
+        if backend != "matplotlib":
+            raise ValueError("Local-basis shadow plotting currently supports backend='matplotlib'.")
+
+        if active_link_mask.shape != (len(render_cache.draw_links),):
+            raise ValueError("active_link_mask has an incompatible shape.")
+
+        if active_node_mask.shape != (len(render_cache.draw_nodes),):
+            raise ValueError("active_node_mask has an incompatible shape.")
+
+        if render_cache.mode in ("arrows", "dimers") and not self.has_link_variables():
+            raise ValueError(
+                f"mode='{render_cache.mode}' requires link variables in the layout. "
+                "For site-only layouts, use mode='values' with with_site_values=True."
+            )
+
+        self._draw_local_basis_links_from_grid_render_cache(
+            ax=ax,
+            config=config,
+            render_cache=render_cache,
+            active_link_mask=active_link_mask,
+            shadow_style=shadow_style,
+        )
+        self._draw_local_basis_nodes_from_grid_render_cache(
+            ax=ax,
+            config=config,
+            render_cache=render_cache,
+            active_node_mask=active_node_mask,
+            shadow_style=shadow_style,
+            with_site_labels=with_site_labels,
+            with_site_values=with_site_values,
+        )
+        if (with_link_values or render_cache.mode == "values") and self.has_link_variables():
+            self._draw_local_basis_link_values_from_grid_render_cache(
+                ax=ax,
+                config=config,
+                render_cache=render_cache,
+                active_link_mask=active_link_mask,
+                shadow_style=shadow_style,
+            )
+        if with_link_ids:
+            self._draw_local_basis_link_ids_from_grid_render_cache(
+                ax=ax,
+                render_cache=render_cache,
+                active_link_mask=active_link_mask,
+                shadow_style=shadow_style,
+            )
+        if with_plaquette_symbols and render_cache.plaquette_symbol_style != "none":
+            self._draw_plaquette_symbols_from_grid_render_cache(
+                ax=ax,
+                config=config,
+                render_cache=render_cache,
+                plaquette_symbol_values=plaquette_symbol_values,
+            )
+
+        self._finish_axes(ax, title=title)
+
+        if show:
+            plt.show()
+
+        return ax
+
+    def _draw_local_basis_links_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: _BasisGridRenderCache,
+        active_link_mask: npt.NDArray[np.bool_],
+        shadow_style: LocalBasisShadowStyle,
+    ) -> None:
+        if render_cache.mode == "arrows":
+            values = config[render_cache.link_variable_indices]
+
+            for index, value in enumerate(values):
+                source = tuple(float(x) for x in render_cache.link_source_xy[index])
+                target = tuple(float(x) for x in render_cache.link_target_xy[index])
+
+                if not self._points_along_link(int(value)):
+                    source, target = target, source
+
+                active = bool(active_link_mask[index])
+                color = self.style.edge_color if active else shadow_style.shadow_link_color
+                alpha = self.style.arrow_alpha if active else shadow_style.shadow_link_alpha
+                linewidth = self.style.arrow_linewidth
+                if not active:
+                    linewidth *= shadow_style.shadow_link_width_scale
+
+                arrow = FancyArrowPatch(
+                    source,
+                    target,
+                    arrowstyle="-|>",
+                    mutation_scale=self._resolved_arrow_mutation_scale(),
+                    linewidth=linewidth,
+                    color=color,
+                    alpha=alpha,
+                    shrinkA=self._resolved_arrow_shrink_points(),
+                    shrinkB=self._resolved_arrow_shrink_points(),
+                    zorder=2 if active else 1,
+                )
+
+                ax.add_patch(arrow)
+            return
+
+        if render_cache.mode == "dimers":
+            values = config[render_cache.link_variable_indices]
+            occupied_mask = values != 0
+            self._add_local_basis_link_collection(
+                ax=ax,
+                segments=render_cache.link_segments[~active_link_mask],
+                color=shadow_style.shadow_link_color,
+                linewidth=self.style.empty_width * shadow_style.shadow_link_width_scale,
+                alpha=shadow_style.shadow_link_alpha,
+                zorder=1,
+            )
+            self._add_local_basis_link_collection(
+                ax=ax,
+                segments=render_cache.link_segments[active_link_mask & ~occupied_mask],
+                color=self.style.empty_edge_color,
+                linewidth=self.style.empty_width,
+                alpha=self.style.empty_alpha,
+                zorder=2,
+            )
+            self._add_local_basis_link_collection(
+                ax=ax,
+                segments=render_cache.link_segments[active_link_mask & occupied_mask],
+                color=self.style.edge_color,
+                linewidth=self.style.occupied_width,
+                alpha=self.style.occupied_alpha,
+                zorder=3,
+            )
+            return
+
+        if render_cache.mode == "values":
+            self._add_local_basis_link_collection(
+                ax=ax,
+                segments=render_cache.link_segments[~active_link_mask],
+                color=shadow_style.shadow_link_color,
+                linewidth=self.style.empty_width * shadow_style.shadow_link_width_scale,
+                alpha=shadow_style.shadow_link_alpha,
+                zorder=1,
+            )
+            self._add_local_basis_link_collection(
+                ax=ax,
+                segments=render_cache.link_segments[active_link_mask],
+                color=self.style.empty_edge_color,
+                linewidth=self.style.empty_width,
+                alpha=0.7,
+                zorder=2,
+            )
+            return
+
+        raise ValueError("mode must be one of 'arrows', 'dimers', or 'values'.")
+
+    @staticmethod
+    def _add_local_basis_link_collection(
+        *,
+        ax,
+        segments: npt.NDArray[np.float64],
+        color: str,
+        linewidth: float,
+        alpha: float,
+        zorder: int,
+    ) -> None:
+        if segments.size == 0:
+            return
+
+        ax.add_collection(
+            LineCollection(
+                segments,
+                colors=color,
+                linewidths=linewidth,
+                alpha=alpha,
+                capstyle="round",
+                zorder=zorder,
+            )
+        )
+
+    def _draw_local_basis_nodes_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: _BasisGridRenderCache,
+        active_node_mask: npt.NDArray[np.bool_],
+        shadow_style: LocalBasisShadowStyle,
+        with_site_labels: bool,
+        with_site_values: bool,
+    ) -> None:
+        if render_cache.node_xy.size == 0:
+            return
+
+        inactive_xy = render_cache.node_xy[~active_node_mask]
+        active_xy = render_cache.node_xy[active_node_mask]
+
+        if inactive_xy.size:
+            ax.scatter(
+                inactive_xy[:, 0],
+                inactive_xy[:, 1],
+                s=self.style.node_size,
+                color=shadow_style.shadow_node_color,
+                alpha=shadow_style.shadow_node_alpha,
+                zorder=2,
+            )
+
+        if active_xy.size:
+            ax.scatter(
+                active_xy[:, 0],
+                active_xy[:, 1],
+                s=self.style.node_size,
+                color=self.style.node_color,
+                zorder=4,
+            )
+
+        if not (with_site_labels or with_site_values):
+            return
+
+        for node_index, (px, py) in enumerate(render_cache.node_xy):
+            active = bool(active_node_mask[node_index])
+            if not active and not shadow_style.label_shadowed_variables:
+                continue
+
+            pieces: list[str] = []
+
+            if with_site_labels:
+                pieces.append(render_cache.site_labels[node_index])
+
+            if with_site_values:
+                variable_index = int(render_cache.site_variable_indices[node_index])
+                if variable_index >= 0:
+                    pieces.append(str(int(config[variable_index])))
+
+            if pieces:
+                ax.text(
+                    float(px),
+                    float(py),
+                    "\n".join(pieces),
+                    ha="center",
+                    va="center",
+                    fontsize=self._resolved_site_label_fontsize(),
+                    color="black" if active else shadow_style.shadow_link_color,
+                    alpha=1.0 if active else shadow_style.shadow_node_alpha,
+                    zorder=5 if active else 3,
+                )
+
+    def _draw_local_basis_link_values_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        config: npt.NDArray[np.int64],
+        render_cache: _BasisGridRenderCache,
+        active_link_mask: npt.NDArray[np.bool_],
+        shadow_style: LocalBasisShadowStyle,
+    ) -> None:
+        values = config[render_cache.link_variable_indices]
+
+        for index, (midpoint, value) in enumerate(
+            zip(render_cache.link_midpoints, values, strict=True)
+        ):
+            active = bool(active_link_mask[index])
+            if not active and not shadow_style.label_shadowed_variables:
+                continue
+
+            ax.text(
+                float(midpoint[0]),
+                float(midpoint[1]),
+                str(int(value)),
+                ha="center",
+                va="center",
+                fontsize=self._resolved_link_label_fontsize(),
+                color="black" if active else shadow_style.shadow_link_color,
+                alpha=1.0 if active else shadow_style.shadow_link_alpha,
+                bbox={
+                    "boxstyle": "round,pad=0.15",
+                    "fc": "white",
+                    "ec": "none",
+                    "alpha": 0.8 if active else 0.35,
+                },
+                zorder=6 if active else 3,
+            )
+
+    def _draw_local_basis_link_ids_from_grid_render_cache(
+        self,
+        *,
+        ax,
+        render_cache: _BasisGridRenderCache,
+        active_link_mask: npt.NDArray[np.bool_],
+        shadow_style: LocalBasisShadowStyle,
+    ) -> None:
+        for index, (midpoint, draw_link) in enumerate(
+            zip(render_cache.link_midpoints, render_cache.draw_links, strict=True)
+        ):
+            active = bool(active_link_mask[index])
+            if not active and not shadow_style.label_shadowed_variables:
+                continue
+
+            ax.text(
+                float(midpoint[0]),
+                float(midpoint[1]),
+                str(int(draw_link.link_id)),
+                ha="center",
+                va="center",
+                fontsize=self._resolved_link_label_fontsize(),
+                color="purple" if active else shadow_style.shadow_link_color,
+                alpha=1.0 if active else shadow_style.shadow_link_alpha,
+                zorder=20 if active else 3,
+                bbox={
+                    "boxstyle": "round,pad=0.1",
+                    "fc": "white",
+                    "ec": "none",
+                    "alpha": 0.7 if active else 0.35,
+                },
+            )
 
     def _draw_links_from_grid_render_cache(
         self,
@@ -4056,6 +4413,379 @@ def _zero_indices_for_mechanism(
 
 
 @dataclass(frozen=True)
+class LocalBasisGridVisualizer:
+    """Plot local basis patterns on top of the full lattice geometry.
+
+    This visualizer is intended for local reduced-density-matrix and local
+    recycler readouts.  It embeds each local pattern into a full reference
+    configuration, draws the full lattice with the usual
+    :class:`BasisConfigurationVisualizer` geometry, and shadows every site/link
+    outside ``variable_indices``.
+    """
+
+    lattice: LatticeGraph
+    layout: VariableLayout | None = None
+    style: LinkVisualStyle = field(default_factory=LinkVisualStyle)
+    shadow_style: LocalBasisShadowStyle = field(default_factory=LocalBasisShadowStyle)
+    periodic_image_mode: PeriodicImageMode = "positive_patch"
+    collapse_duplicate_visual_links: bool = True
+    coordinate_scale: float = 1.0
+    coordinate_transform: npt.ArrayLike | None = None
+    site_label_style: SiteLabelStyle = "cell_sublattice"
+
+    def _single_visualizer(self) -> BasisConfigurationVisualizer:
+        return BasisConfigurationVisualizer(
+            lattice=self.lattice,
+            layout=self.layout,
+            style=self.style,
+            periodic_image_mode=self.periodic_image_mode,
+            collapse_duplicate_visual_links=self.collapse_duplicate_visual_links,
+            coordinate_scale=self.coordinate_scale,
+            coordinate_transform=self.coordinate_transform,
+            site_label_style=self.site_label_style,
+        )
+
+    def build_render_cache(
+        self,
+        *,
+        reference_config: npt.ArrayLike | None = None,
+        mode: LinkPlotMode = "auto",
+        plaquette_symbols: PlaquetteSymbolStyle = "none",
+    ) -> _BasisGridRenderCache:
+        """Build a reusable render cache for local-basis plots."""
+        reference = self._resolve_reference_config(reference_config)
+        return self._single_visualizer().build_grid_render_cache(
+            reference_config=reference,
+            mode=mode,
+            plaquette_symbols=plaquette_symbols,
+        )
+
+    def plot(
+        self,
+        local_patterns: npt.ArrayLike,
+        *,
+        variable_indices: Sequence[int],
+        reference_config: npt.ArrayLike | None = None,
+        nrows: int | None = None,
+        ncols: int | None = None,
+        start_index: int = 0,
+        labels: Sequence[str] | None = None,
+        show_local_pattern_label: bool = True,
+        config_label_style: BasisConfigLabelStyle = "compact",
+        config_label_max_length: int = 48,
+        mode: LinkPlotMode = "auto",
+        plaquette_symbols: PlaquetteSymbolStyle = "none",
+        figsize: tuple[float, float] | None = None,
+        show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
+        suptitle: str | None = None,
+        suptitle_y: float = 0.995,
+        tight_layout_rect: tuple[float, float, float, float] | None = None,
+        single_plot_kwargs: dict | None = None,
+        render_cache: _BasisGridRenderCache | None = None,
+    ):
+        """Plot local patterns, highlighting only ``variable_indices``.
+
+        Parameters
+        ----------
+        local_patterns:
+            Local basis patterns with shape ``(n_patterns, n_local_variables)``.
+            For a single local variable, a one-dimensional input is interpreted
+            as several one-variable patterns.
+        variable_indices:
+            Indices in the full configuration array corresponding to the local
+            pattern entries.
+        reference_config:
+            Full configuration used as the background outside the local support.
+            If omitted and a ``VariableLayout`` is available, the layout's
+            default configuration is used.
+        """
+        variable_key = _normalize_local_variable_indices(variable_indices)
+        reference = self._resolve_reference_config(reference_config)
+        patterns = _as_local_basis_patterns(
+            local_patterns,
+            n_local_variables=len(variable_key),
+        )
+
+        if patterns.shape[0] == 0:
+            raise ValueError("local_patterns must contain at least one pattern.")
+
+        embedded_configs = _embed_local_patterns(
+            reference_config=reference,
+            local_patterns=patterns,
+            variable_indices=variable_key,
+        )
+
+        single_visualizer = self._single_visualizer()
+        single_visualizer._validate_config_batch_for_cached_grid(embedded_configs)
+
+        if render_cache is None:
+            render_cache = single_visualizer.build_grid_render_cache(
+                reference_config=embedded_configs[0],
+                mode=mode,
+                plaquette_symbols=plaquette_symbols,
+            )
+
+        active_link_mask, active_node_mask = self._active_artist_masks(
+            variable_indices=variable_key,
+            render_cache=render_cache,
+        )
+
+        rows, cols = automatic_grid_shape(
+            patterns.shape[0],
+            nrows=nrows,
+            ncols=ncols,
+        )
+
+        if labels is not None and len(labels) != patterns.shape[0]:
+            raise ValueError("labels must have the same length as local_patterns.")
+
+        if figsize is None:
+            figsize = (3.0 * cols, 3.0 * rows)
+
+        fig, axes = plt.subplots(rows, cols, figsize=figsize, squeeze=False)
+
+        if single_plot_kwargs is None:
+            single_plot_kwargs = {}
+
+        plot_kwargs = dict(single_plot_kwargs)
+        with_site_labels = bool(plot_kwargs.pop("with_site_labels", True))
+        with_site_values = bool(plot_kwargs.pop("with_site_values", False))
+        with_link_values = bool(plot_kwargs.pop("with_link_values", False))
+        with_link_ids = bool(plot_kwargs.pop("with_link_ids", False))
+        with_plaquette_symbols = bool(plot_kwargs.pop("with_plaquette_symbols", False))
+        plaquette_symbol_values = plot_kwargs.pop("plaquette_symbol_values", None)
+        plot_kwargs.pop("title", None)
+        plot_kwargs.pop("show", None)
+        plot_kwargs.pop("backend", None)
+        plot_kwargs.pop("ax", None)
+        plot_kwargs.pop("mode", None)
+
+        # Constructor-only options; do not pass them to the single-state renderer.
+        plot_kwargs.pop("style", None)
+        plot_kwargs.pop("shadow_style", None)
+        plot_kwargs.pop("periodic_image_mode", None)
+        plot_kwargs.pop("collapse_duplicate_visual_links", None)
+        plot_kwargs.pop("coordinate_scale", None)
+        plot_kwargs.pop("coordinate_transform", None)
+        plot_kwargs.pop("site_label_style", None)
+
+        for k in range(rows * cols):
+            ax = axes.flat[k]
+
+            if k >= patterns.shape[0]:
+                ax.axis("off")
+                continue
+
+            if labels is None:
+                title = f"local {start_index + k}"
+            else:
+                title = labels[k]
+
+            if show_local_pattern_label:
+                pattern_text = format_basis_config(
+                    patterns[k],
+                    style=config_label_style,
+                    max_length=config_label_max_length,
+                )
+                if pattern_text:
+                    title = f"{title}\n{pattern_text}"
+
+            single_visualizer._plot_local_basis_with_grid_render_cache(
+                embedded_configs[k],
+                ax=ax,
+                render_cache=render_cache,
+                active_link_mask=active_link_mask,
+                active_node_mask=active_node_mask,
+                shadow_style=self.shadow_style,
+                show=False,
+                backend=backend,
+                with_site_labels=with_site_labels,
+                with_site_values=with_site_values,
+                with_link_values=with_link_values,
+                with_link_ids=with_link_ids,
+                with_plaquette_symbols=with_plaquette_symbols
+                and render_cache.plaquette_symbol_style != "none",
+                plaquette_symbol_values=plaquette_symbol_values,
+                title=title,
+                **plot_kwargs,
+            )
+
+        if suptitle is not None:
+            fig.suptitle(suptitle, y=suptitle_y)
+
+        if tight_layout_rect is None:
+            if suptitle is None:
+                tight_layout_rect = (0.0, 0.0, 1.0, 1.0)
+            else:
+                tight_layout_rect = (0.0, 0.0, 1.0, 0.96)
+
+        fig.tight_layout(rect=tight_layout_rect)
+
+        if show:
+            plt.show()
+
+        return fig, axes
+
+    def plot_readout(
+        self,
+        readout,
+        *,
+        reference_config: npt.ArrayLike | None = None,
+        labels: Sequence[str] | None = None,
+        suptitle: str | None = None,
+        **plot_kwargs,
+    ):
+        """Plot the local patterns exposed by a local-RDM-style readout.
+
+        The method intentionally uses duck typing so the visualizer does not
+        depend on ``qlinks.caging`` or ``qlinks.open_system``.
+        """
+        if suptitle is None:
+            component_index = getattr(readout, "component_index", None)
+            if component_index is None:
+                suptitle = "Local basis patterns"
+            else:
+                suptitle = f"Local basis patterns, component {component_index}"
+
+        return self.plot(
+            getattr(readout, "local_patterns"),
+            variable_indices=getattr(readout, "variable_indices"),
+            reference_config=reference_config,
+            labels=labels,
+            suptitle=suptitle,
+            **plot_kwargs,
+        )
+
+    def _resolve_reference_config(
+        self,
+        reference_config: npt.ArrayLike | None,
+    ) -> npt.NDArray[np.int64]:
+        if reference_config is None:
+            if self.layout is None:
+                raise ValueError(
+                    "reference_config is required when LocalBasisGridVisualizer "
+                    "is used without a VariableLayout."
+                )
+            return np.asarray(self.layout.default_config(), dtype=np.int64)
+
+        reference = np.asarray(reference_config, dtype=np.int64)
+        if reference.ndim != 1:
+            raise ValueError("reference_config must be one-dimensional.")
+
+        if self.layout is not None:
+            self.layout.validate_config(reference)
+        elif reference.size < self.lattice.num_links:
+            raise ValueError(
+                "Without a VariableLayout, reference_config must contain at least "
+                f"{self.lattice.num_links} link values."
+            )
+
+        return reference
+
+    def _active_artist_masks(
+        self,
+        *,
+        variable_indices: tuple[int, ...],
+        render_cache: _BasisGridRenderCache,
+    ) -> tuple[npt.NDArray[np.bool_], npt.NDArray[np.bool_]]:
+        active_variables = set(variable_indices)
+        active_link_mask = np.asarray(
+            [int(index) in active_variables for index in render_cache.link_variable_indices],
+            dtype=bool,
+        )
+
+        active_site_ids: set[int] = set()
+        active_link_ids: set[int] = set()
+
+        if self.layout is None:
+            active_link_ids.update(int(index) for index in variable_indices)
+        else:
+            for variable_index in variable_indices:
+                spec = self.layout.spec(int(variable_index))
+                if spec.kind == VariableKind.SITE:
+                    active_site_ids.add(int(spec.geometry_index))
+                elif spec.kind == VariableKind.LINK:
+                    active_link_ids.add(int(spec.geometry_index))
+
+        for draw_link in render_cache.draw_links:
+            if int(draw_link.link_id) not in active_link_ids:
+                continue
+            active_site_ids.add(int(draw_link.source_site))
+            active_site_ids.add(int(draw_link.target_site))
+
+        active_node_mask = np.asarray(
+            [
+                int(node.site_id) in active_site_ids
+                or int(render_cache.site_variable_indices[index]) in active_variables
+                for index, node in enumerate(render_cache.draw_nodes)
+            ],
+            dtype=bool,
+        )
+
+        return active_link_mask, active_node_mask
+
+
+def _normalize_local_variable_indices(variable_indices: Sequence[int]) -> tuple[int, ...]:
+    out = tuple(int(index) for index in variable_indices)
+
+    if len(set(out)) != len(out):
+        raise ValueError("variable_indices must not contain duplicates.")
+
+    if any(index < 0 for index in out):
+        raise ValueError("variable_indices must be non-negative.")
+
+    return out
+
+
+def _as_local_basis_patterns(
+    local_patterns: npt.ArrayLike,
+    *,
+    n_local_variables: int,
+) -> npt.NDArray[np.int64]:
+    patterns = np.asarray(local_patterns, dtype=np.int64)
+
+    if patterns.ndim == 1:
+        if n_local_variables == 0:
+            if patterns.size != 0:
+                raise ValueError("Empty local supports require empty local patterns.")
+            patterns = patterns.reshape(1, 0)
+        elif n_local_variables == 1:
+            patterns = patterns.reshape(-1, 1)
+        elif patterns.size == n_local_variables:
+            patterns = patterns.reshape(1, -1)
+        else:
+            raise ValueError(
+                "local_patterns has incompatible shape for the supplied variable_indices."
+            )
+
+    if patterns.ndim != 2:
+        raise ValueError("local_patterns must be one- or two-dimensional.")
+
+    if patterns.shape[1] != n_local_variables:
+        raise ValueError("local_patterns must have one column for each supplied variable index.")
+
+    return patterns
+
+
+def _embed_local_patterns(
+    *,
+    reference_config: npt.NDArray[np.int64],
+    local_patterns: npt.NDArray[np.int64],
+    variable_indices: tuple[int, ...],
+) -> npt.NDArray[np.int64]:
+    if any(index >= reference_config.size for index in variable_indices):
+        raise ValueError("variable_indices are outside reference_config.")
+
+    configs = np.repeat(reference_config.reshape(1, -1), local_patterns.shape[0], axis=0)
+
+    if variable_indices:
+        configs[:, list(variable_indices)] = local_patterns
+
+    return configs
+
+
+@dataclass(frozen=True)
 class BasisGridVisualizer:
     """
     Plot many basis configurations as an n by m grid.
@@ -4478,6 +5208,72 @@ def plot_basis_grid(
         start_index=start_index,
         labels=labels,
         show_config_label=show_config_label,
+        config_label_style=config_label_style,
+        config_label_max_length=config_label_max_length,
+        mode=mode,
+        plaquette_symbols=plaquette_symbols,
+        figsize=figsize,
+        show=show,
+        backend=backend,
+        suptitle=suptitle,
+        single_plot_kwargs=single_plot_kwargs,
+        render_cache=render_cache,
+    )
+
+
+def plot_local_basis_grid(
+    lattice: LatticeGraph,
+    local_patterns: npt.ArrayLike,
+    *,
+    variable_indices: Sequence[int],
+    reference_config: npt.ArrayLike | None = None,
+    layout: VariableLayout | None = None,
+    nrows: int | None = None,
+    ncols: int | None = None,
+    start_index: int = 0,
+    labels: Sequence[str] | None = None,
+    show_local_pattern_label: bool = True,
+    config_label_style: BasisConfigLabelStyle = "compact",
+    config_label_max_length: int = 48,
+    backend: VisualizerBackend = "matplotlib",
+    mode: LinkPlotMode = "auto",
+    plaquette_symbols: PlaquetteSymbolStyle = "none",
+    periodic_image_mode: PeriodicImageMode = "positive_patch",
+    collapse_duplicate_visual_links: bool = True,
+    coordinate_scale: float = 1.0,
+    coordinate_transform: npt.ArrayLike | None = None,
+    site_label_style: SiteLabelStyle = "cell_sublattice",
+    style: LinkVisualStyle | None = None,
+    shadow_style: LocalBasisShadowStyle | None = None,
+    figsize: tuple[float, float] | None = None,
+    show: bool = True,
+    suptitle: str | None = None,
+    single_plot_kwargs: dict | None = None,
+    render_cache: _BasisGridRenderCache | None = None,
+):
+    """Functional wrapper around :class:`LocalBasisGridVisualizer`."""
+
+    visualizer = LocalBasisGridVisualizer(
+        lattice=lattice,
+        layout=layout,
+        style=style if style is not None else LinkVisualStyle(),
+        shadow_style=shadow_style if shadow_style is not None else LocalBasisShadowStyle(),
+        periodic_image_mode=periodic_image_mode,
+        collapse_duplicate_visual_links=collapse_duplicate_visual_links,
+        coordinate_scale=coordinate_scale,
+        coordinate_transform=coordinate_transform,
+        site_label_style=site_label_style,
+    )
+
+    return visualizer.plot(
+        local_patterns,
+        variable_indices=variable_indices,
+        reference_config=reference_config,
+        nrows=nrows,
+        ncols=ncols,
+        start_index=start_index,
+        labels=labels,
+        show_local_pattern_label=show_local_pattern_label,
         config_label_style=config_label_style,
         config_label_max_length=config_label_max_length,
         mode=mode,

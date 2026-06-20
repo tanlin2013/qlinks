@@ -4,6 +4,8 @@ from qlinks.visualizer.basis import (
     BasisGridVisualizer,
     LinkPlotMode,
     LinkVisualStyle,
+    LocalBasisGridVisualizer,
+    LocalBasisShadowStyle,
     PeriodicImageMode,
     PlaquetteSymbolMode,
     PlaquetteSymbolStyle,
@@ -13,6 +15,7 @@ from qlinks.visualizer.basis import (
     format_basis_config,
     plot_basis_config,
     plot_basis_grid,
+    plot_local_basis_grid,
 )
 from qlinks.visualizer.hamiltonian_graph import (
     AutomorphismBackend,
@@ -53,6 +56,8 @@ __all__ = [
     "LayoutName",
     "LinkPlotMode",
     "LinkVisualStyle",
+    "LocalBasisGridVisualizer",
+    "LocalBasisShadowStyle",
     "LiouvillianGraphVisualizer",
     "NodeColorRule",
     "NormalizedGraphBackend",
@@ -73,5 +78,6 @@ __all__ = [
     "operator_space_labels",
     "plot_basis_config",
     "plot_basis_grid",
+    "plot_local_basis_grid",
     "unflatten_operator_index",
 ]
