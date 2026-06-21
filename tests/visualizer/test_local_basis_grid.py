@@ -23,6 +23,13 @@ class DummyLocalRDMReadout:
     variable_indices: tuple[int, ...]
     local_patterns: tuple[tuple[int, ...], ...]
     component_index: int | None = None
+    density_matrix: np.ndarray | None = None
+
+
+@dataclass(frozen=True)
+class DummyMatrixUnitTerm:
+    target_pattern: tuple[int, ...]
+    source_pattern: tuple[int, ...]
 
 
 def test_plot_local_basis_grid_shadows_links_outside_support() -> None:
@@ -78,7 +85,14 @@ def test_local_basis_grid_can_use_layout_default_reference_config() -> None:
     )
 
     assert axes.shape == (1, 2)
-    assert len(axes.flat[0].patches) == lattice.num_links
+    assert len(axes.flat[0].patches) == 1
+    line_collections = [
+        collection
+        for collection in axes.flat[0].collections
+        if isinstance(collection, LineCollection)
+    ]
+    assert line_collections
+    assert len(line_collections[0].get_segments()) == lattice.num_links - 1
 
     plt.close(fig)
 
@@ -132,3 +146,82 @@ def test_local_basis_grid_api_is_exported_in_all() -> None:
     assert "LocalBasisGridVisualizer" in visualizer_api.__all__
     assert "LocalBasisShadowStyle" in visualizer_api.__all__
     assert "plot_local_basis_grid" in visualizer_api.__all__
+
+
+def test_local_basis_grid_can_plot_without_reference_or_layout() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+
+    visualizer = LocalBasisGridVisualizer(lattice=lattice)
+    fig, axes = visualizer.plot(
+        np.array([[1], [0]], dtype=np.int64),
+        variable_indices=(0,),
+        ncols=2,
+        mode="dimers",
+        show=False,
+        single_plot_kwargs={"with_site_labels": False},
+    )
+
+    assert axes.shape == (1, 2)
+    line_collections = [
+        collection
+        for collection in axes.flat[0].collections
+        if isinstance(collection, LineCollection)
+    ]
+    assert line_collections
+    assert len(line_collections[0].get_segments()) == lattice.num_links - 1
+
+    plt.close(fig)
+
+
+def test_plot_readout_filters_to_patterns_with_nonzero_density_matrix_entries() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+
+    readout = DummyLocalRDMReadout(
+        variable_indices=(0, 1),
+        local_patterns=((0, 0), (1, 0), (0, 1)),
+        density_matrix=np.array(
+            [
+                [0.0, 0.0, 0.25],
+                [0.0, 0.0, 0.0],
+                [0.25, 0.0, 0.0],
+            ],
+            dtype=np.complex128,
+        ),
+    )
+
+    visualizer = LocalBasisGridVisualizer(lattice=lattice)
+    fig, axes = visualizer.plot_readout(
+        readout,
+        ncols=2,
+        mode="values",
+        show=False,
+        single_plot_kwargs={"with_site_labels": False},
+    )
+
+    assert axes.shape == (1, 2)
+    assert "local 0" in axes.flat[0].get_title()
+    assert "local 2" in axes.flat[1].get_title()
+
+    plt.close(fig)
+
+
+def test_plot_local_basis_grid_filters_to_nonzero_local_operator_patterns() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    local_operator = np.diag([0.0, 1.0, 0.0]).astype(np.complex128)
+
+    fig, axes = plot_local_basis_grid(
+        lattice=lattice,
+        local_patterns=np.array([[0, 0], [1, 0], [0, 1]], dtype=np.int64),
+        variable_indices=(0, 1),
+        local_operator=local_operator,
+        show_only_nonzero_matrix_elements=True,
+        mode="values",
+        show=False,
+        single_plot_kwargs={"with_site_labels": False},
+    )
+
+    assert axes.shape == (1, 1)
+    assert "local 1" in axes.flat[0].get_title()
+    assert "10" in axes.flat[0].get_title()
+
+    plt.close(fig)

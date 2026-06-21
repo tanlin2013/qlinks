@@ -857,33 +857,38 @@ class BasisConfigurationVisualizer:
         shadow_style: LocalBasisShadowStyle,
     ) -> None:
         if render_cache.mode == "arrows":
+            self._add_local_basis_link_collection(
+                ax=ax,
+                segments=render_cache.link_segments[~active_link_mask],
+                color=shadow_style.shadow_link_color,
+                linewidth=self.style.arrow_linewidth * shadow_style.shadow_link_width_scale,
+                alpha=shadow_style.shadow_link_alpha,
+                zorder=1,
+            )
+
             values = config[render_cache.link_variable_indices]
 
             for index, value in enumerate(values):
+                if not bool(active_link_mask[index]):
+                    continue
+
                 source = tuple(float(x) for x in render_cache.link_source_xy[index])
                 target = tuple(float(x) for x in render_cache.link_target_xy[index])
 
                 if not self._points_along_link(int(value)):
                     source, target = target, source
 
-                active = bool(active_link_mask[index])
-                color = self.style.edge_color if active else shadow_style.shadow_link_color
-                alpha = self.style.arrow_alpha if active else shadow_style.shadow_link_alpha
-                linewidth = self.style.arrow_linewidth
-                if not active:
-                    linewidth *= shadow_style.shadow_link_width_scale
-
                 arrow = FancyArrowPatch(
                     source,
                     target,
                     arrowstyle="-|>",
                     mutation_scale=self._resolved_arrow_mutation_scale(),
-                    linewidth=linewidth,
-                    color=color,
-                    alpha=alpha,
+                    linewidth=self.style.arrow_linewidth,
+                    color=self.style.edge_color,
+                    alpha=self.style.arrow_alpha,
                     shrinkA=self._resolved_arrow_shrink_points(),
                     shrinkB=self._resolved_arrow_shrink_points(),
-                    zorder=2 if active else 1,
+                    zorder=2,
                 )
 
                 ax.add_patch(arrow)
@@ -4417,10 +4422,12 @@ class LocalBasisGridVisualizer:
     """Plot local basis patterns on top of the full lattice geometry.
 
     This visualizer is intended for local reduced-density-matrix and local
-    recycler readouts.  It embeds each local pattern into a full reference
-    configuration, draws the full lattice with the usual
-    :class:`BasisConfigurationVisualizer` geometry, and shadows every site/link
-    outside ``variable_indices``.
+    recycler readouts.  It embeds each local pattern into a synthetic or
+    user-supplied full-lattice background, draws the full lattice with the
+    usual :class:`BasisConfigurationVisualizer` geometry, and shadows every
+    site/link outside ``variable_indices``.  A full constrained-basis
+    configuration is therefore optional; only the finite local basis is needed
+    for the local variables being inspected.
     """
 
     lattice: LatticeGraph
@@ -4483,6 +4490,9 @@ class LocalBasisGridVisualizer:
         tight_layout_rect: tuple[float, float, float, float] | None = None,
         single_plot_kwargs: dict | None = None,
         render_cache: _BasisGridRenderCache | None = None,
+        local_operator: npt.ArrayLike | None = None,
+        show_only_nonzero_matrix_elements: bool = False,
+        matrix_element_tolerance: float = 1e-10,
     ):
         """Plot local patterns, highlighting only ``variable_indices``.
 
@@ -4496,9 +4506,14 @@ class LocalBasisGridVisualizer:
             Indices in the full configuration array corresponding to the local
             pattern entries.
         reference_config:
-            Full configuration used as the background outside the local support.
-            If omitted and a ``VariableLayout`` is available, the layout's
-            default configuration is used.
+            Optional full configuration used as the background outside the local
+            support.  If omitted, a synthetic background is used.  Nonlocal
+            variables are shadowed, so the synthetic values are not meant to be
+            interpreted as a physical basis state.
+        local_operator:
+            Optional local matrix/operator in the same pattern order.  When
+            ``show_only_nonzero_matrix_elements=True``, only patterns appearing
+            in a nonzero row or column of this matrix are drawn.
         """
         variable_key = _normalize_local_variable_indices(variable_indices)
         reference = self._resolve_reference_config(reference_config)
@@ -4509,6 +4524,21 @@ class LocalBasisGridVisualizer:
 
         if patterns.shape[0] == 0:
             raise ValueError("local_patterns must contain at least one pattern.")
+
+        if show_only_nonzero_matrix_elements:
+            if local_operator is None:
+                raise ValueError(
+                    "local_operator is required when " "show_only_nonzero_matrix_elements=True."
+                )
+            selected_pattern_indices = _nonzero_local_operator_pattern_indices(
+                local_operator,
+                n_patterns=patterns.shape[0],
+                tolerance=matrix_element_tolerance,
+            )
+            if selected_pattern_indices.size == 0:
+                raise ValueError("No local patterns participate in nonzero matrix elements.")
+            patterns = patterns[selected_pattern_indices]
+            labels = _select_local_pattern_labels(labels, selected_pattern_indices)
 
         embedded_configs = _embed_local_patterns(
             reference_config=reference,
@@ -4634,6 +4664,8 @@ class LocalBasisGridVisualizer:
         reference_config: npt.ArrayLike | None = None,
         labels: Sequence[str] | None = None,
         suptitle: str | None = None,
+        show_only_nonzero_matrix_elements: bool = True,
+        matrix_element_tolerance: float = 1e-10,
         **plot_kwargs,
     ):
         """Plot the local patterns exposed by a local-RDM-style readout.
@@ -4648,12 +4680,35 @@ class LocalBasisGridVisualizer:
             else:
                 suptitle = f"Local basis patterns, component {component_index}"
 
+        local_operator = _local_operator_from_readout(readout)
+        matrix_unit_terms = (
+            None if local_operator is not None else getattr(readout, "matrix_unit_terms", None)
+        )
+
+        local_patterns = getattr(readout, "local_patterns")
+        if (
+            show_only_nonzero_matrix_elements
+            and local_operator is None
+            and matrix_unit_terms is not None
+        ):
+            selected_pattern_indices = _nonzero_matrix_unit_pattern_indices(
+                matrix_unit_terms=matrix_unit_terms,
+                local_patterns=local_patterns,
+            )
+            local_patterns = _select_local_patterns(local_patterns, selected_pattern_indices)
+            labels = _select_local_pattern_labels(labels, selected_pattern_indices)
+            show_only_nonzero_matrix_elements = False
+
         return self.plot(
-            getattr(readout, "local_patterns"),
+            local_patterns,
             variable_indices=getattr(readout, "variable_indices"),
             reference_config=reference_config,
             labels=labels,
             suptitle=suptitle,
+            local_operator=local_operator,
+            show_only_nonzero_matrix_elements=show_only_nonzero_matrix_elements
+            and local_operator is not None,
+            matrix_element_tolerance=matrix_element_tolerance,
             **plot_kwargs,
         )
 
@@ -4662,12 +4717,9 @@ class LocalBasisGridVisualizer:
         reference_config: npt.ArrayLike | None,
     ) -> npt.NDArray[np.int64]:
         if reference_config is None:
-            if self.layout is None:
-                raise ValueError(
-                    "reference_config is required when LocalBasisGridVisualizer "
-                    "is used without a VariableLayout."
-                )
-            return np.asarray(self.layout.default_config(), dtype=np.int64)
+            if self.layout is not None:
+                return np.asarray(self.layout.default_config(), dtype=np.int64)
+            return np.zeros(self.lattice.num_links, dtype=np.int64)
 
         reference = np.asarray(reference_config, dtype=np.int64)
         if reference.ndim != 1:
@@ -4766,6 +4818,83 @@ def _as_local_basis_patterns(
         raise ValueError("local_patterns must have one column for each supplied variable index.")
 
     return patterns
+
+
+def _select_local_patterns(
+    local_patterns,
+    selected_indices: npt.NDArray[np.int64],
+) -> tuple[tuple[int, ...], ...]:
+    pattern_tuple = tuple(tuple(int(value) for value in pattern) for pattern in local_patterns)
+    return tuple(pattern_tuple[int(index)] for index in selected_indices)
+
+
+def _select_local_pattern_labels(
+    labels: Sequence[str] | None,
+    selected_indices: npt.NDArray[np.int64],
+) -> list[str] | None:
+    if labels is None:
+        return [f"local {int(index)}" for index in selected_indices]
+
+    if len(labels) < int(np.max(selected_indices, initial=-1)) + 1:
+        raise ValueError("labels must have the same length as local_patterns.")
+
+    return [labels[int(index)] for index in selected_indices]
+
+
+def _nonzero_local_operator_pattern_indices(
+    local_operator: npt.ArrayLike,
+    *,
+    n_patterns: int,
+    tolerance: float,
+) -> npt.NDArray[np.int64]:
+    operator = np.asarray(local_operator, dtype=np.complex128)
+
+    if operator.shape != (n_patterns, n_patterns):
+        raise ValueError(
+            "local_operator shape must match the number of local patterns: "
+            f"{operator.shape} != {(n_patterns, n_patterns)}."
+        )
+
+    nonzero = np.abs(operator) > float(tolerance)
+    active = np.any(nonzero, axis=0) | np.any(nonzero, axis=1)
+    return np.flatnonzero(active).astype(np.int64, copy=False)
+
+
+def _local_operator_from_readout(readout) -> npt.NDArray[np.complex128] | None:
+    for attribute in ("density_matrix", "local_operator"):
+        if hasattr(readout, attribute):
+            value = getattr(readout, attribute)
+            if value is not None:
+                return np.asarray(value, dtype=np.complex128)
+
+    reduced_density_matrix = getattr(readout, "reduced_density_matrix", None)
+    if reduced_density_matrix is not None and hasattr(reduced_density_matrix, "density_matrix"):
+        return np.asarray(reduced_density_matrix.density_matrix, dtype=np.complex128)
+
+    return None
+
+
+def _nonzero_matrix_unit_pattern_indices(
+    *,
+    matrix_unit_terms,
+    local_patterns,
+) -> npt.NDArray[np.int64]:
+    pattern_to_index = {
+        tuple(int(value) for value in pattern): index
+        for index, pattern in enumerate(local_patterns)
+    }
+    selected: set[int] = set()
+
+    for term in matrix_unit_terms:
+        for attribute in ("target_pattern", "source_pattern"):
+            pattern = tuple(int(value) for value in getattr(term, attribute))
+            if pattern not in pattern_to_index:
+                raise ValueError(
+                    f"matrix-unit term contains pattern {pattern} not present in local_patterns."
+                )
+            selected.add(int(pattern_to_index[pattern]))
+
+    return np.asarray(sorted(selected), dtype=np.int64)
 
 
 def _embed_local_patterns(
@@ -5250,6 +5379,9 @@ def plot_local_basis_grid(
     suptitle: str | None = None,
     single_plot_kwargs: dict | None = None,
     render_cache: _BasisGridRenderCache | None = None,
+    local_operator: npt.ArrayLike | None = None,
+    show_only_nonzero_matrix_elements: bool = False,
+    matrix_element_tolerance: float = 1e-10,
 ):
     """Functional wrapper around :class:`LocalBasisGridVisualizer`."""
 
@@ -5284,4 +5416,7 @@ def plot_local_basis_grid(
         suptitle=suptitle,
         single_plot_kwargs=single_plot_kwargs,
         render_cache=render_cache,
+        local_operator=local_operator,
+        show_only_nonzero_matrix_elements=show_only_nonzero_matrix_elements,
+        matrix_element_tolerance=matrix_element_tolerance,
     )
