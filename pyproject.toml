@@ -96,6 +96,9 @@ ignore = [
     "E704",
     "W503",
 ]
+per-file-ignores = [
+    "tests/*:N806",
+]
 
 [tool.mypy]
 ignore_missing_imports = true

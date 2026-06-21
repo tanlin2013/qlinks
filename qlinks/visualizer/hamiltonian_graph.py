@@ -941,7 +941,7 @@ class HamiltonianGraphVisualizer:
                 }
             }
 
-        for source, target, data in graph.edges(data=True):
+        for _source, _target, data in graph.edges(data=True):
             value = data.get("hamiltonian_weight", data.get("weight", 1.0))
 
             # NetworkX GraphML/GEXF writers cannot safely serialize complex values.

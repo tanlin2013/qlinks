@@ -353,7 +353,10 @@ def solve_candidate_for_kinetic_targets(
         local_basis = _time_solver_stage(
             config.timing_collector,
             "solver.fixed_kappa_nullspace",
-            lambda: nullspace_from_gram(gram_matrix, tolerance=config.tolerance),
+            lambda gram_matrix=gram_matrix: nullspace_from_gram(
+                gram_matrix,
+                tolerance=config.tolerance,
+            ),
         )
 
         if local_basis.shape[1] == 0:
@@ -378,9 +381,11 @@ def solve_candidate_for_kinetic_targets(
             local_basis = _time_solver_stage(
                 config.timing_collector,
                 "solver.ipr_localization",
-                lambda: localized_basis_by_many_start_ipr(
-                    local_basis.astype(np.complex128, copy=False),
-                    config=ipr_config,
+                lambda local_basis=local_basis, ipr_config=ipr_config: (
+                    localized_basis_by_many_start_ipr(
+                        local_basis.astype(np.complex128, copy=False),
+                        config=ipr_config,
+                    )
                 ),
             )
             used_ipr = True
@@ -389,10 +394,15 @@ def solve_candidate_for_kinetic_targets(
 
         for localized_index in range(local_basis.shape[1]):
             local_state = local_basis[:, localized_index]
+            # fmt: off
             cage_state = _time_solver_stage(
                 config.timing_collector,
                 "solver.validation",
-                lambda: _build_validated_cage_state(
+                lambda local_state=local_state,
+                energy_value=energy_value,
+                target_kappa=target_kappa,
+                fixed_kappa_subspace_dim=fixed_kappa_subspace_dim,
+                used_ipr=used_ipr: _build_validated_cage_state(
                     hamiltonian,
                     candidate.vertices,
                     local_state,
@@ -415,6 +425,7 @@ def solve_candidate_for_kinetic_targets(
                     hamiltonian_column_block=hamiltonian_column_block,
                 ),
             )
+            # fmt: on
 
             if cage_state is not None:
                 cage_states.append(cage_state)
@@ -505,23 +516,32 @@ def solve_candidate(
                 random_seed=config.ipr_random_seed,
             )
 
+            # fmt: off
             local_basis = _time_solver_stage(
                 config.timing_collector,
                 "solver.ipr_localization",
-                lambda: localized_basis_by_many_start_ipr(
-                    local_basis.astype(np.complex128, copy=False),
-                    config=ipr_config,
+                lambda local_basis=local_basis, ipr_config=ipr_config: (
+                    localized_basis_by_many_start_ipr(
+                        local_basis.astype(np.complex128, copy=False),
+                        config=ipr_config,
+                    )
                 ),
             )
             used_ipr = True
+            # fmt: on
 
         for localized_index in range(local_basis.shape[1]):
             local_state = local_basis[:, localized_index]
 
+            # fmt: off
             cage_state = _time_solver_stage(
                 config.timing_collector,
                 "solver.validation",
-                lambda: _build_validated_cage_state(
+                lambda local_state=local_state,
+                representative_energy=representative_energy,
+                group_index=group_index,
+                state_indices=state_indices,
+                used_ipr=used_ipr: _build_validated_cage_state(
                     hamiltonian,
                     candidate.vertices,
                     local_state,
@@ -539,6 +559,7 @@ def solve_candidate(
                     hamiltonian_column_block=hamiltonian_column_block,
                 ),
             )
+            # fmt: on
 
             if cage_state is not None:
                 cage_states.append(cage_state)

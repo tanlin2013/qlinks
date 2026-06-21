@@ -325,7 +325,7 @@ class _LazySparseProductOperator:
         )
 
     @property
-    def T(self):
+    def T(self):  # noqa: N802
         return self.tocsr().T
 
     def tocsr(self) -> sp.csr_array:
@@ -369,7 +369,7 @@ class _LazySparseSumOperator:
         return np.complex128
 
     @property
-    def T(self):
+    def T(self):  # noqa: N802
         return self.tocsr().T
 
     def tocsr(self) -> sp.csr_array:
@@ -418,7 +418,7 @@ class _LazyReducedIZMonitorOperator:
         return np.complex128
 
     @property
-    def T(self):
+    def T(self):  # noqa: N802
         return self.tocsr().T
 
     def tocsr(self) -> sp.csr_array:
@@ -489,7 +489,7 @@ class _LazyLocalTermMonitorProductOperator:
         return np.complex128
 
     @property
-    def T(self):
+    def T(self):  # noqa: N802
         return self.tocsr().T
 
     def tocsr(self) -> sp.csr_array:
@@ -543,7 +543,7 @@ class _LazyLocalTermSumMonitorProductOperator:
         return np.complex128
 
     @property
-    def T(self):
+    def T(self):  # noqa: N802
         return self.tocsr().T
 
     def tocsr(self) -> sp.csr_array:

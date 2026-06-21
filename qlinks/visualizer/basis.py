@@ -1397,7 +1397,7 @@ class BasisConfigurationVisualizer:
     ) -> None:
         text_items: list[tuple[Sequence[float], str, str]] = []
 
-        for index, draw_plaquette in enumerate(render_cache.draw_plaquettes):
+        for index, _draw_plaquette in enumerate(render_cache.draw_plaquettes):
             square_indices = render_cache.square_qlm_link_variable_indices[index]
 
             if square_indices is not None:
@@ -2423,10 +2423,10 @@ class BasisConfigurationVisualizer:
             cell = None
 
             if hasattr(plaquette, "cell"):
-                cell = getattr(plaquette, "cell")
+                cell = plaquette.cell
 
             elif hasattr(plaquette, "anchor_cell"):
-                cell = getattr(plaquette, "anchor_cell")
+                cell = plaquette.anchor_cell
 
             if cell is None:
                 continue

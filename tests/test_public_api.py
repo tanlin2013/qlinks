@@ -48,7 +48,7 @@ EXPECTED_EXPORTS = {
 def test_public_api_exports_are_sorted_and_bound() -> None:
     for module_name in PUBLIC_MODULES:
         module = importlib.import_module(module_name)
-        public_names = getattr(module, "__all__")
+        public_names = module.__all__
 
         assert public_names == sorted(public_names), module_name
         assert len(public_names) == len(set(public_names)), module_name

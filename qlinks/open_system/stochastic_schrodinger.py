@@ -2629,7 +2629,11 @@ def sample_lindblad_mcwf(
         state_callback: Callable[[int, Any], None] | None = None
         if options.store_density_matrices or state_snapshots is not None:
 
-            def collect_ensemble_output(time_index: int, state: Any) -> None:
+            def collect_ensemble_output(
+                time_index: int,
+                state: Any,
+                trajectory_index: int = trajectory_index,
+            ) -> None:
                 state_numpy = _state_to_numpy(state, backend=backend_obj)
                 if options.store_density_matrices:
                     rho_t[time_index] += projector(state_numpy)

@@ -220,7 +220,7 @@ class _BasisSolutionCollector:
                 super().__init__()
                 self.outer = outer
 
-            def OnSolutionCallback(self) -> None:
+            def OnSolutionCallback(self) -> None:  # noqa: N802
                 config = [int(self.Value(var)) for var in self.outer.variables]
                 self.outer.states.append(config)
 

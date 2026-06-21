@@ -62,14 +62,14 @@ class BasisOperator:
         return (self.basis.n_states, self.basis.n_states)
 
     @property
-    def T(self) -> TransposedBasisOperator:
+    def T(self) -> TransposedBasisOperator:  # noqa: N802
         return TransposedBasisOperator(
             parent=self,
             conjugate=False,
         )
 
     @property
-    def H(self) -> TransposedBasisOperator:
+    def H(self) -> TransposedBasisOperator:  # noqa: N802
         """
         Hermitian adjoint view.
         """
@@ -275,7 +275,7 @@ class TransposedBasisOperator:
         return (m, n)
 
     @property
-    def T(self) -> BasisOperator | TransposedBasisOperator:
+    def T(self) -> BasisOperator | TransposedBasisOperator:  # noqa: N802
         if self.conjugate:
             return TransposedBasisOperator(
                 parent=self.parent,
@@ -284,7 +284,7 @@ class TransposedBasisOperator:
         return self.parent
 
     @property
-    def H(self) -> BasisOperator:
+    def H(self) -> BasisOperator:  # noqa: N802
         return self.parent
 
     def _coefficient(self, coefficient: complex) -> complex:
