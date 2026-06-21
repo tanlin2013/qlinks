@@ -1,21 +1,17 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""Sphinx configuration for the qlinks documentation."""
 
-# -- Path setup --------------------------------------------------------------
+from __future__ import annotations
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-import os
+import os  # noqa: F401
 import sys
 from importlib import metadata
+from pathlib import Path
 
-sys.path.insert(0, os.path.abspath("../../.."))
-sys.path.insert(0, os.path.abspath("../.."))
+DOCS_SOURCE_DIR = Path(__file__).resolve().parent
+DOCS_DIR = DOCS_SOURCE_DIR.parent
+PROJECT_ROOT = DOCS_DIR.parent
+
+sys.path.insert(0, str(PROJECT_ROOT))
 
 # -- Project information -----------------------------------------------------
 
@@ -23,109 +19,109 @@ project = "qlinks"
 copyright = "2023, Tan Tao-Lin"
 author = "Tan Tao-Lin"
 
-# The short X.Y version
-version = metadata.version("qlinks")
-# The full version, including alpha/beta/rc tags
-release = metadata.version("qlinks")
+try:
+    release = metadata.version("qlinks")
+except metadata.PackageNotFoundError:
+    release = "0+unknown"
+
+version = release
 
 # -- General configuration ---------------------------------------------------
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.napoleon",
-    "nbsphinx",
-    "sphinx.ext.mathjax",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.doctest",
-    "sphinx.ext.todo",
     "sphinx.ext.coverage",
-    "sphinx.ext.ifconfig",
-    "sphinx.ext.viewcode",
+    "sphinx.ext.doctest",
     "sphinx.ext.githubpages",
+    "sphinx.ext.ifconfig",
     "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "nbsphinx",
     "m2r2",
 ]
 
-# Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
-
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
 source_suffix = [".rst", ".md"]
-
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".ipynb"]
 
-# Allowing docstring in both __init__ and right under class definition
+# Optional runtime extras are not required to build the API reference.  Mocking
+# them keeps the documentation build usable with only the docs dependency group.
+autodoc_mock_imports = [
+    "cupy",
+    "cupyx",
+    "h5py",
+    "igraph",
+    "ortools",
+    "plotly",
+    "pynauty",
+    "pyvis",
+    "ray",
+]
+
+# Document class-level and __init__ docstrings together.  This matches the
+# dataclass-heavy style used by the public API.
 autoclass_content = "both"
 
-# Allow notebook errors
-nbsphinx_allow_errors = True
-
-# -- Options for HTML output -------------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-html_theme = "sphinx_book_theme"
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    "github_url": "https://github.com/tanlin2013/qlinks",
-    "repository_url": "https://github.com/tanlin2013/qlinks",
-    "use_repository_button": True,
-    "use_issues_button": True,
-    "use_edit_page_button": True,
-    "path_to_docs": "docs",
-    "use_fullscreen_button": False,
-    "use_download_button": False,
-}
-
-# -- Options for Sphinx autosummary ------------------------------------------
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
     "special-members": "__init__",
-    "undoc-members": True,
+    "undoc-members": False,
     "exclude-members": "__weakref__",
-    "autosummary": True,
     "show-inheritance": True,
 }
 autodoc_typehints = "description"
-# autosummary_generate = True
-# autosummary_imported_members = True
-# numpydoc_show_class_members = False
+autodoc_typehints_description_target = "documented"
 
-# -- Options for Mathjax -----------------------------------------------------
-# mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/node-main.min.js"
-# mathjax2_config = {
-#     "tex": {
-#         "inlineMath": [["$", "$"], ["\\(", "\\)"]],
-#         "displayMath": [["$$", "$$"]],
-#         "processEscapes": True,
-#     },
-#     "options": {"ignoreHtmlClass": "document", "processHtmlClass": "math|output_area"}
-# }
+autosummary_generate = True
+
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = False
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_preprocess_types = True
+
+nbsphinx_allow_errors = True
+
+# -- Options for HTML output -------------------------------------------------
+
+html_theme = "sphinx_book_theme"
+html_static_path = ["_static"]
+html_title = "qlinks"
+
+html_theme_options = {
+    "github_url": "https://github.com/tanlin2013/qlinks",
+    "repository_url": "https://github.com/tanlin2013/qlinks",
+    "repository_branch": "main",
+    "path_to_docs": "docs/source",
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "use_edit_page_button": True,
+    "use_fullscreen_button": False,
+    "use_download_button": False,
+    "home_page_in_toc": True,
+}
 
 # -- Link with documentation of external projects ----------------------------
+
 intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
+    "python": ("https://docs.python.org/3", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
 }
 
 # -- Options for todo extension ----------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/extensions/todo.html#configuration
 
 todo_include_todos = True

@@ -5,7 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    qlinks.basis.solvers
 
@@ -13,11 +13,24 @@ Submodules
 ----------
 
 qlinks.basis.basis module
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: qlinks.basis.basis
    :members:
-   :undoc-members:
+   :show-inheritance:
+
+qlinks.basis.configs module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: qlinks.basis.configs
+   :members:
+   :show-inheritance:
+
+qlinks.basis.sectors module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: qlinks.basis.sectors
+   :members:
    :show-inheritance:
 
 Module contents
@@ -25,5 +38,4 @@ Module contents
 
 .. automodule:: qlinks.basis
    :members:
-   :undoc-members:
    :show-inheritance:
