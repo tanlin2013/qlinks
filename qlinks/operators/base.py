@@ -60,13 +60,12 @@ class DiagonalLocalOperator(LocalOperator, Protocol):
 
 
 class BaseLocalOperator:
-    """
-    Convenience base class for configuration-space local operators.
+    """Convenience base for configuration-space local operators.
 
-    Design rule
-    -----------
-    Concrete operators should precompute all geometry/layout-dependent data in
-    __post_init__(), so apply() only performs cheap indexed array operations.
+    Notes:
+        Concrete operators should precompute geometry/layout-dependent data in
+        ``__post_init__()`` so that ``apply()`` only performs cheap indexed
+        array operations.
     """
 
     layout: VariableLayout

@@ -9,6 +9,12 @@ from qlinks.variables import VariableLayout
 
 
 class BasisSolver(Protocol):
+    """Protocol implemented by constrained-basis solvers.
+
+    Solvers enumerate configurations from a :class:`VariableLayout` subject to
+    constraints and sector filters, then return a :class:`Basis`.
+    """
+
     def solve(
         self,
         layout: VariableLayout,
@@ -19,6 +25,14 @@ class BasisSolver(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class SolverInput:
+    """Immutable bundle of inputs shared by basis solvers.
+
+    Attributes:
+        layout: Variable layout defining local spaces.
+        constraints: Constraints all states must satisfy.
+        sectors: Sector filters all states must satisfy.
+    """
+
     layout: VariableLayout
     constraints: tuple[Constraint, ...]
     sectors: tuple[SectorCondition, ...]

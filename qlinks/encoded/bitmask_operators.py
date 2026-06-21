@@ -13,6 +13,13 @@ from qlinks.variables import VariableLayout
 
 @dataclass(frozen=True, slots=True)
 class BitmaskAction:
+    """One encoded-basis matrix action.
+
+    Attributes:
+        coefficient: Matrix element coefficient.
+        code: Target encoded configuration.
+    """
+
     coefficient: complex
     code: int
 
@@ -25,6 +32,8 @@ class BitmaskAction:
 
 
 class BitmaskOperator(Protocol):
+    """Protocol for operators acting on integer-encoded binary states."""
+
     layout: VariableLayout
     name: str
 
@@ -90,6 +99,13 @@ def _single_pattern_action_code(
 
 @dataclass(frozen=True, slots=True)
 class BitmaskOperatorSum:
+    """Sum of bitmask operators presented as one operator.
+
+    Attributes:
+        terms: Bitmask operators to apply and concatenate.
+        name: Human-readable operator name.
+    """
+
     terms: tuple[BitmaskOperator, ...]
     name: str = "bitmask_operator_sum"
 
@@ -116,6 +132,14 @@ class BitmaskOperatorSum:
 
 @dataclass(frozen=True, slots=True)
 class BitmaskConstantDiagonalOperator:
+    """Constant diagonal operator in bitmask representation.
+
+    Attributes:
+        layout: Binary variable layout.
+        coefficient: Constant diagonal matrix element.
+        name: Human-readable operator name.
+    """
+
     layout: VariableLayout
     coefficient: complex
     name: str = "bitmask_constant_diagonal"
@@ -789,6 +813,17 @@ def bitmask_alternating_flippability_projectors(
     plaquette_id: int,
     coefficient: complex = 1.0,
 ) -> tuple[BitmaskPatternDiagonalOperator, BitmaskPatternDiagonalOperator]:
+    """Return the two alternating-pattern projectors for a binary plaquette.
+
+    Args:
+        layout: Binary variable layout.
+        lattice: Lattice containing the plaquette.
+        plaquette_id: Plaquette id.
+        coefficient: Diagonal coefficient for each projector.
+
+    Returns:
+        Pair of bitmask diagonal projectors onto the two alternating patterns.
+    """
     link_ids = lattice.plaquette_links(plaquette_id)
 
     variable_indices = np.asarray(

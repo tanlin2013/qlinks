@@ -47,10 +47,13 @@ def unflatten_operator_index(
 ) -> tuple[int, int]:
     """Map a vectorized Liouville-space index to an operator basis pair.
 
-    Returns
-    -------
-    tuple[int, int]
-        The pair ``(ket_index, bra_index)`` corresponding to ``|ket><bra|``.
+    Args:
+        index: Flat Liouville-space index.
+        hilbert_dim: Hilbert-space dimension.
+        convention: Vectorization convention used to flatten the operator.
+
+    Returns:
+        Pair ``(ket_index, bra_index)`` corresponding to ``|ket><bra|``.
     """
     if index < 0 or index >= hilbert_dim * hilbert_dim:
         raise ValueError("operator-space index is out of range.")

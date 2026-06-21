@@ -47,19 +47,15 @@ class ConstraintPropagation:
 
 
 class Constraint(Protocol):
-    """
-    General constraint interface.
+    """General constraint interface.
 
     A constraint decides whether a raw configuration is allowed.
 
-    Performance contract
-    --------------------
-    affected_variables() must return the variable indices that can affect the
-    result of partial_check() or check().
-
-    DFSBasisSolver uses this support to decide when to call partial_check().
-    If a constraint does not override affected_variables(), BaseConstraint
-    conservatively returns all variables, which is correct but slower.
+    Notes:
+        ``affected_variables()`` should return the variable indices that can
+        affect ``partial_check()`` or ``check()``.  :class:`DFSBasisSolver` uses
+        this support to avoid unnecessary checks.  Returning all variables is
+        correct but slower.
     """
 
     name: str
@@ -78,17 +74,13 @@ class Constraint(Protocol):
 
 
 class SectorCondition(Protocol):
-    """
-    Diagonal symmetry-sector filter.
+    """Diagonal symmetry-sector filter.
 
-    Performance contract
-    --------------------
-    affected_variables() must return the variable indices that can affect the
-    result of partial_check() or check().
-
-    DFSBasisSolver uses this support to decide when to call partial_check().
-    If a constraint does not override affected_variables(), BaseConstraint
-    conservatively returns all variables, which is correct but slower.
+    Notes:
+        ``affected_variables()`` should return the variable indices that can
+        affect ``partial_check()`` or ``check()``.  :class:`DFSBasisSolver` uses
+        this support to avoid unnecessary checks.  Returning all variables is
+        correct but slower.
     """
 
     name: str

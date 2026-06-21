@@ -9,19 +9,14 @@ import numpy.typing as npt
 
 @dataclass(frozen=True, slots=True)
 class LocalSpace:
-    """
-    Finite local Hilbert/configuration space for one physical variable.
+    """Finite local Hilbert/configuration space for one variable.
 
-    Examples
-    --------
-    Spin-1/2 site:
-        values = [0, 1]
+    Attributes:
+        values: Allowed integer values for the variable.
 
-    QLM spin-1/2 electric field:
-        values = [-1, 1]
-
-    Dimer occupation:
-        values = [0, 1]
+    Examples:
+        Spin-1/2 site or dimer occupation uses ``[0, 1]``.  A spin-half QLM
+        electric field uses ``[-1, 1]``.
     """
 
     values: npt.NDArray[np.integer]

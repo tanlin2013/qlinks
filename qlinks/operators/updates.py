@@ -77,6 +77,12 @@ class SingleLocalUpdateOperator(LocalUpdateOperator, Protocol):
 
 
 class BaseLocalUpdateOperator:
+    """Convenience base for update-style local operators.
+
+    Subclasses provide a layout and implement update methods that return local
+    variable indices and replacement values instead of full configurations.
+    """
+
     layout: VariableLayout
     name: str
 
@@ -416,6 +422,14 @@ class UpdateMultiNegationFlipOperator(BaseLocalUpdateOperator):
 
 @dataclass(frozen=True, slots=True)
 class UpdatePlaquettePatternTransition:
+    """One local plaquette pattern transition for update operators.
+
+    Attributes:
+        initial: Source local pattern.
+        final: Target local pattern.
+        coefficient: Transition coefficient.
+    """
+
     initial: npt.NDArray[np.int64]
     final: npt.NDArray[np.int64]
     coefficient: complex = 1.0

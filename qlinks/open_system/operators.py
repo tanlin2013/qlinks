@@ -126,10 +126,28 @@ def prepare_sparse_lindblad_operators(
 
 
 def vectorize_density_matrix(density_matrix: Any) -> Any:
+    """Vectorize a density matrix in column-major Liouville convention.
+
+    Args:
+        density_matrix: Square density matrix ``rho``.
+
+    Returns:
+        Flattened vector with entries ordered as Fortran/column-major storage.
+    """
     return density_matrix.reshape(-1, order="F")
 
 
 def unvectorize_density_matrix(vectorized_density_matrix: Any, dim: int) -> Any:
+    """Restore a density matrix from column-major Liouville vectorization.
+
+    Args:
+        vectorized_density_matrix: Vector returned by
+            :func:`vectorize_density_matrix`.
+        dim: Hilbert-space dimension.
+
+    Returns:
+        ``(dim, dim)`` density matrix.
+    """
     return vectorized_density_matrix.reshape((dim, dim), order="F")
 
 
@@ -180,6 +198,21 @@ def build_liouvillian(
     sparse_format: str = "csc",
     dtype=np.complex128,
 ):
+    """Build the sparse Liouvillian superoperator.
+
+    The Liouvillian acts on density matrices vectorized with
+    :func:`vectorize_density_matrix`.
+
+    Args:
+        hamiltonian: Hamiltonian matrix.
+        jumps: Lindblad jump operators.
+        backend: Open-system backend name or object.
+        sparse_format: Sparse format for the returned superoperator.
+        dtype: Complex dtype used during conversion.
+
+    Returns:
+        Sparse Liouvillian matrix with shape ``(dim * dim, dim * dim)``.
+    """
     sparse_operators = prepare_sparse_lindblad_operators(
         hamiltonian=hamiltonian,
         jumps=jumps,
@@ -197,6 +230,22 @@ def lindblad_rhs_density_matrix(
     jumps: list[Any] | tuple[Any, ...],
     backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
 ):
+    """Evaluate the Lindblad master-equation right-hand side.
+
+    Computes ``d rho / dt = -i[H, rho] + sum_j D[J_j](rho)`` using dense
+    backend arrays.  For repeated calls, use
+    :func:`prepare_dense_lindblad_operators` and
+    :func:`lindblad_rhs_density_matrix_prepared`.
+
+    Args:
+        density_matrix: Current density matrix.
+        hamiltonian: Hamiltonian matrix.
+        jumps: Lindblad jump operators.
+        backend: Open-system backend name or object.
+
+    Returns:
+        Density-matrix derivative on the requested backend.
+    """
     dense_operators = prepare_dense_lindblad_operators(
         hamiltonian=hamiltonian,
         jumps=jumps,

@@ -2497,37 +2497,22 @@ def sample_lindblad_mcwf(
     options: McwfOptions | None = None,
     rng: np.random.Generator | int | None = None,
 ) -> EnsembleResult:
-    """Estimate Lindblad evolution by averaging MCWF trajectories.
+    """Estimate Lindblad evolution with Monte Carlo wavefunction trajectories.
 
-    Parameters
-    ----------
-    hamiltonian:
-        Hamiltonian matrix.
+    Args:
+        hamiltonian: Hamiltonian matrix.
+        jumps: Lindblad jump operators.
+        times: Strictly increasing time grid.
+        state_initial: Fixed initial pure state used for every trajectory.
+            Mutually exclusive with ``state_sampler``.
+        state_sampler: Optional callable that samples an initial pure state from
+            a NumPy random generator.
+        options: MCWF sampling and storage options.
+        rng: Optional RNG or seed.  Overrides ``options.seed`` when supplied.
 
-    jumps:
-        Lindblad jump operators.
-
-    times:
-        Strictly increasing time grid.
-
-    state_initial:
-        Fixed initial pure state. Used for every trajectory.
-
-    state_sampler:
-        Optional callable that samples an initial pure state from a NumPy RNG.
-        Mutually exclusive with state_initial.
-
-    options:
-        MCWF options.
-
-    rng:
-        Optional RNG or seed. Overrides options.seed when provided.
-
-    Returns
-    -------
-    EnsembleResult
-        Contains ensemble-averaged density matrices ``rho_t`` when requested,
-        optional low-rank state snapshots, and optional individual trajectories.
+    Returns:
+        Ensemble result containing averaged density matrices when requested,
+        optional low-rank state snapshots, and optional stored trajectories.
     """
     if options is None:
         options = McwfOptions()

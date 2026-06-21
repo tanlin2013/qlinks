@@ -43,6 +43,16 @@ def plaquette_coupling_value(
     *,
     name: str,
 ) -> complex:
+    """Resolve a scalar plaquette coupling for one plaquette id.
+
+    Args:
+        coupling: Constant, mapping, or callable coupling.
+        plaquette_id: Plaquette id to query.
+        name: Coupling name used in error messages.
+
+    Returns:
+        Complex coupling value.
+    """
     if callable(coupling):
         return complex(coupling(plaquette_id))
 
@@ -61,6 +71,16 @@ def directed_plaquette_coupling_value(
     *,
     name: str,
 ) -> DirectedPlaquetteCoupling:
+    """Resolve an oriented plaquette coupling for one plaquette id.
+
+    Args:
+        coupling: Constant, mapping, or callable directed coupling.
+        plaquette_id: Plaquette id to query.
+        name: Coupling name used in error messages.
+
+    Returns:
+        Directed forward/backward coupling.
+    """
     if callable(coupling):
         value = coupling(plaquette_id)
     elif isinstance(coupling, Mapping):
@@ -90,6 +110,15 @@ def is_zero_coupling(
     coupling: PlaquetteCoupling,
     plaquette_ids: list[int],
 ) -> bool:
+    """Return whether a plaquette coupling vanishes on all selected plaquettes.
+
+    Args:
+        coupling: Constant, mapping, or callable scalar coupling.
+        plaquette_ids: Plaquettes to test.
+
+    Returns:
+        ``True`` when every resolved coupling is exactly zero.
+    """
     return all(
         plaquette_coupling_value(
             coupling,

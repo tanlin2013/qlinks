@@ -19,6 +19,20 @@ MissingActionPolicy = Literal["skip", "raise"]
 
 @dataclass(frozen=True, slots=True)
 class OptimizedSparseBuildStats:
+    """Counters collected by :class:`OptimizedSparseHamiltonianBuilder`.
+
+    Attributes:
+        n_basis: Number of basis states.
+        n_terms: Number of local update/diagonal operators.
+        n_raw_actions: Number of raw local actions evaluated.
+        n_kept_actions: Number of nonzero actions inserted into the matrix.
+        n_missing_actions: Number of actions whose target state was outside the
+            basis.
+        nnz: Number of stored nonzero entries after sparse assembly.
+        n_scratch_arrays: Number of reusable scratch arrays allocated by the
+            builder.
+    """
+
     n_basis: int
     n_terms: int
     n_raw_actions: int
@@ -30,6 +44,13 @@ class OptimizedSparseBuildStats:
 
 @dataclass(frozen=True, slots=True)
 class OptimizedSparseBuildResult:
+    """Optimized sparse matrix together with build statistics.
+
+    Attributes:
+        matrix: Built sparse matrix.
+        stats: Counters describing the optimized build.
+    """
+
     matrix: Any
     stats: OptimizedSparseBuildStats
 
@@ -95,28 +116,18 @@ def _prepare_update_operators(
 
 @dataclass(frozen=True, slots=True)
 class OptimizedSparseHamiltonianBuilder:
-    """
-    Sparse Hamiltonian builder using LocalUpdateAction.
+    """Sparse builder for update-style local operators.
 
-    Main optimization
-    -----------------
-    Operators do not allocate full output configurations. They only return
-    local updates. The builder owns one scratch array and reuses it for every
-    action.
+    Operators return compact local updates rather than full output
+    configurations.  The builder owns a reusable scratch configuration and
+    inserts ``H[row, col] += coefficient`` after applying each update to the
+    current column configuration.
 
-    Matrix convention
-    -----------------
-    For each column basis state |config_col>, and action
-
-        coefficient, variable_indices, new_values
-
-    we construct
-
-        config_row = config_col with local updates applied
-
-    and insert
-
-        H[row, col] += coefficient
+    Attributes:
+        dtype: Matrix dtype.
+        on_missing: Policy for actions outside the basis.
+        drop_zero_atol: Absolute threshold for dropping small coefficients.
+        backend: Sparse backend name or backend object.
     """
 
     dtype: npt.DTypeLike = np.complex128
@@ -322,6 +333,19 @@ def build_optimized_sparse_hamiltonian(
     drop_zero_atol: float = 0.0,
     backend: SparseBackendName | SparseBackend = "scipy",
 ) -> Any:
+    """Build a sparse Hamiltonian using update-style operators.
+
+    Args:
+        basis: Basis that fixes the matrix row/column order.
+        operators: Operators supporting ``diagonal_value`` or ``apply_update``.
+        dtype: Matrix dtype.
+        on_missing: Policy for actions outside the basis.
+        drop_zero_atol: Absolute threshold for dropping small coefficients.
+        backend: Sparse backend name or backend object.
+
+    Returns:
+        Sparse Hamiltonian matrix.
+    """
     builder = OptimizedSparseHamiltonianBuilder(
         dtype=dtype,
         on_missing=on_missing,

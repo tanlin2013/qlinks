@@ -8,7 +8,21 @@ DegenerateBasisStrategy = Literal["none", "ipr"]
 
 @dataclass(frozen=True)
 class CageSolverConfig:
-    """Numerical configuration for the interference-caging solver."""
+    """Numerical configuration for the interference-caging eigensolver.
+
+    Attributes:
+        tolerance: Base numerical tolerance for nullspaces and residual checks.
+        max_power: Optional maximum power in the invariant-subspace closure
+            chain.
+        stabilization_rounds: Number of stable closure rounds before stopping.
+        validate_full_residual: Whether to validate against full Hamiltonian
+            columns when available.
+        normalize_states: Whether to normalize returned local states.
+        degenerate_basis_strategy: How to choose representatives from
+            degenerate cage subspaces.
+        timing_collector: Optional mutable dictionary accumulating per-stage
+            runtime in seconds.
+    """
 
     tolerance: float = 1e-10
     max_power: int | None = None

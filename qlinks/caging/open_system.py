@@ -700,7 +700,22 @@ def _left_multiply_sparse_csr(left: Any, right: Any) -> sp.csr_array:
 
 @dataclass(frozen=True, slots=True)
 class ReducedIZMonitorComponent:
-    """One frustration-free reduced-IZ monitor component."""
+    """One frustration-free reduced-IZ monitor component.
+
+    Attributes:
+        component_id: Stable identifier of the component group.
+        monitor: Sparse or lazy monitor operator for this component.
+        zero_indices: Classification zero reports included in the component.
+        support_variables: Local variables on which the component acts.
+        support_plaquette_ids: Plaquettes touched by the component support.
+        monitor_plaquette_ids: Plaquettes used to assemble monitor terms.
+        jump_plaquette_ids: Plaquettes used to assemble kinetic monitor jumps.
+        z_value: Sharp potential value assigned to the component, if present.
+        n_potential_terms: Number of diagonal potential terms included.
+        monitor_residual: Norm of the component monitor acting on the target.
+        jump_residuals: Norms of component jumps acting on the target.
+        jump_plaquette_id_groups: Optional grouped jump plaquette ids.
+    """
 
     component_id: int
     monitor: Any
@@ -801,7 +816,27 @@ class LocalRecyclerReadout:
 
 @dataclass(frozen=True, slots=True)
 class CageLindbladConstruction:
-    """Open-system construction associated with one cage state."""
+    """Open-system construction associated with one cage state.
+
+    The construction stores the monitor, Lindblad jump operators, selected
+    local-term regions, residual diagnostics, and recycler metadata needed to
+    run or inspect dark-state engineering experiments.
+
+    Attributes:
+        cage_state: Target state vector in the global constrained basis.
+        region: Variable/plaquette support inferred from the classification
+            report.
+        z_value: Type-1 potential signature value, if inferred or supplied.
+        monitor: Global monitor operator annihilating the target state.
+        jumps: Lindblad jump operators.
+        monitor_components: Reduced-IZ component data when reduced-IZ monitors
+            are used.
+        recycling_build_result: Optional local-recycling construction metadata.
+        monitor_residual: Norm of ``monitor @ cage_state``.
+        max_jump_residual: Maximum norm of ``jump @ cage_state``.
+        liouvillian_residual: Optional Lindblad RHS residual of the target
+            density matrix.
+    """
 
     cage_state: NDArray[np.complex128]
     region: CageRegionSupport
@@ -1392,10 +1427,50 @@ def build_type1_cage_lindblad_construction(
     timing_collector: dict[str, float] | None = None,
     residual_tolerance: float = 1e-10,
 ) -> CageLindbladConstruction:
-    """Build M_R and J_p = K_p M_R for a type-1 cage.
+    """Build monitor and jump operators for a type-1 cage state.
 
-    This assumes the cage has type-1 signature (0, z), so that K|psi> = 0
-    and the relevant potential value is z on the contributing basis states.
+    This assembly routine connects the caging classification layer with the
+    open-system layer.  It infers the local monitor region from the
+    classification report, builds a monitor that annihilates the target, and
+    constructs Lindblad jumps according to the selected design and optional
+    recycler policy.
+
+    Args:
+        model: Hamiltonian model exposing local-term descriptors.
+        build_result: Existing model build result fixing the global basis and
+            Hamiltonian terms.
+        cage_state: Target cage state in the global basis.
+        classification_report: Reduced-IZ classification report for the target.
+        z_value: Optional sharp type-1 potential value.  If omitted, the value
+            is inferred when needed.
+        builder: Local-term matrix builder.
+        backend: Sparse backend for local-term matrices.
+        open_system_backend: Backend used for Lindblad diagnostics.
+        monitor_source: Source used to assemble the monitor.
+        reduced_iz_monitor_decomposition: Frustration-free grouping used for
+            reduced-IZ monitors.
+        reduced_iz_monitor_content: Whether reduced-IZ monitors include only
+            off-diagonal terms or diagonal augmentation.
+        monitor_plaquette_policy: Which local plaquette terms enter the monitor.
+        jump_plaquette_policy: Which kinetic terms are used for monitor jumps.
+        jump_operator_design: Formula used to assemble Lindblad jumps.
+        kinetic_jump_grouping: Whether kinetic terms are grouped into larger
+            jumps.
+        recycling_jump_source: Optional local-recycler construction strategy.
+        include_q_empty: Include q-empty reduced-IZ reports.
+        include_closed_by_known_zeros: Include reports closed by known zeros.
+        include_projector_like: Include projector-like reports.
+        include_collective_cancellation: Include collective-cancellation
+            reports.
+        use_collective_coefficients: Use coefficients stored in collective
+            cancellation reports when available.
+        check_liouvillian: Whether to compute the target Liouvillian residual.
+        compute_jump_residuals: Whether to compute individual jump residuals.
+        timing_collector: Optional mutable timing dictionary.
+        residual_tolerance: Numerical tolerance used for monitor/residual checks.
+
+    Returns:
+        Complete cage Lindblad construction with monitor, jumps, and diagnostics.
     """
     psi = np.asarray(cage_state, dtype=np.complex128)
     norm = np.linalg.norm(psi)

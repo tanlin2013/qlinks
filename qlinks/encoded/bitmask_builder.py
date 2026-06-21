@@ -15,6 +15,18 @@ MissingActionPolicy = Literal["skip", "raise"]
 
 @dataclass(frozen=True, slots=True)
 class BitmaskSparseBuildStats:
+    """Counters collected by :class:`BitmaskSparseHamiltonianBuilder`.
+
+    Attributes:
+        n_basis: Number of encoded basis states.
+        n_terms: Number of bitmask operators.
+        n_raw_actions: Number of raw bitmask actions evaluated.
+        n_kept_actions: Number of nonzero actions inserted into the matrix.
+        n_missing_actions: Number of actions whose target code was outside the
+            basis.
+        nnz: Number of stored nonzero entries after sparse assembly.
+    """
+
     n_basis: int
     n_terms: int
     n_raw_actions: int
@@ -25,6 +37,13 @@ class BitmaskSparseBuildStats:
 
 @dataclass(frozen=True, slots=True)
 class BitmaskSparseBuildResult:
+    """Bitmask sparse matrix together with build statistics.
+
+    Attributes:
+        matrix: Built sparse matrix.
+        stats: Counters describing the bitmask build.
+    """
+
     matrix: Any
     stats: BitmaskSparseBuildStats
 
@@ -68,10 +87,16 @@ def _prepare_bitmask_operators(
 
 @dataclass(frozen=True, slots=True)
 class BitmaskSparseHamiltonianBuilder:
-    """
-    Sparse Hamiltonian builder for BinaryEncodedBasis.
+    """Sparse builder for :class:`BinaryEncodedBasis`.
 
-    This avoids constructing NumPy config arrays during matrix assembly.
+    Bitmask operators act directly on integer-encoded configurations, avoiding
+    NumPy configuration arrays in the matrix-assembly hot loop.
+
+    Attributes:
+        dtype: Matrix dtype.
+        on_missing: Policy for actions outside the encoded basis.
+        drop_zero_atol: Absolute threshold for dropping small coefficients.
+        backend: Sparse backend name or backend object.
     """
 
     dtype: npt.DTypeLike = np.complex128
@@ -225,6 +250,19 @@ def build_bitmask_sparse_hamiltonian(
     drop_zero_atol: float = 0.0,
     backend: SparseBackendName | SparseBackend = "scipy",
 ) -> Any:
+    """Build a sparse Hamiltonian from bitmask operators.
+
+    Args:
+        basis: Encoded basis that fixes matrix row/column order.
+        operators: Bitmask operators to sum.
+        dtype: Matrix dtype.
+        on_missing: Policy for actions outside the encoded basis.
+        drop_zero_atol: Absolute threshold for dropping small coefficients.
+        backend: Sparse backend name or backend object.
+
+    Returns:
+        Sparse Hamiltonian matrix.
+    """
     builder = BitmaskSparseHamiltonianBuilder(
         dtype=dtype,
         on_missing=on_missing,

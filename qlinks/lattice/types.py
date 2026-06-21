@@ -12,6 +12,8 @@ Position: TypeAlias = tuple[float, ...]
 
 
 class BoundaryCondition(StrEnum):
+    """Supported lattice boundary conditions."""
+
     OPEN = "open"
     PERIODIC = "periodic"
 

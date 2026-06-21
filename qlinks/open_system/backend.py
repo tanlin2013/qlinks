@@ -12,6 +12,17 @@ OpenSystemBackendName = Literal["scipy", "cupy"]
 
 @dataclass(frozen=True, slots=True)
 class OpenSystemBackend:
+    """Array/sparse backend bundle for open-system solvers.
+
+    Attributes:
+        name: Backend name.
+        array_module: Dense array module, such as NumPy or CuPy.
+        sparse_module: Sparse matrix module.
+        sparse_linalg_module: Sparse linear-algebra module, if available.
+        supports_expm_multiply: Whether the backend can run Krylov
+            ``expm_multiply`` evolution.
+    """
+
     name: OpenSystemBackendName
     array_module: Any
     sparse_module: Any
@@ -39,6 +50,19 @@ class OpenSystemBackend:
 def get_open_system_backend(
     backend: OpenSystemBackendName | OpenSystemBackend,
 ) -> OpenSystemBackend:
+    """Resolve an open-system backend name or backend object.
+
+    Args:
+        backend: ``"scipy"``, ``"cupy"``, or an existing backend object.
+
+    Returns:
+        Backend object used by open-system operators and solvers.
+
+    Raises:
+        ImportError: If ``backend="cupy"`` is requested but CuPy is not
+            installed.
+        ValueError: If the backend name is unknown.
+    """
     if isinstance(backend, OpenSystemBackend):
         return backend
 
@@ -77,6 +101,17 @@ def as_backend_sparse_matrix(
     format: str = "csr",
     dtype=np.complex128,
 ):
+    """Convert a dense or sparse matrix to a backend sparse matrix.
+
+    Args:
+        matrix: Input matrix in dense, SciPy sparse, or backend sparse form.
+        backend: Target backend.
+        format: Sparse format requested from the backend.
+        dtype: Complex dtype for the converted matrix.
+
+    Returns:
+        Sparse matrix on the requested backend.
+    """
     if backend.name == "scipy":
         if scipy_sparse.issparse(matrix):
             return matrix.asformat(format).astype(dtype)
@@ -108,6 +143,16 @@ def as_backend_dense_array(
     backend: OpenSystemBackend,
     dtype=np.complex128,
 ):
+    """Convert a dense or sparse matrix to a backend dense array.
+
+    Args:
+        matrix: Input matrix in dense, SciPy sparse, or backend sparse form.
+        backend: Target backend.
+        dtype: Complex dtype for the converted array.
+
+    Returns:
+        Dense array on the requested backend.
+    """
     if backend.name == "scipy":
         if scipy_sparse.issparse(matrix):
             return matrix.toarray().astype(dtype)

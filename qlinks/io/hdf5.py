@@ -38,6 +38,16 @@ def _normalize_index(index: int | slice | list[int] | npt.NDArray[np.integer]):
 
 @dataclass
 class EigenpairHDF5Writer:
+    """Write eigenpair datasets to an HDF5 file.
+
+    Attributes:
+        path: Output HDF5 path.
+        mode: HDF5 file mode.
+        compression: Optional HDF5 compression name.
+        compression_opts: Optional compression options.
+        chunks: HDF5 chunking option for datasets.
+    """
+
     path: str | Path
     mode: str = "w"
     compression: str | None = "gzip"
@@ -253,6 +263,13 @@ class EigenpairHDF5Writer:
 
 @dataclass
 class EigenpairHDF5Reader:
+    """Read eigenpair datasets written by :class:`EigenpairHDF5Writer`.
+
+    Attributes:
+        path: Input HDF5 path.
+        mode: HDF5 file mode.
+    """
+
     path: str | Path
     mode: str = "r"
 

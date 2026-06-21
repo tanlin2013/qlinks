@@ -102,6 +102,21 @@ class _ConditionInfo:
 
 @dataclass(frozen=True, slots=True)
 class DFSBasisSolver:
+    """Depth-first constrained-basis enumerator.
+
+    The solver incrementally assigns variables, runs partial checks and
+    propagators, and optionally notifies search observers.  It is the default
+    basis solver for model builds because it supports early stopping, dynamic
+    ordering, propagation, and model-specific observer hooks.
+
+    Attributes:
+        sort: Whether to lexicographically sort the returned basis.
+        variable_order: Optional explicit variable order.
+        variable_order_strategy: Heuristic used when ``variable_order`` is not
+            supplied.
+        value_order_strategy: Heuristic used to order trial local values.
+    """
+
     sort: bool = True
 
     # Explicit order. If provided, this overrides variable_order_strategy.

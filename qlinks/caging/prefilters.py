@@ -13,29 +13,16 @@ from qlinks.caging.nullspace import as_dense_array, nullspace_svd
 
 @dataclass(frozen=True)
 class CandidateFilterContext:
-    """
-    Matrix-level context used by candidate prefilters.
+    """Matrix-level context used by candidate prefilters.
 
-    Parameters
-    ----------
-    hamiltonian:
-        Full Hamiltonian matrix. This is optional for filters that only need
-        kinetic_matrix or self_loop_values.
-
-    kinetic_matrix:
-        Off-diagonal or kinetic matrix. For ``H = K + V``, this should be ``K``.
-
-    self_loop_values:
-        Diagonal/self-loop data. This can be a one-dimensional array of scalar
-        values, or a two-dimensional array of coefficient vectors. The latter is
-        useful when ``V({lambda_i})`` depends on several parameters.
-
-        Shape examples:
-            ``(hilbert_size,)``
-            ``(hilbert_size, n_parameters)``
-
-    bipartition_labels:
-        Integer labels for bipartite subsets. Usually entries are 0 and 1.
+    Attributes:
+        hamiltonian: Optional full Hamiltonian matrix.
+        kinetic_matrix: Optional off-diagonal or kinetic matrix.  For
+            ``H = K + V``, this should be ``K``.
+        self_loop_values: Optional diagonal/self-loop data.  Shape can be
+            ``(hilbert_size,)`` for scalar values or
+            ``(hilbert_size, n_parameters)`` for multi-parameter coefficients.
+        bipartition_labels: Optional integer labels for bipartite subsets.
     """
 
     hamiltonian: object | None = None
@@ -111,19 +98,16 @@ def extract_subblocks(
     matrix: object,
     support_indices: NDArray[np.int_],
 ) -> tuple[object, object, NDArray[np.int_]]:
-    """
-    Extract internal and boundary blocks for a candidate support.
+    """Extract internal and boundary blocks for a candidate support.
 
-    Returns
-    -------
-    internal_matrix:
-        ``matrix[support, support]``.
+    Args:
+        matrix: Square matrix to slice.
+        support_indices: Candidate support indices.
 
-    boundary_matrix:
-        ``matrix[outside, support]``.
-
-    outside_indices:
-        Indices outside the support.
+    Returns:
+        Tuple ``(internal_matrix, boundary_matrix, outside_indices)`` where
+        ``internal_matrix = matrix[support, support]`` and
+        ``boundary_matrix = matrix[outside, support]``.
     """
     _validate_square_matrix(matrix, name="matrix")
 
@@ -158,20 +142,15 @@ def has_uniform_values(
     *,
     tolerance: float = 1e-10,
 ) -> bool:
-    """
-    Check whether all selected values are uniform.
+    """Check whether all selected scalar/vector values are uniform.
 
-    This supports both scalar values and coefficient vectors.
+    Args:
+        values: Scalar values with shape ``(support_size,)`` or coefficient
+            vectors with shape ``(support_size, n_parameters)``.
+        tolerance: Numerical tolerance for equality to the first value.
 
-    Examples
-    --------
-    Scalar self-loop values:
-
-        values.shape == (support_size,)
-
-    Multi-parameter self-loop coefficients:
-
-        values.shape == (support_size, n_parameters)
+    Returns:
+        ``True`` if every selected row/value agrees within tolerance.
     """
     selected_values = np.asarray(values, dtype=np.complex128)
 

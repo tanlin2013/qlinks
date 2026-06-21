@@ -254,6 +254,14 @@ def qdm_flippability_projectors(
 
 
 def alternating_binary_patterns(length: int) -> tuple[np.ndarray, np.ndarray]:
+    """Return the two binary alternating patterns on an even plaquette.
+
+    Args:
+        length: Plaquette cycle length.
+
+    Returns:
+        Pair of arrays like ``1010...`` and ``0101...``.
+    """
     if length <= 0:
         raise ValueError("length must be positive.")
     if length % 2 != 0:
@@ -265,6 +273,14 @@ def alternating_binary_patterns(length: int) -> tuple[np.ndarray, np.ndarray]:
 
 
 def alternating_flux_patterns(length: int) -> tuple[np.ndarray, np.ndarray]:
+    """Return the two ``{-1, +1}`` alternating flux patterns.
+
+    Args:
+        length: Plaquette cycle length.
+
+    Returns:
+        Pair of opposite alternating flux arrays.
+    """
     if length <= 0:
         raise ValueError("length must be positive.")
     if length % 2 != 0:
@@ -281,6 +297,17 @@ def alternating_binary_flippability_projectors(
     plaquette_id: int,
     coefficient: complex = 1.0,
 ) -> tuple[PatternDiagonalOperator, PatternDiagonalOperator]:
+    """Return binary flippability projectors for one plaquette.
+
+    Args:
+        layout: Variable layout.
+        lattice: Lattice containing the plaquette.
+        plaquette_id: Plaquette id.
+        coefficient: Diagonal coefficient for each projector.
+
+    Returns:
+        Pair of diagonal projectors onto the two alternating binary patterns.
+    """
     link_ids = lattice.plaquette_links(plaquette_id)
     variable_indices = np.asarray(
         [layout.link_variable_index(int(link_id)) for link_id in link_ids],
@@ -313,6 +340,17 @@ def alternating_flux_flippability_projectors(
     plaquette_id: int,
     coefficient: complex = 1.0,
 ) -> tuple[PatternDiagonalOperator, PatternDiagonalOperator]:
+    """Return flux flippability projectors for one plaquette.
+
+    Args:
+        layout: Variable layout.
+        lattice: Lattice containing the plaquette.
+        plaquette_id: Plaquette id.
+        coefficient: Diagonal coefficient for each projector.
+
+    Returns:
+        Pair of diagonal projectors onto the two alternating flux patterns.
+    """
     link_ids = lattice.plaquette_links(plaquette_id)
     variable_indices = np.asarray(
         [layout.link_variable_index(int(link_id)) for link_id in link_ids],

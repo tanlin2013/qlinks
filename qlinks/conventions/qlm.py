@@ -17,38 +17,21 @@ def staggered_charges_from_sites(
     magnitude: int = 1,
     convention: SublatticeSignConvention = "even_positive",
 ) -> npt.NDArray[np.int64]:
-    """
-    Generate staggered background charges on lattice sites.
+    """Generate staggered background charges on lattice sites.
 
-    The charge is assigned by the parity of the unit-cell coordinate:
+    The charge sign is assigned by the parity of the unit-cell coordinate,
+    ``eta(r) = (-1) ** sum(cell coordinates)``.  On a square lattice this is
+    ``eta(x, y) = (-1) ** (x + y)``.
 
-        eta(r) = (-1) ** sum(cell coordinates)
+    Args:
+        lattice: Lattice whose sites carry the Gauss-law charges.
+        magnitude: Absolute value of the staggered charge.
+        convention: Which sublattice receives the positive charge.
+            ``"even_positive"`` assigns ``+magnitude`` to the even sublattice;
+            ``"odd_positive"`` reverses the sign.
 
-    For a square lattice, this is simply:
-
-        eta(x, y) = (-1) ** (x + y)
-
-    Parameters
-    ----------
-    lattice:
-        Lattice whose sites carry the Gauss-law charges.
-
-    magnitude:
-        Absolute value of the staggered charge.
-
-    convention:
-        "even_positive":
-            even sublattice gets +magnitude,
-            odd sublattice gets -magnitude.
-
-        "odd_positive":
-            even sublattice gets -magnitude,
-            odd sublattice gets +magnitude.
-
-    Returns
-    -------
-    charges:
-        Integer array of shape (lattice.num_sites,), ordered by site id.
+    Returns:
+        Integer charge array ordered by site id.
     """
     if magnitude < 0:
         raise ValueError("magnitude must be non-negative.")
@@ -78,37 +61,21 @@ def square_qdm_staggered_charges(
     charge_normalization: ChargeNormalization = "spin_half",
     convention: SublatticeSignConvention = "even_positive",
 ) -> npt.NDArray[np.int64]:
-    """
-    Staggered charges for the square-lattice QDM-to-QLM mapping.
+    """Return staggered charges for the square QDM-to-QLM mapping.
 
-    For the current spin-half flux convention E_l in {-1, +1}, the close-packed
-    QDM constraint
+    With spin-half flux variables ``E_l in {-1, +1}``, the close-packed QDM
+    constraint maps to a staggered Gauss law with charge magnitude one.
 
-        one dimer touching each site
+    Args:
+        lattice: Square lattice whose sites receive charges.
+        magnitude: Optional explicit charge magnitude.  If omitted, the
+            magnitude is inferred from ``charge_normalization``.
+        charge_normalization: ``"spin_half"`` gives user charges ``±1``;
+            ``"integer_flux"`` gives user charges ``±2``.
+        convention: Which sublattice receives the positive charge.
 
-    maps naturally to a staggered Gauss law with charge magnitude 1 on the
-    square lattice.
-
-    Parameters
-    ----------
-    lattice:
-        SquareLattice instance.
-
-    charge_normalization:
-        "spin_half":
-            The user-facing charges are ±1, matching the spin-half flux convention.
-
-        "integer_flux":
-            The user-facing charges are ±2, matching the integer-flux convention
-            where E_l in {-2, 0, +2}.
-
-    convention:
-        Which sublattice receives the positive charge.
-
-    Returns
-    -------
-    charges:
-        Integer array ordered by site id.
+    Returns:
+        Integer charge array ordered by site id.
     """
     if magnitude is None:
         if charge_normalization == "spin_half":

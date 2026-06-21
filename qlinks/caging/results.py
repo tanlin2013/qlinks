@@ -8,7 +8,17 @@ from numpy.typing import NDArray
 
 @dataclass(frozen=True)
 class CageState:
-    """A validated interference-caged eigenstate."""
+    """Validated interference-caged eigenstate on compact support.
+
+    Attributes:
+        energy: Eigenvalue associated with the cage state.
+        local_state: State amplitudes restricted to ``support``.
+        support: Global basis indices carrying nonzero amplitudes.
+        boundary_residual: Norm of leakage outside the candidate support.
+        eigen_residual: Eigen residual on the internal support.
+        full_residual: Optional residual against the full Hamiltonian.
+        metadata: Optional solver/search metadata.
+    """
 
     energy: complex
     local_state: NDArray[np.complex128]
@@ -39,11 +49,13 @@ def cage_states_to_full_matrix(
     cage_states: list[CageState],
     hilbert_size: int,
 ) -> np.ndarray:
-    """Lift many compact cage states to a dense matrix.
+    """Lift many compact cage states to dense full-Hilbert vectors.
 
-    Returns
-    -------
-    full_matrix:
+    Args:
+        cage_states: Compact cage states.
+        hilbert_size: Full Hilbert-space dimension.
+
+    Returns:
         Array with shape ``(n_states, hilbert_size)``.
     """
     full_matrix = np.zeros(

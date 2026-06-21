@@ -45,6 +45,30 @@ Rk4StepPolicy = Literal[
 
 @dataclass(frozen=True, slots=True)
 class LindbladEvolutionOptions:
+    """Options controlling Lindblad time evolution.
+
+    Attributes:
+        method: Solver method.  ``"auto"`` chooses between Krylov and RK4
+            variants from system size and backend capabilities.
+        backend: Backend used for dense/sparse array operations.
+        rk4_step_policy: Policy when the requested time grid is too coarse for
+            RK4 according to the Lindblad scale estimate.
+        max_dimension_for_liouvillian: Largest Hilbert dimension for explicit
+            Liouville-space RK4 in ``"auto"`` mode.
+        max_dimension_for_krylov: Largest Hilbert dimension for Krylov
+            ``expm_multiply`` in ``"auto"`` mode.
+        max_rk4_step_scale: Maximum recommended RK4 step times estimated
+            Lindblad scale.
+        adaptive_tolerance: Relative tolerance used by adaptive RK4 step
+            subdivision.
+        min_substeps: Minimum RK4 substeps per interval.
+        max_substeps: Maximum RK4 substeps per interval.
+        enforce_hermiticity: Symmetrize density matrices after each interval.
+        renormalize_trace: Renormalize trace after each interval.
+        check_density_matrix: Record density-matrix diagnostics after evolution
+            steps.
+    """
+
     method: LindbladSolverMethod = "auto"
     backend: OpenSystemBackendName = "scipy"
     rk4_step_policy: Rk4StepPolicy = "adaptive"
@@ -61,6 +85,18 @@ class LindbladEvolutionOptions:
 
 @dataclass(frozen=True, slots=True)
 class LindbladEvolutionResult:
+    """Result returned by Lindblad time-evolution solvers.
+
+    Attributes:
+        times: Time grid used by the evolution.
+        density_matrices: Density matrix at each time.
+        method: Concrete solver method used after resolving ``"auto"``.
+        backend: Backend name.
+        diagnostics: Per-time density-matrix diagnostics when enabled.
+        n_substeps_per_interval: RK4 substep counts for each interval, or an
+            empty tuple for non-RK4 methods.
+    """
+
     times: np.ndarray
     density_matrices: list[Any]
     method: str
@@ -70,6 +106,13 @@ class LindbladEvolutionResult:
 
 
 class LindbladProblem:
+    """Reusable Lindblad problem with cached prepared operators.
+
+    The problem stores a Hamiltonian and jump list, prepares dense/sparse
+    operator bundles lazily, and exposes RHS, Liouvillian, and evolution
+    methods that reuse those caches.
+    """
+
     def __init__(
         self,
         *,
@@ -197,6 +240,21 @@ def solve_lindblad(
     backend: OpenSystemBackendName = "scipy",
     options: LindbladEvolutionOptions | None = None,
 ) -> LindbladEvolutionResult:
+    """Evolve a density matrix under a Lindblad master equation.
+
+    Args:
+        hamiltonian: Hamiltonian matrix.
+        jumps: Lindblad jump operators.
+        density_matrix_initial: Initial density matrix.
+        times: Strictly increasing one-dimensional time grid.
+        method: Solver method, or ``"auto"``.
+        backend: Open-system backend name.
+        options: Optional full options object.  When supplied, ``method`` and
+            ``backend`` override the corresponding fields.
+
+    Returns:
+        Evolution result containing density matrices and diagnostics metadata.
+    """
     if options is None:
         options = LindbladEvolutionOptions(method=method, backend=backend)
     else:

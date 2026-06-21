@@ -49,44 +49,30 @@ LocalBoundaryMode = Literal["relaxed", "closed"]
 class LocalQDMCageSearchConfig:
     """Configuration for the QDM local-first type-1 cage search.
 
-    Parameters
-    ----------
-    tolerance:
-        Numerical tolerance used by the local candidate solver.
-
-    allowed_kappas:
-        Kinetic eigenvalues to target.  The first shortcut path is intended for
-        type-1 cages, so the default is ``(0,)``.
-
-    halo_layers:
-        Number of plaquette-neighbor expansions used when the search region is
-        supplied by plaquettes.  Neighboring plaquettes are those sharing at
-        least one link.  ``halo_layers=1`` means: include the seed plaquettes
-        and their one-plaquette kinetic halo.
-
-    boundary_mode:
-        ``"relaxed"`` enforces exact dimer constraints only at sites whose all
-        incident links lie in the local link set.  Boundary sites only enforce
-        an at-most constraint, leaving room for an exterior padding.
-
-        ``"closed"`` requires every site touched by the local link set to have
-        all incident links included, and then enforces exact local constraints.
-        This is useful for full-lattice regression tests or deliberately closed
-        stripe/torus regions.
-
-    include_sectors_when_full:
-        If the local link set is the full model link set, apply the model's
-        sector conditions during local basis generation.  For genuine local
-        regions sector checks are deferred to the padding/global-certification
-        layer.
-
-    prune_inactive_local_basis_states:
-        For genuine local regions, ask the shared DFS to prune branches that can
-        no longer produce a configuration flippable on any active plaquette.
-        Such configurations are isolated in the local kinetic graph and cannot
-        enter a nontrivial type-1 component when ``min_component_size > 1``.  It
-        is opt-in because observer calls add Python overhead on very small
-        regions.
+    Attributes:
+        tolerance: Numerical tolerance used by the local candidate solver.
+        allowed_kappas: Kinetic eigenvalues to target.  The local-first path is
+            intended for type-1 cages, so the default is ``(0,)``.
+        min_component_size: Minimum local kinetic-graph component size.
+        halo_layers: Number of plaquette-neighbor expansions applied when the
+            search region is supplied by plaquettes.  Neighbors share at least
+            one link.
+        boundary_mode: ``"relaxed"`` enforces exact dimer constraints only at
+            internally complete sites; boundary sites use an at-most constraint.
+            ``"closed"`` requires all touched sites to be complete and then
+            enforces exact constraints.
+        include_sectors_when_full: If the local link set is the full model link
+            set, also apply model sector conditions during local basis
+            generation.
+        prune_inactive_local_basis_states: For genuine local regions, ask DFS
+            to prune branches that can no longer produce a configuration
+            flippable on any active plaquette.
+        max_local_states: Optional early-stop limit for local basis generation.
+        sort_basis: Whether to sort the local basis.
+        validate_full_residual: Whether local cage states should be validated
+            against the full local kinetic graph columns.
+        degenerate_basis_strategy: How to choose representatives from degenerate
+            local cage subspaces.
     """
 
     tolerance: float = 1.0e-10

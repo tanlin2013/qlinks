@@ -258,23 +258,21 @@ def allowed_signed_sum_targets(
     signs: npt.ArrayLike,
     value_transform=None,
 ) -> tuple[int, ...]:
-    """
-    Return all possible raw values of sum_i signs[i] * f(x_i).
+    """Return all possible raw signed-sum sector values.
 
-    Parameters
-    ----------
-    layout:
-        Variable layout.
+    Computes all values of ``sum_i signs[i] * f(x_i)`` over the local spaces of
+    the selected variables.
 
-    variable_indices:
-        Variables included in the diagonal quantum number.
+    Args:
+        layout: Variable layout.
+        variable_indices: Variables included in the diagonal quantum number.
+        signs: Integer signs/covector coefficients.
+        value_transform: Optional function mapping local-space values to the
+            internal values used by the sector.  If ``None``, values are used
+            directly.
 
-    signs:
-        Integer signs/covector coefficients.
-
-    value_transform:
-        Optional function mapping local-space values to the internal electric
-        values used by the sector. If None, values are used directly.
+    Returns:
+        Sorted tuple of possible raw signed-sum targets.
     """
     variable_indices = np.asarray(variable_indices, dtype=np.int64)
     signs = np.asarray(signs, dtype=np.int64)
@@ -334,6 +332,15 @@ def raw_targets_from_user_targets(
     *,
     flux_normalization: FluxNormalization,
 ) -> tuple[int, ...]:
+    """Convert user-facing winding labels to internal raw targets.
+
+    Args:
+        user_targets: Winding labels in the requested normalization.
+        flux_normalization: Normalization convention used by the user labels.
+
+    Returns:
+        Raw integer winding targets used internally by sector conditions.
+    """
     return tuple(
         internal_flux_winding_value(
             int(target),
@@ -900,22 +907,25 @@ class SquareQDMElectricWindingSector(BaseSectorCondition):
 
 @dataclass(frozen=True, slots=True)
 class HoneycombElectricWindingSector(BaseSectorCondition):
-    """
-    Electric winding sector for the honeycomb QLM on a periodic lattice.
+    """Electric winding sector for the honeycomb QLM on a periodic lattice.
 
-    This sector fixes one of the two conserved electric-flux winding numbers
-    on a honeycomb torus. The winding number is defined as the signed electric
-    flux through a non-contractible cut of the periodic lattice. The signs are
-    determined by the oriented-link convention of the lattice, so the sector is
-    invariant under local plaquette flips.
+    This sector fixes one of the two conserved electric-flux winding numbers on
+    a honeycomb torus.  The winding number is the signed electric flux through a
+    non-contractible cut; signs follow the lattice oriented-link convention.
 
-    Notes
-    -----
-    The ``direction`` argument labels the two independent periodic directions
-    of the integer unit-cell coordinates, not the Cartesian directions of the
-    plotting embedding.
+    Attributes:
+        layout: Variable layout.
+        lattice: Honeycomb lattice.
+        direction: Periodic cell direction, ``"x"`` or ``"y"``.
+        target: User-facing target winding value.
+        flux_normalization: Convention used to interpret the target.
 
-    Specifically,
+    Notes:
+        ``direction`` labels the two independent periodic directions of the
+        integer unit-cell coordinates, not the Cartesian directions of the
+        plotting embedding.
+
+        Specifically,
 
         direction="x"
 
@@ -936,27 +946,6 @@ class HoneycombElectricWindingSector(BaseSectorCondition):
     The primitive vectors and basis offsets used for plotting do not define
     the winding sector. The winding sector is defined by the combinatorial
     periodic cell coordinates and the oriented link/cut convention.
-
-    Parameters
-    ----------
-    layout:
-        Variable layout whose link variables represent spin-half electric
-        fluxes.
-
-    lattice:
-        Periodic honeycomb lattice.
-
-    direction:
-        Either ``"x"`` or ``"y"``. These refer to the two unit-cell periodic
-        directions, not Cartesian plot axes.
-
-    target:
-        Target winding value in the chosen direction.
-
-    flux_normalization:
-        Normalization convention for the electric flux variables. For example,
-        ``"spin_half"`` corresponds to link values ``{-1, +1}`` representing
-        twice the physical spin-half electric field.
     """
 
     layout: VariableLayout

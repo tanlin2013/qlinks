@@ -30,7 +30,26 @@ CageSearchType = Literal["type1", "type2", "type1_and_type2", "custom"]
 
 @dataclass(frozen=True, slots=True)
 class CageSearchConfig:
-    """Configuration for the high-level cage-search workflow."""
+    """Configuration for the high-level interference-cage search.
+
+    Attributes:
+        search_type: Candidate family to search.  ``"type1"`` targets
+            bipartite ``kappa=0`` cages; ``"type2"`` targets fixed nonzero
+            kinetic eigenvalues; ``"type1_and_type2"`` runs both.
+        tolerance: Numerical tolerance for candidate filtering and solver
+            residual checks.
+        min_component_size: Minimum Fock-space component size considered.
+        validate_full_residual: Whether to validate candidate eigenstates
+            against the full Hamiltonian columns.
+        degenerate_basis_strategy: How to choose representatives from
+            degenerate cage subspaces.
+        type1_kappas: Kinetic eigenvalues used for type-1 candidates.
+        type2_kappas: Kinetic eigenvalues used for type-2 candidates.
+        deduplicate_by_rank: Whether to remove linearly dependent discoveries
+            within each signature.
+        store_full_states: Whether result records include full Hilbert-space
+            state vectors.
+    """
 
     search_type: CageSearchType = "type1_and_type2"
     tolerance: float = 1e-10
@@ -72,7 +91,15 @@ class CageSearchConfig:
 
 @dataclass(frozen=True, slots=True)
 class CageRecord:
-    """One discovered cage state together with its metadata."""
+    """One discovered cage state together with its search metadata.
+
+    Attributes:
+        cage_state: Compact cage state on its support.
+        signature: Integer signature ``(kappa, z)`` inferred from kinetic and
+            potential/self-loop values.
+        candidate: Candidate subgraph that produced the state.
+        full_state: Optional full Hilbert-space vector.
+    """
 
     cage_state: CageState
     signature: tuple[int, int]
@@ -134,7 +161,20 @@ class CageRecordView:
 
 @dataclass
 class CageSearchResult:
-    """Result of a high-level cage search."""
+    """Collection returned by :class:`CageSearcher`.
+
+    The result behaves like a sequence of :class:`CageRecord` objects and also
+    supports signature-based indexing, for example ``result[(0, 6)]`` or
+    ``result[(0, 6), 0]``.
+
+    Attributes:
+        records: Discovered cage records.
+        hilbert_size: Full Hilbert-space dimension.
+        config: Search configuration used to produce the result.
+        type1_candidates: Type-1 candidate subgraphs inspected by the search.
+        type2_candidates: Type-2 candidate subgraphs inspected by the search.
+        search_stage_seconds: Accumulated timing information by stage.
+    """
 
     records: list[CageRecord]
     hilbert_size: int
@@ -180,25 +220,14 @@ class CageSearchResult:
             | tuple[tuple[int, int], slice]
         ),
     ) -> CageRecord | list[CageRecord] | CageRecordView:
-        """
-        Index cage records.
+        """Index cage records by position, slice, or signature.
 
-        Supported forms
-        ---------------
-        result[i]
-            Return the i-th record among all records.
+        Args:
+            index: Integer, slice, signature tuple ``(kappa, z)``, or
+                ``((kappa, z), position_or_slice)`` pair.
 
-        result[i:j]
-            Return a list of records among all records.
-
-        result[(kappa, z)]
-            Return an indexable view of records with this signature.
-
-        result[(kappa, z), i]
-            Return the i-th record with this signature.
-
-        result[(kappa, z), i:j]
-            Return records with this signature in the given slice.
+        Returns:
+            A single record, a list of records, or a signature-filtered view.
         """
         if isinstance(index, Integral):
             return self.records[int(index)]
@@ -290,7 +319,12 @@ class CageSearchResult:
 
 @dataclass
 class CageSearcher:
-    """High-level cage-search assembly object."""
+    """High-level cage-search driver for sparse Hamiltonian matrices.
+
+    The searcher combines graph candidate generation, candidate solving,
+    signature grouping, optional IPR localization, and deduplication into a
+    single workflow.
+    """
 
     hamiltonian_matrix: scipy_sparse.spmatrix | scipy_sparse.sparray
     kinetic_matrix: scipy_sparse.spmatrix | scipy_sparse.sparray

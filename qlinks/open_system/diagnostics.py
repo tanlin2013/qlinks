@@ -23,6 +23,22 @@ from qlinks.open_system.operators import (
 
 @dataclass(frozen=True, slots=True)
 class EvolutionDiagnostics:
+    """Diagnostics for density-matrix or MCWF evolution output.
+
+    Attributes:
+        trace_errors: Absolute errors of ``Tr(rho)`` from one.
+        hermiticity_errors: Frobenius norm of anti-Hermitian parts.
+        min_eigenvalues: Smallest density-matrix eigenvalue at each time.
+        purities: ``Tr(rho^2)`` values.
+        fidelities: Optional fidelity with a target state/density matrix.
+        lindblad_residuals: Optional norm of the Lindblad RHS at each time.
+        times: Optional time grid.
+        source: Description of the analyzed data source.
+        density_check_mode: Density check strategy used by the analyzer.
+        trajectory_counts: Optional number of trajectories per time point.
+        state_norm_errors: Optional norm errors for pure-state trajectories.
+    """
+
     trace_errors: np.ndarray
     hermiticity_errors: np.ndarray
     min_eigenvalues: np.ndarray
@@ -254,37 +270,33 @@ def analyze_lindblad_evolution(
     backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
     density_check_mode: str = "auto",
 ) -> EvolutionDiagnostics:
-    """Analyze density diagnostics along a Lindblad/MCWF evolution.
+    """Analyze diagnostics along Lindblad or MCWF evolution output.
 
-    The function accepts the original dense-density path, but it can also read
-    MCWF ensemble outputs directly. In particular, an ``EnsembleResult`` with
-    ``rho_t`` disabled and ``state_snapshots`` enabled can be diagnosed without
-    rebuilding dense density matrices unless explicitly requested.
+    The function accepts dense density matrices directly, but it can also read
+    MCWF ensemble outputs.  When an ensemble stores low-rank state snapshots but
+    not ``rho_t``, diagnostics can be computed without materializing dense
+    density matrices unless ``density_check_mode="full"`` is requested.
 
-    Parameters
-    ----------
-    density_matrices:
-        Sequence of density matrices. This is the legacy input path.
+    Args:
+        density_matrices: Optional sequence of density matrices.
+        ensemble_result: Optional MCWF ensemble result.  The analyzer prefers
+            populated ``rho_t``, then ``state_snapshots``, then stored
+            trajectories.
+        state_snapshots: Optional sequence of matrices with shape
+            ``(dim, n_trajectories)``.
+        trajectories: Optional trajectory results with stored states.
+        times: Optional time grid.
+        target_state: Optional pure state for fidelity diagnostics.
+        hamiltonian: Optional Hamiltonian for Lindblad residual diagnostics.
+        jumps: Optional jump operators for Lindblad residual diagnostics.
+        atol: Numerical tolerance for density-matrix checks.
+        backend: Open-system backend name or object.
+        density_check_mode: ``"auto"``, ``"full"``, or ``"low_rank"``.
+            ``"low_rank"`` avoids materializing density matrices from MCWF
+            snapshots and reports ``NaN`` for minimum eigenvalues.
 
-    ensemble_result:
-        Optional MCWF ``EnsembleResult``. The analyzer prefers ``rho_t`` when it
-        is populated, then ``state_snapshots``, then stored trajectories.
-
-    state_snapshots:
-        Optional sequence of state matrices with shape ``(dim, n_trajectories)``
-        representing low-rank MCWF ensemble snapshots.
-
-    trajectories:
-        Optional sequence of trajectory results with stored ``states``. This is
-        mainly a compatibility path for scalar MCWF output.
-
-    density_check_mode:
-        ``"auto"`` uses full density checks when dense density matrices are
-        available or when Lindblad residuals are requested. For snapshots only,
-        it uses ``"low_rank"`` by default. ``"full"`` materializes density
-        matrices from snapshots and can compute Lindblad residuals.
-        ``"low_rank"`` computes trace, purity, and target fidelity directly
-        from snapshot state matrices and reports ``NaN`` for min eigenvalues.
+    Returns:
+        Evolution diagnostics arrays.
     """
     (
         density_matrices_resolved,
@@ -669,6 +681,22 @@ def _validate_times_length(times: np.ndarray | None, n_outputs: int) -> None:
 
 @dataclass(frozen=True, slots=True)
 class DensityMatrixVerification:
+    """Numerical checks for a candidate density matrix.
+
+    Attributes:
+        trace: Matrix trace.
+        trace_error: Absolute error of the trace from one.
+        hermiticity_error: Frobenius norm of ``rho - rho^dagger``.
+        min_eigenvalue: Smallest Hermitian eigenvalue after symmetrization.
+        purity: ``Tr(rho^2)``.
+        fidelity_with_target: Optional fidelity ``<psi|rho|psi>``.
+        is_hermitian: Whether the Hermiticity check passes.
+        is_trace_one: Whether the trace-one check passes.
+        is_positive_semidefinite: Whether the minimum eigenvalue is above
+            ``-atol``.
+        is_density_matrix: Combined validity flag.
+    """
+
     trace: complex
     trace_error: float
     hermiticity_error: float
@@ -687,6 +715,19 @@ def verify_density_matrix(
     target_state: npt.ArrayLike | None = None,
     atol: float = 1e-10,
 ) -> DensityMatrixVerification:
+    """Check whether an array is a valid density matrix.
+
+    Args:
+        rho: Candidate density matrix.
+        target_state: Optional pure state used to compute ``<psi|rho|psi>``.
+        atol: Absolute tolerance for trace, Hermiticity, and positivity checks.
+
+    Returns:
+        Verification record with scalar diagnostics and boolean flags.
+
+    Raises:
+        ValueError: If ``rho`` is not square or ``target_state`` is invalid.
+    """
     rho_array = np.asarray(rho, dtype=np.complex128)
 
     if rho_array.ndim != 2 or rho_array.shape[0] != rho_array.shape[1]:
@@ -737,6 +778,16 @@ def verify_density_matrix(
 
 @dataclass(frozen=True, slots=True)
 class LindbladFinalStateVerification:
+    """Verification of a final Lindblad density matrix.
+
+    Attributes:
+        density_matrix: Basic density-matrix validity diagnostics.
+        lindblad_residual: Norm of the Lindblad RHS evaluated at the final
+            state.
+        relative_lindblad_residual: Residual normalized by the density-matrix
+            norm scale.
+    """
+
     density_matrix: DensityMatrixVerification
     lindblad_residual: float
     relative_lindblad_residual: float
@@ -751,6 +802,19 @@ def verify_lindblad_final_state(
     atol: float = 1e-10,
     backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
 ) -> LindbladFinalStateVerification:
+    """Verify density-matrix validity and Lindblad stationarity.
+
+    Args:
+        rho: Candidate final density matrix.
+        hamiltonian: Hamiltonian matrix.
+        jumps: Lindblad jump operators.
+        target_state: Optional pure state for fidelity diagnostics.
+        atol: Absolute tolerance passed to :func:`verify_density_matrix`.
+        backend: Open-system backend name or object.
+
+    Returns:
+        Final-state verification record.
+    """
     rho_array = np.asarray(rho, dtype=np.complex128)
 
     density = verify_density_matrix(

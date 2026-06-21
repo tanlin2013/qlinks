@@ -37,6 +37,14 @@ def bit_to_flux(value: int) -> int:
 
 
 def flux_config_to_binary(config: npt.ArrayLike) -> npt.NDArray[np.int64]:
+    """Convert a ``{-1, +1}`` flux configuration to binary ``{0, 1}``.
+
+    Args:
+        config: Flux configuration.
+
+    Returns:
+        Binary configuration with ``-1 -> 0`` and ``+1 -> 1``.
+    """
     arr = np.asarray(config, dtype=np.int64)
 
     if arr.ndim != 1:
@@ -51,6 +59,14 @@ def flux_config_to_binary(config: npt.ArrayLike) -> npt.NDArray[np.int64]:
 
 
 def binary_config_to_flux(config: npt.ArrayLike) -> npt.NDArray[np.int64]:
+    """Convert a binary ``{0, 1}`` configuration to flux ``{-1, +1}``.
+
+    Args:
+        config: Binary configuration.
+
+    Returns:
+        Flux configuration with ``0 -> -1`` and ``1 -> +1``.
+    """
     arr = np.asarray(config, dtype=np.int64)
 
     if arr.ndim != 1:
@@ -65,6 +81,14 @@ def binary_config_to_flux(config: npt.ArrayLike) -> npt.NDArray[np.int64]:
 
 
 def flux_configs_to_binary(configs: npt.ArrayLike) -> npt.NDArray[np.int64]:
+    """Convert a stack of flux configurations to binary configurations.
+
+    Args:
+        configs: Array whose final axis contains flux values ``{-1, +1}``.
+
+    Returns:
+        Array of the same shape with binary values ``{0, 1}``.
+    """
     arr = np.asarray(configs, dtype=np.int64)
 
     if arr.ndim != 2:

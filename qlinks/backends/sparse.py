@@ -43,6 +43,15 @@ class SparseBackend(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class ScipySparseBackend:
+    """SciPy sparse backend used by default Hamiltonian builders.
+
+    The backend normalizes sparse-matrix construction behind a small protocol so
+    model/build code can also target CuPy when available.
+
+    Attributes:
+        name: Backend name, always ``"scipy"``.
+    """
+
     name: str = "scipy"
 
     def as_data_array(self, data: list[complex], dtype: npt.DTypeLike) -> npt.NDArray:

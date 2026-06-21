@@ -22,6 +22,13 @@ _TRIANGULAR_KIND_DISPLACEMENTS: dict[str, tuple[int, int]] = {
 
 @dataclass(frozen=True, slots=True)
 class Z2CutData:
+    """Cached link and variable indices for one Z2 winding cut.
+
+    Attributes:
+        link_ids: Physical link ids crossing the cut.
+        variable_indices: Layout variable indices associated with ``link_ids``.
+    """
+
     link_ids: npt.NDArray[np.int64]
     variable_indices: npt.NDArray[np.int64]
 

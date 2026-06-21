@@ -58,6 +58,16 @@ def density_matrix_from_state(
     *,
     normalize: bool = True,
 ) -> npt.NDArray[np.complex128]:
+    """Return the pure density matrix associated with a state vector.
+
+    Args:
+        state: One-dimensional state vector.
+        normalize: Whether to normalize the vector before forming
+            ``|psi><psi|``.
+
+    Returns:
+        Complex density matrix ``|psi><psi|``.
+    """
     return pure_density_matrix(state, normalize=normalize)
 
 
@@ -99,20 +109,15 @@ def random_mixed_density_matrix(
 ) -> npt.NDArray[np.complex128]:
     r"""Draw a random mixed density matrix using a Ginibre ensemble.
 
-    Parameters
-    ----------
-    dim:
-        Hilbert-space dimension.
-    rank:
-        Optional effective rank. If None, use full rank ``dim``.
-        The state is generated as rho = X X^\dagger / Tr(X X^\dagger),
-        where X has shape ``(dim, rank)``.
-    rng:
-        NumPy random generator or seed.
+    The state is generated as ``rho = X X^\dagger / Tr(X X^\dagger)`` where
+    ``X`` has shape ``(dim, rank)``.
 
-    Returns
-    -------
-    rho:
+    Args:
+        dim: Hilbert-space dimension.
+        rank: Optional effective rank.  If ``None``, use full rank ``dim``.
+        rng: NumPy random generator or seed.
+
+    Returns:
         Hermitian, positive-semidefinite density matrix with trace one.
     """
     if dim <= 0:
@@ -157,11 +162,20 @@ def random_density_matrix(
     rank: int | None = None,
     rng: np.random.Generator | int | None = None,
 ) -> npt.NDArray[np.complex128]:
-    r"""Draw a random density matrix.
+    r"""Draw a random pure or mixed density matrix.
 
-    ``kind="pure"`` returns |psi><psi|.
+    Args:
+        dim: Hilbert-space dimension.
+        kind: ``"pure"`` for ``|psi><psi|`` or ``"mixed"`` for a Ginibre
+            mixed state.
+        rank: Optional effective rank for ``kind="mixed"``.
+        rng: NumPy random generator or seed.
 
-    ``kind="mixed"`` returns X X^\dagger / Tr(X X^\dagger).
+    Returns:
+        Density matrix with trace one.
+
+    Raises:
+        ValueError: If ``kind`` is unsupported or ``rank`` is incompatible.
     """
     if kind == "pure":
         if rank is not None and rank != 1:

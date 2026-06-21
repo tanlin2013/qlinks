@@ -811,24 +811,24 @@ def classify_cage_state(
     sector_mask: NDArray[np.bool_] | None = None,
     config: CageClassificationConfig | None = None,
 ) -> CageClassificationReport:
-    """
-    Classify one cage state as regional-like, extended-like, or ambiguous.
+    """Classify one compact cage state from solver output.
 
-    Parameters
-    ----------
-    cage_state:
-        Compact cage state returned by the caging solver.
-    kinetic_matrix:
-        Off-diagonal Hamiltonian H0/K. This is used to identify
-        interference zeros and define local Z_h patterns.
-    basis_configs:
-        Integer array of shape (n_basis, n_variables). Each row is the
-        product-state/basis configuration. For QDM/QLM, the variables can
-        be link occupations/fluxes. For spin chains, they can be site spins.
-    hilbert_size:
-        Full Hilbert-space dimension. Defaults to basis_configs.shape[0].
-    config:
-        Numerical classification parameters.
+    Args:
+        cage_state: Compact cage state returned by the caging solver.
+        kinetic_matrix: Off-diagonal Hamiltonian or kinetic matrix used to
+            identify interference zeros and local ``Z_h`` patterns.
+        basis_configs: Integer array with shape ``(n_basis, n_variables)``.
+            Rows are product-state configurations in the global constrained
+            basis.
+        hilbert_size: Full Hilbert-space dimension.  Defaults to
+            ``basis_configs.shape[0]``.
+        sector_mask: Optional mask selecting the sector used for local
+            diagnostics.
+        config: Numerical classification parameters.
+
+    Returns:
+        Classification report describing reduced-IZ zeros, regional/extended
+        labels, and monitor decompositions.
     """
     if config is None:
         config = CageClassificationConfig()

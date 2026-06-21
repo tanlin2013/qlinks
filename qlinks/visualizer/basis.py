@@ -164,30 +164,26 @@ class _BasisGridRenderCache:
 
 @dataclass(frozen=True)
 class BasisConfigurationVisualizer:
-    """
-    Geometry-detached basis-configuration visualizer.
+    """Draw one basis configuration on a lattice geometry.
 
-    Parameters
-    ----------
-    lattice:
-        A LatticeGraph, e.g. ChainLattice or SquareLattice.
+    The visualizer is model-agnostic: it reads variable values from a
+    :class:`VariableLayout` and renders them as QLM arrows, QDM dimers, or
+    generic values.
 
-    layout:
-        VariableLayout mapping site/link ids to positions in the raw config
-        array. If None, the visualizer assumes link variable index == link id
-        for link plotting.
-
-    periodic_image_mode:
-        How to draw links that wrap periodic boundaries.
-
-        "none": Don't draw wrapped links.
-
-        "positive": Draw wrapped links with the target site shifted by +1 period
-        so they appear next to the source site. This is usually more intuitive
-        for small lattices.
-
-        "both": Draw both the original wrapped link and the complementary image
-        link. This is more complete but can be visually cluttered.
+    Attributes:
+        lattice: Lattice graph, such as :class:`ChainLattice` or
+            :class:`SquareLattice`.
+        layout: Optional variable layout.  If omitted, link plotting assumes
+            ``link_variable_index == link_id``.
+        style: Visual style for links, sites, and plaquette symbols.
+        periodic_image_mode: How to draw links that wrap periodic boundaries.
+            ``"none"`` omits wrapped links; ``"positive_patch"`` draws the
+            positive image patch; ``"both"`` draws both images.
+        collapse_duplicate_visual_links: Whether to collapse duplicate periodic
+            visual links.
+        coordinate_scale: Uniform coordinate scaling.
+        coordinate_transform: Optional 2x2 coordinate transform.
+        site_label_style: How to label lattice sites.
     """
 
     lattice: LatticeGraph
@@ -4916,20 +4912,22 @@ def _embed_local_patterns(
 
 @dataclass(frozen=True)
 class BasisGridVisualizer:
-    """
-    Plot many basis configurations as an n by m grid.
+    """Plot many basis configurations as a grid of lattice panels.
 
-    Parameters
-    ----------
-    lattice:
-        Geometry/topology object.
+    The grid visualizer reuses the same drawing primitives as
+    :class:`BasisConfigurationVisualizer` and can build an internal render cache
+    for repeated plotting on the same geometry.
 
-    layout:
-        Variable layout used to interpret each config array.
-
-    single_visualizer:
-        Optional custom single-state visualizer. If omitted, this class creates
-        BasisConfigurationVisualizer(lattice, layout).
+    Attributes:
+        lattice: Geometry/topology object.
+        layout: Variable layout used to interpret each configuration array.
+        style: Visual style for links, sites, and plaquette symbols.
+        periodic_image_mode: How to draw periodic links.
+        collapse_duplicate_visual_links: Whether duplicate periodic visual
+            links are collapsed.
+        coordinate_scale: Uniform coordinate scaling.
+        coordinate_transform: Optional 2x2 coordinate transform.
+        site_label_style: How to label lattice sites.
     """
 
     lattice: LatticeGraph

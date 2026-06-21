@@ -16,20 +16,25 @@ from qlinks.operators.base import (
 
 @dataclass(frozen=True)
 class BasisOperator:
-    """
-    Matrix-like wrapper around configuration-space LocalOperator objects.
+    """Matrix-like wrapper around configuration-space local operators.
 
-    This object does not explicitly build the sparse matrix. Instead, it applies
-    the local operators directly by looping over the basis states.
+    The wrapper applies local operators directly by looping over basis states;
+    it does not explicitly build a sparse matrix.  It supports matrix-vector
+    products and transpose/Hermitian-adjoint views.
 
-    Examples
-    --------
-    >>> O = BasisOperator(basis, operators)
-    >>> y = O @ v
-    >>> value = v.T @ O @ v
-    >>> value_complex = v.conj() @ O @ v
-    >>> y_t = O.T @ v
-    >>> y_h = O.H @ v
+    Attributes:
+        basis: Basis that fixes row/column ordering.
+        operators: Local operators to sum.
+        combine_duplicates: Whether to combine duplicate actions within a
+            column.
+        drop_zero_atol: Absolute threshold for dropping small coefficients.
+        dtype: Output dtype for matrix-vector products.
+
+    Examples:
+        >>> operator = BasisOperator(basis, operators)
+        >>> y = operator @ vector
+        >>> y_t = operator.T @ vector
+        >>> y_h = operator.H @ vector
     """
 
     basis: Basis

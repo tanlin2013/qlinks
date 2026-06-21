@@ -56,6 +56,17 @@ def decode_binary_code(code: int, n_variables: int) -> npt.NDArray[np.int64]:
 
 
 def bitmask_from_indices(indices: Iterable[int]) -> int:
+    """Return an integer mask with bits set at the requested indices.
+
+    Args:
+        indices: Nonnegative bit positions.
+
+    Returns:
+        Integer bitmask.
+
+    Raises:
+        ValueError: If any bit index is negative.
+    """
     mask = 0
     for i in indices:
         if i < 0:

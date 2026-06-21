@@ -11,6 +11,8 @@ from qlinks.variables.local_space import LocalSpace
 
 
 class VariableKind(StrEnum):
+    """Kind of physical variable represented in a layout."""
+
     SITE = "site"
     LINK = "link"
 
