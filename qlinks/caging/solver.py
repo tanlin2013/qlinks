@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from functools import partial
 
 import numpy as np
 import scipy.linalg as scipy_linalg
@@ -332,7 +333,8 @@ def solve_candidate_for_kinetic_targets(
     internal_kinetic_matrix, dense_boundary_overlap = _time_solver_stage(
         config.timing_collector,
         "solver.candidate_blocks",
-        lambda: _candidate_kinetic_blocks_for_fixed_kappa(
+        partial(
+            _candidate_kinetic_blocks_for_fixed_kappa,
             kinetic_matrix,
             candidate,
         ),
@@ -353,7 +355,8 @@ def solve_candidate_for_kinetic_targets(
         local_basis = _time_solver_stage(
             config.timing_collector,
             "solver.fixed_kappa_nullspace",
-            lambda gram_matrix=gram_matrix: nullspace_from_gram(
+            partial(
+                nullspace_from_gram,
                 gram_matrix,
                 tolerance=config.tolerance,
             ),
@@ -381,11 +384,10 @@ def solve_candidate_for_kinetic_targets(
             local_basis = _time_solver_stage(
                 config.timing_collector,
                 "solver.ipr_localization",
-                lambda local_basis=local_basis, ipr_config=ipr_config: (
-                    localized_basis_by_many_start_ipr(
-                        local_basis.astype(np.complex128, copy=False),
-                        config=ipr_config,
-                    )
+                partial(
+                    localized_basis_by_many_start_ipr,
+                    local_basis.astype(np.complex128, copy=False),
+                    config=ipr_config,
                 ),
             )
             used_ipr = True
@@ -394,15 +396,20 @@ def solve_candidate_for_kinetic_targets(
 
         for localized_index in range(local_basis.shape[1]):
             local_state = local_basis[:, localized_index]
-            # fmt: off
+            metadata = {
+                "fixed_kappa_solver": True,
+                "target_kappa": complex(target_kappa),
+                "self_loop_value": z_value,
+                "invariant_subspace_dim": fixed_kappa_subspace_dim,
+                "degenerate_group_index": 0,
+                "degenerate_group_size": fixed_kappa_subspace_dim,
+                "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
+            }
             cage_state = _time_solver_stage(
                 config.timing_collector,
                 "solver.validation",
-                lambda local_state=local_state,
-                energy_value=energy_value,
-                target_kappa=target_kappa,
-                fixed_kappa_subspace_dim=fixed_kappa_subspace_dim,
-                used_ipr=used_ipr: _build_validated_cage_state(
+                partial(
+                    _build_validated_cage_state,
                     hamiltonian,
                     candidate.vertices,
                     local_state,
@@ -411,21 +418,12 @@ def solve_candidate_for_kinetic_targets(
                     dense_internal_matrix=dense_hamiltonian_internal,
                     dense_boundary_matrix=None,
                     config=config,
-                    metadata={
-                        "fixed_kappa_solver": True,
-                        "target_kappa": complex(target_kappa),
-                        "self_loop_value": z_value,
-                        "invariant_subspace_dim": fixed_kappa_subspace_dim,
-                        "degenerate_group_index": 0,
-                        "degenerate_group_size": fixed_kappa_subspace_dim,
-                        "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
-                    },
+                    metadata=metadata,
                     dense_boundary_overlap_matrix=dense_boundary_overlap,
                     boundary_column_block=hamiltonian_column_block,
                     hamiltonian_column_block=hamiltonian_column_block,
                 ),
             )
-            # fmt: on
 
             if cage_state is not None:
                 cage_states.append(cage_state)
@@ -446,7 +444,8 @@ def solve_candidate(
     internal_matrix, boundary_matrix, _outside_indices = _time_solver_stage(
         config.timing_collector,
         "solver.extract_subblocks",
-        lambda: extract_subblocks(
+        partial(
+            extract_subblocks,
             hamiltonian,
             candidate.vertices,
         ),
@@ -455,7 +454,8 @@ def solve_candidate(
     subspace_basis = _time_solver_stage(
         config.timing_collector,
         "solver.invariant_boundary_nullspace",
-        lambda: invariant_boundary_nullspace(
+        partial(
+            invariant_boundary_nullspace,
             internal_matrix,
             boundary_matrix,
             tolerance=config.tolerance,
@@ -479,13 +479,13 @@ def solve_candidate(
         energy_values, projected_states = _time_solver_stage(
             config.timing_collector,
             "solver.projected_eigensolve",
-            lambda: scipy_linalg.eigh(projected_matrix),
+            partial(scipy_linalg.eigh, projected_matrix),
         )
     else:
         energy_values, projected_states = _time_solver_stage(
             config.timing_collector,
             "solver.projected_eigensolve",
-            lambda: scipy_linalg.eig(projected_matrix),
+            partial(scipy_linalg.eig, projected_matrix),
         )
 
     cage_states: list[CageState] = []
@@ -516,32 +516,31 @@ def solve_candidate(
                 random_seed=config.ipr_random_seed,
             )
 
-            # fmt: off
             local_basis = _time_solver_stage(
                 config.timing_collector,
                 "solver.ipr_localization",
-                lambda local_basis=local_basis, ipr_config=ipr_config: (
-                    localized_basis_by_many_start_ipr(
-                        local_basis.astype(np.complex128, copy=False),
-                        config=ipr_config,
-                    )
+                partial(
+                    localized_basis_by_many_start_ipr,
+                    local_basis.astype(np.complex128, copy=False),
+                    config=ipr_config,
                 ),
             )
             used_ipr = True
-            # fmt: on
 
         for localized_index in range(local_basis.shape[1]):
             local_state = local_basis[:, localized_index]
 
-            # fmt: off
+            metadata = {
+                "invariant_subspace_dim": subspace_basis.shape[1],
+                "degenerate_group_index": group_index,
+                "degenerate_group_size": len(state_indices),
+                "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
+            }
             cage_state = _time_solver_stage(
                 config.timing_collector,
                 "solver.validation",
-                lambda local_state=local_state,
-                representative_energy=representative_energy,
-                group_index=group_index,
-                state_indices=state_indices,
-                used_ipr=used_ipr: _build_validated_cage_state(
+                partial(
+                    _build_validated_cage_state,
                     hamiltonian,
                     candidate.vertices,
                     local_state,
@@ -550,16 +549,10 @@ def solve_candidate(
                     dense_internal_matrix=dense_internal_matrix,
                     dense_boundary_matrix=dense_boundary_matrix,
                     config=config,
-                    metadata={
-                        "invariant_subspace_dim": subspace_basis.shape[1],
-                        "degenerate_group_index": group_index,
-                        "degenerate_group_size": len(state_indices),
-                        "degenerate_basis_strategy": ("ipr" if used_ipr else "none"),
-                    },
+                    metadata=metadata,
                     hamiltonian_column_block=hamiltonian_column_block,
                 ),
             )
-            # fmt: on
 
             if cage_state is not None:
                 cage_states.append(cage_state)
