@@ -374,14 +374,14 @@
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">T</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TransposedBasisOperator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">T</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TransposedBasisOperator</span><span class="p">:</span>  <span class="c1"># noqa: N802</span>
         <span class="k">return</span> <span class="n">TransposedBasisOperator</span><span class="p">(</span>
             <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
             <span class="n">conjugate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">H</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TransposedBasisOperator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">H</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TransposedBasisOperator</span><span class="p">:</span>  <span class="c1"># noqa: N802</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Hermitian adjoint view.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -605,7 +605,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">T</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BasisOperator</span> <span class="o">|</span> <span class="n">TransposedBasisOperator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">T</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BasisOperator</span> <span class="o">|</span> <span class="n">TransposedBasisOperator</span><span class="p">:</span>  <span class="c1"># noqa: N802</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conjugate</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">TransposedBasisOperator</span><span class="p">(</span>
                 <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>
@@ -614,7 +614,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">H</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BasisOperator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">H</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BasisOperator</span><span class="p">:</span>  <span class="c1"># noqa: N802</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
