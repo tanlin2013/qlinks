@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks.conventions package &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.conventions package &#8212; qlinks</title>
   
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -154,7 +154,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="qlinks.html">qlinks package</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="qlinks.backends.html">qlinks.backends package</a></li>
@@ -163,18 +179,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -251,7 +273,7 @@
       
       
       
-      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/qlinks.conventions.rst" target="_blank"
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/qlinks.conventions.rst" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -353,35 +375,24 @@
 <dt class="sig sig-object py" id="qlinks.conventions.qlm.staggered_charges_from_sites">
 <span class="sig-prename descclassname"><span class="pre">qlinks.conventions.qlm.</span></span><span class="sig-name descname"><span class="pre">staggered_charges_from_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'even_positive'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/conventions/qlm.html#staggered_charges_from_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.conventions.qlm.staggered_charges_from_sites" title="Link to this definition">#</a></dt>
 <dd><p>Generate staggered background charges on lattice sites.</p>
-<p>The charge is assigned by the parity of the unit-cell coordinate:</p>
-<blockquote>
-<div><p>eta(r) = (-1) ** sum(cell coordinates)</p>
-</div></blockquote>
-<p>For a square lattice, this is simply:</p>
-<blockquote>
-<div><p>eta(x, y) = (-1) ** (x + y)</p>
-</div></blockquote>
+<p>The charge sign is assigned by the parity of the unit-cell coordinate,
+<code class="docutils literal notranslate"><span class="pre">eta(r)</span> <span class="pre">=</span> <span class="pre">(-1)</span> <span class="pre">**</span> <span class="pre">sum(cell</span> <span class="pre">coordinates)</span></code>.  On a square lattice this is
+<code class="docutils literal notranslate"><span class="pre">eta(x,</span> <span class="pre">y)</span> <span class="pre">=</span> <span class="pre">(-1)</span> <span class="pre">**</span> <span class="pre">(x</span> <span class="pre">+</span> <span class="pre">y)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>) – Lattice whose sites carry the Gauss-law charges.</p></li>
-<li><p><strong>magnitude</strong> (<em>int</em>) – Absolute value of the staggered charge.</p></li>
-<li><p><strong>convention</strong> (<em>Literal</em><em>[</em><em>'even_positive'</em><em>, </em><em>'odd_positive'</em><em>]</em>) – <dl class="simple">
-<dt>“even_positive”:</dt><dd><p>even sublattice gets +magnitude,
-odd sublattice gets -magnitude.</p>
-</dd>
-<dt>”odd_positive”:</dt><dd><p>even sublattice gets -magnitude,
-odd sublattice gets +magnitude.</p>
-</dd>
-</dl>
-</p></li>
+<li><p><strong>magnitude</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Absolute value of the staggered charge.</p></li>
+<li><p><strong>convention</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'even_positive'</em><em>, </em><em>'odd_positive'</em><em>]</em>) – Which sublattice receives the positive charge.
+<code class="docutils literal notranslate"><span class="pre">&quot;even_positive&quot;</span></code> assigns <code class="docutils literal notranslate"><span class="pre">+magnitude</span></code> to the even sublattice;
+<code class="docutils literal notranslate"><span class="pre">&quot;odd_positive&quot;</span></code> reverses the sign.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Integer array of shape (lattice.num_sites,), ordered by site id.</p>
+<dd class="field-even"><p>Integer charge array ordered by site id.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>charges</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -389,35 +400,25 @@ odd sublattice gets +magnitude.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="qlinks.conventions.qlm.square_qdm_staggered_charges">
 <span class="sig-prename descclassname"><span class="pre">qlinks.conventions.qlm.</span></span><span class="sig-name descname"><span class="pre">square_qdm_staggered_charges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'spin_half'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'even_positive'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/conventions/qlm.html#square_qdm_staggered_charges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.conventions.qlm.square_qdm_staggered_charges" title="Link to this definition">#</a></dt>
-<dd><p>Staggered charges for the square-lattice QDM-to-QLM mapping.</p>
-<p>For the current spin-half flux convention E_l in {-1, +1}, the close-packed
-QDM constraint</p>
-<blockquote>
-<div><p>one dimer touching each site</p>
-</div></blockquote>
-<p>maps naturally to a staggered Gauss law with charge magnitude 1 on the
-square lattice.</p>
+<dd><p>Return staggered charges for the square QDM-to-QLM mapping.</p>
+<p>With spin-half flux variables <code class="docutils literal notranslate"><span class="pre">E_l</span> <span class="pre">in</span> <span class="pre">{-1,</span> <span class="pre">+1}</span></code>, the close-packed QDM
+constraint maps to a staggered Gauss law with charge magnitude one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.square.SquareLattice" title="qlinks.lattice.square.SquareLattice"><em>SquareLattice</em></a>) – SquareLattice instance.</p></li>
-<li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>) – <dl class="simple">
-<dt>“spin_half”:</dt><dd><p>The user-facing charges are ±1, matching the spin-half flux convention.</p>
-</dd>
-<dt>”integer_flux”:</dt><dd><p>The user-facing charges are ±2, matching the integer-flux convention
-where E_l in {-2, 0, +2}.</p>
-</dd>
-</dl>
-</p></li>
-<li><p><strong>convention</strong> (<em>Literal</em><em>[</em><em>'even_positive'</em><em>, </em><em>'odd_positive'</em><em>]</em>) – Which sublattice receives the positive charge.</p></li>
-<li><p><strong>magnitude</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.square.SquareLattice" title="qlinks.lattice.square.SquareLattice"><em>SquareLattice</em></a>) – Square lattice whose sites receive charges.</p></li>
+<li><p><strong>magnitude</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional explicit charge magnitude.  If omitted, the
+magnitude is inferred from <code class="docutils literal notranslate"><span class="pre">charge_normalization</span></code>.</p></li>
+<li><p><strong>charge_normalization</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;spin_half&quot;</span></code> gives user charges <code class="docutils literal notranslate"><span class="pre">±1</span></code>;
+<code class="docutils literal notranslate"><span class="pre">&quot;integer_flux&quot;</span></code> gives user charges <code class="docutils literal notranslate"><span class="pre">±2</span></code>.</p></li>
+<li><p><strong>convention</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'even_positive'</em><em>, </em><em>'odd_positive'</em><em>]</em>) – Which sublattice receives the positive charge.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Integer array ordered by site id.</p>
+<dd class="field-even"><p>Integer charge array ordered by site id.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>charges</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -428,35 +429,25 @@ where E_l in {-2, 0, +2}.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="qlinks.conventions.square_qdm_staggered_charges">
 <span class="sig-prename descclassname"><span class="pre">qlinks.conventions.</span></span><span class="sig-name descname"><span class="pre">square_qdm_staggered_charges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'spin_half'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'even_positive'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/conventions/qlm.html#square_qdm_staggered_charges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.conventions.square_qdm_staggered_charges" title="Link to this definition">#</a></dt>
-<dd><p>Staggered charges for the square-lattice QDM-to-QLM mapping.</p>
-<p>For the current spin-half flux convention E_l in {-1, +1}, the close-packed
-QDM constraint</p>
-<blockquote>
-<div><p>one dimer touching each site</p>
-</div></blockquote>
-<p>maps naturally to a staggered Gauss law with charge magnitude 1 on the
-square lattice.</p>
+<dd><p>Return staggered charges for the square QDM-to-QLM mapping.</p>
+<p>With spin-half flux variables <code class="docutils literal notranslate"><span class="pre">E_l</span> <span class="pre">in</span> <span class="pre">{-1,</span> <span class="pre">+1}</span></code>, the close-packed QDM
+constraint maps to a staggered Gauss law with charge magnitude one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.square.SquareLattice" title="qlinks.lattice.square.SquareLattice"><em>SquareLattice</em></a>) – SquareLattice instance.</p></li>
-<li><p><strong>charge_normalization</strong> (<em>Literal</em><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>) – <dl class="simple">
-<dt>“spin_half”:</dt><dd><p>The user-facing charges are ±1, matching the spin-half flux convention.</p>
-</dd>
-<dt>”integer_flux”:</dt><dd><p>The user-facing charges are ±2, matching the integer-flux convention
-where E_l in {-2, 0, +2}.</p>
-</dd>
-</dl>
-</p></li>
-<li><p><strong>convention</strong> (<em>Literal</em><em>[</em><em>'even_positive'</em><em>, </em><em>'odd_positive'</em><em>]</em>) – Which sublattice receives the positive charge.</p></li>
-<li><p><strong>magnitude</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.square.SquareLattice" title="qlinks.lattice.square.SquareLattice"><em>SquareLattice</em></a>) – Square lattice whose sites receive charges.</p></li>
+<li><p><strong>magnitude</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional explicit charge magnitude.  If omitted, the
+magnitude is inferred from <code class="docutils literal notranslate"><span class="pre">charge_normalization</span></code>.</p></li>
+<li><p><strong>charge_normalization</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'integer_flux'</em><em>, </em><em>'spin_half'</em><em>]</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;spin_half&quot;</span></code> gives user charges <code class="docutils literal notranslate"><span class="pre">±1</span></code>;
+<code class="docutils literal notranslate"><span class="pre">&quot;integer_flux&quot;</span></code> gives user charges <code class="docutils literal notranslate"><span class="pre">±2</span></code>.</p></li>
+<li><p><strong>convention</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'even_positive'</em><em>, </em><em>'odd_positive'</em><em>]</em>) – Which sublattice receives the positive charge.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Integer array ordered by site id.</p>
+<dd class="field-even"><p>Integer charge array ordered by site id.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>charges</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -465,35 +456,24 @@ where E_l in {-2, 0, +2}.</p>
 <dt class="sig sig-object py" id="qlinks.conventions.staggered_charges_from_sites">
 <span class="sig-prename descclassname"><span class="pre">qlinks.conventions.</span></span><span class="sig-name descname"><span class="pre">staggered_charges_from_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'even_positive'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/conventions/qlm.html#staggered_charges_from_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.conventions.staggered_charges_from_sites" title="Link to this definition">#</a></dt>
 <dd><p>Generate staggered background charges on lattice sites.</p>
-<p>The charge is assigned by the parity of the unit-cell coordinate:</p>
-<blockquote>
-<div><p>eta(r) = (-1) ** sum(cell coordinates)</p>
-</div></blockquote>
-<p>For a square lattice, this is simply:</p>
-<blockquote>
-<div><p>eta(x, y) = (-1) ** (x + y)</p>
-</div></blockquote>
+<p>The charge sign is assigned by the parity of the unit-cell coordinate,
+<code class="docutils literal notranslate"><span class="pre">eta(r)</span> <span class="pre">=</span> <span class="pre">(-1)</span> <span class="pre">**</span> <span class="pre">sum(cell</span> <span class="pre">coordinates)</span></code>.  On a square lattice this is
+<code class="docutils literal notranslate"><span class="pre">eta(x,</span> <span class="pre">y)</span> <span class="pre">=</span> <span class="pre">(-1)</span> <span class="pre">**</span> <span class="pre">(x</span> <span class="pre">+</span> <span class="pre">y)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lattice</strong> (<a class="reference internal" href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><em>LatticeGraph</em></a>) – Lattice whose sites carry the Gauss-law charges.</p></li>
-<li><p><strong>magnitude</strong> (<em>int</em>) – Absolute value of the staggered charge.</p></li>
-<li><p><strong>convention</strong> (<em>Literal</em><em>[</em><em>'even_positive'</em><em>, </em><em>'odd_positive'</em><em>]</em>) – <dl class="simple">
-<dt>“even_positive”:</dt><dd><p>even sublattice gets +magnitude,
-odd sublattice gets -magnitude.</p>
-</dd>
-<dt>”odd_positive”:</dt><dd><p>even sublattice gets -magnitude,
-odd sublattice gets +magnitude.</p>
-</dd>
-</dl>
-</p></li>
+<li><p><strong>magnitude</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Absolute value of the staggered charge.</p></li>
+<li><p><strong>convention</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'even_positive'</em><em>, </em><em>'odd_positive'</em><em>]</em>) – Which sublattice receives the positive charge.
+<code class="docutils literal notranslate"><span class="pre">&quot;even_positive&quot;</span></code> assigns <code class="docutils literal notranslate"><span class="pre">+magnitude</span></code> to the even sublattice;
+<code class="docutils literal notranslate"><span class="pre">&quot;odd_positive&quot;</span></code> reverses the sign.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Integer array of shape (lattice.num_sites,), ordered by site id.</p>
+<dd class="field-even"><p>Integer charge array ordered by site id.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>charges</p>
+<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
 </dd>
 </dl>
 </dd></dl>

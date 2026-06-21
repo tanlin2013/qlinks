@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks.basis package &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.basis package &#8212; qlinks</title>
   
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -154,7 +154,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="qlinks.html">qlinks package</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="qlinks.backends.html">qlinks.backends package</a></li>
@@ -163,18 +179,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -251,7 +273,7 @@
       
       
       
-      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/qlinks.basis.rst" target="_blank"
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/qlinks.basis.rst" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -321,23 +343,36 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subpackages">Subpackages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.basis">qlinks.basis.basis module</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.full_basis_from_layout"><code class="docutils literal notranslate"><span class="pre">full_basis_from_layout()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis"><code class="docutils literal notranslate"><span class="pre">Basis</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.layout"><code class="docutils literal notranslate"><span class="pre">Basis.layout</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.states"><code class="docutils literal notranslate"><span class="pre">Basis.states</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.encoder"><code class="docutils literal notranslate"><span class="pre">Basis.encoder</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.index"><code class="docutils literal notranslate"><span class="pre">Basis.index</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.from_states"><code class="docutils literal notranslate"><span class="pre">Basis.from_states()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.empty"><code class="docutils literal notranslate"><span class="pre">Basis.empty()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.n_states"><code class="docutils literal notranslate"><span class="pre">Basis.n_states</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.n_variables"><code class="docutils literal notranslate"><span class="pre">Basis.n_variables</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.state"><code class="docutils literal notranslate"><span class="pre">Basis.state()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.get_index"><code class="docutils literal notranslate"><span class="pre">Basis.get_index()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.require_index"><code class="docutils literal notranslate"><span class="pre">Basis.require_index()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.iter_states"><code class="docutils literal notranslate"><span class="pre">Basis.iter_states()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.__init__"><code class="docutils literal notranslate"><span class="pre">Basis.__init__()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.basis">qlinks.basis.basis module</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.full_basis_from_layout"><code class="docutils literal notranslate"><span class="pre">full_basis_from_layout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis"><code class="docutils literal notranslate"><span class="pre">Basis</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.layout"><code class="docutils literal notranslate"><span class="pre">Basis.layout</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.states"><code class="docutils literal notranslate"><span class="pre">Basis.states</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.encoder"><code class="docutils literal notranslate"><span class="pre">Basis.encoder</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.index"><code class="docutils literal notranslate"><span class="pre">Basis.index</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.from_states"><code class="docutils literal notranslate"><span class="pre">Basis.from_states()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.empty"><code class="docutils literal notranslate"><span class="pre">Basis.empty()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.n_states"><code class="docutils literal notranslate"><span class="pre">Basis.n_states</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.n_variables"><code class="docutils literal notranslate"><span class="pre">Basis.n_variables</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.state"><code class="docutils literal notranslate"><span class="pre">Basis.state()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.get_index"><code class="docutils literal notranslate"><span class="pre">Basis.get_index()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.require_index"><code class="docutils literal notranslate"><span class="pre">Basis.require_index()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.iter_states"><code class="docutils literal notranslate"><span class="pre">Basis.iter_states()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.__init__"><code class="docutils literal notranslate"><span class="pre">Basis.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.configs">qlinks.basis.configs module</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.configs.basis_configs_from_basis"><code class="docutils literal notranslate"><span class="pre">basis_configs_from_basis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.configs.basis_configs_from_build_result"><code class="docutils literal notranslate"><span class="pre">basis_configs_from_build_result()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.configs.decode_basis_configs_with_layout"><code class="docutils literal notranslate"><span class="pre">decode_basis_configs_with_layout()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.sectors">qlinks.basis.sectors module</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.sectors.sector_mask_from_sectors"><code class="docutils literal notranslate"><span class="pre">sector_mask_from_sectors()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.sectors.sector_mask_from_build_result"><code class="docutils literal notranslate"><span class="pre">sector_mask_from_build_result()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -384,6 +419,10 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
@@ -419,6 +458,9 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.layout"><code class="docutils literal notranslate"><span class="pre">SolverInput.layout</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.constraints"><code class="docutils literal notranslate"><span class="pre">SolverInput.constraints</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.sectors"><code class="docutils literal notranslate"><span class="pre">SolverInput.sectors</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4"><code class="docutils literal notranslate"><span class="pre">SolverInput.layout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5"><code class="docutils literal notranslate"><span class="pre">SolverInput.constraints</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6"><code class="docutils literal notranslate"><span class="pre">SolverInput.sectors</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.from_parts"><code class="docutils literal notranslate"><span class="pre">SolverInput.from_parts()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.from_collection"><code class="docutils literal notranslate"><span class="pre">SolverInput.from_collection()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.__init__"><code class="docutils literal notranslate"><span class="pre">SolverInput.__init__()</span></code></a></li>
@@ -451,151 +493,11 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="qlinks.basis.solvers.html">qlinks.basis.solvers package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers.base">qlinks.basis.solvers.base module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.BasisSolver"><code class="docutils literal notranslate"><span class="pre">BasisSolver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.BasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">BasisSolver.solve()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.BasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">BasisSolver.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput"><code class="docutils literal notranslate"><span class="pre">SolverInput</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput.layout"><code class="docutils literal notranslate"><span class="pre">SolverInput.layout</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput.constraints"><code class="docutils literal notranslate"><span class="pre">SolverInput.constraints</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput.sectors"><code class="docutils literal notranslate"><span class="pre">SolverInput.sectors</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput.from_parts"><code class="docutils literal notranslate"><span class="pre">SolverInput.from_parts()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput.from_collection"><code class="docutils literal notranslate"><span class="pre">SolverInput.from_collection()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput.__init__"><code class="docutils literal notranslate"><span class="pre">SolverInput.__init__()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers.brute_force">qlinks.basis.solvers.brute_force module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.brute_force.BruteForceBasisSolver"><code class="docutils literal notranslate"><span class="pre">BruteForceBasisSolver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.brute_force.BruteForceBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">BruteForceBasisSolver.sort</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.brute_force.BruteForceBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">BruteForceBasisSolver.solve()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.brute_force.BruteForceBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">BruteForceBasisSolver.__init__()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers.cpsat">qlinks.basis.solvers.cpsat module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.cpsat.CPSATBasisSolver"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.cpsat.CPSATBasisSolver.max_solutions"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.max_solutions</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.cpsat.CPSATBasisSolver.num_workers"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.num_workers</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.cpsat.CPSATBasisSolver.log_search_progress"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.log_search_progress</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.cpsat.CPSATBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.sort</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.cpsat.CPSATBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.solve()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.cpsat.CPSATBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.__init__()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers.dfs">qlinks.basis.solvers.dfs module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSSearchObserver"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSSearchObserver.name"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.name</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSSearchObserver.can_continue"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.can_continue()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSSearchObserver.accept_solution"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.accept_solution()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSSearchObserver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics"><code class="docutils literal notranslate"><span class="pre">DFSStatistics</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.branch_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.branch_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.solution_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.solution_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.contradiction_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.contradiction_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.propagated_assignment_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagated_assignment_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.skipped_forced_variable_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.skipped_forced_variable_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.partial_check_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.partial_check_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.propagation_round_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagation_round_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.propagator_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagator_call_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.dynamic_variable_selection_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_variable_selection_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.dynamic_value_ordering_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_value_ordering_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.observer_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_call_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.observer_update_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_update_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.observer_prune_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_prune_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.observer_solution_reject_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_solution_reject_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.max_depth"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.max_depth</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics.__init__"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSBasisSolver"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers">Module contents</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.BasisSolver"><code class="docutils literal notranslate"><span class="pre">BasisSolver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.BasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">BasisSolver.solve()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.BasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">BasisSolver.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.BruteForceBasisSolver"><code class="docutils literal notranslate"><span class="pre">BruteForceBasisSolver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.BruteForceBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">BruteForceBasisSolver.sort</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.BruteForceBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">BruteForceBasisSolver.solve()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.BruteForceBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">BruteForceBasisSolver.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.CPSATBasisSolver"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.CPSATBasisSolver.max_solutions"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.max_solutions</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.CPSATBasisSolver.num_workers"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.num_workers</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.CPSATBasisSolver.log_search_progress"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.log_search_progress</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.CPSATBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.sort</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.CPSATBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.solve()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.CPSATBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">CPSATBasisSolver.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSBasisSolver"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSBasisSolver.sort"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSSearchObserver"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSSearchObserver.name"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.name</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSSearchObserver.can_continue"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.can_continue()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSSearchObserver.accept_solution"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.accept_solution()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSSearchObserver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSSearchObserver.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics"><code class="docutils literal notranslate"><span class="pre">DFSStatistics</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.branch_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.branch_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.solution_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.solution_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.contradiction_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.contradiction_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.propagated_assignment_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagated_assignment_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.skipped_forced_variable_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.skipped_forced_variable_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.partial_check_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.partial_check_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.propagation_round_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagation_round_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.propagator_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.propagator_call_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.dynamic_variable_selection_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_variable_selection_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.dynamic_value_ordering_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.dynamic_value_ordering_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.observer_call_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_call_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.observer_update_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_update_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.observer_prune_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_prune_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.observer_solution_reject_count"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.observer_solution_reject_count</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.max_depth"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.max_depth</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.__init__"><code class="docutils literal notranslate"><span class="pre">DFSStatistics.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.SolverInput"><code class="docutils literal notranslate"><span class="pre">SolverInput</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.SolverInput.layout"><code class="docutils literal notranslate"><span class="pre">SolverInput.layout</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.SolverInput.constraints"><code class="docutils literal notranslate"><span class="pre">SolverInput.constraints</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.SolverInput.sectors"><code class="docutils literal notranslate"><span class="pre">SolverInput.sectors</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.SolverInput.from_parts"><code class="docutils literal notranslate"><span class="pre">SolverInput.from_parts()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.SolverInput.from_collection"><code class="docutils literal notranslate"><span class="pre">SolverInput.from_collection()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.SolverInput.__init__"><code class="docutils literal notranslate"><span class="pre">SolverInput.__init__()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers.base">qlinks.basis.solvers.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers.brute_force">qlinks.basis.solvers.brute_force module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers.cpsat">qlinks.basis.solvers.cpsat module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers.dfs">qlinks.basis.solvers.dfs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.basis.solvers.html#module-qlinks.basis.solvers">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -603,9 +505,8 @@
 </section>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
-</section>
 <section id="module-qlinks.basis.basis">
-<span id="qlinks-basis-basis-module"></span><h2>qlinks.basis.basis module<a class="headerlink" href="#module-qlinks.basis.basis" title="Link to this heading">#</a></h2>
+<span id="qlinks-basis-basis-module"></span><h3>qlinks.basis.basis module<a class="headerlink" href="#module-qlinks.basis.basis" title="Link to this heading">#</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="qlinks.basis.basis.full_basis_from_layout">
 <span class="sig-prename descclassname"><span class="pre">qlinks.basis.basis.</span></span><span class="sig-name descname"><span class="pre">full_basis_from_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#full_basis_from_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.full_basis_from_layout" title="Link to this definition">#</a></dt>
@@ -617,23 +518,13 @@
 </div></blockquote>
 <p>where dim_i is the local-space dimension of variable i.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>sort</strong> (<em>bool</em>)</p></li>
-<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.basis.</span></span><span class="sig-name descname"><span class="pre">Basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.Basis" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Computational basis represented by explicit configurations.</p>
 <dl class="simple">
 <dt>states:</dt><dd><p>Integer array of shape (n_states, n_variables).</p>
@@ -642,14 +533,6 @@
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>states</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>encoder</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.encoding.ConfigEncoder" title="qlinks.variables.encoding.ConfigEncoder"><em>ConfigEncoder</em></a>)</p></li>
-<li><p><strong>index</strong> (<em>dict</em><em>[</em><em>bytes</em><em>, </em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.layout">
@@ -668,23 +551,13 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.index">
-<span class="sig-name descname"><span class="pre">index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.basis.Basis.index" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><span class="pre">bytes</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.basis.Basis.index" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.from_states">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.from_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.Basis.from_states" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>states</strong> (<em>ArrayLike</em>)</p></li>
-<li><p><strong>sort</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -692,38 +565,23 @@
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.empty">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.Basis.empty" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.n_states">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.basis.Basis.n_states" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.basis.Basis.n_states" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.n_variables">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.basis.Basis.n_variables" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.basis.Basis.n_variables" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.state">
 <span class="sig-name descname"><span class="pre">state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_index</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.Basis.state" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>basis_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>copy</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -731,12 +589,6 @@
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.get_index">
 <span class="sig-name descname"><span class="pre">get_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.get_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.Basis.get_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int | None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -744,12 +596,6 @@
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.require_index">
 <span class="sig-name descname"><span class="pre">require_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.require_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.Basis.require_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -757,12 +603,6 @@
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.iter_states">
 <span class="sig-name descname"><span class="pre">iter_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.iter_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.basis.Basis.iter_states" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Iterable</em>[NDArray[<em>int64</em>]]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -770,29 +610,76 @@
 <dt class="sig sig-object py" id="qlinks.basis.basis.Basis.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.basis.Basis.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>states</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>encoder</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.encoding.ConfigEncoder" title="qlinks.variables.encoding.ConfigEncoder"><em>ConfigEncoder</em></a>)</p></li>
-<li><p><strong>index</strong> (<em>dict</em><em>[</em><em>bytes</em><em>, </em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
 </section>
+<section id="module-qlinks.basis.configs">
+<span id="qlinks-basis-configs-module"></span><h3>qlinks.basis.configs module<a class="headerlink" href="#module-qlinks.basis.configs" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.configs.basis_configs_from_basis">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.configs.</span></span><span class="sig-name descname"><span class="pre">basis_configs_from_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/configs.html#basis_configs_from_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.configs.basis_configs_from_basis" title="Link to this definition">#</a></dt>
+<dd><p>Return explicit basis configurations for ArrayBasis or BinaryEncodedBasis.</p>
+<p>Sparse/array builders usually expose this as <code class="docutils literal notranslate"><span class="pre">basis.states</span></code>. Bitmask
+builders may use BinaryEncodedBasis, which stores compact integer codes and
+exposes <code class="docutils literal notranslate"><span class="pre">to_array_basis()</span></code>.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.configs.basis_configs_from_build_result">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.configs.</span></span><span class="sig-name descname"><span class="pre">basis_configs_from_build_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build_result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/configs.html#basis_configs_from_build_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.configs.basis_configs_from_build_result" title="Link to this definition">#</a></dt>
+<dd><p>Return physical basis configurations from a ModelBuildResult.</p>
+<p>Bitmask builders may store basis states as local integer codes, e.g.
+0/1 for a two-state local space. The classifier and visualizers need the
+physical variable values declared by build_result.layout, e.g. -1/+1.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.configs.decode_basis_configs_with_layout">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.configs.</span></span><span class="sig-name descname"><span class="pre">decode_basis_configs_with_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/configs.html#decode_basis_configs_with_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.configs.decode_basis_configs_with_layout" title="Link to this definition">#</a></dt>
+<dd><p>Decode local integer codes into physical values using a VariableLayout.</p>
+<p>If the configs already contain valid physical values, they are returned
+unchanged. Otherwise, values 0, 1, …, d-1 are interpreted as indices into
+each variable’s local space.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-qlinks.basis.sectors">
+<span id="qlinks-basis-sectors-module"></span><h3>qlinks.basis.sectors module<a class="headerlink" href="#module-qlinks.basis.sectors" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.sectors.sector_mask_from_sectors">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.sectors.</span></span><span class="sig-name descname"><span class="pre">sector_mask_from_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/sectors.html#sector_mask_from_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.sectors.sector_mask_from_sectors" title="Link to this definition">#</a></dt>
+<dd><p>Return a boolean mask selecting configs satisfying all sectors.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.basis.sectors.sector_mask_from_build_result">
+<span class="sig-prename descclassname"><span class="pre">qlinks.basis.sectors.</span></span><span class="sig-name descname"><span class="pre">sector_mask_from_build_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/sectors.html#sector_mask_from_build_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.sectors.sector_mask_from_build_result" title="Link to this definition">#</a></dt>
+<dd><p>Return a boolean mask for configs in a build result.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">sectors</span></code> is provided, use those sectors. Otherwise, try common
+build-result fields and fall back to selecting all basis states.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</section>
+</section>
 <section id="module-qlinks.basis">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-qlinks.basis" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.Basis">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">Basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.Basis" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Computational basis represented by explicit configurations.</p>
 <dl class="simple">
 <dt>states:</dt><dd><p>Integer array of shape (n_states, n_variables).</p>
@@ -801,14 +688,6 @@
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>states</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>encoder</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.encoding.ConfigEncoder" title="qlinks.variables.encoding.ConfigEncoder"><em>ConfigEncoder</em></a>)</p></li>
-<li><p><strong>index</strong> (<em>dict</em><em>[</em><em>bytes</em><em>, </em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.Basis.layout">
@@ -827,23 +706,13 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.Basis.index">
-<span class="sig-name descname"><span class="pre">index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.Basis.index" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><span class="pre">bytes</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.Basis.index" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.Basis.from_states">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.from_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.Basis.from_states" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>states</strong> (<em>ArrayLike</em>)</p></li>
-<li><p><strong>sort</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -851,38 +720,23 @@
 <dt class="sig sig-object py" id="qlinks.basis.Basis.empty">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.Basis.empty" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.basis.Basis.n_states">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.Basis.n_states" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.Basis.n_states" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.basis.Basis.n_variables">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.Basis.n_variables" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.Basis.n_variables" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.Basis.state">
 <span class="sig-name descname"><span class="pre">state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_index</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.Basis.state" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>basis_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>copy</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -890,12 +744,6 @@
 <dt class="sig sig-object py" id="qlinks.basis.Basis.get_index">
 <span class="sig-name descname"><span class="pre">get_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.get_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.Basis.get_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int | None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -903,12 +751,6 @@
 <dt class="sig sig-object py" id="qlinks.basis.Basis.require_index">
 <span class="sig-name descname"><span class="pre">require_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.require_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.Basis.require_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -916,12 +758,6 @@
 <dt class="sig sig-object py" id="qlinks.basis.Basis.iter_states">
 <span class="sig-name descname"><span class="pre">iter_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/basis.html#Basis.iter_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.Basis.iter_states" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Iterable</em>[NDArray[<em>int64</em>]]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -929,17 +765,6 @@
 <dt class="sig sig-object py" id="qlinks.basis.Basis.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.Basis.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>states</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>encoder</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.encoding.ConfigEncoder" title="qlinks.variables.encoding.ConfigEncoder"><em>ConfigEncoder</em></a>)</p></li>
-<li><p><strong>index</strong> (<em>dict</em><em>[</em><em>bytes</em><em>, </em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -948,21 +773,14 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.BasisSolver">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">BasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/base.html#BasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.BasisSolver" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
+<p>Protocol implemented by constrained-basis solvers.</p>
+<p>Solvers enumerate configurations from a <code class="xref py py-class docutils literal notranslate"><span class="pre">VariableLayout</span></code> subject to
+constraints and sector filters, then return a <a class="reference internal" href="#qlinks.basis.Basis" title="qlinks.basis.Basis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Basis</span></code></a>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.BasisSolver.solve">
 <span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/base.html#BasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.BasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -976,7 +794,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.BruteForceBasisSolver">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">BruteForceBasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/brute_force.html#BruteForceBasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.BruteForceBasisSolver" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Exhaustive product-space basis solver.</p>
 <p>This is simple and useful for tests, but it scales as</p>
 <blockquote>
@@ -984,30 +802,16 @@
 </div></blockquote>
 <p>so it should only be used for small systems.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sort</strong> (<em>bool</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.BruteForceBasisSolver.sort">
-<span class="sig-name descname"><span class="pre">sort</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qlinks.basis.BruteForceBasisSolver.sort" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sort</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#qlinks.basis.BruteForceBasisSolver.sort" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.BruteForceBasisSolver.solve">
 <span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/brute_force.html#BruteForceBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.BruteForceBasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
-<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1015,12 +819,6 @@
 <dt class="sig sig-object py" id="qlinks.basis.BruteForceBasisSolver.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.BruteForceBasisSolver.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sort</strong> (<em>bool</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1029,7 +827,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.CPSATBasisSolver">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">CPSATBasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_solutions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_search_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/cpsat.html#CPSATBasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>OR-Tools CP-SAT basis solver.</p>
 <p>This solver is useful when the constraints are naturally integer/Boolean
 constraints. It currently supports:</p>
@@ -1046,50 +844,31 @@ SquareWindingSector</p>
 <p>Unsupported custom constraints raise NotImplementedError.</p>
 <p>OR-Tools is imported lazily so qlinks can still be installed without it.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>max_solutions</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>num_workers</strong> (<em>int</em>)</p></li>
-<li><p><strong>log_search_progress</strong> (<em>bool</em>)</p></li>
-<li><p><strong>sort</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.CPSATBasisSolver.max_solutions">
-<span class="sig-name descname"><span class="pre">max_solutions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.max_solutions" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">max_solutions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.max_solutions" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.CPSATBasisSolver.num_workers">
-<span class="sig-name descname"><span class="pre">num_workers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.num_workers" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">num_workers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.num_workers" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.CPSATBasisSolver.log_search_progress">
-<span class="sig-name descname"><span class="pre">log_search_progress</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.log_search_progress" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_search_progress</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.log_search_progress" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.CPSATBasisSolver.sort">
-<span class="sig-name descname"><span class="pre">sort</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.sort" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sort</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.sort" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.CPSATBasisSolver.solve">
 <span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/cpsat.html#CPSATBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
-<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1097,17 +876,6 @@ SquareWindingSector</p>
 <dt class="sig sig-object py" id="qlinks.basis.CPSATBasisSolver.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_solutions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_search_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.CPSATBasisSolver.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>max_solutions</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>num_workers</strong> (<em>int</em>)</p></li>
-<li><p><strong>log_search_progress</strong> (<em>bool</em>)</p></li>
-<li><p><strong>sort</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1115,54 +883,84 @@ SquareWindingSector</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.DFSBasisSolver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">DFSBasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'npt.ArrayLike</span> <span class="pre">|</span> <span class="pre">None'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'VariableOrderStrategy'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_order_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'ValueOrderStrategy'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'layout'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSBasisSolver" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">DFSBasisSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layout'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSBasisSolver" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Depth-first constrained-basis enumerator.</p>
+<p>The solver incrementally assigns variables, runs partial checks and
+propagators, and optionally notifies search observers.  It is the default
+basis solver for model builds because it supports early stopping, dynamic
+ordering, propagation, and model-specific observer hooks.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sort</strong> (<em>bool</em>)</p></li>
-<li><p><strong>variable_order</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>, </em><em>'weighted_degree'</em><em>, </em><em>'constraint_closure'</em><em>, </em><em>'dynamic'</em><em>]</em>)</p></li>
-<li><p><strong>value_order_strategy</strong> (<em>Literal</em><em>[</em><em>'layout'</em><em>, </em><em>'propagation'</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSBasisSolver.sort">
-<span class="sig-name descname"><span class="pre">sort</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.sort" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">sort</span></span><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.sort" title="Link to this definition">#</a></dt>
+<dd><p>Whether to lexicographically sort the returned basis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSBasisSolver.variable_order">
-<span class="sig-name descname"><span class="pre">variable_order</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ArrayLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.variable_order" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">variable_order</span></span><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.variable_order" title="Link to this definition">#</a></dt>
+<dd><p>Optional explicit variable order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike | None</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSBasisSolver.variable_order_strategy">
-<span class="sig-name descname"><span class="pre">variable_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'degree'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'weighted_degree'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'constraint_closure'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'dynamic'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.variable_order_strategy" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">variable_order_strategy</span></span><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.variable_order_strategy" title="Link to this definition">#</a></dt>
+<dd><p>Heuristic used when <code class="docutils literal notranslate"><span class="pre">variable_order</span></code> is not
+supplied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Literal[‘auto’, ‘layout’, ‘degree’, ‘weighted_degree’, ‘constraint_closure’, ‘dynamic’]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSBasisSolver.value_order_strategy">
-<span class="sig-name descname"><span class="pre">value_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'propagation'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.value_order_strategy" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">value_order_strategy</span></span><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.value_order_strategy" title="Link to this definition">#</a></dt>
+<dd><p>Heuristic used to order trial local values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Literal[‘layout’, ‘propagation’]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">sort</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">variable_order</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ArrayLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">variable_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'degree'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'weighted_degree'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'constraint_closure'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'dynamic'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id2" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">value_order_strategy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'layout'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'propagation'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id3" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.DFSBasisSolver.solve">
 <span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.solve" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
-<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>observers</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSSearchObserver" title="qlinks.basis.solvers.dfs.DFSSearchObserver"><em>DFSSearchObserver</em></a><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1171,18 +969,6 @@ SquareWindingSector</p>
 <span class="sig-name descname"><span class="pre">solve_with_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSBasisSolver.solve_with_statistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.solve_with_statistics" title="Link to this definition">#</a></dt>
 <dd><p>Solve and return lightweight DFS execution statistics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
-<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>observers</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSSearchObserver" title="qlinks.basis.solvers.dfs.DFSSearchObserver"><em>DFSSearchObserver</em></a><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[<a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a>, <a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.dfs.DFSStatistics" title="qlinks.basis.solvers.dfs.DFSStatistics"><em>DFSStatistics</em></a>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1190,17 +976,6 @@ SquareWindingSector</p>
 <dt class="sig sig-object py" id="qlinks.basis.DFSBasisSolver.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_order_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layout'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.DFSBasisSolver.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sort</strong> (<em>bool</em>)</p></li>
-<li><p><strong>variable_order</strong> (<em>ArrayLike</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>variable_order_strategy</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'layout'</em><em>, </em><em>'degree'</em><em>, </em><em>'weighted_degree'</em><em>, </em><em>'constraint_closure'</em><em>, </em><em>'dynamic'</em><em>]</em>)</p></li>
-<li><p><strong>value_order_strategy</strong> (<em>Literal</em><em>[</em><em>'layout'</em><em>, </em><em>'propagation'</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1209,7 +984,7 @@ SquareWindingSector</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.DFSSearchObserver">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">DFSSearchObserver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSSearchObserver" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
 <p>Read-only branch/solution observer for <a class="reference internal" href="#qlinks.basis.DFSBasisSolver" title="qlinks.basis.DFSBasisSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a>.</p>
 <p>Observers are intended for search-specific pruning that is not naturally a
 model constraint.  They may inspect the mutable DFS arrays but must not
@@ -1232,23 +1007,13 @@ Batched callbacks are preferred for observers that maintain incremental
 state over many variables.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSSearchObserver.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.basis.DFSSearchObserver.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.basis.DFSSearchObserver.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.DFSSearchObserver.can_continue">
 <span class="sig-name descname"><span class="pre">can_continue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assigned_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changed_variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver.can_continue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSSearchObserver.can_continue" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>assigned_mask</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.bool" title="(in NumPy v2.4)"><em>bool</em></a><em>]</em>)</p></li>
-<li><p><strong>changed_variables</strong> (<em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1256,12 +1021,6 @@ state over many variables.</p>
 <dt class="sig sig-object py" id="qlinks.basis.DFSSearchObserver.accept_solution">
 <span class="sig-name descname"><span class="pre">accept_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSSearchObserver.accept_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSSearchObserver.accept_solution" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1275,133 +1034,92 @@ state over many variables.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">DFSStatistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">branch_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solution_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contradiction_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagated_assignment_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped_forced_variable_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_check_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagation_round_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagator_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_variable_selection_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_value_ordering_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_update_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_prune_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_solution_reject_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/dfs.html#DFSStatistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.DFSStatistics" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Execution counters for <a class="reference internal" href="#qlinks.basis.DFSBasisSolver" title="qlinks.basis.DFSBasisSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DFSBasisSolver</span></code></a>.</p>
 <p>The counters are intentionally lightweight and solver-centric.  They are
 meant for comparing pruning/order heuristics, not for proving exact search
 tree identities across implementation changes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>branch_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>solution_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>contradiction_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>propagated_assignment_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>skipped_forced_variable_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>partial_check_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>propagation_round_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>propagator_call_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>dynamic_variable_selection_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>dynamic_value_ordering_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>observer_call_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>observer_update_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>observer_prune_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>observer_solution_reject_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>max_depth</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.branch_count">
-<span class="sig-name descname"><span class="pre">branch_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.branch_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">branch_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.branch_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.solution_count">
-<span class="sig-name descname"><span class="pre">solution_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.solution_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solution_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.solution_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.contradiction_count">
-<span class="sig-name descname"><span class="pre">contradiction_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.contradiction_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">contradiction_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.contradiction_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.propagated_assignment_count">
-<span class="sig-name descname"><span class="pre">propagated_assignment_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.propagated_assignment_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">propagated_assignment_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.propagated_assignment_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.skipped_forced_variable_count">
-<span class="sig-name descname"><span class="pre">skipped_forced_variable_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.skipped_forced_variable_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">skipped_forced_variable_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.skipped_forced_variable_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.partial_check_count">
-<span class="sig-name descname"><span class="pre">partial_check_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.partial_check_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">partial_check_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.partial_check_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.propagation_round_count">
-<span class="sig-name descname"><span class="pre">propagation_round_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.propagation_round_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">propagation_round_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.propagation_round_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.propagator_call_count">
-<span class="sig-name descname"><span class="pre">propagator_call_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.propagator_call_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">propagator_call_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.propagator_call_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.dynamic_variable_selection_count">
-<span class="sig-name descname"><span class="pre">dynamic_variable_selection_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.dynamic_variable_selection_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dynamic_variable_selection_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.dynamic_variable_selection_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.dynamic_value_ordering_count">
-<span class="sig-name descname"><span class="pre">dynamic_value_ordering_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.dynamic_value_ordering_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dynamic_value_ordering_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.dynamic_value_ordering_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.observer_call_count">
-<span class="sig-name descname"><span class="pre">observer_call_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.observer_call_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">observer_call_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.observer_call_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.observer_update_count">
-<span class="sig-name descname"><span class="pre">observer_update_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.observer_update_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">observer_update_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.observer_update_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.observer_prune_count">
-<span class="sig-name descname"><span class="pre">observer_prune_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.observer_prune_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">observer_prune_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.observer_prune_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.observer_solution_reject_count">
-<span class="sig-name descname"><span class="pre">observer_solution_reject_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.observer_solution_reject_count" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">observer_solution_reject_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.observer_solution_reject_count" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.max_depth">
-<span class="sig-name descname"><span class="pre">max_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.max_depth" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">max_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.basis.DFSStatistics.max_depth" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.DFSStatistics.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">branch_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solution_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contradiction_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagated_assignment_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped_forced_variable_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_check_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagation_round_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagator_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_variable_selection_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_value_ordering_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_call_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_update_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_prune_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observer_solution_reject_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.DFSStatistics.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>branch_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>solution_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>contradiction_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>propagated_assignment_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>skipped_forced_variable_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>partial_check_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>propagation_round_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>propagator_call_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>dynamic_variable_selection_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>dynamic_value_ordering_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>observer_call_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>observer_update_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>observer_prune_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>observer_solution_reject_count</strong> (<em>int</em>)</p></li>
-<li><p><strong>max_depth</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1409,46 +1127,63 @@ tree identities across implementation changes.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.basis.SolverInput">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">SolverInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'VariableLayout'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'tuple[Constraint,</span> <span class="pre">...]'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'tuple[SectorCondition,</span> <span class="pre">...]'</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/base.html#SolverInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.SolverInput" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">SolverInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/base.html#SolverInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.SolverInput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Immutable bundle of inputs shared by basis solvers.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>constraints</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.SolverInput.layout">
-<span class="sig-name descname"><span class="pre">layout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><span class="pre">VariableLayout</span></a></em><a class="headerlink" href="#qlinks.basis.SolverInput.layout" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">layout</span></span><a class="headerlink" href="#qlinks.basis.SolverInput.layout" title="Link to this definition">#</a></dt>
+<dd><p>Variable layout defining local spaces.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout">qlinks.variables.layout.VariableLayout</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.SolverInput.constraints">
-<span class="sig-name descname"><span class="pre">constraints</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><span class="pre">Constraint</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.SolverInput.constraints" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">constraints</span></span><a class="headerlink" href="#qlinks.basis.SolverInput.constraints" title="Link to this definition">#</a></dt>
+<dd><p>Constraints all states must satisfy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint">qlinks.constraints.base.Constraint</a>, …]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.basis.SolverInput.sectors">
-<span class="sig-name descname"><span class="pre">sectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><span class="pre">SectorCondition</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.basis.SolverInput.sectors" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sectors</span></span><a class="headerlink" href="#qlinks.basis.SolverInput.sectors" title="Link to this definition">#</a></dt>
+<dd><p>Sector filters all states must satisfy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition">qlinks.constraints.base.SectorCondition</a>, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">layout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><span class="pre">VariableLayout</span></a></em><a class="headerlink" href="#id4" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">constraints</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><span class="pre">Constraint</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id5" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">sectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><span class="pre">SectorCondition</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id6" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.basis.SolverInput.from_parts">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_parts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/base.html#SolverInput.from_parts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.SolverInput.from_parts" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput" title="qlinks.basis.solvers.base.SolverInput"><em>SolverInput</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1456,15 +1191,6 @@ tree identities across implementation changes.</p>
 <dt class="sig sig-object py" id="qlinks.basis.SolverInput.from_collection">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/solvers/base.html#SolverInput.from_collection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.SolverInput.from_collection" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>collection</strong> (<a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.collection.ConstraintCollection" title="qlinks.constraints.collection.ConstraintCollection"><em>ConstraintCollection</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="qlinks.basis.solvers.html#qlinks.basis.solvers.base.SolverInput" title="qlinks.basis.solvers.base.SolverInput"><em>SolverInput</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1472,16 +1198,6 @@ tree identities across implementation changes.</p>
 <dt class="sig sig-object py" id="qlinks.basis.SolverInput.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.basis.SolverInput.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>constraints</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.Constraint" title="qlinks.constraints.base.Constraint"><em>Constraint</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="qlinks.constraints.html#qlinks.constraints.base.SectorCondition" title="qlinks.constraints.base.SectorCondition"><em>SectorCondition</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1495,12 +1211,6 @@ tree identities across implementation changes.</p>
 builders may use BinaryEncodedBasis, which stores compact integer codes and
 exposes <code class="docutils literal notranslate"><span class="pre">to_array_basis()</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>basis</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1512,12 +1222,6 @@ exposes <code class="docutils literal notranslate"><span class="pre">to_array_ba
 0/1 for a two-state local space. The classifier and visualizers need the
 physical variable values declared by build_result.layout, e.g. -1/+1.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>build_result</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1529,15 +1233,6 @@ physical variable values declared by build_result.layout, e.g. -1/+1.</p>
 unchanged. Otherwise, values 0, 1, …, d-1 are interpreted as indices into
 each variable’s local space.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>basis_configs</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p></li>
-<li><p><strong>layout</strong> (<em>Any</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1552,16 +1247,6 @@ each variable’s local space.</p>
 </div></blockquote>
 <p>where dim_i is the local-space dimension of variable i.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="qlinks.variables.html#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>sort</strong> (<em>bool</em>)</p></li>
-<li><p><strong>max_states</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.basis.basis.Basis" title="qlinks.basis.basis.Basis"><em>Basis</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1572,15 +1257,6 @@ each variable’s local space.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">sectors</span></code> is provided, use those sectors. Otherwise, try common
 build-result fields and fall back to selecting all basis states.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>build_result</strong> (<em>Any</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.bool" title="(in NumPy v2.4)"><em>bool</em></a>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1589,15 +1265,6 @@ build-result fields and fall back to selecting all basis states.</p>
 <span class="sig-prename descclassname"><span class="pre">qlinks.basis.</span></span><span class="sig-name descname"><span class="pre">sector_mask_from_sectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sectors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/basis/sectors.html#sector_mask_from_sectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.basis.sector_mask_from_sectors" title="Link to this definition">#</a></dt>
 <dd><p>Return a boolean mask selecting configs satisfying all sectors.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>basis_configs</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p></li>
-<li><p><strong>sectors</strong> (<em>Sequence</em><em>[</em><em>Any</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.bool" title="(in NumPy v2.4)"><em>bool</em></a>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1652,23 +1319,36 @@ build-result fields and fall back to selecting all basis states.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subpackages">Subpackages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.basis">qlinks.basis.basis module</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.full_basis_from_layout"><code class="docutils literal notranslate"><span class="pre">full_basis_from_layout()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis"><code class="docutils literal notranslate"><span class="pre">Basis</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.layout"><code class="docutils literal notranslate"><span class="pre">Basis.layout</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.states"><code class="docutils literal notranslate"><span class="pre">Basis.states</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.encoder"><code class="docutils literal notranslate"><span class="pre">Basis.encoder</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.index"><code class="docutils literal notranslate"><span class="pre">Basis.index</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.from_states"><code class="docutils literal notranslate"><span class="pre">Basis.from_states()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.empty"><code class="docutils literal notranslate"><span class="pre">Basis.empty()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.n_states"><code class="docutils literal notranslate"><span class="pre">Basis.n_states</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.n_variables"><code class="docutils literal notranslate"><span class="pre">Basis.n_variables</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.state"><code class="docutils literal notranslate"><span class="pre">Basis.state()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.get_index"><code class="docutils literal notranslate"><span class="pre">Basis.get_index()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.require_index"><code class="docutils literal notranslate"><span class="pre">Basis.require_index()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.iter_states"><code class="docutils literal notranslate"><span class="pre">Basis.iter_states()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.__init__"><code class="docutils literal notranslate"><span class="pre">Basis.__init__()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.basis">qlinks.basis.basis module</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.full_basis_from_layout"><code class="docutils literal notranslate"><span class="pre">full_basis_from_layout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis"><code class="docutils literal notranslate"><span class="pre">Basis</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.layout"><code class="docutils literal notranslate"><span class="pre">Basis.layout</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.states"><code class="docutils literal notranslate"><span class="pre">Basis.states</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.encoder"><code class="docutils literal notranslate"><span class="pre">Basis.encoder</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.index"><code class="docutils literal notranslate"><span class="pre">Basis.index</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.from_states"><code class="docutils literal notranslate"><span class="pre">Basis.from_states()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.empty"><code class="docutils literal notranslate"><span class="pre">Basis.empty()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.n_states"><code class="docutils literal notranslate"><span class="pre">Basis.n_states</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.n_variables"><code class="docutils literal notranslate"><span class="pre">Basis.n_variables</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.state"><code class="docutils literal notranslate"><span class="pre">Basis.state()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.get_index"><code class="docutils literal notranslate"><span class="pre">Basis.get_index()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.require_index"><code class="docutils literal notranslate"><span class="pre">Basis.require_index()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.iter_states"><code class="docutils literal notranslate"><span class="pre">Basis.iter_states()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.basis.Basis.__init__"><code class="docutils literal notranslate"><span class="pre">Basis.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.configs">qlinks.basis.configs module</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.configs.basis_configs_from_basis"><code class="docutils literal notranslate"><span class="pre">basis_configs_from_basis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.configs.basis_configs_from_build_result"><code class="docutils literal notranslate"><span class="pre">basis_configs_from_build_result()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.configs.decode_basis_configs_with_layout"><code class="docutils literal notranslate"><span class="pre">decode_basis_configs_with_layout()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.basis.sectors">qlinks.basis.sectors module</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.sectors.sector_mask_from_sectors"><code class="docutils literal notranslate"><span class="pre">sector_mask_from_sectors()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.sectors.sector_mask_from_build_result"><code class="docutils literal notranslate"><span class="pre">sector_mask_from_build_result()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1715,6 +1395,10 @@ build-result fields and fall back to selecting all basis states.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.variable_order"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.variable_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.value_order_strategy"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.sort</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.variable_order_strategy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.value_order_strategy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.solve"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.solve_with_statistics"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.solve_with_statistics()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.DFSBasisSolver.__init__"><code class="docutils literal notranslate"><span class="pre">DFSBasisSolver.__init__()</span></code></a></li>
@@ -1750,6 +1434,9 @@ build-result fields and fall back to selecting all basis states.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.layout"><code class="docutils literal notranslate"><span class="pre">SolverInput.layout</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.constraints"><code class="docutils literal notranslate"><span class="pre">SolverInput.constraints</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.sectors"><code class="docutils literal notranslate"><span class="pre">SolverInput.sectors</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4"><code class="docutils literal notranslate"><span class="pre">SolverInput.layout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5"><code class="docutils literal notranslate"><span class="pre">SolverInput.constraints</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6"><code class="docutils literal notranslate"><span class="pre">SolverInput.sectors</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.from_parts"><code class="docutils literal notranslate"><span class="pre">SolverInput.from_parts()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.from_collection"><code class="docutils literal notranslate"><span class="pre">SolverInput.from_collection()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.basis.SolverInput.__init__"><code class="docutils literal notranslate"><span class="pre">SolverInput.__init__()</span></code></a></li>

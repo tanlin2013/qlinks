@@ -1,0 +1,1225 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.caging.search &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=423d4ce3"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/caging/search';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/caging/search.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.caging.search</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;High-level assembly API for interference-cage searches.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Integral</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">overload</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">scipy_sparse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.candidate</span><span class="w"> </span><span class="kn">import</span> <span class="n">CandidateSubgraph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.linear_independence</span><span class="w"> </span><span class="kn">import</span> <span class="n">IndependentColumnSelector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.partition</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">type1_candidates_from_bipartite_self_loops</span><span class="p">,</span>
+    <span class="n">type2_candidates_from_self_loops</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.solver</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CageSolverConfig</span><span class="p">,</span>
+    <span class="n">CageState</span><span class="p">,</span>
+    <span class="n">solve_candidate_for_kinetic_targets</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CageSearchType</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;type1&quot;</span><span class="p">,</span> <span class="s2">&quot;type2&quot;</span><span class="p">,</span> <span class="s2">&quot;type1_and_type2&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="CageSearchConfig">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearchConfig">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CageSearchConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for the high-level interference-cage search.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        search_type: Candidate family to search.  ``&quot;type1&quot;`` targets</span>
+<span class="sd">            bipartite ``kappa=0`` cages; ``&quot;type2&quot;`` targets fixed nonzero</span>
+<span class="sd">            kinetic eigenvalues; ``&quot;type1_and_type2&quot;`` runs both.</span>
+<span class="sd">        tolerance: Numerical tolerance for candidate filtering and solver</span>
+<span class="sd">            residual checks.</span>
+<span class="sd">        min_component_size: Minimum Fock-space component size considered.</span>
+<span class="sd">        validate_full_residual: Whether to validate candidate eigenstates</span>
+<span class="sd">            against the full Hamiltonian columns.</span>
+<span class="sd">        degenerate_basis_strategy: How to choose representatives from</span>
+<span class="sd">            degenerate cage subspaces.</span>
+<span class="sd">        type1_kappas: Kinetic eigenvalues used for type-1 candidates.</span>
+<span class="sd">        type2_kappas: Kinetic eigenvalues used for type-2 candidates.</span>
+<span class="sd">        deduplicate_by_rank: Whether to remove linearly dependent discoveries</span>
+<span class="sd">            within each signature.</span>
+<span class="sd">        store_full_states: Whether result records include full Hilbert-space</span>
+<span class="sd">            state vectors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">search_type</span><span class="p">:</span> <span class="n">CageSearchType</span> <span class="o">=</span> <span class="s2">&quot;type1_and_type2&quot;</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span>
+    <span class="n">min_component_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">validate_full_residual</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">degenerate_basis_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;ipr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+    <span class="n">ipr_n_restarts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span>
+    <span class="n">ipr_max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">ipr_step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">ipr_candidate_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">ipr_rank_completion_patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">ipr_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">ipr_random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">type1_kappas</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+    <span class="n">type2_kappas</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">deduplicate_by_rank</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">rank_tolerance_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span>
+    <span class="n">signature_tolerance_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span>
+    <span class="n">potential_signature_unit</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">store_full_states</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">include_type1</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">include_type2</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="s2">&quot;type1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type1_and_type2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+        <span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;search_type must be &#39;type1&#39;, &#39;type2&#39;, &quot;</span> <span class="s2">&quot;&#39;type1_and_type2&#39;, or &#39;custom&#39;.&quot;</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CageRecord">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageRecord">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CageRecord</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One discovered cage state together with its search metadata.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        cage_state: Compact cage state on its support.</span>
+<span class="sd">        signature: Integer signature ``(kappa, z)`` inferred from kinetic and</span>
+<span class="sd">            potential/self-loop values.</span>
+<span class="sd">        candidate: Candidate subgraph that produced the state.</span>
+<span class="sd">        full_state: Optional full Hilbert-space vector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cage_state</span><span class="p">:</span> <span class="n">CageState</span>
+    <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">candidate</span><span class="p">:</span> <span class="n">CandidateSubgraph</span>
+    <span class="n">full_state</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">kappa</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">potential_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">support</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cage_state</span><span class="o">.</span><span class="n">support</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">local_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cage_state</span><span class="o">.</span><span class="n">local_state</span></div>
+
+
+
+<div class="viewcode-block" id="CageRecordView">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageRecordView">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CageRecordView</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Indexable view into a subset of cage records.&quot;&quot;&quot;</span>
+
+    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]</span>
+    <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRecord</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRecord</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+<div class="viewcode-block" id="CageRecordView.first">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageRecordView.first">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">first</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRecord</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No cage records are available.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No cage record found for signature </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CageRecordView.to_list">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageRecordView.to_list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CageSearchResult">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearchResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CageSearchResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collection returned by :class:`CageSearcher`.</span>
+
+<span class="sd">    The result behaves like a sequence of :class:`CageRecord` objects and also</span>
+<span class="sd">    supports signature-based indexing, for example ``result[(0, 6)]`` or</span>
+<span class="sd">    ``result[(0, 6), 0]``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        records: Discovered cage records.</span>
+<span class="sd">        hilbert_size: Full Hilbert-space dimension.</span>
+<span class="sd">        config: Search configuration used to produce the result.</span>
+<span class="sd">        type1_candidates: Type-1 candidate subgraphs inspected by the search.</span>
+<span class="sd">        type2_candidates: Type-2 candidate subgraphs inspected by the search.</span>
+<span class="sd">        search_stage_seconds: Accumulated timing information by stage.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]</span>
+    <span class="n">hilbert_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">CageSearchConfig</span>
+    <span class="n">type1_candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">type2_candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">search_stage_seconds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRecord</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">CageRecordView</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRecord</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">slice</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="p">(</span>
+            <span class="nb">int</span>
+            <span class="o">|</span> <span class="nb">slice</span>
+            <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+            <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span>
+            <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">slice</span><span class="p">]</span>
+        <span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRecord</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]</span> <span class="o">|</span> <span class="n">CageRecordView</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Index cage records by position, slice, or signature.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            index: Integer, slice, signature tuple ``(kappa, z)``, or</span>
+<span class="sd">                ``((kappa, z), position_or_slice)`` pair.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A single record, a list of records, or a signature-filtered view.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">Integral</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">_is_signature_index</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+            <span class="n">signature</span> <span class="o">=</span> <span class="n">_normalize_signature</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">CageRecordView</span><span class="p">(</span>
+                <span class="n">records</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">records_by_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">),</span>
+                <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_is_signature_record_index</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+            <span class="n">signature</span> <span class="o">=</span> <span class="n">_normalize_signature</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">record_index</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">records_by_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">records</span><span class="p">[</span><span class="n">record_index</span><span class="p">]</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;CageSearchResult indices must be an integer, a slice, &quot;</span>
+            <span class="s2">&quot;a signature tuple like (kappa, Z), or &quot;</span>
+            <span class="s2">&quot;a pair like ((kappa, Z), index).&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">counts_by_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">:</span>
+            <span class="n">counts</span><span class="p">[</span><span class="n">record</span><span class="o">.</span><span class="n">signature</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">signature</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">counts</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">counts_by_signature</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CageSearchResult.records_by_signature">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearchResult.records_by_signature">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">records_by_signature</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">_normalize_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">record</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span> <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">signature</span> <span class="o">==</span> <span class="n">signature</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CageSearchResult.by_signature">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearchResult.by_signature">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">by_signature</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRecordView</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an indexable view of records with a fixed signature.&quot;&quot;&quot;</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">_normalize_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CageRecordView</span><span class="p">(</span>
+            <span class="n">records</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">records_by_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">),</span>
+            <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageSearchResult.first">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearchResult.first">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">first</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRecord</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">signature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No cage records are available.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">by_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CageSearchResult.full_state_matrix">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearchResult.full_state_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">full_state_matrix</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+        <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span> <span class="k">if</span> <span class="n">signature</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">records_by_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+
+        <span class="n">full_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">records</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">hilbert_size</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">records</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">full_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">full_matrix</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">full_state</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">full_matrix</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">support</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">local_state</span>
+
+        <span class="k">return</span> <span class="n">full_matrix</span></div>
+
+
+<div class="viewcode-block" id="CageSearchResult.cage_states">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearchResult.cage_states">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cage_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageState</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">record</span><span class="o">.</span><span class="n">cage_state</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CageSearcher">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearcher">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CageSearcher</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;High-level cage-search driver for sparse Hamiltonian matrices.</span>
+
+<span class="sd">    The searcher combines graph candidate generation, candidate solving,</span>
+<span class="sd">    signature grouping, optional IPR localization, and deduplication into a</span>
+<span class="sd">    single workflow.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">hamiltonian_matrix</span><span class="p">:</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">spmatrix</span> <span class="o">|</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">sparray</span>
+    <span class="n">kinetic_matrix</span><span class="p">:</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">spmatrix</span> <span class="o">|</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">sparray</span>
+    <span class="n">self_loop_values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">CageSearchConfig</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">CageSearchConfig</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CageSearcher.from_model_build_result">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearcher.from_model_build_result">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_model_build_result</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">build_result</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">CageSearchConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageSearcher</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct from a model build result containing H, K, and V.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">build_result</span><span class="o">.</span><span class="n">kinetic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;build_result.kinetic is required for cage search.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">build_result</span><span class="o">.</span><span class="n">potential</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;build_result.potential is required for cage search.&quot;</span><span class="p">)</span>
+
+        <span class="n">search_config</span> <span class="o">=</span> <span class="n">CageSearchConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+        <span class="n">search_config</span> <span class="o">=</span> <span class="n">_with_inferred_potential_signature_unit</span><span class="p">(</span>
+            <span class="n">search_config</span><span class="p">,</span>
+            <span class="n">build_result</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">hamiltonian_matrix</span><span class="o">=</span><span class="n">build_result</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">,</span>
+            <span class="n">kinetic_matrix</span><span class="o">=</span><span class="n">build_result</span><span class="o">.</span><span class="n">kinetic</span><span class="p">,</span>
+            <span class="n">self_loop_values</span><span class="o">=</span><span class="n">diagonal_values</span><span class="p">(</span><span class="n">build_result</span><span class="o">.</span><span class="n">potential</span><span class="p">),</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">search_config</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageSearcher.run">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.CageSearcher.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">type1_candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">type2_candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageSearchResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the full cage-search workflow.&quot;&quot;&quot;</span>
+        <span class="n">search_stage_seconds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">type1_enabled</span><span class="p">,</span> <span class="n">type2_enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enabled_candidate_types</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">type1_candidates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">type1_candidates</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_time_search_stage</span><span class="p">(</span>
+                    <span class="s2">&quot;candidate_build_type1&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_build_type1_candidates</span><span class="p">,</span>
+                    <span class="n">search_stage_seconds</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">type1_enabled</span>
+                <span class="k">else</span> <span class="p">[]</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">type2_candidates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">type2_candidates</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_time_search_stage</span><span class="p">(</span>
+                    <span class="s2">&quot;candidate_build_type2&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_build_type2_candidates</span><span class="p">,</span>
+                    <span class="n">search_stage_seconds</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">type2_enabled</span>
+                <span class="k">else</span> <span class="p">[]</span>
+            <span class="p">)</span>
+
+        <span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">type1_enabled</span><span class="p">:</span>
+            <span class="n">records</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_time_search_stage</span><span class="p">(</span>
+                    <span class="s2">&quot;solve_type1&quot;</span><span class="p">,</span>
+                    <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_candidates</span><span class="p">(</span>
+                        <span class="n">candidates</span><span class="o">=</span><span class="n">type1_candidates</span><span class="p">,</span>
+                        <span class="n">allowed_kappas</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">type1_kappas</span><span class="p">,</span>
+                        <span class="n">timing_collector</span><span class="o">=</span><span class="n">search_stage_seconds</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">search_stage_seconds</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">type2_enabled</span><span class="p">:</span>
+            <span class="n">records</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_time_search_stage</span><span class="p">(</span>
+                    <span class="s2">&quot;solve_type2&quot;</span><span class="p">,</span>
+                    <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_candidates</span><span class="p">(</span>
+                        <span class="n">candidates</span><span class="o">=</span><span class="n">type2_candidates</span><span class="p">,</span>
+                        <span class="n">allowed_kappas</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">type2_kappas</span><span class="p">,</span>
+                        <span class="n">timing_collector</span><span class="o">=</span><span class="n">search_stage_seconds</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">search_stage_seconds</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_search_stage</span><span class="p">(</span>
+            <span class="s2">&quot;rank_deduplication&quot;</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deduplicate_records_by_signature</span><span class="p">(</span><span class="n">records</span><span class="p">),</span>
+            <span class="n">search_stage_seconds</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">CageSearchResult</span><span class="p">(</span>
+            <span class="n">records</span><span class="o">=</span><span class="n">records</span><span class="p">,</span>
+            <span class="n">hilbert_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">type1_candidates</span><span class="o">=</span><span class="n">type1_candidates</span><span class="p">,</span>
+            <span class="n">type2_candidates</span><span class="o">=</span><span class="n">type2_candidates</span><span class="p">,</span>
+            <span class="n">search_stage_seconds</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">search_stage_seconds</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_time_search_stage</span><span class="p">(</span>
+        <span class="n">stage_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">func</span><span class="p">,</span>
+        <span class="n">timing_collector</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">()</span>
+        <span class="n">timing_collector</span><span class="p">[</span><span class="n">stage_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">timing_collector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">stage_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_enabled_candidate_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">include_type1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">include_type1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">include_type1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">include_type1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">search_type</span> <span class="ow">in</span> <span class="p">{</span>
+                <span class="s2">&quot;type1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type1_and_type2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">include_type2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">include_type2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">include_type2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">include_type2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">search_type</span> <span class="ow">in</span> <span class="p">{</span>
+                <span class="s2">&quot;type2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type1_and_type2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">include_type1</span><span class="p">,</span> <span class="n">include_type2</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_type1_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]:</span>
+        <span class="n">bipartition</span> <span class="o">=</span> <span class="n">bipartition_labels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kinetic_matrix</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">type1_candidates_from_bipartite_self_loops</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kinetic_matrix</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">self_loop_values</span><span class="p">,</span>
+            <span class="n">bipartition</span><span class="p">,</span>
+            <span class="n">min_component_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_component_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_type2_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">type2_candidates_from_self_loops</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kinetic_matrix</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">self_loop_values</span><span class="p">,</span>
+            <span class="n">min_component_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_component_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_solve_candidates</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">],</span>
+        <span class="n">allowed_kappas</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">timing_collector</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span>
+        <span class="n">solver_config</span> <span class="o">=</span> <span class="n">CageSolverConfig</span><span class="p">(</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="n">validate_full_residual</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">validate_full_residual</span><span class="p">,</span>
+            <span class="n">degenerate_basis_strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">degenerate_basis_strategy</span><span class="p">,</span>
+            <span class="n">ipr_n_restarts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ipr_n_restarts</span><span class="p">,</span>
+            <span class="n">ipr_max_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ipr_max_iter</span><span class="p">,</span>
+            <span class="n">ipr_step_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ipr_step_size</span><span class="p">,</span>
+            <span class="n">ipr_candidate_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ipr_candidate_count</span><span class="p">,</span>
+            <span class="n">ipr_rank_completion_patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ipr_rank_completion_patience</span><span class="p">,</span>
+            <span class="n">ipr_batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ipr_batch_size</span><span class="p">,</span>
+            <span class="n">ipr_random_seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ipr_random_seed</span><span class="p">,</span>
+            <span class="n">timing_collector</span><span class="o">=</span><span class="n">timing_collector</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="n">cage_states</span> <span class="o">=</span> <span class="n">solve_candidate_for_kinetic_targets</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_matrix</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kinetic_matrix</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">self_loop_values</span><span class="p">,</span>
+                <span class="n">candidate</span><span class="p">,</span>
+                <span class="n">target_kappas</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">kappa</span><span class="p">)</span> <span class="k">for</span> <span class="n">kappa</span> <span class="ow">in</span> <span class="n">allowed_kappas</span><span class="p">),</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">solver_config</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">cage_state</span> <span class="ow">in</span> <span class="n">cage_states</span><span class="p">:</span>
+                <span class="n">self_loop_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">self_loop_values</span><span class="p">[</span><span class="n">candidate</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">signature</span> <span class="o">=</span> <span class="n">signature_from_energy_and_self_loop</span><span class="p">(</span>
+                    <span class="n">cage_state</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+                    <span class="n">self_loop_value</span><span class="p">,</span>
+                    <span class="n">tolerance</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">signature_tolerance_factor</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tolerance</span><span class="p">),</span>
+                    <span class="n">potential_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">potential_signature_unit</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">signature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">kinetic_value</span><span class="p">,</span> <span class="n">_potential_value</span> <span class="o">=</span> <span class="n">signature</span>
+
+                <span class="k">if</span> <span class="n">kinetic_value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_kappas</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">full_state</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">embed_cage_state</span><span class="p">(</span>
+                        <span class="n">cage_state</span><span class="p">,</span>
+                        <span class="n">hilbert_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">store_full_states</span>
+                    <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">)</span>
+
+                <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">CageRecord</span><span class="p">(</span>
+                        <span class="n">cage_state</span><span class="o">=</span><span class="n">cage_state</span><span class="p">,</span>
+                        <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
+                        <span class="n">candidate</span><span class="o">=</span><span class="n">candidate</span><span class="p">,</span>
+                        <span class="n">full_state</span><span class="o">=</span><span class="n">full_state</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">records</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deduplicate_records_by_signature</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">deduplicate_by_rank</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">records</span>
+
+        <span class="n">grouped_records</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">grouped_selectors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">IndependentColumnSelector</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">rank_tolerance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">rank_tolerance_factor</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tolerance</span>
+
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="n">grouped_selectors</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">signature</span><span class="p">,</span>
+                <span class="n">IndependentColumnSelector</span><span class="p">(</span><span class="n">tolerance</span><span class="o">=</span><span class="n">rank_tolerance</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">full_state</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">full_state</span>
+                <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">full_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">embed_cage_state</span><span class="p">(</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">cage_state</span><span class="p">,</span>
+                    <span class="n">hilbert_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">selector</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">full_state</span><span class="p">):</span>
+                <span class="n">grouped_records</span><span class="p">[</span><span class="n">record</span><span class="o">.</span><span class="n">signature</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+        <span class="n">deduplicated</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">signature</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">grouped_records</span><span class="p">):</span>
+            <span class="n">deduplicated</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">grouped_records</span><span class="p">[</span><span class="n">signature</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">deduplicated</span></div>
+
+
+
+<div class="viewcode-block" id="diagonal_values">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.diagonal_values">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagonal_values</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return diagonal values from a dense or sparse matrix.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="embed_cage_state">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.embed_cage_state">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">embed_cage_state</span><span class="p">(</span>
+    <span class="n">cage_state</span><span class="p">:</span> <span class="n">CageState</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">hilbert_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Embed a compact cage state into the full Hilbert space.&quot;&quot;&quot;</span>
+    <span class="n">full_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">hilbert_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">full_state</span><span class="p">[</span><span class="n">cage_state</span><span class="o">.</span><span class="n">support</span><span class="p">]</span> <span class="o">=</span> <span class="n">cage_state</span><span class="o">.</span><span class="n">local_state</span>
+
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">full_state</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot embed a zero cage state.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">full_state</span> <span class="o">/</span> <span class="n">norm</span></div>
+
+
+
+<div class="viewcode-block" id="signature_from_energy_and_self_loop">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.signature_from_energy_and_self_loop">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">signature_from_energy_and_self_loop</span><span class="p">(</span>
+    <span class="n">energy_value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="n">self_loop_value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">potential_unit</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Infer integer ``(kappa, Z)`` signature from energy and self-loop value.</span>
+
+<span class="sd">    ``self_loop_value`` is the actual diagonal potential value, including any</span>
+<span class="sd">    scalar potential coupling.  ``potential_unit`` is the unit used to report</span>
+<span class="sd">    the potential signature.  For example, if ``V = lambda * V_tilde`` and</span>
+<span class="sd">    ``self_loop_value = lambda * Z``, then ``potential_unit=lambda`` reports</span>
+<span class="sd">    the lazy-index signature as ``(kappa, Z)`` while all internal residuals use</span>
+<span class="sd">    the coupled Hamiltonian.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">potential_unit</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">potential_unit</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">potential_unit</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;potential_unit must be nonzero.&quot;</span><span class="p">)</span>
+
+    <span class="n">potential_value</span> <span class="o">=</span> <span class="n">_integer_from_nearly_real</span><span class="p">(</span>
+        <span class="nb">complex</span><span class="p">(</span><span class="n">self_loop_value</span><span class="p">)</span> <span class="o">/</span> <span class="n">potential_unit</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">kinetic_value</span> <span class="o">=</span> <span class="n">_integer_from_nearly_real</span><span class="p">(</span>
+        <span class="nb">complex</span><span class="p">(</span><span class="n">energy_value</span><span class="p">)</span> <span class="o">-</span> <span class="nb">complex</span><span class="p">(</span><span class="n">self_loop_value</span><span class="p">),</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">potential_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">kinetic_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">kinetic_value</span><span class="p">,</span> <span class="n">potential_value</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_integer_from_nearly_real</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return nearest integer if ``value`` is real/integer within tolerance.&quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">value</span><span class="p">)),</span>
+        <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">atol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">real_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="n">integer_value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">real_value</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span>
+        <span class="n">real_value</span><span class="p">,</span>
+        <span class="n">integer_value</span><span class="p">,</span>
+        <span class="n">atol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">integer_value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_with_inferred_potential_signature_unit</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">CageSearchConfig</span><span class="p">,</span>
+    <span class="n">build_result</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageSearchConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Infer scalar potential-coupling unit from a model build result.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">complex</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">potential_signature_unit</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">build_result</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">coupling</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;coup_pot&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">coupling</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">callable</span><span class="p">(</span><span class="n">coupling</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coupling</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">potential_unit</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">coupling</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="k">if</span> <span class="n">potential_unit</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">potential_signature_unit</span><span class="o">=</span><span class="n">potential_unit</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="bipartition_labels">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search.bipartition_labels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bipartition_labels</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return bipartition labels for an undirected sparse graph.&quot;&quot;&quot;</span>
+    <span class="n">adjacency</span> <span class="o">=</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">adjacency</span><span class="o">.</span><span class="n">setdiag</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">adjacency</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>
+
+    <span class="n">adjacency</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">adjacency</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+    <span class="n">adjacency</span> <span class="o">=</span> <span class="n">adjacency</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">adjacency</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+    <span class="n">n_vertices</span> <span class="o">=</span> <span class="n">adjacency</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">start_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="n">start_index</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">labels</span><span class="p">[</span><span class="n">start_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">queue</span><span class="p">:</span> <span class="n">deque</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">start_index</span><span class="p">])</span>
+
+        <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+            <span class="n">vertex_index</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="n">adjacency</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span>
+                <span class="n">adjacency</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">]</span> <span class="p">:</span> <span class="n">adjacency</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">vertex_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">neighbor_index</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
+                <span class="n">neighbor_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">neighbor_index</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="n">neighbor_index</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">labels</span><span class="p">[</span><span class="n">neighbor_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">labels</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">]</span>
+                    <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neighbor_index</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">labels</span><span class="p">[</span><span class="n">neighbor_index</span><span class="p">]</span> <span class="o">==</span> <span class="n">labels</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Graph is not bipartite.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">labels</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_signature_index</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether index looks like a cage signature ``(kappa, Z)``.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Integral</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">Integral</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_signature_record_index</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether index looks like ``((kappa, Z), record_index)``.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="ow">and</span> <span class="n">_is_signature_index</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="n">Integral</span><span class="p">,</span> <span class="nb">slice</span><span class="p">))</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert numpy integer signatures to plain Python integer tuples.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_signature_index</span><span class="p">(</span><span class="n">signature</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Signature must be a tuple of two integers: (kappa, Z).&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">signature</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">signature</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks.variables package &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.variables package &#8212; qlinks</title>
   
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -154,7 +154,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="qlinks.html">qlinks package</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="qlinks.backends.html">qlinks.backends package</a></li>
@@ -163,18 +179,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -251,7 +273,7 @@
       
       
       
-      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/qlinks.variables.rst" target="_blank"
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/qlinks.variables.rst" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -409,6 +431,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.variables.local_space">qlinks.variables.local_space module</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace"><code class="docutils literal notranslate"><span class="pre">LocalSpace</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace.values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace.from_values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.from_values()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace.binary"><code class="docutils literal notranslate"><span class="pre">LocalSpace.binary()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace.spin_half_flux"><code class="docutils literal notranslate"><span class="pre">LocalSpace.spin_half_flux()</span></code></a></li>
@@ -467,6 +490,7 @@
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace"><code class="docutils literal notranslate"><span class="pre">LocalSpace</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.from_values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.from_values()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.binary"><code class="docutils literal notranslate"><span class="pre">LocalSpace.binary()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.spin_half_flux"><code class="docutils literal notranslate"><span class="pre">LocalSpace.spin_half_flux()</span></code></a></li>
@@ -541,7 +565,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.config.</span></span><span class="sig-name descname"><span class="pre">ConfigView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Lightweight read/write wrapper around a NumPy configuration array.</p>
 <p>This is useful for readable operator code:</p>
 <blockquote>
@@ -550,12 +574,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 </div></blockquote>
 <p>The underlying array is still a normal NumPy array.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.layout">
@@ -571,15 +589,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.from_array">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.from_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.from_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<em>ArrayLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -587,12 +596,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.default">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.default" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -600,9 +603,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.copy">
 <span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.copy" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -610,12 +610,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.value">
 <span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.value" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -623,15 +617,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.set_value">
 <span class="sig-name descname"><span class="pre">set_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.set_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.set_value" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>value</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -639,12 +624,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.site">
 <span class="sig-name descname"><span class="pre">site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.site" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -652,12 +631,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.link">
 <span class="sig-name descname"><span class="pre">link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.link"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.link" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>link_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -665,15 +638,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.set_site">
 <span class="sig-name descname"><span class="pre">set_site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.set_site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.set_site" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>site_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>value</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -681,15 +645,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.set_link">
 <span class="sig-name descname"><span class="pre">set_link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.set_link"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.set_link" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>link_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>value</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -700,12 +655,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <p>This only works for variables with local values {0, 1}.
 For QLM flux variables {-1, +1}, use negated().</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -715,12 +664,6 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dd><p>Return a new config with one variable multiplied by -1.</p>
 <p>This is useful for spin-1/2 QLM flux variables {-1, +1}.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -728,12 +671,6 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.as_array">
 <span class="sig-name descname"><span class="pre">as_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.as_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.config.ConfigView.as_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -741,15 +678,6 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dt class="sig sig-object py" id="qlinks.variables.config.ConfigView.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.config.ConfigView.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -761,7 +689,7 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.encoding.ConfigEncoder">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.encoding.</span></span><span class="sig-name descname"><span class="pre">ConfigEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#ConfigEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.encoding.ConfigEncoder" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Encode configurations into hashable keys for basis lookup.</p>
 <p>The default key is bytes from a canonical int64 representation. This is not
 always the most compressed representation, but it is robust for mixed
@@ -769,9 +697,6 @@ site/link variables and arbitrary integer local values.</p>
 <p>Later, for spin-1/2-only models, this can be supplemented by a bit-packed
 encoder.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.encoding.ConfigEncoder.layout">
@@ -782,15 +707,6 @@ encoder.</p>
 <dt class="sig sig-object py" id="qlinks.variables.encoding.ConfigEncoder.encode">
 <span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#ConfigEncoder.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.encoding.ConfigEncoder.encode" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bytes</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -798,15 +714,6 @@ encoder.</p>
 <dt class="sig sig-object py" id="qlinks.variables.encoding.ConfigEncoder.decode">
 <span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#ConfigEncoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.encoding.ConfigEncoder.decode" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>bytes</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -814,15 +721,6 @@ encoder.</p>
 <dt class="sig sig-object py" id="qlinks.variables.encoding.ConfigEncoder.build_index">
 <span class="sig-name descname"><span class="pre">build_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#ConfigEncoder.build_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.encoding.ConfigEncoder.build_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>configs</strong> (<em>Iterable</em><em>[</em><em>ArrayLike</em><em>]</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict[bytes, int]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -830,12 +728,6 @@ encoder.</p>
 <dt class="sig sig-object py" id="qlinks.variables.encoding.ConfigEncoder.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.encoding.ConfigEncoder.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -844,15 +736,12 @@ encoder.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.encoding.BitPackedBinaryEncoder">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.encoding.</span></span><span class="sig-name descname"><span class="pre">BitPackedBinaryEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#BitPackedBinaryEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.encoding.BitPackedBinaryEncoder" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Compact encoder for pure binary layouts with local values {0, 1}.</p>
 <p>This is useful for PXP, toric-code qubits, or dimer occupation variables.</p>
 <p>It intentionally does not support {-1, +1} directly. For QLM flux variables,
 either use ConfigEncoder or convert values to binary codes first.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.encoding.BitPackedBinaryEncoder.layout">
@@ -863,15 +752,6 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dt class="sig sig-object py" id="qlinks.variables.encoding.BitPackedBinaryEncoder.encode">
 <span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#BitPackedBinaryEncoder.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.encoding.BitPackedBinaryEncoder.encode" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bytes</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -879,15 +759,6 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dt class="sig sig-object py" id="qlinks.variables.encoding.BitPackedBinaryEncoder.decode">
 <span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#BitPackedBinaryEncoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.encoding.BitPackedBinaryEncoder.decode" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>bytes</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -895,12 +766,6 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dt class="sig sig-object py" id="qlinks.variables.encoding.BitPackedBinaryEncoder.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.encoding.BitPackedBinaryEncoder.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -912,7 +777,8 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableKind">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.layout.</span></span><span class="sig-name descname"><span class="pre">VariableKind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableKind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableKind" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.StrEnum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></a></p>
+<p>Kind of physical variable represented in a layout.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableKind.SITE">
 <span class="sig-name descname"><span class="pre">SITE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'site'</span></em><a class="headerlink" href="#qlinks.variables.layout.VariableKind.SITE" title="Link to this definition">#</a></dt>
@@ -928,18 +794,18 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.layout.HasSiteLinkCounts">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.layout.</span></span><span class="sig-name descname"><span class="pre">HasSiteLinkCounts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#HasSiteLinkCounts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.HasSiteLinkCounts" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
 <p>Minimal protocol expected from the future lattice layer.</p>
 <p>A concrete lattice does not need to inherit from this protocol.
 It only needs to expose num_sites and/or num_links.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.layout.HasSiteLinkCounts.num_sites">
-<span class="sig-name descname"><span class="pre">num_sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.layout.HasSiteLinkCounts.num_sites" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">num_sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.layout.HasSiteLinkCounts.num_sites" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.layout.HasSiteLinkCounts.num_links">
-<span class="sig-name descname"><span class="pre">num_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.layout.HasSiteLinkCounts.num_links" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">num_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.layout.HasSiteLinkCounts.num_links" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -952,7 +818,7 @@ It only needs to expose num_sites and/or num_links.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableSpec">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.layout.</span></span><span class="sig-name descname"><span class="pre">VariableSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableSpec" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One variable in the flattened configuration array.</p>
 <dl class="simple">
 <dt>kind:</dt><dd><p>Whether this variable lives on a site or link.</p>
@@ -963,13 +829,6 @@ It only needs to expose num_sites and/or num_links.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kind</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableKind" title="qlinks.variables.layout.VariableKind"><em>VariableKind</em></a>)</p></li>
-<li><p><strong>geometry_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableSpec.kind">
@@ -978,7 +837,7 @@ It only needs to expose num_sites and/or num_links.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableSpec.geometry_index">
-<span class="sig-name descname"><span class="pre">geometry_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.layout.VariableSpec.geometry_index" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">geometry_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.layout.VariableSpec.geometry_index" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -990,16 +849,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableSpec.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.layout.VariableSpec.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kind</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableKind" title="qlinks.variables.layout.VariableKind"><em>VariableKind</em></a>)</p></li>
-<li><p><strong>geometry_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1008,7 +857,7 @@ It only needs to expose num_sites and/or num_links.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.layout.</span></span><span class="sig-name descname"><span class="pre">VariableLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Map physical site/link variables to positions in a compact NumPy config array.</p>
 <p>The computational basis state is represented as</p>
 <blockquote>
@@ -1016,28 +865,16 @@ It only needs to expose num_sites and/or num_links.</p>
 </div></blockquote>
 <p>This class tells us which var_index corresponds to which site/link variable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>specs</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><em>VariableSpec</em></a><em>, </em><em>...</em><em>]</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.specs">
-<span class="sig-name descname"><span class="pre">specs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><span class="pre">VariableSpec</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.specs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">specs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><span class="pre">VariableSpec</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.specs" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.from_sites">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.from_sites" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_sites</strong> (<em>int</em>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1045,15 +882,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.from_links">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.from_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_links</strong> (<em>int</em>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1061,17 +889,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.from_sites_and_links">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_sites_and_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_sites_and_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.from_sites_and_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_sites</strong> (<em>int</em>)</p></li>
-<li><p><strong>site_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-<li><p><strong>num_links</strong> (<em>int</em>)</p></li>
-<li><p><strong>link_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1079,15 +896,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.from_lattice_sites">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lattice_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_lattice_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.from_lattice_sites" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lattice</strong> (<a class="reference internal" href="#qlinks.variables.layout.HasSiteLinkCounts" title="qlinks.variables.layout.HasSiteLinkCounts"><em>HasSiteLinkCounts</em></a>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1095,15 +903,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.from_lattice_links">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lattice_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_lattice_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.from_lattice_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lattice</strong> (<a class="reference internal" href="#qlinks.variables.layout.HasSiteLinkCounts" title="qlinks.variables.layout.HasSiteLinkCounts"><em>HasSiteLinkCounts</em></a>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1111,39 +910,23 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.from_lattice_sites_and_links">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lattice_sites_and_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_lattice_sites_and_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.from_lattice_sites_and_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lattice</strong> (<a class="reference internal" href="#qlinks.variables.layout.HasSiteLinkCounts" title="qlinks.variables.layout.HasSiteLinkCounts"><em>HasSiteLinkCounts</em></a>)</p></li>
-<li><p><strong>site_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-<li><p><strong>link_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.n_variables">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.n_variables" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.n_variables" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.shape">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.shape" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.shape" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.spec">
 <span class="sig-name descname"><span class="pre">spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.spec" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><em>VariableSpec</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1151,12 +934,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.local_space">
 <span class="sig-name descname"><span class="pre">local_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.local_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.local_space" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1164,15 +941,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.variable_index">
 <span class="sig-name descname"><span class="pre">variable_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.variable_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.variable_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kind</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableKind" title="qlinks.variables.layout.VariableKind"><em>VariableKind</em></a><em> | </em><em>str</em>)</p></li>
-<li><p><strong>geometry_index</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1180,12 +948,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.site_variable_index">
 <span class="sig-name descname"><span class="pre">site_variable_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.site_variable_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.site_variable_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1193,12 +955,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.link_variable_index">
 <span class="sig-name descname"><span class="pre">link_variable_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.link_variable_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.link_variable_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>link_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1206,9 +962,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.site_variable_indices">
 <span class="sig-name descname"><span class="pre">site_variable_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.site_variable_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.site_variable_indices" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1216,9 +969,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.link_variable_indices">
 <span class="sig-name descname"><span class="pre">link_variable_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.link_variable_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.link_variable_indices" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1226,12 +976,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.empty_config">
 <span class="sig-name descname"><span class="pre">empty_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.empty_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.empty_config" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>fill_value</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1241,9 +985,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dd><p>Return a valid default configuration.</p>
 <p>For each variable, choose the first value in its local space.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1251,12 +992,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.validate_config">
 <span class="sig-name descname"><span class="pre">validate_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.validate_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.validate_config" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1264,12 +999,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.validate_batch">
 <span class="sig-name descname"><span class="pre">validate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.validate_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.validate_batch" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>configs</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1278,9 +1007,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <span class="sig-name descname"><span class="pre">as_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.as_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.as_metadata" title="Link to this definition">#</a></dt>
 <dd><p>Small serializable summary useful for debugging or future IO.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1288,12 +1014,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <dt class="sig sig-object py" id="qlinks.variables.layout.VariableLayout.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.layout.VariableLayout.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>specs</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><em>VariableSpec</em></a><em>, </em><em>...</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1305,37 +1025,33 @@ It only needs to expose num_sites and/or num_links.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.local_space.</span></span><span class="sig-name descname"><span class="pre">LocalSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Finite local Hilbert/configuration space for one physical variable.</p>
-<p class="rubric">Examples</p>
-<dl class="simple">
-<dt>Spin-1/2 site:</dt><dd><p>values = [0, 1]</p>
-</dd>
-<dt>QLM spin-1/2 electric field:</dt><dd><p>values = [-1, 1]</p>
-</dd>
-<dt>Dimer occupation:</dt><dd><p>values = [0, 1]</p>
-</dd>
-</dl>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Finite local Hilbert/configuration space for one variable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace.values">
-<span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><span class="pre">integer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.values" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">values</span></span><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.values" title="Link to this definition">#</a></dt>
+<dd><p>Allowed integer values for the variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>NDArray[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)">numpy.integer</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p>Spin-1/2 site or dimer occupation uses <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.  A spin-half QLM
+electric field uses <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><span class="pre">integer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace.from_values">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.from_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.from_values" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<em>Iterable</em><em>[</em><em>int</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1344,9 +1060,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">binary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.binary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.binary" title="Link to this definition">#</a></dt>
 <dd><p>Local two-state variable with values {0, 1}.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1358,9 +1071,6 @@ It only needs to expose num_sites and/or num_links.</p>
 {-1/2, +1/2}, keep this integer representation internally and divide
 by 2 only when evaluating physical observables.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1369,15 +1079,12 @@ by 2 only when evaluating physical observables.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spin_one</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.spin_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.spin_one" title="Link to this definition">#</a></dt>
 <dd><p>Spin-1 local variable with S^z values {-1, 0, +1}.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace.dim">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.dim" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.dim" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -1389,12 +1096,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace.contains">
 <span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.contains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.contains" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1402,12 +1103,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace.validate_value">
 <span class="sig-name descname"><span class="pre">validate_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.validate_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.validate_value" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1415,12 +1110,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace.validate_array">
 <span class="sig-name descname"><span class="pre">validate_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.validate_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.validate_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>array</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1429,12 +1118,6 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">value_to_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.value_to_code"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.value_to_code" title="Link to this definition">#</a></dt>
 <dd><p>Convert a physical local value to a dense integer code 0, …, dim - 1.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1443,12 +1126,6 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">code_to_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.code_to_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.code_to_value" title="Link to this definition">#</a></dt>
 <dd><p>Convert a dense integer code 0, …, dim - 1 back to the physical value.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>code</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1456,12 +1133,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.local_space.LocalSpace.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.local_space.LocalSpace.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1473,15 +1144,12 @@ by 2 only when evaluating physical observables.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.BitPackedBinaryEncoder">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">BitPackedBinaryEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#BitPackedBinaryEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.BitPackedBinaryEncoder" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Compact encoder for pure binary layouts with local values {0, 1}.</p>
 <p>This is useful for PXP, toric-code qubits, or dimer occupation variables.</p>
 <p>It intentionally does not support {-1, +1} directly. For QLM flux variables,
 either use ConfigEncoder or convert values to binary codes first.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.BitPackedBinaryEncoder.layout">
@@ -1492,15 +1160,6 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dt class="sig sig-object py" id="qlinks.variables.BitPackedBinaryEncoder.encode">
 <span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#BitPackedBinaryEncoder.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.BitPackedBinaryEncoder.encode" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bytes</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1508,15 +1167,6 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dt class="sig sig-object py" id="qlinks.variables.BitPackedBinaryEncoder.decode">
 <span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#BitPackedBinaryEncoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.BitPackedBinaryEncoder.decode" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>bytes</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1524,12 +1174,6 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dt class="sig sig-object py" id="qlinks.variables.BitPackedBinaryEncoder.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.BitPackedBinaryEncoder.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1538,7 +1182,7 @@ either use ConfigEncoder or convert values to binary codes first.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.ConfigEncoder">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">ConfigEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#ConfigEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigEncoder" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Encode configurations into hashable keys for basis lookup.</p>
 <p>The default key is bytes from a canonical int64 representation. This is not
 always the most compressed representation, but it is robust for mixed
@@ -1546,9 +1190,6 @@ site/link variables and arbitrary integer local values.</p>
 <p>Later, for spin-1/2-only models, this can be supplemented by a bit-packed
 encoder.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.ConfigEncoder.layout">
@@ -1559,15 +1200,6 @@ encoder.</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigEncoder.encode">
 <span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#ConfigEncoder.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigEncoder.encode" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>ArrayLike</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bytes</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1575,15 +1207,6 @@ encoder.</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigEncoder.decode">
 <span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#ConfigEncoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigEncoder.decode" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>bytes</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1591,15 +1214,6 @@ encoder.</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigEncoder.build_index">
 <span class="sig-name descname"><span class="pre">build_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/encoding.html#ConfigEncoder.build_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigEncoder.build_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>configs</strong> (<em>Iterable</em><em>[</em><em>ArrayLike</em><em>]</em>)</p></li>
-<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict[bytes, int]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1607,12 +1221,6 @@ encoder.</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigEncoder.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.ConfigEncoder.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1621,7 +1229,7 @@ encoder.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">ConfigView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Lightweight read/write wrapper around a NumPy configuration array.</p>
 <p>This is useful for readable operator code:</p>
 <blockquote>
@@ -1630,12 +1238,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 </div></blockquote>
 <p>The underlying array is still a normal NumPy array.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.layout">
@@ -1651,15 +1253,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.from_array">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.from_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.from_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<em>ArrayLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1667,12 +1260,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.default">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.default" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1680,9 +1267,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.copy">
 <span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.copy" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1690,12 +1274,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.value">
 <span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.value" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1703,15 +1281,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.set_value">
 <span class="sig-name descname"><span class="pre">set_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.set_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.set_value" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>value</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1719,12 +1288,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.site">
 <span class="sig-name descname"><span class="pre">site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.site" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1732,12 +1295,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.link">
 <span class="sig-name descname"><span class="pre">link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.link"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.link" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>link_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1745,15 +1302,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.set_site">
 <span class="sig-name descname"><span class="pre">set_site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.set_site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.set_site" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>site_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>value</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1761,15 +1309,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.set_link">
 <span class="sig-name descname"><span class="pre">set_link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.set_link"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.set_link" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>link_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>value</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1780,12 +1319,6 @@ cfg.set_link(3, -cfg.link(3))</p>
 <p>This only works for variables with local values {0, 1}.
 For QLM flux variables {-1, +1}, use negated().</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1795,12 +1328,6 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dd><p>Return a new config with one variable multiplied by -1.</p>
 <p>This is useful for spin-1/2 QLM flux variables {-1, +1}.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.config.ConfigView" title="qlinks.variables.config.ConfigView"><em>ConfigView</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1808,12 +1335,6 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.as_array">
 <span class="sig-name descname"><span class="pre">as_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/config.html#ConfigView.as_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.ConfigView.as_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1821,15 +1342,6 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dt class="sig sig-object py" id="qlinks.variables.ConfigView.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.ConfigView.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a>)</p></li>
-<li><p><strong>array</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1838,18 +1350,18 @@ For QLM flux variables {-1, +1}, use negated().</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.HasSiteLinkCounts">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">HasSiteLinkCounts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#HasSiteLinkCounts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
 <p>Minimal protocol expected from the future lattice layer.</p>
 <p>A concrete lattice does not need to inherit from this protocol.
 It only needs to expose num_sites and/or num_links.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.HasSiteLinkCounts.num_sites">
-<span class="sig-name descname"><span class="pre">num_sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts.num_sites" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">num_sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts.num_sites" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.HasSiteLinkCounts.num_links">
-<span class="sig-name descname"><span class="pre">num_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts.num_links" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">num_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.HasSiteLinkCounts.num_links" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1862,37 +1374,33 @@ It only needs to expose num_sites and/or num_links.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">LocalSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Finite local Hilbert/configuration space for one physical variable.</p>
-<p class="rubric">Examples</p>
-<dl class="simple">
-<dt>Spin-1/2 site:</dt><dd><p>values = [0, 1]</p>
-</dd>
-<dt>QLM spin-1/2 electric field:</dt><dd><p>values = [-1, 1]</p>
-</dd>
-<dt>Dimer occupation:</dt><dd><p>values = [0, 1]</p>
-</dd>
-</dl>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Finite local Hilbert/configuration space for one variable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace.values">
-<span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><span class="pre">integer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.LocalSpace.values" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">values</span></span><a class="headerlink" href="#qlinks.variables.LocalSpace.values" title="Link to this definition">#</a></dt>
+<dd><p>Allowed integer values for the variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>NDArray[<a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)">numpy.integer</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p>Spin-1/2 site or dimer occupation uses <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.  A spin-half QLM
+electric field uses <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><span class="pre">integer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace.from_values">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.from_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace.from_values" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<em>Iterable</em><em>[</em><em>int</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1901,9 +1409,6 @@ It only needs to expose num_sites and/or num_links.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">binary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.binary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace.binary" title="Link to this definition">#</a></dt>
 <dd><p>Local two-state variable with values {0, 1}.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1915,9 +1420,6 @@ It only needs to expose num_sites and/or num_links.</p>
 {-1/2, +1/2}, keep this integer representation internally and divide
 by 2 only when evaluating physical observables.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1926,15 +1428,12 @@ by 2 only when evaluating physical observables.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spin_one</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.spin_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace.spin_one" title="Link to this definition">#</a></dt>
 <dd><p>Spin-1 local variable with S^z values {-1, 0, +1}.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace.dim">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.LocalSpace.dim" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.LocalSpace.dim" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -1946,12 +1445,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace.contains">
 <span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.contains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace.contains" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1959,12 +1452,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace.validate_value">
 <span class="sig-name descname"><span class="pre">validate_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.validate_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace.validate_value" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1972,12 +1459,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace.validate_array">
 <span class="sig-name descname"><span class="pre">validate_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.validate_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace.validate_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>array</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1986,12 +1467,6 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">value_to_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.value_to_code"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace.value_to_code" title="Link to this definition">#</a></dt>
 <dd><p>Convert a physical local value to a dense integer code 0, …, dim - 1.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2000,12 +1475,6 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">code_to_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/local_space.html#LocalSpace.code_to_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.LocalSpace.code_to_value" title="Link to this definition">#</a></dt>
 <dd><p>Convert a dense integer code 0, …, dim - 1 back to the physical value.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>code</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2013,12 +1482,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.LocalSpace.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.LocalSpace.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2027,7 +1490,8 @@ by 2 only when evaluating physical observables.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.VariableKind">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">VariableKind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableKind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableKind" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.StrEnum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></a></p>
+<p>Kind of physical variable represented in a layout.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.VariableKind.SITE">
 <span class="sig-name descname"><span class="pre">SITE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'site'</span></em><a class="headerlink" href="#qlinks.variables.VariableKind.SITE" title="Link to this definition">#</a></dt>
@@ -2043,7 +1507,7 @@ by 2 only when evaluating physical observables.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">VariableLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Map physical site/link variables to positions in a compact NumPy config array.</p>
 <p>The computational basis state is represented as</p>
 <blockquote>
@@ -2051,28 +1515,16 @@ by 2 only when evaluating physical observables.</p>
 </div></blockquote>
 <p>This class tells us which var_index corresponds to which site/link variable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>specs</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><em>VariableSpec</em></a><em>, </em><em>...</em><em>]</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.specs">
-<span class="sig-name descname"><span class="pre">specs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><span class="pre">VariableSpec</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.VariableLayout.specs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">specs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><span class="pre">VariableSpec</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.VariableLayout.specs" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.from_sites">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.from_sites" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_sites</strong> (<em>int</em>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2080,15 +1532,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.from_links">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.from_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_links</strong> (<em>int</em>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2096,17 +1539,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.from_sites_and_links">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_sites_and_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_sites_and_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.from_sites_and_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_sites</strong> (<em>int</em>)</p></li>
-<li><p><strong>site_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-<li><p><strong>num_links</strong> (<em>int</em>)</p></li>
-<li><p><strong>link_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2114,15 +1546,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.from_lattice_sites">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lattice_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_lattice_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.from_lattice_sites" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lattice</strong> (<a class="reference internal" href="#qlinks.variables.layout.HasSiteLinkCounts" title="qlinks.variables.layout.HasSiteLinkCounts"><em>HasSiteLinkCounts</em></a>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2130,15 +1553,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.from_lattice_links">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lattice_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_lattice_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.from_lattice_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lattice</strong> (<a class="reference internal" href="#qlinks.variables.layout.HasSiteLinkCounts" title="qlinks.variables.layout.HasSiteLinkCounts"><em>HasSiteLinkCounts</em></a>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2146,39 +1560,23 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.from_lattice_sites_and_links">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lattice_sites_and_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.from_lattice_sites_and_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.from_lattice_sites_and_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lattice</strong> (<a class="reference internal" href="#qlinks.variables.layout.HasSiteLinkCounts" title="qlinks.variables.layout.HasSiteLinkCounts"><em>HasSiteLinkCounts</em></a>)</p></li>
-<li><p><strong>site_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-<li><p><strong>link_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableLayout" title="qlinks.variables.layout.VariableLayout"><em>VariableLayout</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.n_variables">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.VariableLayout.n_variables" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.VariableLayout.n_variables" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.shape">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.VariableLayout.shape" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.variables.VariableLayout.shape" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.spec">
 <span class="sig-name descname"><span class="pre">spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.spec" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><em>VariableSpec</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2186,12 +1584,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.local_space">
 <span class="sig-name descname"><span class="pre">local_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.local_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.local_space" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>variable_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2199,15 +1591,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.variable_index">
 <span class="sig-name descname"><span class="pre">variable_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.variable_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.variable_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kind</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableKind" title="qlinks.variables.layout.VariableKind"><em>VariableKind</em></a><em> | </em><em>str</em>)</p></li>
-<li><p><strong>geometry_index</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2215,12 +1598,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.site_variable_index">
 <span class="sig-name descname"><span class="pre">site_variable_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.site_variable_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.site_variable_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2228,12 +1605,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.link_variable_index">
 <span class="sig-name descname"><span class="pre">link_variable_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.link_variable_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.link_variable_index" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>link_index</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2241,9 +1612,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.site_variable_indices">
 <span class="sig-name descname"><span class="pre">site_variable_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.site_variable_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.site_variable_indices" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2251,9 +1619,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.link_variable_indices">
 <span class="sig-name descname"><span class="pre">link_variable_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.link_variable_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.link_variable_indices" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2261,12 +1626,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.empty_config">
 <span class="sig-name descname"><span class="pre">empty_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.empty_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.empty_config" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>fill_value</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2276,9 +1635,6 @@ by 2 only when evaluating physical observables.</p>
 <dd><p>Return a valid default configuration.</p>
 <p>For each variable, choose the first value in its local space.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2286,12 +1642,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.validate_config">
 <span class="sig-name descname"><span class="pre">validate_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.validate_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.validate_config" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2299,12 +1649,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.validate_batch">
 <span class="sig-name descname"><span class="pre">validate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.validate_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.validate_batch" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>configs</strong> (<em>ArrayLike</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2313,9 +1657,6 @@ by 2 only when evaluating physical observables.</p>
 <span class="sig-name descname"><span class="pre">as_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableLayout.as_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableLayout.as_metadata" title="Link to this definition">#</a></dt>
 <dd><p>Small serializable summary useful for debugging or future IO.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2323,12 +1664,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableLayout.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.VariableLayout.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>specs</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#qlinks.variables.layout.VariableSpec" title="qlinks.variables.layout.VariableSpec"><em>VariableSpec</em></a><em>, </em><em>...</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2337,7 +1672,7 @@ by 2 only when evaluating physical observables.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.variables.VariableSpec">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.variables.</span></span><span class="sig-name descname"><span class="pre">VariableSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/variables/layout.html#VariableSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.variables.VariableSpec" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One variable in the flattened configuration array.</p>
 <dl class="simple">
 <dt>kind:</dt><dd><p>Whether this variable lives on a site or link.</p>
@@ -2348,13 +1683,6 @@ by 2 only when evaluating physical observables.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kind</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableKind" title="qlinks.variables.layout.VariableKind"><em>VariableKind</em></a>)</p></li>
-<li><p><strong>geometry_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.VariableSpec.kind">
@@ -2363,7 +1691,7 @@ by 2 only when evaluating physical observables.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.variables.VariableSpec.geometry_index">
-<span class="sig-name descname"><span class="pre">geometry_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.variables.VariableSpec.geometry_index" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">geometry_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.variables.VariableSpec.geometry_index" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -2375,16 +1703,6 @@ by 2 only when evaluating physical observables.</p>
 <dt class="sig sig-object py" id="qlinks.variables.VariableSpec.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_space</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.variables.VariableSpec.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kind</strong> (<a class="reference internal" href="#qlinks.variables.layout.VariableKind" title="qlinks.variables.layout.VariableKind"><em>VariableKind</em></a>)</p></li>
-<li><p><strong>geometry_index</strong> (<em>int</em>)</p></li>
-<li><p><strong>local_space</strong> (<a class="reference internal" href="#qlinks.variables.local_space.LocalSpace" title="qlinks.variables.local_space.LocalSpace"><em>LocalSpace</em></a>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2529,6 +1847,7 @@ by 2 only when evaluating physical observables.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-qlinks.variables.local_space">qlinks.variables.local_space module</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace"><code class="docutils literal notranslate"><span class="pre">LocalSpace</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace.values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace.from_values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.from_values()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace.binary"><code class="docutils literal notranslate"><span class="pre">LocalSpace.binary()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.local_space.LocalSpace.spin_half_flux"><code class="docutils literal notranslate"><span class="pre">LocalSpace.spin_half_flux()</span></code></a></li>
@@ -2587,6 +1906,7 @@ by 2 only when evaluating physical observables.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace"><code class="docutils literal notranslate"><span class="pre">LocalSpace</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">LocalSpace.values</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.from_values"><code class="docutils literal notranslate"><span class="pre">LocalSpace.from_values()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.binary"><code class="docutils literal notranslate"><span class="pre">LocalSpace.binary()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.variables.LocalSpace.spin_half_flux"><code class="docutils literal notranslate"><span class="pre">LocalSpace.spin_half_flux()</span></code></a></li>

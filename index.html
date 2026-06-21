@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks documentation &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks &#8212; qlinks</title>
   
   
   
@@ -48,7 +48,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="qlinks package" href="qlinks.html" />
+    <link rel="next" title="Overview" href="overview.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="1.0.1" />
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -155,7 +155,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1 current active">
+                <a class="reference internal" href="#">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.backends.html">qlinks.backends package</a></li>
@@ -164,18 +180,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -252,7 +274,7 @@
       
       
       
-      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/index.rst" target="_blank"
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/index.rst" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -309,7 +331,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>qlinks documentation</h1>
+    <h1>qlinks</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -323,157 +345,79 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="qlinks-documentation">
-<h1>qlinks documentation<a class="headerlink" href="#qlinks-documentation" title="Link to this heading">#</a></h1>
-<p>Add your content using <code class="docutils literal notranslate"><span class="pre">reStructuredText</span></code> syntax. See the
-<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html">reStructuredText</a>
-documentation for details.</p>
+  <section id="qlinks">
+<h1>qlinks<a class="headerlink" href="#qlinks" title="Link to this heading">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">qlinks</span></code> is a research-oriented Python package for constrained lattice
+Hamiltonians, Fock-space graph diagnostics, interference-cage searches, and
+open-system constructions around many-body scarred states.</p>
+<p>The package is designed around a typical exact-diagonalization workflow:
+choose a lattice model, build the constrained basis and Hamiltonian, analyze
+its Fock-space structure, and then use visualization or diagnostic tools to
+understand compact and regional cage states.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The public API is becoming more stable, but the caging and open-system
+layers are still active research code.  Prefer the high-level APIs shown in
+this guide when writing notebooks or examples.</p>
+</div>
 <div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#design-principles">Design principles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#build-a-model">Build a model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#build-the-constrained-hamiltonian">Build the constrained Hamiltonian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#builder-choices">Builder choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#inspect-sectors">Inspect sectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#search-for-cages">Search for cages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#classify-a-cage">Classify a cage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#visualize">Visualize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#open-system-construction">Open-system construction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#square-qdm-hamiltonian">Square QDM Hamiltonian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#square-qlm-with-staggered-background-charges">Square QLM with staggered background charges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#plaquette-dependent-couplings-and-peierls-phases">Plaquette-dependent couplings and Peierls phases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#reuse-a-basis-across-builders">Reuse a basis across builders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#cage-search-and-first-record">Cage search and first record</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#reduced-density-matrix-readout">Reduced density matrix readout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#open-system-time-evolution">Open-system time evolution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development_status.html#stable-or-mostly-stable">Stable or mostly stable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development_status.html#active-research-layers">Active research layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development_status.html#planned-documentation-work">Planned documentation work</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development_status.html#backward-compatibility-expectations">Backward-compatibility expectations</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="qlinks.html">qlinks package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.backends.html">qlinks.backends package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.backends.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.backends.html#module-qlinks.backends.sparse">qlinks.backends.sparse module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.backends.html#module-qlinks.backends">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.html">qlinks.basis package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#subpackages">Subpackages</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#module-qlinks.basis.basis">qlinks.basis.basis module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.basis.html#module-qlinks.basis">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.builders.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.builders.html#module-qlinks.builders.optimized_sparse">qlinks.builders.optimized_sparse module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.builders.html#module-qlinks.builders.sparse">qlinks.builders.sparse module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.builders.html#module-qlinks.builders">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.base">qlinks.constraints.base module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.blockade">qlinks.constraints.blockade module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.collection">qlinks.constraints.collection module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.dimer">qlinks.constraints.dimer module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.gauss_law">qlinks.constraints.gauss_law module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.local">qlinks.constraints.local module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.sectors">qlinks.constraints.sectors module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.winding">qlinks.constraints.winding module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints.z2_winding">qlinks.constraints.z2_winding module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.constraints.html#module-qlinks.constraints">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.conventions.html">qlinks.conventions package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.conventions.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.conventions.html#module-qlinks.conventions.qlm">qlinks.conventions.qlm module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.conventions.html#module-qlinks.conventions">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.encoded.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.encoded.html#module-qlinks.encoded.binary_basis">qlinks.encoded.binary_basis module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.encoded.html#module-qlinks.encoded.bitmask_builder">qlinks.encoded.bitmask_builder module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.encoded.html#module-qlinks.encoded.bitmask_operators">qlinks.encoded.bitmask_operators module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.encoded.html#module-qlinks.encoded.flux">qlinks.encoded.flux module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.encoded.html#module-qlinks.encoded">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.exceptions.html#module-qlinks.exceptions">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.lattice.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.lattice.html#module-qlinks.lattice.chain">qlinks.lattice.chain module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.lattice.html#module-qlinks.lattice.graph">qlinks.lattice.graph module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.lattice.html#module-qlinks.lattice.honeycomb">qlinks.lattice.honeycomb module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.lattice.html#module-qlinks.lattice.square">qlinks.lattice.square module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.lattice.html#module-qlinks.lattice.triangular">qlinks.lattice.triangular module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.lattice.html#module-qlinks.lattice.types">qlinks.lattice.types module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.lattice.html#module-qlinks.lattice">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#module-qlinks.models.base">qlinks.models.base module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#module-qlinks.models.pxp">qlinks.models.pxp module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#module-qlinks.models.qdm">qlinks.models.qdm module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#module-qlinks.models.qlm">qlinks.models.qlm module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.models.html#module-qlinks.models">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.open_sys.html">qlinks.open_sys package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.open_sys.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.open_sys.html#qlinks-open-sys-lindbladian-module">qlinks.open_sys.lindbladian module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.open_sys.html#qlinks-open-sys-stochastic-schrodinger-module">qlinks.open_sys.stochastic_schrodinger module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.open_sys.html#module-contents">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.operators.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.operators.html#module-qlinks.operators.base">qlinks.operators.base module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.operators.html#module-qlinks.operators.diagonal">qlinks.operators.diagonal module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.operators.html#module-qlinks.operators.plaquette">qlinks.operators.plaquette module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.operators.html#module-qlinks.operators.pxp">qlinks.operators.pxp module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.operators.html#module-qlinks.operators.transitions">qlinks.operators.transitions module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.operators.html#module-qlinks.operators.updates">qlinks.operators.updates module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.operators.html#module-qlinks.operators">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.variables.html">qlinks.variables package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.variables.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.variables.html#module-qlinks.variables.config">qlinks.variables.config module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.variables.html#module-qlinks.variables.encoding">qlinks.variables.encoding module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.variables.html#module-qlinks.variables.layout">qlinks.variables.layout module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.variables.html#module-qlinks.variables.local_space">qlinks.variables.local_space module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.variables.html#module-qlinks.variables">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#module-qlinks.visualizer.basis">qlinks.visualizer.basis module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.visualizer.html#module-qlinks.visualizer">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.html#subpackages">Subpackages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.html#module-qlinks.distributed">qlinks.distributed module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig"><code class="docutils literal notranslate"><span class="pre">DistributedConfig</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.backend"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.backend</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.preserve_order"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.preserve_order</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.show_progress"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.show_progress</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.progress_description"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.progress_description</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.failure_mode"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.failure_mode</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.ray_init_kwargs"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.ray_init_kwargs</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.ray_shutdown"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.ray_shutdown</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.num_cpus_per_task"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.num_cpus_per_task</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.num_gpus_per_task"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.num_gpus_per_task</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.DistributedConfig.__init__"><code class="docutils literal notranslate"><span class="pre">DistributedConfig.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.html#qlinks.distributed.TaskFailure"><code class="docutils literal notranslate"><span class="pre">TaskFailure</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.TaskFailure.task_index"><code class="docutils literal notranslate"><span class="pre">TaskFailure.task_index</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.TaskFailure.task_input"><code class="docutils literal notranslate"><span class="pre">TaskFailure.task_input</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.TaskFailure.exception_type"><code class="docutils literal notranslate"><span class="pre">TaskFailure.exception_type</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.TaskFailure.message"><code class="docutils literal notranslate"><span class="pre">TaskFailure.message</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="qlinks.html#qlinks.distributed.TaskFailure.__init__"><code class="docutils literal notranslate"><span class="pre">TaskFailure.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.html#qlinks.distributed.map_tasks"><code class="docutils literal notranslate"><span class="pre">map_tasks()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.html#qlinks.distributed.map_tasks_serial"><code class="docutils literal notranslate"><span class="pre">map_tasks_serial()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.html#qlinks.distributed.map_tasks_ray"><code class="docutils literal notranslate"><span class="pre">map_tasks_ray()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.html#qlinks.distributed.ray_task_wrapper"><code class="docutils literal notranslate"><span class="pre">ray_task_wrapper()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="qlinks.html#qlinks.distributed.map_on_ray"><code class="docutils literal notranslate"><span class="pre">map_on_ray()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.html#module-qlinks">Module contents</a></li>
 </ul>
 </li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 </div>
 </section>
@@ -490,11 +434,11 @@ documentation for details.</p>
                   
 <div class="prev-next-area">
     <a class="right-next"
-       href="qlinks.html"
+       href="overview.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">qlinks package</p>
+        <p class="prev-next-title">Overview</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

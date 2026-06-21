@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks.lattice &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.lattice &#8212; qlinks</title>
   
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -154,7 +154,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.backends.html">qlinks.backends package</a></li>
@@ -163,18 +179,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -251,7 +273,7 @@
       
       
       
-      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/_autosummary/qlinks.lattice.rst" target="_blank"
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/_autosummary/qlinks.lattice.rst" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -458,7 +480,8 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.lattice.BoundaryCondition">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">BoundaryCondition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/types.html#BoundaryCondition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.BoundaryCondition" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.StrEnum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></a></p>
+<p>Supported lattice boundary conditions.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.BoundaryCondition.OPEN">
 <span class="sig-name descname"><span class="pre">OPEN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'open'</span></em><a class="headerlink" href="#qlinks.lattice.BoundaryCondition.OPEN" title="Link to this definition">#</a></dt>
@@ -485,52 +508,37 @@
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>length</strong> (<em>int</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.lattice.ChainLattice.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BoundaryCondition.OPEN</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/chain.html#ChainLattice.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.ChainLattice.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>length</strong> (<em>int</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.ChainLattice.sites">
-<span class="sig-name descname"><span class="pre">sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.Site" title="qlinks.lattice.Site"><span class="pre">Site</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.sites" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.Site" title="qlinks.lattice.Site"><span class="pre">Site</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.sites" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.ChainLattice.links">
-<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.Link" title="qlinks.lattice.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.links" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.Link" title="qlinks.lattice.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.links" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.ChainLattice.plaquettes">
-<span class="sig-name descname"><span class="pre">plaquettes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.Plaquette" title="qlinks.lattice.Plaquette"><span class="pre">Plaquette</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.plaquettes" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">plaquettes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.Plaquette" title="qlinks.lattice.Plaquette"><span class="pre">Plaquette</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.plaquettes" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.ChainLattice.boundary_condition">
-<span class="sig-name descname"><span class="pre">boundary_condition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.BoundaryCondition" title="qlinks.lattice.BoundaryCondition"><span class="pre">BoundaryCondition</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.boundary_condition" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">boundary_condition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.BoundaryCondition" title="qlinks.lattice.BoundaryCondition"><span class="pre">BoundaryCondition</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.boundary_condition" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.ChainLattice.translations">
-<span class="sig-name descname"><span class="pre">translations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.translations" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">translations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.ChainLattice.translations" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -560,28 +568,11 @@ B(x,y-1)</p>
 </dl>
 <p>This representation is convenient for QDM/QLM hexagon ring exchange.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lx</strong> (<em>int</em>)</p></li>
-<li><p><strong>ly</strong> (<em>int</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.lattice.HoneycombLattice.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BoundaryCondition.OPEN</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/honeycomb.html#HoneycombLattice.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.HoneycombLattice.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lx</strong> (<em>int</em>)</p></li>
-<li><p><strong>ly</strong> (<em>int</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -589,16 +580,6 @@ B(x,y-1)</p>
 <dt class="sig sig-object py" id="qlinks.lattice.HoneycombLattice.site_id">
 <span class="sig-name descname"><span class="pre">site_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sublattice</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/honeycomb.html#HoneycombLattice.site_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.HoneycombLattice.site_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>int</em>)</p></li>
-<li><p><strong>y</strong> (<em>int</em>)</p></li>
-<li><p><strong>sublattice</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -616,15 +597,6 @@ B(x,y-1)</p>
 <dt class="sig sig-object py" id="qlinks.lattice.HoneycombLattice.hexagon_plaquette_id">
 <span class="sig-name descname"><span class="pre">hexagon_plaquette_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/honeycomb.html#HoneycombLattice.hexagon_plaquette_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.HoneycombLattice.hexagon_plaquette_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>int</em>)</p></li>
-<li><p><strong>y</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -643,65 +615,56 @@ B(x,y-1)</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">LatticeGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquettes=()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition=BoundaryCondition.OPEN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translations=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Pure geometry/topology object.</p>
 <p>This class knows only about sites, links, incidence, adjacency, plaquettes,
 and translations. It knows nothing about physical variables, Gauss laws,
 dimers, spins, Hamiltonians, or constraints.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sites</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Site" title="qlinks.lattice.types.Site"><em>Site</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>links</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Link" title="qlinks.lattice.types.Link"><em>Link</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>plaquettes</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Plaquette" title="qlinks.lattice.types.Plaquette"><em>Plaquette</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-<li><p><strong>translations</strong> (<em>Mapping</em><em>[</em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em><em>]</em><em>, </em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.sites">
-<span class="sig-name descname"><span class="pre">sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Site" title="qlinks.lattice.types.Site"><span class="pre">Site</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.sites" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Site" title="qlinks.lattice.types.Site"><span class="pre">Site</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.sites" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.links">
-<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Link" title="qlinks.lattice.types.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.links" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Link" title="qlinks.lattice.types.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.links" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.plaquettes">
-<span class="sig-name descname"><span class="pre">plaquettes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Plaquette" title="qlinks.lattice.types.Plaquette"><span class="pre">Plaquette</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.plaquettes" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">plaquettes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Plaquette" title="qlinks.lattice.types.Plaquette"><span class="pre">Plaquette</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.plaquettes" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.boundary_condition">
-<span class="sig-name descname"><span class="pre">boundary_condition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><span class="pre">BoundaryCondition</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.boundary_condition" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">boundary_condition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><span class="pre">BoundaryCondition</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.boundary_condition" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.translations">
-<span class="sig-name descname"><span class="pre">translations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.translations" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">translations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.14)"><span class="pre">Mapping</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.translations" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.ndim">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.ndim" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.ndim" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.num_sites">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.num_sites" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.num_sites" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.num_links">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.num_links" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.num_links" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.num_plaquettes">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_plaquettes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.num_plaquettes" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_plaquettes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.num_plaquettes" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -737,27 +700,18 @@ dimers, spins, Hamiltonians, or constraints.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.primitive_vectors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">primitive_vectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.primitive_vectors" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">primitive_vectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.primitive_vectors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.basis_offsets">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.basis_offsets" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.LatticeGraph.basis_offsets" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.embedded_position">
 <span class="sig-name descname"><span class="pre">embedded_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sublattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.embedded_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.embedded_position" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>cell</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>sublattice</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[float, …]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -765,12 +719,6 @@ dimers, spins, Hamiltonians, or constraints.</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.site_embedded_position">
 <span class="sig-name descname"><span class="pre">site_embedded_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.site_embedded_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.site_embedded_position" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[float, …]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -785,9 +733,6 @@ B[target, link] = +1</p>
 </div></blockquote>
 <p>This is the natural convention for divergence-like constraints.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -796,9 +741,6 @@ B[target, link] = +1</p>
 <span class="sig-name descname"><span class="pre">unoriented_adjacency_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.unoriented_adjacency_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.unoriented_adjacency_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Return symmetric site-site adjacency matrix.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -806,12 +748,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.incident_links">
 <span class="sig-name descname"><span class="pre">incident_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.incident_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.incident_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -819,12 +755,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.incoming_links">
 <span class="sig-name descname"><span class="pre">incoming_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.incoming_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.incoming_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -832,12 +762,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.outgoing_links">
 <span class="sig-name descname"><span class="pre">outgoing_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.outgoing_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.outgoing_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -845,12 +769,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.neighbors">
 <span class="sig-name descname"><span class="pre">neighbors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.neighbors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.neighbors" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>site_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -858,12 +776,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.plaquette_links">
 <span class="sig-name descname"><span class="pre">plaquette_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.plaquette_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.plaquette_links" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>plaquette_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -871,12 +783,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.plaquette_orientations">
 <span class="sig-name descname"><span class="pre">plaquette_orientations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.plaquette_orientations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.plaquette_orientations" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>plaquette_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -885,12 +791,6 @@ B[target, link] = +1</p>
 <span class="sig-name descname"><span class="pre">plaquette_boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.plaquette_boundary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.plaquette_boundary" title="Link to this definition">#</a></dt>
 <dd><p>Return the oriented boundary of a plaquette.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>plaquette_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.OrientedLink" title="qlinks.lattice.types.OrientedLink"><em>OrientedLink</em></a>, …]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -898,12 +798,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.plaquette_sites">
 <span class="sig-name descname"><span class="pre">plaquette_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.plaquette_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.plaquette_sites" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>plaquette_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -917,9 +811,6 @@ B[target, link] = +1</p>
 </div></blockquote>
 <p>depending on the orientation of the link in the plaquette boundary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -927,12 +818,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.plaquette_anchor_cell">
 <span class="sig-name descname"><span class="pre">plaquette_anchor_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plaquette_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.plaquette_anchor_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.plaquette_anchor_cell" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>plaquette_id</strong> (<em>int</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[int, …]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -940,15 +825,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.plaquette_id_from_anchor">
 <span class="sig-name descname"><span class="pre">plaquette_id_from_anchor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.plaquette_id_from_anchor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.plaquette_id_from_anchor" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>cell</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>kind</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -956,12 +832,6 @@ B[target, link] = +1</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.canonical_cell">
 <span class="sig-name descname"><span class="pre">canonical_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.canonical_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.canonical_cell" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cell</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[int, …]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -972,15 +842,6 @@ B[target, link] = +1</p>
 <p>Returns None if the translation is not defined, e.g. for an open-boundary
 site translated out of the system.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>site_id</strong> (<em>int</em>)</p></li>
-<li><p><strong>displacement</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int | None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -991,15 +852,6 @@ site translated out of the system.</p>
 <p>orientation = +1 means traversal agrees with stored link orientation.
 orientation = -1 means traversal is opposite to stored link orientation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> (<em>int</em>)</p></li>
-<li><p><strong>target</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[int, int]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1007,9 +859,6 @@ orientation = -1 means traversal is opposite to stored link orientation.</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.as_metadata">
 <span class="sig-name descname"><span class="pre">as_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/graph.html#LatticeGraph.as_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph.as_metadata" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict[str, object]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1017,18 +866,6 @@ orientation = -1 means traversal is opposite to stored link orientation.</p>
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquettes=()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition=BoundaryCondition.OPEN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translations=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.lattice.LatticeGraph.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sites</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Site" title="qlinks.lattice.types.Site"><em>Site</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>links</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Link" title="qlinks.lattice.types.Link"><em>Link</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>plaquettes</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.Plaquette" title="qlinks.lattice.types.Plaquette"><em>Plaquette</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-<li><p><strong>translations</strong> (<em>Mapping</em><em>[</em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em><em>]</em><em>, </em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1037,7 +874,7 @@ orientation = -1 means traversal is opposite to stored link orientation.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.lattice.Link">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">Link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/types.html#Link"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.Link" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Oriented link metadata.</p>
 <p>The link orientation is source -&gt; target.</p>
 <p>This orientation defines the sign convention in the incidence matrix:</p>
@@ -1052,57 +889,36 @@ incidence[target, link] = +1</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>source</strong> (<em>int</em>)</p></li>
-<li><p><strong>target</strong> (<em>int</em>)</p></li>
-<li><p><strong>kind</strong> (<em>str</em>)</p></li>
-<li><p><strong>wrap</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Link.id">
-<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.Link.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.Link.id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Link.source">
-<span class="sig-name descname"><span class="pre">source</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.Link.source" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">source</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.Link.source" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Link.target">
-<span class="sig-name descname"><span class="pre">target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.Link.target" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.Link.target" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Link.kind">
-<span class="sig-name descname"><span class="pre">kind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.lattice.Link.kind" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.lattice.Link.kind" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Link.wrap">
-<span class="sig-name descname"><span class="pre">wrap</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qlinks.lattice.Link.wrap" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">wrap</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#qlinks.lattice.Link.wrap" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.lattice.Link.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.lattice.Link.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>source</strong> (<em>int</em>)</p></li>
-<li><p><strong>target</strong> (<em>int</em>)</p></li>
-<li><p><strong>kind</strong> (<em>str</em>)</p></li>
-<li><p><strong>wrap</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1111,49 +927,34 @@ incidence[target, link] = +1</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.LinkId">
 <span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">LinkId</span></span><a class="headerlink" href="#qlinks.lattice.LinkId" title="Link to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+<dd><p>alias of <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.lattice.OrientedLink">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">OrientedLink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/types.html#OrientedLink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.OrientedLink" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>A link with an orientation relative to a plaquette boundary.</p>
 <p>orientation = +1 means the plaquette traverses the link along its stored
 source -&gt; target direction.</p>
 <p>orientation = -1 means the plaquette traverses the link opposite to its
 stored source -&gt; target direction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>link_id</strong> (<em>int</em>)</p></li>
-<li><p><strong>orientation</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.OrientedLink.link_id">
-<span class="sig-name descname"><span class="pre">link_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.OrientedLink.link_id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">link_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.OrientedLink.link_id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.OrientedLink.orientation">
-<span class="sig-name descname"><span class="pre">orientation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.OrientedLink.orientation" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">orientation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.OrientedLink.orientation" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.lattice.OrientedLink.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.lattice.OrientedLink.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>link_id</strong> (<em>int</em>)</p></li>
-<li><p><strong>orientation</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1162,7 +963,7 @@ stored source -&gt; target direction.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">Plaquette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_cell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/types.html#Plaquette"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.Plaquette" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Oriented elementary loop.</p>
 <dl class="simple">
 <dt>links:</dt><dd><p>Link ids around the loop.</p>
@@ -1180,50 +981,40 @@ plotting, and later local operator construction.</p>
 <p>kind: Geometry-dependent plaquette type.</p>
 <p>anchor_cell: Unit-cell coordinate used to label this plaquette.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>links</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>orientations</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>sites</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>kind</strong> (<em>str</em>)</p></li>
-<li><p><strong>anchor_cell</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette.id">
-<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.Plaquette.id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette.links">
-<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.links" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.links" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette.orientations">
-<span class="sig-name descname"><span class="pre">orientations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.orientations" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">orientations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.orientations" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette.sites">
-<span class="sig-name descname"><span class="pre">sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.sites" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sites</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.sites" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette.kind">
-<span class="sig-name descname"><span class="pre">kind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.kind" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.lattice.Plaquette.kind" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette.anchor_cell">
-<span class="sig-name descname"><span class="pre">anchor_cell</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.anchor_cell" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">anchor_cell</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.anchor_cell" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette.boundary">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">boundary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.OrientedLink" title="qlinks.lattice.types.OrientedLink"><span class="pre">OrientedLink</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.boundary" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">boundary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.OrientedLink" title="qlinks.lattice.types.OrientedLink"><span class="pre">OrientedLink</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Plaquette.boundary" title="Link to this definition">#</a></dt>
 <dd><p>Return the oriented boundary links of this plaquette.</p>
 </dd></dl>
 
@@ -1231,19 +1022,6 @@ plotting, and later local operator construction.</p>
 <dt class="sig sig-object py" id="qlinks.lattice.Plaquette.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_cell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.lattice.Plaquette.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>links</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>orientations</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>sites</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>kind</strong> (<em>str</em>)</p></li>
-<li><p><strong>anchor_cell</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1252,13 +1030,13 @@ plotting, and later local operator construction.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.PlaquetteId">
 <span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">PlaquetteId</span></span><a class="headerlink" href="#qlinks.lattice.PlaquetteId" title="Link to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+<dd><p>alias of <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.lattice.Site">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">Site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sublattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/types.html#Site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.Site" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Geometry-level site metadata.</p>
 <dl class="simple">
 <dt>id:</dt><dd><p>Consecutive integer site id.</p>
@@ -1272,50 +1050,31 @@ It should not be used as the primary index in performance-sensitive code.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>cell</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>sublattice</strong> (<em>int</em>)</p></li>
-<li><p><strong>position</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>...</em><em>]</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Site.id">
-<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.Site.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.Site.id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Site.cell">
-<span class="sig-name descname"><span class="pre">cell</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Site.cell" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cell</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Site.cell" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Site.sublattice">
-<span class="sig-name descname"><span class="pre">sublattice</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qlinks.lattice.Site.sublattice" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sublattice</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.lattice.Site.sublattice" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.Site.position">
-<span class="sig-name descname"><span class="pre">position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Site.position" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.lattice.Site.position" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.lattice.Site.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sublattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.lattice.Site.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>cell</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p></li>
-<li><p><strong>sublattice</strong> (<em>int</em>)</p></li>
-<li><p><strong>position</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>...</em><em>]</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1324,7 +1083,7 @@ It should not be used as the primary index in performance-sensitive code.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.lattice.SiteId">
 <span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">SiteId</span></span><a class="headerlink" href="#qlinks.lattice.SiteId" title="Link to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+<dd><p>alias of <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
@@ -1352,28 +1111,11 @@ left edge: -y</p>
 </dl>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lx</strong> (<em>int</em>)</p></li>
-<li><p><strong>ly</strong> (<em>int</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.lattice.SquareLattice.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BoundaryCondition.OPEN</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/square.html#SquareLattice.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.SquareLattice.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lx</strong> (<em>int</em>)</p></li>
-<li><p><strong>ly</strong> (<em>int</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1381,15 +1123,6 @@ left edge: -y</p>
 <dt class="sig sig-object py" id="qlinks.lattice.SquareLattice.site_id">
 <span class="sig-name descname"><span class="pre">site_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/square.html#SquareLattice.site_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.SquareLattice.site_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>int</em>)</p></li>
-<li><p><strong>y</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1397,12 +1130,6 @@ left edge: -y</p>
 <dt class="sig sig-object py" id="qlinks.lattice.SquareLattice.canonical_cell">
 <span class="sig-name descname"><span class="pre">canonical_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/square.html#SquareLattice.canonical_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.SquareLattice.canonical_cell" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cell</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[int, …]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1410,15 +1137,6 @@ left edge: -y</p>
 <dt class="sig sig-object py" id="qlinks.lattice.SquareLattice.plaquette_id_from_cell">
 <span class="sig-name descname"><span class="pre">plaquette_id_from_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/square.html#SquareLattice.plaquette_id_from_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.SquareLattice.plaquette_id_from_cell" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>int</em>)</p></li>
-<li><p><strong>y</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1426,15 +1144,6 @@ left edge: -y</p>
 <dt class="sig sig-object py" id="qlinks.lattice.SquareLattice.square_plaquette_id">
 <span class="sig-name descname"><span class="pre">square_plaquette_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/square.html#SquareLattice.square_plaquette_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.SquareLattice.square_plaquette_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>int</em>)</p></li>
-<li><p><strong>y</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1475,32 +1184,11 @@ plaquettes on triangular lattices.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lx</strong> (<em>int</em>)</p></li>
-<li><p><strong>ly</strong> (<em>int</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-<li><p><strong>include_triangles</strong> (<em>bool</em>)</p></li>
-<li><p><strong>include_rhombi</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.lattice.TriangularLattice.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BoundaryCondition.OPEN</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_triangles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_rhombi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/triangular.html#TriangularLattice.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.TriangularLattice.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lx</strong> (<em>int</em>)</p></li>
-<li><p><strong>ly</strong> (<em>int</em>)</p></li>
-<li><p><strong>boundary_condition</strong> (<a class="reference internal" href="../qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition" title="qlinks.lattice.types.BoundaryCondition"><em>BoundaryCondition</em></a><em> | </em><em>str</em>)</p></li>
-<li><p><strong>include_triangles</strong> (<em>bool</em>)</p></li>
-<li><p><strong>include_rhombi</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1508,15 +1196,6 @@ plaquettes on triangular lattices.</p>
 <dt class="sig sig-object py" id="qlinks.lattice.TriangularLattice.site_id">
 <span class="sig-name descname"><span class="pre">site_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/triangular.html#TriangularLattice.site_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.TriangularLattice.site_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>int</em>)</p></li>
-<li><p><strong>y</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1529,9 +1208,6 @@ plaquettes on triangular lattices.</p>
 <dt class="sig sig-object py" id="qlinks.lattice.TriangularLattice.qlm_plaquette_ids">
 <span class="sig-name descname"><span class="pre">qlm_plaquette_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_triangles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/triangular.html#TriangularLattice.qlm_plaquette_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.TriangularLattice.qlm_plaquette_ids" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>use_triangles</strong> (<em>bool</em>)</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1539,16 +1215,6 @@ plaquettes on triangular lattices.</p>
 <dt class="sig sig-object py" id="qlinks.lattice.TriangularLattice.triangular_plaquette_id">
 <span class="sig-name descname"><span class="pre">triangular_plaquette_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/triangular.html#TriangularLattice.triangular_plaquette_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.TriangularLattice.triangular_plaquette_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>int</em>)</p></li>
-<li><p><strong>y</strong> (<em>int</em>)</p></li>
-<li><p><strong>kind</strong> (<em>str</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1556,16 +1222,6 @@ plaquettes on triangular lattices.</p>
 <dt class="sig sig-object py" id="qlinks.lattice.TriangularLattice.rhombus_plaquette_id">
 <span class="sig-name descname"><span class="pre">rhombus_plaquette_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qlinks/lattice/triangular.html#TriangularLattice.rhombus_plaquette_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.TriangularLattice.rhombus_plaquette_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>int</em>)</p></li>
-<li><p><strong>y</strong> (<em>int</em>)</p></li>
-<li><p><strong>kind</strong> (<em>str</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
 </dl>
 </dd></dl>
 

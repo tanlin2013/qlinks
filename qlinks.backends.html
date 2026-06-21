@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>qlinks.backends package &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.backends package &#8212; qlinks</title>
   
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -154,7 +154,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="qlinks.html">qlinks package</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">qlinks.backends package</a></li>
@@ -163,18 +179,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -251,7 +273,7 @@
       
       
       
-      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/qlinks.backends.rst" target="_blank"
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/qlinks.backends.rst" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -335,6 +357,7 @@
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend.name"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend.as_data_array"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.as_data_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend.as_index_array"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.as_index_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend.coo_matrix"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.coo_matrix()</span></code></a></li>
@@ -376,6 +399,7 @@
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend.name"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend.as_data_array"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.as_data_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend.as_index_array"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.as_index_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend.coo_matrix"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.coo_matrix()</span></code></a></li>
@@ -420,26 +444,17 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.backends.sparse.SparseBackend">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.backends.sparse.</span></span><span class="sig-name descname"><span class="pre">SparseBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
 <p>Minimal backend protocol for sparse Hamiltonian construction.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.backends.sparse.SparseBackend.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.backends.sparse.SparseBackend.as_data_array">
 <span class="sig-name descname"><span class="pre">as_data_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.as_data_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.as_data_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>list</em><em>[</em><em>complex</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -447,12 +462,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.SparseBackend.as_index_array">
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -460,18 +469,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.SparseBackend.coo_matrix">
 <span class="sig-name descname"><span class="pre">coo_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.coo_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.coo_matrix" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Any</em>)</p></li>
-<li><p><strong>rows</strong> (<em>Any</em>)</p></li>
-<li><p><strong>cols</strong> (<em>Any</em>)</p></li>
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -479,15 +476,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.SparseBackend.empty_csr">
 <span class="sig-name descname"><span class="pre">empty_csr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.empty_csr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.empty_csr" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -495,12 +483,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.SparseBackend.to_cpu_array">
 <span class="sig-name descname"><span class="pre">to_cpu_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.to_cpu_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.to_cpu_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -508,12 +490,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.SparseBackend.max_abs_data">
 <span class="sig-name descname"><span class="pre">max_abs_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sparse_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.max_abs_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.SparseBackend.max_abs_data" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sparse_matrix</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -526,31 +502,33 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.backends.sparse.</span></span><span class="sig-name descname"><span class="pre">ScipySparseBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'str'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'scipy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.backends.sparse.</span></span><span class="sig-name descname"><span class="pre">ScipySparseBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scipy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>SciPy sparse backend used by default Hamiltonian builders.</p>
+<p>The backend normalizes sparse-matrix construction behind a small protocol so
+model/build code can also target CuPy when available.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.name" title="Link to this definition">#</a></dt>
+<dd><p>Backend name, always <code class="docutils literal notranslate"><span class="pre">&quot;scipy&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend.as_data_array">
 <span class="sig-name descname"><span class="pre">as_data_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.as_data_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.as_data_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>list</em><em>[</em><em>complex</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -558,12 +536,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend.as_index_array">
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -571,18 +543,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend.coo_matrix">
 <span class="sig-name descname"><span class="pre">coo_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.coo_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.coo_matrix" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>NDArray</em>)</p></li>
-<li><p><strong>rows</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>cols</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -590,15 +550,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend.empty_csr">
 <span class="sig-name descname"><span class="pre">empty_csr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.empty_csr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.empty_csr" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -606,12 +557,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend.to_cpu_array">
 <span class="sig-name descname"><span class="pre">to_cpu_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.to_cpu_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.to_cpu_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -619,12 +564,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend.max_abs_data">
 <span class="sig-name descname"><span class="pre">max_abs_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sparse_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.max_abs_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.max_abs_data" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sparse_matrix</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -632,12 +571,6 @@
 <dt class="sig sig-object py" id="qlinks.backends.sparse.ScipySparseBackend.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scipy'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.backends.sparse.ScipySparseBackend.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -646,7 +579,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.backends.sparse.</span></span><span class="sig-name descname"><span class="pre">CupySparseBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cupy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>CuPy/CuPyX sparse backend.</p>
 <p>Imported lazily so qlinks does not require CuPy unless backend=”cupy” is used.</p>
 <div class="admonition note">
@@ -656,13 +589,10 @@ more closely than scipy’s newer sparse array API. Therefore this backend
 creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -679,12 +609,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend.as_data_array">
 <span class="sig-name descname"><span class="pre">as_data_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.as_data_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.as_data_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>list</em><em>[</em><em>complex</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
 </dl>
 </dd></dl>
 
@@ -692,9 +616,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend.as_index_array">
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -702,15 +623,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend.coo_matrix">
 <span class="sig-name descname"><span class="pre">coo_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.coo_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.coo_matrix" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Any</em>)</p></li>
-<li><p><strong>rows</strong> (<em>Any</em>)</p></li>
-<li><p><strong>cols</strong> (<em>Any</em>)</p></li>
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
 </dl>
 </dd></dl>
 
@@ -718,12 +630,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend.empty_csr">
 <span class="sig-name descname"><span class="pre">empty_csr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.empty_csr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.empty_csr" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
 </dl>
 </dd></dl>
 
@@ -731,12 +637,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend.to_cpu_array">
 <span class="sig-name descname"><span class="pre">to_cpu_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.to_cpu_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.to_cpu_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -744,12 +644,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend.max_abs_data">
 <span class="sig-name descname"><span class="pre">max_abs_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sparse_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.max_abs_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.max_abs_data" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sparse_matrix</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -757,12 +651,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.sparse.CupySparseBackend.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cupy'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.backends.sparse.CupySparseBackend.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -775,12 +663,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <p>backend=”auto” currently chooses scipy. This keeps behavior deterministic.
 Later, you can change “auto” to use cupy if an input basis lives on GPU.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'scipy'</em><em>, </em><em>'cupy'</em><em>, </em><em>'auto'</em><em>] </em><em>| </em><em>~qlinks.backends.sparse.SparseBackend</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.backends.sparse.SparseBackend" title="qlinks.backends.sparse.SparseBackend"><em>SparseBackend</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -790,7 +672,7 @@ Later, you can change “auto” to use cupy if an input basis lives on GPU.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.backends.</span></span><span class="sig-name descname"><span class="pre">CupySparseBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cupy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.CupySparseBackend" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>CuPy/CuPyX sparse backend.</p>
 <p>Imported lazily so qlinks does not require CuPy unless backend=”cupy” is used.</p>
 <div class="admonition note">
@@ -800,13 +682,10 @@ more closely than scipy’s newer sparse array API. Therefore this backend
 creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.backends.CupySparseBackend.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.backends.CupySparseBackend.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -823,12 +702,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend.as_data_array">
 <span class="sig-name descname"><span class="pre">as_data_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.as_data_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.CupySparseBackend.as_data_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>list</em><em>[</em><em>complex</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
 </dl>
 </dd></dl>
 
@@ -836,9 +709,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend.as_index_array">
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.CupySparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -846,15 +716,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend.coo_matrix">
 <span class="sig-name descname"><span class="pre">coo_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.coo_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.CupySparseBackend.coo_matrix" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Any</em>)</p></li>
-<li><p><strong>rows</strong> (<em>Any</em>)</p></li>
-<li><p><strong>cols</strong> (<em>Any</em>)</p></li>
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
 </dl>
 </dd></dl>
 
@@ -862,12 +723,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend.empty_csr">
 <span class="sig-name descname"><span class="pre">empty_csr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.empty_csr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.CupySparseBackend.empty_csr" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
 </dl>
 </dd></dl>
 
@@ -875,12 +730,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend.to_cpu_array">
 <span class="sig-name descname"><span class="pre">to_cpu_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.to_cpu_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.CupySparseBackend.to_cpu_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -888,12 +737,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend.max_abs_data">
 <span class="sig-name descname"><span class="pre">max_abs_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sparse_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#CupySparseBackend.max_abs_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.CupySparseBackend.max_abs_data" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sparse_matrix</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -901,12 +744,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.CupySparseBackend.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cupy'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.backends.CupySparseBackend.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -914,31 +751,33 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.backends.</span></span><span class="sig-name descname"><span class="pre">ScipySparseBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'str'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'scipy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.backends.</span></span><span class="sig-name descname"><span class="pre">ScipySparseBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scipy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>SciPy sparse backend used by default Hamiltonian builders.</p>
+<p>The backend normalizes sparse-matrix construction behind a small protocol so
+model/build code can also target CuPy when available.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.name" title="Link to this definition">#</a></dt>
+<dd><p>Backend name, always <code class="docutils literal notranslate"><span class="pre">&quot;scipy&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend.as_data_array">
 <span class="sig-name descname"><span class="pre">as_data_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.as_data_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.as_data_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>list</em><em>[</em><em>complex</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -946,12 +785,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend.as_index_array">
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray[<em>int64</em>]</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -959,18 +792,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend.coo_matrix">
 <span class="sig-name descname"><span class="pre">coo_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.coo_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.coo_matrix" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>NDArray</em>)</p></li>
-<li><p><strong>rows</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>cols</strong> (<em>NDArray</em><em>[</em><em>int64</em><em>]</em>)</p></li>
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -978,15 +799,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend.empty_csr">
 <span class="sig-name descname"><span class="pre">empty_csr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.empty_csr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.empty_csr" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><em>csr_array</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -994,12 +806,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend.to_cpu_array">
 <span class="sig-name descname"><span class="pre">to_cpu_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.to_cpu_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.to_cpu_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1007,12 +813,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend.max_abs_data">
 <span class="sig-name descname"><span class="pre">max_abs_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sparse_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#ScipySparseBackend.max_abs_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.max_abs_data" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sparse_matrix</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1020,12 +820,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.ScipySparseBackend.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scipy'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.backends.ScipySparseBackend.__init__" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1034,26 +828,17 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qlinks.backends.SparseBackend">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.backends.</span></span><span class="sig-name descname"><span class="pre">SparseBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.SparseBackend" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
 <p>Minimal backend protocol for sparse Hamiltonian construction.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.backends.SparseBackend.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qlinks.backends.SparseBackend.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#qlinks.backends.SparseBackend.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qlinks.backends.SparseBackend.as_data_array">
 <span class="sig-name descname"><span class="pre">as_data_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.as_data_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.SparseBackend.as_data_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>list</em><em>[</em><em>complex</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1061,12 +846,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.SparseBackend.as_index_array">
 <span class="sig-name descname"><span class="pre">as_index_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.as_index_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.SparseBackend.as_index_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>NDArray</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.4)"><em>integer</em></a><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1074,18 +853,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.SparseBackend.coo_matrix">
 <span class="sig-name descname"><span class="pre">coo_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.coo_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.SparseBackend.coo_matrix" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Any</em>)</p></li>
-<li><p><strong>rows</strong> (<em>Any</em>)</p></li>
-<li><p><strong>cols</strong> (<em>Any</em>)</p></li>
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1093,15 +860,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.SparseBackend.empty_csr">
 <span class="sig-name descname"><span class="pre">empty_csr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.empty_csr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.SparseBackend.empty_csr" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1109,12 +867,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.SparseBackend.to_cpu_array">
 <span class="sig-name descname"><span class="pre">to_cpu_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.to_cpu_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.SparseBackend.to_cpu_array" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>array</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>NDArray</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1122,12 +874,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <dt class="sig sig-object py" id="qlinks.backends.SparseBackend.max_abs_data">
 <span class="sig-name descname"><span class="pre">max_abs_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sparse_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/backends/sparse.html#SparseBackend.max_abs_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.backends.SparseBackend.max_abs_data" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sparse_matrix</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1145,12 +891,6 @@ creates cupyx.scipy.sparse.coo_matrix/csr_matrix, not csr_array.</p>
 <p>backend=”auto” currently chooses scipy. This keeps behavior deterministic.
 Later, you can change “auto” to use cupy if an input basis lives on GPU.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<em>Literal</em><em>[</em><em>'scipy'</em><em>, </em><em>'cupy'</em><em>, </em><em>'auto'</em><em>] </em><em>| </em><em>~qlinks.backends.sparse.SparseBackend</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#qlinks.backends.sparse.SparseBackend" title="qlinks.backends.sparse.SparseBackend"><em>SparseBackend</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1219,6 +959,7 @@ Later, you can change “auto” to use cupy if an input basis lives on GPU.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend.name"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend.as_data_array"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.as_data_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend.as_index_array"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.as_index_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.sparse.ScipySparseBackend.coo_matrix"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.coo_matrix()</span></code></a></li>
@@ -1260,6 +1001,7 @@ Later, you can change “auto” to use cupy if an input basis lives on GPU.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend.name"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend.as_data_array"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.as_data_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend.as_index_array"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.as_index_array()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.backends.ScipySparseBackend.coo_matrix"><code class="docutils literal notranslate"><span class="pre">ScipySparseBackend.coo_matrix()</span></code></a></li>

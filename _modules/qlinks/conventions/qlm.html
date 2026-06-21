@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qlinks.conventions.qlm &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.conventions.qlm &#8212; qlinks</title>
   
   
   
@@ -126,7 +126,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -153,7 +153,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
@@ -162,18 +178,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -326,38 +348,21 @@
     <span class="n">magnitude</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">convention</span><span class="p">:</span> <span class="n">SublatticeSignConvention</span> <span class="o">=</span> <span class="s2">&quot;even_positive&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate staggered background charges on lattice sites.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate staggered background charges on lattice sites.</span>
 
-<span class="sd">    The charge is assigned by the parity of the unit-cell coordinate:</span>
+<span class="sd">    The charge sign is assigned by the parity of the unit-cell coordinate,</span>
+<span class="sd">    ``eta(r) = (-1) ** sum(cell coordinates)``.  On a square lattice this is</span>
+<span class="sd">    ``eta(x, y) = (-1) ** (x + y)``.</span>
 
-<span class="sd">        eta(r) = (-1) ** sum(cell coordinates)</span>
+<span class="sd">    Args:</span>
+<span class="sd">        lattice: Lattice whose sites carry the Gauss-law charges.</span>
+<span class="sd">        magnitude: Absolute value of the staggered charge.</span>
+<span class="sd">        convention: Which sublattice receives the positive charge.</span>
+<span class="sd">            ``&quot;even_positive&quot;`` assigns ``+magnitude`` to the even sublattice;</span>
+<span class="sd">            ``&quot;odd_positive&quot;`` reverses the sign.</span>
 
-<span class="sd">    For a square lattice, this is simply:</span>
-
-<span class="sd">        eta(x, y) = (-1) ** (x + y)</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    lattice:</span>
-<span class="sd">        Lattice whose sites carry the Gauss-law charges.</span>
-
-<span class="sd">    magnitude:</span>
-<span class="sd">        Absolute value of the staggered charge.</span>
-
-<span class="sd">    convention:</span>
-<span class="sd">        &quot;even_positive&quot;:</span>
-<span class="sd">            even sublattice gets +magnitude,</span>
-<span class="sd">            odd sublattice gets -magnitude.</span>
-
-<span class="sd">        &quot;odd_positive&quot;:</span>
-<span class="sd">            even sublattice gets -magnitude,</span>
-<span class="sd">            odd sublattice gets +magnitude.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    charges:</span>
-<span class="sd">        Integer array of shape (lattice.num_sites,), ordered by site id.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Integer charge array ordered by site id.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">magnitude</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;magnitude must be non-negative.&quot;</span><span class="p">)</span>
@@ -390,37 +395,21 @@
     <span class="n">charge_normalization</span><span class="p">:</span> <span class="n">ChargeNormalization</span> <span class="o">=</span> <span class="s2">&quot;spin_half&quot;</span><span class="p">,</span>
     <span class="n">convention</span><span class="p">:</span> <span class="n">SublatticeSignConvention</span> <span class="o">=</span> <span class="s2">&quot;even_positive&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Staggered charges for the square-lattice QDM-to-QLM mapping.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return staggered charges for the square QDM-to-QLM mapping.</span>
 
-<span class="sd">    For the current spin-half flux convention E_l in {-1, +1}, the close-packed</span>
-<span class="sd">    QDM constraint</span>
+<span class="sd">    With spin-half flux variables ``E_l in {-1, +1}``, the close-packed QDM</span>
+<span class="sd">    constraint maps to a staggered Gauss law with charge magnitude one.</span>
 
-<span class="sd">        one dimer touching each site</span>
+<span class="sd">    Args:</span>
+<span class="sd">        lattice: Square lattice whose sites receive charges.</span>
+<span class="sd">        magnitude: Optional explicit charge magnitude.  If omitted, the</span>
+<span class="sd">            magnitude is inferred from ``charge_normalization``.</span>
+<span class="sd">        charge_normalization: ``&quot;spin_half&quot;`` gives user charges ``±1``;</span>
+<span class="sd">            ``&quot;integer_flux&quot;`` gives user charges ``±2``.</span>
+<span class="sd">        convention: Which sublattice receives the positive charge.</span>
 
-<span class="sd">    maps naturally to a staggered Gauss law with charge magnitude 1 on the</span>
-<span class="sd">    square lattice.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    lattice:</span>
-<span class="sd">        SquareLattice instance.</span>
-
-<span class="sd">    charge_normalization:</span>
-<span class="sd">        &quot;spin_half&quot;:</span>
-<span class="sd">            The user-facing charges are ±1, matching the spin-half flux convention.</span>
-
-<span class="sd">        &quot;integer_flux&quot;:</span>
-<span class="sd">            The user-facing charges are ±2, matching the integer-flux convention</span>
-<span class="sd">            where E_l in {-2, 0, +2}.</span>
-
-<span class="sd">    convention:</span>
-<span class="sd">        Which sublattice receives the positive charge.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    charges:</span>
-<span class="sd">        Integer array ordered by site id.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Integer charge array ordered by site id.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">magnitude</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">charge_normalization</span> <span class="o">==</span> <span class="s2">&quot;spin_half&quot;</span><span class="p">:</span>

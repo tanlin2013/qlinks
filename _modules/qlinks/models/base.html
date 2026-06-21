@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qlinks.models.base &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.models.base &#8212; qlinks</title>
   
   
   
@@ -126,7 +126,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -153,7 +153,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
@@ -162,18 +178,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -386,24 +408,23 @@
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.HamiltonianTermSpec">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">HamiltonianTermSpec</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A symbolic Hamiltonian term before matrix construction.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Symbolic Hamiltonian term before sparse matrix construction.</span>
 
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    kinetic term:</span>
-<span class="sd">        HamiltonianTermSpec(</span>
-<span class="sd">            name=&quot;kinetic&quot;,</span>
-<span class="sd">            kind=&quot;kinetic&quot;,</span>
-<span class="sd">            operators=(op0, op1, ...),</span>
-<span class="sd">        )</span>
+<span class="sd">    A model returns these specs from ``make_terms()``.  The shared builder then</span>
+<span class="sd">    chooses the requested sparse backend and turns each operator tuple into a</span>
+<span class="sd">    matrix.</span>
 
-<span class="sd">    potential term:</span>
-<span class="sd">        HamiltonianTermSpec(</span>
-<span class="sd">            name=&quot;potential&quot;,</span>
-<span class="sd">            kind=&quot;potential&quot;,</span>
-<span class="sd">            operators=(diag_op0, diag_op1, ...),</span>
-<span class="sd">        )</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        name: Stable term name, such as ``&quot;kinetic&quot;`` or ``&quot;potential&quot;``.</span>
+<span class="sd">        operators: Local operator objects that contribute to this term.</span>
+<span class="sd">        kind: Coarse term category used by diagnostics and local-term assembly.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; HamiltonianTermSpec(</span>
+<span class="sd">        ...     name=&quot;kinetic&quot;,</span>
+<span class="sd">        ...     kind=&quot;kinetic&quot;,</span>
+<span class="sd">        ...     operators=(op0, op1),</span>
+<span class="sd">        ... )</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -437,8 +458,13 @@
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.BuiltHamiltonianTerm">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BuiltHamiltonianTerm</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A Hamiltonian term after sparse matrix construction.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sparse matrix and metadata for one built Hamiltonian term.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name: Term name copied from :class:`HamiltonianTermSpec`.</span>
+<span class="sd">        kind: Coarse term category.</span>
+<span class="sd">        operators: Operators used to build the term.</span>
+<span class="sd">        matrix: Built sparse matrix, or ``None`` when the term has no operators.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -452,18 +478,28 @@
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.ModelBuildResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModelBuildResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Full model build result.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Basis, terms, and total Hamiltonian returned by ``model.build()``.</span>
 
-<span class="sd">    The intended usage is:</span>
+<span class="sd">    Use this result when downstream code needs both the total Hamiltonian and</span>
+<span class="sd">    named pieces such as the kinetic or potential terms.  Keeping them together</span>
+<span class="sd">    avoids rebuilding the basis and matrices repeatedly.</span>
 
-<span class="sd">        result = model.build(...)</span>
-<span class="sd">        H = result.hamiltonian</span>
-<span class="sd">        K = result.kinetic</span>
-<span class="sd">        V = result.potential</span>
-<span class="sd">        basis = result.basis</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        model: Model instance that produced the result.</span>
+<span class="sd">        lattice: Cached lattice used by the model.</span>
+<span class="sd">        layout: Physical variable layout.</span>
+<span class="sd">        constraints: Constraints used for basis construction.</span>
+<span class="sd">        sectors: Sector filters used for basis construction.</span>
+<span class="sd">        basis: Basis object used by the selected builder.  For ``builder=</span>
+<span class="sd">            &quot;bitmask&quot;`` this can be a :class:`BinaryEncodedBasis`.</span>
+<span class="sd">        terms: Mapping from term name to built term metadata.</span>
+<span class="sd">        hamiltonian: Sparse total Hamiltonian, equal to the sum of all built</span>
+<span class="sd">            nonempty term matrices.</span>
 
-<span class="sd">    This avoids repeatedly calling expensive build methods.</span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; result = model.build(builder=&quot;optimized&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; hamiltonian = result.hamiltonian</span>
+<span class="sd">        &gt;&gt;&gt; kinetic = result.kinetic</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">model</span><span class="p">:</span> <span class="nb">object</span>
@@ -518,10 +554,15 @@
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.SparseBuildOptions">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">SparseBuildOptions</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Shared sparse-build options.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shared sparse-build options.</span>
 
-<span class="sd">    This is mostly a convenience container for scripts and future APIs.</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        backend: Sparse backend name or backend object.</span>
+<span class="sd">        dtype: Matrix dtype passed to the builder.</span>
+<span class="sd">        on_missing: Policy for operator actions that leave the constrained</span>
+<span class="sd">            basis.  Use ``&quot;raise&quot;`` for debugging and ``&quot;skip&quot;`` for boundary</span>
+<span class="sd">            terms that intentionally leak outside a subspace.</span>
+<span class="sd">        drop_zero_atol: Absolute threshold below which coefficients are dropped.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">backend</span><span class="p">:</span> <span class="n">SparseBackendName</span> <span class="o">|</span> <span class="n">SparseBackend</span> <span class="o">=</span> <span class="s2">&quot;scipy&quot;</span>
@@ -542,11 +583,26 @@
     <span class="n">sort</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Basis</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Common array-basis solver dispatch.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build an array basis using the requested solver.</span>
 
-<span class="sd">    If no constraints/sectors are present, use a direct Cartesian-product</span>
-<span class="sd">    construction instead of DFS/CP-SAT/brute force.</span>
+<span class="sd">    When no constraints or sectors are supplied, this function uses direct</span>
+<span class="sd">    Cartesian-product enumeration instead of invoking DFS, brute force, or</span>
+<span class="sd">    CP-SAT.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        layout: Variable layout defining the local state space.</span>
+<span class="sd">        constraints: Local/global constraints that every basis state must obey.</span>
+<span class="sd">        sectors: Diagonal sector filters.</span>
+<span class="sd">        solver: Solver name: ``&quot;dfs&quot;``, ``&quot;brute_force&quot;``, or ``&quot;cpsat&quot;``.</span>
+<span class="sd">        sort: Whether to lexicographically sort the final basis.</span>
+<span class="sd">        max_states: Optional early-stop limit for first-solution or existence</span>
+<span class="sd">            checks.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Basis containing the satisfying configurations.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If ``max_states`` is negative or ``solver`` is unknown.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_states</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_states must be non-negative or None.&quot;</span><span class="p">)</span>
@@ -589,6 +645,14 @@
 <div class="viewcode-block" id="validate_builder_name">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.validate_builder_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate a Hamiltonian builder name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        builder: Candidate builder name.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If ``builder`` is not one of the supported names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">builder</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;sparse&quot;</span><span class="p">,</span> <span class="s2">&quot;optimized&quot;</span><span class="p">,</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;builder must be one of &#39;sparse&#39;, &#39;optimized&#39;, or &#39;bitmask&#39;.&quot;</span><span class="p">)</span></div>
 
@@ -597,13 +661,16 @@
 <div class="viewcode-block" id="combine_hamiltonian_terms">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.combine_hamiltonian_terms">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">combine_hamiltonian_terms</span><span class="p">(</span><span class="n">matrices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Sum all non-None sparse matrices.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sum all nonempty sparse matrices.</span>
 
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If all terms are None.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        matrices: Term matrices.  ``None`` entries are ignored.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Sum of all non-``None`` matrices, preserving the backend matrix type.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If every entry is ``None``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">nonempty</span> <span class="o">=</span> <span class="p">[</span><span class="n">matrix</span> <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">matrices</span> <span class="k">if</span> <span class="n">matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
@@ -622,35 +689,16 @@
 <div class="viewcode-block" id="HamiltonianModelBase">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.HamiltonianModelBase">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">HamiltonianModelBase</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class for Hamiltonian models.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for model-level basis and Hamiltonian construction.</span>
 
-<span class="sd">    Concrete models should implement:</span>
+<span class="sd">    Subclasses implement the geometry-specific pieces: lattice construction,</span>
+<span class="sd">    variable layout, constraints, optional sectors, and symbolic Hamiltonian</span>
+<span class="sd">    terms.  The base class provides cached ``lattice``/``layout`` properties and</span>
+<span class="sd">    shared ``build_basis()``, ``build()``, and ``build_hamiltonian()`` methods.</span>
 
-<span class="sd">        _make_lattice()</span>
-<span class="sd">        _make_layout()</span>
-<span class="sd">        make_constraints()</span>
-<span class="sd">        make_sectors()</span>
-<span class="sd">        make_terms()</span>
-
-<span class="sd">    The base class provides:</span>
-
-<span class="sd">        cached lattice</span>
-<span class="sd">        cached layout</span>
-<span class="sd">        cached model_builder</span>
-<span class="sd">        build_basis()</span>
-<span class="sd">        build()</span>
-<span class="sd">        build_hamiltonian()</span>
-
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    Model classes that inherit from this base should usually NOT use</span>
-<span class="sd">    dataclass(slots=True), because functools.cached_property needs an instance</span>
-<span class="sd">    __dict__. Use:</span>
-
-<span class="sd">        @dataclass(frozen=True)</span>
-<span class="sd">        class MyModel(HamiltonianModelBase):</span>
-<span class="sd">            ...</span>
+<span class="sd">    Notes:</span>
+<span class="sd">        Subclasses should usually use ``@dataclass(frozen=True)`` without</span>
+<span class="sd">        ``slots=True``.  The cached properties require an instance ``__dict__``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="HamiltonianModelBase.lattice">
@@ -677,22 +725,18 @@
 <div class="viewcode-block" id="HamiltonianModelBase.allowed_sector_labels">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.HamiltonianModelBase.allowed_sector_labels">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">allowed_sector_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return allowed user-facing quantum labels for diagonal symmetry sectors.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return allowed user-facing labels for symmetry sectors.</span>
 
 <span class="sd">        Models without user-selectable sectors return an empty dictionary.</span>
-<span class="sd">        Geometry-specific subclasses should override this method.</span>
+<span class="sd">        Geometry-specific subclasses override this to expose labels such as</span>
+<span class="sd">        winding numbers.</span>
 
-<span class="sd">        Examples</span>
-<span class="sd">        --------</span>
-<span class="sd">        SquareQLMModel(...).allowed_sector_labels()</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Mapping from sector name to allowed user-facing values.</span>
 
-<span class="sd">        may return:</span>
-
-<span class="sd">            {</span>
-<span class="sd">                &quot;winding_x&quot;: (...),</span>
-<span class="sd">                &quot;winding_y&quot;: (...),</span>
-<span class="sd">            }</span>
+<span class="sd">        Examples:</span>
+<span class="sd">            ``SquareQLMModel(...).allowed_sector_labels()`` may return</span>
+<span class="sd">            ``{&quot;winding_x&quot;: (...), &quot;winding_y&quot;: (...)}``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{}</span></div>
 
@@ -714,8 +758,9 @@
 <div class="viewcode-block" id="HamiltonianModelBase.make_lattice">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.HamiltonianModelBase.make_lattice">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">make_lattice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Backward-compatible alias.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the cached lattice.</span>
+
+<span class="sd">        This is a backward-compatible alias for the ``lattice`` property.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span></div>
 
@@ -723,8 +768,9 @@
 <div class="viewcode-block" id="HamiltonianModelBase.make_layout">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.HamiltonianModelBase.make_layout">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">make_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VariableLayout</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Backward-compatible alias.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the cached variable layout.</span>
+
+<span class="sd">        This is a backward-compatible alias for the ``layout`` property.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span></div>
 
@@ -769,20 +815,22 @@
         <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span><span class="p">,</span>
         <span class="n">sort_basis</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">VariableLayout</span><span class="p">,</span> <span class="n">Basis</span> <span class="o">|</span> <span class="n">BinaryEncodedBasis</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert the physical layout/basis into the representation needed by</span>
-<span class="sd">        the requested builder.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the physical basis to the representation required by a builder.</span>
 
-<span class="sd">        Default behavior</span>
-<span class="sd">        ----------------</span>
-<span class="sd">        sparse / optimized:</span>
-<span class="sd">            use the array Basis.</span>
+<span class="sd">        The default sparse and optimized builders use the array</span>
+<span class="sd">        :class:`Basis`.  The bitmask builder uses :class:`BinaryEncodedBasis`.</span>
+<span class="sd">        QLM flux models override this method because their physical variables</span>
+<span class="sd">        are ``{-1, +1}``, while the bitmask encoding is binary.</span>
 
-<span class="sd">        bitmask:</span>
-<span class="sd">            convert binary array Basis into BinaryEncodedBasis.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            physical_layout: Original model layout.</span>
+<span class="sd">            array_basis: Basis in physical variable values.</span>
+<span class="sd">            input_basis: User-supplied basis, if any.</span>
+<span class="sd">            builder: Requested builder name.</span>
+<span class="sd">            sort_basis: Whether the caller requested sorted basis generation.</span>
 
-<span class="sd">        QLM flux models using {-1,+1} variables should override this method</span>
-<span class="sd">        because they need the flux-to-binary encoding convention.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Pair ``(operator_layout, build_basis)`` used for operator assembly.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
@@ -847,15 +895,23 @@
         <span class="n">on_missing</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;raise&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span>
         <span class="n">drop_zero_atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelBuildResult</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Build basis, Hamiltonian terms, and total Hamiltonian once.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the constrained basis, named terms, and total Hamiltonian.</span>
 
-<span class="sd">        Preferred usage:</span>
+<span class="sd">        Args:</span>
+<span class="sd">            basis: Optional precomputed basis.  Supplying one avoids basis</span>
+<span class="sd">                enumeration and fixes the row/column order.</span>
+<span class="sd">            basis_solver: Solver used when ``basis`` is not supplied.</span>
+<span class="sd">            builder: Matrix builder: ``&quot;sparse&quot;``, ``&quot;optimized&quot;``, or</span>
+<span class="sd">                ``&quot;bitmask&quot;``.</span>
+<span class="sd">            backend: Sparse backend name or backend object.</span>
+<span class="sd">            dtype: Matrix dtype.</span>
+<span class="sd">            sort_basis: Whether to sort an internally generated basis.</span>
+<span class="sd">            on_missing: Policy for operator actions that leave the basis.</span>
+<span class="sd">            drop_zero_atol: Absolute threshold for dropping small coefficients.</span>
 
-<span class="sd">            result = model.build(...)</span>
-<span class="sd">            H = result.hamiltonian</span>
-<span class="sd">            K = result.kinetic</span>
-<span class="sd">            V = result.potential</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Full model build result containing the basis, named term matrices,</span>
+<span class="sd">            and total Hamiltonian.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
@@ -884,11 +940,24 @@
         <span class="n">on_missing</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;raise&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span>
         <span class="n">drop_zero_atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convenience method returning only the total Hamiltonian.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build and return only the total Hamiltonian matrix.</span>
 
-<span class="sd">        For accessing kinetic/potential separately, prefer calling build()</span>
-<span class="sd">        once and using result.kinetic/result.potential.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            basis: Optional precomputed basis.</span>
+<span class="sd">            basis_solver: Solver used when ``basis`` is not supplied.</span>
+<span class="sd">            builder: Matrix builder name.</span>
+<span class="sd">            backend: Sparse backend name or backend object.</span>
+<span class="sd">            dtype: Matrix dtype.</span>
+<span class="sd">            sort_basis: Whether to sort an internally generated basis.</span>
+<span class="sd">            on_missing: Policy for operator actions that leave the basis.</span>
+<span class="sd">            drop_zero_atol: Absolute threshold for dropping small coefficients.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Sparse total Hamiltonian matrix.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            Prefer :meth:`build` when you also need the basis, kinetic term, or</span>
+<span class="sd">            potential term.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_builder</span><span class="o">.</span><span class="n">build_hamiltonian</span><span class="p">(</span>
@@ -913,8 +982,13 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return matrix-free descriptors for local Hamiltonian pieces.</span>
 
-<span class="sd">        The default is empty because not every model exposes local terms yet.</span>
-<span class="sd">        Geometry-specific models should override this.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            operator_kind: Optional filter such as kinetic or potential.</span>
+<span class="sd">            term_kind: Optional physical/local-term category filter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of local term descriptors.  The base implementation returns</span>
+<span class="sd">            an empty tuple because not every model exposes local terms.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">()</span></div>
 
@@ -928,9 +1002,20 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HamiltonianTermSpec</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator spec for one local term.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the symbolic operator spec for one local term.</span>
 
-<span class="sd">        Subclasses implementing local_term_descriptors() should also implement this.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            descriptor: Descriptor previously returned by</span>
+<span class="sd">                :meth:`local_term_descriptors`.</span>
+<span class="sd">            layout: Layout used for operator construction.</span>
+<span class="sd">            builder: Builder name, allowing subclasses to return optimized or</span>
+<span class="sd">                bitmask-specific operator implementations.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Symbolic Hamiltonian term containing the local operators.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            NotImplementedError: If the model does not support local terms.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> does not support local term assembly yet.&quot;</span>
@@ -950,7 +1035,21 @@
         <span class="n">on_missing</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;raise&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span>
         <span class="n">drop_zero_atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build one local sparse matrix in the basis of an existing build result.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build one local-term matrix in an existing model basis.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            descriptor: Local term descriptor to build.</span>
+<span class="sd">            build_result: Existing model build result whose basis fixes the</span>
+<span class="sd">                matrix row/column order.</span>
+<span class="sd">            builder: Matrix builder name.</span>
+<span class="sd">            backend: Sparse backend name or backend object.</span>
+<span class="sd">            dtype: Matrix dtype.</span>
+<span class="sd">            on_missing: Policy for operator actions outside the basis.</span>
+<span class="sd">            drop_zero_atol: Absolute threshold for dropping small coefficients.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Sparse matrix for the requested local term.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
 
         <span class="n">term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_local_term</span><span class="p">(</span>
@@ -976,18 +1075,15 @@
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.GenericModelBuilder">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">GenericModelBuilder</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Shared Hamiltonian model builder.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shared implementation behind :class:`HamiltonianModelBase.build`.</span>
 
-<span class="sd">    It owns the repeated model-building workflow:</span>
+<span class="sd">    The builder owns the repeated workflow of collecting constraints/sectors,</span>
+<span class="sd">    solving or converting the basis, asking the model for symbolic terms,</span>
+<span class="sd">    building each term matrix, and summing the total Hamiltonian.</span>
 
-<span class="sd">        1. get cached layout</span>
-<span class="sd">        2. build constraints/sectors</span>
-<span class="sd">        3. solve or convert basis</span>
-<span class="sd">        4. ask model for Hamiltonian terms</span>
-<span class="sd">        5. build each sparse term matrix</span>
-<span class="sd">        6. sum terms into total Hamiltonian</span>
-<span class="sd">        7. return ModelBuildResult</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        model: Model instance whose hooks provide geometry, constraints, and</span>
+<span class="sd">            symbolic terms.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">model</span><span class="p">:</span> <span class="n">HamiltonianModelBase</span>

@@ -1,0 +1,648 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.caging.support &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=423d4ce3"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/caging/support';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/caging/support.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.caging.support</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CageClassificationReport</span><span class="p">,</span>
+    <span class="n">InterferenceZeroReport</span><span class="p">,</span>
+    <span class="n">IZProbeMechanismLabel</span><span class="p">,</span>
+    <span class="n">ReducedIZProbeSupport</span><span class="p">,</span>
+    <span class="n">reduced_iz_probe_support_from_report</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CageSupportExtractionPolicy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;raise_on_unexplained&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ignore_unexplained&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="CageRegionSupport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.CageRegionSupport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CageRegionSupport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Union support R extracted from reduced IZ probes.&quot;&quot;&quot;</span>
+
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">probe_supports</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ReducedIZProbeSupport</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">ignored_probe_supports</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ReducedIZProbeSupport</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">n_total_probes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_used_probes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_ignored_probes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_unexplained_leakage_probes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">max_complement_action_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_reduced_action_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">variable_index_set</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">region_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_unexplained_leakage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_unexplained_leakage_probes</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CageRegionSupport.contains_variable">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.CageRegionSupport.contains_variable">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">contains_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_index_set</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="extract_cage_region_support">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.extract_cage_region_support">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_cage_region_support</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">CageClassificationReport</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">policy</span><span class="p">:</span> <span class="n">CageSupportExtractionPolicy</span> <span class="o">=</span> <span class="s2">&quot;raise_on_unexplained&quot;</span><span class="p">,</span>
+    <span class="n">include_q_empty</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">include_closed_by_known_zeros</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">include_projector_like</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">include_collective_cancellation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">complement_action_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageRegionSupport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract the union support R from trusted reduced IZ probes.</span>
+
+<span class="sd">    This function does not interpret the report label as a scaling statement.</span>
+<span class="sd">    It only asks whether each reduced probe has explained complement behavior.</span>
+
+<span class="sd">    By default, q_empty, closed_by_known_zeros, and projector_like probes are</span>
+<span class="sd">    all allowed.  Only unexplained_leakage is rejected.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">probe_supports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReducedIZProbeSupport</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ignored_probe_supports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReducedIZProbeSupport</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">union_variables</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="n">cached_probe_supports</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">reduced_iz_probe_supports</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cached_probe_supports</span> <span class="ow">and</span> <span class="n">report</span><span class="o">.</span><span class="n">zero_reports</span><span class="p">:</span>
+        <span class="n">cached_probe_supports</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">reduced_iz_probe_support_from_report</span><span class="p">(</span><span class="n">zero_report</span><span class="p">)</span> <span class="k">for</span> <span class="n">zero_report</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">zero_reports</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">probe_support</span> <span class="ow">in</span> <span class="n">cached_probe_supports</span><span class="p">:</span>
+        <span class="n">use_probe</span> <span class="o">=</span> <span class="n">_should_use_probe_support</span><span class="p">(</span>
+            <span class="n">probe_support</span><span class="p">,</span>
+            <span class="n">include_q_empty</span><span class="o">=</span><span class="n">include_q_empty</span><span class="p">,</span>
+            <span class="n">include_closed_by_known_zeros</span><span class="o">=</span><span class="n">include_closed_by_known_zeros</span><span class="p">,</span>
+            <span class="n">include_projector_like</span><span class="o">=</span><span class="n">include_projector_like</span><span class="p">,</span>
+            <span class="n">include_collective_cancellation</span><span class="o">=</span><span class="n">include_collective_cancellation</span><span class="p">,</span>
+            <span class="n">complement_action_tolerance</span><span class="o">=</span><span class="n">complement_action_tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;unexplained_leakage&quot;</span><span class="p">:</span>
+            <span class="n">ignored_probe_supports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">probe_support</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">use_probe</span><span class="p">:</span>
+            <span class="n">probe_supports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">probe_support</span><span class="p">)</span>
+            <span class="n">union_variables</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">probe_support</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ignored_probe_supports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">probe_support</span><span class="p">)</span>
+
+    <span class="n">n_unexplained</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="n">support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;unexplained_leakage&quot;</span> <span class="k">for</span> <span class="n">support</span> <span class="ow">in</span> <span class="n">ignored_probe_supports</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n_unexplained</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;raise_on_unexplained&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot safely extract cage region support because at least one &quot;</span>
+            <span class="s2">&quot;reduced IZ probe has unexplained leakage. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;n_unexplained_leakage_probes=</span><span class="si">{</span><span class="n">n_unexplained</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">complement_norms</span> <span class="o">=</span> <span class="p">[</span><span class="n">support</span><span class="o">.</span><span class="n">complement_action_norm</span> <span class="k">for</span> <span class="n">support</span> <span class="ow">in</span> <span class="n">probe_supports</span><span class="p">]</span>
+    <span class="n">reduced_norms</span> <span class="o">=</span> <span class="p">[</span><span class="n">support</span><span class="o">.</span><span class="n">reduced_action_norm</span> <span class="k">for</span> <span class="n">support</span> <span class="ow">in</span> <span class="n">probe_supports</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">CageRegionSupport</span><span class="p">(</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">union_variables</span><span class="p">)),</span>
+        <span class="n">probe_supports</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">probe_supports</span><span class="p">),</span>
+        <span class="n">ignored_probe_supports</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">ignored_probe_supports</span><span class="p">),</span>
+        <span class="n">n_total_probes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">zero_reports</span><span class="p">),</span>
+        <span class="n">n_used_probes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">probe_supports</span><span class="p">),</span>
+        <span class="n">n_ignored_probes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ignored_probe_supports</span><span class="p">),</span>
+        <span class="n">n_unexplained_leakage_probes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_unexplained</span><span class="p">),</span>
+        <span class="n">max_complement_action_norm</span><span class="o">=</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">complement_norms</span><span class="p">)</span> <span class="k">if</span> <span class="n">complement_norms</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">max_reduced_action_norm</span><span class="o">=</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">reduced_norms</span><span class="p">)</span> <span class="k">if</span> <span class="n">reduced_norms</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;report_label&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="s2">&quot;support_size&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">support_size</span><span class="p">,</span>
+            <span class="s2">&quot;hilbert_size&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">hilbert_size</span><span class="p">,</span>
+            <span class="s2">&quot;support_fraction&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">support_fraction</span><span class="p">,</span>
+            <span class="s2">&quot;n_nontrivial_zeros&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">n_nontrivial_zeros</span><span class="p">,</span>
+            <span class="s2">&quot;n_distinct_local_patterns&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">n_distinct_local_patterns</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_should_use_probe_support</span><span class="p">(</span>
+    <span class="n">probe_support</span><span class="p">:</span> <span class="n">ReducedIZProbeSupport</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">include_q_empty</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">include_closed_by_known_zeros</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">include_projector_like</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">include_collective_cancellation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">complement_action_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">complement_action_tolerance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">complement_action_norm</span> <span class="o">&gt;</span> <span class="n">complement_action_tolerance</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;q_empty&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">include_q_empty</span>
+
+    <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;closed_by_known_zeros&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">include_closed_by_known_zeros</span>
+
+    <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;projector_like&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">include_projector_like</span>
+
+    <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;collective_cancellation&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">include_collective_cancellation</span>
+
+    <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;unexplained_leakage&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown IZ probe mechanism label: </span><span class="si">{</span><span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ReducedIZPatternSupport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.ReducedIZPatternSupport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ReducedIZPatternSupport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One distinct reduced IZ local pattern and the variables it uses.&quot;&quot;&quot;</span>
+
+    <span class="n">pattern_key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">source_zero_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">mechanism_labels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">IZProbeMechanismLabel</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="distinct_reduced_iz_pattern_supports">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.distinct_reduced_iz_pattern_supports">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">distinct_reduced_iz_pattern_supports</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">CageClassificationReport</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">include_projector_like</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ReducedIZPatternSupport</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Group reduced IZ probes by local transition pattern and support.&quot;&quot;&quot;</span>
+    <span class="n">grouped</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span>
+        <span class="nb">tuple</span><span class="p">[</span>
+            <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+            <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="o">...</span><span class="p">],</span>
+        <span class="p">],</span>
+        <span class="nb">list</span><span class="p">[</span><span class="n">InterferenceZeroReport</span><span class="p">],</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">zero_report</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">zero_reports</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;unexplained_leakage&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;projector_like&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">include_projector_like</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">zero_report</span><span class="o">.</span><span class="n">local_mask</span><span class="p">))</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">_public_local_pattern_key</span><span class="p">(</span><span class="n">zero_report</span><span class="p">))</span>
+        <span class="n">grouped</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zero_report</span><span class="p">)</span>
+
+    <span class="n">pattern_supports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReducedIZPatternSupport</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">pattern_key</span><span class="p">),</span> <span class="n">zero_reports</span> <span class="ow">in</span> <span class="n">grouped</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">pattern_supports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ReducedIZPatternSupport</span><span class="p">(</span>
+                <span class="n">pattern_key</span><span class="o">=</span><span class="n">pattern_key</span><span class="p">,</span>
+                <span class="n">variable_indices</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>
+                <span class="n">source_zero_indices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">zero_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">),</span>
+                <span class="n">mechanism_labels</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pattern_supports</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_public_local_pattern_key</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">InterferenceZeroReport</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">transition</span><span class="o">.</span><span class="n">source_local</span><span class="p">,</span>
+                <span class="n">transition</span><span class="o">.</span><span class="n">target_local</span><span class="p">,</span>
+                <span class="n">_complex_key</span><span class="p">(</span><span class="n">transition</span><span class="o">.</span><span class="n">matrix_element</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">transition</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">local_transitions</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_complex_key</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">digits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">value</span><span class="p">)),</span> <span class="n">digits</span><span class="p">),</span>
+        <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">value</span><span class="p">)),</span> <span class="n">digits</span><span class="p">),</span>
+    <span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

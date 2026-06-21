@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qlinks.models.couplings &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.models.couplings &#8212; qlinks</title>
   
   
   
@@ -126,7 +126,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -153,7 +153,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
@@ -162,18 +178,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -317,7 +339,7 @@
 
 
 <div class="viewcode-block" id="DirectedPlaquetteCoupling">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.DirectedPlaquetteCoupling">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.couplings.DirectedPlaquetteCoupling">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">DirectedPlaquetteCoupling</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward/backward coupling for an oriented plaquette transition.</span>
@@ -329,13 +351,13 @@
     <span class="n">backward</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="DirectedPlaquetteCoupling.resolved_forward">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.DirectedPlaquetteCoupling.resolved_forward">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.couplings.DirectedPlaquetteCoupling.resolved_forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">resolved_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DirectedPlaquetteCoupling.resolved_backward">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.DirectedPlaquetteCoupling.resolved_backward">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.couplings.DirectedPlaquetteCoupling.resolved_backward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">resolved_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
@@ -354,13 +376,23 @@
 
 
 <div class="viewcode-block" id="plaquette_coupling_value">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.plaquette_coupling_value">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.couplings.plaquette_coupling_value">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plaquette_coupling_value</span><span class="p">(</span>
     <span class="n">coupling</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span><span class="p">,</span>
     <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a scalar plaquette coupling for one plaquette id.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coupling: Constant, mapping, or callable coupling.</span>
+<span class="sd">        plaquette_id: Plaquette id to query.</span>
+<span class="sd">        name: Coupling name used in error messages.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Complex coupling value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">coupling</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">coupling</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">))</span>
 
@@ -375,13 +407,23 @@
 
 
 <div class="viewcode-block" id="directed_plaquette_coupling_value">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.directed_plaquette_coupling_value">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.couplings.directed_plaquette_coupling_value">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">directed_plaquette_coupling_value</span><span class="p">(</span>
     <span class="n">coupling</span><span class="p">:</span> <span class="n">DirectedPlaquetteCouplingLike</span><span class="p">,</span>
     <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DirectedPlaquetteCoupling</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve an oriented plaquette coupling for one plaquette id.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coupling: Constant, mapping, or callable directed coupling.</span>
+<span class="sd">        plaquette_id: Plaquette id to query.</span>
+<span class="sd">        name: Coupling name used in error messages.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Directed forward/backward coupling.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">coupling</span><span class="p">):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">coupling</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coupling</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
@@ -400,7 +442,7 @@
 
 
 <div class="viewcode-block" id="peierls_plaquette_coupling">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.peierls_plaquette_coupling">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.couplings.peierls_plaquette_coupling">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">peierls_plaquette_coupling</span><span class="p">(</span>
     <span class="n">amplitude</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
     <span class="n">phase</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -412,11 +454,20 @@
 
 
 <div class="viewcode-block" id="is_zero_coupling">
-<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.is_zero_coupling">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.couplings.is_zero_coupling">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_zero_coupling</span><span class="p">(</span>
     <span class="n">coupling</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span><span class="p">,</span>
     <span class="n">plaquette_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether a plaquette coupling vanishes on all selected plaquettes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coupling: Constant, mapping, or callable scalar coupling.</span>
+<span class="sd">        plaquette_ids: Plaquettes to test.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``True`` when every resolved coupling is exactly zero.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
         <span class="n">plaquette_coupling_value</span><span class="p">(</span>
             <span class="n">coupling</span><span class="p">,</span>

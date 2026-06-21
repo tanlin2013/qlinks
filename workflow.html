@@ -1,0 +1,656 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Typical workflow &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=423d4ce3"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'workflow';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Minimal examples" href="examples.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/workflow.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2Fworkflow.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Typical workflow</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-model">Build a model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-constrained-hamiltonian">Build the constrained Hamiltonian</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#builder-choices">Builder choices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inspect-sectors">Inspect sectors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#search-for-cages">Search for cages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classify-a-cage">Classify a cage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualize">Visualize</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-system-construction">Open-system construction</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="typical-workflow">
+<h1>Typical workflow<a class="headerlink" href="#typical-workflow" title="Link to this heading">#</a></h1>
+<p>The high-level workflow is:</p>
+<ol class="arabic simple">
+<li><p>Create a model.</p></li>
+<li><p>Build the constrained basis and Hamiltonian.</p></li>
+<li><p>Inspect the model sectors or sparse terms when needed.</p></li>
+<li><p>Search for cage states.</p></li>
+<li><p>Classify, visualize, or use the cage in an open-system construction.</p></li>
+</ol>
+<section id="build-a-model">
+<h2>Build a model<a class="headerlink" href="#build-a-model" title="Link to this heading">#</a></h2>
+<p>A model object packages the lattice, variable layout, constraints, sectors, and
+local Hamiltonian terms.  For example, a square QDM in the zero electric winding
+sector can be built as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareQDMModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">SquareQDMModel</span><span class="p">(</span>
+    <span class="n">lx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">ly</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">boundary_condition</span><span class="o">=</span><span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+    <span class="n">winding_x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">winding_y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">coup_kin</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">coup_pot</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="build-the-constrained-hamiltonian">
+<h2>Build the constrained Hamiltonian<a class="headerlink" href="#build-the-constrained-hamiltonian" title="Link to this heading">#</a></h2>
+<p>Use <a class="reference internal" href="qlinks.models.html#qlinks.models.HamiltonianModelBase.build" title="qlinks.models.HamiltonianModelBase.build"><code class="xref py py-meth docutils literal notranslate"><span class="pre">model.build()</span></code></a> when you
+need the basis and named terms, not only the total Hamiltonian:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">build_result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">basis_solver</span><span class="o">=</span><span class="s2">&quot;dfs&quot;</span><span class="p">,</span>
+    <span class="n">builder</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;scipy&quot;</span><span class="p">,</span>
+    <span class="n">sort_basis</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">on_missing</span><span class="o">=</span><span class="s2">&quot;raise&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">hamiltonian</span> <span class="o">=</span> <span class="n">build_result</span><span class="o">.</span><span class="n">hamiltonian</span>
+<span class="n">kinetic</span> <span class="o">=</span> <span class="n">build_result</span><span class="o">.</span><span class="n">kinetic</span>
+<span class="n">potential</span> <span class="o">=</span> <span class="n">build_result</span><span class="o">.</span><span class="n">potential</span>
+<span class="n">basis</span> <span class="o">=</span> <span class="n">build_result</span><span class="o">.</span><span class="n">basis</span>
+</pre></div>
+</div>
+<p>The returned <a class="reference internal" href="qlinks.models.html#qlinks.models.ModelBuildResult" title="qlinks.models.ModelBuildResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">qlinks.models.ModelBuildResult</span></code></a> is the preferred object to
+pass into higher-level tools because it keeps the matrix, basis, and model
+metadata aligned.</p>
+</section>
+<section id="builder-choices">
+<h2>Builder choices<a class="headerlink" href="#builder-choices" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">builder=&quot;sparse&quot;</span></code></dt><dd><p>General sparse builder.  This is the easiest builder to use while developing
+new models or operators.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">builder=&quot;optimized&quot;</span></code></dt><dd><p>Sparse builder with additional internal optimizations for repeated local
+updates.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">builder=&quot;bitmask&quot;</span></code></dt><dd><p>Encoded builder for binary local spaces.  This is useful for larger QDM/QLM
+workflows but requires compatible binary operator implementations.</p>
+</dd>
+</dl>
+<p>When comparing matrices from two builders, always compare them in the same basis
+order.  Either reuse a precomputed basis or assert that both build results have
+identical basis configurations before comparing matrices.</p>
+</section>
+<section id="inspect-sectors">
+<h2>Inspect sectors<a class="headerlink" href="#inspect-sectors" title="Link to this heading">#</a></h2>
+<p>Many periodic models expose available or nonempty sector labels:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">allowed_sector_labels</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">nonempty_sector_labels</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The meaning of a sector label is model- and convention-dependent.  For example,
+square QDM winding labels can use either cut-count or staggered electric-flux
+conventions depending on <code class="docutils literal notranslate"><span class="pre">winding_convention</span></code>.</p>
+</section>
+<section id="search-for-cages">
+<h2>Search for cages<a class="headerlink" href="#search-for-cages" title="Link to this heading">#</a></h2>
+<p>A cage search consumes the built Hamiltonian, kinetic term, and potential term:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">CageSearchConfig</span><span class="p">,</span> <span class="n">CageSearcher</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">CageSearchConfig</span><span class="p">(</span>
+    <span class="n">search_type</span><span class="o">=</span><span class="s2">&quot;type1_and_type2&quot;</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">degenerate_basis_strategy</span><span class="o">=</span><span class="s2">&quot;ipr&quot;</span><span class="p">,</span>
+    <span class="n">ipr_n_restarts</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">ipr_candidate_count</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+    <span class="n">ipr_random_seed</span><span class="o">=</span><span class="mi">1234</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">searcher</span> <span class="o">=</span> <span class="n">CageSearcher</span><span class="o">.</span><span class="n">from_model_build_result</span><span class="p">(</span>
+    <span class="n">build_result</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">search_result</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">search_result</span><span class="o">.</span><span class="n">counts_by_signature</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A signature is usually interpreted as <code class="docutils literal notranslate"><span class="pre">(kappa,</span> <span class="pre">z)</span></code>, where <code class="docutils literal notranslate"><span class="pre">kappa</span></code> is the
+kinetic eigenvalue target and <code class="docutils literal notranslate"><span class="pre">z</span></code> is the inferred uniform potential/self-loop
+value on the cage support.</p>
+</section>
+<section id="classify-a-cage">
+<h2>Classify a cage<a class="headerlink" href="#classify-a-cage" title="Link to this heading">#</a></h2>
+<p>The classification layer explains how a cage avoids leaking into neighboring
+Fock-space states.  It is most useful after selecting one record from a search
+result:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">CageClassificationConfig</span><span class="p">,</span> <span class="n">classify_cage_state</span>
+
+<span class="n">record</span> <span class="o">=</span> <span class="n">search_result</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+<span class="n">report</span> <span class="o">=</span> <span class="n">classify_cage_state</span><span class="p">(</span>
+    <span class="n">record</span><span class="o">.</span><span class="n">cage_state</span><span class="p">,</span>
+    <span class="n">kinetic_matrix</span><span class="o">=</span><span class="n">build_result</span><span class="o">.</span><span class="n">kinetic</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="o">=</span><span class="n">build_result</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">states</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">CageClassificationConfig</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The report contains interference-zero records, reduced local operator supports,
+classification labels, and diagnostics that can feed visualizers or open-system
+construction routines.</p>
+</section>
+<section id="visualize">
+<h2>Visualize<a class="headerlink" href="#visualize" title="Link to this heading">#</a></h2>
+<p>Use real-space visualizers to inspect basis configurations and support patterns:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.visualizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasisGridVisualizer</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">BasisGridVisualizer</span><span class="p">(</span>
+    <span class="n">lattice</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+    <span class="n">layout</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+    <span class="n">periodic_image_mode</span><span class="o">=</span><span class="s2">&quot;positive_patch&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">grid</span><span class="o">.</span><span class="n">plot_cage_support</span><span class="p">(</span>
+    <span class="n">search_result</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="o">=</span><span class="n">build_result</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">states</span><span class="p">,</span>
+    <span class="n">signature</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="n">record_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">max_states</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Use Fock-space graph visualizers to inspect the Hamiltonian graph:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.visualizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">HamiltonianGraphVisualizer</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">HamiltonianGraphVisualizer</span><span class="o">.</span><span class="n">from_sparse_matrix</span><span class="p">(</span>
+    <span class="n">build_result</span><span class="o">.</span><span class="n">kinetic</span><span class="p">,</span>
+    <span class="n">include_self_loops</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">graph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s2">&quot;kk&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="open-system-construction">
+<h2>Open-system construction<a class="headerlink" href="#open-system-construction" title="Link to this heading">#</a></h2>
+<p>The open-system layer is intended for Lindblad dark-state engineering and
+verification around cage states.  The high-level caging entry point constructs a
+problem from a type-1 cage, its classification report, and model metadata:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_type1_cage_lindblad_construction</span>
+
+<span class="n">construction</span> <span class="o">=</span> <span class="n">build_type1_cage_lindblad_construction</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">build_result</span><span class="o">=</span><span class="n">build_result</span><span class="p">,</span>
+    <span class="n">cage_state</span><span class="o">=</span><span class="n">record</span><span class="o">.</span><span class="n">full_state</span><span class="p">,</span>
+    <span class="n">classification_report</span><span class="o">=</span><span class="n">report</span><span class="p">,</span>
+    <span class="n">z_value</span><span class="o">=</span><span class="n">record</span><span class="o">.</span><span class="n">potential_value</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">construction</span><span class="o">.</span><span class="n">n_jumps</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">construction</span><span class="o">.</span><span class="n">max_jump_residual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This part of the API is still under active development, so treat construction
+options as research controls rather than fixed application-level defaults.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="installation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="examples.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Minimal examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-model">Build a model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-constrained-hamiltonian">Build the constrained Hamiltonian</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#builder-choices">Builder choices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inspect-sectors">Inspect sectors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#search-for-cages">Search for cages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classify-a-cage">Classify a cage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualize">Visualize</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-system-construction">Open-system construction</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

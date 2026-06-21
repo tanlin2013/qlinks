@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qlinks.operators.linear &#8212; qlinks 1.0.1 documentation</title>
+    <title>qlinks.operators.linear &#8212; qlinks</title>
   
   
   
@@ -126,7 +126,7 @@
   
   
   
-    <p class="title logo__title">qlinks 1.0.1 documentation</p>
+    <p class="title logo__title">qlinks</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -153,7 +153,23 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
@@ -162,18 +178,24 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_sys.html">qlinks.open_sys package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
 </ul>
 </details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 </ul>
 
     </div>
@@ -322,23 +344,28 @@
 
 
 <div class="viewcode-block" id="BasisOperator">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.BasisOperator">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.BasisOperator">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BasisOperator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Matrix-like wrapper around configuration-space LocalOperator objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix-like wrapper around configuration-space local operators.</span>
 
-<span class="sd">    This object does not explicitly build the sparse matrix. Instead, it applies</span>
-<span class="sd">    the local operators directly by looping over the basis states.</span>
+<span class="sd">    The wrapper applies local operators directly by looping over basis states;</span>
+<span class="sd">    it does not explicitly build a sparse matrix.  It supports matrix-vector</span>
+<span class="sd">    products and transpose/Hermitian-adjoint views.</span>
 
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; O = BasisOperator(basis, operators)</span>
-<span class="sd">    &gt;&gt;&gt; y = O @ v</span>
-<span class="sd">    &gt;&gt;&gt; value = v.T @ O @ v</span>
-<span class="sd">    &gt;&gt;&gt; value_complex = v.conj() @ O @ v</span>
-<span class="sd">    &gt;&gt;&gt; y_t = O.T @ v</span>
-<span class="sd">    &gt;&gt;&gt; y_h = O.H @ v</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        basis: Basis that fixes row/column ordering.</span>
+<span class="sd">        operators: Local operators to sum.</span>
+<span class="sd">        combine_duplicates: Whether to combine duplicate actions within a</span>
+<span class="sd">            column.</span>
+<span class="sd">        drop_zero_atol: Absolute threshold for dropping small coefficients.</span>
+<span class="sd">        dtype: Output dtype for matrix-vector products.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; operator = BasisOperator(basis, operators)</span>
+<span class="sd">        &gt;&gt;&gt; y = operator @ vector</span>
+<span class="sd">        &gt;&gt;&gt; y_t = operator.T @ vector</span>
+<span class="sd">        &gt;&gt;&gt; y_h = operator.H @ vector</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">basis</span><span class="p">:</span> <span class="n">Basis</span>
@@ -354,7 +381,7 @@
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;operators&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">))</span>
 
 <div class="viewcode-block" id="BasisOperator.from_operator">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.BasisOperator.from_operator">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.BasisOperator.from_operator">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_operator</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
@@ -408,7 +435,7 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BasisOperator.matvec">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.BasisOperator.matvec">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.BasisOperator.matvec">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute self @ vector.</span>
@@ -443,7 +470,7 @@
 
 
 <div class="viewcode-block" id="BasisOperator.matmat">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.BasisOperator.matmat">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.BasisOperator.matmat">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute self @ matrix, where matrix has shape (n_basis, n_vecs).</span>
@@ -478,7 +505,7 @@
 
 
 <div class="viewcode-block" id="BasisOperator.rmatvec">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.BasisOperator.rmatvec">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.BasisOperator.rmatvec">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute vector @ self.</span>
@@ -510,7 +537,7 @@
 
 
 <div class="viewcode-block" id="BasisOperator.rmatmat">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.BasisOperator.rmatmat">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.BasisOperator.rmatmat">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rmatmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute matrix @ self, where matrix has shape (n_vecs, n_basis).</span>
@@ -564,7 +591,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Left operand must be a vector or matrix.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BasisOperator.expectation">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.BasisOperator.expectation">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.BasisOperator.expectation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expectation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
@@ -587,7 +614,7 @@
 
 
 <div class="viewcode-block" id="TransposedBasisOperator">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.TransposedBasisOperator">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.TransposedBasisOperator">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TransposedBasisOperator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -623,7 +650,7 @@
         <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TransposedBasisOperator.matvec">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.TransposedBasisOperator.matvec">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.TransposedBasisOperator.matvec">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute A.T @ vector or A.H @ vector.</span>
@@ -657,7 +684,7 @@
 
 
 <div class="viewcode-block" id="TransposedBasisOperator.rmatvec">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.TransposedBasisOperator.rmatvec">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.TransposedBasisOperator.rmatvec">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute vector @ A.T or vector @ A.H.</span>
@@ -719,7 +746,7 @@
 
 
 <div class="viewcode-block" id="as_basis_operator">
-<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.as_basis_operator">[docs]</a>
+<a class="viewcode-back" href="../../../qlinks.operators.html#qlinks.operators.linear.as_basis_operator">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">as_basis_operator</span><span class="p">(</span>
     <span class="n">basis</span><span class="p">:</span> <span class="n">Basis</span><span class="p">,</span>
     <span class="n">operators</span><span class="p">:</span> <span class="n">LocalOperator</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalOperator</span><span class="p">],</span>

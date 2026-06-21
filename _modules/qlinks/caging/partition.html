@@ -1,0 +1,829 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.caging.partition &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=423d4ce3"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/caging/partition';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/caging/partition.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.caging.partition</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">scipy_sparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.csgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">connected_components</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.candidate</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BOUNDARY_OVERLAP_MATRIX_METADATA_KEY</span><span class="p">,</span>
+    <span class="n">INTERNAL_KINETIC_MATRIX_METADATA_KEY</span><span class="p">,</span>
+    <span class="n">CandidateSubgraph</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="VertexSignature">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.VertexSignature">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VertexSignature</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hashable vertex signature used for candidate partitioning.&quot;&quot;&quot;</span>
+
+    <span class="n">values</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span></div>
+
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SparseKineticNeighborCache</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reusable sparse-neighborhood view for cage-candidate partitioning.</span>
+
+<span class="sd">    Type-1 candidate discovery only needs the *support pattern* of the</span>
+<span class="sd">    boundary-overlap graph to split a self-loop/bipartition sector into</span>
+<span class="sd">    connected components. Building the weighted overlap ``K[:, S]^† K[:, S]``</span>
+<span class="sd">    for every full sector can be noticeably more expensive than the actual</span>
+<span class="sd">    connectivity query. This cache keeps one CSC copy of the kinetic matrix and</span>
+<span class="sd">    constructs the unweighted overlap graph by sharing sparse row-neighbor</span>
+<span class="sd">    buckets. Weighted overlaps are still materialized later, but only for the</span>
+<span class="sd">    final candidate components needed by the solver.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">csc_matrix</span><span class="p">:</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csc_matrix</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_matrix</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SparseKineticNeighborCache&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a reusable CSC-neighborhood cache from a sparse matrix.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;SparseKineticNeighborCache requires a sparse matrix.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">csc_matrix</span><span class="o">=</span><span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">boundary_overlap_adjacency</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">candidate_vertices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the unweighted shared-neighbor graph on candidate vertices.</span>
+
+<span class="sd">        Vertices ``a`` and ``b`` are adjacent when the two sparse columns</span>
+<span class="sd">        ``K[:, a]`` and ``K[:, b]`` share at least one nonzero row. This is the</span>
+<span class="sd">        off-diagonal sparsity pattern of ``K[:, S]^† K[:, S]``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">candidate_vertices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">local_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">vertices</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">local_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+
+        <span class="n">row_to_local_columns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">indptr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csc_matrix</span><span class="o">.</span><span class="n">indptr</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csc_matrix</span><span class="o">.</span><span class="n">indices</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csc_matrix</span><span class="o">.</span><span class="n">data</span>
+
+        <span class="k">for</span> <span class="n">local_column_index</span><span class="p">,</span> <span class="n">vertex_index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertices</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">indptr</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">vertex_index</span><span class="p">)])</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">indptr</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">vertex_index</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">entry_position</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+                <span class="n">row_to_local_columns</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="n">entry_position</span><span class="p">])]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">local_column_index</span><span class="p">,</span> <span class="nb">complex</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">entry_position</span><span class="p">]))</span>
+                <span class="p">)</span>
+
+        <span class="n">overlap_entries</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">local_columns</span> <span class="ow">in</span> <span class="n">row_to_local_columns</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_columns</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">row_local_index</span><span class="p">,</span> <span class="n">row_value</span> <span class="ow">in</span> <span class="n">local_columns</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">column_local_index</span><span class="p">,</span> <span class="n">column_value</span> <span class="ow">in</span> <span class="n">local_columns</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">row_local_index</span> <span class="o">!=</span> <span class="n">column_local_index</span><span class="p">:</span>
+                        <span class="n">overlap_entries</span><span class="p">[(</span><span class="n">row_local_index</span><span class="p">,</span> <span class="n">column_local_index</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">row_value</span><span class="p">)</span> <span class="o">*</span> <span class="n">column_value</span>
+                        <span class="p">)</span>
+
+        <span class="n">nonzero_entries</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column_index</span><span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column_index</span><span class="p">),</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">overlap_entries</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="mf">0.0</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonzero_entries</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">((</span><span class="n">local_size</span><span class="p">,</span> <span class="n">local_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+
+        <span class="n">row_indices</span><span class="p">,</span> <span class="n">column_indices</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">nonzero_entries</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">adjacency</span> <span class="o">=</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_entries</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">row_indices</span><span class="p">,</span> <span class="n">column_indices</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">local_size</span><span class="p">,</span> <span class="n">local_size</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">adjacency</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">boundary_overlap_matrix</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">candidate_vertices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the weighted boundary-overlap matrix for final candidates.&quot;&quot;&quot;</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">candidate_vertices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">column_block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">[:,</span> <span class="n">vertices</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">column_block</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">column_block</span><span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rounded_scalar_signature</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Hashable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a scalar value into a stable hashable signature.&quot;&quot;&quot;</span>
+    <span class="n">real_part</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">value</span><span class="p">)),</span> <span class="n">decimals</span><span class="p">)</span>
+    <span class="n">imag_part</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">value</span><span class="p">)),</span> <span class="n">decimals</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">imag_part</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">real_part</span>
+
+    <span class="k">return</span> <span class="n">real_part</span><span class="p">,</span> <span class="n">imag_part</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_self_loop_signature</span><span class="p">(</span>
+    <span class="n">self_loop_value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">complexfloating</span> <span class="o">|</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Hashable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a hashable signature for scalar or vector self-loop data.&quot;&quot;&quot;</span>
+    <span class="n">value_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">self_loop_value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">value_array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_rounded_scalar_signature</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">value_array</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">_rounded_scalar_signature</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">local_value</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">local_value</span> <span class="ow">in</span> <span class="n">value_array</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_unweighted_adjacency</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a matrix to an unweighted sparse adjacency matrix.&quot;&quot;&quot;</span>
+    <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">setdiag</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>
+    <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_components_from_adjacency</span><span class="p">(</span>
+    <span class="n">adjacency_matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">candidate_vertices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">min_component_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split an adjacency matrix into connected candidate components.&quot;&quot;&quot;</span>
+    <span class="n">sparse_adjacency</span> <span class="o">=</span> <span class="n">_as_unweighted_adjacency</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sparse_adjacency</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">component_count</span><span class="p">,</span> <span class="n">component_labels</span> <span class="o">=</span> <span class="n">connected_components</span><span class="p">(</span>
+        <span class="n">sparse_adjacency</span><span class="p">,</span>
+        <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">connection</span><span class="o">=</span><span class="s2">&quot;weak&quot;</span><span class="p">,</span>
+        <span class="n">return_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">candidate_subgraphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">component_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">component_count</span><span class="p">):</span>
+        <span class="n">local_mask</span> <span class="o">=</span> <span class="n">component_labels</span> <span class="o">==</span> <span class="n">component_index</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">local_mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_component_size</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">support_indices</span> <span class="o">=</span> <span class="n">candidate_vertices</span><span class="p">[</span><span class="n">local_mask</span><span class="p">]</span>
+        <span class="n">candidate_subgraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CandidateSubgraph</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">support_indices</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">candidate_subgraphs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_submatrix</span><span class="p">(</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">row_indices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="n">column_indices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``matrix[row_indices, column_indices]`` for dense or sparse matrices.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">matrix</span><span class="p">[</span><span class="n">row_indices</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">column_indices</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_column_block</span><span class="p">(</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">column_indices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``matrix[:, column_indices]`` for dense or sparse matrices.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">matrix</span><span class="p">[:,</span> <span class="n">column_indices</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_local_indices_for_vertices</span><span class="p">(</span>
+    <span class="n">group_vertices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="n">candidate_vertices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return positions of candidate vertices within a parent vertex group.&quot;&quot;&quot;</span>
+    <span class="n">local_index_by_vertex</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">vertex_index</span><span class="p">):</span> <span class="n">local_index</span> <span class="k">for</span> <span class="n">local_index</span><span class="p">,</span> <span class="n">vertex_index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_vertices</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">local_index_by_vertex</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">vertex_index</span><span class="p">)]</span> <span class="k">for</span> <span class="n">vertex_index</span> <span class="ow">in</span> <span class="n">candidate_vertices</span><span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="group_vertices_by_signature">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.group_vertices_by_signature">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">group_vertices_by_signature</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">self_loop_values</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">bipartition_labels</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_bipartition</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">VertexSignature</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Group vertices by self-loop values and optionally bipartition labels.&quot;&quot;&quot;</span>
+    <span class="n">self_loop_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">self_loop_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">include_bipartition</span> <span class="ow">and</span> <span class="n">bipartition_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bipartition_labels are required when include_bipartition=True.&quot;</span><span class="p">)</span>
+
+    <span class="n">signature_to_vertices</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">VertexSignature</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">vertex_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">self_loop_values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">signature_parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">include_bipartition</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">bipartition_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">signature_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">bipartition_labels</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">]))</span>
+
+        <span class="n">signature_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">_self_loop_signature</span><span class="p">(</span>
+                <span class="n">self_loop_values</span><span class="p">[</span><span class="n">vertex_index</span><span class="p">],</span>
+                <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">vertex_signature</span> <span class="o">=</span> <span class="n">VertexSignature</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">signature_parts</span><span class="p">))</span>
+        <span class="n">signature_to_vertices</span><span class="p">[</span><span class="n">vertex_signature</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vertex_index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">vertex_signature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vertex_indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">vertex_signature</span><span class="p">,</span> <span class="n">vertex_indices</span> <span class="ow">in</span> <span class="n">signature_to_vertices</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="type1_candidates_from_bipartite_self_loops">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.type1_candidates_from_bipartite_self_loops">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">type1_candidates_from_bipartite_self_loops</span><span class="p">(</span>
+    <span class="n">kinetic_matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">self_loop_values</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">bipartition_labels</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">min_component_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+    <span class="n">neighbor_cache</span><span class="p">:</span> <span class="n">SparseKineticNeighborCache</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate Type-1 candidates from ``(bipartition_label, self_loop_value)``.</span>
+
+<span class="sd">    Since same-side vertices of a bipartite kinetic graph have zero direct</span>
+<span class="sd">    kinetic adjacency, components are defined by the boundary-overlap graph</span>
+
+<span class="sd">        K[group, outside] @ K[outside, group].</span>
+
+<span class="sd">    This is the generalized version of the old ``incidence_mat @ incidence_mat.T``</span>
+<span class="sd">    workflow.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">signature_groups</span> <span class="o">=</span> <span class="n">group_vertices_by_signature</span><span class="p">(</span>
+        <span class="n">self_loop_values</span><span class="o">=</span><span class="n">self_loop_values</span><span class="p">,</span>
+        <span class="n">bipartition_labels</span><span class="o">=</span><span class="n">bipartition_labels</span><span class="p">,</span>
+        <span class="n">include_bipartition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">neighbor_cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">kinetic_matrix</span><span class="p">):</span>
+        <span class="n">neighbor_cache</span> <span class="o">=</span> <span class="n">SparseKineticNeighborCache</span><span class="o">.</span><span class="n">from_matrix</span><span class="p">(</span><span class="n">kinetic_matrix</span><span class="p">)</span>
+
+    <span class="n">candidate_subgraphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">vertex_signature</span><span class="p">,</span> <span class="n">group_vertices</span> <span class="ow">in</span> <span class="n">signature_groups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">group_vertices</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">min_component_size</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Type-1 candidates are grouped by one bipartition side and uniform</span>
+        <span class="c1"># self-loop value. The relevant connectivity is the support pattern of</span>
+        <span class="c1"># K[:, S]^† K[:, S]. For sparse matrices, build that unweighted graph</span>
+        <span class="c1"># from cached column-neighbor buckets and materialize the weighted</span>
+        <span class="c1"># overlap only for final connected candidates.</span>
+        <span class="k">if</span> <span class="n">neighbor_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">column_block</span> <span class="o">=</span> <span class="n">_column_block</span><span class="p">(</span><span class="n">kinetic_matrix</span><span class="p">,</span> <span class="n">group_vertices</span><span class="p">)</span>
+            <span class="n">boundary_overlap_matrix</span> <span class="o">=</span> <span class="n">column_block</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">column_block</span>
+            <span class="n">group_candidates</span> <span class="o">=</span> <span class="n">_components_from_adjacency</span><span class="p">(</span>
+                <span class="n">boundary_overlap_matrix</span><span class="p">,</span>
+                <span class="n">group_vertices</span><span class="p">,</span>
+                <span class="n">min_component_size</span><span class="o">=</span><span class="n">min_component_size</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">boundary_overlap_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">boundary_overlap_adjacency</span> <span class="o">=</span> <span class="n">neighbor_cache</span><span class="o">.</span><span class="n">boundary_overlap_adjacency</span><span class="p">(</span>
+                <span class="n">group_vertices</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">group_candidates</span> <span class="o">=</span> <span class="n">_components_from_adjacency</span><span class="p">(</span>
+                <span class="n">boundary_overlap_adjacency</span><span class="p">,</span>
+                <span class="n">group_vertices</span><span class="p">,</span>
+                <span class="n">min_component_size</span><span class="o">=</span><span class="n">min_component_size</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">group_candidate</span> <span class="ow">in</span> <span class="n">group_candidates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">boundary_overlap_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">neighbor_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;neighbor_cache unexpectedly missing.&quot;</span><span class="p">)</span>
+                <span class="n">candidate_boundary_overlap</span> <span class="o">=</span> <span class="n">neighbor_cache</span><span class="o">.</span><span class="n">boundary_overlap_matrix</span><span class="p">(</span>
+                    <span class="n">group_candidate</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">local_indices</span> <span class="o">=</span> <span class="n">_local_indices_for_vertices</span><span class="p">(</span>
+                    <span class="n">group_vertices</span><span class="p">,</span>
+                    <span class="n">group_candidate</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">candidate_boundary_overlap</span> <span class="o">=</span> <span class="n">_submatrix</span><span class="p">(</span>
+                    <span class="n">boundary_overlap_matrix</span><span class="p">,</span>
+                    <span class="n">local_indices</span><span class="p">,</span>
+                    <span class="n">local_indices</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">candidate_internal_kinetic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">group_candidate</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">group_candidate</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">candidate_subgraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">CandidateSubgraph</span><span class="p">(</span>
+                    <span class="n">vertices</span><span class="o">=</span><span class="n">group_candidate</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+                    <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;candidate_type&quot;</span><span class="p">:</span> <span class="s2">&quot;type1&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="n">vertex_signature</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                        <span class="n">INTERNAL_KINETIC_MATRIX_METADATA_KEY</span><span class="p">:</span> <span class="n">candidate_internal_kinetic</span><span class="p">,</span>
+                        <span class="n">BOUNDARY_OVERLAP_MATRIX_METADATA_KEY</span><span class="p">:</span> <span class="n">candidate_boundary_overlap</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">candidate_subgraphs</span></div>
+
+
+
+<div class="viewcode-block" id="type2_candidates_from_self_loops">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.type2_candidates_from_self_loops">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">type2_candidates_from_self_loops</span><span class="p">(</span>
+    <span class="n">kinetic_matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">self_loop_values</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">min_component_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate Type-2 candidates from uniform self-loop sectors.</span>
+
+<span class="sd">    Components are defined by the internal kinetic graph ``K[group, group]``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">signature_groups</span> <span class="o">=</span> <span class="n">group_vertices_by_signature</span><span class="p">(</span>
+        <span class="n">self_loop_values</span><span class="o">=</span><span class="n">self_loop_values</span><span class="p">,</span>
+        <span class="n">include_bipartition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">candidate_subgraphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CandidateSubgraph</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">vertex_signature</span><span class="p">,</span> <span class="n">group_vertices</span> <span class="ow">in</span> <span class="n">signature_groups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">group_vertices</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">min_component_size</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">internal_matrix</span> <span class="o">=</span> <span class="n">_submatrix</span><span class="p">(</span>
+            <span class="n">kinetic_matrix</span><span class="p">,</span>
+            <span class="n">group_vertices</span><span class="p">,</span>
+            <span class="n">group_vertices</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">group_candidates</span> <span class="o">=</span> <span class="n">_components_from_adjacency</span><span class="p">(</span>
+            <span class="n">internal_matrix</span><span class="p">,</span>
+            <span class="n">group_vertices</span><span class="p">,</span>
+            <span class="n">min_component_size</span><span class="o">=</span><span class="n">min_component_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">group_candidate</span> <span class="ow">in</span> <span class="n">group_candidates</span><span class="p">:</span>
+            <span class="n">local_indices</span> <span class="o">=</span> <span class="n">_local_indices_for_vertices</span><span class="p">(</span>
+                <span class="n">group_vertices</span><span class="p">,</span>
+                <span class="n">group_candidate</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">candidate_internal_kinetic</span> <span class="o">=</span> <span class="n">_submatrix</span><span class="p">(</span>
+                <span class="n">internal_matrix</span><span class="p">,</span>
+                <span class="n">local_indices</span><span class="p">,</span>
+                <span class="n">local_indices</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">candidate_subgraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">CandidateSubgraph</span><span class="p">(</span>
+                    <span class="n">vertices</span><span class="o">=</span><span class="n">group_candidate</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+                    <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;candidate_type&quot;</span><span class="p">:</span> <span class="s2">&quot;type2&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="n">vertex_signature</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                        <span class="n">INTERNAL_KINETIC_MATRIX_METADATA_KEY</span><span class="p">:</span> <span class="n">candidate_internal_kinetic</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">candidate_subgraphs</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
