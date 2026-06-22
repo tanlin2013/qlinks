@@ -974,12 +974,12 @@
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.all_satisfied"><code class="docutils literal notranslate"><span class="pre">all_satisfied()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.allowed_signed_sum_targets"><code class="docutils literal notranslate"><span class="pre">allowed_signed_sum_targets()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.square_disk_line_label_for_cell"><code class="docutils literal notranslate"><span class="pre">square_disk_line_label_for_cell()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.square_disk_line_labels"><code class="docutils literal notranslate"><span class="pre">square_disk_line_labels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.internal_charge_value"><code class="docutils literal notranslate"><span class="pre">internal_charge_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.internal_flux_winding_value"><code class="docutils literal notranslate"><span class="pre">internal_flux_winding_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.normalize_winding_target"><code class="docutils literal notranslate"><span class="pre">normalize_winding_target()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.raw_targets_from_user_targets"><code class="docutils literal notranslate"><span class="pre">raw_targets_from_user_targets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.square_disk_line_label_for_cell"><code class="docutils literal notranslate"><span class="pre">square_disk_line_label_for_cell()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.square_disk_line_labels"><code class="docutils literal notranslate"><span class="pre">square_disk_line_labels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.user_targets_from_raw_flux_targets"><code class="docutils literal notranslate"><span class="pre">user_targets_from_raw_flux_targets()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.user_winding_value_from_internal"><code class="docutils literal notranslate"><span class="pre">user_winding_value_from_internal()</span></code></a></li>
 </ul>
@@ -4803,26 +4803,6 @@ directly.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="qlinks.constraints.square_disk_line_label_for_cell">
-<span class="sig-prename descclassname"><span class="pre">qlinks.constraints.</span></span><span class="sig-name descname"><span class="pre">square_disk_line_label_for_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">family</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/disk.html#square_disk_line_label_for_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.square_disk_line_label_for_cell" title="Link to this definition">#</a></dt>
-<dd><p>Return the diagonal-line label for one square-lattice cell/site.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="qlinks.constraints.square_disk_line_labels">
-<span class="sig-prename descclassname"><span class="pre">qlinks.constraints.</span></span><span class="sig-name descname"><span class="pre">square_disk_line_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">family</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/disk.html#square_disk_line_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.square_disk_line_labels" title="Link to this definition">#</a></dt>
-<dd><p>Return stable labels for square-lattice disk diagonal lines.</p>
-<p><code class="docutils literal notranslate"><span class="pre">family='x_plus_y'</span></code> labels anti-diagonals with constant <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">y</span></code>;
-<code class="docutils literal notranslate"><span class="pre">family='x_minus_y'</span></code> labels diagonals with constant <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">-</span> <span class="pre">y</span></code>.  Periodic
-lattices use labels modulo the corresponding linear size, so these are the
-line sums conserved by diagonal hopping on a torus.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="qlinks.constraints.internal_charge_value">
 <span class="sig-prename descclassname"><span class="pre">qlinks.constraints.</span></span><span class="sig-name descname"><span class="pre">internal_charge_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge_normalization</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/gauss_law.html#internal_charge_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.internal_charge_value" title="Link to this definition">#</a></dt>
 <dd><p>Convert user-facing charge into the raw integer target used by configs.</p>
@@ -4887,6 +4867,26 @@ Fraction(3, 2)
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, …]</p>
 </dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.constraints.square_disk_line_label_for_cell">
+<span class="sig-prename descclassname"><span class="pre">qlinks.constraints.</span></span><span class="sig-name descname"><span class="pre">square_disk_line_label_for_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">family</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/disk.html#square_disk_line_label_for_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.square_disk_line_label_for_cell" title="Link to this definition">#</a></dt>
+<dd><p>Return the diagonal-line label for one square-lattice cell/site.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.constraints.square_disk_line_labels">
+<span class="sig-prename descclassname"><span class="pre">qlinks.constraints.</span></span><span class="sig-name descname"><span class="pre">square_disk_line_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lattice</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">family</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/constraints/disk.html#square_disk_line_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.constraints.square_disk_line_labels" title="Link to this definition">#</a></dt>
+<dd><p>Return stable labels for square-lattice disk diagonal lines.</p>
+<p><code class="docutils literal notranslate"><span class="pre">family='x_plus_y'</span></code> labels anti-diagonals with constant <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">y</span></code>;
+<code class="docutils literal notranslate"><span class="pre">family='x_minus_y'</span></code> labels diagonals with constant <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">-</span> <span class="pre">y</span></code>.  Periodic
+lattices use labels modulo the corresponding linear size, so these are the
+line sums conserved by diagonal hopping on a torus.</p>
+<dl class="field-list simple">
 </dl>
 </dd></dl>
 
@@ -5596,12 +5596,12 @@ are valid integer user labels under the current API.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.all_satisfied"><code class="docutils literal notranslate"><span class="pre">all_satisfied()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.allowed_signed_sum_targets"><code class="docutils literal notranslate"><span class="pre">allowed_signed_sum_targets()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.square_disk_line_label_for_cell"><code class="docutils literal notranslate"><span class="pre">square_disk_line_label_for_cell()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.square_disk_line_labels"><code class="docutils literal notranslate"><span class="pre">square_disk_line_labels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.internal_charge_value"><code class="docutils literal notranslate"><span class="pre">internal_charge_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.internal_flux_winding_value"><code class="docutils literal notranslate"><span class="pre">internal_flux_winding_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.normalize_winding_target"><code class="docutils literal notranslate"><span class="pre">normalize_winding_target()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.raw_targets_from_user_targets"><code class="docutils literal notranslate"><span class="pre">raw_targets_from_user_targets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.square_disk_line_label_for_cell"><code class="docutils literal notranslate"><span class="pre">square_disk_line_label_for_cell()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.square_disk_line_labels"><code class="docutils literal notranslate"><span class="pre">square_disk_line_labels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.user_targets_from_raw_flux_targets"><code class="docutils literal notranslate"><span class="pre">user_targets_from_raw_flux_targets()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.constraints.user_winding_value_from_internal"><code class="docutils literal notranslate"><span class="pre">user_winding_value_from_internal()</span></code></a></li>
 </ul>
