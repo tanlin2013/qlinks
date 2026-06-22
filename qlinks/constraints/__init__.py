@@ -10,6 +10,11 @@ from qlinks.constraints.base import (
 from qlinks.constraints.blockade import NearestNeighborBlockadeConstraint
 from qlinks.constraints.collection import ConstraintCollection
 from qlinks.constraints.dimer import DimerCoveringConstraint
+from qlinks.constraints.disk import (
+    SquareDiskDiagonalLineSumSector,
+    square_disk_line_label_for_cell,
+    square_disk_line_labels,
+)
 from qlinks.constraints.gauss_law import (
     ChargeNormalization,
     GaussLawConstraint,
@@ -65,6 +70,7 @@ __all__ = [
     "NearestNeighborBlockadeConstraint",
     "ParitySector",
     "SectorCondition",
+    "SquareDiskDiagonalLineSumSector",
     "SquareQDMElectricWindingSector",
     "SquareWindingSector",
     "TotalValueSector",
@@ -76,6 +82,8 @@ __all__ = [
     "Z2ValueConvention",
     "all_satisfied",
     "allowed_signed_sum_targets",
+    "square_disk_line_label_for_cell",
+    "square_disk_line_labels",
     "internal_charge_value",
     "internal_flux_winding_value",
     "normalize_winding_target",

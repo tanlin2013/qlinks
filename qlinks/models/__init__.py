@@ -43,6 +43,7 @@ from qlinks.models.qlm import (
     SquareQLMModel,
     TriangularQLMModel,
 )
+from qlinks.models.quantum_disk import QuantumDiskModel, SquareQuantumDiskModel
 from qlinks.models.spin_one_xy import SpinOneXYChainModel
 from qlinks.models.toric_code import ToricCodeModel
 
@@ -67,9 +68,11 @@ __all__ = [
     "QDMModel",
     "QLMBase",
     "QLMModel",
+    "QuantumDiskModel",
     "SparseBuildOptions",
     "SpinOneXYChainModel",
     "SquareQDMModel",
+    "SquareQuantumDiskModel",
     "SquareQLMModel",
     "TermKind",
     "ToricCodeModel",

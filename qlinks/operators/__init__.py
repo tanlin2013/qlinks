@@ -13,6 +13,10 @@ from qlinks.operators.diagonal import (
     LocalValueDiagonalOperator,
     PatternDiagonalOperator,
 )
+from qlinks.operators.disk import (
+    DiskDiagonalHopOperator,
+    DiskDiagonalHopProjector,
+)
 from qlinks.operators.linear import (
     BasisOperator,
     TransposedBasisOperator,
@@ -66,6 +70,8 @@ __all__ = [
     "BinaryFlipOperator",
     "ConstantDiagonalOperator",
     "DiagonalLocalOperator",
+    "DiskDiagonalHopOperator",
+    "DiskDiagonalHopProjector",
     "LocalOperator",
     "LocalSquareValueDiagonalOperator",
     "LocalSumDiagonalOperator",
