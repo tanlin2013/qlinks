@@ -8,6 +8,7 @@ import numpy.typing as npt
 
 from qlinks.backends import SparseBackend, SparseBackendName, get_sparse_backend
 from qlinks.basis import Basis
+from qlinks.builders.triplets import SparseTripletBuffer
 from qlinks.operators import LocalOperator, OperatorAction, combine_duplicate_actions
 
 MissingActionPolicy = Literal["skip", "raise"]
@@ -131,9 +132,10 @@ class SparseHamiltonianBuilder:
             )
             return SparseBuildResult(matrix=matrix, stats=stats)
 
-        rows: list[int] = []
-        cols: list[int] = []
-        data: list[complex] = []
+        triplets = SparseTripletBuffer()
+        append_row = triplets.rows.append
+        append_col = triplets.cols.append
+        append_data = triplets.data.append
 
         n_raw_actions = 0
         n_kept_actions = 0
@@ -161,9 +163,9 @@ class SparseHamiltonianBuilder:
                 column_actions.extend(actions)
 
             if abs(diagonal_coefficient) > self.drop_zero_atol:
-                rows.append(col)
-                cols.append(col)
-                data.append(diagonal_coefficient)
+                append_row(col)
+                append_col(col)
+                append_data(diagonal_coefficient)
                 n_kept_actions += 1
 
             if self.combine_duplicates:
@@ -191,15 +193,15 @@ class SparseHamiltonianBuilder:
 
                     continue
 
-                rows.append(row)
-                cols.append(col)
-                data.append(action.coefficient)
+                append_row(row)
+                append_col(col)
+                append_data(action.coefficient)
                 n_kept_actions += 1
 
         matrix = sparse_backend.coo_matrix(
-            data=sparse_backend.as_data_array(data, dtype=self.dtype),
-            rows=sparse_backend.as_index_array(rows),
-            cols=sparse_backend.as_index_array(cols),
+            data=sparse_backend.as_data_array(triplets.data, dtype=self.dtype),
+            rows=sparse_backend.as_index_array(triplets.rows),
+            cols=sparse_backend.as_index_array(triplets.cols),
             shape=(n, n),
             dtype=self.dtype,
         )

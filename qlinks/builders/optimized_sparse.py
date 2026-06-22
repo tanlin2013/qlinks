@@ -8,6 +8,7 @@ import numpy.typing as npt
 
 from qlinks.backends import SparseBackend, SparseBackendName, get_sparse_backend
 from qlinks.basis import Basis
+from qlinks.builders.triplets import SparseTripletBuffer
 from qlinks.operators import (
     DiagonalLocalOperator,
     LocalUpdateAction,
@@ -166,9 +167,10 @@ class OptimizedSparseHamiltonianBuilder:
             )
             return OptimizedSparseBuildResult(matrix=matrix, stats=stats)
 
-        rows: list[int] = []
-        cols: list[int] = []
-        data: list[complex] = []
+        triplets = SparseTripletBuffer()
+        append_row = triplets.rows.append
+        append_col = triplets.cols.append
+        append_data = triplets.data.append
 
         scratch = np.empty(basis.n_variables, dtype=np.int64)
 
@@ -194,9 +196,9 @@ class OptimizedSparseHamiltonianBuilder:
                 diagonal_coefficient += complex(value)
 
             if abs(diagonal_coefficient) > self.drop_zero_atol:
-                rows.append(col)
-                cols.append(col)
-                data.append(diagonal_coefficient)
+                append_row(col)
+                append_col(col)
+                append_data(diagonal_coefficient)
                 n_kept_actions += 1
 
             for single_update in prepared_operators.single_update_functions:
@@ -233,9 +235,9 @@ class OptimizedSparseHamiltonianBuilder:
 
                     continue
 
-                rows.append(row)
-                cols.append(col)
-                data.append(coefficient)
+                append_row(row)
+                append_col(col)
+                append_data(coefficient)
                 n_kept_actions += 1
 
             for operator in prepared_operators.fallback_operators:
@@ -264,15 +266,15 @@ class OptimizedSparseHamiltonianBuilder:
 
                         continue
 
-                    rows.append(row)
-                    cols.append(col)
-                    data.append(action.coefficient)
+                    append_row(row)
+                    append_col(col)
+                    append_data(action.coefficient)
                     n_kept_actions += 1
 
         matrix = sparse_backend.coo_matrix(
-            data=sparse_backend.as_data_array(data, dtype=self.dtype),
-            rows=sparse_backend.as_index_array(rows),
-            cols=sparse_backend.as_index_array(cols),
+            data=sparse_backend.as_data_array(triplets.data, dtype=self.dtype),
+            rows=sparse_backend.as_index_array(triplets.rows),
+            cols=sparse_backend.as_index_array(triplets.cols),
             shape=(n, n),
             dtype=self.dtype,
         )
