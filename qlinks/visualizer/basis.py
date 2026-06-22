@@ -4681,7 +4681,7 @@ class LocalBasisGridVisualizer:
             None if local_operator is not None else getattr(readout, "matrix_unit_terms", None)
         )
 
-        local_patterns = getattr(readout, "local_patterns")
+        local_patterns = readout.local_patterns
         if (
             show_only_nonzero_matrix_elements
             and local_operator is None
@@ -4697,7 +4697,7 @@ class LocalBasisGridVisualizer:
 
         return self.plot(
             local_patterns,
-            variable_indices=getattr(readout, "variable_indices"),
+            variable_indices=readout.variable_indices,
             reference_config=reference_config,
             labels=labels,
             suptitle=suptitle,
