@@ -1,0 +1,798 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.models.quantum_disk &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=423d4ce3"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/models/quantum_disk';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/models/quantum_disk.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.models.quantum_disk</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints</span><span class="w"> </span><span class="kn">import</span> <span class="n">NearestNeighborBlockadeConstraint</span><span class="p">,</span> <span class="n">TotalValueSector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints.disk</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DiskDiagonalFamily</span><span class="p">,</span>
+    <span class="n">SquareDiskDiagonalLineSumSector</span><span class="p">,</span>
+    <span class="n">square_disk_line_labels</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundaryCondition</span><span class="p">,</span> <span class="n">SquareLattice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BasisSolverName</span><span class="p">,</span>
+    <span class="n">HamiltonianBuilderName</span><span class="p">,</span>
+    <span class="n">HamiltonianModelBase</span><span class="p">,</span>
+    <span class="n">HamiltonianTermSpec</span><span class="p">,</span>
+    <span class="n">normalize_sector_labels_for_display</span><span class="p">,</span>
+    <span class="n">validate_builder_name</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.local_terms</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalOperatorKind</span><span class="p">,</span> <span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="n">LocalTermKind</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.operators</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalValueDiagonalOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.operators.disk</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiskDiagonalHopOperator</span><span class="p">,</span> <span class="n">DiskDiagonalHopProjector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalSpace</span><span class="p">,</span> <span class="n">VariableLayout</span>
+
+<span class="n">DiskHopFamily</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;x_plus_y&quot;</span><span class="p">,</span> <span class="s2">&quot;x_minus_y&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQuantumDiskModel</span><span class="p">(</span><span class="n">HamiltonianModelBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Square-lattice quantum disk model with diagonal hopping.</span>
+
+<span class="sd">    Variables:</span>
+<span class="sd">        Binary disk occupations ``n_i in {0, 1}`` on square-lattice sites.  The</span>
+<span class="sd">        sites should be interpreted as disk centers; this leaves enough geometry</span>
+<span class="sd">        metadata for a later basis visualizer without introducing a new cell</span>
+<span class="sd">        variable kind yet.</span>
+
+<span class="sd">    Constraint:</span>
+<span class="sd">        Optional nearest-neighbor hard-core exclusion.</span>
+
+<span class="sd">    Kinetic term:</span>
+<span class="sd">        A disk hops along selected diagonal lattice lines.  A hop in</span>
+<span class="sd">        ``family=&#39;x_plus_y&#39;`` uses displacement ``(+1, -1)`` and preserves every</span>
+<span class="sd">        ``x + y`` line sum.  A hop in ``family=&#39;x_minus_y&#39;`` uses displacement</span>
+<span class="sd">        ``(+1, +1)`` and preserves every ``x - y`` line sum.</span>
+
+<span class="sd">    Diagonal/topological sectors:</span>
+<span class="sd">        ``disk_number`` fixes the total particle number.  ``x_plus_y_sums`` and</span>
+<span class="sd">        ``x_minus_y_sums`` fix the conserved diagonal line sums.  The model</span>
+<span class="sd">        rejects incompatible diagonal sectors when the selected hop families do</span>
+<span class="sd">        not preserve them.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">ly</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">BoundaryCondition</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">OPEN</span>
+    <span class="n">coup_kin</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="n">coup_pot</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">chemical_potential</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">hop_families</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DiskHopFamily</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;x_plus_y&quot;</span><span class="p">,)</span>
+    <span class="n">hard_core_nearest_neighbor</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">disk_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">x_plus_y_sums</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">x_minus_y_sums</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hop_families</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hop_families must contain at least one diagonal family.&quot;</span><span class="p">)</span>
+        <span class="n">invalid</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hop_families</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="s2">&quot;x_plus_y&quot;</span><span class="p">,</span> <span class="s2">&quot;x_minus_y&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">invalid</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hop_families entries must be &#39;x_plus_y&#39; or &#39;x_minus_y&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_lattice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareLattice</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SquareLattice</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ly</span><span class="p">,</span>
+            <span class="n">boundary_condition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VariableLayout</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VariableLayout</span><span class="o">.</span><span class="n">from_lattice_sites</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">LocalSpace</span><span class="o">.</span><span class="n">binary</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.disk_site_ids">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.disk_site_ids">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">disk_site_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the site ids that carry disk variables.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">site_ids</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.disk_coordinates">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.disk_coordinates">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">disk_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return disk-center coordinates for future visualization code.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">id</span><span class="p">):</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">sites</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.basis_visualization_data">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.basis_visualization_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">basis_visualization_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return lightweight disk-occupation data for a future visualizer.&quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">validate_config</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;quantum_disk&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;site_occupations&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))])</span>
+                <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">disk_site_ids</span><span class="p">()</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;site_coordinates&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">disk_coordinates</span><span class="p">(),</span>
+            <span class="s2">&quot;boundary_condition&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.diagonal_line_labels">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.diagonal_line_labels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal_line_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="p">:</span> <span class="n">DiskDiagonalFamily</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">square_disk_line_labels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="n">family</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.make_constraints">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_constraints">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hard_core_nearest_neighbor</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+        <span class="k">return</span> <span class="n">NearestNeighborBlockadeConstraint</span><span class="o">.</span><span class="n">from_lattice</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">layout</span><span class="p">,</span>
+            <span class="n">occupied_value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_diagonal_sector_compatibility</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">families</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hop_families</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plus_y_sums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">families</span> <span class="o">-</span> <span class="p">{</span><span class="s2">&quot;x_plus_y&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;x_plus_y_sums is a symmetry sector only when all hops preserve &quot;</span>
+                <span class="s2">&quot;x+y, i.e. hop_families must be (&#39;x_plus_y&#39;,).&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_minus_y_sums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">families</span> <span class="o">-</span> <span class="p">{</span><span class="s2">&quot;x_minus_y&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;x_minus_y_sums is a symmetry sector only when all hops preserve &quot;</span>
+                <span class="s2">&quot;x-y, i.e. hop_families must be (&#39;x_minus_y&#39;,).&quot;</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.make_sectors">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_sectors">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_sectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_diagonal_sector_compatibility</span><span class="p">()</span>
+
+        <span class="n">sectors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">disk_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">TotalValueSector</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">target</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disk_number</span><span class="p">),</span>
+                    <span class="n">variable_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span>
+                            <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">disk_site_ids</span><span class="p">()</span>
+                        <span class="p">],</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;disk_number_sector&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plus_y_sums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">SquareDiskDiagonalLineSumSector</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">family</span><span class="o">=</span><span class="s2">&quot;x_plus_y&quot;</span><span class="p">,</span>
+                    <span class="n">target</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plus_y_sums</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_minus_y_sums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">SquareDiskDiagonalLineSumSector</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">family</span><span class="o">=</span><span class="s2">&quot;x_minus_y&quot;</span><span class="p">,</span>
+                    <span class="n">target</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_minus_y_sums</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sectors</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.allowed_sector_labels">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.allowed_sector_labels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">allowed_sector_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">normalize_sector_labels_for_display</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_allowed_sector_labels</span><span class="p">())</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_allowed_sector_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;disk_number&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">}</span>
+        <span class="n">labels</span><span class="p">[</span><span class="s2">&quot;x_plus_y_lines&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal_line_labels</span><span class="p">(</span><span class="s2">&quot;x_plus_y&quot;</span><span class="p">)</span>
+        <span class="n">labels</span><span class="p">[</span><span class="s2">&quot;x_minus_y_lines&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal_line_labels</span><span class="p">(</span><span class="s2">&quot;x_minus_y&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">labels</span>
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.nonempty_sector_labels">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.nonempty_sector_labels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nonempty_sector_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">normalize_sector_labels_for_display</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nonempty_sector_labels</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_nonempty_sector_labels</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">solver</span><span class="p">:</span> <span class="n">BasisSolverName</span> <span class="o">=</span> <span class="s2">&quot;dfs&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="n">nonempty_disk_numbers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">disk_number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">trial</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">disk_number</span><span class="o">=</span><span class="n">disk_number</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">trial</span><span class="o">.</span><span class="n">has_basis_state</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">):</span>
+                <span class="n">nonempty_disk_numbers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">disk_number</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;disk_number&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nonempty_disk_numbers</span><span class="p">)}</span>
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.diagonal_hop_pairs">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.diagonal_hop_pairs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal_hop_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="p">:</span> <span class="n">DiskHopFamily</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">DiskDiagonalHopOperator</span><span class="o">.</span><span class="n">pairs_for_family</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="n">family</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.make_kinetic_operators">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_kinetic_operators">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_kinetic_operators</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">!=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;SquareQuantumDiskModel currently supports builder=&#39;sparse&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
+
+        <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">family</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hop_families</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal_hop_pairs</span><span class="p">(</span><span class="n">family</span><span class="p">):</span>
+                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">DiskDiagonalHopOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                        <span class="n">source_site</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_i</span><span class="p">),</span>
+                        <span class="n">target_site</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_j</span><span class="p">),</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_kin</span><span class="p">,</span>
+                        <span class="n">enforce_nearest_neighbor_blockade</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hard_core_nearest_neighbor</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">DiskDiagonalHopOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                        <span class="n">source_site</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_j</span><span class="p">),</span>
+                        <span class="n">target_site</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_i</span><span class="p">),</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_kin</span><span class="p">),</span>
+                        <span class="n">enforce_nearest_neighbor_blockade</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hard_core_nearest_neighbor</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.make_potential_operators">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_potential_operators">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_potential_operators</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">!=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;SquareQuantumDiskModel currently supports builder=&#39;sparse&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
+
+        <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">chemical_potential</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">disk_site_ids</span><span class="p">():</span>
+                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">LocalValueDiagonalOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">variable_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))),</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chemical_potential</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;disk_number_</span><span class="si">{</span><span class="n">site_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coup_pot</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">family</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hop_families</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal_hop_pairs</span><span class="p">(</span><span class="n">family</span><span class="p">):</span>
+                    <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">DiskDiagonalHopProjector</span><span class="p">(</span>
+                            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                            <span class="n">source_site</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_i</span><span class="p">),</span>
+                            <span class="n">target_site</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_j</span><span class="p">),</span>
+                            <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_pot</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">DiskDiagonalHopProjector</span><span class="p">(</span>
+                            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                            <span class="n">source_site</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_j</span><span class="p">),</span>
+                            <span class="n">target_site</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_i</span><span class="p">),</span>
+                            <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_pot</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.make_terms">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_terms">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_terms</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">HamiltonianTermSpec</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">kinetic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_kinetic_operators</span><span class="p">(</span><span class="n">layout</span><span class="p">,</span> <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">)</span>
+        <span class="n">potential</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_potential_operators</span><span class="p">(</span><span class="n">layout</span><span class="p">,</span> <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">)</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">HamiltonianTermSpec</span><span class="o">.</span><span class="n">from_operators</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
+                <span class="n">operators</span><span class="o">=</span><span class="n">kinetic</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">potential</span><span class="p">:</span>
+            <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">HamiltonianTermSpec</span><span class="o">.</span><span class="n">from_operators</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;potential&quot;</span><span class="p">,</span>
+                    <span class="n">operators</span><span class="o">=</span><span class="n">potential</span><span class="p">,</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;potential&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.local_term_descriptors">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.local_term_descriptors">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">local_term_descriptors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">operator_kind</span><span class="p">:</span> <span class="n">LocalOperatorKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">term_kind</span><span class="p">:</span> <span class="n">LocalTermKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">term_kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;bond&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">()</span>
+        <span class="n">descriptors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">term_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">family</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hop_families</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal_hop_pairs</span><span class="p">(</span><span class="n">family</span><span class="p">):</span>
+                <span class="n">support_sites</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_i</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_j</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">operator_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">,</span> <span class="s2">&quot;hamiltonian&quot;</span><span class="p">):</span>
+                    <span class="n">descriptors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">LocalTermDescriptor</span><span class="p">(</span>
+                            <span class="n">term_id</span><span class="o">=</span><span class="n">term_id</span><span class="p">,</span>
+                            <span class="n">term_kind</span><span class="o">=</span><span class="s2">&quot;bond&quot;</span><span class="p">,</span>
+                            <span class="n">operator_kind</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
+                            <span class="n">support_links</span><span class="o">=</span><span class="p">(),</span>
+                            <span class="n">support_sites</span><span class="o">=</span><span class="n">support_sites</span><span class="p">,</span>
+                            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;T_</span><span class="si">{</span><span class="n">family</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coup_pot</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">operator_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;potential&quot;</span><span class="p">,</span> <span class="s2">&quot;hamiltonian&quot;</span><span class="p">):</span>
+                    <span class="n">descriptors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">LocalTermDescriptor</span><span class="p">(</span>
+                            <span class="n">term_id</span><span class="o">=</span><span class="n">term_id</span><span class="p">,</span>
+                            <span class="n">term_kind</span><span class="o">=</span><span class="s2">&quot;bond&quot;</span><span class="p">,</span>
+                            <span class="n">operator_kind</span><span class="o">=</span><span class="s2">&quot;potential&quot;</span><span class="p">,</span>
+                            <span class="n">support_links</span><span class="o">=</span><span class="p">(),</span>
+                            <span class="n">support_sites</span><span class="o">=</span><span class="n">support_sites</span><span class="p">,</span>
+                            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;P_</span><span class="si">{</span><span class="n">family</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="n">term_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">descriptors</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">QuantumDiskModel</span> <span class="o">=</span> <span class="n">SquareQuantumDiskModel</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

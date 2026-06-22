@@ -337,6 +337,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparseBackend</span><span class="p">,</span> <span class="n">SparseBackendName</span><span class="p">,</span> <span class="n">get_sparse_backend</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.basis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Basis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.builders.triplets</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparseTripletBuffer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.operators</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DiagonalLocalOperator</span><span class="p">,</span>
     <span class="n">LocalUpdateAction</span><span class="p">,</span>
@@ -508,9 +509,10 @@
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">OptimizedSparseBuildResult</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span> <span class="n">stats</span><span class="o">=</span><span class="n">stats</span><span class="p">)</span>
 
-        <span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">cols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">triplets</span> <span class="o">=</span> <span class="n">SparseTripletBuffer</span><span class="p">()</span>
+        <span class="n">append_row</span> <span class="o">=</span> <span class="n">triplets</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">append</span>
+        <span class="n">append_col</span> <span class="o">=</span> <span class="n">triplets</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">append</span>
+        <span class="n">append_data</span> <span class="o">=</span> <span class="n">triplets</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span>
 
         <span class="n">scratch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">n_variables</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
 
@@ -536,9 +538,9 @@
                 <span class="n">diagonal_coefficient</span> <span class="o">+=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">diagonal_coefficient</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_zero_atol</span><span class="p">:</span>
-                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
-                <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diagonal_coefficient</span><span class="p">)</span>
+                <span class="n">append_row</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                <span class="n">append_col</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                <span class="n">append_data</span><span class="p">(</span><span class="n">diagonal_coefficient</span><span class="p">)</span>
                 <span class="n">n_kept_actions</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="k">for</span> <span class="n">single_update</span> <span class="ow">in</span> <span class="n">prepared_operators</span><span class="o">.</span><span class="n">single_update_functions</span><span class="p">:</span>
@@ -575,9 +577,9 @@
 
                     <span class="k">continue</span>
 
-                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-                <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span>
+                <span class="n">append_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="n">append_col</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                <span class="n">append_data</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span>
                 <span class="n">n_kept_actions</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">prepared_operators</span><span class="o">.</span><span class="n">fallback_operators</span><span class="p">:</span>
@@ -606,15 +608,15 @@
 
                         <span class="k">continue</span>
 
-                    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-                    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
-                    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span>
+                    <span class="n">append_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                    <span class="n">append_col</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                    <span class="n">append_data</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span>
                     <span class="n">n_kept_actions</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="n">matrix</span> <span class="o">=</span> <span class="n">sparse_backend</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">(</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">sparse_backend</span><span class="o">.</span><span class="n">as_data_array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
-            <span class="n">rows</span><span class="o">=</span><span class="n">sparse_backend</span><span class="o">.</span><span class="n">as_index_array</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span>
-            <span class="n">cols</span><span class="o">=</span><span class="n">sparse_backend</span><span class="o">.</span><span class="n">as_index_array</span><span class="p">(</span><span class="n">cols</span><span class="p">),</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">sparse_backend</span><span class="o">.</span><span class="n">as_data_array</span><span class="p">(</span><span class="n">triplets</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+            <span class="n">rows</span><span class="o">=</span><span class="n">sparse_backend</span><span class="o">.</span><span class="n">as_index_array</span><span class="p">(</span><span class="n">triplets</span><span class="o">.</span><span class="n">rows</span><span class="p">),</span>
+            <span class="n">cols</span><span class="o">=</span><span class="n">sparse_backend</span><span class="o">.</span><span class="n">as_index_array</span><span class="p">(</span><span class="n">triplets</span><span class="o">.</span><span class="n">cols</span><span class="p">),</span>
             <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span>
             <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
         <span class="p">)</span>

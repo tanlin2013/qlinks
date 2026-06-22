@@ -354,6 +354,7 @@
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
+ | <a href="#X"><strong>X</strong></a>
  | <a href="#Z"><strong>Z</strong></a>
  
 </div>
@@ -721,6 +722,8 @@
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.__init__">(qlinks.constraints.sectors.TotalValueSector method)</a>
 </li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.__init__">(qlinks.constraints.SquareDiskDiagonalLineSumSector method)</a>
+</li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.__init__">(qlinks.constraints.SquareQDMElectricWindingSector method)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.__init__">(qlinks.constraints.SquareWindingSector method)</a>
@@ -933,6 +936,8 @@
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SquareQLMModel.__init__">(qlinks.models.SquareQLMModel method)</a>
 </li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.__init__">(qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
         <li><a href="qlinks.models.html#qlinks.models.toric_code.ToricCodeModel.__init__">(qlinks.models.toric_code.ToricCodeModel method)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.ToricCodeModel.__init__">(qlinks.models.ToricCodeModel method)</a>
@@ -1058,6 +1063,10 @@
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.LocalValueDiagonalOperator.__init__">(qlinks.operators.diagonal.LocalValueDiagonalOperator method)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.__init__">(qlinks.operators.diagonal.PatternDiagonalOperator method)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.__init__">(qlinks.operators.DiskDiagonalHopOperator method)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.__init__">(qlinks.operators.DiskDiagonalHopProjector method)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.linear.BasisOperator.__init__">(qlinks.operators.linear.BasisOperator method)</a>
 </li>
@@ -1453,6 +1462,8 @@
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.affected_variables">(qlinks.constraints.sectors.TotalValueSector method)</a>
 </li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.affected_variables">(qlinks.constraints.SquareDiskDiagonalLineSumSector method)</a>
+</li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.affected_variables">(qlinks.constraints.SquareQDMElectricWindingSector method)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.affected_variables">(qlinks.constraints.SquareWindingSector method)</a>
@@ -1528,6 +1539,10 @@
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.LocalValueDiagonalOperator.affected_variables">(qlinks.operators.diagonal.LocalValueDiagonalOperator method)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.affected_variables">(qlinks.operators.diagonal.PatternDiagonalOperator method)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.affected_variables">(qlinks.operators.DiskDiagonalHopOperator method)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.affected_variables">(qlinks.operators.DiskDiagonalHopProjector method)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.LocalOperator.affected_variables">(qlinks.operators.LocalOperator method)</a>
 </li>
@@ -1646,14 +1661,14 @@
         <li><a href="qlinks.constraints.html#qlinks.constraints.winding.SquareWindingSector.allowed_internal_targets">(qlinks.constraints.winding.SquareWindingSector class method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#id1">allowed_kappas (qlinks.caging.local_search.LocalQDMCageSearchConfig attribute)</a>, <a href="qlinks.caging.html#qlinks.caging.local_search.LocalQDMCageSearchConfig.allowed_kappas">[1]</a>
 
       <ul>
         <li><a href="qlinks.caging.html#id100">(qlinks.caging.LocalQDMCageSearchConfig attribute)</a>, <a href="qlinks.caging.html#qlinks.caging.LocalQDMCageSearchConfig.allowed_kappas">[1]</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.models.html#qlinks.models.base.HamiltonianModelBase.allowed_sector_labels">allowed_sector_labels() (qlinks.models.base.HamiltonianModelBase method)</a>
 
       <ul>
@@ -1666,6 +1681,8 @@
         <li><a href="qlinks.models.html#qlinks.models.qlm.QLMBase.allowed_sector_labels">(qlinks.models.qlm.QLMBase method)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.QLMBase.allowed_sector_labels">(qlinks.models.QLMBase method)</a>
+</li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.allowed_sector_labels">(qlinks.models.SquareQuantumDiskModel method)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.constraints.html#qlinks.constraints.allowed_signed_sum_targets">allowed_signed_sum_targets() (in module qlinks.constraints)</a>
@@ -1814,6 +1831,8 @@
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.LocalValueDiagonalOperator.apply">(qlinks.operators.diagonal.LocalValueDiagonalOperator method)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.apply">(qlinks.operators.diagonal.PatternDiagonalOperator method)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.apply">(qlinks.operators.DiskDiagonalHopOperator method)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.LocalOperator.apply">(qlinks.operators.LocalOperator method)</a>
 </li>
@@ -2252,6 +2271,8 @@
         <li><a href="qlinks.models.html#qlinks.models.ModelBuildResult.basis_operator">(qlinks.models.ModelBuildResult method)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.basis_visualization_data">basis_visualization_data() (qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
       <li><a href="_autosummary/qlinks.visualizer.html#qlinks.visualizer.BasisConfigurationVisualizer">BasisConfigurationVisualizer (class in qlinks.visualizer)</a>, <a href="qlinks.visualizer.html#qlinks.visualizer.BasisConfigurationVisualizer">[1]</a>
 
       <ul>
@@ -2584,6 +2605,8 @@
         <li><a href="qlinks.models.html#qlinks.models.SquareQDMModel.boundary_condition">(qlinks.models.SquareQDMModel attribute)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SquareQLMModel.boundary_condition">(qlinks.models.SquareQLMModel attribute)</a>
+</li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.boundary_condition">(qlinks.models.SquareQuantumDiskModel attribute)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.toric_code.ToricCodeModel.boundary_condition">(qlinks.models.toric_code.ToricCodeModel attribute)</a>
 </li>
@@ -3179,6 +3202,8 @@
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SectorCondition.check">(qlinks.constraints.SectorCondition method)</a>
 </li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.check">(qlinks.constraints.SquareDiskDiagonalLineSumSector method)</a>
+</li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.check">(qlinks.constraints.SquareQDMElectricWindingSector method)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.check">(qlinks.constraints.SquareWindingSector method)</a>
@@ -3214,6 +3239,8 @@
         <li><a href="qlinks.constraints.html#qlinks.constraints.ConstraintCollection.check_sectors">(qlinks.constraints.ConstraintCollection method)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.chemical_potential">chemical_potential (qlinks.models.SquareQuantumDiskModel attribute)</a>
+</li>
       <li><a href="qlinks.open_system.html#qlinks.open_system.stochastic_schrodinger.choose_jump">choose_jump() (in module qlinks.open_system.stochastic_schrodinger)</a>
 </li>
       <li><a href="qlinks.io.html#id13">chunks (qlinks.io.EigenpairHDF5Writer attribute)</a>, <a href="qlinks.io.html#qlinks.io.EigenpairHDF5Writer.chunks">[1]</a>
@@ -3364,6 +3391,10 @@
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.LocalValueDiagonalOperator.coefficient">(qlinks.operators.diagonal.LocalValueDiagonalOperator attribute)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.coefficient">(qlinks.operators.diagonal.PatternDiagonalOperator attribute)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.coefficient">(qlinks.operators.DiskDiagonalHopOperator attribute)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.coefficient">(qlinks.operators.DiskDiagonalHopProjector attribute)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.LocalSquareValueDiagonalOperator.coefficient">(qlinks.operators.LocalSquareValueDiagonalOperator attribute)</a>
 </li>
@@ -3953,6 +3984,8 @@
 </li>
         <li><a href="qlinks.models.html#qlinks.models.QLMBase.coup_kin">(qlinks.models.QLMBase attribute)</a>
 </li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.coup_kin">(qlinks.models.SquareQuantumDiskModel attribute)</a>
+</li>
       </ul></li>
       <li><a href="qlinks.models.html#qlinks.models.qdm.QDMBase.coup_pot">coup_pot (qlinks.models.qdm.QDMBase attribute)</a>
 
@@ -3962,6 +3995,8 @@
         <li><a href="qlinks.models.html#qlinks.models.qlm.QLMBase.coup_pot">(qlinks.models.qlm.QLMBase attribute)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.QLMBase.coup_pot">(qlinks.models.QLMBase attribute)</a>
+</li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.coup_pot">(qlinks.models.SquareQuantumDiskModel attribute)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.backends.html#qlinks.backends.CupySparseBackend.cp">cp (qlinks.backends.CupySparseBackend property)</a>
@@ -4270,6 +4305,10 @@
         <li><a href="qlinks.caging.html#qlinks.caging.RobustQDMLocalCageSearchContext.diagnostics_by_stage">(qlinks.caging.RobustQDMLocalCageSearchContext attribute)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.diagonal_hop_pairs">diagonal_hop_pairs() (qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.diagonal_line_labels">diagonal_line_labels() (qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
       <li><a href="qlinks.operators.html#qlinks.operators.base.DiagonalLocalOperator.diagonal_value">diagonal_value() (qlinks.operators.base.DiagonalLocalOperator method)</a>
 
       <ul>
@@ -4286,6 +4325,8 @@
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.diagonal_value">(qlinks.operators.diagonal.PatternDiagonalOperator method)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.DiagonalLocalOperator.diagonal_value">(qlinks.operators.DiagonalLocalOperator method)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.diagonal_value">(qlinks.operators.DiskDiagonalHopProjector method)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.LocalSquareValueDiagonalOperator.diagonal_value">(qlinks.operators.LocalSquareValueDiagonalOperator method)</a>
 </li>
@@ -4410,6 +4451,16 @@
         <li><a href="qlinks.caging.html#qlinks.caging.StripeRegionProposal.directions">(qlinks.caging.StripeRegionProposal attribute)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.disk_coordinates">disk_coordinates() (qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.disk_number">disk_number (qlinks.models.SquareQuantumDiskModel attribute)</a>
+</li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.disk_site_ids">disk_site_ids() (qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
+      <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator">DiskDiagonalHopOperator (class in qlinks.operators)</a>
+</li>
+      <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector">DiskDiagonalHopProjector (class in qlinks.operators)</a>
+</li>
       <li><a href="qlinks.open_system.html#qlinks.open_system.AbsorbingProjectorJumpDiagnostics.dissipator_adjoint_projector_norm">dissipator_adjoint_projector_norm (qlinks.open_system.AbsorbingProjectorJumpDiagnostics attribute)</a>
 
       <ul>
@@ -4678,6 +4729,12 @@
         <li><a href="_autosummary/qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle.empty_edge_color">(qlinks.visualizer.LinkVisualStyle attribute)</a>, <a href="qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle.empty_edge_color">[1]</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.empty_value">empty_value (qlinks.operators.DiskDiagonalHopOperator attribute)</a>
+
+      <ul>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.empty_value">(qlinks.operators.DiskDiagonalHopProjector attribute)</a>
+</li>
+      </ul></li>
       <li><a href="qlinks.visualizer.html#qlinks.visualizer.basis.LinkVisualStyle.empty_width">empty_width (qlinks.visualizer.basis.LinkVisualStyle attribute)</a>
 
       <ul>
@@ -4724,6 +4781,8 @@
         <li><a href="qlinks.open_system.html#id40">(qlinks.open_system.solvers.LindbladEvolutionOptions attribute)</a>, <a href="qlinks.open_system.html#qlinks.open_system.solvers.LindbladEvolutionOptions.enforce_hermiticity">[1]</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.enforce_nearest_neighbor_blockade">enforce_nearest_neighbor_blockade (qlinks.operators.DiskDiagonalHopOperator attribute)</a>
+</li>
       <li><a href="qlinks.open_system.html#qlinks.open_system.EnsembleResult">EnsembleResult (class in qlinks.open_system)</a>
 
       <ul>
@@ -4846,6 +4905,8 @@
         <li><a href="qlinks.caging.html#qlinks.caging.QDMMultiPaddingDiagnostics.failures">(qlinks.caging.QDMMultiPaddingDiagnostics attribute)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.family">family (qlinks.constraints.SquareDiskDiagonalLineSumSector attribute)</a>
+</li>
       <li><a href="qlinks.open_system.html#id9">fidelities (qlinks.open_system.diagnostics.EvolutionDiagnostics attribute)</a>, <a href="qlinks.open_system.html#qlinks.open_system.diagnostics.EvolutionDiagnostics.fidelities">[1]</a>
 
       <ul>
@@ -5544,6 +5605,8 @@
         <li><a href="qlinks.models.html#qlinks.models.base.HamiltonianTermSpec">(class in qlinks.models.base)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.hard_core_nearest_neighbor">hard_core_nearest_neighbor (qlinks.models.SquareQuantumDiskModel attribute)</a>
+</li>
       <li><a href="qlinks.open_system.html#qlinks.open_system.AbsorbingProjectorSymmetryDiagnostics.has_absorbing_projector_symmetry">has_absorbing_projector_symmetry (qlinks.open_system.AbsorbingProjectorSymmetryDiagnostics attribute)</a>
 
       <ul>
@@ -5702,6 +5765,8 @@
         <li><a href="qlinks.models.html#qlinks.models.qlm.HoneycombQLMModel">(class in qlinks.models.qlm)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.hop_families">hop_families (qlinks.models.SquareQuantumDiskModel attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -6500,9 +6565,13 @@
         <li><a href="_autosummary/qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphStyle.label_vertices">(qlinks.visualizer.HamiltonianGraphStyle attribute)</a>, <a href="qlinks.visualizer.html#qlinks.visualizer.HamiltonianGraphStyle.label_vertices">[1]</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.labels">labels (qlinks.constraints.SquareDiskDiagonalLineSumSector property)</a>
+</li>
       <li><a href="qlinks.constraints.html#id8">lattice (qlinks.constraints.HoneycombElectricWindingSector attribute)</a>, <a href="qlinks.constraints.html#qlinks.constraints.HoneycombElectricWindingSector.lattice">[1]</a>
 
       <ul>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.lattice">(qlinks.constraints.SquareDiskDiagonalLineSumSector attribute)</a>
+</li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.lattice">(qlinks.constraints.SquareQDMElectricWindingSector attribute)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.lattice">(qlinks.constraints.SquareWindingSector attribute)</a>
@@ -6540,6 +6609,8 @@
         <li><a href="qlinks.models.html#qlinks.models.HamiltonianModelBase.lattice">(qlinks.models.HamiltonianModelBase property)</a>
 </li>
         <li><a href="qlinks.models.html#id29">(qlinks.models.ModelBuildResult attribute)</a>, <a href="qlinks.models.html#qlinks.models.ModelBuildResult.lattice">[1]</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.lattice">(qlinks.operators.DiskDiagonalHopOperator attribute)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.plaquette.PlaquettePatternOperator.lattice">(qlinks.operators.plaquette.PlaquettePatternOperator attribute)</a>
 </li>
@@ -6657,6 +6728,8 @@
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.layout">(qlinks.constraints.sectors.TotalValueSector attribute)</a>
 </li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.layout">(qlinks.constraints.SquareDiskDiagonalLineSumSector attribute)</a>
+</li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.layout">(qlinks.constraints.SquareQDMElectricWindingSector attribute)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.layout">(qlinks.constraints.SquareWindingSector attribute)</a>
@@ -6742,6 +6815,10 @@
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.LocalValueDiagonalOperator.layout">(qlinks.operators.diagonal.LocalValueDiagonalOperator attribute)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.layout">(qlinks.operators.diagonal.PatternDiagonalOperator attribute)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.layout">(qlinks.operators.DiskDiagonalHopOperator attribute)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.layout">(qlinks.operators.DiskDiagonalHopProjector attribute)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.LocalOperator.layout">(qlinks.operators.LocalOperator attribute)</a>
 </li>
@@ -7417,6 +7494,8 @@
 </li>
         <li><a href="qlinks.models.html#qlinks.models.QLMBase.local_term_descriptors">(qlinks.models.QLMBase method)</a>
 </li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.local_term_descriptors">(qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.classification.InterferenceZeroReport.local_transitions">local_transitions (qlinks.caging.classification.InterferenceZeroReport attribute)</a>
 
@@ -7713,6 +7792,8 @@
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SquareQLMModel.lx">(qlinks.models.SquareQLMModel attribute)</a>
 </li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.lx">(qlinks.models.SquareQuantumDiskModel attribute)</a>
+</li>
         <li><a href="qlinks.models.html#qlinks.models.toric_code.ToricCodeModel.lx">(qlinks.models.toric_code.ToricCodeModel attribute)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.ToricCodeModel.lx">(qlinks.models.ToricCodeModel attribute)</a>
@@ -7754,6 +7835,8 @@
         <li><a href="qlinks.models.html#qlinks.models.SquareQDMModel.ly">(qlinks.models.SquareQDMModel attribute)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SquareQLMModel.ly">(qlinks.models.SquareQLMModel attribute)</a>
+</li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.ly">(qlinks.models.SquareQuantumDiskModel attribute)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.toric_code.ToricCodeModel.ly">(qlinks.models.toric_code.ToricCodeModel attribute)</a>
 </li>
@@ -7797,6 +7880,8 @@
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SpinOneXYChainModel.make_constraints">(qlinks.models.SpinOneXYChainModel method)</a>
 </li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_constraints">(qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
         <li><a href="qlinks.models.html#qlinks.models.toric_code.ToricCodeModel.make_constraints">(qlinks.models.toric_code.ToricCodeModel method)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.ToricCodeModel.make_constraints">(qlinks.models.ToricCodeModel method)</a>
@@ -7814,6 +7899,8 @@
         <li><a href="qlinks.models.html#qlinks.models.spin_one_xy.SpinOneXYChainModel.make_kinetic_operators">(qlinks.models.spin_one_xy.SpinOneXYChainModel method)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SpinOneXYChainModel.make_kinetic_operators">(qlinks.models.SpinOneXYChainModel method)</a>
+</li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_kinetic_operators">(qlinks.models.SquareQuantumDiskModel method)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.models.html#qlinks.models.base.HamiltonianModelBase.make_lattice">make_lattice() (qlinks.models.base.HamiltonianModelBase method)</a>
@@ -7893,6 +7980,8 @@
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SpinOneXYChainModel.make_potential_operators">(qlinks.models.SpinOneXYChainModel method)</a>
 </li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_potential_operators">(qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.make_qdm_cage_block">make_qdm_cage_block() (in module qlinks.caging)</a>
 
@@ -7941,6 +8030,8 @@
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SquareQLMModel.make_sectors">(qlinks.models.SquareQLMModel method)</a>
 </li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_sectors">(qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
         <li><a href="qlinks.models.html#qlinks.models.toric_code.ToricCodeModel.make_sectors">(qlinks.models.toric_code.ToricCodeModel method)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.ToricCodeModel.make_sectors">(qlinks.models.ToricCodeModel method)</a>
@@ -7976,6 +8067,8 @@
         <li><a href="qlinks.models.html#qlinks.models.spin_one_xy.SpinOneXYChainModel.make_terms">(qlinks.models.spin_one_xy.SpinOneXYChainModel method)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.SpinOneXYChainModel.make_terms">(qlinks.models.SpinOneXYChainModel method)</a>
+</li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_terms">(qlinks.models.SquareQuantumDiskModel method)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.toric_code.ToricCodeModel.make_terms">(qlinks.models.toric_code.ToricCodeModel method)</a>
 </li>
@@ -8362,6 +8455,8 @@
         <li><a href="qlinks.open_system.html#id36">(qlinks.open_system.solvers.LindbladEvolutionOptions attribute)</a>, <a href="qlinks.open_system.html#qlinks.open_system.solvers.LindbladEvolutionOptions.max_rk4_step_scale">[1]</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.SupportSizeFilter.max_size">max_size (qlinks.caging.SupportSizeFilter attribute)</a>
 </li>
       <li><a href="qlinks.basis.html#qlinks.basis.CPSATBasisSolver.max_solutions">max_solutions (qlinks.basis.CPSATBasisSolver attribute)</a>
@@ -8372,8 +8467,6 @@
         <li><a href="qlinks.basis.solvers.html#qlinks.basis.solvers.CPSATBasisSolver.max_solutions">(qlinks.basis.solvers.CPSATBasisSolver attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.open_system.html#id78">max_substeps (qlinks.open_system.LindbladEvolutionOptions attribute)</a>, <a href="qlinks.open_system.html#qlinks.open_system.LindbladEvolutionOptions.max_substeps">[1]</a>
 
       <ul>
@@ -9548,6 +9641,8 @@
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.name">(qlinks.constraints.sectors.TotalValueSector attribute)</a>
 </li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.name">(qlinks.constraints.SquareDiskDiagonalLineSumSector attribute)</a>
+</li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.name">(qlinks.constraints.SquareQDMElectricWindingSector attribute)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.name">(qlinks.constraints.SquareWindingSector attribute)</a>
@@ -9639,6 +9734,10 @@
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.LocalValueDiagonalOperator.name">(qlinks.operators.diagonal.LocalValueDiagonalOperator attribute)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.diagonal.PatternDiagonalOperator.name">(qlinks.operators.diagonal.PatternDiagonalOperator attribute)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.name">(qlinks.operators.DiskDiagonalHopOperator attribute)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.name">(qlinks.operators.DiskDiagonalHopProjector attribute)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.LocalOperator.name">(qlinks.operators.LocalOperator attribute)</a>
 </li>
@@ -9842,6 +9941,8 @@
 </li>
         <li><a href="qlinks.models.html#qlinks.models.QLMBase.nonempty_sector_labels">(qlinks.models.QLMBase method)</a>
 </li>
+        <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.nonempty_sector_labels">(qlinks.models.SquareQuantumDiskModel method)</a>
+</li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.CageClassificationReport.nonzero_complement_action_probe_failure_indices">nonzero_complement_action_probe_failure_indices (qlinks.caging.CageClassificationReport attribute)</a>
 
@@ -10030,6 +10131,12 @@
       <ul>
         <li><a href="qlinks.constraints.html#qlinks.constraints.NearestNeighborBlockadeConstraint.occupied_value">(qlinks.constraints.NearestNeighborBlockadeConstraint attribute)</a>
 </li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.occupied_value">(qlinks.constraints.SquareDiskDiagonalLineSumSector attribute)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.occupied_value">(qlinks.operators.DiskDiagonalHopOperator attribute)</a>
+</li>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.occupied_value">(qlinks.operators.DiskDiagonalHopProjector attribute)</a>
+</li>
         <li><a href="qlinks.operators.html#qlinks.operators.pxp.PXPSpinFlipOperator.occupied_value">(qlinks.operators.pxp.PXPSpinFlipOperator attribute)</a>
 </li>
         <li><a href="qlinks.operators.html#qlinks.operators.PXPSpinFlipOperator.occupied_value">(qlinks.operators.PXPSpinFlipOperator attribute)</a>
@@ -10107,14 +10214,14 @@
         <li><a href="qlinks.caging.html#qlinks.caging.MultiLocalQDMCertificationReport.one_hop_shell_size">(qlinks.caging.MultiLocalQDMCertificationReport attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/qlinks.lattice.html#qlinks.lattice.BoundaryCondition.OPEN">OPEN (qlinks.lattice.BoundaryCondition attribute)</a>, <a href="qlinks.lattice.html#qlinks.lattice.BoundaryCondition.OPEN">[1]</a>
 
       <ul>
         <li><a href="qlinks.lattice.html#qlinks.lattice.types.BoundaryCondition.OPEN">(qlinks.lattice.types.BoundaryCondition attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.CageLindbladConstruction.open_system_backend">open_system_backend (qlinks.caging.CageLindbladConstruction attribute)</a>
 
       <ul>
@@ -10317,6 +10424,8 @@
         <li><a href="qlinks.caging.html#qlinks.caging.QDMMultiPaddingDiagnostics.paddings">(qlinks.caging.QDMMultiPaddingDiagnostics attribute)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.pairs_for_family">pairs_for_family() (qlinks.operators.DiskDiagonalHopOperator class method)</a>
+</li>
       <li><a href="qlinks.operators.html#qlinks.operators.linear.TransposedBasisOperator.parent">parent (qlinks.operators.linear.TransposedBasisOperator attribute)</a>
 
       <ul>
@@ -10373,6 +10482,8 @@
         <li><a href="qlinks.constraints.html#qlinks.constraints.sectors.ParitySector.partial_check">(qlinks.constraints.sectors.ParitySector method)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.partial_check">(qlinks.constraints.sectors.TotalValueSector method)</a>
+</li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.partial_check">(qlinks.constraints.SquareDiskDiagonalLineSumSector method)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.partial_check">(qlinks.constraints.SquareQDMElectricWindingSector method)</a>
 </li>
@@ -11752,6 +11863,8 @@
         <li><a href="qlinks.models.html#qlinks.models.qlm.QLMModel">(class in qlinks.models.qlm)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.models.html#qlinks.models.QuantumDiskModel">QuantumDiskModel (in module qlinks.models)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -13128,8 +13241,6 @@
         <li><a href="qlinks.caging.html#qlinks.caging.local_search.SnakeStripeRegionProposalRecord">(class in qlinks.caging.local_search)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.basis.html#qlinks.basis.DFSStatistics.solution_count">solution_count (qlinks.basis.DFSStatistics attribute)</a>
 
       <ul>
@@ -13138,6 +13249,8 @@
         <li><a href="qlinks.basis.solvers.html#qlinks.basis.solvers.DFSStatistics.solution_count">(qlinks.basis.solvers.DFSStatistics attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.basis.html#qlinks.basis.BasisSolver.solve">solve() (qlinks.basis.BasisSolver method)</a>
 
       <ul>
@@ -13296,6 +13409,12 @@
         <li><a href="qlinks.caging.html#qlinks.caging.classification.CageClassificationReport.source_projector_like_probe_indices">(qlinks.caging.classification.CageClassificationReport attribute)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.source_site">source_site (qlinks.operators.DiskDiagonalHopOperator attribute)</a>
+
+      <ul>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.source_site">(qlinks.operators.DiskDiagonalHopProjector attribute)</a>
+</li>
+      </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.classification.CollectiveCancellationReport.source_zero_indices">source_zero_indices (qlinks.caging.classification.CollectiveCancellationReport attribute)</a>
 
       <ul>
@@ -13448,6 +13567,10 @@
         <li><a href="qlinks.models.html#qlinks.models.PXPModel.square">(qlinks.models.PXPModel class method)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.constraints.html#qlinks.constraints.square_disk_line_label_for_cell">square_disk_line_label_for_cell() (in module qlinks.constraints)</a>
+</li>
+      <li><a href="qlinks.constraints.html#qlinks.constraints.square_disk_line_labels">square_disk_line_labels() (in module qlinks.constraints)</a>
+</li>
       <li><a href="qlinks.lattice.html#qlinks.lattice.square.SquareLattice.square_plaquette_id">square_plaquette_id() (qlinks.lattice.square.SquareLattice method)</a>
 
       <ul>
@@ -13460,6 +13583,8 @@
         <li><a href="qlinks.conventions.html#qlinks.conventions.qlm.square_qdm_staggered_charges">(in module qlinks.conventions.qlm)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector">SquareDiskDiagonalLineSumSector (class in qlinks.constraints)</a>
+</li>
       <li><a href="_autosummary/qlinks.lattice.html#qlinks.lattice.SquareLattice">SquareLattice (class in qlinks.lattice)</a>, <a href="qlinks.lattice.html#qlinks.lattice.SquareLattice">[1]</a>
 
       <ul>
@@ -13484,6 +13609,8 @@
         <li><a href="qlinks.models.html#qlinks.models.qlm.SquareQLMModel">(class in qlinks.models.qlm)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel">SquareQuantumDiskModel (class in qlinks.models)</a>
+</li>
       <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector">SquareWindingSector (class in qlinks.constraints)</a>
 
       <ul>
@@ -13889,6 +14016,8 @@
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.target">(qlinks.constraints.sectors.TotalValueSector attribute)</a>
 </li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.target">(qlinks.constraints.SquareDiskDiagonalLineSumSector attribute)</a>
+</li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.target">(qlinks.constraints.SquareQDMElectricWindingSector attribute)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.target">(qlinks.constraints.SquareWindingSector attribute)</a>
@@ -14034,6 +14163,12 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalRecyclingCandidate.target_residual">(qlinks.open_system.LocalRecyclingCandidate attribute)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopOperator.target_site">target_site (qlinks.operators.DiskDiagonalHopOperator attribute)</a>
+
+      <ul>
+        <li><a href="qlinks.operators.html#qlinks.operators.DiskDiagonalHopProjector.target_site">(qlinks.operators.DiskDiagonalHopProjector attribute)</a>
+</li>
+      </ul></li>
       <li><a href="qlinks.html#qlinks.distributed.TaskFailure.task_index">task_index (qlinks.distributed.TaskFailure attribute)</a>
 </li>
       <li><a href="qlinks.html#qlinks.distributed.TaskFailure.task_input">task_input (qlinks.distributed.TaskFailure attribute)</a>
@@ -14170,6 +14305,8 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.OpenSystemBackend.to_numpy">(qlinks.open_system.OpenSystemBackend method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.CageClassificationReport.to_rich">to_rich() (qlinks.caging.CageClassificationReport method)</a>
 
       <ul>
@@ -14192,8 +14329,6 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.MonitorKernelClosureDiagnostics.to_rich">(qlinks.open_system.MonitorKernelClosureDiagnostics method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.CageClassificationReport.to_summary_dict">to_summary_dict() (qlinks.caging.CageClassificationReport method)</a>
 
       <ul>
@@ -14749,6 +14884,8 @@
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.sectors.TotalValueSector.value">(qlinks.constraints.sectors.TotalValueSector method)</a>
 </li>
+        <li><a href="qlinks.constraints.html#qlinks.constraints.SquareDiskDiagonalLineSumSector.value">(qlinks.constraints.SquareDiskDiagonalLineSumSector method)</a>
+</li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareQDMElectricWindingSector.value">(qlinks.constraints.SquareQDMElectricWindingSector method)</a>
 </li>
         <li><a href="qlinks.constraints.html#qlinks.constraints.SquareWindingSector.value">(qlinks.constraints.SquareWindingSector method)</a>
@@ -15252,6 +15389,18 @@
         <li><a href="qlinks.io.html#qlinks.io.hdf5.EigenpairHDF5Writer.write_observable">(qlinks.io.hdf5.EigenpairHDF5Writer method)</a>
 </li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="X">X</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.x_minus_y_sums">x_minus_y_sums (qlinks.models.SquareQuantumDiskModel attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="qlinks.models.html#qlinks.models.SquareQuantumDiskModel.x_plus_y_sums">x_plus_y_sums (qlinks.models.SquareQuantumDiskModel attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
