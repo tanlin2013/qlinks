@@ -1508,7 +1508,9 @@ def _symmetrized_weighted_adjacency(
     # use its conjugate as the upper-oriented value.
     upper_from_lower = lower.T.conjugate()
     upper_bool = upper.astype(bool)
-    missing_from_upper = upper_from_lower.multiply((upper_bool.astype(np.int8) == 0))
+    upper_present = upper_from_lower.multiply(upper_bool.astype(upper_from_lower.dtype, copy=False))
+    missing_from_upper = upper_from_lower - upper_present
+    missing_from_upper.eliminate_zeros()
 
     upper_combined = upper + missing_from_upper
     adjacency = upper_combined + upper_combined.T.conjugate()
