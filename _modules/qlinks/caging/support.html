@@ -402,8 +402,9 @@
 <span class="sd">    This function does not interpret the report label as a scaling statement.</span>
 <span class="sd">    It only asks whether each reduced probe has explained complement behavior.</span>
 
-<span class="sd">    By default, q_empty, closed_by_known_zeros, and projector_like probes are</span>
-<span class="sd">    all allowed.  Only unexplained_leakage is rejected.</span>
+<span class="sd">    By default, q_empty, closed_by_known_zeros, domain_blocked, and</span>
+<span class="sd">    projector_like probes are all allowed.  Only unexplained_leakage is</span>
+<span class="sd">    rejected.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">probe_supports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReducedIZProbeSupport</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">ignored_probe_supports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReducedIZProbeSupport</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -490,7 +491,7 @@
     <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;closed_by_known_zeros&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">include_closed_by_known_zeros</span>
 
-    <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;projector_like&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;domain_blocked&quot;</span><span class="p">,</span> <span class="s2">&quot;projector_like&quot;</span><span class="p">}:</span>
         <span class="k">return</span> <span class="n">include_projector_like</span>
 
     <span class="k">if</span> <span class="n">probe_support</span><span class="o">.</span><span class="n">mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;collective_cancellation&quot;</span><span class="p">:</span>
@@ -534,8 +535,9 @@
     <span class="k">for</span> <span class="n">zero_report</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">zero_reports</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;unexplained_leakage&quot;</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;projector_like&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">include_projector_like</span><span class="p">:</span>
-            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;domain_blocked&quot;</span><span class="p">,</span> <span class="s2">&quot;projector_like&quot;</span><span class="p">}:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">include_projector_like</span><span class="p">:</span>
+                <span class="k">continue</span>
 
         <span class="n">variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">zero_report</span><span class="o">.</span><span class="n">local_mask</span><span class="p">))</span>
         <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">_public_local_pattern_key</span><span class="p">(</span><span class="n">zero_report</span><span class="p">))</span>

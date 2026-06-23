@@ -355,6 +355,7 @@
 <span class="n">IZProbeMechanismLabel</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
     <span class="s2">&quot;q_empty&quot;</span><span class="p">,</span>
     <span class="s2">&quot;closed_by_known_zeros&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;domain_blocked&quot;</span><span class="p">,</span>
     <span class="s2">&quot;projector_like&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collective_cancellation&quot;</span><span class="p">,</span>
     <span class="s2">&quot;unexplained_leakage&quot;</span><span class="p">,</span>
@@ -540,8 +541,16 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;closed_by_known_zeros&quot;</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_domain_blocked</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;domain_blocked&quot;</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_projector_like</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="o">==</span> <span class="s2">&quot;projector_like&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_projector_blocked_family</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;domain_blocked&quot;</span><span class="p">,</span> <span class="s2">&quot;projector_like&quot;</span><span class="p">}</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_collective_cancellation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -776,6 +785,24 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">n_reduced_iz_region_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reduced_iz_region_variable_indices</span><span class="p">)</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">domain_blocked_source_zero_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Source-zero indices whose probe is domain-blocked.</span>
+
+<span class="sd">        Domain-blocked probes have finite complement support, but that</span>
+<span class="sd">        complement support contains no input configuration on which the</span>
+<span class="sd">        transplanted reduced-IZ operator can fire.  They are a regional</span>
+<span class="sd">        closure mechanism in the state-level classification.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_zero_indices_with_mechanism</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zero_reports</span><span class="p">,</span>
+            <span class="s2">&quot;domain_blocked&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_domain_blocked_source_probes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_blocked_source_zero_indices</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
 <div class="viewcode-block" id="CageClassificationReport.selected_reduced_iz_reports">
 <a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.classification.CageClassificationReport.selected_reduced_iz_reports">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">selected_reduced_iz_reports</span><span class="p">(</span>
@@ -958,6 +985,11 @@
             <span class="n">_format_index_preview</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">closed_by_known_zero_network_source_zero_indices</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="n">mechanisms</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;domain-blocked&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_domain_blocked_source_probes</span><span class="p">),</span>
+            <span class="n">_format_index_preview</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_blocked_source_zero_indices</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">mechanisms</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
             <span class="s2">&quot;projector-like&quot;</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_projector_like_source_probes</span><span class="p">),</span>
             <span class="n">_format_index_preview</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projector_like_source_zero_indices</span><span class="p">),</span>
@@ -1029,17 +1061,13 @@
         <span class="n">state_level</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
             <span class="s2">&quot;has only regional mechanisms&quot;</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">n_projector_like_source_probes</span> <span class="o">==</span> <span class="mi">0</span>
-                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_collective_cancellation_source_probes</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_collective_cancellation_source_probes</span> <span class="o">==</span> <span class="mi">0</span>
                 <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_invalid_source_probes</span> <span class="o">==</span> <span class="mi">0</span>
             <span class="p">),</span>
         <span class="p">)</span>
         <span class="n">state_level</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
-            <span class="s2">&quot;contains extended mechanisms&quot;</span><span class="p">,</span>
-            <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">n_projector_like_source_probes</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_collective_cancellation_source_probes</span> <span class="o">&gt;</span> <span class="mi">0</span>
-            <span class="p">),</span>
+            <span class="s2">&quot;contains collective mechanisms&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_collective_cancellation_source_probes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="n">state_level</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;has invalid probe failures&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_invalid_source_probes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span>
 
@@ -1153,6 +1181,7 @@
                 <span class="s2">&quot;closed-by-known-zero-network source probes&quot;</span><span class="p">:</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">n_closed_by_known_zero_network_source_probes</span>
                 <span class="p">),</span>
+                <span class="s2">&quot;domain-blocked source probes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_domain_blocked_source_probes</span><span class="p">,</span>
                 <span class="s2">&quot;projector-like source probes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_projector_like_source_probes</span><span class="p">,</span>
                 <span class="s2">&quot;collective-cancellation source probes&quot;</span><span class="p">:</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">n_collective_cancellation_source_probes</span>
@@ -1379,6 +1408,10 @@
     <span class="n">projector_like_annihilated_input_indices</span> <span class="o">=</span> <span class="n">_union_projector_like_annihilated_inputs</span><span class="p">(</span>
         <span class="n">zero_reports</span>
     <span class="p">)</span>
+    <span class="n">domain_blocked_source_zero_indices</span> <span class="o">=</span> <span class="n">_zero_indices_with_mechanism</span><span class="p">(</span>
+        <span class="n">zero_reports</span><span class="p">,</span>
+        <span class="s2">&quot;domain_blocked&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">projector_like_source_zero_indices</span> <span class="o">=</span> <span class="n">_zero_indices_with_mechanism</span><span class="p">(</span>
         <span class="n">zero_reports</span><span class="p">,</span>
         <span class="s2">&quot;projector_like&quot;</span><span class="p">,</span>
@@ -1396,6 +1429,8 @@
             <span class="p">[</span>
                 <span class="n">q_empty_source_zero_indices</span><span class="p">,</span>
                 <span class="n">closed_by_known_zero_network_source_zero_indices</span><span class="p">,</span>
+                <span class="n">domain_blocked_source_zero_indices</span><span class="p">,</span>
+                <span class="n">projector_like_source_zero_indices</span><span class="p">,</span>
             <span class="p">]</span>
         <span class="p">)</span>
     <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1575,7 +1610,7 @@
             <span class="n">selected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zero_report</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;closed_by_known_zeros&quot;</span> <span class="ow">and</span> <span class="n">include_closed_by_known_zeros</span><span class="p">:</span>
             <span class="n">selected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zero_report</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;projector_like&quot;</span> <span class="ow">and</span> <span class="n">include_projector_like</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">label</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;domain_blocked&quot;</span><span class="p">,</span> <span class="s2">&quot;projector_like&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="n">include_projector_like</span><span class="p">:</span>
             <span class="n">selected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zero_report</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;collective_cancellation&quot;</span> <span class="ow">and</span> <span class="n">include_collective_cancellation</span><span class="p">:</span>
             <span class="n">selected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zero_report</span><span class="p">)</span>
@@ -2081,13 +2116,16 @@
 <span class="sd">    The label belongs to the source probe Z_h^(R), not intrinsically to</span>
 <span class="sd">    the target vertices.</span>
 
-<span class="sd">    A source probe is projector_like if either:</span>
-<span class="sd">      1. it directly has finite Q-sector weight but no complement targets;</span>
-<span class="sd">      2. it closes onto a target IZ whose own source probe is</span>
-<span class="sd">         projector-dependent.</span>
+<span class="sd">    A source probe is domain_blocked if it directly has finite Q-sector</span>
+<span class="sd">    weight but no complement input in the domain of the transplanted</span>
+<span class="sd">    reduced-IZ operator.  A source probe is projector_like when it is</span>
+<span class="sd">    projector-dependent but not purely domain-blocked, or when it closes</span>
+<span class="sd">    onto a target IZ whose own source probe is projector-dependent.</span>
 
-<span class="sd">    A source probe is closed_by_known_zeros only if all of its complement</span>
-<span class="sd">    targets are either trivial zeros or non-projector-dependent known IZs.</span>
+<span class="sd">    Both domain_blocked and projector_like are valid individually closed</span>
+<span class="sd">    mechanisms at the state level.  A source probe is closed_by_known_zeros</span>
+<span class="sd">    only if all of its complement targets are trivial zeros or</span>
+<span class="sd">    non-projector-dependent known IZs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">known_zero_indices</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">zero_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">}</span>
 
@@ -2128,9 +2166,15 @@
 
     <span class="n">invalid_sources</span> <span class="o">=</span> <span class="n">unexpected_target_failure_sources</span> <span class="o">|</span> <span class="n">nonzero_complement_action_failure_sources</span>
 
-    <span class="n">projector_dependent_sources</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">source_projector_dependent_sources</span> <span class="o">=</span> <span class="p">{</span>
         <span class="nb">int</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">zero_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span> <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">source_projector_like</span>
     <span class="p">}</span>
+    <span class="n">domain_blocked_sources</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">zero_index</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">source_projector_like</span> <span class="ow">and</span> <span class="n">report</span><span class="o">.</span><span class="n">complement_contributing_input_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">projector_dependent_sources</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">source_projector_dependent_sources</span><span class="p">)</span>
 
     <span class="c1"># Propagate projector-dependence backward:</span>
     <span class="c1"># if h closes onto h&#39; and h&#39; is projector-dependent, then h is also</span>
@@ -2167,6 +2211,8 @@
 
         <span class="k">if</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">invalid_sources</span><span class="p">:</span>
             <span class="n">probe_mechanism_label</span><span class="p">:</span> <span class="n">IZProbeMechanismLabel</span> <span class="o">=</span> <span class="s2">&quot;unexplained_leakage&quot;</span>
+        <span class="k">elif</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">domain_blocked_sources</span><span class="p">:</span>
+            <span class="n">probe_mechanism_label</span> <span class="o">=</span> <span class="s2">&quot;domain_blocked&quot;</span>
         <span class="k">elif</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">projector_dependent_sources</span><span class="p">:</span>
             <span class="n">probe_mechanism_label</span> <span class="o">=</span> <span class="s2">&quot;projector_like&quot;</span>
         <span class="k">elif</span> <span class="n">q_empty</span><span class="p">:</span>
@@ -3090,10 +3136,12 @@
 <span class="sd">        At least one zero has unexplained leakage.</span>
 
 <span class="sd">    extended_candidate:</span>
-<span class="sd">        No unexplained leakage, but at least one zero is projector_like.</span>
+<span class="sd">        No unexplained leakage, but at least one zero requires collective</span>
+<span class="sd">        cancellation between reduced-IZ probes.</span>
 
 <span class="sd">    regional_candidate:</span>
-<span class="sd">        All zeros are regional mechanisms: q_empty or closed_by_known_zeros.</span>
+<span class="sd">        All zeros are individually closed by q_empty, domain_blocked,</span>
+<span class="sd">        projector_like, or closed_by_known_zeros mechanisms.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">del</span> <span class="n">config</span>
 
@@ -3103,15 +3151,16 @@
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_invalid_probe</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;invalid_or_inconsistent&quot;</span>
 
-    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
-        <span class="n">report</span><span class="o">.</span><span class="n">is_projector_like</span> <span class="ow">or</span> <span class="n">report</span><span class="o">.</span><span class="n">is_collective_cancellation</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span>
-    <span class="p">):</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_collective_cancellation</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;extended_candidate&quot;</span>
 
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span>
-        <span class="n">report</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;q_empty&quot;</span><span class="p">,</span> <span class="s2">&quot;closed_by_known_zeros&quot;</span><span class="p">}</span>
-        <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span>
-    <span class="p">):</span>
+    <span class="n">regional_mechanisms</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;q_empty&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;domain_blocked&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;projector_like&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;closed_by_known_zeros&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">probe_mechanism_label</span> <span class="ow">in</span> <span class="n">regional_mechanisms</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;regional_candidate&quot;</span>
 
     <span class="k">return</span> <span class="s2">&quot;invalid_or_inconsistent&quot;</span>
@@ -3193,6 +3242,7 @@
             <span class="p">(</span><span class="s2">&quot;probe mechanism&quot;</span><span class="p">,</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">probe_mechanism_label</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">&quot;q-empty probe&quot;</span><span class="p">,</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">is_q_empty</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">&quot;closed known-zero-network probe&quot;</span><span class="p">,</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">is_closed_by_known_zeros</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;domain-blocked probe&quot;</span><span class="p">,</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">is_domain_blocked</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">&quot;projector-like probe&quot;</span><span class="p">,</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">is_projector_like</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">&quot;invalid/leakage probe&quot;</span><span class="p">,</span> <span class="n">zero_report</span><span class="o">.</span><span class="n">is_invalid_probe</span><span class="p">),</span>
             <span class="p">(</span>
