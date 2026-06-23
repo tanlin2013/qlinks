@@ -148,7 +148,6 @@ def test_show_square_pbc_positive_patch_arrows_with_symbols() -> None:
         show=True,
         mode="arrows",
         with_plaquette_symbols=True,
-        plaquette_symbol_style="square_qlm",
         title="Square 4x4 PBC, QLM arrows + square symbols",
     )
 
@@ -171,7 +170,6 @@ def test_show_square_2_by_2_pbc_positive_patch_arrows() -> None:
         show=True,
         mode="arrows",
         with_plaquette_symbols=True,
-        plaquette_symbol_style="square_qlm",
         title="Square 2x2 PBC, positive_patch",
     )
 
@@ -284,7 +282,6 @@ def test_show_square_basis_grid_positive_patch() -> None:
         ncols=2,
         show=True,
         mode="arrows",
-        plaquette_symbols="square_qlm",
         periodic_image_mode="positive_patch",
         collapse_duplicate_visual_links=True,
         show_config_label=True,
@@ -344,7 +341,6 @@ def test_show_triangular_rhombus_circulation_symbols() -> None:
         mode="arrows",
         with_site_labels=False,
         with_plaquette_symbols=True,
-        plaquette_symbol_style="circulation",
         title="Triangular lattice: circulation symbols only on rhombi",
     )
 
@@ -454,7 +450,6 @@ def test_show_honeycomb_hexagon_circulation_symbols() -> None:
         mode="arrows",
         with_site_labels=False,
         with_plaquette_symbols=True,
-        plaquette_symbol_style="circulation",
         title="Honeycomb lattice: hexagon circulation symbols",
     )
 
@@ -561,7 +556,6 @@ def test_show_triangular_qdm_rhombus_dimer_symbols() -> None:
         mode="dimers",
         with_site_labels=False,
         with_plaquette_symbols=True,
-        plaquette_symbol_style="resonance",
         title="Triangular QDM: alternating dimers on rhombi",
     )
 
@@ -611,7 +605,6 @@ def test_show_honeycomb_qdm_hexagon_dimer_symbols() -> None:
         mode="dimers",
         with_site_labels=False,
         with_plaquette_symbols=True,
-        plaquette_symbol_style="resonance",
         title="Honeycomb QDM: alternating dimers on hexagons",
     )
 
@@ -658,7 +651,6 @@ def test_show_honeycomb_one_vulnerable_resonance_arrows() -> None:
         mode="dimers",
         with_site_labels=False,
         with_plaquette_symbols=True,
-        plaquette_symbol_style="resonance",
         title="Honeycomb QDM: one-vulnerable-link resonance arrows",
     )
 
