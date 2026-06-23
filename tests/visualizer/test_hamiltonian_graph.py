@@ -1,6 +1,7 @@
 import importlib.util
 import subprocess
 import sys
+import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -140,6 +141,58 @@ def test_node_values_by_self_loop_degree_and_state_weight() -> None:
             state_vector=np.array([1, 1j, 0], dtype=np.complex128),
         ),
         np.array([1, 1, 0], dtype=np.float64),
+    )
+
+
+def test_undirected_symmetrization_uses_lower_only_edges_without_warning() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 0.0, 0.0],
+                [1.0 + 2.0j, 0.0, 0.0],
+                [0.0, -3.0j, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        warnings.simplefilter("always")
+        visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+
+    sparse_warnings = [
+        warning
+        for warning in caught_warnings
+        if issubclass(warning.category, scipy_sparse.SparseEfficiencyWarning)
+    ]
+
+    assert sparse_warnings == []
+    assert visualizer.edge_pairs() == [(0, 1), (1, 2)]
+    np.testing.assert_allclose(
+        visualizer.edge_weights(),
+        np.asarray([1.0 - 2.0j, 3.0j], dtype=np.complex128),
+    )
+
+
+def test_directed_hamiltonian_graph_keeps_oriented_edges() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 2.0, 0.0],
+                [3.0, 0.0, 4.0],
+                [0.0, 0.0, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+
+    visualizer = HamiltonianGraphVisualizer.from_directed_sparse_matrix(matrix)
+
+    assert visualizer.graph_data.directed is True
+    assert visualizer.edge_pairs() == [(0, 1), (1, 0), (1, 2)]
+    np.testing.assert_allclose(
+        visualizer.edge_weights(),
+        np.asarray([2.0, 3.0, 4.0], dtype=np.complex128),
     )
 
 
