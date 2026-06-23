@@ -1018,3 +1018,147 @@ def test_hamiltonian_graph_networkx_edge_coloring_complex_runs() -> None:
     assert ax.collections
 
     plt.close(fig)
+
+
+def test_node_values_state_rules_and_errors() -> None:
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+    state = np.asarray([1.0, 1.0j, -2.0], dtype=np.complex128)
+
+    np.testing.assert_allclose(visualizer.node_values(color_by="constant"), [0.0, 0.0, 0.0])
+    np.testing.assert_allclose(
+        visualizer.node_values(color_by="state_amplitude_real", state_vector=state),
+        [1.0, 0.0, -2.0],
+    )
+    np.testing.assert_allclose(
+        visualizer.node_values(color_by="state_amplitude_imag", state_vector=state),
+        [0.0, 1.0, 0.0],
+    )
+    np.testing.assert_allclose(
+        visualizer.node_values(color_by="state_amplitude_abs", state_vector=state),
+        [1.0, 1.0, 2.0],
+    )
+    np.testing.assert_allclose(
+        visualizer.node_values(color_by="state_phase", state_vector=state),
+        np.angle(state),
+    )
+
+    with pytest.raises(ValueError, match="state_vector is required"):
+        visualizer.node_values(color_by="state_weight")
+    with pytest.raises(ValueError, match="Expected 3 node values"):
+        visualizer.node_values(color_by="self_loop", self_loop_values=np.array([1.0, 2.0]))
+    with pytest.raises(ValueError, match="Unsupported color_by"):
+        visualizer.node_values(color_by="not-a-rule")  # type: ignore[arg-type]
+
+
+def test_edge_values_rules_and_errors() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0 + 1.0j, 0.0],
+                [1.0 - 1.0j, 0.0, -2.0j],
+                [0.0, 2.0j, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+    weights = visualizer.edge_weights()
+
+    np.testing.assert_allclose(visualizer.edge_values(color_by="constant"), np.zeros(2))
+    np.testing.assert_allclose(visualizer.edge_values(color_by="weight_abs"), np.abs(weights))
+    np.testing.assert_allclose(visualizer.edge_values(color_by="weight_real"), np.real(weights))
+    np.testing.assert_allclose(visualizer.edge_values(color_by="weight_imag"), np.imag(weights))
+    np.testing.assert_allclose(visualizer.edge_values(color_by="weight_phase"), np.angle(weights))
+    np.testing.assert_allclose(visualizer.edge_values(color_by="weight_complex"), weights)
+
+    with pytest.raises(ValueError, match="Unsupported edge_color_by"):
+        visualizer.edge_values(color_by="bad-rule")  # type: ignore[arg-type]
+
+
+def test_vertex_display_labels_use_custom_and_original_indices() -> None:
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+    assert visualizer.vertex_display_labels() == ["0", "1", "2"]
+
+    custom = HamiltonianGraphVisualizer(
+        graph_data=visualizer.graph_data.__class__(
+            adjacency=visualizer.graph_data.adjacency,
+            self_loop_values=visualizer.graph_data.self_loop_values,
+            original_indices=np.array([10, 11, 12], dtype=np.int64),
+            vertex_labels=("a", "b", "c"),
+        ),
+        style=visualizer.style,
+    )
+    assert custom.vertex_display_labels() == ["a", "b", "c"]
+
+    bad = HamiltonianGraphVisualizer(
+        graph_data=visualizer.graph_data.__class__(
+            adjacency=visualizer.graph_data.adjacency,
+            self_loop_values=visualizer.graph_data.self_loop_values,
+            original_indices=np.array([0], dtype=np.int64),
+        ),
+        style=visualizer.style,
+    )
+    with pytest.raises(ValueError, match="original_indices"):
+        bad.vertex_display_labels()
+
+
+def test_subgraph_for_cage_state_and_zero_edges() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 0.0, 0.0],
+                [1.0, 0.0, 1.0, 1.0],
+                [0.0, 1.0, 0.0, 1.0],
+                [0.0, 1.0, 1.0, 0.0],
+            ],
+            dtype=np.complex128,
+        )
+    )
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix)
+    state = np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
+
+    subgraph = visualizer.subgraph_for_cage_state(
+        state,
+        zero_indices=[2, 3],
+        include_zero_edges=False,
+    )
+
+    np.testing.assert_array_equal(subgraph.graph_data.original_indices, np.array([0, 2, 3]))
+    assert subgraph.edge_pairs() == []
+    np.testing.assert_allclose(subgraph.graph_data.state_vector, [1.0, 0.0, 0.0])
+
+    with pytest.raises(ValueError, match="No cage support"):
+        visualizer.subgraph_for_cage_state(np.zeros(4, dtype=np.complex128))
+
+
+def test_extract_cage_zero_indices_from_report_like_object() -> None:
+    class Report:
+        nontrivial_zero_indices = [1]
+        projector_like_zero_indices = ((2, 3), np.array([3, 4]))
+
+    extracted = HamiltonianGraphVisualizer._extract_cage_zero_indices(
+        zero_indices=[0],
+        classification_report=Report(),
+    )
+
+    np.testing.assert_array_equal(extracted, np.array([0, 1, 2, 3, 4], dtype=np.int64))
+
+
+def test_networkx_layout_export_has_node_metadata() -> None:
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    graph = visualizer.to_networkx_with_layout(layout="spring", seed=0)
+
+    for node in graph.nodes:
+        assert "x" in graph.nodes[node]
+        assert "y" in graph.nodes[node]
+        assert "viz" in graph.nodes[node]
+        assert "degree" in graph.nodes[node]
+        assert "self_loop_real" in graph.nodes[node]
+
+
+def test_save_graph_rejects_unknown_suffix(tmp_path: Path) -> None:
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(_small_hamiltonian())
+
+    with pytest.raises(ValueError, match="Graph export path"):
+        visualizer.save_graph(tmp_path / "graph.unknown")
