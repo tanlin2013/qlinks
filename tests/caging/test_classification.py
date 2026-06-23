@@ -912,10 +912,10 @@ def test_classify_full_state_rejects_mismatched_basis_size(pairwise_interference
         )
 
 
-def test_classify_full_state_detects_projector_like_extended_mechanism(
+def test_classify_full_state_detects_domain_blocked_regional_mechanism(
     classification_config, pairwise_interference_case
 ):
-    """Finite Q-sector weight with no complement targets is extended-like.
+    """Finite Q-sector weight with no complement targets is domain-blocked.
 
     The active interference zero is still |000>, with active neighbors
     |010> and |001>. We add amplitude on |111>, which lies outside the
@@ -941,7 +941,7 @@ def test_classify_full_state_detects_projector_like_extended_mechanism(
         config=config,
     )
 
-    assert report.label == "extended_candidate"
+    assert report.label == "regional_candidate"
     assert report.support_size == 3
     assert report.n_nontrivial_zeros == 1
 
@@ -951,14 +951,17 @@ def test_classify_full_state_detects_projector_like_extended_mechanism(
 
     assert report.n_q_empty_source_probes == 0
     assert report.n_closed_by_known_zero_network_source_probes == 0
-    assert report.n_projector_like_source_probes == 1
+    assert report.n_domain_blocked_source_probes == 1
+    assert report.n_projector_like_source_probes == 0
     assert report.n_invalid_source_probes == 0
 
-    assert report.n_regional_source_probes == 0
-    assert report.n_projector_like_source_probes == 1
+    assert report.n_regional_source_probes == 1
+    assert report.n_domain_blocked_source_probes == 1
+    assert report.n_projector_like_source_probes == 0
     assert report.n_invalid_source_probes == 0
 
-    assert _zero_indices(report.projector_like_source_zero_indices) == {indices["h"]}
+    assert _zero_indices(report.domain_blocked_source_zero_indices) == {indices["h"]}
+    assert _zero_indices(report.projector_like_source_zero_indices) == set()
     assert _zero_indices(report.invalid_source_zero_indices) == set()
 
     zero_report = report.zero_reports[0]
@@ -969,9 +972,10 @@ def test_classify_full_state_detects_projector_like_extended_mechanism(
     assert not zero_report.complement_targets_are_known_zeros
     assert zero_report.complement_action_norm <= config.action_tolerance
 
-    assert zero_report.probe_mechanism_label == "projector_like"
+    assert zero_report.probe_mechanism_label == "domain_blocked"
     assert not zero_report.is_q_empty
-    assert zero_report.is_projector_like
+    assert zero_report.is_domain_blocked
+    assert not zero_report.is_projector_like
     assert not zero_report.is_invalid_probe
     assert zero_report.source_projector_like
 
@@ -1019,7 +1023,7 @@ def test_classification_report_summary_dict_is_stable(
 
 
 def test_probe_mechanism_propagates_projector_like_target_dependence(classification_config):
-    """A probe closing onto a projector-like IZ target is extended-like."""
+    """A probe closing onto a domain-blocked IZ target remains regional."""
     config = classification_config
 
     source_zero = 10
@@ -1049,7 +1053,7 @@ def test_probe_mechanism_propagates_projector_like_target_dependence(classificat
     source = reports_by_zero[source_zero]
     target = reports_by_zero[projector_target_zero]
 
-    assert target.probe_mechanism_label == "projector_like"
+    assert target.probe_mechanism_label == "domain_blocked"
     assert target.source_projector_like
     assert not target.has_unexpected_targets
     assert not target.has_nonzero_complement_action
@@ -1068,7 +1072,7 @@ def test_probe_mechanism_propagates_projector_like_target_dependence(classificat
         config=config,
     )
 
-    assert label == "extended_candidate"
+    assert label == "regional_candidate"
 
 
 def test_probe_mechanism_keeps_trivial_and_destructive_closure_regional(classification_config):

@@ -4395,6 +4395,7 @@ def _zero_indices_for_mechanism(
     field_name_by_mechanism = {
         "q_empty": "q_empty_zero_indices",
         "closed_by_known_zeros": "closed_by_known_zero_indices",
+        "domain_blocked": "domain_blocked_zero_indices",
         "projector_like": "projector_like_zero_indices",
         "unexplained_leakage": "unexplained_leakage_zero_indices",
         "regional": "regional_mechanism_zero_indices",
@@ -5244,6 +5245,7 @@ class BasisGridVisualizer:
                 "all",
                 "q_empty",
                 "closed_by_known_zeros",
+                "domain_blocked",
                 "projector_like",
                 "unexplained_leakage",
                 "regional",

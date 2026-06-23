@@ -65,8 +65,9 @@ def extract_cage_region_support(
     This function does not interpret the report label as a scaling statement.
     It only asks whether each reduced probe has explained complement behavior.
 
-    By default, q_empty, closed_by_known_zeros, and projector_like probes are
-    all allowed.  Only unexplained_leakage is rejected.
+    By default, q_empty, closed_by_known_zeros, domain_blocked, and
+    projector_like probes are all allowed.  Only unexplained_leakage is
+    rejected.
     """
     probe_supports: list[ReducedIZProbeSupport] = []
     ignored_probe_supports: list[ReducedIZProbeSupport] = []
@@ -152,7 +153,7 @@ def _should_use_probe_support(
     if probe_support.mechanism_label == "closed_by_known_zeros":
         return include_closed_by_known_zeros
 
-    if probe_support.mechanism_label == "projector_like":
+    if probe_support.mechanism_label in {"domain_blocked", "projector_like"}:
         return include_projector_like
 
     if probe_support.mechanism_label == "collective_cancellation":
@@ -191,8 +192,9 @@ def distinct_reduced_iz_pattern_supports(
     for zero_report in report.zero_reports:
         if zero_report.probe_mechanism_label == "unexplained_leakage":
             continue
-        if zero_report.probe_mechanism_label == "projector_like" and not include_projector_like:
-            continue
+        if zero_report.probe_mechanism_label in {"domain_blocked", "projector_like"}:
+            if not include_projector_like:
+                continue
 
         variables = tuple(int(i) for i in np.flatnonzero(zero_report.local_mask))
         key = (variables, _public_local_pattern_key(zero_report))

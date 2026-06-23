@@ -26,6 +26,7 @@ CageSpatialLabel: TypeAlias = Literal[
 IZProbeMechanismLabel: TypeAlias = Literal[
     "q_empty",
     "closed_by_known_zeros",
+    "domain_blocked",
     "projector_like",
     "collective_cancellation",
     "unexplained_leakage",
@@ -203,8 +204,16 @@ class InterferenceZeroReport:
         return self.probe_mechanism_label == "closed_by_known_zeros"
 
     @property
+    def is_domain_blocked(self) -> bool:
+        return self.probe_mechanism_label == "domain_blocked"
+
+    @property
     def is_projector_like(self) -> bool:
         return self.probe_mechanism_label == "projector_like"
+
+    @property
+    def is_projector_blocked_family(self) -> bool:
+        return self.probe_mechanism_label in {"domain_blocked", "projector_like"}
 
     @property
     def is_collective_cancellation(self) -> bool:
@@ -427,6 +436,24 @@ class CageClassificationReport:
     def n_reduced_iz_region_variables(self) -> int:
         return len(self.reduced_iz_region_variable_indices)
 
+    @property
+    def domain_blocked_source_zero_indices(self) -> NDArray[np.int64]:
+        """Source-zero indices whose probe is domain-blocked.
+
+        Domain-blocked probes have finite complement support, but that
+        complement support contains no input configuration on which the
+        transplanted reduced-IZ operator can fire.  They are a regional
+        closure mechanism in the state-level classification.
+        """
+        return _zero_indices_with_mechanism(
+            self.zero_reports,
+            "domain_blocked",
+        )
+
+    @property
+    def n_domain_blocked_source_probes(self) -> int:
+        return int(self.domain_blocked_source_zero_indices.size)
+
     def selected_reduced_iz_reports(
         self,
         *,
@@ -592,6 +619,11 @@ class CageClassificationReport:
             _format_index_preview(self.closed_by_known_zero_network_source_zero_indices),
         )
         mechanisms.add_row(
+            "domain-blocked",
+            str(self.n_domain_blocked_source_probes),
+            _format_index_preview(self.domain_blocked_source_zero_indices),
+        )
+        mechanisms.add_row(
             "projector-like",
             str(self.n_projector_like_source_probes),
             _format_index_preview(self.projector_like_source_zero_indices),
@@ -663,17 +695,13 @@ class CageClassificationReport:
         state_level.add_row(
             "has only regional mechanisms",
             str(
-                self.n_projector_like_source_probes == 0
-                and self.n_collective_cancellation_source_probes == 0
+                self.n_collective_cancellation_source_probes == 0
                 and self.n_invalid_source_probes == 0
             ),
         )
         state_level.add_row(
-            "contains extended mechanisms",
-            str(
-                self.n_projector_like_source_probes > 0
-                or self.n_collective_cancellation_source_probes > 0
-            ),
+            "contains collective mechanisms",
+            str(self.n_collective_cancellation_source_probes > 0),
         )
         state_level.add_row("has invalid probe failures", str(self.n_invalid_source_probes > 0))
 
@@ -781,6 +809,7 @@ class CageClassificationReport:
                 "closed-by-known-zero-network source probes": (
                     self.n_closed_by_known_zero_network_source_probes
                 ),
+                "domain-blocked source probes": self.n_domain_blocked_source_probes,
                 "projector-like source probes": self.n_projector_like_source_probes,
                 "collective-cancellation source probes": (
                     self.n_collective_cancellation_source_probes
@@ -1000,6 +1029,10 @@ def classify_full_state(
     projector_like_annihilated_input_indices = _union_projector_like_annihilated_inputs(
         zero_reports
     )
+    domain_blocked_source_zero_indices = _zero_indices_with_mechanism(
+        zero_reports,
+        "domain_blocked",
+    )
     projector_like_source_zero_indices = _zero_indices_with_mechanism(
         zero_reports,
         "projector_like",
@@ -1017,6 +1050,8 @@ def classify_full_state(
             [
                 q_empty_source_zero_indices,
                 closed_by_known_zero_network_source_zero_indices,
+                domain_blocked_source_zero_indices,
+                projector_like_source_zero_indices,
             ]
         )
     ).astype(np.int64, copy=False)
@@ -1187,7 +1222,7 @@ def select_reduced_iz_monitor_reports_from_zero_reports(
             selected.append(zero_report)
         elif label == "closed_by_known_zeros" and include_closed_by_known_zeros:
             selected.append(zero_report)
-        elif label == "projector_like" and include_projector_like:
+        elif label in {"domain_blocked", "projector_like"} and include_projector_like:
             selected.append(zero_report)
         elif label == "collective_cancellation" and include_collective_cancellation:
             selected.append(zero_report)
@@ -1674,13 +1709,16 @@ def _annotate_probe_mechanisms(
     The label belongs to the source probe Z_h^(R), not intrinsically to
     the target vertices.
 
-    A source probe is projector_like if either:
-      1. it directly has finite Q-sector weight but no complement targets;
-      2. it closes onto a target IZ whose own source probe is
-         projector-dependent.
+    A source probe is domain_blocked if it directly has finite Q-sector
+    weight but no complement input in the domain of the transplanted
+    reduced-IZ operator.  A source probe is projector_like when it is
+    projector-dependent but not purely domain-blocked, or when it closes
+    onto a target IZ whose own source probe is projector-dependent.
 
-    A source probe is closed_by_known_zeros only if all of its complement
-    targets are either trivial zeros or non-projector-dependent known IZs.
+    Both domain_blocked and projector_like are valid individually closed
+    mechanisms at the state level.  A source probe is closed_by_known_zeros
+    only if all of its complement targets are trivial zeros or
+    non-projector-dependent known IZs.
     """
     known_zero_indices = {int(report.zero_index) for report in zero_reports}
 
@@ -1721,9 +1759,15 @@ def _annotate_probe_mechanisms(
 
     invalid_sources = unexpected_target_failure_sources | nonzero_complement_action_failure_sources
 
-    projector_dependent_sources = {
+    source_projector_dependent_sources = {
         int(report.zero_index) for report in zero_reports if report.source_projector_like
     }
+    domain_blocked_sources = {
+        int(report.zero_index)
+        for report in zero_reports
+        if (report.source_projector_like and report.complement_contributing_input_indices.size == 0)
+    }
+    projector_dependent_sources = set(source_projector_dependent_sources)
 
     # Propagate projector-dependence backward:
     # if h closes onto h' and h' is projector-dependent, then h is also
@@ -1760,6 +1804,8 @@ def _annotate_probe_mechanisms(
 
         if source in invalid_sources:
             probe_mechanism_label: IZProbeMechanismLabel = "unexplained_leakage"
+        elif source in domain_blocked_sources:
+            probe_mechanism_label = "domain_blocked"
         elif source in projector_dependent_sources:
             probe_mechanism_label = "projector_like"
         elif q_empty:
@@ -2683,10 +2729,12 @@ def _classify_from_zero_reports(
         At least one zero has unexplained leakage.
 
     extended_candidate:
-        No unexplained leakage, but at least one zero is projector_like.
+        No unexplained leakage, but at least one zero requires collective
+        cancellation between reduced-IZ probes.
 
     regional_candidate:
-        All zeros are regional mechanisms: q_empty or closed_by_known_zeros.
+        All zeros are individually closed by q_empty, domain_blocked,
+        projector_like, or closed_by_known_zeros mechanisms.
     """
     del config
 
@@ -2696,15 +2744,16 @@ def _classify_from_zero_reports(
     if any(report.is_invalid_probe for report in zero_reports):
         return "invalid_or_inconsistent"
 
-    if any(
-        report.is_projector_like or report.is_collective_cancellation for report in zero_reports
-    ):
+    if any(report.is_collective_cancellation for report in zero_reports):
         return "extended_candidate"
 
-    if all(
-        report.probe_mechanism_label in {"q_empty", "closed_by_known_zeros"}
-        for report in zero_reports
-    ):
+    regional_mechanisms = {
+        "q_empty",
+        "domain_blocked",
+        "projector_like",
+        "closed_by_known_zeros",
+    }
+    if all(report.probe_mechanism_label in regional_mechanisms for report in zero_reports):
         return "regional_candidate"
 
     return "invalid_or_inconsistent"
@@ -2786,6 +2835,7 @@ def _rich_zero_reports_section(
             ("probe mechanism", zero_report.probe_mechanism_label),
             ("q-empty probe", zero_report.is_q_empty),
             ("closed known-zero-network probe", zero_report.is_closed_by_known_zeros),
+            ("domain-blocked probe", zero_report.is_domain_blocked),
             ("projector-like probe", zero_report.is_projector_like),
             ("invalid/leakage probe", zero_report.is_invalid_probe),
             (

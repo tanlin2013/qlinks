@@ -1439,6 +1439,7 @@ class HamiltonianGraphVisualizer:
                 "known_zero_indices",
                 "q_empty_zero_indices",
                 "closed_by_known_zeros_indices",
+                "domain_blocked_zero_indices",
                 "projector_like_zero_indices",
                 "collective_cancellation_zero_indices",
             )
