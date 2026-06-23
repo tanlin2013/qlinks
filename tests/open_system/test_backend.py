@@ -12,23 +12,7 @@ from qlinks.open_system import (
     initial_density_matrix,
     solve_lindblad,
 )
-
-
-def _require_functional_cupy():
-    cupy = pytest.importorskip("cupy")
-    pytest.importorskip("cupyx.scipy.sparse")
-
-    try:
-        device_count = cupy.cuda.runtime.getDeviceCount()
-        test_array = cupy.asarray([1.0])
-        cupy.asnumpy(test_array)
-    except Exception as exc:  # pragma: no cover - depends on CI GPU runtime.
-        pytest.skip(f"CuPy is installed but no functional CUDA runtime is available: {exc}")
-
-    if device_count <= 0:  # pragma: no cover - depends on CI GPU runtime.
-        pytest.skip("CuPy is installed but no CUDA device is available.")
-
-    return cupy
+from tests.helpers.cupy import require_functional_cupy
 
 
 def test_get_open_system_backend_accepts_existing_backend_object() -> None:
@@ -91,8 +75,9 @@ def test_cupy_backend_resolution_and_converters_with_fake_modules(monkeypatch) -
     np.testing.assert_allclose(dense_matrix, matrix)
 
 
+@pytest.mark.gpu
 def test_solve_lindblad_rk4_matrix_cupy_backend():
-    _require_functional_cupy()
+    require_functional_cupy()
 
     hamiltonian = np.diag([1.0, -1.0]).astype(np.complex128)
     density_matrix_initial = initial_density_matrix(2, kind="mixed", rng=0)

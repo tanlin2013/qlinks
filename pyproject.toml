@@ -79,6 +79,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 markers = [
     "manual: integration tests that are not run in normal CI",
+    "gpu: tests that require a real CUDA-capable GPU runtime",
 ]
 
 [tool.black]

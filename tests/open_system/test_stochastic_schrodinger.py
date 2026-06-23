@@ -16,6 +16,7 @@ from qlinks.open_system.stochastic_schrodinger import (
     run_quantum_jump_trajectory,
     sample_lindblad_mcwf,
 )
+from tests.helpers.cupy import require_functional_cupy
 
 
 @pytest.fixture
@@ -813,9 +814,9 @@ def test_sample_lindblad_mcwf_returns_requested_trajectories(qubit_ops):
         assert len(trajectory.states) == len(times)
 
 
+@pytest.mark.gpu
 def test_run_quantum_jump_trajectory_cupy_backend_optional(qubit_ops):
-    pytest.importorskip("cupy")
-    pytest.importorskip("cupyx.scipy.sparse")
+    require_functional_cupy()
 
     hamiltonian = np.zeros((2, 2), dtype=np.complex128)
     jumps: list[np.ndarray] = []

@@ -22,6 +22,7 @@ from qlinks.operators import (
     qdm_flippability_projectors,
 )
 from qlinks.variables import LocalSpace, VariableLayout
+from tests.helpers.cupy import require_functional_cupy
 
 
 def test_constant_diagonal_operator_builds_identity_term() -> None:
@@ -383,8 +384,9 @@ def test_sparse_builder_backend_scipy_explicit() -> None:
     np.testing.assert_allclose(H.toarray(), expected)
 
 
+@pytest.mark.gpu
 def test_sparse_builder_backend_cupy() -> None:
-    cp = pytest.importorskip("cupy")
+    cp = require_functional_cupy()
 
     layout = VariableLayout.from_sites(1, LocalSpace.binary())
     basis = BruteForceBasisSolver(sort=True).solve(layout)

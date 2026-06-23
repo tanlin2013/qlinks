@@ -6,6 +6,7 @@ import pytest
 import scipy.sparse as scipy_sparse
 
 from qlinks.backends import CupySparseBackend, ScipySparseBackend, get_sparse_backend
+from tests.helpers.cupy import require_functional_cupy
 
 
 def test_get_scipy_backend() -> None:
@@ -80,9 +81,9 @@ def test_scipy_backend_max_abs_data() -> None:
     assert backend.max_abs_data(matrix) == 3.0
 
 
+@pytest.mark.gpu
 def test_cupy_backend_import_or_skip() -> None:
-    cp = pytest.importorskip("cupy")
-    pytest.importorskip("cupyx.scipy.sparse")
+    cp = require_functional_cupy()
 
     backend = CupySparseBackend()
 

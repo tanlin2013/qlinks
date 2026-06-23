@@ -34,15 +34,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install CUDA Toolkit
-        uses: Jimver/cuda-toolkit@v0.2.35
-        with:
-          cuda: '13.2.0'
-
-      - name: Verify CUDA Installation
-        run: |
-          nvcc --version
-
       - name: Set up Python and Poetry
         uses: ./.github/actions/setup-python-poetry
         env:
@@ -55,12 +46,12 @@ jobs:
           system-packages: >-
             build-essential gfortran libblas-dev liblapack-dev pkg-config
             libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
-          install-command: poetry install -vvv --with dev --extras "distributed storage cupy drawing" --sync
+          install-command: poetry install -vvv --with dev --extras "distributed storage drawing" --sync
 
       - name: Test
         shell: bash
         run: |
-          poetry run pytest tests/ -s --trace-config -m "not manual" \
+          poetry run pytest tests/ -s --trace-config -m "not manual and not gpu" \
             --cov=${{ github.event.repository.name }}/ \
             --cov-report=term-missing ${@-}
           poetry run coverage xml
