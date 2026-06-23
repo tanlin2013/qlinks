@@ -60,6 +60,9 @@ class _FakeLayout:
     def __getitem__(self, index: int):
         return self.variables[index]
 
+    def local_space(self, index: int):
+        return self.variables[index].local_space
+
     def validate_batch(self, configs) -> None:
         configs_array = np.asarray(configs)
 
@@ -121,4 +124,84 @@ def test_decode_basis_configs_with_layout_rejects_vector() -> None:
         decode_basis_configs_with_layout(
             np.array([0, 1], dtype=np.int64),
             _FakeLayout(),
+        )
+
+
+@dataclass(frozen=True)
+class _FakeConfigsBasis:
+    configs: np.ndarray
+
+
+@dataclass(frozen=True)
+class _FakeBadEncodedBasis:
+    def to_array_basis(self) -> object:
+        return object()
+
+
+class _FakeFluxLocalSpace:
+    values = np.array([-1, 1], dtype=np.int64)
+
+    def contains(self, value: int) -> bool:
+        return int(value) in (-1, 1)
+
+
+class _FakeFluxVariable:
+    local_space = _FakeFluxLocalSpace()
+
+
+class _FakeFluxLayout(_FakeLayout):
+    def __init__(self, n_variables: int = 2):
+        self.variables = tuple(_FakeFluxVariable() for _ in range(n_variables))
+
+
+def test_basis_configs_from_basis_reads_configs_attribute() -> None:
+    configs = np.array([[0, 1], [1, 0]], dtype=np.int64)
+    basis = _FakeConfigsBasis(configs=configs)
+
+    result = basis_configs_from_basis(basis)
+
+    np.testing.assert_array_equal(result, configs)
+
+
+def test_basis_configs_from_basis_rejects_bad_encoded_basis() -> None:
+    with pytest.raises(TypeError, match="Unsupported encoded basis type"):
+        basis_configs_from_basis(_FakeBadEncodedBasis())
+
+
+def test_basis_configs_from_basis_rejects_wrong_shape() -> None:
+    with pytest.raises(ValueError, match="basis configurations"):
+        basis_configs_from_basis(_FakeBasis(states=np.array([0, 1], dtype=np.int64)))
+
+
+def test_basis_configs_from_build_result_without_layout_returns_basis_configs() -> None:
+    states = np.array([[0, 1], [1, 0]], dtype=np.int64)
+    build_result = _FakeBuildResult(basis=_FakeBasis(states=states))
+
+    result = basis_configs_from_build_result(build_result)
+
+    np.testing.assert_array_equal(result, states)
+
+
+def test_decode_basis_configs_with_layout_decodes_integer_codes() -> None:
+    codes = np.array([[0, 1], [1, 0]], dtype=np.int64)
+    layout = _FakeFluxLayout(n_variables=2)
+
+    decoded = decode_basis_configs_with_layout(codes, layout)
+
+    np.testing.assert_array_equal(decoded, np.array([[-1, 1], [1, -1]], dtype=np.int64))
+
+
+def test_decode_basis_configs_with_layout_rejects_incompatible_variable_count() -> None:
+    with pytest.raises(ValueError, match="incompatible variable counts"):
+        decode_basis_configs_with_layout(
+            np.array([[0, 1, 0]], dtype=np.int64),
+            _FakeLayout(n_variables=2),
+        )
+
+
+def test_decode_basis_configs_with_layout_rejects_invalid_codes() -> None:
+    with pytest.raises(ValueError, match="neither valid physical values"):
+        decode_basis_configs_with_layout(
+            np.array([[0, 2]], dtype=np.int64),
+            _FakeFluxLayout(n_variables=2),
         )
