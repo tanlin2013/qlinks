@@ -35,9 +35,9 @@ jobs:
           fetch-depth: 0
 
       - name: Install CUDA Toolkit
-        uses: Jimver/cuda-toolkit@v2
+        uses: Jimver/cuda-toolkit@v0.2.35
         with:
-          cuda: '12.4.1'
+          cuda: '13.2.0'
 
       - name: Verify CUDA Installation
         run: |
