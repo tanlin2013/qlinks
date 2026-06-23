@@ -45,8 +45,8 @@ jobs:
           compile-paths: qlinks tests
           system-packages: >-
             build-essential gfortran libblas-dev liblapack-dev pkg-config
-            libxml2-dev libxslt1-dev zlib1g-dev
-          install-command: poetry install -vvv --with dev --extras "distributed storage" --sync
+            libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
+          install-command: poetry install -vvv --with dev --extras "distributed storage cupy drawing" --sync
 
       - name: Test
         shell: bash
