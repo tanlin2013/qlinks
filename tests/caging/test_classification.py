@@ -1022,6 +1022,54 @@ def test_classification_report_summary_dict_is_stable(
     assert summary["Invalid probe reasons"]["nonzero-complement-action source probes"] == 0
 
 
+def test_classification_report_separates_closure_fock_and_real_space_axes(
+    classification_config, pairwise_interference_case
+):
+    basis_configs, kinetic, indices = pairwise_interference_case
+
+    state = np.zeros(basis_configs.shape[0], dtype=np.complex128)
+    state[indices["v1"]] = 1.0 / np.sqrt(2.0)
+    state[indices["v2"]] = -1.0 / np.sqrt(2.0)
+
+    potential_diagonal = np.zeros(basis_configs.shape[0], dtype=np.complex128)
+    potential_diagonal[indices["v1"]] = 5.0
+    potential_diagonal[indices["v2"]] = 5.0
+
+    report = classify_full_state(
+        state,
+        kinetic_matrix=kinetic,
+        basis_configs=basis_configs,
+        potential_diagonal=potential_diagonal,
+        config=classification_config,
+    )
+
+    assert report.label == "regional_candidate"
+    assert report.closure_mechanism_label == "q_empty"
+    assert report.closure_summary.n_q_empty_source_probes == 1
+
+    fock = report.fock_support_morphology
+    assert fock.label == "finite_size_shell_dense"
+    assert fock.support_size == 2
+    assert fock.effective_support_size == pytest.approx(2.0)
+    assert fock.potential_shell_size == 2
+    assert fock.support_shell_fraction == pytest.approx(1.0)
+    assert fock.effective_shell_fraction == pytest.approx(1.0)
+    assert fock.boundary_size == 1
+    assert fock.support_internal_matrix_entries == 0
+
+    real_space = report.real_space_support_morphology
+    assert report.real_space_support_morphology_label == "partially_active"
+    assert real_space.active_variable_indices == (1, 2)
+    assert real_space.active_variable_count == 2
+    assert real_space.frozen_variable_count == 1
+    assert real_space.reduced_iz_region_variable_indices == (1, 2)
+
+    summary = report.to_summary_dict()
+    assert summary["Closure mechanism"]["label"] == "q_empty"
+    assert summary["Fock-space support morphology"]["potential shell size"] == 2
+    assert summary["Real-space support morphology"]["active variables"] == 2
+
+
 def test_probe_mechanism_propagates_projector_like_target_dependence(classification_config):
     """A probe closing onto a domain-blocked IZ target remains regional."""
     config = classification_config

@@ -18,6 +18,31 @@ CageSpatialLabel: TypeAlias = Literal[
     "extended_candidate",
     "invalid_or_inconsistent",
 ]
+ClosureMechanismLabel: TypeAlias = Literal[
+    "no_nontrivial_zeros",
+    "unexplained_leakage",
+    "collective_cancellation",
+    "projector_network",
+    "pure_domain_blocked",
+    "zero_network_closed",
+    "q_empty",
+    "mixed_individual_closure",
+]
+FockSupportMorphologyLabel: TypeAlias = Literal[
+    "unknown",
+    "finite_size_empty",
+    "finite_size_singleton",
+    "finite_size_sector_sparse",
+    "finite_size_sector_dense",
+    "finite_size_shell_sparse",
+    "finite_size_shell_dense",
+]
+RealSpaceSupportMorphologyLabel: TypeAlias = Literal[
+    "unknown",
+    "frozen",
+    "partially_active",
+    "fully_active",
+]
 # Mechanism label for the reduced IZ probe associated with a source zero.
 #
 # The label is attached to the probe Z_h^(R), not intrinsically to the
@@ -68,6 +93,12 @@ class CageClassificationConfig:
     collective_cancellation_mode: CollectiveCancellationMode = "same_local_support_nullspace"
     collective_min_group_size: int = 2
     collective_relation_tolerance: float | None = None
+
+    # Finite-size morphology heuristics.  These labels are deliberately
+    # separate from the closure mechanism and should not be interpreted as
+    # thermodynamic scaling classifications without a multi-size study.
+    fock_dense_fraction_threshold: float = 0.5
+    potential_shell_tolerance: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -281,6 +312,89 @@ class CollectiveCancellationReport:
 
 
 @dataclass(frozen=True, slots=True)
+class ClosureMechanismSummary:
+    """State-level summary of reduced-IZ closure mechanisms.
+
+    This is intentionally separated from Fock-space and real-space support
+    morphology.  It summarizes how boundary/interference-zero probes close,
+    not how large or spatially extended the cage support is.
+    """
+
+    label: ClosureMechanismLabel = "no_nontrivial_zeros"
+    n_q_empty_source_probes: int = 0
+    n_closed_by_known_zero_network_source_probes: int = 0
+    n_domain_blocked_source_probes: int = 0
+    n_projector_like_source_probes: int = 0
+    n_collective_cancellation_source_probes: int = 0
+    n_unexplained_leakage_source_probes: int = 0
+    n_projector_like_iz_targets: int = 0
+    n_unexpected_targets: int = 0
+    n_nonzero_complement_action_failures: int = 0
+
+    @property
+    def n_individually_closed_source_probes(self) -> int:
+        return (
+            self.n_q_empty_source_probes
+            + self.n_closed_by_known_zero_network_source_probes
+            + self.n_domain_blocked_source_probes
+            + self.n_projector_like_source_probes
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class FockSupportMorphology:
+    """Finite-size morphology diagnostics for the support in Fock space.
+
+    The ``label`` is a finite-size proxy only.  Scaling labels such as
+    finite, polynomial, or shell-extended require comparing a family of
+    systems across sizes.
+    """
+
+    label: FockSupportMorphologyLabel = "unknown"
+    support_size: int = 0
+    effective_support_size: float = 0.0
+    hilbert_size: int = 0
+    support_fraction: float = 0.0
+    effective_hilbert_fraction: float = 0.0
+    boundary_size: int = 0
+    boundary_to_support_ratio: float = 0.0
+    support_internal_matrix_entries: int = 0
+    potential_shell_value: complex | None = None
+    potential_shell_size: int | None = None
+    support_shell_fraction: float | None = None
+    effective_shell_fraction: float | None = None
+    potential_shell_residual: float | None = None
+
+    @property
+    def has_potential_shell(self) -> bool:
+        return self.potential_shell_size is not None
+
+
+@dataclass(frozen=True, slots=True)
+class RealSpaceSupportMorphology:
+    """Finite-size morphology diagnostics in the microscopic variable space.
+
+    The variable indices are model-layout indices.  Connectivity, diameter,
+    and winding/wrapping require lattice adjacency metadata and are therefore
+    left to higher-level lattice-aware helpers.
+    """
+
+    label: RealSpaceSupportMorphologyLabel = "unknown"
+    n_variables: int = 0
+    active_variable_indices: tuple[int, ...] = ()
+    active_variable_count: int = 0
+    active_variable_fraction: float = 0.0
+    frozen_variable_count: int = 0
+    reduced_iz_region_variable_indices: tuple[int, ...] = ()
+    reduced_iz_region_variable_count: int = 0
+    reduced_iz_region_variable_fraction: float = 0.0
+    exact_support_component_count: int = 0
+    exact_support_component_sizes: tuple[int, ...] = ()
+    connected_support_component_count: int = 0
+    connected_support_component_sizes: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class ReducedIZProbeSupport:
     """Cached support data for one reduced IZ probe ``Z_h^(R)``."""
 
@@ -405,6 +519,15 @@ class CageClassificationReport:
         tuple[ReducedIZMonitorComponentGroup, ...],
     ] = field(default_factory=dict)
 
+    # Orthogonal report axes.  ``label`` above remains as a compatibility
+    # synthesis for older notebooks/tests, while these summaries expose the
+    # three concepts separately.
+    closure_summary: ClosureMechanismSummary = field(default_factory=ClosureMechanismSummary)
+    fock_support_morphology: FockSupportMorphology = field(default_factory=FockSupportMorphology)
+    real_space_support_morphology: RealSpaceSupportMorphology = field(
+        default_factory=RealSpaceSupportMorphology
+    )
+
     metadata: dict[str, object] = field(default_factory=dict)
 
     def __repr__(self) -> str:
@@ -427,6 +550,18 @@ class CageClassificationReport:
 
     def __rich__(self):
         return self.to_rich()
+
+    @property
+    def closure_mechanism_label(self) -> ClosureMechanismLabel:
+        return self.closure_summary.label
+
+    @property
+    def fock_support_morphology_label(self) -> FockSupportMorphologyLabel:
+        return self.fock_support_morphology.label
+
+    @property
+    def real_space_support_morphology_label(self) -> RealSpaceSupportMorphologyLabel:
+        return self.real_space_support_morphology.label
 
     @property
     def n_reduced_iz_probe_supports(self) -> int:
@@ -587,7 +722,10 @@ class CageClassificationReport:
         header = Panel(
             Group(
                 Text("Cage classification report", style="bold"),
-                Text(f"label: {self.label}"),
+                Text(f"legacy label: {self.label}"),
+                Text(f"closure: {self.closure_mechanism_label}"),
+                Text(f"Fock support: {self.fock_support_morphology_label}"),
+                Text(f"real-space support: {self.real_space_support_morphology_label}"),
             ),
             expand=False,
         )
@@ -666,6 +804,70 @@ class CageClassificationReport:
             "max complement action norm", _format_float(self.max_complement_action_norm)
         )
 
+        fock = Table(title="Fock-space support morphology")
+        fock.add_column("quantity", style="bold")
+        fock.add_column("value", justify="right")
+        fock_morph = self.fock_support_morphology
+        fock.add_row("label", fock_morph.label)
+        fock.add_row("effective support size", _format_float(fock_morph.effective_support_size))
+        fock.add_row(
+            "effective Hilbert fraction",
+            _format_float(fock_morph.effective_hilbert_fraction),
+        )
+        fock.add_row("boundary size", str(fock_morph.boundary_size))
+        fock.add_row(
+            "boundary/support",
+            _format_float(fock_morph.boundary_to_support_ratio),
+        )
+        fock.add_row(
+            "support internal matrix entries",
+            str(fock_morph.support_internal_matrix_entries),
+        )
+        if fock_morph.potential_shell_size is not None:
+            fock.add_row("potential shell size", str(fock_morph.potential_shell_size))
+            fock.add_row(
+                "support/shell",
+                _format_optional_float(fock_morph.support_shell_fraction),
+            )
+            fock.add_row(
+                "effective support/shell",
+                _format_optional_float(fock_morph.effective_shell_fraction),
+            )
+            fock.add_row(
+                "potential shell residual",
+                _format_optional_float(fock_morph.potential_shell_residual),
+            )
+
+        real_space = Table(title="Real-space support morphology")
+        real_space.add_column("quantity", style="bold")
+        real_space.add_column("value", justify="right")
+        real_morph = self.real_space_support_morphology
+        real_space.add_row("label", real_morph.label)
+        real_space.add_row("active variables", str(real_morph.active_variable_count))
+        real_space.add_row(
+            "active variable fraction",
+            _format_float(real_morph.active_variable_fraction),
+        )
+        real_space.add_row("frozen variables", str(real_morph.frozen_variable_count))
+        real_space.add_row(
+            "reduced-IZ region variables",
+            str(real_morph.reduced_iz_region_variable_count),
+        )
+        real_space.add_row(
+            "reduced-IZ variable fraction",
+            _format_float(real_morph.reduced_iz_region_variable_fraction),
+        )
+        real_space.add_row(
+            "exact-support components",
+            f"{real_morph.exact_support_component_count} "
+            f"{real_morph.exact_support_component_sizes}",
+        )
+        real_space.add_row(
+            "connected-support components",
+            f"{real_morph.connected_support_component_count} "
+            f"{real_morph.connected_support_component_sizes}",
+        )
+
         reduced_iz = Table(title="Reduced-IZ monitor cache")
         reduced_iz.add_column("quantity", style="bold")
         reduced_iz.add_column("value", justify="right")
@@ -692,6 +894,11 @@ class CageClassificationReport:
         state_level = Table(title="State-level interpretation")
         state_level.add_column("quantity", style="bold")
         state_level.add_column("value", justify="right")
+        state_level.add_row("closure mechanism", self.closure_mechanism_label)
+        state_level.add_row("Fock support morphology", self.fock_support_morphology_label)
+        state_level.add_row(
+            "real-space support morphology", self.real_space_support_morphology_label
+        )
         state_level.add_row(
             "has only regional mechanisms",
             str(
@@ -710,6 +917,8 @@ class CageClassificationReport:
             overview,
             mechanisms,
             closure,
+            fock,
+            real_space,
             reduced_iz,
             state_level,
         ]
@@ -787,6 +996,50 @@ class CageClassificationReport:
                 "nontrivial zeros": self.n_nontrivial_zeros,
                 "distinct local patterns": self.n_distinct_local_patterns,
             },
+            "Closure mechanism": {
+                "label": self.closure_mechanism_label,
+                "individually closed source probes": (
+                    self.closure_summary.n_individually_closed_source_probes
+                ),
+                "unexplained-leakage source probes": (
+                    self.closure_summary.n_unexplained_leakage_source_probes
+                ),
+                "collective-cancellation source probes": (
+                    self.closure_summary.n_collective_cancellation_source_probes
+                ),
+            },
+            "Fock-space support morphology": {
+                "label": self.fock_support_morphology.label,
+                "effective support size": (self.fock_support_morphology.effective_support_size),
+                "effective Hilbert fraction": (
+                    self.fock_support_morphology.effective_hilbert_fraction
+                ),
+                "boundary size": self.fock_support_morphology.boundary_size,
+                "boundary/support": (self.fock_support_morphology.boundary_to_support_ratio),
+                "support internal matrix entries": (
+                    self.fock_support_morphology.support_internal_matrix_entries
+                ),
+                "potential shell size": (self.fock_support_morphology.potential_shell_size),
+                "support/shell": self.fock_support_morphology.support_shell_fraction,
+                "effective support/shell": (self.fock_support_morphology.effective_shell_fraction),
+            },
+            "Real-space support morphology": {
+                "label": self.real_space_support_morphology.label,
+                "active variables": (self.real_space_support_morphology.active_variable_count),
+                "active variable fraction": (
+                    self.real_space_support_morphology.active_variable_fraction
+                ),
+                "frozen variables": (self.real_space_support_morphology.frozen_variable_count),
+                "reduced-IZ region variables": (
+                    self.real_space_support_morphology.reduced_iz_region_variable_count
+                ),
+                "exact-support components": (
+                    self.real_space_support_morphology.exact_support_component_count
+                ),
+                "connected-support components": (
+                    self.real_space_support_morphology.connected_support_component_count
+                ),
+            },
             "Reduced IZ monitor cache": {
                 "probe supports": len(self.reduced_iz_probe_supports),
                 "region variables": self.reduced_iz_region_variable_indices,
@@ -838,6 +1091,7 @@ def classify_cage_state(
     basis_configs: NDArray[np.integer],
     hilbert_size: int | None = None,
     sector_mask: NDArray[np.bool_] | None = None,
+    potential_diagonal: NDArray[np.number] | None = None,
     config: CageClassificationConfig | None = None,
 ) -> CageClassificationReport:
     """Classify one compact cage state from solver output.
@@ -853,6 +1107,9 @@ def classify_cage_state(
             ``basis_configs.shape[0]``.
         sector_mask: Optional mask selecting the sector used for local
             diagnostics.
+        potential_diagonal: Optional diagonal potential/self-loop values.
+            When provided, the report includes shell-relative Fock-space
+            support diagnostics if the state has a sharp potential value.
         config: Numerical classification parameters.
 
     Returns:
@@ -875,6 +1132,7 @@ def classify_cage_state(
         kinetic_matrix=kinetic_matrix,
         basis_configs=basis_configs,
         sector_mask=sector_mask,
+        potential_diagonal=potential_diagonal,
         config=config,
         metadata={
             "energy": cage_state.energy,
@@ -892,6 +1150,7 @@ def classify_full_state(
     kinetic_matrix: sp.spmatrix | sp.sparray | NDArray,
     basis_configs: NDArray[np.integer],
     sector_mask: NDArray[np.bool_] | None = None,
+    potential_diagonal: NDArray[np.number] | None = None,
     config: CageClassificationConfig | None = None,
     metadata: dict[str, object] | None = None,
 ) -> CageClassificationReport:
@@ -1080,6 +1339,22 @@ def classify_full_state(
         for decomposition in ("single_sum", "exact_support", "connected_support")
     }
 
+    closure_summary = _closure_mechanism_summary(tuple(zero_reports))
+    fock_support_morphology = _fock_support_morphology(
+        full_state=full_state,
+        kinetic_csr=kinetic_csr,
+        support_mask=support_mask,
+        active_frontier_zero_indices=active_frontier_zero_indices,
+        potential_diagonal=potential_diagonal,
+        config=config,
+    )
+    real_space_support_morphology = _real_space_support_morphology(
+        basis_configs=basis_configs,
+        support_mask=support_mask,
+        reduced_iz_region_variable_indices=reduced_iz_region_variable_indices,
+        reduced_iz_monitor_component_groups=reduced_iz_monitor_component_groups,
+    )
+
     metadata = {} if metadata is None else dict(metadata)
     metadata.setdefault(
         "classification_domain_size",
@@ -1148,6 +1423,9 @@ def classify_full_state(
         reduced_iz_probe_supports=reduced_iz_probe_supports,
         reduced_iz_region_variable_indices=reduced_iz_region_variable_indices,
         reduced_iz_monitor_component_groups=reduced_iz_monitor_component_groups,
+        closure_summary=closure_summary,
+        fock_support_morphology=fock_support_morphology,
+        real_space_support_morphology=real_space_support_morphology,
         metadata=metadata,
     )
 
@@ -2715,6 +2993,208 @@ def _collective_tolerance(config: CageClassificationConfig) -> float:
     return float(config.action_tolerance)
 
 
+def _closure_mechanism_summary(
+    zero_reports: tuple[InterferenceZeroReport, ...] | list[InterferenceZeroReport],
+) -> ClosureMechanismSummary:
+    """Return the closure-mechanism axis of a classification report."""
+    if len(zero_reports) == 0:
+        return ClosureMechanismSummary(label="no_nontrivial_zeros")
+
+    n_q_empty = sum(report.is_q_empty for report in zero_reports)
+    n_closed = sum(report.is_closed_by_known_zeros for report in zero_reports)
+    n_domain_blocked = sum(report.is_domain_blocked for report in zero_reports)
+    n_projector_like = sum(report.is_projector_like for report in zero_reports)
+    n_collective = sum(report.is_collective_cancellation for report in zero_reports)
+    n_unexplained = sum(report.is_invalid_probe for report in zero_reports)
+    n_projector_targets = sum(report.n_projector_like_iz_targets for report in zero_reports)
+    n_unexpected_targets = sum(report.n_unexpected_targets for report in zero_reports)
+    n_nonzero_complement_failures = sum(
+        report.has_nonzero_complement_action for report in zero_reports
+    )
+
+    if n_unexplained > 0:
+        label: ClosureMechanismLabel = "unexplained_leakage"
+    elif n_collective > 0:
+        label = "collective_cancellation"
+    elif n_projector_like > 0 or n_projector_targets > 0:
+        label = "projector_network"
+    elif n_domain_blocked == len(zero_reports):
+        label = "pure_domain_blocked"
+    elif n_closed == len(zero_reports):
+        label = "zero_network_closed"
+    elif n_q_empty == len(zero_reports):
+        label = "q_empty"
+    else:
+        label = "mixed_individual_closure"
+
+    return ClosureMechanismSummary(
+        label=label,
+        n_q_empty_source_probes=int(n_q_empty),
+        n_closed_by_known_zero_network_source_probes=int(n_closed),
+        n_domain_blocked_source_probes=int(n_domain_blocked),
+        n_projector_like_source_probes=int(n_projector_like),
+        n_collective_cancellation_source_probes=int(n_collective),
+        n_unexplained_leakage_source_probes=int(n_unexplained),
+        n_projector_like_iz_targets=int(n_projector_targets),
+        n_unexpected_targets=int(n_unexpected_targets),
+        n_nonzero_complement_action_failures=int(n_nonzero_complement_failures),
+    )
+
+
+def _fock_support_morphology(
+    *,
+    full_state: NDArray[np.complex128],
+    kinetic_csr: sp.csr_array,
+    support_mask: NDArray[np.bool_],
+    active_frontier_zero_indices: NDArray[np.int64],
+    potential_diagonal: NDArray | None,
+    config: CageClassificationConfig,
+) -> FockSupportMorphology:
+    """Return finite-size Fock-space support morphology diagnostics."""
+    support_indices = np.flatnonzero(support_mask)
+    support_size = int(support_indices.size)
+    hilbert_size = int(full_state.size)
+    support_fraction = support_size / float(hilbert_size) if hilbert_size else 0.0
+
+    weights = np.abs(full_state) ** 2
+    state_norm_sq = float(np.sum(weights))
+    weights_fourth_sum = float(np.sum(weights**2))
+    if state_norm_sq > 0.0 and weights_fourth_sum > 0.0:
+        effective_support_size = (state_norm_sq * state_norm_sq) / weights_fourth_sum
+    else:
+        effective_support_size = 0.0
+    effective_hilbert_fraction = (
+        effective_support_size / float(hilbert_size) if hilbert_size else 0.0
+    )
+
+    boundary_size = int(active_frontier_zero_indices.size)
+    boundary_to_support_ratio = boundary_size / float(support_size) if support_size else 0.0
+    if support_size:
+        support_internal_matrix_entries = int(
+            kinetic_csr[support_indices, :][:, support_indices].nnz
+        )
+    else:
+        support_internal_matrix_entries = 0
+
+    potential_shell_value: complex | None = None
+    potential_shell_size: int | None = None
+    support_shell_fraction: float | None = None
+    effective_shell_fraction: float | None = None
+    potential_shell_residual: float | None = None
+
+    if potential_diagonal is not None:
+        diagonal = np.asarray(potential_diagonal, dtype=np.complex128).reshape(-1)
+        if diagonal.size != hilbert_size:
+            raise ValueError("potential_diagonal must have length full_state.size.")
+        if state_norm_sq > 0.0:
+            potential_shell_value = complex(
+                np.vdot(full_state, diagonal * full_state) / state_norm_sq
+            )
+            residual_vector = (diagonal - potential_shell_value) * full_state
+            potential_shell_residual = float(np.linalg.norm(residual_vector))
+            shell_tolerance = (
+                float(config.potential_shell_tolerance)
+                if config.potential_shell_tolerance is not None
+                else max(float(config.action_tolerance), float(config.amplitude_tolerance))
+            )
+            if potential_shell_residual <= shell_tolerance:
+                shell_mask = np.abs(diagonal - potential_shell_value) <= shell_tolerance
+                potential_shell_size = int(np.count_nonzero(shell_mask))
+                if potential_shell_size > 0:
+                    support_shell_fraction = support_size / float(potential_shell_size)
+                    effective_shell_fraction = effective_support_size / float(potential_shell_size)
+
+    if support_size == 0:
+        label: FockSupportMorphologyLabel = "finite_size_empty"
+    elif support_size == 1:
+        label = "finite_size_singleton"
+    elif effective_shell_fraction is not None:
+        if effective_shell_fraction >= config.fock_dense_fraction_threshold:
+            label = "finite_size_shell_dense"
+        else:
+            label = "finite_size_shell_sparse"
+    elif effective_hilbert_fraction >= config.fock_dense_fraction_threshold:
+        label = "finite_size_sector_dense"
+    else:
+        label = "finite_size_sector_sparse"
+
+    return FockSupportMorphology(
+        label=label,
+        support_size=support_size,
+        effective_support_size=float(effective_support_size),
+        hilbert_size=hilbert_size,
+        support_fraction=float(support_fraction),
+        effective_hilbert_fraction=float(effective_hilbert_fraction),
+        boundary_size=boundary_size,
+        boundary_to_support_ratio=float(boundary_to_support_ratio),
+        support_internal_matrix_entries=support_internal_matrix_entries,
+        potential_shell_value=potential_shell_value,
+        potential_shell_size=potential_shell_size,
+        support_shell_fraction=support_shell_fraction,
+        effective_shell_fraction=effective_shell_fraction,
+        potential_shell_residual=potential_shell_residual,
+    )
+
+
+def _real_space_support_morphology(
+    *,
+    basis_configs: NDArray[np.integer],
+    support_mask: NDArray[np.bool_],
+    reduced_iz_region_variable_indices: tuple[int, ...],
+    reduced_iz_monitor_component_groups: dict[
+        ReducedIZMonitorDecomposition,
+        tuple[ReducedIZMonitorComponentGroup, ...],
+    ],
+) -> RealSpaceSupportMorphology:
+    """Return finite-size variable-space support morphology diagnostics."""
+    n_variables = int(basis_configs.shape[1])
+    support_configs = basis_configs[support_mask]
+
+    if support_configs.shape[0] == 0 or n_variables == 0:
+        active_variable_indices: tuple[int, ...] = ()
+    else:
+        reference = support_configs[0]
+        active_mask = np.any(support_configs != reference, axis=0)
+        active_variable_indices = tuple(int(index) for index in np.flatnonzero(active_mask))
+
+    active_variable_count = len(active_variable_indices)
+    active_variable_fraction = active_variable_count / float(n_variables) if n_variables else 0.0
+    frozen_variable_count = n_variables - active_variable_count
+
+    if n_variables == 0:
+        label: RealSpaceSupportMorphologyLabel = "unknown"
+    elif active_variable_count == 0:
+        label = "frozen"
+    elif active_variable_count == n_variables:
+        label = "fully_active"
+    else:
+        label = "partially_active"
+
+    exact_groups = reduced_iz_monitor_component_groups.get("exact_support", ())
+    connected_groups = reduced_iz_monitor_component_groups.get("connected_support", ())
+    exact_sizes = tuple(int(group.support_size) for group in exact_groups)
+    connected_sizes = tuple(int(group.support_size) for group in connected_groups)
+    reduced_count = len(reduced_iz_region_variable_indices)
+
+    return RealSpaceSupportMorphology(
+        label=label,
+        n_variables=n_variables,
+        active_variable_indices=active_variable_indices,
+        active_variable_count=active_variable_count,
+        active_variable_fraction=float(active_variable_fraction),
+        frozen_variable_count=frozen_variable_count,
+        reduced_iz_region_variable_indices=reduced_iz_region_variable_indices,
+        reduced_iz_region_variable_count=reduced_count,
+        reduced_iz_region_variable_fraction=(
+            reduced_count / float(n_variables) if n_variables else 0.0
+        ),
+        exact_support_component_count=len(exact_groups),
+        exact_support_component_sizes=exact_sizes,
+        connected_support_component_count=len(connected_groups),
+        connected_support_component_sizes=connected_sizes,
+    )
+
+
 def _classify_from_zero_reports(
     *,
     zero_reports: list[InterferenceZeroReport],
@@ -2781,6 +3261,12 @@ def _format_float(value: float) -> str:
         return f"{value:.3e}"
 
     return f"{value:.6g}"
+
+
+def _format_optional_float(value: float | None) -> str:
+    if value is None:
+        return "n/a"
+    return _format_float(float(value))
 
 
 def _format_index_preview(
