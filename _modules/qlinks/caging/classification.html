@@ -347,6 +347,31 @@
     <span class="s2">&quot;extended_candidate&quot;</span><span class="p">,</span>
     <span class="s2">&quot;invalid_or_inconsistent&quot;</span><span class="p">,</span>
 <span class="p">]</span>
+<span class="n">ClosureMechanismLabel</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;no_nontrivial_zeros&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;unexplained_leakage&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;collective_cancellation&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;projector_network&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pure_domain_blocked&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;zero_network_closed&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;q_empty&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mixed_individual_closure&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">FockSupportMorphologyLabel</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;unknown&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;finite_size_empty&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;finite_size_singleton&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;finite_size_sector_sparse&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;finite_size_sector_dense&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;finite_size_shell_sparse&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;finite_size_shell_dense&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">RealSpaceSupportMorphologyLabel</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;unknown&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;frozen&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;partially_active&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fully_active&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 <span class="c1"># Mechanism label for the reduced IZ probe associated with a source zero.</span>
 <span class="c1">#</span>
 <span class="c1"># The label is attached to the probe Z_h^(R), not intrinsically to the</span>
@@ -398,7 +423,13 @@
 
     <span class="n">collective_cancellation_mode</span><span class="p">:</span> <span class="n">CollectiveCancellationMode</span> <span class="o">=</span> <span class="s2">&quot;same_local_support_nullspace&quot;</span>
     <span class="n">collective_min_group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="n">collective_relation_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">collective_relation_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Finite-size morphology heuristics.  These labels are deliberately</span>
+    <span class="c1"># separate from the closure mechanism and should not be interpreted as</span>
+    <span class="c1"># thermodynamic scaling classifications without a multi-size study.</span>
+    <span class="n">fock_dense_fraction_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">potential_shell_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -621,6 +652,98 @@
 
 
 
+<div class="viewcode-block" id="ClosureMechanismSummary">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.classification.ClosureMechanismSummary">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClosureMechanismSummary</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;State-level summary of reduced-IZ closure mechanisms.</span>
+
+<span class="sd">    This is intentionally separated from Fock-space and real-space support</span>
+<span class="sd">    morphology.  It summarizes how boundary/interference-zero probes close,</span>
+<span class="sd">    not how large or spatially extended the cage support is.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">label</span><span class="p">:</span> <span class="n">ClosureMechanismLabel</span> <span class="o">=</span> <span class="s2">&quot;no_nontrivial_zeros&quot;</span>
+    <span class="n">n_q_empty_source_probes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_closed_by_known_zero_network_source_probes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_domain_blocked_source_probes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_projector_like_source_probes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_collective_cancellation_source_probes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_unexplained_leakage_source_probes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_projector_like_iz_targets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_unexpected_targets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_nonzero_complement_action_failures</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_individually_closed_source_probes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_q_empty_source_probes</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_closed_by_known_zero_network_source_probes</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_domain_blocked_source_probes</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_projector_like_source_probes</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FockSupportMorphology">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.classification.FockSupportMorphology">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FockSupportMorphology</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finite-size morphology diagnostics for the support in Fock space.</span>
+
+<span class="sd">    The ``label`` is a finite-size proxy only.  Scaling labels such as</span>
+<span class="sd">    finite, polynomial, or shell-extended require comparing a family of</span>
+<span class="sd">    systems across sizes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">label</span><span class="p">:</span> <span class="n">FockSupportMorphologyLabel</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+    <span class="n">support_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">effective_support_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">hilbert_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">support_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">effective_hilbert_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">boundary_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">boundary_to_support_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">support_internal_matrix_entries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">potential_shell_value</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">potential_shell_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">support_shell_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">effective_shell_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">potential_shell_residual</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_potential_shell</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">potential_shell_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="RealSpaceSupportMorphology">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.classification.RealSpaceSupportMorphology">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RealSpaceSupportMorphology</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finite-size morphology diagnostics in the microscopic variable space.</span>
+
+<span class="sd">    The variable indices are model-layout indices.  Connectivity, diameter,</span>
+<span class="sd">    and winding/wrapping require lattice adjacency metadata and are therefore</span>
+<span class="sd">    left to higher-level lattice-aware helpers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">label</span><span class="p">:</span> <span class="n">RealSpaceSupportMorphologyLabel</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+    <span class="n">n_variables</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">active_variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">active_variable_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">active_variable_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">frozen_variable_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">reduced_iz_region_variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">reduced_iz_region_variable_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">reduced_iz_region_variable_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">exact_support_component_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">exact_support_component_sizes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">connected_support_component_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">connected_support_component_sizes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span></div>
+
+
+
 <div class="viewcode-block" id="ReducedIZProbeSupport">
 <a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.classification.ReducedIZProbeSupport">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -754,6 +877,15 @@
         <span class="nb">tuple</span><span class="p">[</span><span class="n">ReducedIZMonitorComponentGroup</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
+    <span class="c1"># Orthogonal report axes.  ``label`` above remains as a compatibility</span>
+    <span class="c1"># synthesis for older notebooks/tests, while these summaries expose the</span>
+    <span class="c1"># three concepts separately.</span>
+    <span class="n">closure_summary</span><span class="p">:</span> <span class="n">ClosureMechanismSummary</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">ClosureMechanismSummary</span><span class="p">)</span>
+    <span class="n">fock_support_morphology</span><span class="p">:</span> <span class="n">FockSupportMorphology</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">FockSupportMorphology</span><span class="p">)</span>
+    <span class="n">real_space_support_morphology</span><span class="p">:</span> <span class="n">RealSpaceSupportMorphology</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">RealSpaceSupportMorphology</span>
+    <span class="p">)</span>
+
     <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -776,6 +908,18 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__rich__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_rich</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">closure_mechanism_label</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClosureMechanismLabel</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">closure_summary</span><span class="o">.</span><span class="n">label</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fock_support_morphology_label</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FockSupportMorphologyLabel</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">label</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">real_space_support_morphology_label</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RealSpaceSupportMorphologyLabel</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span><span class="o">.</span><span class="n">label</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">n_reduced_iz_probe_supports</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -953,7 +1097,10 @@
         <span class="n">header</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
             <span class="n">Group</span><span class="p">(</span>
                 <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;Cage classification report&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">),</span>
-                <span class="n">Text</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;label: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+                <span class="n">Text</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;legacy label: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+                <span class="n">Text</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;closure: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">closure_mechanism_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+                <span class="n">Text</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fock support: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+                <span class="n">Text</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;real-space support: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
             <span class="p">),</span>
             <span class="n">expand</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1032,6 +1179,70 @@
             <span class="s2">&quot;max complement action norm&quot;</span><span class="p">,</span> <span class="n">_format_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_complement_action_norm</span><span class="p">)</span>
         <span class="p">)</span>
 
+        <span class="n">fock</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Fock-space support morphology&quot;</span><span class="p">)</span>
+        <span class="n">fock</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">fock</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">fock_morph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span>
+        <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="n">fock_morph</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+        <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;effective support size&quot;</span><span class="p">,</span> <span class="n">_format_float</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">effective_support_size</span><span class="p">))</span>
+        <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;effective Hilbert fraction&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">effective_hilbert_fraction</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;boundary size&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">boundary_size</span><span class="p">))</span>
+        <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;boundary/support&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">boundary_to_support_ratio</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;support internal matrix entries&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">support_internal_matrix_entries</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">fock_morph</span><span class="o">.</span><span class="n">potential_shell_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;potential shell size&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">potential_shell_size</span><span class="p">))</span>
+            <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+                <span class="s2">&quot;support/shell&quot;</span><span class="p">,</span>
+                <span class="n">_format_optional_float</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">support_shell_fraction</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+                <span class="s2">&quot;effective support/shell&quot;</span><span class="p">,</span>
+                <span class="n">_format_optional_float</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">effective_shell_fraction</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">fock</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+                <span class="s2">&quot;potential shell residual&quot;</span><span class="p">,</span>
+                <span class="n">_format_optional_float</span><span class="p">(</span><span class="n">fock_morph</span><span class="o">.</span><span class="n">potential_shell_residual</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="n">real_space</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Real-space support morphology&quot;</span><span class="p">)</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">real_morph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="n">real_morph</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;active variables&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">real_morph</span><span class="o">.</span><span class="n">active_variable_count</span><span class="p">))</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;active variable fraction&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="n">real_morph</span><span class="o">.</span><span class="n">active_variable_fraction</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;frozen variables&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">real_morph</span><span class="o">.</span><span class="n">frozen_variable_count</span><span class="p">))</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;reduced-IZ region variables&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">real_morph</span><span class="o">.</span><span class="n">reduced_iz_region_variable_count</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;reduced-IZ variable fraction&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="n">real_morph</span><span class="o">.</span><span class="n">reduced_iz_region_variable_fraction</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;exact-support components&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real_morph</span><span class="o">.</span><span class="n">exact_support_component_count</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real_morph</span><span class="o">.</span><span class="n">exact_support_component_sizes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">real_space</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;connected-support components&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real_morph</span><span class="o">.</span><span class="n">connected_support_component_count</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real_morph</span><span class="o">.</span><span class="n">connected_support_component_sizes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="n">reduced_iz</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Reduced-IZ monitor cache&quot;</span><span class="p">)</span>
         <span class="n">reduced_iz</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
         <span class="n">reduced_iz</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
@@ -1058,6 +1269,11 @@
         <span class="n">state_level</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;State-level interpretation&quot;</span><span class="p">)</span>
         <span class="n">state_level</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
         <span class="n">state_level</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">state_level</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;closure mechanism&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">closure_mechanism_label</span><span class="p">)</span>
+        <span class="n">state_level</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;Fock support morphology&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology_label</span><span class="p">)</span>
+        <span class="n">state_level</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;real-space support morphology&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology_label</span>
+        <span class="p">)</span>
         <span class="n">state_level</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
             <span class="s2">&quot;has only regional mechanisms&quot;</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span>
@@ -1076,6 +1292,8 @@
             <span class="n">overview</span><span class="p">,</span>
             <span class="n">mechanisms</span><span class="p">,</span>
             <span class="n">closure</span><span class="p">,</span>
+            <span class="n">fock</span><span class="p">,</span>
+            <span class="n">real_space</span><span class="p">,</span>
             <span class="n">reduced_iz</span><span class="p">,</span>
             <span class="n">state_level</span><span class="p">,</span>
         <span class="p">]</span>
@@ -1159,6 +1377,50 @@
                 <span class="s2">&quot;nontrivial zeros&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nontrivial_zeros</span><span class="p">,</span>
                 <span class="s2">&quot;distinct local patterns&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_distinct_local_patterns</span><span class="p">,</span>
             <span class="p">},</span>
+            <span class="s2">&quot;Closure mechanism&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">closure_mechanism_label</span><span class="p">,</span>
+                <span class="s2">&quot;individually closed source probes&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">closure_summary</span><span class="o">.</span><span class="n">n_individually_closed_source_probes</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;unexplained-leakage source probes&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">closure_summary</span><span class="o">.</span><span class="n">n_unexplained_leakage_source_probes</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;collective-cancellation source probes&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">closure_summary</span><span class="o">.</span><span class="n">n_collective_cancellation_source_probes</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;Fock-space support morphology&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                <span class="s2">&quot;effective support size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">effective_support_size</span><span class="p">),</span>
+                <span class="s2">&quot;effective Hilbert fraction&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">effective_hilbert_fraction</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;boundary size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">boundary_size</span><span class="p">,</span>
+                <span class="s2">&quot;boundary/support&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">boundary_to_support_ratio</span><span class="p">),</span>
+                <span class="s2">&quot;support internal matrix entries&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">support_internal_matrix_entries</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;potential shell size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">potential_shell_size</span><span class="p">),</span>
+                <span class="s2">&quot;support/shell&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">support_shell_fraction</span><span class="p">,</span>
+                <span class="s2">&quot;effective support/shell&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fock_support_morphology</span><span class="o">.</span><span class="n">effective_shell_fraction</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;Real-space support morphology&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                <span class="s2">&quot;active variables&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span><span class="o">.</span><span class="n">active_variable_count</span><span class="p">),</span>
+                <span class="s2">&quot;active variable fraction&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span><span class="o">.</span><span class="n">active_variable_fraction</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;frozen variables&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span><span class="o">.</span><span class="n">frozen_variable_count</span><span class="p">),</span>
+                <span class="s2">&quot;reduced-IZ region variables&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span><span class="o">.</span><span class="n">reduced_iz_region_variable_count</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;exact-support components&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span><span class="o">.</span><span class="n">exact_support_component_count</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;connected-support components&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">real_space_support_morphology</span><span class="o">.</span><span class="n">connected_support_component_count</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
             <span class="s2">&quot;Reduced IZ monitor cache&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;probe supports&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reduced_iz_probe_supports</span><span class="p">),</span>
                 <span class="s2">&quot;region variables&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduced_iz_region_variable_indices</span><span class="p">,</span>
@@ -1214,6 +1476,7 @@
     <span class="n">basis_configs</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
     <span class="n">hilbert_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">sector_mask</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">potential_diagonal</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">CageClassificationConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageClassificationReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Classify one compact cage state from solver output.</span>
@@ -1229,6 +1492,9 @@
 <span class="sd">            ``basis_configs.shape[0]``.</span>
 <span class="sd">        sector_mask: Optional mask selecting the sector used for local</span>
 <span class="sd">            diagnostics.</span>
+<span class="sd">        potential_diagonal: Optional diagonal potential/self-loop values.</span>
+<span class="sd">            When provided, the report includes shell-relative Fock-space</span>
+<span class="sd">            support diagnostics if the state has a sharp potential value.</span>
 <span class="sd">        config: Numerical classification parameters.</span>
 
 <span class="sd">    Returns:</span>
@@ -1251,6 +1517,7 @@
         <span class="n">kinetic_matrix</span><span class="o">=</span><span class="n">kinetic_matrix</span><span class="p">,</span>
         <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
         <span class="n">sector_mask</span><span class="o">=</span><span class="n">sector_mask</span><span class="p">,</span>
+        <span class="n">potential_diagonal</span><span class="o">=</span><span class="n">potential_diagonal</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
             <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">cage_state</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
@@ -1271,6 +1538,7 @@
     <span class="n">kinetic_matrix</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">spmatrix</span> <span class="o">|</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparray</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">,</span>
     <span class="n">basis_configs</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
     <span class="n">sector_mask</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">potential_diagonal</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">CageClassificationConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageClassificationReport</span><span class="p">:</span>
@@ -1459,6 +1727,22 @@
         <span class="k">for</span> <span class="n">decomposition</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;single_sum&quot;</span><span class="p">,</span> <span class="s2">&quot;exact_support&quot;</span><span class="p">,</span> <span class="s2">&quot;connected_support&quot;</span><span class="p">)</span>
     <span class="p">}</span>
 
+    <span class="n">closure_summary</span> <span class="o">=</span> <span class="n">_closure_mechanism_summary</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">zero_reports</span><span class="p">))</span>
+    <span class="n">fock_support_morphology</span> <span class="o">=</span> <span class="n">_fock_support_morphology</span><span class="p">(</span>
+        <span class="n">full_state</span><span class="o">=</span><span class="n">full_state</span><span class="p">,</span>
+        <span class="n">kinetic_csr</span><span class="o">=</span><span class="n">kinetic_csr</span><span class="p">,</span>
+        <span class="n">support_mask</span><span class="o">=</span><span class="n">support_mask</span><span class="p">,</span>
+        <span class="n">active_frontier_zero_indices</span><span class="o">=</span><span class="n">active_frontier_zero_indices</span><span class="p">,</span>
+        <span class="n">potential_diagonal</span><span class="o">=</span><span class="n">potential_diagonal</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">real_space_support_morphology</span> <span class="o">=</span> <span class="n">_real_space_support_morphology</span><span class="p">(</span>
+        <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+        <span class="n">support_mask</span><span class="o">=</span><span class="n">support_mask</span><span class="p">,</span>
+        <span class="n">reduced_iz_region_variable_indices</span><span class="o">=</span><span class="n">reduced_iz_region_variable_indices</span><span class="p">,</span>
+        <span class="n">reduced_iz_monitor_component_groups</span><span class="o">=</span><span class="n">reduced_iz_monitor_component_groups</span><span class="p">,</span>
+    <span class="p">)</span>
+
     <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
     <span class="n">metadata</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
         <span class="s2">&quot;classification_domain_size&quot;</span><span class="p">,</span>
@@ -1527,6 +1811,9 @@
         <span class="n">reduced_iz_probe_supports</span><span class="o">=</span><span class="n">reduced_iz_probe_supports</span><span class="p">,</span>
         <span class="n">reduced_iz_region_variable_indices</span><span class="o">=</span><span class="n">reduced_iz_region_variable_indices</span><span class="p">,</span>
         <span class="n">reduced_iz_monitor_component_groups</span><span class="o">=</span><span class="n">reduced_iz_monitor_component_groups</span><span class="p">,</span>
+        <span class="n">closure_summary</span><span class="o">=</span><span class="n">closure_summary</span><span class="p">,</span>
+        <span class="n">fock_support_morphology</span><span class="o">=</span><span class="n">fock_support_morphology</span><span class="p">,</span>
+        <span class="n">real_space_support_morphology</span><span class="o">=</span><span class="n">real_space_support_morphology</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
     <span class="p">)</span></div>
 
@@ -3122,6 +3409,208 @@
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">action_tolerance</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_closure_mechanism_summary</span><span class="p">(</span>
+    <span class="n">zero_reports</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">InterferenceZeroReport</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">InterferenceZeroReport</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClosureMechanismSummary</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the closure-mechanism axis of a classification report.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">zero_reports</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ClosureMechanismSummary</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;no_nontrivial_zeros&quot;</span><span class="p">)</span>
+
+    <span class="n">n_q_empty</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_q_empty</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">)</span>
+    <span class="n">n_closed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_closed_by_known_zeros</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">)</span>
+    <span class="n">n_domain_blocked</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_domain_blocked</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">)</span>
+    <span class="n">n_projector_like</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_projector_like</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">)</span>
+    <span class="n">n_collective</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_collective_cancellation</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">)</span>
+    <span class="n">n_unexplained</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_invalid_probe</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">)</span>
+    <span class="n">n_projector_targets</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">n_projector_like_iz_targets</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">)</span>
+    <span class="n">n_unexpected_targets</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">n_unexpected_targets</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span><span class="p">)</span>
+    <span class="n">n_nonzero_complement_failures</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">has_nonzero_complement_action</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">zero_reports</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n_unexplained</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">label</span><span class="p">:</span> <span class="n">ClosureMechanismLabel</span> <span class="o">=</span> <span class="s2">&quot;unexplained_leakage&quot;</span>
+    <span class="k">elif</span> <span class="n">n_collective</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;collective_cancellation&quot;</span>
+    <span class="k">elif</span> <span class="n">n_projector_like</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n_projector_targets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;projector_network&quot;</span>
+    <span class="k">elif</span> <span class="n">n_domain_blocked</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">zero_reports</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;pure_domain_blocked&quot;</span>
+    <span class="k">elif</span> <span class="n">n_closed</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">zero_reports</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;zero_network_closed&quot;</span>
+    <span class="k">elif</span> <span class="n">n_q_empty</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">zero_reports</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;q_empty&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;mixed_individual_closure&quot;</span>
+
+    <span class="k">return</span> <span class="n">ClosureMechanismSummary</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">n_q_empty_source_probes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_q_empty</span><span class="p">),</span>
+        <span class="n">n_closed_by_known_zero_network_source_probes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_closed</span><span class="p">),</span>
+        <span class="n">n_domain_blocked_source_probes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_domain_blocked</span><span class="p">),</span>
+        <span class="n">n_projector_like_source_probes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_projector_like</span><span class="p">),</span>
+        <span class="n">n_collective_cancellation_source_probes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_collective</span><span class="p">),</span>
+        <span class="n">n_unexplained_leakage_source_probes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_unexplained</span><span class="p">),</span>
+        <span class="n">n_projector_like_iz_targets</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_projector_targets</span><span class="p">),</span>
+        <span class="n">n_unexpected_targets</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_unexpected_targets</span><span class="p">),</span>
+        <span class="n">n_nonzero_complement_action_failures</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_nonzero_complement_failures</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fock_support_morphology</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">full_state</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">kinetic_csr</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span>
+    <span class="n">support_mask</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
+    <span class="n">active_frontier_zero_indices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="n">potential_diagonal</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">CageClassificationConfig</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FockSupportMorphology</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return finite-size Fock-space support morphology diagnostics.&quot;&quot;&quot;</span>
+    <span class="n">support_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">support_mask</span><span class="p">)</span>
+    <span class="n">support_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">support_indices</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">hilbert_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">full_state</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">support_fraction</span> <span class="o">=</span> <span class="n">support_size</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">hilbert_size</span><span class="p">)</span> <span class="k">if</span> <span class="n">hilbert_size</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">full_state</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">state_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">))</span>
+    <span class="n">weights_fourth_sum</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">state_norm_sq</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">weights_fourth_sum</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">effective_support_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">state_norm_sq</span> <span class="o">*</span> <span class="n">state_norm_sq</span><span class="p">)</span> <span class="o">/</span> <span class="n">weights_fourth_sum</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">effective_support_size</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">effective_hilbert_fraction</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">effective_support_size</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">hilbert_size</span><span class="p">)</span> <span class="k">if</span> <span class="n">hilbert_size</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="p">)</span>
+
+    <span class="n">boundary_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">active_frontier_zero_indices</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">boundary_to_support_ratio</span> <span class="o">=</span> <span class="n">boundary_size</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">support_size</span><span class="p">)</span> <span class="k">if</span> <span class="n">support_size</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">support_size</span><span class="p">:</span>
+        <span class="n">support_internal_matrix_entries</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="n">kinetic_csr</span><span class="p">[</span><span class="n">support_indices</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">support_indices</span><span class="p">]</span><span class="o">.</span><span class="n">nnz</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">support_internal_matrix_entries</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">potential_shell_value</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">potential_shell_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">support_shell_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">effective_shell_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">potential_shell_residual</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">potential_diagonal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">potential_diagonal</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">hilbert_size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;potential_diagonal must have length full_state.size.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">state_norm_sq</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">potential_shell_value</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">full_state</span><span class="p">,</span> <span class="n">diagonal</span> <span class="o">*</span> <span class="n">full_state</span><span class="p">)</span> <span class="o">/</span> <span class="n">state_norm_sq</span>
+            <span class="p">)</span>
+            <span class="n">residual_vector</span> <span class="o">=</span> <span class="p">(</span><span class="n">diagonal</span> <span class="o">-</span> <span class="n">potential_shell_value</span><span class="p">)</span> <span class="o">*</span> <span class="n">full_state</span>
+            <span class="n">potential_shell_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual_vector</span><span class="p">))</span>
+            <span class="n">shell_tolerance</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">potential_shell_tolerance</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">potential_shell_tolerance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">action_tolerance</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">amplitude_tolerance</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">potential_shell_residual</span> <span class="o">&lt;=</span> <span class="n">shell_tolerance</span><span class="p">:</span>
+                <span class="n">shell_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">diagonal</span> <span class="o">-</span> <span class="n">potential_shell_value</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">shell_tolerance</span>
+                <span class="n">potential_shell_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">shell_mask</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">potential_shell_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">support_shell_fraction</span> <span class="o">=</span> <span class="n">support_size</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">potential_shell_size</span><span class="p">)</span>
+                    <span class="n">effective_shell_fraction</span> <span class="o">=</span> <span class="n">effective_support_size</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">potential_shell_size</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">support_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">label</span><span class="p">:</span> <span class="n">FockSupportMorphologyLabel</span> <span class="o">=</span> <span class="s2">&quot;finite_size_empty&quot;</span>
+    <span class="k">elif</span> <span class="n">support_size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;finite_size_singleton&quot;</span>
+    <span class="k">elif</span> <span class="n">effective_shell_fraction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">effective_shell_fraction</span> <span class="o">&gt;=</span> <span class="n">config</span><span class="o">.</span><span class="n">fock_dense_fraction_threshold</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;finite_size_shell_dense&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;finite_size_shell_sparse&quot;</span>
+    <span class="k">elif</span> <span class="n">effective_hilbert_fraction</span> <span class="o">&gt;=</span> <span class="n">config</span><span class="o">.</span><span class="n">fock_dense_fraction_threshold</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;finite_size_sector_dense&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;finite_size_sector_sparse&quot;</span>
+
+    <span class="k">return</span> <span class="n">FockSupportMorphology</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">support_size</span><span class="o">=</span><span class="n">support_size</span><span class="p">,</span>
+        <span class="n">effective_support_size</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">effective_support_size</span><span class="p">),</span>
+        <span class="n">hilbert_size</span><span class="o">=</span><span class="n">hilbert_size</span><span class="p">,</span>
+        <span class="n">support_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">support_fraction</span><span class="p">),</span>
+        <span class="n">effective_hilbert_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">effective_hilbert_fraction</span><span class="p">),</span>
+        <span class="n">boundary_size</span><span class="o">=</span><span class="n">boundary_size</span><span class="p">,</span>
+        <span class="n">boundary_to_support_ratio</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">boundary_to_support_ratio</span><span class="p">),</span>
+        <span class="n">support_internal_matrix_entries</span><span class="o">=</span><span class="n">support_internal_matrix_entries</span><span class="p">,</span>
+        <span class="n">potential_shell_value</span><span class="o">=</span><span class="n">potential_shell_value</span><span class="p">,</span>
+        <span class="n">potential_shell_size</span><span class="o">=</span><span class="n">potential_shell_size</span><span class="p">,</span>
+        <span class="n">support_shell_fraction</span><span class="o">=</span><span class="n">support_shell_fraction</span><span class="p">,</span>
+        <span class="n">effective_shell_fraction</span><span class="o">=</span><span class="n">effective_shell_fraction</span><span class="p">,</span>
+        <span class="n">potential_shell_residual</span><span class="o">=</span><span class="n">potential_shell_residual</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_real_space_support_morphology</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">support_mask</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
+    <span class="n">reduced_iz_region_variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">reduced_iz_monitor_component_groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span>
+        <span class="n">ReducedIZMonitorDecomposition</span><span class="p">,</span>
+        <span class="nb">tuple</span><span class="p">[</span><span class="n">ReducedIZMonitorComponentGroup</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RealSpaceSupportMorphology</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return finite-size variable-space support morphology diagnostics.&quot;&quot;&quot;</span>
+    <span class="n">n_variables</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">basis_configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">support_configs</span> <span class="o">=</span> <span class="n">basis_configs</span><span class="p">[</span><span class="n">support_mask</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">support_configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n_variables</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">active_variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="n">support_configs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">active_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">support_configs</span> <span class="o">!=</span> <span class="n">reference</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">active_variable_indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">active_mask</span><span class="p">))</span>
+
+    <span class="n">active_variable_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">active_variable_indices</span><span class="p">)</span>
+    <span class="n">active_variable_fraction</span> <span class="o">=</span> <span class="n">active_variable_count</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_variables</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_variables</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="n">frozen_variable_count</span> <span class="o">=</span> <span class="n">n_variables</span> <span class="o">-</span> <span class="n">active_variable_count</span>
+
+    <span class="k">if</span> <span class="n">n_variables</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">label</span><span class="p">:</span> <span class="n">RealSpaceSupportMorphologyLabel</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+    <span class="k">elif</span> <span class="n">active_variable_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;frozen&quot;</span>
+    <span class="k">elif</span> <span class="n">active_variable_count</span> <span class="o">==</span> <span class="n">n_variables</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;fully_active&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;partially_active&quot;</span>
+
+    <span class="n">exact_groups</span> <span class="o">=</span> <span class="n">reduced_iz_monitor_component_groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exact_support&quot;</span><span class="p">,</span> <span class="p">())</span>
+    <span class="n">connected_groups</span> <span class="o">=</span> <span class="n">reduced_iz_monitor_component_groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;connected_support&quot;</span><span class="p">,</span> <span class="p">())</span>
+    <span class="n">exact_sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">support_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">exact_groups</span><span class="p">)</span>
+    <span class="n">connected_sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">support_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">connected_groups</span><span class="p">)</span>
+    <span class="n">reduced_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">reduced_iz_region_variable_indices</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">RealSpaceSupportMorphology</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">n_variables</span><span class="o">=</span><span class="n">n_variables</span><span class="p">,</span>
+        <span class="n">active_variable_indices</span><span class="o">=</span><span class="n">active_variable_indices</span><span class="p">,</span>
+        <span class="n">active_variable_count</span><span class="o">=</span><span class="n">active_variable_count</span><span class="p">,</span>
+        <span class="n">active_variable_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">active_variable_fraction</span><span class="p">),</span>
+        <span class="n">frozen_variable_count</span><span class="o">=</span><span class="n">frozen_variable_count</span><span class="p">,</span>
+        <span class="n">reduced_iz_region_variable_indices</span><span class="o">=</span><span class="n">reduced_iz_region_variable_indices</span><span class="p">,</span>
+        <span class="n">reduced_iz_region_variable_count</span><span class="o">=</span><span class="n">reduced_count</span><span class="p">,</span>
+        <span class="n">reduced_iz_region_variable_fraction</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">reduced_count</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_variables</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_variables</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">),</span>
+        <span class="n">exact_support_component_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">exact_groups</span><span class="p">),</span>
+        <span class="n">exact_support_component_sizes</span><span class="o">=</span><span class="n">exact_sizes</span><span class="p">,</span>
+        <span class="n">connected_support_component_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">connected_groups</span><span class="p">),</span>
+        <span class="n">connected_support_component_sizes</span><span class="o">=</span><span class="n">connected_sizes</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_classify_from_zero_reports</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">zero_reports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InterferenceZeroReport</span><span class="p">],</span>
@@ -3188,6 +3677,12 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_optional_float</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;n/a&quot;</span>
+    <span class="k">return</span> <span class="n">_format_float</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_format_index_preview</span><span class="p">(</span>

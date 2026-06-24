@@ -372,6 +372,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">VariableLayout</span>
 
 <span class="n">LocalBoundaryMode</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;relaxed&quot;</span><span class="p">,</span> <span class="s2">&quot;closed&quot;</span><span class="p">]</span>
+<span class="n">SnakeStripeKindPattern</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="s2">&quot;alternating&quot;</span><span class="p">,</span> <span class="s2">&quot;constant_or_alternating&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="LocalQDMCageSearchConfig">
@@ -844,6 +845,11 @@
 <span class="sd">    therefore a better first pass for honeycomb and triangular QDM where useful</span>
 <span class="sd">    width-one stripes can turn while wrapping the torus.</span>
 
+<span class="sd">    Optional ``require_induced_cycle`` and ``kind_pattern`` filters turn the</span>
+<span class="sd">    broad cycle enumerator into a more motif-like proposal: the examples seen</span>
+<span class="sd">    in exact QDM cages are usually chordless width-one cycles whose plaquette</span>
+<span class="sd">    kinds are either constant or strictly alternating between two kinds.</span>
+
 <span class="sd">    The enumeration is intentionally budgeted by ``max_plaquettes``,</span>
 <span class="sd">    ``max_links``, ``max_turns``, and ``max_records``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -860,6 +866,8 @@
     <span class="n">max_turns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">plaquette_kinds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">allow_kind_changes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">kind_pattern</span><span class="p">:</span> <span class="n">SnakeStripeKindPattern</span> <span class="o">=</span> <span class="s2">&quot;constant_or_alternating&quot;</span>
+    <span class="n">require_induced_cycle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">winding_vectors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">adapter</span><span class="p">:</span> <span class="n">LocalCageModelAdapter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -876,6 +884,11 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_links must be positive or None.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_turns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_turns</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_turns must be non-negative or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind_pattern</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="s2">&quot;alternating&quot;</span><span class="p">,</span> <span class="s2">&quot;constant_or_alternating&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;kind_pattern must be &#39;any&#39;, &#39;constant&#39;, &#39;alternating&#39;, &quot;</span>
+                <span class="s2">&quot;or &#39;constant_or_alternating&#39;.&quot;</span>
+            <span class="p">)</span>
 
         <span class="n">adapter</span> <span class="o">=</span> <span class="n">local_cage_adapter_for_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapter</span><span class="p">)</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">normalize_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
@@ -911,6 +924,7 @@
             <span class="n">plaquette_kinds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plaquette_kinds</span><span class="p">,</span>
             <span class="n">allow_kind_changes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">allow_kind_changes</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">edge_neighbors</span> <span class="o">=</span> <span class="n">_snake_edge_neighbor_sets</span><span class="p">(</span><span class="n">edge_map</span><span class="p">)</span>
         <span class="n">allowed_windings</span> <span class="o">=</span> <span class="p">(</span>
             <span class="kc">None</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">winding_vectors</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -943,6 +957,14 @@
                     <span class="k">if</span> <span class="n">neighbor</span> <span class="o">==</span> <span class="n">seed_id</span><span class="p">:</span>
                         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_plaquettes</span><span class="p">):</span>
                             <span class="k">continue</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_induced_cycle</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_snake_path_is_induced_cycle</span><span class="p">(</span>
+                            <span class="n">path</span><span class="p">,</span> <span class="n">edge_neighbors</span>
+                        <span class="p">):</span>
+                            <span class="k">continue</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">_snake_path_kind_pattern_allowed</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind_pattern</span>
+                        <span class="p">):</span>
+                            <span class="k">continue</span>
                         <span class="n">winding</span> <span class="o">=</span> <span class="n">_winding_from_lifted_displacement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">next_lifted</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">winding</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">winding</span><span class="p">):</span>
                             <span class="k">continue</span>
@@ -971,10 +993,19 @@
 
                     <span class="k">if</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">path</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_plaquettes</span><span class="p">):</span>
                         <span class="k">continue</span>
+                    <span class="n">next_path</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">path</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_induced_cycle</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_snake_path_extension_is_induced</span><span class="p">(</span>
+                        <span class="n">path</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">,</span> <span class="n">edge_neighbors</span>
+                    <span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">_snake_partial_kind_pattern_possible</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">next_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind_pattern</span>
+                    <span class="p">):</span>
+                        <span class="k">continue</span>
 
                     <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="p">(</span>
-                            <span class="p">(</span><span class="o">*</span><span class="n">path</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">),</span>
+                            <span class="n">next_path</span><span class="p">,</span>
                             <span class="n">next_lifted</span><span class="p">,</span>
                             <span class="n">step</span><span class="p">,</span>
                             <span class="n">next_turn_count</span><span class="p">,</span>
@@ -1546,6 +1577,8 @@
     <span class="n">stripe_directions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">snake_stripe_max_turns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">snake_stripe_allow_kind_changes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">snake_stripe_kind_pattern</span><span class="p">:</span> <span class="n">SnakeStripeKindPattern</span> <span class="o">=</span> <span class="s2">&quot;constant_or_alternating&quot;</span>
+    <span class="n">snake_stripe_require_induced_cycle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">snake_stripe_plaquette_kinds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">snake_stripe_winding_vectors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">adaptive_beam_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
@@ -1593,6 +1626,16 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_widths must contain positive integers.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_stripe_max_turns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_stripe_max_turns</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;snake_stripe_max_turns must be non-negative or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_stripe_kind_pattern</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;constant&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;alternating&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;constant_or_alternating&quot;</span><span class="p">,</span>
+        <span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;snake_stripe_kind_pattern must be &#39;any&#39;, &#39;constant&#39;, &#39;alternating&#39;, &quot;</span>
+                <span class="s2">&quot;or &#39;constant_or_alternating&#39;.&quot;</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_stripe_plaquette_kinds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_stripe_plaquette_kinds</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;snake_stripe_plaquette_kinds must be non-empty or None.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_stripe_winding_vectors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_stripe_winding_vectors</span><span class="p">:</span>
@@ -2990,6 +3033,108 @@
 
 
 
+<div class="viewcode-block" id="collect_qdm_cage_blocks_with_scan_from_region_proposals">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.collect_qdm_cage_blocks_with_scan_from_region_proposals">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">collect_qdm_cage_blocks_with_scan_from_region_proposals</span><span class="p">(</span>
+    <span class="n">proposals</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalRegionProposal</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">LocalQDMCageSearchConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">adapter</span><span class="p">:</span> <span class="n">LocalCageModelAdapter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">signatures</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_regions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_records_per_region</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">block_id_start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">skip_incompatible_blocks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalRegionProposalSearchResult</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run proposal searches and stream compatible QDM blocks.</span>
+
+<span class="sd">    This is the block-oriented counterpart of :func:`run_local_region_proposals`.</span>
+<span class="sd">    It converts records into ``LocalQDMCageBlock`` objects immediately after each</span>
+<span class="sd">    region is searched and stops as soon as ``max_blocks`` is reached.  This is</span>
+<span class="sd">    important for expensive proposal portfolios: the older two-stage workflow</span>
+<span class="sd">    searched every proposed region first and only then applied the block cap, so</span>
+<span class="sd">    robust scans could spend most of their time in local DFS branches that would</span>
+<span class="sd">    never contribute to the requested block pool.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">block_id_start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;block_id_start must be non-negative.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_regions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_regions</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_regions must be non-negative or None.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_records_per_region</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_records_per_region</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_records_per_region must be non-negative or None.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_blocks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_blocks</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_blocks must be non-negative or None.&quot;</span><span class="p">)</span>
+
+    <span class="n">signature_filter</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">signatures</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">signature_filter</span> <span class="o">=</span> <span class="p">{(</span><span class="nb">int</span><span class="p">(</span><span class="n">kappa</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">potential</span><span class="p">))</span> <span class="k">for</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">potential</span> <span class="ow">in</span> <span class="n">signatures</span><span class="p">}</span>
+
+    <span class="n">search_records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalRegionProposalSearchRecord</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">emitted_regions</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">next_block_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">block_id_start</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_blocks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LocalRegionProposalSearchResult</span><span class="p">(</span><span class="n">records</span><span class="o">=</span><span class="p">[]),</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">proposal_index</span><span class="p">,</span> <span class="n">proposal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">proposals</span><span class="p">):</span>
+        <span class="n">proposal_model</span> <span class="o">=</span> <span class="n">_model_for_region_proposal</span><span class="p">(</span><span class="n">proposal</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="n">proposal_adapter</span> <span class="o">=</span> <span class="n">_adapter_for_region_proposal</span><span class="p">(</span><span class="n">proposal</span><span class="p">,</span> <span class="n">adapter</span><span class="p">)</span>
+        <span class="n">proposal_config</span> <span class="o">=</span> <span class="n">_config_for_region_proposal</span><span class="p">(</span><span class="n">proposal</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">region_index</span><span class="p">,</span> <span class="n">proposal_record</span><span class="p">,</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">_iter_region_proposal_records</span><span class="p">(</span><span class="n">proposal</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">max_regions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">emitted_regions</span> <span class="o">&gt;=</span> <span class="n">max_regions</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">LocalRegionProposalSearchResult</span><span class="p">(</span><span class="n">records</span><span class="o">=</span><span class="n">search_records</span><span class="p">),</span> <span class="n">blocks</span>
+            <span class="k">if</span> <span class="n">max_blocks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_blocks</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">LocalRegionProposalSearchResult</span><span class="p">(</span><span class="n">records</span><span class="o">=</span><span class="n">search_records</span><span class="p">),</span> <span class="n">blocks</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">LocalCageSearcher</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">proposal_model</span><span class="p">,</span>
+                <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">proposal_config</span><span class="p">,</span>
+                <span class="n">adapter</span><span class="o">=</span><span class="n">proposal_adapter</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="n">search_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">LocalRegionProposalSearchRecord</span><span class="p">(</span>
+                    <span class="n">proposal_index</span><span class="o">=</span><span class="n">proposal_index</span><span class="p">,</span>
+                    <span class="n">region_index</span><span class="o">=</span><span class="n">region_index</span><span class="p">,</span>
+                    <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span>
+                    <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                    <span class="n">proposal_record</span><span class="o">=</span><span class="n">proposal_record</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">emitted_regions</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">region_records</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">records</span>
+            <span class="k">if</span> <span class="n">signature_filter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">region_records</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">record</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">region_records</span> <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">signature</span> <span class="ow">in</span> <span class="n">signature_filter</span>
+                <span class="p">]</span>
+            <span class="k">if</span> <span class="n">max_records_per_region</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">region_records</span> <span class="o">=</span> <span class="n">region_records</span><span class="p">[:</span><span class="n">max_records_per_region</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">local_record</span> <span class="ow">in</span> <span class="n">region_records</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">max_blocks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_blocks</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">LocalRegionProposalSearchResult</span><span class="p">(</span><span class="n">records</span><span class="o">=</span><span class="n">search_records</span><span class="p">),</span> <span class="n">blocks</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">block</span> <span class="o">=</span> <span class="n">make_qdm_cage_block</span><span class="p">(</span>
+                        <span class="n">proposal_model</span><span class="p">,</span>
+                        <span class="n">local_record</span><span class="p">,</span>
+                        <span class="n">block_id</span><span class="o">=</span><span class="n">next_block_id</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">skip_incompatible_blocks</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">raise</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+                <span class="n">next_block_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">LocalRegionProposalSearchResult</span><span class="p">(</span><span class="n">records</span><span class="o">=</span><span class="n">search_records</span><span class="p">),</span> <span class="n">blocks</span></div>
+
+
+
 <div class="viewcode-block" id="collect_qdm_cage_blocks_from_region_proposals">
 <a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.collect_qdm_cage_blocks_from_region_proposals">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collect_qdm_cage_blocks_from_region_proposals</span><span class="p">(</span>
@@ -3006,25 +3151,26 @@
     <span class="n">skip_incompatible_blocks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run proposal searches and return a QDM block pool for multi-padding.&quot;&quot;&quot;</span>
-    <span class="n">scan</span> <span class="o">=</span> <span class="n">run_local_region_proposals</span><span class="p">(</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">blocks</span> <span class="o">=</span> <span class="n">collect_qdm_cage_blocks_with_scan_from_region_proposals</span><span class="p">(</span>
         <span class="n">proposals</span><span class="p">,</span>
         <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">adapter</span><span class="o">=</span><span class="n">adapter</span><span class="p">,</span>
-        <span class="n">max_regions</span><span class="o">=</span><span class="n">max_regions</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">scan</span><span class="o">.</span><span class="n">qdm_cage_blocks</span><span class="p">(</span>
-        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-        <span class="n">block_id_start</span><span class="o">=</span><span class="n">block_id_start</span><span class="p">,</span>
         <span class="n">signatures</span><span class="o">=</span><span class="n">signatures</span><span class="p">,</span>
+        <span class="n">max_regions</span><span class="o">=</span><span class="n">max_regions</span><span class="p">,</span>
         <span class="n">max_records_per_region</span><span class="o">=</span><span class="n">max_records_per_region</span><span class="p">,</span>
         <span class="n">max_blocks</span><span class="o">=</span><span class="n">max_blocks</span><span class="p">,</span>
+        <span class="n">block_id_start</span><span class="o">=</span><span class="n">block_id_start</span><span class="p">,</span>
         <span class="n">skip_incompatible_blocks</span><span class="o">=</span><span class="n">skip_incompatible_blocks</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">blocks</span></div>
 
 
 
 <span class="n">collect_qdm_cage_blocks_from_proposals</span> <span class="o">=</span> <span class="n">collect_qdm_cage_blocks_from_region_proposals</span>
+<span class="n">collect_qdm_cage_blocks_with_scan_from_proposals</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">collect_qdm_cage_blocks_with_scan_from_region_proposals</span>
+<span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_model_for_region_proposal</span><span class="p">(</span>
@@ -3465,6 +3611,49 @@
         <span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_qdm_active_plaquette_closure_variable_order</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">region</span><span class="p">:</span> <span class="n">LocalQDMRegion</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">n_local_variables</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Order local variables so active plaquettes are decided early.</span>
+
+<span class="sd">    The local-basis DFS may otherwise spend a long time enumerating boundary</span>
+<span class="sd">    dimer completions before assigning enough links to decide whether any active</span>
+<span class="sd">    plaquette can be flippable.  For local cage searches with the active-state</span>
+<span class="sd">    observer enabled, grouping links plaquette-by-plaquette exposes inactive</span>
+<span class="sd">    branches to the observer much earlier.  The basis remains sorted afterward</span>
+<span class="sd">    when ``sort=True``, so this only changes traversal cost, not the public basis</span>
+<span class="sd">    order.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">local_index_by_link</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">):</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">link_ids</span><span class="p">)}</span>
+    <span class="n">ordered</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">append_variable</span><span class="p">(</span><span class="n">variable_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">variable_index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">variable_index</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_local_variables</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+        <span class="n">ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="n">region</span><span class="o">.</span><span class="n">active_plaquette_ids</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="n">_plaquette_local_indices</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+            <span class="n">local_index_by_link</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">append_variable</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n_local_variables</span><span class="p">)):</span>
+        <span class="n">append_variable</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ordered</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_qdm_active_plaquette_observer</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
     <span class="n">region</span><span class="p">:</span> <span class="n">LocalQDMRegion</span><span class="p">,</span>
@@ -3581,11 +3770,17 @@
     <span class="p">)</span>
 
     <span class="n">observers</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">variable_order</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">prune_inactive_states</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">full_link_region</span><span class="p">:</span>
         <span class="n">observer</span> <span class="o">=</span> <span class="n">_qdm_active_plaquette_observer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">region</span><span class="p">)</span>
         <span class="n">observers</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">observer</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">observer</span><span class="p">,)</span>
+        <span class="n">variable_order</span> <span class="o">=</span> <span class="n">_qdm_active_plaquette_closure_variable_order</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">region</span><span class="p">,</span>
+            <span class="n">n_local_variables</span><span class="o">=</span><span class="n">n_local</span><span class="p">,</span>
+        <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">DFSBasisSolver</span><span class="p">(</span><span class="n">sort</span><span class="o">=</span><span class="n">sort</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+    <span class="k">return</span> <span class="n">DFSBasisSolver</span><span class="p">(</span><span class="n">sort</span><span class="o">=</span><span class="n">sort</span><span class="p">,</span> <span class="n">variable_order</span><span class="o">=</span><span class="n">variable_order</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
         <span class="n">layout</span><span class="p">,</span>
         <span class="n">constraints</span><span class="o">=</span><span class="n">constraints</span><span class="p">,</span>
         <span class="n">sectors</span><span class="o">=</span><span class="n">sectors</span><span class="p">,</span>
@@ -4370,6 +4565,7 @@
         <span class="n">blocks</span> <span class="o">=</span> <span class="n">collect_qdm_cage_blocks_from_region_proposals</span><span class="p">(</span>
             <span class="n">proposals</span><span class="p">,</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">robust_config</span><span class="o">.</span><span class="n">local_config</span><span class="p">,</span>
             <span class="n">adapter</span><span class="o">=</span><span class="n">adapter</span><span class="p">,</span>
             <span class="n">signatures</span><span class="o">=</span><span class="n">robust_config</span><span class="o">.</span><span class="n">block_signatures</span><span class="p">,</span>
             <span class="n">max_regions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -4390,14 +4586,11 @@
             <span class="n">stages</span><span class="o">=</span><span class="n">robust_config</span><span class="o">.</span><span class="n">padding_stages</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="n">scan</span> <span class="o">=</span> <span class="n">run_local_region_proposals</span><span class="p">(</span>
+    <span class="n">scan</span><span class="p">,</span> <span class="n">blocks</span> <span class="o">=</span> <span class="n">collect_qdm_cage_blocks_with_scan_from_region_proposals</span><span class="p">(</span>
         <span class="n">proposals</span><span class="p">,</span>
         <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">robust_config</span><span class="o">.</span><span class="n">local_config</span><span class="p">,</span>
         <span class="n">adapter</span><span class="o">=</span><span class="n">adapter</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">blocks</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">qdm_cage_blocks</span><span class="p">(</span>
-        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
         <span class="n">signatures</span><span class="o">=</span><span class="n">robust_config</span><span class="o">.</span><span class="n">block_signatures</span><span class="p">,</span>
         <span class="n">max_records_per_region</span><span class="o">=</span><span class="n">robust_config</span><span class="o">.</span><span class="n">max_records_per_region</span><span class="p">,</span>
         <span class="n">max_blocks</span><span class="o">=</span><span class="n">robust_config</span><span class="o">.</span><span class="n">max_blocks</span><span class="p">,</span>
@@ -4647,6 +4840,8 @@
                 <span class="n">max_turns</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_max_turns</span><span class="p">,</span>
                 <span class="n">plaquette_kinds</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_plaquette_kinds</span><span class="p">,</span>
                 <span class="n">allow_kind_changes</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_allow_kind_changes</span><span class="p">,</span>
+                <span class="n">kind_pattern</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_kind_pattern</span><span class="p">,</span>
+                <span class="n">require_induced_cycle</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_require_induced_cycle</span><span class="p">,</span>
                 <span class="n">winding_vectors</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_winding_vectors</span><span class="p">,</span>
                 <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">local_config</span><span class="p">,</span>
                 <span class="n">adapter</span><span class="o">=</span><span class="n">adapter</span><span class="p">,</span>
@@ -6557,6 +6752,123 @@
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">plaquette_id</span><span class="p">,</span> <span class="n">edge_items</span> <span class="ow">in</span> <span class="n">edges</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
     <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_snake_edge_neighbor_sets</span><span class="p">(</span>
+    <span class="n">edge_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="o">...</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return undirected neighbor sets used by snake-cycle filters.&quot;&quot;&quot;</span>
+    <span class="n">neighbors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span> <span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">edge_map</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">edge_items</span> <span class="ow">in</span> <span class="n">edge_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">neighbors</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">edge_items</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+            <span class="n">neighbors</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="n">neighbors</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">values</span><span class="p">))</span> <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_snake_path_extension_is_induced</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">candidate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">edge_neighbors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether appending ``candidate`` keeps a chordless snake path.&quot;&quot;&quot;</span>
+    <span class="n">candidate</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">previous</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">candidate_neighbors</span> <span class="o">=</span> <span class="n">edge_neighbors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">())</span>
+    <span class="n">seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">existing</span> <span class="ow">in</span> <span class="n">path</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="c1"># The last vertex of an induced cycle must also touch the seed.  Allow</span>
+        <span class="c1"># this prospective closing edge while pruning all other chords.</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="o">==</span> <span class="n">seed</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="ow">in</span> <span class="n">candidate_neighbors</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">previous</span> <span class="ow">in</span> <span class="n">candidate_neighbors</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_snake_path_is_induced_cycle</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">edge_neighbors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether ``path`` is a chordless cycle on the plaquette graph.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">path</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">:</span>
+        <span class="n">degree</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">edge_neighbors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span> <span class="nb">frozenset</span><span class="p">())))</span>
+        <span class="k">if</span> <span class="n">degree</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_snake_path_kinds</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquettes</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)]</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">path</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_snake_partial_kind_pattern_possible</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">pattern</span><span class="p">:</span> <span class="n">SnakeStripeKindPattern</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cheap partial-path pruning for kind-pattern-restricted snakes.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">pattern</span> <span class="o">==</span> <span class="s2">&quot;any&quot;</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">kinds</span> <span class="o">=</span> <span class="n">_snake_path_kinds</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="n">distinct</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">kinds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pattern</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">pattern</span> <span class="o">==</span> <span class="s2">&quot;alternating&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">left</span> <span class="o">!=</span> <span class="n">right</span> <span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">kinds</span><span class="p">,</span> <span class="n">kinds</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># ``constant_or_alternating`` keeps both possibilities alive until closure.</span>
+    <span class="n">constant_possible</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    <span class="n">alternating_possible</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+        <span class="n">left</span> <span class="o">!=</span> <span class="n">right</span> <span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">kinds</span><span class="p">,</span> <span class="n">kinds</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">constant_possible</span> <span class="ow">or</span> <span class="n">alternating_possible</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_snake_path_kind_pattern_allowed</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">pattern</span><span class="p">:</span> <span class="n">SnakeStripeKindPattern</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether a closed snake has the requested plaquette-kind pattern.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">pattern</span> <span class="o">==</span> <span class="s2">&quot;any&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">kinds</span> <span class="o">=</span> <span class="n">_snake_path_kinds</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="n">distinct</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">kinds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pattern</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+
+    <span class="n">alternating</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">kinds</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">left</span> <span class="o">!=</span> <span class="n">right</span> <span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">kinds</span><span class="p">,</span> <span class="n">kinds</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="ow">and</span> <span class="n">kinds</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kinds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">pattern</span> <span class="o">==</span> <span class="s2">&quot;alternating&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">alternating</span>
+
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">alternating</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_zero_cell_displacement</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
