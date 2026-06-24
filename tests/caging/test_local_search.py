@@ -37,6 +37,7 @@ from qlinks.caging import (
     certify_qdm_multi_block_result,
     classify_cage_state,
     collect_qdm_cage_blocks_from_region_proposals,
+    collect_qdm_cage_blocks_with_scan_from_region_proposals,
     diagnose_qdm_multi_block_paddings,
     enumerate_qdm_local_basis,
     find_multi_qdm_block_paddings,
@@ -789,6 +790,78 @@ def test_multi_block_padding_iterator_preserves_raw_padding_cap() -> None:
     assert uncapped_diagnostics.n_certified == 2
     assert uncapped_diagnostics.n_padding_attempts >= diagnostics.n_certified
     assert uncapped_diagnostics.first_certified_attempt_index is not None
+
+
+def test_qdm_block_collection_stops_after_max_blocks() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    local_config = LocalQDMCageSearchConfig(
+        halo_layers=0,
+        boundary_mode="relaxed",
+        prune_inactive_local_basis_states=True,
+        tolerance=1.0e-10,
+    )
+    proposal = StripeRegionProposal(
+        model,
+        directions=(0,),
+        width=1,
+        config=local_config,
+    )
+
+    scan, blocks = collect_qdm_cage_blocks_with_scan_from_region_proposals(
+        [proposal],
+        model=model,
+        signatures=((0, 2),),
+        max_records_per_region=2,
+        max_blocks=2,
+    )
+
+    assert len(blocks) == 2
+    assert len(scan) == 1
+    assert scan.records[0].counts_by_signature[(0, 2)] == 2
+
+
+def test_robust_qdm_context_uses_streaming_block_collection() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    robust_config = RobustQDMLocalCageSearchConfig(
+        region_strategies=("stripe",),
+        stripe_widths=(1,),
+        stripe_directions=(0,),
+        max_regions_per_strategy=None,
+        block_signatures=((0, 2),),
+        max_records_per_region=2,
+        min_blocks=2,
+        max_blocks=2,
+        max_paddings_per_stage=0,
+        padding_stages=("static",),
+        store_full_states=False,
+    )
+
+    _certified, context = robust_qdm_local_cage_search(
+        model,
+        config=robust_config,
+        return_context=True,
+    )
+
+    assert context.n_blocks == 2
+    assert context.n_regions == 1
 
 
 def test_robust_qdm_local_cage_search_returns_certified_result_under_small_budget() -> None:

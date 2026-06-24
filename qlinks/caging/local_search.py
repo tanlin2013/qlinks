@@ -2461,6 +2461,105 @@ def run_local_region_proposals(
     return LocalRegionProposalSearchResult(records=search_records)
 
 
+def collect_qdm_cage_blocks_with_scan_from_region_proposals(
+    proposals: Sequence[LocalRegionProposal],
+    *,
+    model: object | None = None,
+    config: LocalQDMCageSearchConfig | None = None,
+    adapter: LocalCageModelAdapter | None = None,
+    signatures: Sequence[tuple[int, int]] | None = None,
+    max_regions: int | None = None,
+    max_records_per_region: int | None = None,
+    max_blocks: int | None = None,
+    block_id_start: int = 0,
+    skip_incompatible_blocks: bool = True,
+) -> tuple[LocalRegionProposalSearchResult, list[LocalQDMCageBlock]]:
+    """Run proposal searches and stream compatible QDM blocks.
+
+    This is the block-oriented counterpart of :func:`run_local_region_proposals`.
+    It converts records into ``LocalQDMCageBlock`` objects immediately after each
+    region is searched and stops as soon as ``max_blocks`` is reached.  This is
+    important for expensive proposal portfolios: the older two-stage workflow
+    searched every proposed region first and only then applied the block cap, so
+    robust scans could spend most of their time in local DFS branches that would
+    never contribute to the requested block pool.
+    """
+    if block_id_start < 0:
+        raise ValueError("block_id_start must be non-negative.")
+    if max_regions is not None and max_regions < 0:
+        raise ValueError("max_regions must be non-negative or None.")
+    if max_records_per_region is not None and max_records_per_region < 0:
+        raise ValueError("max_records_per_region must be non-negative or None.")
+    if max_blocks is not None and max_blocks < 0:
+        raise ValueError("max_blocks must be non-negative or None.")
+
+    signature_filter = None
+    if signatures is not None:
+        signature_filter = {(int(kappa), int(potential)) for kappa, potential in signatures}
+
+    search_records: list[LocalRegionProposalSearchRecord] = []
+    blocks: list[LocalQDMCageBlock] = []
+    emitted_regions = 0
+    next_block_id = int(block_id_start)
+
+    if max_blocks == 0:
+        return LocalRegionProposalSearchResult(records=[]), []
+
+    for proposal_index, proposal in enumerate(proposals):
+        proposal_model = _model_for_region_proposal(proposal, model)
+        proposal_adapter = _adapter_for_region_proposal(proposal, adapter)
+        proposal_config = _config_for_region_proposal(proposal, config)
+
+        for region_index, proposal_record, region in _iter_region_proposal_records(proposal):
+            if max_regions is not None and emitted_regions >= max_regions:
+                return LocalRegionProposalSearchResult(records=search_records), blocks
+            if max_blocks is not None and len(blocks) >= max_blocks:
+                return LocalRegionProposalSearchResult(records=search_records), blocks
+
+            result = LocalCageSearcher(
+                model=proposal_model,
+                region=region,
+                config=proposal_config,
+                adapter=proposal_adapter,
+            ).run()
+            search_records.append(
+                LocalRegionProposalSearchRecord(
+                    proposal_index=proposal_index,
+                    region_index=region_index,
+                    region=region,
+                    result=result,
+                    proposal_record=proposal_record,
+                )
+            )
+            emitted_regions += 1
+
+            region_records = result.records
+            if signature_filter is not None:
+                region_records = [
+                    record for record in region_records if record.signature in signature_filter
+                ]
+            if max_records_per_region is not None:
+                region_records = region_records[:max_records_per_region]
+
+            for local_record in region_records:
+                if max_blocks is not None and len(blocks) >= max_blocks:
+                    return LocalRegionProposalSearchResult(records=search_records), blocks
+                try:
+                    block = make_qdm_cage_block(
+                        proposal_model,
+                        local_record,
+                        block_id=next_block_id,
+                    )
+                except ValueError:
+                    if skip_incompatible_blocks:
+                        continue
+                    raise
+                blocks.append(block)
+                next_block_id += 1
+
+    return LocalRegionProposalSearchResult(records=search_records), blocks
+
+
 def collect_qdm_cage_blocks_from_region_proposals(
     proposals: Sequence[LocalRegionProposal],
     *,
@@ -2475,24 +2574,25 @@ def collect_qdm_cage_blocks_from_region_proposals(
     skip_incompatible_blocks: bool = True,
 ) -> list[LocalQDMCageBlock]:
     """Run proposal searches and return a QDM block pool for multi-padding."""
-    scan = run_local_region_proposals(
+    _, blocks = collect_qdm_cage_blocks_with_scan_from_region_proposals(
         proposals,
         model=model,
         config=config,
         adapter=adapter,
-        max_regions=max_regions,
-    )
-    return scan.qdm_cage_blocks(
-        model=model,
-        block_id_start=block_id_start,
         signatures=signatures,
+        max_regions=max_regions,
         max_records_per_region=max_records_per_region,
         max_blocks=max_blocks,
+        block_id_start=block_id_start,
         skip_incompatible_blocks=skip_incompatible_blocks,
     )
+    return blocks
 
 
 collect_qdm_cage_blocks_from_proposals = collect_qdm_cage_blocks_from_region_proposals
+collect_qdm_cage_blocks_with_scan_from_proposals = (
+    collect_qdm_cage_blocks_with_scan_from_region_proposals
+)
 
 
 def _model_for_region_proposal(
@@ -2927,6 +3027,49 @@ class _LocalQDMActivePlaquetteObserver:
         )
 
 
+def _qdm_active_plaquette_closure_variable_order(
+    model: object,
+    region: LocalQDMRegion,
+    *,
+    n_local_variables: int,
+) -> npt.NDArray[np.int64]:
+    """Order local variables so active plaquettes are decided early.
+
+    The local-basis DFS may otherwise spend a long time enumerating boundary
+    dimer completions before assigning enough links to decide whether any active
+    plaquette can be flippable.  For local cage searches with the active-state
+    observer enabled, grouping links plaquette-by-plaquette exposes inactive
+    branches to the observer much earlier.  The basis remains sorted afterward
+    when ``sort=True``, so this only changes traversal cost, not the public basis
+    order.
+    """
+    local_index_by_link = {int(link_id): i for i, link_id in enumerate(region.link_ids)}
+    ordered: list[int] = []
+    seen: set[int] = set()
+
+    def append_variable(variable_index: int) -> None:
+        variable_index = int(variable_index)
+        if variable_index in seen:
+            return
+        if variable_index < 0 or variable_index >= int(n_local_variables):
+            return
+        seen.add(variable_index)
+        ordered.append(variable_index)
+
+    for plaquette_id in region.active_plaquette_ids:
+        for variable_index in _plaquette_local_indices(
+            model,
+            int(plaquette_id),
+            local_index_by_link,
+        ):
+            append_variable(int(variable_index))
+
+    for variable_index in range(int(n_local_variables)):
+        append_variable(variable_index)
+
+    return np.asarray(ordered, dtype=np.int64)
+
+
 def _qdm_active_plaquette_observer(
     model: object,
     region: LocalQDMRegion,
@@ -3041,11 +3184,17 @@ def enumerate_qdm_local_basis(
     )
 
     observers = ()
+    variable_order = None
     if prune_inactive_states and not full_link_region:
         observer = _qdm_active_plaquette_observer(model, region)
         observers = () if observer is None else (observer,)
+        variable_order = _qdm_active_plaquette_closure_variable_order(
+            model,
+            region,
+            n_local_variables=n_local,
+        )
 
-    return DFSBasisSolver(sort=sort).solve(
+    return DFSBasisSolver(sort=sort, variable_order=variable_order).solve(
         layout,
         constraints=constraints,
         sectors=sectors,
@@ -3791,6 +3940,7 @@ def robust_qdm_local_cage_search(
         blocks = collect_qdm_cage_blocks_from_region_proposals(
             proposals,
             model=model,
+            config=robust_config.local_config,
             adapter=adapter,
             signatures=robust_config.block_signatures,
             max_regions=None,
@@ -3811,14 +3961,11 @@ def robust_qdm_local_cage_search(
             stages=robust_config.padding_stages,
         )
 
-    scan = run_local_region_proposals(
+    scan, blocks = collect_qdm_cage_blocks_with_scan_from_region_proposals(
         proposals,
         model=model,
         config=robust_config.local_config,
         adapter=adapter,
-    )
-    blocks = scan.qdm_cage_blocks(
-        model=model,
         signatures=robust_config.block_signatures,
         max_records_per_region=robust_config.max_records_per_region,
         max_blocks=robust_config.max_blocks,
