@@ -488,6 +488,61 @@ def test_snake_stripe_region_proposal_finds_triangular_rhombus_snakes() -> None:
     assert all(record.region.link_ids.size < model.lattice.num_links for record in records)
 
 
+def test_snake_stripe_region_proposal_filters_known_honeycomb_induced_snake() -> None:
+    model = HoneycombQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=-2,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = SnakeStripeRegionProposal(
+        model,
+        max_plaquettes=8,
+        min_plaquettes=8,
+        max_records=64,
+        require_induced_cycle=True,
+        kind_pattern="constant_or_alternating",
+        config=LocalQDMCageSearchConfig(halo_layers=0, boundary_mode="relaxed"),
+    )
+    records = list(proposal.iter_records())
+    target = (1, 2, 4, 7, 9, 10, 12, 15)
+
+    assert target in {tuple(record.plaquette_ids.tolist()) for record in records}
+    assert all(record.plaquette_kinds == ("hexagon",) for record in records)
+
+
+def test_snake_stripe_region_proposal_filters_known_triangular_alternating_snake() -> None:
+    model = TriangularQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_a=0,
+        winding_b=0,
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+
+    proposal = SnakeStripeRegionProposal(
+        model,
+        max_plaquettes=8,
+        min_plaquettes=8,
+        max_records=32,
+        allow_kind_changes=True,
+        kind_pattern="alternating",
+        require_induced_cycle=True,
+        config=LocalQDMCageSearchConfig(halo_layers=0, boundary_mode="relaxed"),
+    )
+    records = list(proposal.iter_records())
+    target = (47, 48, 53, 54, 68, 69, 74, 75)
+
+    assert target in {tuple(record.plaquette_ids.tolist()) for record in records}
+    assert all(len(record.plaquette_kinds) == 2 for record in records)
+
+
 def test_robust_config_can_use_snake_stripe_strategy() -> None:
     model = SquareQDMModel(
         lx=4,

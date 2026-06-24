@@ -43,6 +43,7 @@ from qlinks.operators.plaquette import alternating_binary_patterns
 from qlinks.variables import VariableLayout
 
 LocalBoundaryMode = Literal["relaxed", "closed"]
+SnakeStripeKindPattern = Literal["any", "constant", "alternating", "constant_or_alternating"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -477,6 +478,11 @@ class SnakeStripeRegionProposal:
     therefore a better first pass for honeycomb and triangular QDM where useful
     width-one stripes can turn while wrapping the torus.
 
+    Optional ``require_induced_cycle`` and ``kind_pattern`` filters turn the
+    broad cycle enumerator into a more motif-like proposal: the examples seen
+    in exact QDM cages are usually chordless width-one cycles whose plaquette
+    kinds are either constant or strictly alternating between two kinds.
+
     The enumeration is intentionally budgeted by ``max_plaquettes``,
     ``max_links``, ``max_turns``, and ``max_records``.
     """
@@ -493,6 +499,8 @@ class SnakeStripeRegionProposal:
     max_turns: int | None = None
     plaquette_kinds: tuple[str, ...] | None = None
     allow_kind_changes: bool = False
+    kind_pattern: SnakeStripeKindPattern = "constant_or_alternating"
+    require_induced_cycle: bool = False
     winding_vectors: tuple[tuple[int, ...], ...] | None = None
     adapter: LocalCageModelAdapter | None = None
 
@@ -509,6 +517,11 @@ class SnakeStripeRegionProposal:
             raise ValueError("max_links must be positive or None.")
         if self.max_turns is not None and self.max_turns < 0:
             raise ValueError("max_turns must be non-negative or None.")
+        if self.kind_pattern not in {"any", "constant", "alternating", "constant_or_alternating"}:
+            raise ValueError(
+                "kind_pattern must be 'any', 'constant', 'alternating', "
+                "or 'constant_or_alternating'."
+            )
 
         adapter = local_cage_adapter_for_model(self.model, self.adapter)
         config = adapter.normalize_config(self.config)
@@ -542,6 +555,7 @@ class SnakeStripeRegionProposal:
             plaquette_kinds=self.plaquette_kinds,
             allow_kind_changes=self.allow_kind_changes,
         )
+        edge_neighbors = _snake_edge_neighbor_sets(edge_map)
         allowed_windings = (
             None
             if self.winding_vectors is None
@@ -574,6 +588,14 @@ class SnakeStripeRegionProposal:
                     if neighbor == seed_id:
                         if len(path) < int(self.min_plaquettes):
                             continue
+                        if self.require_induced_cycle and not _snake_path_is_induced_cycle(
+                            path, edge_neighbors
+                        ):
+                            continue
+                        if not _snake_path_kind_pattern_allowed(
+                            self.model, path, self.kind_pattern
+                        ):
+                            continue
                         winding = _winding_from_lifted_displacement(self.model, next_lifted)
                         if winding is None or not any(int(value) != 0 for value in winding):
                             continue
@@ -602,10 +624,19 @@ class SnakeStripeRegionProposal:
 
                     if neighbor in path or len(path) >= int(self.max_plaquettes):
                         continue
+                    next_path = (*path, neighbor)
+                    if self.require_induced_cycle and not _snake_path_extension_is_induced(
+                        path, neighbor, edge_neighbors
+                    ):
+                        continue
+                    if not _snake_partial_kind_pattern_possible(
+                        self.model, next_path, self.kind_pattern
+                    ):
+                        continue
 
                     stack.append(
                         (
-                            (*path, neighbor),
+                            next_path,
                             next_lifted,
                             step,
                             next_turn_count,
@@ -1128,6 +1159,8 @@ class RobustQDMLocalCageSearchConfig:
     stripe_directions: tuple[int, ...] | None = None
     snake_stripe_max_turns: int | None = None
     snake_stripe_allow_kind_changes: bool = False
+    snake_stripe_kind_pattern: SnakeStripeKindPattern = "constant_or_alternating"
+    snake_stripe_require_induced_cycle: bool = False
     snake_stripe_plaquette_kinds: tuple[str, ...] | None = None
     snake_stripe_winding_vectors: tuple[tuple[int, ...], ...] | None = None
     adaptive_beam_width: int = 8
@@ -1175,6 +1208,16 @@ class RobustQDMLocalCageSearchConfig:
             raise ValueError("stripe_widths must contain positive integers.")
         if self.snake_stripe_max_turns is not None and self.snake_stripe_max_turns < 0:
             raise ValueError("snake_stripe_max_turns must be non-negative or None.")
+        if self.snake_stripe_kind_pattern not in {
+            "any",
+            "constant",
+            "alternating",
+            "constant_or_alternating",
+        }:
+            raise ValueError(
+                "snake_stripe_kind_pattern must be 'any', 'constant', 'alternating', "
+                "or 'constant_or_alternating'."
+            )
         if self.snake_stripe_plaquette_kinds is not None and not self.snake_stripe_plaquette_kinds:
             raise ValueError("snake_stripe_plaquette_kinds must be non-empty or None.")
         if self.snake_stripe_winding_vectors is not None and not self.snake_stripe_winding_vectors:
@@ -4018,6 +4061,8 @@ def _robust_qdm_region_proposals(
                 max_turns=config.snake_stripe_max_turns,
                 plaquette_kinds=config.snake_stripe_plaquette_kinds,
                 allow_kind_changes=config.snake_stripe_allow_kind_changes,
+                kind_pattern=config.snake_stripe_kind_pattern,
+                require_induced_cycle=config.snake_stripe_require_induced_cycle,
                 winding_vectors=config.snake_stripe_winding_vectors,
                 config=config.local_config,
                 adapter=adapter,
@@ -5919,6 +5964,123 @@ def _plaquette_shared_link_neighbor_edges(
         )
         for plaquette_id, edge_items in edges.items()
     }
+
+
+def _snake_edge_neighbor_sets(
+    edge_map: dict[int, tuple[tuple[int, tuple[int, ...]], ...]],
+) -> dict[int, frozenset[int]]:
+    """Return undirected neighbor sets used by snake-cycle filters."""
+    neighbors: dict[int, set[int]] = {int(pid): set() for pid in edge_map}
+    for source, edge_items in edge_map.items():
+        source = int(source)
+        neighbors.setdefault(source, set())
+        for target, _ in edge_items:
+            target = int(target)
+            neighbors.setdefault(target, set()).add(source)
+            neighbors[source].add(target)
+
+    return {int(pid): frozenset(sorted(values)) for pid, values in neighbors.items()}
+
+
+def _snake_path_extension_is_induced(
+    path: tuple[int, ...],
+    candidate: int,
+    edge_neighbors: dict[int, frozenset[int]],
+) -> bool:
+    """Return whether appending ``candidate`` keeps a chordless snake path."""
+    candidate = int(candidate)
+    if candidate in path:
+        return False
+    if not path:
+        return True
+
+    previous = int(path[-1])
+    candidate_neighbors = edge_neighbors.get(candidate, frozenset())
+    seed = int(path[0])
+    for existing in path[:-1]:
+        # The last vertex of an induced cycle must also touch the seed.  Allow
+        # this prospective closing edge while pruning all other chords.
+        if int(existing) == seed:
+            continue
+        if int(existing) in candidate_neighbors:
+            return False
+    return previous in candidate_neighbors
+
+
+def _snake_path_is_induced_cycle(
+    path: tuple[int, ...],
+    edge_neighbors: dict[int, frozenset[int]],
+) -> bool:
+    """Return whether ``path`` is a chordless cycle on the plaquette graph."""
+    if len(path) < 3:
+        return False
+    selected = {int(pid) for pid in path}
+    if len(selected) != len(path):
+        return False
+
+    for plaquette_id in selected:
+        degree = len(selected.intersection(edge_neighbors.get(int(plaquette_id), frozenset())))
+        if degree != 2:
+            return False
+    return True
+
+
+def _snake_path_kinds(model: object, path: Sequence[int]) -> tuple[str, ...]:
+    return tuple(str(model.lattice.plaquettes[int(pid)].kind) for pid in path)
+
+
+def _snake_partial_kind_pattern_possible(
+    model: object,
+    path: Sequence[int],
+    pattern: SnakeStripeKindPattern,
+) -> bool:
+    """Cheap partial-path pruning for kind-pattern-restricted snakes."""
+    if pattern == "any" or len(path) <= 1:
+        return True
+
+    kinds = _snake_path_kinds(model, path)
+    distinct = set(kinds)
+    if pattern == "constant":
+        return len(distinct) == 1
+    if pattern == "alternating":
+        return len(distinct) <= 2 and all(
+            left != right for left, right in zip(kinds, kinds[1:], strict=False)
+        )
+
+    # ``constant_or_alternating`` keeps both possibilities alive until closure.
+    constant_possible = len(distinct) == 1
+    alternating_possible = len(distinct) <= 2 and all(
+        left != right for left, right in zip(kinds, kinds[1:], strict=False)
+    )
+    return constant_possible or alternating_possible
+
+
+def _snake_path_kind_pattern_allowed(
+    model: object,
+    path: Sequence[int],
+    pattern: SnakeStripeKindPattern,
+) -> bool:
+    """Return whether a closed snake has the requested plaquette-kind pattern."""
+    if pattern == "any":
+        return True
+    if len(path) == 0:
+        return False
+
+    kinds = _snake_path_kinds(model, path)
+    distinct = set(kinds)
+    if pattern == "constant":
+        return len(distinct) == 1
+
+    alternating = (
+        len(distinct) == 2
+        and len(kinds) % 2 == 0
+        and all(left != right for left, right in zip(kinds, kinds[1:], strict=False))
+        and kinds[-1] != kinds[0]
+    )
+    if pattern == "alternating":
+        return alternating
+
+    return len(distinct) == 1 or alternating
 
 
 def _zero_cell_displacement(model: object) -> tuple[int, ...]:
