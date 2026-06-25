@@ -68,7 +68,6 @@ from qlinks.open_system.spin_one_xy import (
     SpinOneXYLeftMultiplier,
     SpinOneXYLindbladConstruction,
     build_spin_one_xy_lindblad_construction,
-    spin_one_xy_scar_tower_states,
 )
 from qlinks.open_system.states import (
     DensityMatrixKind,
@@ -171,7 +170,6 @@ __all__ = [
     "score_recycling_jump",
     "select_local_recycling_candidates",
     "solve_lindblad",
-    "spin_one_xy_scar_tower_states",
     "unvectorize_density_matrix",
     "vectorize_density_matrix",
     "verify_density_matrix",

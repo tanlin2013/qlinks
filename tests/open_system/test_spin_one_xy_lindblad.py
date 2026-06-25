@@ -2,9 +2,9 @@ import numpy as np
 
 from qlinks.basis import basis_configs_from_build_result
 from qlinks.models import SpinOneXYChainModel
+from qlinks.models.spin_one_xy import spin_one_xy_scar_tower_states
 from qlinks.open_system import (
     build_spin_one_xy_lindblad_construction,
-    spin_one_xy_scar_tower_states,
 )
 from tests.helpers.assertions import assert_sparse_allclose
 

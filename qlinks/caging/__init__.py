@@ -212,7 +212,6 @@ from qlinks.caging.types import (
 from qlinks.open_system import (
     SpinOneXYLindbladConstruction,
     build_spin_one_xy_lindblad_construction,
-    spin_one_xy_scar_tower_states,
 )
 
 __all__ = [
@@ -399,7 +398,6 @@ __all__ = [
     "solve_candidate",
     "solve_candidate_for_kinetic_targets",
     "solve_candidates",
-    "spin_one_xy_scar_tower_states",
     "support_key_for_zero_report",
     "support_key_from_mask",
     "type1_candidates_from_bipartite_self_loops",
