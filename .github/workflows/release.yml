@@ -6,6 +6,20 @@ on:
       - 'releases/**'
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      publish_testpypi:
+        description: Publish the built distributions to TestPyPI.
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   versions:
@@ -23,8 +37,67 @@ jobs:
         id: versions
         run: python scripts/ci_versions.py
 
-  build:
+  package:
+    name: Build and validate distributions
     needs: versions
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python and Poetry
+        uses: ./.github/actions/setup-python-poetry
+        with:
+          python-version: ${{ needs.versions.outputs.default-python }}
+          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          cache-prefix: release-package
+          compile-paths: qlinks tests scripts
+          install-command: poetry install -vvv --only main --sync
+
+      - name: Validate release metadata
+        run: python scripts/validate_release.py
+
+      - name: Check Poetry metadata and lockfile
+        run: poetry check --lock
+
+      - name: Build source and wheel distributions
+        run: poetry build
+
+      - name: Check distribution metadata
+        run: |
+          python -m pip install --upgrade twine
+          python -m twine check dist/*
+
+      - name: Smoke test built wheel
+        shell: bash
+        run: |
+          python -m venv /tmp/qlinks-wheel-smoke
+          /tmp/qlinks-wheel-smoke/bin/python -m pip install --upgrade pip
+          /tmp/qlinks-wheel-smoke/bin/python -m pip install dist/*.whl
+          /tmp/qlinks-wheel-smoke/bin/python - <<'PY'
+          import qlinks
+
+          print(f"Imported qlinks {qlinks.__version__}")
+          PY
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  docker:
+    name: Build and push GHCR image
+    needs:
+      - versions
+      - package
     runs-on: ubuntu-latest
 
     permissions:
@@ -51,7 +124,7 @@ jobs:
             type=sha,format=long
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
 
-      - name: Log in to the Container registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -61,6 +134,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           build-args: |
             PYTHON_VERSION=${{ needs.versions.outputs.default-python }}
@@ -68,26 +143,56 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  release:
-    needs:
-      - versions
-      - build
+  publish_testpypi:
+    name: Publish to TestPyPI
+    needs: package
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_testpypi
     runs-on: ubuntu-latest
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/qlinks/
 
     permissions:
       contents: read
-      packages: read
-
-    container:
-      image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      id-token: write
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Build package
-        run: poetry build --format wheel
-
-      - name: Publish a Python distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+      - name: Download distributions
+        uses: actions/download-artifact@v4
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          name: python-distributions
+          path: dist
+
+      - name: Publish distributions to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist/
+          skip-existing: true
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/project/qlinks/
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist
+
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
