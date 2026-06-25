@@ -17,6 +17,12 @@ from qlinks.visualizer.basis import (
     plot_basis_grid,
     plot_local_basis_grid,
 )
+from qlinks.visualizer.disk import (
+    QuantumDiskBasisGridVisualizer,
+    QuantumDiskConfigurationVisualizer,
+    QuantumDiskVisualStyle,
+    plot_quantum_disk_basis_grid,
+)
 from qlinks.visualizer.hamiltonian_graph import (
     AutomorphismBackend,
     EdgeColorRule,
@@ -64,6 +70,9 @@ __all__ = [
     "PeriodicImageMode",
     "PlaquetteSymbolMode",
     "PlaquetteSymbolStyle",
+    "QuantumDiskBasisGridVisualizer",
+    "QuantumDiskConfigurationVisualizer",
+    "QuantumDiskVisualStyle",
     "SiteLabelStyle",
     "StochasticSchrodingerGraphVisualizer",
     "StochasticSchrodingerTrajectory",
@@ -79,5 +88,6 @@ __all__ = [
     "plot_basis_config",
     "plot_basis_grid",
     "plot_local_basis_grid",
+    "plot_quantum_disk_basis_grid",
     "unflatten_operator_index",
 ]
