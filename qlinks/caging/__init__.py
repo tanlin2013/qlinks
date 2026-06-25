@@ -209,6 +209,11 @@ from qlinks.caging.types import (
     CageSolverConfig,
     DegenerateBasisStrategy,
 )
+from qlinks.open_system import (
+    SpinOneXYLindbladConstruction,
+    build_spin_one_xy_lindblad_construction,
+    spin_one_xy_scar_tower_states,
+)
 
 __all__ = [
     "AdaptiveRegionProposal",
@@ -306,6 +311,7 @@ __all__ = [
     "SectorPolicy",
     "SnakeStripeRegionProposal",
     "SnakeStripeRegionProposalRecord",
+    "SpinOneXYLindbladConstruction",
     "StripeRegionProposal",
     "StripeRegionProposalRecord",
     "SupportPermutationDiagnostic",
@@ -319,6 +325,7 @@ __all__ = [
     "build_qdm_local_kinetic_matrix",
     "build_qdm_local_region_from_links",
     "build_qdm_local_region_from_plaquettes",
+    "build_spin_one_xy_lindblad_construction",
     "build_type1_cage_lindblad_construction",
     "build_type1_local_cage_lindblad_construction",
     "cage_state_to_full_vector",
@@ -392,6 +399,7 @@ __all__ = [
     "solve_candidate",
     "solve_candidate_for_kinetic_targets",
     "solve_candidates",
+    "spin_one_xy_scar_tower_states",
     "support_key_for_zero_report",
     "support_key_from_mask",
     "type1_candidates_from_bipartite_self_loops",

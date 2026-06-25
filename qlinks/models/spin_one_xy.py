@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from qlinks.constraints import TotalValueSector
 from qlinks.lattice import BoundaryCondition, ChainLattice
 from qlinks.models.base import (
     HamiltonianBuilderName,
@@ -45,6 +46,7 @@ class SpinOneXYChainModel(HamiltonianModelBase):
     j_xy: complex = 1.0
     h_z: complex = 0.0
     d_z: complex = 0.0
+    total_sz: int | None = None
 
     def _make_lattice(self) -> ChainLattice:
         return ChainLattice(
@@ -68,7 +70,19 @@ class SpinOneXYChainModel(HamiltonianModelBase):
         self,
         layout: VariableLayout | None = None,
     ):
-        return ()
+        if layout is None:
+            layout = self.layout
+
+        if self.total_sz is None:
+            return ()
+
+        return (
+            TotalValueSector(
+                layout=layout,
+                target=int(self.total_sz),
+                name="total_sz_sector",
+            ),
+        )
 
     def make_kinetic_operators(
         self,

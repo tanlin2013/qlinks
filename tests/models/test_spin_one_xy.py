@@ -241,3 +241,30 @@ def test_spin_one_xy_local_term_descriptors_and_build_local_terms() -> None:
     assert result.potential is not None
     assert_sparse_allclose(local_kinetic, result.kinetic)
     assert_sparse_allclose(local_potential, result.potential)
+
+
+def test_spin_one_xy_total_sz_sector_filters_basis() -> None:
+    model = SpinOneXYChainModel(
+        length=4,
+        boundary_condition="periodic",
+        j_xy=1.0,
+        total_sz=0,
+    )
+
+    basis = model.build_basis(solver="dfs", sort=True)
+
+    assert basis.n_states == 19
+    assert all(int(config.sum()) == 0 for config in basis.states)
+
+
+def test_spin_one_xy_total_sz_sector_extreme_state() -> None:
+    model = SpinOneXYChainModel(
+        length=3,
+        boundary_condition="open",
+        total_sz=-3,
+    )
+
+    basis = model.build_basis(solver="dfs", sort=True)
+
+    assert basis.n_states == 1
+    np.testing.assert_array_equal(basis.states[0], np.asarray([-1, -1, -1]))
