@@ -198,3 +198,46 @@ def test_spin_one_xy_zero_h_and_d_has_no_potential_term_by_default():
 
     assert result.kinetic is not None
     assert result.potential is None
+
+
+def test_spin_one_xy_local_term_descriptors_and_build_local_terms() -> None:
+    model = SpinOneXYChainModel(
+        length=3,
+        boundary_condition="open",
+        j_xy=1.0,
+        h_z=0.3,
+        d_z=0.7,
+    )
+    result = model.build(builder="sparse", basis_solver="dfs", sort_basis=True)
+
+    kinetic_descriptors = model.local_term_descriptors(operator_kind="kinetic", term_kind="bond")
+    potential_descriptors = model.local_term_descriptors(
+        operator_kind="potential",
+        term_kind="site",
+    )
+
+    assert len(kinetic_descriptors) == 2
+    assert len(potential_descriptors) == 6
+    assert kinetic_descriptors[0].support_sites == (0, 1)
+    assert kinetic_descriptors[0].support_variables == (0, 1)
+    assert potential_descriptors[0].support_variables == (0,)
+
+    local_kinetic = sum(
+        (
+            model.build_local_term(descriptor, result, builder="sparse")
+            for descriptor in kinetic_descriptors
+        ),
+        0 * result.hamiltonian,
+    )
+    local_potential = sum(
+        (
+            model.build_local_term(descriptor, result, builder="sparse")
+            for descriptor in potential_descriptors
+        ),
+        0 * result.hamiltonian,
+    )
+
+    assert result.kinetic is not None
+    assert result.potential is not None
+    assert_sparse_allclose(local_kinetic, result.kinetic)
+    assert_sparse_allclose(local_potential, result.potential)

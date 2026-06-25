@@ -205,3 +205,38 @@ def test_square_quantum_disk_visualization_data_hook() -> None:
     assert data["site_occupations"] == {0: 1, 1: 0, 2: 0, 3: 1}
     assert data["site_coordinates"] == {0: (0, 0), 1: (0, 1), 2: (1, 0), 3: (1, 1)}
     assert data["boundary_condition"] == "open"
+
+
+def test_square_quantum_disk_build_local_bond_terms() -> None:
+    from tests.helpers.assertions import assert_sparse_allclose
+
+    model = SquareQuantumDiskModel(
+        lx=2,
+        ly=2,
+        boundary_condition="open",
+        hop_families=("x_plus_y",),
+        hard_core_nearest_neighbor=False,
+        coup_kin=-1.0,
+        coup_pot=0.5,
+        chemical_potential=0.0,
+    )
+    result = model.build(on_missing="raise", sort_basis=True)
+
+    kinetic_descriptors = model.local_term_descriptors(operator_kind="kinetic", term_kind="bond")
+    potential_descriptors = model.local_term_descriptors(
+        operator_kind="potential",
+        term_kind="bond",
+    )
+
+    assert len(kinetic_descriptors) == 1
+    assert len(potential_descriptors) == 1
+    assert kinetic_descriptors[0].support_sites == (1, 2)
+    assert kinetic_descriptors[0].support_variables == (1, 2)
+
+    local_kinetic = model.build_local_term(kinetic_descriptors[0], result, builder="sparse")
+    local_potential = model.build_local_term(potential_descriptors[0], result, builder="sparse")
+
+    assert result.kinetic is not None
+    assert result.potential is not None
+    assert_sparse_allclose(local_kinetic, result.kinetic)
+    assert_sparse_allclose(local_potential, result.potential)

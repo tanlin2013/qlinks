@@ -329,6 +329,9 @@ class SquareQuantumDiskModel(HamiltonianModelBase):
         for family in self.hop_families:
             for site_i, site_j in self.diagonal_hop_pairs(family):
                 support_sites = (int(site_i), int(site_j))
+                support_variables = tuple(
+                    int(self.layout.site_variable_index(site_id)) for site_id in support_sites
+                )
                 if operator_kind in (None, "kinetic", "hamiltonian"):
                     descriptors.append(
                         LocalTermDescriptor(
@@ -337,6 +340,7 @@ class SquareQuantumDiskModel(HamiltonianModelBase):
                             operator_kind="kinetic",
                             support_links=(),
                             support_sites=support_sites,
+                            support_variables=support_variables,
                             label=f"T_{family}_{site_i}_{site_j}",
                         )
                     )
@@ -348,11 +352,79 @@ class SquareQuantumDiskModel(HamiltonianModelBase):
                             operator_kind="potential",
                             support_links=(),
                             support_sites=support_sites,
+                            support_variables=support_variables,
                             label=f"P_{family}_{site_i}_{site_j}",
                         )
                     )
                 term_id += 1
         return tuple(descriptors)
+
+    def make_local_term(
+        self,
+        descriptor: LocalTermDescriptor,
+        layout: VariableLayout,
+        *,
+        builder: HamiltonianBuilderName = "sparse",
+    ) -> HamiltonianTermSpec:
+        validate_builder_name(builder)
+        if builder != "sparse":
+            raise NotImplementedError("SquareQuantumDiskModel currently supports builder='sparse'.")
+        if descriptor.term_kind != "bond":
+            raise ValueError("SquareQuantumDiskModel local terms currently support bond terms.")
+        if len(descriptor.support_sites) != 2:
+            raise ValueError("Disk bond descriptors must contain exactly two support sites.")
+
+        site_i, site_j = (int(site) for site in descriptor.support_sites)
+
+        if descriptor.operator_kind == "kinetic":
+            operators = (
+                DiskDiagonalHopOperator(
+                    layout=layout,
+                    lattice=self.lattice,
+                    source_site=site_i,
+                    target_site=site_j,
+                    coefficient=self.coup_kin,
+                    enforce_nearest_neighbor_blockade=self.hard_core_nearest_neighbor,
+                ),
+                DiskDiagonalHopOperator(
+                    layout=layout,
+                    lattice=self.lattice,
+                    source_site=site_j,
+                    target_site=site_i,
+                    coefficient=np.conjugate(self.coup_kin),
+                    enforce_nearest_neighbor_blockade=self.hard_core_nearest_neighbor,
+                ),
+            )
+            return HamiltonianTermSpec.from_operators(
+                name=f"kinetic_{descriptor.term_id}",
+                operators=operators,
+                kind="kinetic",
+            )
+
+        if descriptor.operator_kind == "potential":
+            operators = (
+                DiskDiagonalHopProjector(
+                    layout=layout,
+                    source_site=site_i,
+                    target_site=site_j,
+                    coefficient=self.coup_pot,
+                ),
+                DiskDiagonalHopProjector(
+                    layout=layout,
+                    source_site=site_j,
+                    target_site=site_i,
+                    coefficient=self.coup_pot,
+                ),
+            )
+            return HamiltonianTermSpec.from_operators(
+                name=f"potential_{descriptor.term_id}",
+                operators=operators,
+                kind="potential",
+            )
+
+        raise ValueError(
+            "descriptor.operator_kind must be 'kinetic' or 'potential' for SquareQuantumDiskModel."
+        )
 
 
 QuantumDiskModel = SquareQuantumDiskModel

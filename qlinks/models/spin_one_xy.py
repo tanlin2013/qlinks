@@ -9,6 +9,11 @@ from qlinks.models.base import (
     HamiltonianTermSpec,
     validate_builder_name,
 )
+from qlinks.models.local_terms import (
+    LocalOperatorKind,
+    LocalTermDescriptor,
+    LocalTermKind,
+)
 from qlinks.operators import (
     LocalSquareValueDiagonalOperator,
     LocalValueDiagonalOperator,
@@ -194,3 +199,134 @@ class SpinOneXYChainModel(HamiltonianModelBase):
             )
 
         return tuple(terms)
+
+    def local_term_descriptors(
+        self,
+        *,
+        operator_kind: LocalOperatorKind | None = None,
+        term_kind: LocalTermKind | None = None,
+    ) -> tuple[LocalTermDescriptor, ...]:
+        """Return site/bond local terms for generic open-system builders."""
+        descriptors: list[LocalTermDescriptor] = []
+
+        if term_kind in (None, "bond") and operator_kind in (None, "kinetic", "hamiltonian"):
+            for link in self.lattice.links:
+                support_sites = (int(link.source), int(link.target))
+                support_variables = tuple(
+                    int(self.layout.site_variable_index(site_id)) for site_id in support_sites
+                )
+                descriptors.append(
+                    LocalTermDescriptor(
+                        term_id=int(link.id),
+                        term_kind="bond",
+                        operator_kind="kinetic",
+                        support_links=(int(link.id),),
+                        support_sites=support_sites,
+                        support_variables=support_variables,
+                        label=f"XY_{link.source}_{link.target}",
+                    )
+                )
+
+        if term_kind in (None, "site") and operator_kind in (None, "potential", "hamiltonian"):
+            for site_id in self.lattice.site_ids:
+                variable_index = int(self.layout.site_variable_index(int(site_id)))
+
+                if self.h_z != 0:
+                    descriptors.append(
+                        LocalTermDescriptor(
+                            term_id=int(site_id),
+                            term_kind="site",
+                            operator_kind="potential",
+                            support_links=(),
+                            support_sites=(int(site_id),),
+                            support_variables=(variable_index,),
+                            label=f"Sz_{site_id}",
+                        )
+                    )
+
+                if self.d_z != 0:
+                    descriptors.append(
+                        LocalTermDescriptor(
+                            term_id=int(site_id),
+                            term_kind="site",
+                            operator_kind="potential",
+                            support_links=(),
+                            support_sites=(int(site_id),),
+                            support_variables=(variable_index,),
+                            label=f"Sz2_{site_id}",
+                        )
+                    )
+
+        return tuple(descriptors)
+
+    def make_local_term(
+        self,
+        descriptor: LocalTermDescriptor,
+        layout: VariableLayout,
+        *,
+        builder: HamiltonianBuilderName = "sparse",
+    ) -> HamiltonianTermSpec:
+        validate_builder_name(builder)
+
+        if descriptor.term_kind == "bond" and descriptor.operator_kind == "kinetic":
+            operators = (
+                (
+                    SpinOneXYBondOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        link_id=int(descriptor.term_id),
+                        coefficient=self.j_xy,
+                    )
+                    if builder == "sparse"
+                    else UpdateSpinOneXYBondOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        link_id=int(descriptor.term_id),
+                        coefficient=self.j_xy,
+                    )
+                ),
+            )
+            return HamiltonianTermSpec.from_operators(
+                name=f"kinetic_{descriptor.term_id}",
+                operators=operators,
+                kind="kinetic",
+            )
+
+        if descriptor.term_kind == "site" and descriptor.operator_kind == "potential":
+            site_id = int(descriptor.term_id)
+            variable_index = int(layout.site_variable_index(site_id))
+            operators: list[object] = []
+
+            if self.h_z != 0 and (
+                descriptor.label is None or str(descriptor.label).startswith("Sz_")
+            ):
+                operators.append(
+                    LocalValueDiagonalOperator(
+                        layout=layout,
+                        variable_index=variable_index,
+                        coefficient=self.h_z,
+                        name="spin_one_zeeman_z",
+                    )
+                )
+
+            if self.d_z != 0 and (
+                descriptor.label is None or str(descriptor.label).startswith("Sz2_")
+            ):
+                operators.append(
+                    LocalSquareValueDiagonalOperator(
+                        layout=layout,
+                        variable_index=variable_index,
+                        coefficient=self.d_z,
+                        name="spin_one_single_ion_anisotropy",
+                    )
+                )
+
+            return HamiltonianTermSpec.from_operators(
+                name=f"potential_{descriptor.label or site_id}",
+                operators=tuple(operators),
+                kind="potential",
+            )
+
+        raise ValueError(
+            "SpinOneXYChainModel local terms support bond kinetic terms and site potential terms."
+        )
