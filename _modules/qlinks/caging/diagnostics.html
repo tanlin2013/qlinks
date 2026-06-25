@@ -330,10 +330,11 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.local_recycling</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
     <span class="n">LocalMatrixUnitTerm</span><span class="p">,</span>
@@ -538,6 +539,843 @@
 
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">readouts</span><span class="p">)</span></div>
 
+
+
+<div class="viewcode-block" id="SupportPermutationDiagnostic">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.SupportPermutationDiagnostic">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupportPermutationDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagnostics for one support permutation as a possible CLS symmetry.</span>
+
+<span class="sd">    The permutation maps old local support positions to new local support</span>
+<span class="sd">    positions.  It is tested as a unitary ``U`` acting inside the support.  A</span>
+<span class="sd">    boundary-fixed local symmetry satisfies ``K U = K`` for the leakage matrix</span>
+<span class="sd">    ``K = H_{boundary,support}``.  If the state is also an eigenvector of ``U``</span>
+<span class="sd">    with a nontrivial phase, then the permutation gives a symmetry-sector</span>
+<span class="sd">    explanation for the destructive-interference closure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">permutation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">moved_support_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">cycle_lengths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">boundary_fixed_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">boundary_fixed_relative_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">internal_commutator_residual</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">internal_commutator_relative_residual</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">state_phase</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">state_eigen_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">state_eigen_relative_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">is_nontrivial_state_sector</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">explains_boundary_closure</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">moved_support_count</span> <span class="o">==</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="SupportPermutationDiagnostic.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.SupportPermutationDiagnostic.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a compact dictionary useful in notebooks and logs.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;permutation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutation</span><span class="p">,</span>
+            <span class="s2">&quot;moved_support_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">moved_support_count</span><span class="p">,</span>
+            <span class="s2">&quot;cycle_lengths&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_lengths</span><span class="p">,</span>
+            <span class="s2">&quot;boundary_fixed_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_fixed_residual</span><span class="p">,</span>
+            <span class="s2">&quot;boundary_fixed_relative_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_fixed_relative_residual</span><span class="p">,</span>
+            <span class="s2">&quot;internal_commutator_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">internal_commutator_residual</span><span class="p">,</span>
+            <span class="s2">&quot;internal_commutator_relative_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">internal_commutator_relative_residual</span><span class="p">,</span>
+            <span class="s2">&quot;state_phase&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_phase</span><span class="p">,</span>
+            <span class="s2">&quot;state_eigen_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_eigen_residual</span><span class="p">,</span>
+            <span class="s2">&quot;state_eigen_relative_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_eigen_relative_residual</span><span class="p">,</span>
+            <span class="s2">&quot;is_nontrivial_state_sector&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_nontrivial_state_sector</span><span class="p">,</span>
+            <span class="s2">&quot;explains_boundary_closure&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">explains_boundary_closure</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FockSpaceAutomorphismDiagnostic">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.FockSpaceAutomorphismDiagnostic">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FockSpaceAutomorphismDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Boundary-fixed Fock-space automorphism diagnostics for a cage state.</span>
+
+<span class="sd">    The diagnostic searches automorphisms of the support-plus-boundary graph</span>
+<span class="sd">    while fixing every boundary vertex individually.  This is intentionally the</span>
+<span class="sd">    conservative CLS test: a nontrivial support irrep is certified only when the</span>
+<span class="sd">    exterior/boundary channels are symmetry-trivial.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">support_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">boundary_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">hilbert_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">support_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">boundary_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">selected_graph_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">state_boundary_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">state_boundary_relative_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">n_automorphisms_tested</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_nontrivial_automorphisms</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_explaining_automorphisms</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">automorphism_search_truncated</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">skipped_reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">permutation_diagnostics</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SupportPermutationDiagnostic</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">was_skipped</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">skipped_reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_nontrivial_automorphism_explanation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_explaining_automorphisms</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">best_explaining_permutation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SupportPermutationDiagnostic</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">explaining</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">diagnostic</span>
+            <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutation_diagnostics</span>
+            <span class="k">if</span> <span class="n">diagnostic</span><span class="o">.</span><span class="n">explains_boundary_closure</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">explaining</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">explaining</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">state_eigen_relative_residual</span><span class="p">,</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">boundary_fixed_relative_residual</span><span class="p">,</span>
+                <span class="o">-</span><span class="n">item</span><span class="o">.</span><span class="n">moved_support_count</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="FockSpaceAutomorphismDiagnostic.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.FockSpaceAutomorphismDiagnostic.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a compact dictionary useful in notebooks and logs.&quot;&quot;&quot;</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_explaining_permutation</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;support_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_size</span><span class="p">,</span>
+            <span class="s2">&quot;boundary_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_size</span><span class="p">,</span>
+            <span class="s2">&quot;selected_graph_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_graph_size</span><span class="p">,</span>
+            <span class="s2">&quot;state_boundary_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_boundary_residual</span><span class="p">,</span>
+            <span class="s2">&quot;state_boundary_relative_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_boundary_relative_residual</span><span class="p">,</span>
+            <span class="s2">&quot;n_automorphisms_tested&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_automorphisms_tested</span><span class="p">,</span>
+            <span class="s2">&quot;n_nontrivial_automorphisms&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nontrivial_automorphisms</span><span class="p">,</span>
+            <span class="s2">&quot;n_explaining_automorphisms&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_explaining_automorphisms</span><span class="p">,</span>
+            <span class="s2">&quot;automorphism_search_truncated&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">automorphism_search_truncated</span><span class="p">,</span>
+            <span class="s2">&quot;skipped_reason&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">skipped_reason</span><span class="p">,</span>
+            <span class="s2">&quot;best_explaining_permutation&quot;</span><span class="p">:</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">best</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">best</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">(),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="OperatorStateActionDiagnostic">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.OperatorStateActionDiagnostic">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OperatorStateActionDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Action of one candidate operator on the target state.&quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">action_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">relative_action_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">eigenvalue</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">eigen_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">relative_eigen_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">annihilates_state</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">is_eigen_operator</span><span class="p">:</span> <span class="nb">bool</span>
+
+<div class="viewcode-block" id="OperatorStateActionDiagnostic.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.OperatorStateActionDiagnostic.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a compact dictionary useful in notebooks and logs.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;action_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_norm</span><span class="p">,</span>
+            <span class="s2">&quot;relative_action_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_action_norm</span><span class="p">,</span>
+            <span class="s2">&quot;eigenvalue&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalue</span><span class="p">,</span>
+            <span class="s2">&quot;eigen_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigen_residual</span><span class="p">,</span>
+            <span class="s2">&quot;relative_eigen_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_eigen_residual</span><span class="p">,</span>
+            <span class="s2">&quot;annihilates_state&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">annihilates_state</span><span class="p">,</span>
+            <span class="s2">&quot;is_eigen_operator&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_eigen_operator</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LocalAnnihilatorDiagnostic">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalAnnihilatorDiagnostic">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalAnnihilatorDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linear-annihilator diagnostics in a supplied operator basis.</span>
+
+<span class="sd">    If the operator basis is ``{O_a}``, this diagnostic computes the nullspace of</span>
+<span class="sd">    the action matrix with columns ``O_a |psi&gt;``.  Every null vector gives a</span>
+<span class="sd">    linear combination ``sum_a c_a O_a`` that annihilates the state.  The same</span>
+<span class="sd">    action data also reports which individual operators have the state as an</span>
+<span class="sd">    eigenvector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">operator_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">state_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">action_matrix_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">action_matrix_rank</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">annihilator_nullity</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">singular_values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">annihilator_coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">annihilator_residuals</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">operator_action_diagnostics</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">OperatorStateActionDiagnostic</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_annihilator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">annihilator_nullity</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_individual_annihilators</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">annihilates_state</span><span class="p">)</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator_action_diagnostics</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_individual_eigen_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">is_eigen_operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator_action_diagnostics</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LocalAnnihilatorDiagnostic.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalAnnihilatorDiagnostic.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a compact dictionary useful in notebooks and logs.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;operator_names&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator_names</span><span class="p">,</span>
+            <span class="s2">&quot;state_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_norm</span><span class="p">,</span>
+            <span class="s2">&quot;action_matrix_shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_matrix_shape</span><span class="p">,</span>
+            <span class="s2">&quot;action_matrix_rank&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_matrix_rank</span><span class="p">,</span>
+            <span class="s2">&quot;annihilator_nullity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">annihilator_nullity</span><span class="p">,</span>
+            <span class="s2">&quot;singular_values&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">singular_values</span><span class="p">),</span>
+            <span class="s2">&quot;annihilator_residuals&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">annihilator_residuals</span><span class="p">),</span>
+            <span class="s2">&quot;n_individual_annihilators&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_individual_annihilators</span><span class="p">,</span>
+            <span class="s2">&quot;n_individual_eigen_operators&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_individual_eigen_operators</span><span class="p">,</span>
+            <span class="s2">&quot;operator_action_diagnostics&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">diagnostic</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator_action_diagnostics</span>
+            <span class="p">),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CommutantAlgebraDiagnostic">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.CommutantAlgebraDiagnostic">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CommutantAlgebraDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Commutant diagnostics in a supplied operator basis.</span>
+
+<span class="sd">    Given candidate operators ``O_a`` and Hamiltonian/local terms ``h_j``, this</span>
+<span class="sd">    solves for linear combinations ``X=sum_a c_a O_a`` satisfying</span>
+<span class="sd">    ``[X, h_j]=0`` for all supplied terms.  This is a small-system diagnostic and</span>
+<span class="sd">    is meant for reverse engineering candidate commutant generators after exact</span>
+<span class="sd">    cage states have been found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">operator_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">term_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">commutator_matrix_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">commutant_rank</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">commutant_nullity</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">singular_values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">commutant_coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">commutant_residuals</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">individual_commutator_norms</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_commutant_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">commutant_nullity</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CommutantAlgebraDiagnostic.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.CommutantAlgebraDiagnostic.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a compact dictionary useful in notebooks and logs.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;operator_names&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator_names</span><span class="p">,</span>
+            <span class="s2">&quot;term_names&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">term_names</span><span class="p">,</span>
+            <span class="s2">&quot;commutator_matrix_shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">commutator_matrix_shape</span><span class="p">,</span>
+            <span class="s2">&quot;commutant_rank&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">commutant_rank</span><span class="p">,</span>
+            <span class="s2">&quot;commutant_nullity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">commutant_nullity</span><span class="p">,</span>
+            <span class="s2">&quot;singular_values&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">singular_values</span><span class="p">),</span>
+            <span class="s2">&quot;commutant_residuals&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">commutant_residuals</span><span class="p">),</span>
+            <span class="s2">&quot;individual_commutator_norms&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_commutator_norms</span>
+            <span class="p">),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="fock_space_automorphism_diagnostic">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.fock_space_automorphism_diagnostic">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fock_space_automorphism_diagnostic</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">kinetic_matrix</span><span class="p">,</span>
+    <span class="n">support_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">weight_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">max_graph_vertices</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">96</span><span class="p">,</span>
+    <span class="n">max_automorphisms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span>
+    <span class="n">include_identity</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FockSpaceAutomorphismDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagnose boundary-fixed Fock-space automorphisms of a cage support.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        kinetic_matrix: Sparse or dense matrix defining Fock-space hopping.</span>
+<span class="sd">        support_indices: Global basis indices carrying the compact state.</span>
+<span class="sd">        state: Either the local state on ``support_indices`` or a full Hilbert</span>
+<span class="sd">            vector in the same basis as ``kinetic_matrix``.</span>
+<span class="sd">        tolerance: Numerical tolerance used for symmetry/eigenstate tests.</span>
+<span class="sd">        weight_tolerance: Matrix entries with smaller absolute value are ignored</span>
+<span class="sd">            when building the graph and boundary map.</span>
+<span class="sd">        max_graph_vertices: Skip automorphism enumeration above this selected</span>
+<span class="sd">            support-plus-boundary graph size.  Use ``None`` to disable.</span>
+<span class="sd">        max_automorphisms: Maximum number of graph automorphisms to test.</span>
+<span class="sd">        include_identity: Whether to keep the identity permutation in the</span>
+<span class="sd">            returned per-permutation diagnostics.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Boundary-fixed automorphism diagnostic.  ``skipped_reason`` is populated</span>
+<span class="sd">        when the selected graph is intentionally too large for this lightweight</span>
+<span class="sd">        diagnostic.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">kinetic_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">hilbert_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">support</span> <span class="o">=</span> <span class="n">_as_index_tuple</span><span class="p">(</span><span class="n">support_indices</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">hilbert_size</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;support_indices&quot;</span><span class="p">)</span>
+    <span class="n">local_state</span> <span class="o">=</span> <span class="n">_state_on_support</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">support</span><span class="o">=</span><span class="n">support</span><span class="p">,</span> <span class="n">hilbert_size</span><span class="o">=</span><span class="n">hilbert_size</span><span class="p">)</span>
+
+    <span class="n">boundary</span> <span class="o">=</span> <span class="n">_boundary_indices_from_support</span><span class="p">(</span>
+        <span class="n">matrix</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span>
+        <span class="n">support</span><span class="o">=</span><span class="n">support</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">weight_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">support_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">support</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">boundary_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">boundary</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">leakage</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">boundary_array</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">support_array</span><span class="p">]</span>
+    <span class="n">leakage</span> <span class="o">=</span> <span class="n">_threshold_sparse_matrix</span><span class="p">(</span><span class="n">leakage</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">weight_tolerance</span><span class="p">)</span>
+    <span class="n">state_boundary_action</span> <span class="o">=</span> <span class="n">leakage</span> <span class="o">@</span> <span class="n">local_state</span>
+    <span class="n">state_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">local_state</span><span class="p">))</span>
+    <span class="n">state_boundary_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">state_boundary_action</span><span class="p">))</span>
+    <span class="n">state_boundary_relative_residual</span> <span class="o">=</span> <span class="n">state_boundary_residual</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">state_norm</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="n">selected_graph_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">support</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span>
+    <span class="n">skipped_reason</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">max_graph_vertices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">selected_graph_size</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_graph_vertices</span><span class="p">):</span>
+        <span class="n">skipped_reason</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;selected support-plus-boundary graph has </span><span class="si">{</span><span class="n">selected_graph_size</span><span class="si">}</span><span class="s2"> vertices, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;which exceeds max_graph_vertices=</span><span class="si">{</span><span class="n">max_graph_vertices</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">FockSpaceAutomorphismDiagnostic</span><span class="p">(</span>
+            <span class="n">support_indices</span><span class="o">=</span><span class="n">support</span><span class="p">,</span>
+            <span class="n">boundary_indices</span><span class="o">=</span><span class="n">boundary</span><span class="p">,</span>
+            <span class="n">hilbert_size</span><span class="o">=</span><span class="n">hilbert_size</span><span class="p">,</span>
+            <span class="n">support_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">support</span><span class="p">),</span>
+            <span class="n">boundary_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">boundary</span><span class="p">),</span>
+            <span class="n">selected_graph_size</span><span class="o">=</span><span class="n">selected_graph_size</span><span class="p">,</span>
+            <span class="n">state_boundary_residual</span><span class="o">=</span><span class="n">state_boundary_residual</span><span class="p">,</span>
+            <span class="n">state_boundary_relative_residual</span><span class="o">=</span><span class="n">state_boundary_relative_residual</span><span class="p">,</span>
+            <span class="n">n_automorphisms_tested</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">n_nontrivial_automorphisms</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">n_explaining_automorphisms</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">automorphism_search_truncated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">skipped_reason</span><span class="o">=</span><span class="n">skipped_reason</span><span class="p">,</span>
+            <span class="n">permutation_diagnostics</span><span class="o">=</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="n">support_permutations</span><span class="p">,</span> <span class="n">truncated</span> <span class="o">=</span> <span class="n">_boundary_fixed_support_automorphisms</span><span class="p">(</span>
+        <span class="n">matrix</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span>
+        <span class="n">support</span><span class="o">=</span><span class="n">support</span><span class="p">,</span>
+        <span class="n">boundary</span><span class="o">=</span><span class="n">boundary</span><span class="p">,</span>
+        <span class="n">weight_tolerance</span><span class="o">=</span><span class="n">weight_tolerance</span><span class="p">,</span>
+        <span class="n">max_automorphisms</span><span class="o">=</span><span class="n">max_automorphisms</span><span class="p">,</span>
+        <span class="n">include_identity</span><span class="o">=</span><span class="n">include_identity</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">internal</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">support_array</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">support_array</span><span class="p">]</span>
+    <span class="n">internal</span> <span class="o">=</span> <span class="n">_threshold_sparse_matrix</span><span class="p">(</span><span class="n">internal</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">weight_tolerance</span><span class="p">)</span>
+    <span class="n">leakage_norm</span> <span class="o">=</span> <span class="n">_sparse_frobenius_norm</span><span class="p">(</span><span class="n">leakage</span><span class="p">)</span>
+    <span class="n">internal_norm</span> <span class="o">=</span> <span class="n">_sparse_frobenius_norm</span><span class="p">(</span><span class="n">internal</span><span class="p">)</span>
+
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">_diagnose_support_permutation</span><span class="p">(</span>
+            <span class="n">permutation</span><span class="o">=</span><span class="n">permutation</span><span class="p">,</span>
+            <span class="n">leakage</span><span class="o">=</span><span class="n">leakage</span><span class="p">,</span>
+            <span class="n">leakage_norm</span><span class="o">=</span><span class="n">leakage_norm</span><span class="p">,</span>
+            <span class="n">internal</span><span class="o">=</span><span class="n">internal</span><span class="p">,</span>
+            <span class="n">internal_norm</span><span class="o">=</span><span class="n">internal_norm</span><span class="p">,</span>
+            <span class="n">state</span><span class="o">=</span><span class="n">local_state</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">permutation</span> <span class="ow">in</span> <span class="n">support_permutations</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">FockSpaceAutomorphismDiagnostic</span><span class="p">(</span>
+        <span class="n">support_indices</span><span class="o">=</span><span class="n">support</span><span class="p">,</span>
+        <span class="n">boundary_indices</span><span class="o">=</span><span class="n">boundary</span><span class="p">,</span>
+        <span class="n">hilbert_size</span><span class="o">=</span><span class="n">hilbert_size</span><span class="p">,</span>
+        <span class="n">support_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">support</span><span class="p">),</span>
+        <span class="n">boundary_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">boundary</span><span class="p">),</span>
+        <span class="n">selected_graph_size</span><span class="o">=</span><span class="n">selected_graph_size</span><span class="p">,</span>
+        <span class="n">state_boundary_residual</span><span class="o">=</span><span class="n">state_boundary_residual</span><span class="p">,</span>
+        <span class="n">state_boundary_relative_residual</span><span class="o">=</span><span class="n">state_boundary_relative_residual</span><span class="p">,</span>
+        <span class="n">n_automorphisms_tested</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">),</span>
+        <span class="n">n_nontrivial_automorphisms</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="ow">not</span> <span class="n">diagnostic</span><span class="o">.</span><span class="n">is_identity</span><span class="p">)</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="n">diagnostics</span>
+        <span class="p">),</span>
+        <span class="n">n_explaining_automorphisms</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">explains_boundary_closure</span><span class="p">)</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="n">diagnostics</span>
+        <span class="p">),</span>
+        <span class="n">automorphism_search_truncated</span><span class="o">=</span><span class="n">truncated</span><span class="p">,</span>
+        <span class="n">skipped_reason</span><span class="o">=</span><span class="n">skipped_reason</span><span class="p">,</span>
+        <span class="n">permutation_diagnostics</span><span class="o">=</span><span class="n">diagnostics</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fock_space_automorphism_diagnostic_for_cage_state">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.fock_space_automorphism_diagnostic_for_cage_state">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fock_space_automorphism_diagnostic_for_cage_state</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">kinetic_matrix</span><span class="p">,</span>
+    <span class="n">cage_state</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">weight_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">max_graph_vertices</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">96</span><span class="p">,</span>
+    <span class="n">max_automorphisms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span>
+    <span class="n">include_identity</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FockSpaceAutomorphismDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run :func:`fock_space_automorphism_diagnostic` on a ``CageState``.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">fock_space_automorphism_diagnostic</span><span class="p">(</span>
+        <span class="n">kinetic_matrix</span><span class="o">=</span><span class="n">kinetic_matrix</span><span class="p">,</span>
+        <span class="n">support_indices</span><span class="o">=</span><span class="n">cage_state</span><span class="o">.</span><span class="n">support</span><span class="p">,</span>
+        <span class="n">state</span><span class="o">=</span><span class="n">cage_state</span><span class="o">.</span><span class="n">local_state</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="n">weight_tolerance</span><span class="o">=</span><span class="n">weight_tolerance</span><span class="p">,</span>
+        <span class="n">max_graph_vertices</span><span class="o">=</span><span class="n">max_graph_vertices</span><span class="p">,</span>
+        <span class="n">max_automorphisms</span><span class="o">=</span><span class="n">max_automorphisms</span><span class="p">,</span>
+        <span class="n">include_identity</span><span class="o">=</span><span class="n">include_identity</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="local_annihilator_diagnostic_from_operators">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.local_annihilator_diagnostic_from_operators">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">local_annihilator_diagnostic_from_operators</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">operator_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">max_annihilator_vectors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalAnnihilatorDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find linear combinations of supplied operators that annihilate a state.&quot;&quot;&quot;</span>
+    <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">state_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vector</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">state_norm</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state must have nonzero norm.&quot;</span><span class="p">)</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="n">_default_names</span><span class="p">(</span><span class="n">operator_names</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">operators</span><span class="p">))</span>
+    <span class="n">action_columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">action_reports</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">operator</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">operators</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">_matrix_vector_product</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">vector</span><span class="p">)</span>
+        <span class="n">action_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">action_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">action</span><span class="p">))</span>
+        <span class="n">eigenvalue</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">vector</span><span class="p">))</span>
+        <span class="n">eigen_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">action</span> <span class="o">-</span> <span class="n">eigenvalue</span> <span class="o">*</span> <span class="n">vector</span><span class="p">))</span>
+        <span class="n">action_reports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">OperatorStateActionDiagnostic</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">action_norm</span><span class="o">=</span><span class="n">action_norm</span><span class="p">,</span>
+                <span class="n">relative_action_norm</span><span class="o">=</span><span class="n">action_norm</span> <span class="o">/</span> <span class="n">state_norm</span><span class="p">,</span>
+                <span class="n">eigenvalue</span><span class="o">=</span><span class="n">eigenvalue</span><span class="p">,</span>
+                <span class="n">eigen_residual</span><span class="o">=</span><span class="n">eigen_residual</span><span class="p">,</span>
+                <span class="n">relative_eigen_residual</span><span class="o">=</span><span class="n">eigen_residual</span> <span class="o">/</span> <span class="n">state_norm</span><span class="p">,</span>
+                <span class="n">annihilates_state</span><span class="o">=</span><span class="n">action_norm</span> <span class="o">/</span> <span class="n">state_norm</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">,</span>
+                <span class="n">is_eigen_operator</span><span class="o">=</span><span class="n">eigen_residual</span> <span class="o">/</span> <span class="n">state_norm</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">action_matrix</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">action_columns</span><span class="p">)</span> <span class="k">if</span> <span class="n">action_columns</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">vector</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">rank</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">null_vectors</span> <span class="o">=</span> <span class="n">_right_nullspace_from_dense_matrix</span><span class="p">(</span>
+        <span class="n">action_matrix</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_annihilator_vectors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">null_vectors</span> <span class="o">=</span> <span class="n">null_vectors</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_annihilator_vectors</span><span class="p">)]</span>
+
+    <span class="n">residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">action_matrix</span> <span class="o">@</span> <span class="n">null_vectors</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">null_vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">LocalAnnihilatorDiagnostic</span><span class="p">(</span>
+        <span class="n">operator_names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+        <span class="n">state_norm</span><span class="o">=</span><span class="n">state_norm</span><span class="p">,</span>
+        <span class="n">action_matrix_shape</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">action_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">action_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+        <span class="n">action_matrix_rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+        <span class="n">annihilator_nullity</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">null_vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">singular_values</span><span class="o">=</span><span class="n">singular_values</span><span class="p">,</span>
+        <span class="n">annihilator_coefficients</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">null_vectors</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="n">annihilator_residuals</span><span class="o">=</span><span class="n">residuals</span><span class="p">,</span>
+        <span class="n">operator_action_diagnostics</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">action_reports</span><span class="p">),</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="commutant_algebra_diagnostic_from_operator_basis">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.commutant_algebra_diagnostic_from_operator_basis">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">commutant_algebra_diagnostic_from_operator_basis</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">operators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+    <span class="n">hamiltonian_terms</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+    <span class="n">operator_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">term_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">max_commutant_vectors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CommutantAlgebraDiagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find operator-basis combinations commuting with all supplied terms.&quot;&quot;&quot;</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">_default_names</span><span class="p">(</span><span class="n">operator_names</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">operators</span><span class="p">))</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">_default_names</span><span class="p">(</span><span class="n">term_names</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">hamiltonian_terms</span><span class="p">))</span>
+    <span class="n">operator_matrices</span> <span class="o">=</span> <span class="p">[</span><span class="n">_as_dense_matrix</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">operators</span><span class="p">]</span>
+    <span class="n">term_matrices</span> <span class="o">=</span> <span class="p">[</span><span class="n">_as_dense_matrix</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">hamiltonian_terms</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">operator_matrices</span> <span class="ow">and</span> <span class="n">term_matrices</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">operator_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">operator_matrices</span> <span class="o">+</span> <span class="n">term_matrices</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;operators and hamiltonian_terms must have matching shapes.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;operators and hamiltonian_terms must be square matrices.&quot;</span><span class="p">)</span>
+
+    <span class="n">commutator_columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">individual_norms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">operator_matrices</span><span class="p">:</span>
+        <span class="n">pieces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">term_matrices</span><span class="p">:</span>
+            <span class="n">commutator</span> <span class="o">=</span> <span class="n">operator</span> <span class="o">@</span> <span class="n">term</span> <span class="o">-</span> <span class="n">term</span> <span class="o">@</span> <span class="n">operator</span>
+            <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">commutator</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">stacked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">pieces</span><span class="p">)</span> <span class="k">if</span> <span class="n">pieces</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">commutator_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stacked</span><span class="p">)</span>
+        <span class="n">individual_norms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">stacked</span><span class="p">)))</span>
+
+    <span class="n">commutator_matrix</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">commutator_columns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">commutator_columns</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">rank</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">null_vectors</span> <span class="o">=</span> <span class="n">_right_nullspace_from_dense_matrix</span><span class="p">(</span>
+        <span class="n">commutator_matrix</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_commutant_vectors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">null_vectors</span> <span class="o">=</span> <span class="n">null_vectors</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_commutant_vectors</span><span class="p">)]</span>
+
+    <span class="n">residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">commutator_matrix</span> <span class="o">@</span> <span class="n">null_vectors</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">null_vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CommutantAlgebraDiagnostic</span><span class="p">(</span>
+        <span class="n">operator_names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+        <span class="n">term_names</span><span class="o">=</span><span class="n">terms</span><span class="p">,</span>
+        <span class="n">commutator_matrix_shape</span><span class="o">=</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">commutator_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">commutator_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="p">),</span>
+        <span class="n">commutant_rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+        <span class="n">commutant_nullity</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">null_vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">singular_values</span><span class="o">=</span><span class="n">singular_values</span><span class="p">,</span>
+        <span class="n">commutant_coefficients</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">null_vectors</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="n">commutant_residuals</span><span class="o">=</span><span class="n">residuals</span><span class="p">,</span>
+        <span class="n">individual_commutator_norms</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">individual_norms</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_index_tuple</span><span class="p">(</span>
+    <span class="n">indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">result</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must not contain duplicate indices.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">upper_bound</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">result</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> contains indices outside [0, </span><span class="si">{</span><span class="n">upper_bound</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_state_on_support</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">support</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">hilbert_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vector</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">support</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">vector</span>
+    <span class="k">if</span> <span class="n">vector</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">hilbert_size</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">vector</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">support</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state must either be a local support vector or a full Hilbert-space vector.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_boundary_indices_from_support</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span>
+    <span class="n">support</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="n">support_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">support</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">support_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">support_mask</span><span class="p">[</span><span class="n">support_array</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[:,</span> <span class="n">support_array</span><span class="p">]</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="n">_threshold_sparse_matrix</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">row_norms</span> <span class="o">=</span> <span class="n">_sparse_row_norms</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+    <span class="n">boundary</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">((</span><span class="n">row_norms</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">support_mask</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">boundary</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_boundary_fixed_support_automorphisms</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span>
+    <span class="n">support</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">boundary</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">weight_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">max_automorphisms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">include_identity</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.algorithms</span><span class="w"> </span><span class="kn">import</span> <span class="n">isomorphism</span> <span class="k">as</span> <span class="n">nx_iso</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Fock-space automorphism diagnostics require networkx.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+    <span class="n">selected</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">support</span><span class="p">)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span>
+    <span class="n">selected_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">selected</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">n_support</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">support</span><span class="p">)</span>
+    <span class="n">selected_block</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">selected_array</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">selected_array</span><span class="p">]</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="o">&lt;</span> <span class="n">n_support</span><span class="p">:</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;support&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;boundary&quot;</span><span class="p">,</span> <span class="n">node</span> <span class="o">-</span> <span class="n">n_support</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+        <span class="n">selected_block</span><span class="o">.</span><span class="n">row</span><span class="p">,</span>
+        <span class="n">selected_block</span><span class="o">.</span><span class="n">col</span><span class="p">,</span>
+        <span class="n">selected_block</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+        <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">weight_tolerance</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">col</span><span class="p">),</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">_complex_label</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">tolerance</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">weight_tolerance</span><span class="p">,</span> <span class="mf">1.0e-12</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="n">matcher</span> <span class="o">=</span> <span class="n">nx_iso</span><span class="o">.</span><span class="n">DiGraphMatcher</span><span class="p">(</span>
+        <span class="n">graph</span><span class="p">,</span>
+        <span class="n">graph</span><span class="p">,</span>
+        <span class="n">node_match</span><span class="o">=</span><span class="n">nx_iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">edge_match</span><span class="o">=</span><span class="n">nx_iso</span><span class="o">.</span><span class="n">categorical_edge_match</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">identity</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_support</span><span class="p">))</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">permutations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">truncated</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">mapping</span> <span class="ow">in</span> <span class="n">matcher</span><span class="o">.</span><span class="n">isomorphisms_iter</span><span class="p">():</span>
+        <span class="n">permutation</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">index</span><span class="p">])</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_support</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">permutation</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">permutation</span> <span class="o">==</span> <span class="n">identity</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">include_identity</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">permutations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">permutations</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_automorphisms</span><span class="p">:</span>
+            <span class="n">truncated</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">permutations</span><span class="p">),</span> <span class="n">truncated</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_diagnose_support_permutation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">permutation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">leakage</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span>
+    <span class="n">leakage_norm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">internal</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span>
+    <span class="n">internal_norm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SupportPermutationDiagnostic</span><span class="p">:</span>
+    <span class="n">perm_matrix</span> <span class="o">=</span> <span class="n">_permutation_matrix</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span>
+    <span class="n">boundary_residual</span> <span class="o">=</span> <span class="n">_sparse_frobenius_norm</span><span class="p">(</span><span class="n">leakage</span> <span class="o">@</span> <span class="n">perm_matrix</span> <span class="o">-</span> <span class="n">leakage</span><span class="p">)</span>
+    <span class="n">boundary_relative</span> <span class="o">=</span> <span class="n">boundary_residual</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">leakage_norm</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="n">commutator</span> <span class="o">=</span> <span class="n">internal</span> <span class="o">@</span> <span class="n">perm_matrix</span> <span class="o">-</span> <span class="n">perm_matrix</span> <span class="o">@</span> <span class="n">internal</span>
+    <span class="n">internal_residual</span> <span class="o">=</span> <span class="n">_sparse_frobenius_norm</span><span class="p">(</span><span class="n">commutator</span><span class="p">)</span>
+    <span class="n">internal_relative</span> <span class="o">=</span> <span class="n">internal_residual</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">internal_norm</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="n">permuted_state</span> <span class="o">=</span> <span class="n">_apply_permutation_to_vector</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">permutation</span><span class="p">)</span>
+    <span class="n">state_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">state_norm</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span>
+        <span class="n">state_eigen_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">permuted_state</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">permuted_state</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span>
+        <span class="n">state_eigen_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">permuted_state</span> <span class="o">-</span> <span class="n">phase</span> <span class="o">*</span> <span class="n">state</span><span class="p">))</span>
+    <span class="n">state_relative</span> <span class="o">=</span> <span class="n">state_eigen_residual</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">state_norm</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">nontrivial</span> <span class="o">=</span> <span class="n">state_relative</span> <span class="o">&lt;=</span> <span class="n">tolerance</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">phase</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span>
+
+    <span class="k">return</span> <span class="n">SupportPermutationDiagnostic</span><span class="p">(</span>
+        <span class="n">permutation</span><span class="o">=</span><span class="n">permutation</span><span class="p">,</span>
+        <span class="n">moved_support_count</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span> <span class="o">!=</span> <span class="n">image</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">permutation</span><span class="p">)),</span>
+        <span class="n">cycle_lengths</span><span class="o">=</span><span class="n">_permutation_cycle_lengths</span><span class="p">(</span><span class="n">permutation</span><span class="p">),</span>
+        <span class="n">boundary_fixed_residual</span><span class="o">=</span><span class="n">boundary_residual</span><span class="p">,</span>
+        <span class="n">boundary_fixed_relative_residual</span><span class="o">=</span><span class="n">boundary_relative</span><span class="p">,</span>
+        <span class="n">internal_commutator_residual</span><span class="o">=</span><span class="n">internal_residual</span><span class="p">,</span>
+        <span class="n">internal_commutator_relative_residual</span><span class="o">=</span><span class="n">internal_relative</span><span class="p">,</span>
+        <span class="n">state_phase</span><span class="o">=</span><span class="n">phase</span><span class="p">,</span>
+        <span class="n">state_eigen_residual</span><span class="o">=</span><span class="n">state_eigen_residual</span><span class="p">,</span>
+        <span class="n">state_eigen_relative_residual</span><span class="o">=</span><span class="n">state_relative</span><span class="p">,</span>
+        <span class="n">is_nontrivial_state_sector</span><span class="o">=</span><span class="n">nontrivial</span><span class="p">,</span>
+        <span class="n">explains_boundary_closure</span><span class="o">=</span><span class="n">boundary_relative</span> <span class="o">&lt;=</span> <span class="n">tolerance</span> <span class="ow">and</span> <span class="n">nontrivial</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_permutation_matrix</span><span class="p">(</span><span class="n">permutation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
+    <span class="n">n_items</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">permutation</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_items</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_items</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_items</span><span class="p">,</span> <span class="n">n_items</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_permutation_to_vector</span><span class="p">(</span>
+    <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">permutation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">permutation</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)]</span> <span class="o">=</span> <span class="n">vector</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_permutation_cycle_lengths</span><span class="p">(</span><span class="n">permutation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">permutation</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">seen</span><span class="p">[</span><span class="n">start</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">seen</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
+            <span class="n">seen</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">length</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">permutation</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">lengths</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_threshold_sparse_matrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">tolerance</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sparse_row_norms</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="n">squared</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">squared</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">squared</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">squared</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sparse_frobenius_norm</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">sparse</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sparse</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_complex_label</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">tolerance</span><span class="p">,</span> <span class="mf">1.0e-15</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_matrix_vector_product</span><span class="p">(</span>
+    <span class="n">operator</span><span class="p">,</span>
+    <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">operator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">operator</span> <span class="o">@</span> <span class="n">vector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span> <span class="o">@</span> <span class="n">vector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_dense_matrix</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">operator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">toarray</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_right_nullspace_from_dense_matrix</span><span class="p">(</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]:</span>
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;matrix must be two-dimensional.&quot;</span><span class="p">)</span>
+    <span class="n">n_columns</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">n_columns</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">_u</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">))</span>
+    <span class="n">null_vectors</span> <span class="o">=</span> <span class="n">vh</span><span class="p">[</span><span class="n">rank</span><span class="p">:]</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">rank</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">singular_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">null_vectors</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_names</span><span class="p">(</span>
+    <span class="n">names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">!=</span> <span class="n">count</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;names must have the same length as the supplied objects.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
 </pre></div>
 
                 </article>
