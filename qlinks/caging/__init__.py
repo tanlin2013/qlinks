@@ -148,6 +148,7 @@ from qlinks.caging.open_system import (
     ReducedIZMonitorComponent,
     ReducedIZMonitorContent,
     build_type1_cage_lindblad_construction,
+    build_type1_local_cage_lindblad_construction,
 )
 from qlinks.caging.partition import (
     VertexSignature,
@@ -319,6 +320,7 @@ __all__ = [
     "build_qdm_local_region_from_links",
     "build_qdm_local_region_from_plaquettes",
     "build_type1_cage_lindblad_construction",
+    "build_type1_local_cage_lindblad_construction",
     "cage_state_to_full_vector",
     "cage_states_to_full_matrix",
     "certified_qdm_result_from_multi_block_reports",

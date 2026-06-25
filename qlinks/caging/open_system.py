@@ -28,7 +28,7 @@ from qlinks.models.base import (
     ModelBuildResult,
     SparseBackendName,
 )
-from qlinks.models.local_terms import LocalTermDescriptor
+from qlinks.models.local_terms import LocalTermDescriptor, LocalTermKind
 from qlinks.open_system import (
     LindbladProblem,
     LocalMatrixUnitTerm,
@@ -1390,6 +1390,7 @@ def build_type1_cage_lindblad_construction(
     cage_state: NDArray[np.complex128],
     classification_report: CageClassificationReport,
     z_value: complex | None = None,
+    local_term_kind: LocalTermKind | None = None,
     builder: HamiltonianBuilderName = "sparse",
     backend: SparseBackendName = "scipy",
     open_system_backend: OpenSystemBackendName = "scipy",
@@ -1443,6 +1444,9 @@ def build_type1_cage_lindblad_construction(
         classification_report: Reduced-IZ classification report for the target.
         z_value: Optional sharp type-1 potential value.  If omitted, the value
             is inferred when needed.
+        local_term_kind: Optional local-term geometry filter.  Leave as ``None``
+            for generic models, or pass values such as ``"plaquette"`` or
+            ``"bond"`` to restrict the construction to one local-term family.
         builder: Local-term matrix builder.
         backend: Sparse backend for local-term matrices.
         open_system_backend: Backend used for Lindblad diagnostics.
@@ -1533,11 +1537,12 @@ def build_type1_cage_lindblad_construction(
     _record_construction_stage(timing_collector, "extract_region", stage_start)
 
     stage_start = time.perf_counter()
-    kinetic_terms, potential_terms, potential_by_pid = _plaquette_local_terms_by_operator_kind(
-        model
+    kinetic_terms, potential_terms, potential_by_pid = _local_terms_by_operator_kind(
+        model,
+        term_kind=local_term_kind,
     )
 
-    inside_kinetic, outside_kinetic, crossing_kinetic = _partition_plaquette_terms_by_region(
+    inside_kinetic, outside_kinetic, crossing_kinetic = _partition_local_terms_by_region(
         kinetic_terms,
         region.variable_index_set,
     )
@@ -1675,7 +1680,7 @@ def build_type1_cage_lindblad_construction(
 
             single_component_support_set = frozenset(single_component_support)
 
-            single_component_support_plaquette_ids = _plaquette_ids_inside_variable_support(
+            single_component_support_plaquette_ids = _local_term_ids_inside_variable_support(
                 kinetic_terms,
                 single_component_support_set,
             )
@@ -2134,6 +2139,20 @@ def build_type1_cage_lindblad_construction(
     )
 
 
+def build_type1_local_cage_lindblad_construction(
+    **kwargs: Any,
+) -> CageLindbladConstruction:
+    """Alias for the generic local-term Type-1 cage Lindblad builder.
+
+    This name emphasizes that the construction now works with any model that
+    exposes :class:`~qlinks.models.local_terms.LocalTermDescriptor` objects and
+    ``build_local_term``; the older
+    :func:`build_type1_cage_lindblad_construction` name is kept for backward
+    compatibility with QDM/QLM notebooks.
+    """
+    return build_type1_cage_lindblad_construction(**kwargs)
+
+
 def _build_jump_operators(
     *,
     model: Any,
@@ -2403,7 +2422,7 @@ def _recycling_regions_from_construction_context(
     return (tuple(sorted(int(index) for index in region.variable_index_set)),)
 
 
-def _partition_plaquette_terms_by_region(
+def _partition_local_terms_by_region(
     terms: tuple[LocalTermDescriptor, ...],
     region_variables: frozenset[int] | None = None,
     *,
@@ -2425,7 +2444,7 @@ def _partition_plaquette_terms_by_region(
     crossing: list[LocalTermDescriptor] = []
 
     for term in terms:
-        support = term.support_link_set
+        support = term.support_variable_set
 
         if support <= region_variables:
             inside.append(term)
@@ -2435,6 +2454,24 @@ def _partition_plaquette_terms_by_region(
             crossing.append(term)
 
     return tuple(inside), tuple(outside), tuple(crossing)
+
+
+def _partition_plaquette_terms_by_region(
+    terms: tuple[LocalTermDescriptor, ...],
+    region_variables: frozenset[int] | None = None,
+    *,
+    variable_index_set: frozenset[int] | None = None,
+) -> tuple[
+    tuple[LocalTermDescriptor, ...],
+    tuple[LocalTermDescriptor, ...],
+    tuple[LocalTermDescriptor, ...],
+]:
+    """Backward-compatible alias for generic local-term partitioning."""
+    return _partition_local_terms_by_region(
+        terms,
+        region_variables,
+        variable_index_set=variable_index_set,
+    )
 
 
 def _select_monitor_terms(
@@ -2503,9 +2540,13 @@ def _validate_kinetic_jump_grouping_options(
 
 
 def _kinetic_term_support_set(term: LocalTermDescriptor) -> frozenset[int]:
-    support = getattr(term, "support_link_set", None)
+    support = getattr(term, "support_variable_set", None)
     if support is not None:
         return frozenset(int(index) for index in support)
+
+    support_variables = getattr(term, "support_variables", ())
+    if support_variables:
+        return frozenset(int(index) for index in support_variables)
 
     support_links = getattr(term, "support_links", ())
     return frozenset(int(index) for index in support_links)
@@ -3819,7 +3860,7 @@ def _build_reduced_iz_monitor_components(
             component_support_set,
         )
 
-        component_support_plaquette_ids = _plaquette_ids_inside_cached_supports(
+        component_support_plaquette_ids = _local_term_ids_inside_cached_supports(
             kinetic_term_supports,
             component_support_set,
         )
@@ -3980,6 +4021,29 @@ def _union_support_for_zero_reports(
     return tuple(sorted(support))
 
 
+def _local_terms_by_operator_kind(
+    model: Any,
+    *,
+    term_kind: LocalTermKind | None = None,
+) -> tuple[
+    tuple[LocalTermDescriptor, ...],
+    tuple[LocalTermDescriptor, ...],
+    dict[int, LocalTermDescriptor],
+]:
+    """Return local kinetic/potential descriptors from one model query.
+
+    Calling ``local_term_descriptors`` once avoids rebuilding identical
+    local-support tuples separately for kinetic and potential terms.
+    ``term_kind`` may be used to restrict the construction to plaquettes,
+    bonds, sites, or links.
+    """
+    terms = model.local_term_descriptors(term_kind=term_kind)
+    kinetic_terms = tuple(term for term in terms if term.operator_kind == "kinetic")
+    potential_terms = tuple(term for term in terms if term.operator_kind == "potential")
+    potential_by_pid = {int(term.term_id): term for term in potential_terms}
+    return kinetic_terms, potential_terms, potential_by_pid
+
+
 def _plaquette_local_terms_by_operator_kind(
     model: Any,
 ) -> tuple[
@@ -3987,22 +4051,14 @@ def _plaquette_local_terms_by_operator_kind(
     tuple[LocalTermDescriptor, ...],
     dict[int, LocalTermDescriptor],
 ]:
-    """Return plaquette kinetic/potential descriptors from one model query.
-
-    Calling ``local_term_descriptors`` once avoids rebuilding identical
-    plaquette-support tuples separately for kinetic and potential terms.
-    """
-    terms = model.local_term_descriptors(term_kind="plaquette")
-    kinetic_terms = tuple(term for term in terms if term.operator_kind == "kinetic")
-    potential_terms = tuple(term for term in terms if term.operator_kind == "potential")
-    potential_by_pid = {int(term.term_id): term for term in potential_terms}
-    return kinetic_terms, potential_terms, potential_by_pid
+    """Backward-compatible wrapper returning plaquette descriptors."""
+    return _local_terms_by_operator_kind(model, term_kind="plaquette")
 
 
 def _term_support_sets(
     terms: tuple[LocalTermDescriptor, ...],
 ) -> tuple[tuple[LocalTermDescriptor, frozenset[int]], ...]:
-    return tuple((term, term.support_link_set) for term in terms)
+    return tuple((term, term.support_variable_set) for term in terms)
 
 
 def _select_terms_inside_cached_supports(
@@ -4038,7 +4094,7 @@ def _select_monitor_recycler_closure_terms(
     )
 
 
-def _plaquette_ids_inside_cached_supports(
+def _local_term_ids_inside_cached_supports(
     term_supports: tuple[tuple[LocalTermDescriptor, frozenset[int]], ...],
     variable_support: frozenset[int],
 ) -> tuple[int, ...]:
@@ -4047,29 +4103,55 @@ def _plaquette_ids_inside_cached_supports(
     )
 
 
+def _plaquette_ids_inside_cached_supports(
+    term_supports: tuple[tuple[LocalTermDescriptor, frozenset[int]], ...],
+    variable_support: frozenset[int],
+) -> tuple[int, ...]:
+    """Backward-compatible alias for local term ids inside a support."""
+    return _local_term_ids_inside_cached_supports(term_supports, variable_support)
+
+
 def _select_terms_inside_variable_support(
     terms: tuple[LocalTermDescriptor, ...],
     variable_support: frozenset[int],
 ) -> tuple[LocalTermDescriptor, ...]:
-    return tuple(term for term in terms if term.support_link_set <= variable_support)
+    return tuple(term for term in terms if term.support_variable_set <= variable_support)
+
+
+def _local_term_ids_inside_variable_support(
+    terms: tuple[LocalTermDescriptor, ...],
+    variable_support: frozenset[int],
+) -> tuple[int, ...]:
+    return tuple(
+        int(term.term_id) for term in terms if term.support_variable_set <= variable_support
+    )
 
 
 def _plaquette_ids_inside_variable_support(
     terms: tuple[LocalTermDescriptor, ...],
     variable_support: frozenset[int],
 ) -> tuple[int, ...]:
-    return tuple(int(term.term_id) for term in terms if term.support_link_set <= variable_support)
+    """Backward-compatible alias for local term ids inside a support."""
+    return _local_term_ids_inside_variable_support(terms, variable_support)
 
 
-def _plaquette_ids_touching_variable_support(
+def _local_term_ids_touching_variable_support(
     terms: tuple[LocalTermDescriptor, ...],
     variable_support: frozenset[int],
 ) -> tuple[int, ...]:
     return tuple(
         int(term.term_id)
         for term in terms
-        if not term.support_link_set.isdisjoint(variable_support)
+        if not term.support_variable_set.isdisjoint(variable_support)
     )
+
+
+def _plaquette_ids_touching_variable_support(
+    terms: tuple[LocalTermDescriptor, ...],
+    variable_support: frozenset[int],
+) -> tuple[int, ...]:
+    """Backward-compatible alias for local term ids touching a support."""
+    return _local_term_ids_touching_variable_support(terms, variable_support)
 
 
 def _infer_sharp_potential_value(

@@ -745,6 +745,44 @@ def test_partition_plaquette_terms_by_region_separates_inside_crossing_outside()
     assert tuple(term.term_id for term in crossing) == (1,)
 
 
+def test_partition_local_terms_uses_explicit_variable_support_for_site_models():
+    terms = (
+        LocalTermDescriptor(
+            term_id=0,
+            term_kind="bond",
+            operator_kind="kinetic",
+            support_links=(),
+            support_sites=(0, 1),
+            support_variables=(0, 1),
+        ),
+        LocalTermDescriptor(
+            term_id=1,
+            term_kind="bond",
+            operator_kind="kinetic",
+            support_links=(),
+            support_sites=(1, 2),
+            support_variables=(1, 2),
+        ),
+        LocalTermDescriptor(
+            term_id=2,
+            term_kind="bond",
+            operator_kind="kinetic",
+            support_links=(),
+            support_sites=(3, 4),
+            support_variables=(3, 4),
+        ),
+    )
+
+    inside, outside, crossing = _partition_plaquette_terms_by_region(
+        terms,
+        variable_index_set=frozenset({0, 1}),
+    )
+
+    assert tuple(term.term_id for term in inside) == (0,)
+    assert tuple(term.term_id for term in outside) == (2,)
+    assert tuple(term.term_id for term in crossing) == (1,)
+
+
 def test_group_reduced_iz_reports_for_monitor_exact_and_connected_supports():
     report_0 = _zero_report(zero_index=0, local_mask=(True, True, False, False))
     report_1 = _zero_report(zero_index=1, local_mask=(False, True, True, False))
