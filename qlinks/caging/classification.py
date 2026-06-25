@@ -712,6 +712,33 @@ class CageClassificationReport:
             include_empty_supports=include_empty_supports,
         )
 
+    def local_structure_report(
+        self,
+        *,
+        basis_configs: NDArray[np.integer],
+        state: NDArray[np.complex128],
+        model: object | None = None,
+        decomposition: ReducedIZMonitorDecomposition = "exact_support",
+        tolerance: float = 1e-10,
+        matrix_unit_tolerance: float | None = None,
+        max_matrix_unit_terms: int | None = None,
+        include_empty_supports: bool = False,
+    ):
+        """Return an automatic local-structure report from reduced-IZ RDMs."""
+        from qlinks.caging.diagnostics import local_structure_report_from_classification_report
+
+        return local_structure_report_from_classification_report(
+            self,
+            basis_configs=basis_configs,
+            state=state,
+            model=model,
+            decomposition=decomposition,
+            tolerance=tolerance,
+            matrix_unit_tolerance=matrix_unit_tolerance,
+            max_matrix_unit_terms=max_matrix_unit_terms,
+            include_empty_supports=include_empty_supports,
+        )
+
     def to_rich(
         self,
         *,

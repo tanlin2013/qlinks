@@ -201,6 +201,479 @@ def reduced_iz_local_rdm_readouts_from_report(
 
 
 @dataclass(frozen=True, slots=True)
+class LocalCoherentPatternPair:
+    """Detected coherent two-pattern sector in a local RDM."""
+
+    pattern_a: tuple[int, ...]
+    pattern_b: tuple[int, ...]
+    weight: float
+    coefficient: complex
+    relative_phase: complex
+    hamming_distance: int
+    equal_weight_residual: float
+    rank_one_residual: float
+    is_equal_weight: bool
+    is_singlet_like: bool
+
+    @property
+    def sign_label(self) -> str:
+        if abs(self.relative_phase + 1.0) < 1e-8:
+            return "-"
+        if abs(self.relative_phase - 1.0) < 1e-8:
+            return "+"
+        return f"phase={self.relative_phase:.3g}"
+
+    def formula(self) -> str:
+        """Return a compact ket formula for the coherent pair."""
+        if self.is_singlet_like:
+            return f"(|{self.pattern_a}> - |{self.pattern_b}>) / sqrt(2)"
+        if abs(self.relative_phase - 1.0) < 1e-8:
+            return f"(|{self.pattern_a}> + |{self.pattern_b}>) / sqrt(2)"
+        return f"(|{self.pattern_a}> + ({self.relative_phase:.3g}) |{self.pattern_b}>) / sqrt(2)"
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "pattern_a": self.pattern_a,
+            "pattern_b": self.pattern_b,
+            "weight": self.weight,
+            "coefficient": self.coefficient,
+            "relative_phase": self.relative_phase,
+            "hamming_distance": self.hamming_distance,
+            "equal_weight_residual": self.equal_weight_residual,
+            "rank_one_residual": self.rank_one_residual,
+            "is_equal_weight": self.is_equal_weight,
+            "is_singlet_like": self.is_singlet_like,
+            "formula": self.formula(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LocalClassicalPatternSector:
+    """Diagonal-only local pattern sector not absorbed into a coherent pair."""
+
+    pattern: tuple[int, ...]
+    weight: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {"pattern": self.pattern, "weight": self.weight}
+
+
+@dataclass(frozen=True, slots=True)
+class LocalPlaquetteActivityReport:
+    """Flippability summary for one plaquette fully contained in a readout."""
+
+    plaquette_id: int
+    link_ids: tuple[int, ...]
+    local_positions: tuple[int, ...]
+    n_weighted_patterns: int
+    n_flippable_patterns: int
+    flippable_weight: float
+    status: str
+
+    @property
+    def is_always_inactive(self) -> bool:
+        return self.status == "always_inactive"
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "plaquette_id": self.plaquette_id,
+            "link_ids": self.link_ids,
+            "local_positions": self.local_positions,
+            "n_weighted_patterns": self.n_weighted_patterns,
+            "n_flippable_patterns": self.n_flippable_patterns,
+            "flippable_weight": self.flippable_weight,
+            "status": self.status,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LocalStructureReadoutReport:
+    """Automatic structure summary for one local-RDM readout."""
+
+    readout: LocalReducedDensityMatrixReadout
+    coherent_pairs: tuple[LocalCoherentPatternPair, ...]
+    classical_sectors: tuple[LocalClassicalPatternSector, ...]
+    plaquette_activity: tuple[LocalPlaquetteActivityReport, ...]
+    offdiagonal_weight: float
+    coherent_weight: float
+    classical_weight: float
+    tolerance: float
+
+    @property
+    def n_coherent_pairs(self) -> int:
+        return len(self.coherent_pairs)
+
+    @property
+    def n_singlet_like_pairs(self) -> int:
+        return sum(int(pair.is_singlet_like) for pair in self.coherent_pairs)
+
+    @property
+    def inactive_plaquette_ids(self) -> tuple[int, ...]:
+        return tuple(
+            report.plaquette_id
+            for report in self.plaquette_activity
+            if report.status == "always_inactive"
+        )
+
+    @property
+    def flippable_plaquette_ids(self) -> tuple[int, ...]:
+        return tuple(
+            report.plaquette_id
+            for report in self.plaquette_activity
+            if report.status != "always_inactive"
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "component_index": self.readout.component_index,
+            "component_id": self.readout.component_id,
+            "variable_indices": self.readout.variable_indices,
+            "support_rank": self.readout.support_rank,
+            "nullity": self.readout.nullity,
+            "n_coherent_pairs": self.n_coherent_pairs,
+            "n_singlet_like_pairs": self.n_singlet_like_pairs,
+            "n_classical_sectors": len(self.classical_sectors),
+            "coherent_weight": self.coherent_weight,
+            "classical_weight": self.classical_weight,
+            "offdiagonal_weight": self.offdiagonal_weight,
+            "inactive_plaquette_ids": self.inactive_plaquette_ids,
+            "flippable_plaquette_ids": self.flippable_plaquette_ids,
+            "coherent_pairs": tuple(pair.to_summary_dict() for pair in self.coherent_pairs),
+            "classical_sectors": tuple(
+                sector.to_summary_dict() for sector in self.classical_sectors
+            ),
+            "plaquette_activity": tuple(item.to_summary_dict() for item in self.plaquette_activity),
+        }
+
+    def to_text(self, *, max_pairs: int = 8, max_classical: int = 8) -> str:
+        lines = [
+            f"component={self.readout.component_index} id={self.readout.component_id} "
+            f"variables={self.readout.variable_indices}",
+            f"  rank/nullity: {self.readout.support_rank}/{self.readout.nullity}; "
+            f"coherent pairs: {self.n_coherent_pairs}; "
+            f"classical sectors: {len(self.classical_sectors)}",
+        ]
+        if self.coherent_pairs:
+            lines.append("  coherent local sectors:")
+            for pair in self.coherent_pairs[:max_pairs]:
+                kind = "singlet-like" if pair.is_singlet_like else "coherent-pair"
+                lines.append(
+                    f"    - {kind}, weight={pair.weight:.6g}, "
+                    f"hamming={pair.hamming_distance}: {pair.formula()}"
+                )
+            if len(self.coherent_pairs) > max_pairs:
+                lines.append(f"    ... {len(self.coherent_pairs) - max_pairs} more pair(s)")
+        if self.classical_sectors:
+            lines.append("  diagonal/frozen local sectors:")
+            for sector in self.classical_sectors[:max_classical]:
+                lines.append(
+                    f"    - weight={sector.weight:.6g}: " f"|{sector.pattern}><{sector.pattern}|"
+                )
+            if len(self.classical_sectors) > max_classical:
+                lines.append(
+                    f"    ... {len(self.classical_sectors) - max_classical} more sector(s)"
+                )
+        if self.plaquette_activity:
+            inactive = self.inactive_plaquette_ids
+            active = self.flippable_plaquette_ids
+            lines.append(
+                "  contained QDM plaquettes: " f"inactive={inactive}; non-inactive/mixed={active}"
+            )
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True, slots=True)
+class CageLocalStructureReport:
+    """Automatic text/formula report for local structure of a cage state."""
+
+    readout_reports: tuple[LocalStructureReadoutReport, ...]
+    decomposition: ReducedIZMonitorDecomposition | None
+    tolerance: float
+
+    @property
+    def n_readouts(self) -> int:
+        return len(self.readout_reports)
+
+    @property
+    def n_coherent_pairs(self) -> int:
+        return sum(report.n_coherent_pairs for report in self.readout_reports)
+
+    @property
+    def n_singlet_like_pairs(self) -> int:
+        return sum(report.n_singlet_like_pairs for report in self.readout_reports)
+
+    @property
+    def inactive_plaquette_ids(self) -> tuple[int, ...]:
+        ids: set[int] = set()
+        for report in self.readout_reports:
+            ids.update(report.inactive_plaquette_ids)
+        return tuple(sorted(ids))
+
+    @property
+    def flippable_plaquette_ids(self) -> tuple[int, ...]:
+        ids: set[int] = set()
+        for report in self.readout_reports:
+            ids.update(report.flippable_plaquette_ids)
+        return tuple(sorted(ids))
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "decomposition": self.decomposition,
+            "n_readouts": self.n_readouts,
+            "n_coherent_pairs": self.n_coherent_pairs,
+            "n_singlet_like_pairs": self.n_singlet_like_pairs,
+            "inactive_plaquette_ids": self.inactive_plaquette_ids,
+            "flippable_plaquette_ids": self.flippable_plaquette_ids,
+            "readouts": tuple(report.to_summary_dict() for report in self.readout_reports),
+        }
+
+    def to_text(self, *, max_readouts: int | None = None) -> str:
+        lines = [
+            "Cage local structure report",
+            f"decomposition: {self.decomposition}",
+            f"readouts: {self.n_readouts}; coherent pairs: {self.n_coherent_pairs}; "
+            f"singlet-like pairs: {self.n_singlet_like_pairs}",
+        ]
+        if self.inactive_plaquette_ids or self.flippable_plaquette_ids:
+            lines.append(
+                "QDM plaquette summary: "
+                f"inactive={self.inactive_plaquette_ids}; "
+                f"non-inactive/mixed={self.flippable_plaquette_ids}"
+            )
+        selected = self.readout_reports
+        if max_readouts is not None:
+            selected = selected[: int(max_readouts)]
+        for index, report in enumerate(selected):
+            lines.append("")
+            lines.append(f"[{index}] {report.to_text()}")
+        if max_readouts is not None and len(self.readout_reports) > max_readouts:
+            lines.append(f"\n... {len(self.readout_reports) - max_readouts} more readout(s)")
+        return "\n".join(lines)
+
+    def __str__(self) -> str:
+        return self.to_text()
+
+
+def _as_real_weight(value: complex, *, tolerance: float) -> float:
+    if abs(value.imag) > tolerance:
+        return float(abs(value))
+    return float(value.real)
+
+
+def _hamming_distance(pattern_a: tuple[int, ...], pattern_b: tuple[int, ...]) -> int:
+    return sum(int(a != b) for a, b in zip(pattern_a, pattern_b, strict=True))
+
+
+def _is_alternating_binary_pattern(values: Sequence[int]) -> bool:
+    if len(values) < 2:
+        return False
+    return all(int(values[index]) != int(values[index - 1]) for index in range(1, len(values)))
+
+
+def _contained_qdm_plaquette_activity(
+    readout: LocalReducedDensityMatrixReadout,
+    *,
+    model: object | None,
+    tolerance: float,
+) -> tuple[LocalPlaquetteActivityReport, ...]:
+    if model is None or not hasattr(model, "plaquette_ids") or not hasattr(model, "lattice"):
+        return ()
+    lattice = model.lattice
+    if not hasattr(lattice, "plaquette_links"):
+        return ()
+
+    variable_positions = {variable: pos for pos, variable in enumerate(readout.variable_indices)}
+    diagonal = np.diag(readout.density_matrix)
+    pattern_weights = [
+        (pattern, _as_real_weight(complex(weight), tolerance=tolerance))
+        for pattern, weight in zip(readout.local_patterns, diagonal, strict=True)
+        if abs(weight) > tolerance
+    ]
+    if not pattern_weights:
+        return ()
+
+    reports: list[LocalPlaquetteActivityReport] = []
+    for plaquette_id in model.plaquette_ids():
+        link_ids = tuple(int(link) for link in lattice.plaquette_links(int(plaquette_id)))
+        if any(link not in variable_positions for link in link_ids):
+            continue
+        local_positions = tuple(variable_positions[link] for link in link_ids)
+        flippable_count = 0
+        flippable_weight = 0.0
+        for pattern, weight in pattern_weights:
+            local_values = tuple(int(pattern[pos]) for pos in local_positions)
+            if _is_alternating_binary_pattern(local_values):
+                flippable_count += 1
+                flippable_weight += weight
+        if flippable_count == 0:
+            status = "always_inactive"
+        elif flippable_count == len(pattern_weights):
+            status = "always_flippable"
+        else:
+            status = "mixed"
+        reports.append(
+            LocalPlaquetteActivityReport(
+                plaquette_id=int(plaquette_id),
+                link_ids=link_ids,
+                local_positions=local_positions,
+                n_weighted_patterns=len(pattern_weights),
+                n_flippable_patterns=int(flippable_count),
+                flippable_weight=float(flippable_weight),
+                status=status,
+            )
+        )
+    return tuple(reports)
+
+
+def analyze_local_rdm_structure(
+    readout: LocalReducedDensityMatrixReadout,
+    *,
+    model: object | None = None,
+    tolerance: float = 1e-10,
+    equal_weight_tolerance: float | None = None,
+    rank_one_tolerance: float | None = None,
+) -> LocalStructureReadoutReport:
+    """Identify simple local structures in one RDM readout.
+
+    The first version deliberately recognizes only robust, notebook-readable
+    motifs: rank-one two-pattern coherent sectors and diagonal classical/frozen
+    sectors.  If a QDM ``model`` is supplied, fully contained plaquettes are also
+    classified as always inactive, always flippable, or mixed on the RDM support.
+    """
+    matrix = np.asarray(readout.density_matrix, dtype=np.complex128)
+    patterns = tuple(tuple(int(v) for v in pattern) for pattern in readout.local_patterns)
+    diag = np.diag(matrix)
+    equal_tol = tolerance if equal_weight_tolerance is None else float(equal_weight_tolerance)
+    rank_tol = tolerance if rank_one_tolerance is None else float(rank_one_tolerance)
+
+    used: set[int] = set()
+    coherent_pairs: list[LocalCoherentPatternPair] = []
+    offdiagonal_weight = 0.0
+    dim = len(patterns)
+    for i in range(dim):
+        for j in range(i + 1, dim):
+            coeff = complex(matrix[i, j])
+            if abs(coeff) <= tolerance:
+                continue
+            offdiagonal_weight += 2.0 * abs(coeff)
+            if i in used or j in used:
+                continue
+            weight_i = _as_real_weight(complex(diag[i]), tolerance=tolerance)
+            weight_j = _as_real_weight(complex(diag[j]), tolerance=tolerance)
+            if weight_i <= tolerance or weight_j <= tolerance:
+                continue
+            rank_residual = abs(abs(coeff) - float(np.sqrt(max(weight_i * weight_j, 0.0))))
+            if rank_residual > rank_tol:
+                continue
+            equal_residual = abs(weight_i - weight_j)
+            equal_weight = equal_residual <= equal_tol
+            relative_phase = coeff / abs(coeff)
+            is_singlet_like = equal_weight and abs(relative_phase + 1.0) <= 10.0 * tolerance
+            coherent_pairs.append(
+                LocalCoherentPatternPair(
+                    pattern_a=patterns[i],
+                    pattern_b=patterns[j],
+                    weight=float(weight_i + weight_j),
+                    coefficient=coeff,
+                    relative_phase=relative_phase,
+                    hamming_distance=_hamming_distance(patterns[i], patterns[j]),
+                    equal_weight_residual=float(equal_residual),
+                    rank_one_residual=float(rank_residual),
+                    is_equal_weight=bool(equal_weight),
+                    is_singlet_like=bool(is_singlet_like),
+                )
+            )
+            used.add(i)
+            used.add(j)
+
+    classical: list[LocalClassicalPatternSector] = []
+    for i, pattern in enumerate(patterns):
+        if i in used:
+            continue
+        weight = _as_real_weight(complex(diag[i]), tolerance=tolerance)
+        if weight > tolerance:
+            classical.append(LocalClassicalPatternSector(pattern=pattern, weight=float(weight)))
+
+    coherent_weight = float(sum(pair.weight for pair in coherent_pairs))
+    classical_weight = float(sum(sector.weight for sector in classical))
+    return LocalStructureReadoutReport(
+        readout=readout,
+        coherent_pairs=tuple(coherent_pairs),
+        classical_sectors=tuple(classical),
+        plaquette_activity=_contained_qdm_plaquette_activity(
+            readout,
+            model=model,
+            tolerance=tolerance,
+        ),
+        offdiagonal_weight=float(offdiagonal_weight),
+        coherent_weight=coherent_weight,
+        classical_weight=classical_weight,
+        tolerance=float(tolerance),
+    )
+
+
+def local_structure_report_from_readouts(
+    readouts: Sequence[LocalReducedDensityMatrixReadout],
+    *,
+    model: object | None = None,
+    decomposition: ReducedIZMonitorDecomposition | None = None,
+    tolerance: float = 1e-10,
+    equal_weight_tolerance: float | None = None,
+    rank_one_tolerance: float | None = None,
+) -> CageLocalStructureReport:
+    """Build an automatic local-structure report from local RDM readouts."""
+    return CageLocalStructureReport(
+        readout_reports=tuple(
+            analyze_local_rdm_structure(
+                readout,
+                model=model,
+                tolerance=tolerance,
+                equal_weight_tolerance=equal_weight_tolerance,
+                rank_one_tolerance=rank_one_tolerance,
+            )
+            for readout in readouts
+        ),
+        decomposition=decomposition,
+        tolerance=float(tolerance),
+    )
+
+
+def local_structure_report_from_classification_report(
+    report: CageClassificationReport,
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    state: npt.ArrayLike,
+    model: object | None = None,
+    decomposition: ReducedIZMonitorDecomposition = "exact_support",
+    tolerance: float = 1e-10,
+    matrix_unit_tolerance: float | None = None,
+    max_matrix_unit_terms: int | None = None,
+    include_empty_supports: bool = False,
+    equal_weight_tolerance: float | None = None,
+    rank_one_tolerance: float | None = None,
+) -> CageLocalStructureReport:
+    """Compute reduced-IZ RDM readouts and summarize local cage motifs."""
+    readouts = reduced_iz_local_rdm_readouts_from_report(
+        report,
+        basis_configs=basis_configs,
+        state=state,
+        decomposition=decomposition,
+        tolerance=tolerance,
+        matrix_unit_tolerance=matrix_unit_tolerance,
+        max_matrix_unit_terms=max_matrix_unit_terms,
+        include_empty_supports=include_empty_supports,
+    )
+    return local_structure_report_from_readouts(
+        readouts,
+        model=model,
+        decomposition=decomposition,
+        tolerance=tolerance,
+        equal_weight_tolerance=equal_weight_tolerance,
+        rank_one_tolerance=rank_one_tolerance,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class SupportPermutationDiagnostic:
     """Diagnostics for one support permutation as a possible CLS symmetry.
 
