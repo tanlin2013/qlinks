@@ -581,6 +581,65 @@ def diagnose_cage_code_candidate(
     )
 
 
+def diagnose_cage_collection_code_candidate(
+    *,
+    collection: Any,
+    errors: LocalErrorSet,
+    signature: tuple[int, int] | None = None,
+    max_weight: int | None = None,
+    tolerance: float = 1e-10,
+    include_logical_operators: bool = True,
+    include_error_algebra: bool = False,
+    allow_rank_deficient: bool = True,
+    classification_reports: Sequence[Any] = (),
+    metadata: Mapping[str, object] | None = None,
+) -> QECCodeCandidateReport:
+    """Diagnose a cross-sector cage collection as one candidate code space."""
+    selected_collection = collection if signature is None else collection.by_signature(signature)
+    code_space = CodeSpace.from_cage_collection(
+        selected_collection,
+        allow_rank_deficient=allow_rank_deficient,
+    )
+    local_report = diagnose_local_indistinguishability(
+        code_space,
+        errors,
+        max_weight=max_weight,
+        tolerance=tolerance,
+    )
+    logical_report = (
+        search_projected_logical_operators(code_space, errors)
+        if include_logical_operators
+        else None
+    )
+    algebra_report = (
+        diagnose_projected_error_algebra(
+            code_space,
+            errors,
+            max_weight=max_weight,
+            tolerance=tolerance,
+        )
+        if include_error_algebra
+        else None
+    )
+
+    merged_metadata = {"source": "cage_sector_collection"}
+    collection_summary = getattr(selected_collection, "to_summary_dict", None)
+    if callable(collection_summary):
+        merged_metadata["collection"] = collection_summary(max_entries=5)
+    merged_metadata.update(dict(metadata or {}))
+
+    return QECCodeCandidateReport(
+        code_space=code_space,
+        signature=selected_collection.common_signature,
+        record_count=len(selected_collection),
+        local_indistinguishability=local_report,
+        logical_operators=logical_report,
+        error_algebra=algebra_report,
+        classification_labels=_classification_label_tuple(classification_reports),
+        metadata=merged_metadata,
+    )
+
+
 def diagnose_cage_result_code_candidates(
     *,
     cage_result: Any,

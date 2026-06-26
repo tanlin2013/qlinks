@@ -1,3 +1,10 @@
+from qlinks.qec.cage_collection import (
+    CageSectorCollection,
+    CageSectorSource,
+    CollectedCageRecord,
+    embed_record_in_basis,
+    union_basis_from_sector_bases,
+)
 from qlinks.qec.code_space import CodeSpace
 from qlinks.qec.error_algebra import (
     ErrorAlgebraClassification,
@@ -28,13 +35,17 @@ from qlinks.qec.profile import (
     LocalIndistinguishabilityReport,
     QECCodeCandidateReport,
     diagnose_cage_code_candidate,
+    diagnose_cage_collection_code_candidate,
     diagnose_cage_result_code_candidates,
     diagnose_local_indistinguishability,
 )
 
 __all__ = [
     "CageQECScanReport",
+    "CageSectorCollection",
+    "CageSectorSource",
     "CodeSpace",
+    "CollectedCageRecord",
     "ErrorAlgebraClassification",
     "ErrorImageReport",
     "ErrorOperator",
@@ -51,9 +62,12 @@ __all__ = [
     "apply_error_to_code",
     "combine_error_operators",
     "diagnose_cage_code_candidate",
+    "diagnose_cage_collection_code_candidate",
     "diagnose_cage_result_code_candidates",
     "diagnose_knill_laflamme",
     "diagnose_local_indistinguishability",
     "diagnose_projected_error_algebra",
+    "embed_record_in_basis",
     "search_projected_logical_operators",
+    "union_basis_from_sector_bases",
 ]

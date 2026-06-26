@@ -236,6 +236,36 @@ class CodeSpace:
             allow_rank_deficient=allow_rank_deficient,
         )
 
+    @classmethod
+    def from_cage_collection(
+        cls,
+        collection: Any,
+        *,
+        labels: Sequence[Any] = (),
+        rank_tolerance: float = 1e-12,
+        allow_rank_deficient: bool = False,
+    ) -> CodeSpace:
+        """Build a code space from a cross-sector cage collection.
+
+        The collection is duck-typed and must expose ``ambient_basis`` and
+        ``to_ambient_row_vectors()``.  :class:`qlinks.qec.CageSectorCollection`
+        is the intended producer, but the loose dependency keeps this class
+        independent of the collection module.
+        """
+        ambient_basis = getattr(collection, "ambient_basis")
+        row_vectors = collection.to_ambient_row_vectors()
+        default_labels = tuple(labels)
+        if not default_labels:
+            default_labels = tuple(getattr(collection, "labels", ()))
+
+        return cls.from_row_vectors(
+            ambient_basis,
+            row_vectors,
+            labels=default_labels,
+            rank_tolerance=rank_tolerance,
+            allow_rank_deficient=allow_rank_deficient,
+        )
+
     @property
     def dimension(self) -> int:
         """Number of encoded/code states."""
