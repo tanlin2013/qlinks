@@ -27,6 +27,38 @@ class KnillLaflammeWeightSummary:
     worst_pair_support_variables: tuple[int, ...]
     dominant_failure: str | None
 
+    def to_summary_dict(self) -> dict[str, object]:
+        """Return a compact summary of this weight scan row."""
+        return {
+            "max_weight": self.max_weight,
+            "n_errors": self.n_errors,
+            "max_frobenius_residual": self.max_frobenius_residual,
+            "max_spectral_residual": self.max_spectral_residual,
+            "max_relative_frobenius_residual": self.max_relative_frobenius_residual,
+            "max_relative_leakage_frobenius_norm": (self.max_relative_leakage_frobenius_norm),
+            "passes_exact_kl": self.passes_exact_kl,
+            "worst_pair_names": self.worst_pair_names,
+            "worst_pair_support_variables": self.worst_pair_support_variables,
+            "dominant_failure": self.dominant_failure,
+        }
+
+    def to_text(self) -> str:
+        from qlinks.qec.reporting import format_bool, format_float
+
+        return (
+            f"w≤{self.max_weight}: errors={self.n_errors}, "
+            f"passes={format_bool(self.passes_exact_kl)}, "
+            f"max rel-KL={format_float(self.max_relative_frobenius_residual)}, "
+            f"max rel-leakage={format_float(self.max_relative_leakage_frobenius_norm)}, "
+            f"worst={self.worst_pair_names}, failure={self.dominant_failure}"
+        )
+
+    def format_summary(self) -> str:
+        return self.to_text()
+
+    def __str__(self) -> str:
+        return self.to_text()
+
 
 @dataclass(frozen=True, slots=True)
 class LocalIndistinguishabilityReport:
@@ -74,6 +106,107 @@ class LocalIndistinguishabilityReport:
     def report_for_weight(self, max_weight: int) -> KnillLaflammeReport:
         return self.kl_reports_by_weight[int(max_weight)]
 
+    def to_summary_dict(self) -> dict[str, object]:
+        """Return a compact local-indistinguishability profile summary."""
+        worst = self.worst_summary
+        return {
+            "code_dimension": self.code_dimension,
+            "ambient_dimension": self.ambient_dimension,
+            "error_set_name": self.error_set_name,
+            "tolerance": self.tolerance,
+            "max_weight_tested": self.max_weight_tested,
+            "first_violating_weight": self.first_violating_weight,
+            "local_indistinguishability_weight": self.local_indistinguishability_weight,
+            "passes_all_tested_weights": self.passes_all_tested_weights,
+            "worst_summary": None if worst is None else worst.to_summary_dict(),
+            "weight_summaries": tuple(
+                summary.to_summary_dict() for summary in self.weight_summaries
+            ),
+        }
+
+    def to_text(self) -> str:
+        """Return a human-readable local-indistinguishability profile."""
+        from qlinks.qec.reporting import format_bool, format_key_value_lines
+
+        lines = [
+            format_key_value_lines(
+                f"Local indistinguishability profile: {self.error_set_name}",
+                (
+                    ("code dimension", self.code_dimension),
+                    ("ambient dimension", self.ambient_dimension),
+                    ("max weight tested", self.max_weight_tested),
+                    ("first violating weight", self.first_violating_weight),
+                    (
+                        "local indistinguishability weight",
+                        self.local_indistinguishability_weight,
+                    ),
+                    ("passes all tested weights", format_bool(self.passes_all_tested_weights)),
+                ),
+            )
+        ]
+        if self.weight_summaries:
+            lines.append("weight scan")
+            lines.extend(f"  - {summary.to_text()}" for summary in self.weight_summaries)
+        return "\n".join(lines)
+
+    def format_summary(self) -> str:
+        return self.to_text()
+
+    def __str__(self) -> str:
+        return self.to_text()
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self):
+        """Return a rich renderable local-indistinguishability profile."""
+        from rich.console import Group
+
+        from qlinks.qec.reporting import add_summary_rows, format_bool, format_float, require_rich
+
+        _group, Panel, Table, _text = require_rich("LocalIndistinguishabilityReport")
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        add_summary_rows(
+            overview,
+            (
+                ("code dimension", self.code_dimension),
+                ("ambient dimension", self.ambient_dimension),
+                ("max weight tested", self.max_weight_tested),
+                ("first violating weight", self.first_violating_weight),
+                (
+                    "local indistinguishability weight",
+                    self.local_indistinguishability_weight,
+                ),
+                ("passes all tested weights", format_bool(self.passes_all_tested_weights)),
+            ),
+        )
+
+        table = Table(title="Weight scan")
+        table.add_column("max weight", justify="right")
+        table.add_column("errors", justify="right")
+        table.add_column("passes KL")
+        table.add_column("max rel-KL", justify="right")
+        table.add_column("max rel-leakage", justify="right")
+        table.add_column("worst pair")
+        table.add_column("failure")
+        for summary in self.weight_summaries:
+            table.add_row(
+                str(summary.max_weight),
+                str(summary.n_errors),
+                format_bool(summary.passes_exact_kl),
+                format_float(summary.max_relative_frobenius_residual),
+                format_float(summary.max_relative_leakage_frobenius_norm),
+                str(summary.worst_pair_names),
+                str(summary.dominant_failure),
+            )
+
+        return Panel(
+            Group(overview, table),
+            title=f"Local indistinguishability profile: {self.error_set_name}",
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class QECCodeCandidateReport:
@@ -102,6 +235,93 @@ class QECCodeCandidateReport:
     @property
     def qec_candidate(self) -> bool:
         return self.code_dimension >= 2 and self.first_violating_weight is None
+
+    def to_summary_dict(self, *, max_logical_candidates: int = 5) -> dict[str, object]:
+        """Return a compact summary of this cage-code candidate."""
+        return {
+            "signature": self.signature,
+            "record_count": self.record_count,
+            "code_dimension": self.code_dimension,
+            "ambient_dimension": self.code_space.ambient_dimension,
+            "qec_candidate": self.qec_candidate,
+            "first_violating_weight": self.first_violating_weight,
+            "local_indistinguishability_weight": self.local_indistinguishability_weight,
+            "classification_labels": self.classification_labels,
+            "metadata": dict(self.metadata),
+            "local_indistinguishability": (self.local_indistinguishability.to_summary_dict()),
+            "logical_operators": (
+                None
+                if self.logical_operators is None
+                else self.logical_operators.to_summary_dict(max_candidates=max_logical_candidates)
+            ),
+        }
+
+    def to_text(self, *, max_logical_candidates: int = 5) -> str:
+        """Return a human-readable cage-code candidate report."""
+        from qlinks.qec.reporting import format_bool, format_key_value_lines
+
+        lines = [
+            format_key_value_lines(
+                "QEC code candidate",
+                (
+                    ("signature", self.signature),
+                    ("record count", self.record_count),
+                    ("code dimension", self.code_dimension),
+                    ("qec candidate", format_bool(self.qec_candidate)),
+                    ("first violating weight", self.first_violating_weight),
+                    (
+                        "local indistinguishability weight",
+                        self.local_indistinguishability_weight,
+                    ),
+                    ("classification labels", self.classification_labels),
+                ),
+            ),
+            self.local_indistinguishability.to_text(),
+        ]
+        if self.logical_operators is not None:
+            lines.append(self.logical_operators.to_text(max_candidates=max_logical_candidates))
+        return "\n".join(lines)
+
+    def format_summary(self, *, max_logical_candidates: int = 5) -> str:
+        return self.to_text(max_logical_candidates=max_logical_candidates)
+
+    def __str__(self) -> str:
+        return self.to_text(max_logical_candidates=3)
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_logical_candidates: int = 8):
+        """Return a rich renderable cage-code candidate report."""
+        from rich.console import Group
+
+        from qlinks.qec.reporting import add_summary_rows, format_bool, require_rich
+
+        _group, Panel, Table, _text = require_rich("QECCodeCandidateReport")
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        add_summary_rows(
+            overview,
+            (
+                ("signature", self.signature),
+                ("record count", self.record_count),
+                ("code dimension", self.code_dimension),
+                ("qec candidate", format_bool(self.qec_candidate)),
+                ("first violating weight", self.first_violating_weight),
+                (
+                    "local indistinguishability weight",
+                    self.local_indistinguishability_weight,
+                ),
+                ("classification labels", self.classification_labels),
+            ),
+        )
+        renderables = [overview, self.local_indistinguishability.to_rich()]
+        if self.logical_operators is not None:
+            renderables.append(
+                self.logical_operators.to_rich(max_candidates=max_logical_candidates)
+            )
+        return Panel(Group(*renderables), title="QEC code candidate")
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,6 +362,114 @@ class CageQECScanReport:
             if report.signature == signature:
                 return report
         raise KeyError(f"No QEC candidate report for signature {signature}.")
+
+    def to_summary_dict(self, *, max_candidates: int = 20) -> dict[str, object]:
+        """Return a compact summary of a cage-result QEC scan."""
+        best = self.best_by_indistinguishability_weight
+        reports = self.candidate_reports[:max_candidates]
+        return {
+            "n_candidate_reports": len(self.candidate_reports),
+            "n_qec_candidates": len(self.qec_candidates),
+            "best_signature": None if best is None else best.signature,
+            "best_local_indistinguishability_weight": (
+                None if best is None else best.local_indistinguishability_weight
+            ),
+            "candidate_reports": tuple(
+                report.to_summary_dict(max_logical_candidates=3) for report in reports
+            ),
+            "n_preview_candidates": len(reports),
+        }
+
+    def to_text(self, *, max_candidates: int = 20) -> str:
+        """Return a human-readable cage-result QEC scan summary."""
+        from qlinks.qec.reporting import format_key_value_lines
+
+        best = self.best_by_indistinguishability_weight
+        lines = [
+            format_key_value_lines(
+                "Cage QEC scan",
+                (
+                    ("candidate reports", len(self.candidate_reports)),
+                    ("qec candidates", len(self.qec_candidates)),
+                    ("best signature", None if best is None else best.signature),
+                    (
+                        "best indistinguishability weight",
+                        None if best is None else best.local_indistinguishability_weight,
+                    ),
+                ),
+            )
+        ]
+        if self.candidate_reports:
+            lines.append("candidate overview")
+            for report in self.candidate_reports[:max_candidates]:
+                lines.append(
+                    "  - "
+                    f"signature={report.signature}, dim={report.code_dimension}, "
+                    f"records={report.record_count}, "
+                    f"qec_candidate={report.qec_candidate}, "
+                    f"first_violation={report.first_violating_weight}, "
+                    f"local_indistinguishability_weight="
+                    f"{report.local_indistinguishability_weight}"
+                )
+            if len(self.candidate_reports) > max_candidates:
+                lines.append(
+                    f"  ... {len(self.candidate_reports) - max_candidates} more candidates"
+                )
+        return "\n".join(lines)
+
+    def format_summary(self, *, max_candidates: int = 20) -> str:
+        return self.to_text(max_candidates=max_candidates)
+
+    def __str__(self) -> str:
+        return self.to_text(max_candidates=10)
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_candidates: int = 20):
+        """Return a rich renderable cage-result QEC scan summary."""
+        from rich.console import Group
+
+        from qlinks.qec.reporting import add_summary_rows, format_bool, require_rich
+
+        _group, Panel, Table, _text = require_rich("CageQECScanReport")
+        best = self.best_by_indistinguishability_weight
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        add_summary_rows(
+            overview,
+            (
+                ("candidate reports", len(self.candidate_reports)),
+                ("qec candidates", len(self.qec_candidates)),
+                ("best signature", None if best is None else best.signature),
+                (
+                    "best indistinguishability weight",
+                    None if best is None else best.local_indistinguishability_weight,
+                ),
+            ),
+        )
+
+        table = Table(title="Candidate overview")
+        table.add_column("signature")
+        table.add_column("dim", justify="right")
+        table.add_column("records", justify="right")
+        table.add_column("qec candidate")
+        table.add_column("first violation", justify="right")
+        table.add_column("LI weight", justify="right")
+        for report in self.candidate_reports[:max_candidates]:
+            table.add_row(
+                str(report.signature),
+                str(report.code_dimension),
+                str(report.record_count),
+                format_bool(report.qec_candidate),
+                str(report.first_violating_weight),
+                str(report.local_indistinguishability_weight),
+            )
+        if len(self.candidate_reports) > max_candidates:
+            table.caption = f"Showing {max_candidates} of {len(self.candidate_reports)} candidates"
+
+        return Panel(Group(overview, table), title="Cage QEC scan")
 
 
 def diagnose_local_indistinguishability(

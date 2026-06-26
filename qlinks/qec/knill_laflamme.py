@@ -31,6 +31,32 @@ class ErrorImageReport:
             return 0.0
         return self.leakage_frobenius_norm / self.image_frobenius_norm
 
+    def to_summary_dict(self) -> dict[str, object]:
+        """Return a compact summary of this error image."""
+        return {
+            "name": self.name,
+            "support_variables": self.support_variables,
+            "leakage_frobenius_norm": self.leakage_frobenius_norm,
+            "leakage_spectral_norm": self.leakage_spectral_norm,
+            "image_frobenius_norm": self.image_frobenius_norm,
+            "relative_leakage_frobenius_norm": self.relative_leakage_frobenius_norm,
+        }
+
+    def to_text(self) -> str:
+        from qlinks.qec.reporting import format_float
+
+        return (
+            f"{self.name}: leakage={format_float(self.leakage_frobenius_norm)} "
+            f"(relative={format_float(self.relative_leakage_frobenius_norm)}), "
+            f"support={self.support_variables}"
+        )
+
+    def format_summary(self) -> str:
+        return self.to_text()
+
+    def __str__(self) -> str:
+        return self.to_text()
+
 
 @dataclass(frozen=True, slots=True)
 class KnillLaflammePairReport:
@@ -51,6 +77,44 @@ class KnillLaflammePairReport:
     @property
     def names(self) -> tuple[str, str]:
         return (self.left_name, self.right_name)
+
+    def to_summary_dict(self, *, include_matrices: bool = False) -> dict[str, object]:
+        """Return a compact summary of this KL pair residual."""
+        from qlinks.qec.reporting import complex_to_summary, matrix_to_summary
+
+        summary: dict[str, object] = {
+            "left_name": self.left_name,
+            "right_name": self.right_name,
+            "names": self.names,
+            "scalar": complex_to_summary(self.scalar),
+            "frobenius_residual": self.frobenius_residual,
+            "spectral_residual": self.spectral_residual,
+            "relative_frobenius_residual": self.relative_frobenius_residual,
+            "max_offdiagonal_abs": self.max_offdiagonal_abs,
+            "diagonal_spread": self.diagonal_spread,
+            "dominant_failure": self.dominant_failure,
+        }
+        if include_matrices:
+            summary["matrix"] = matrix_to_summary(self.matrix)
+            summary["residual_matrix"] = matrix_to_summary(self.residual_matrix)
+        return summary
+
+    def to_text(self) -> str:
+        from qlinks.qec.reporting import format_complex, format_float
+
+        return (
+            f"{self.left_name}^† {self.right_name}: "
+            f"rel-KL={format_float(self.relative_frobenius_residual)}, "
+            f"||R||_F={format_float(self.frobenius_residual)}, "
+            f"scalar={format_complex(self.scalar)}, "
+            f"failure={self.dominant_failure}"
+        )
+
+    def format_summary(self) -> str:
+        return self.to_text()
+
+    def __str__(self) -> str:
+        return self.to_text()
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,6 +161,166 @@ class KnillLaflammeReport:
 
     def pairs_by_failure(self, failure: DominantFailure) -> tuple[KnillLaflammePairReport, ...]:
         return tuple(pair for pair in self.pair_reports if pair.dominant_failure == failure)
+
+    def to_summary_dict(self, *, max_pairs: int = 5, max_images: int = 5) -> dict[str, object]:
+        """Return a compact, serialization-friendly KL diagnostic summary."""
+        worst_pair = self.worst_pair
+        worst_image = self.worst_error_image
+        failure_counts: dict[str, int] = {}
+        for pair in self.pair_reports:
+            failure_counts[pair.dominant_failure] = failure_counts.get(pair.dominant_failure, 0) + 1
+
+        top_pairs = tuple(
+            pair.to_summary_dict()
+            for pair in sorted(
+                self.pair_reports,
+                key=lambda pair: pair.relative_frobenius_residual,
+                reverse=True,
+            )[:max_pairs]
+        )
+        top_images = tuple(
+            image.to_summary_dict()
+            for image in sorted(
+                self.error_image_reports,
+                key=lambda image: image.relative_leakage_frobenius_norm,
+                reverse=True,
+            )[:max_images]
+        )
+
+        return {
+            "code_dimension": self.code_dimension,
+            "ambient_dimension": self.ambient_dimension,
+            "error_set_name": self.error_set_name,
+            "n_error_pairs": len(self.pair_reports),
+            "n_error_images": len(self.error_image_reports),
+            "tolerance": self.tolerance,
+            "passes_exact_kl": self.passes_exact_kl,
+            "max_frobenius_residual": self.max_frobenius_residual,
+            "max_spectral_residual": self.max_spectral_residual,
+            "max_relative_frobenius_residual": self.max_relative_frobenius_residual,
+            "worst_pair": None if worst_pair is None else worst_pair.to_summary_dict(),
+            "worst_error_image": (None if worst_image is None else worst_image.to_summary_dict()),
+            "failure_counts": dict(sorted(failure_counts.items())),
+            "top_pairs": top_pairs,
+            "top_error_images": top_images,
+        }
+
+    def to_text(self, *, max_pairs: int = 5, max_images: int = 5) -> str:
+        """Return a human-readable KL diagnostic summary."""
+        from qlinks.qec.reporting import format_bool, format_float, format_key_value_lines
+
+        summary = self.to_summary_dict(max_pairs=max_pairs, max_images=max_images)
+        lines = [
+            format_key_value_lines(
+                f"Knill-Laflamme report: {self.error_set_name}",
+                (
+                    ("code dimension", self.code_dimension),
+                    ("ambient dimension", self.ambient_dimension),
+                    ("error pairs", len(self.pair_reports)),
+                    ("passes exact KL", format_bool(self.passes_exact_kl)),
+                    (
+                        "max relative KL residual",
+                        format_float(self.max_relative_frobenius_residual),
+                    ),
+                    ("max ||R||_F", format_float(self.max_frobenius_residual)),
+                    ("max ||R||_2", format_float(self.max_spectral_residual)),
+                    ("failure counts", summary["failure_counts"]),
+                ),
+            )
+        ]
+
+        if self.worst_pair is not None:
+            lines.append("worst KL pairs")
+            for pair in sorted(
+                self.pair_reports,
+                key=lambda pair: pair.relative_frobenius_residual,
+                reverse=True,
+            )[:max_pairs]:
+                lines.append(f"  - {pair.to_text()}")
+
+        if self.worst_error_image is not None:
+            lines.append("largest leakage images")
+            for image in sorted(
+                self.error_image_reports,
+                key=lambda image: image.relative_leakage_frobenius_norm,
+                reverse=True,
+            )[:max_images]:
+                lines.append(f"  - {image.to_text()}")
+
+        return "\n".join(lines)
+
+    def format_summary(self, *, max_pairs: int = 5, max_images: int = 5) -> str:
+        return self.to_text(max_pairs=max_pairs, max_images=max_images)
+
+    def __str__(self) -> str:
+        return self.to_text(max_pairs=3, max_images=3)
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_pairs: int = 8, max_images: int = 8):
+        """Return a rich renderable KL diagnostic summary."""
+        from rich.console import Group
+
+        from qlinks.qec.reporting import add_summary_rows, format_bool, format_float, require_rich
+
+        _group, Panel, Table, _text = require_rich("KnillLaflammeReport")
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        add_summary_rows(
+            overview,
+            (
+                ("code dimension", self.code_dimension),
+                ("ambient dimension", self.ambient_dimension),
+                ("error pairs", len(self.pair_reports)),
+                ("passes exact KL", format_bool(self.passes_exact_kl)),
+                ("max relative KL residual", format_float(self.max_relative_frobenius_residual)),
+                ("max ||R||_F", format_float(self.max_frobenius_residual)),
+                ("max ||R||_2", format_float(self.max_spectral_residual)),
+            ),
+        )
+
+        pair_table = Table(title="Worst KL pairs")
+        pair_table.add_column("left")
+        pair_table.add_column("right")
+        pair_table.add_column("rel KL", justify="right")
+        pair_table.add_column("||R||_F", justify="right")
+        pair_table.add_column("failure")
+        for pair in sorted(
+            self.pair_reports,
+            key=lambda pair: pair.relative_frobenius_residual,
+            reverse=True,
+        )[:max_pairs]:
+            pair_table.add_row(
+                pair.left_name,
+                pair.right_name,
+                format_float(pair.relative_frobenius_residual),
+                format_float(pair.frobenius_residual),
+                pair.dominant_failure,
+            )
+
+        leakage_table = Table(title="Largest leakage images")
+        leakage_table.add_column("error")
+        leakage_table.add_column("relative leakage", justify="right")
+        leakage_table.add_column("||leakage||_F", justify="right")
+        leakage_table.add_column("support")
+        for image in sorted(
+            self.error_image_reports,
+            key=lambda image: image.relative_leakage_frobenius_norm,
+            reverse=True,
+        )[:max_images]:
+            leakage_table.add_row(
+                image.name,
+                format_float(image.relative_leakage_frobenius_norm),
+                format_float(image.leakage_frobenius_norm),
+                str(image.support_variables),
+            )
+
+        return Panel(
+            Group(overview, pair_table, leakage_table),
+            title=f"Knill-Laflamme report: {self.error_set_name}",
+        )
 
 
 def diagnose_knill_laflamme(

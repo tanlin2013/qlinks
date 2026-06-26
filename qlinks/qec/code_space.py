@@ -265,6 +265,61 @@ class CodeSpace:
         arr = np.asarray(image, dtype=np.complex128)
         return arr - self.project_operator_action(arr)
 
-    def leakage_norm(self, image: npt.ArrayLike, *, ord: int | float | str | None = "fro") -> float:
+    def leakage_norm(
+        self,
+        image: npt.ArrayLike,
+        *,
+        ord: int | float | str | None = "fro",
+    ) -> float:
         """Norm of the component of ``image`` outside the code space."""
         return float(np.linalg.norm(self.leakage_image(image), ord=ord))
+
+    def to_summary_dict(self) -> dict[str, object]:
+        """Return a compact, serialization-friendly summary of the code space."""
+        return {
+            "dimension": self.dimension,
+            "ambient_dimension": self.ambient_dimension,
+            "labels": tuple(repr(label) for label in self.labels),
+        }
+
+    def to_text(self) -> str:
+        """Return a compact human-readable code-space summary."""
+        from qlinks.qec.reporting import format_key_value_lines
+
+        summary = self.to_summary_dict()
+        return format_key_value_lines(
+            "Code space",
+            (
+                ("dimension", summary["dimension"]),
+                ("ambient dimension", summary["ambient_dimension"]),
+                ("labels", summary["labels"]),
+            ),
+        )
+
+    def format_summary(self) -> str:
+        """Alias for :meth:`to_text`, useful in notebooks."""
+        return self.to_text()
+
+    def __str__(self) -> str:
+        return self.to_text()
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self):
+        """Return a rich renderable summary of the code space."""
+        from qlinks.qec.reporting import add_summary_rows, require_rich
+
+        _group, Panel, Table, _text = require_rich("CodeSpace")
+        table = Table.grid(padding=(0, 2))
+        table.add_column(style="bold")
+        table.add_column()
+        add_summary_rows(
+            table,
+            (
+                ("dimension", self.dimension),
+                ("ambient dimension", self.ambient_dimension),
+                ("labels", tuple(repr(label) for label in self.labels)),
+            ),
+        )
+        return Panel(table, title="Code space")

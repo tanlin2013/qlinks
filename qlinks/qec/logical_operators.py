@@ -31,6 +31,42 @@ class ProjectedLogicalOperator:
     def weight(self) -> int:
         return len(set(self.support_variables))
 
+    def to_summary_dict(self, *, include_matrices: bool = False) -> dict[str, object]:
+        """Return a compact summary of this projected logical operator."""
+        from qlinks.qec.reporting import complex_to_summary, matrix_to_summary
+
+        summary: dict[str, object] = {
+            "name": self.name,
+            "support_variables": self.support_variables,
+            "weight": self.weight,
+            "scalar": complex_to_summary(self.scalar),
+            "traceless_frobenius_norm": self.traceless_frobenius_norm,
+            "traceless_spectral_norm": self.traceless_spectral_norm,
+            "relative_traceless_frobenius_norm": self.relative_traceless_frobenius_norm,
+            "leakage_frobenius_norm": self.leakage_frobenius_norm,
+            "leakage_spectral_norm": self.leakage_spectral_norm,
+        }
+        if include_matrices:
+            summary["projected_matrix"] = matrix_to_summary(self.projected_matrix)
+            summary["traceless_matrix"] = matrix_to_summary(self.traceless_matrix)
+        return summary
+
+    def to_text(self) -> str:
+        from qlinks.qec.reporting import format_complex, format_float
+
+        return (
+            f"{self.name}: logical_strength={format_float(self.traceless_spectral_norm)}, "
+            f"relative_traceless={format_float(self.relative_traceless_frobenius_norm)}, "
+            f"leakage={format_float(self.leakage_frobenius_norm)}, "
+            f"scalar={format_complex(self.scalar)}, support={self.support_variables}"
+        )
+
+    def format_summary(self) -> str:
+        return self.to_text()
+
+    def __str__(self) -> str:
+        return self.to_text()
+
 
 @dataclass(frozen=True, slots=True)
 class LogicalOperatorReport:
@@ -64,6 +100,94 @@ class LogicalOperatorReport:
             for candidate in self.candidates
             if candidate.leakage_frobenius_norm <= max_leakage
         )
+
+    def to_summary_dict(self, *, max_candidates: int = 8) -> dict[str, object]:
+        """Return a compact projected-logical-operator summary."""
+        best = self.best_candidate
+        sorted_candidates = self.sorted_by_logical_strength()[:max_candidates]
+        return {
+            "code_dimension": self.code_dimension,
+            "n_candidates": len(self.candidates),
+            "best_candidate": None if best is None else best.to_summary_dict(),
+            "top_candidates": tuple(candidate.to_summary_dict() for candidate in sorted_candidates),
+        }
+
+    def to_text(self, *, max_candidates: int = 8) -> str:
+        """Return a human-readable projected-logical-operator summary."""
+        from qlinks.qec.reporting import format_float, format_key_value_lines
+
+        best = self.best_candidate
+        lines = [
+            format_key_value_lines(
+                "Projected logical operators",
+                (
+                    ("code dimension", self.code_dimension),
+                    ("candidate operators", len(self.candidates)),
+                    (
+                        "best logical strength",
+                        "none" if best is None else format_float(best.traceless_spectral_norm),
+                    ),
+                    ("best candidate", "none" if best is None else best.name),
+                ),
+            )
+        ]
+        if self.candidates:
+            lines.append("top projected operators")
+            for candidate in self.sorted_by_logical_strength()[:max_candidates]:
+                lines.append(f"  - {candidate.to_text()}")
+        return "\n".join(lines)
+
+    def format_summary(self, *, max_candidates: int = 8) -> str:
+        return self.to_text(max_candidates=max_candidates)
+
+    def __str__(self) -> str:
+        return self.to_text(max_candidates=5)
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_candidates: int = 10):
+        """Return a rich renderable projected-logical-operator summary."""
+        from rich.console import Group
+
+        from qlinks.qec.reporting import add_summary_rows, format_float, require_rich
+
+        _group, Panel, Table, _text = require_rich("LogicalOperatorReport")
+        best = self.best_candidate
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        add_summary_rows(
+            overview,
+            (
+                ("code dimension", self.code_dimension),
+                ("candidate operators", len(self.candidates)),
+                ("best candidate", "none" if best is None else best.name),
+                (
+                    "best logical strength",
+                    "none" if best is None else format_float(best.traceless_spectral_norm),
+                ),
+            ),
+        )
+
+        table = Table(title="Top projected operators")
+        table.add_column("name")
+        table.add_column("weight", justify="right")
+        table.add_column("logical strength", justify="right")
+        table.add_column("relative traceless", justify="right")
+        table.add_column("leakage", justify="right")
+        table.add_column("support")
+        for candidate in self.sorted_by_logical_strength()[:max_candidates]:
+            table.add_row(
+                candidate.name,
+                str(candidate.weight),
+                format_float(candidate.traceless_spectral_norm),
+                format_float(candidate.relative_traceless_frobenius_norm),
+                format_float(candidate.leakage_frobenius_norm),
+                str(candidate.support_variables),
+            )
+
+        return Panel(Group(overview, table), title="Projected logical operators")
 
 
 def search_projected_logical_operators(

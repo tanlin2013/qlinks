@@ -62,6 +62,32 @@ class ErrorOperator:
         """Number of distinct variables in the declared support."""
         return len(set(self.support_variables))
 
+    def to_summary_dict(self) -> dict[str, object]:
+        """Return a compact summary of this error operator."""
+        return {
+            "name": self.name,
+            "kind": self.kind,
+            "weight": self.weight,
+            "support_variables": self.support_variables,
+            "operator_type": type(self.operator).__name__,
+        }
+
+    def to_text(self) -> str:
+        """Return a one-line human-readable error-operator summary."""
+        support = ",".join(str(index) for index in self.support_variables)
+        if not support:
+            support = "unknown"
+        return (
+            f"{self.name} [{self.kind}; weight={self.weight}; "
+            f"support={support}; type={type(self.operator).__name__}]"
+        )
+
+    def format_summary(self) -> str:
+        return self.to_text()
+
+    def __str__(self) -> str:
+        return self.to_text()
+
 
 @dataclass(frozen=True, slots=True)
 class LocalOperatorProduct:
@@ -307,6 +333,96 @@ class LocalErrorSet:
             ),
             name=self.name,
         )
+
+    def to_summary_dict(self, *, max_errors: int = 10) -> dict[str, object]:
+        """Return a compact, serialization-friendly error-set summary."""
+        weight_counts: dict[int, int] = {}
+        kind_counts: dict[str, int] = {}
+        for error in self.errors:
+            weight_counts[error.weight] = weight_counts.get(error.weight, 0) + 1
+            kind_counts[error.kind] = kind_counts.get(error.kind, 0) + 1
+
+        preview = tuple(error.to_summary_dict() for error in self.errors[:max_errors])
+        return {
+            "name": self.name,
+            "n_errors": len(self.errors),
+            "max_weight": self.max_weight,
+            "weight_counts": dict(sorted(weight_counts.items())),
+            "kind_counts": dict(sorted(kind_counts.items())),
+            "preview_errors": preview,
+            "n_preview_errors": len(preview),
+        }
+
+    def to_text(self, *, max_errors: int = 10) -> str:
+        """Return a human-readable summary of the local error set."""
+        from qlinks.qec.reporting import format_key_value_lines
+
+        summary = self.to_summary_dict(max_errors=max_errors)
+        lines = [
+            format_key_value_lines(
+                f"Local error set: {self.name}",
+                (
+                    ("number of errors", summary["n_errors"]),
+                    ("max weight", summary["max_weight"]),
+                    ("weight counts", summary["weight_counts"]),
+                    ("kind counts", summary["kind_counts"]),
+                ),
+            )
+        ]
+        preview = self.errors[:max_errors]
+        if preview:
+            lines.append("preview errors")
+            lines.extend(f"  - {error.to_text()}" for error in preview)
+            if len(self.errors) > len(preview):
+                lines.append(f"  ... {len(self.errors) - len(preview)} more errors")
+        return "\n".join(lines)
+
+    def format_summary(self, *, max_errors: int = 10) -> str:
+        return self.to_text(max_errors=max_errors)
+
+    def __str__(self) -> str:
+        return self.to_text(max_errors=5)
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_errors: int = 10):
+        """Return a rich renderable summary of the local error set."""
+        from rich.console import Group
+
+        from qlinks.qec.reporting import add_summary_rows, require_rich
+
+        _group, Panel, Table, _text = require_rich("LocalErrorSet")
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        summary = self.to_summary_dict(max_errors=max_errors)
+        add_summary_rows(
+            overview,
+            (
+                ("number of errors", summary["n_errors"]),
+                ("max weight", summary["max_weight"]),
+                ("weight counts", summary["weight_counts"]),
+                ("kind counts", summary["kind_counts"]),
+            ),
+        )
+
+        error_table = Table(title="Preview errors")
+        error_table.add_column("name")
+        error_table.add_column("kind")
+        error_table.add_column("weight", justify="right")
+        error_table.add_column("support")
+        for error in self.errors[:max_errors]:
+            error_table.add_row(
+                error.name,
+                error.kind,
+                str(error.weight),
+                str(error.support_variables),
+            )
+        if len(self.errors) > max_errors:
+            error_table.caption = f"Showing {max_errors} of {len(self.errors)} errors"
+
+        return Panel(Group(overview, error_table), title=f"Local error set: {self.name}")
 
 
 def _single_variable_error_operators(
