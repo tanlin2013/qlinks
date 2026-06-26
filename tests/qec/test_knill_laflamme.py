@@ -70,3 +70,46 @@ def test_knill_laflamme_reports_leakage_separately_from_kl_residual() -> None:
     assert image is not None
     assert image.leakage_frobenius_norm > 0.0
     assert np.isclose(image.relative_leakage_frobenius_norm, 1.0)
+
+
+def test_knill_laflamme_accepts_bitmask_model_errors() -> None:
+    from qlinks.models import SquareQDMModel
+
+    model = SquareQDMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="open",
+        required_count=1,
+        coup_kin=-1.0,
+        coup_pot=1.0,
+    )
+    result = model.build(
+        basis_solver="dfs",
+        builder="bitmask",
+        sort_basis=True,
+    )
+    code = CodeSpace.from_basis_indices(result.basis, [0])
+    errors = LocalErrorSet.from_model(build_result=result)
+
+    report = diagnose_knill_laflamme(code, errors)
+
+    assert len(report.error_image_reports) == len(errors)
+    assert report.ambient_dimension == result.basis.n_states
+
+
+def test_knill_laflamme_accepts_optimized_update_model_errors() -> None:
+    from qlinks.models import PXPModel
+
+    model = PXPModel.chain(3, boundary_condition="open")
+    result = model.build(
+        basis_solver="dfs",
+        builder="optimized",
+        sort_basis=True,
+    )
+    code = CodeSpace.from_basis_indices(result.basis, [0])
+    errors = LocalErrorSet.from_model(build_result=result)
+
+    report = diagnose_knill_laflamme(code, errors)
+
+    assert len(report.error_image_reports) == len(errors)
+    assert report.ambient_dimension == result.basis.n_states

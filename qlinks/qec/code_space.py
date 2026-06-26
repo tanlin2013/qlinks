@@ -8,6 +8,7 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.basis import Basis
+from qlinks.encoded.binary_basis import BinaryEncodedBasis
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,7 +21,7 @@ class CodeSpace:
     before building heavier Liouvillian objects.
     """
 
-    basis: Basis
+    basis: Basis | BinaryEncodedBasis
     vectors: npt.NDArray[np.complex128]
     labels: tuple[Any, ...] = ()
 
@@ -55,7 +56,7 @@ class CodeSpace:
     @classmethod
     def from_vectors(
         cls,
-        basis: Basis,
+        basis: Basis | BinaryEncodedBasis,
         vectors: npt.ArrayLike,
         *,
         labels: Sequence[Any] = (),
@@ -138,7 +139,7 @@ class CodeSpace:
     @classmethod
     def from_row_vectors(
         cls,
-        basis: Basis,
+        basis: Basis | BinaryEncodedBasis,
         row_vectors: npt.ArrayLike,
         **kwargs: Any,
     ) -> CodeSpace:
@@ -160,7 +161,7 @@ class CodeSpace:
     @classmethod
     def from_basis_indices(
         cls,
-        basis: Basis,
+        basis: Basis | BinaryEncodedBasis,
         indices: Sequence[int],
         *,
         labels: Sequence[Any] = (),
@@ -185,7 +186,7 @@ class CodeSpace:
     @classmethod
     def from_cage_records(
         cls,
-        basis: Basis,
+        basis: Basis | BinaryEncodedBasis,
         records: Sequence[Any],
         *,
         labels: Sequence[Any] = (),

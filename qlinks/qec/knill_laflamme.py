@@ -6,6 +6,8 @@ from typing import Any, Literal
 import numpy as np
 import numpy.typing as npt
 
+from qlinks.basis import Basis
+from qlinks.encoded.binary_basis import BinaryEncodedBasis, encode_binary_config
 from qlinks.operators import BasisOperator
 from qlinks.qec.code_space import CodeSpace
 from qlinks.qec.error_sets import ErrorOperator, LocalErrorSet
@@ -183,9 +185,34 @@ def diagnose_knill_laflamme(
 
 
 def apply_error_to_code(code_space: CodeSpace, operator: Any) -> npt.NDArray[np.complex128]:
-    """Apply one matrix-like or configuration-space operator to code vectors."""
+    """Apply one matrix-like or configuration-space operator to code vectors.
+
+    The error-set layer can receive operators from several builder paths:
+
+    * dense/sparse matrices,
+    * :class:`BasisOperator`,
+    * configuration-space local operators with ``apply(config)``, and
+    * bitmask local operators with ``apply_code(code)``.
+
+    This helper normalizes those representations before applying the operator
+    to the code-space basis vectors.
+    """
     matrix_like = _as_matrix_like_operator(code_space, operator)
-    return np.asarray(matrix_like @ code_space.vectors, dtype=np.complex128)
+
+    try:
+        image = matrix_like @ code_space.vectors
+    except ValueError as exc:
+        if np.asarray(matrix_like, dtype=object).ndim == 0:
+            raise TypeError(
+                "Could not apply QEC error operator as a matrix. "
+                f"Got scalar-like object of type {type(operator).__name__}. "
+                "If this is a custom operator, wrap it as a matrix-like object "
+                "or implement affected_variables() together with apply(config) "
+                "or apply_code(code)."
+            ) from exc
+        raise
+
+    return np.asarray(image, dtype=np.complex128)
 
 
 def _as_matrix_like_operator(code_space: CodeSpace, operator: Any) -> Any:
@@ -193,10 +220,19 @@ def _as_matrix_like_operator(code_space: CodeSpace, operator: Any) -> Any:
         return operator
 
     if _is_local_operator(operator):
+        basis = _array_basis_for_code_space(code_space)
         return BasisOperator.from_operator(
-            code_space.basis,
+            basis,
             operator,
         )
+
+    if _is_update_operator(operator):
+        basis = _array_basis_for_code_space(code_space)
+        return _UpdateBasisOperator(basis=basis, operators=(operator,))
+
+    if _is_bitmask_operator(operator):
+        basis = _binary_basis_for_code_space(code_space)
+        return _BitmaskBasisOperator(basis=basis, operators=(operator,))
 
     return operator
 
@@ -205,6 +241,207 @@ def _is_local_operator(operator: Any) -> bool:
     affected_variables = getattr(operator, "affected_variables", None)
     apply = getattr(operator, "apply", None)
     return callable(affected_variables) and callable(apply)
+
+
+def _is_update_operator(operator: Any) -> bool:
+    affected_variables = getattr(operator, "affected_variables", None)
+    apply_update = getattr(operator, "apply_update", None)
+    return callable(affected_variables) and callable(apply_update)
+
+
+def _is_bitmask_operator(operator: Any) -> bool:
+    affected_variables = getattr(operator, "affected_variables", None)
+    apply_code = getattr(operator, "apply_code", None)
+    return callable(affected_variables) and callable(apply_code)
+
+
+def _array_basis_for_code_space(code_space: CodeSpace) -> Basis:
+    basis = code_space.basis
+    if isinstance(basis, Basis):
+        return basis
+
+    to_array_basis = getattr(basis, "to_array_basis", None)
+    if callable(to_array_basis):
+        return to_array_basis()
+
+    raise TypeError(
+        "Configuration-space local operators require a Basis-like code_space.basis "
+        "or a basis object exposing to_array_basis()."
+    )
+
+
+def _binary_basis_for_code_space(code_space: CodeSpace) -> BinaryEncodedBasis:
+    basis = code_space.basis
+    if isinstance(basis, BinaryEncodedBasis):
+        return basis
+
+    if isinstance(basis, Basis):
+        # Preserve the current basis ordering so code_space.vectors and bitmask
+        # matrix-vector products use the same row/column convention.
+        return BinaryEncodedBasis.from_codes(
+            basis.layout,
+            [encode_binary_config(config) for config in basis.iter_states(copy=False)],
+            sort=False,
+        )
+
+    raise TypeError(
+        "Bitmask operators require BinaryEncodedBasis, or a binary array Basis "
+        "that can be encoded without changing the basis order."
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _UpdateBasisOperator:
+    """Matrix-like wrapper for update-style local operators on an array Basis."""
+
+    basis: Basis
+    operators: tuple[Any, ...]
+    drop_zero_atol: float = 0.0
+    dtype: npt.DTypeLike = np.complex128
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        return (self.basis.n_states, self.basis.n_states)
+
+    def matvec(self, vector: npt.ArrayLike) -> npt.NDArray[np.complex128]:
+        x = np.asarray(vector, dtype=self.dtype)
+        if x.ndim != 1:
+            raise ValueError("matvec expects a one-dimensional vector.")
+        if x.shape[0] != self.basis.n_states:
+            raise ValueError(f"Expected vector length {self.basis.n_states}, got {x.shape[0]}.")
+
+        y = np.zeros(self.basis.n_states, dtype=self.dtype)
+        scratch = np.empty(self.basis.layout.n_variables, dtype=np.int64)
+
+        for col, config in enumerate(self.basis.iter_states(copy=False)):
+            amplitude = x[col]
+            if amplitude == 0:
+                continue
+
+            for operator in self.operators:
+                for action in operator.apply_update(config):
+                    if abs(action.coefficient) <= self.drop_zero_atol:
+                        continue
+                    scratch[:] = config
+                    scratch[action.variable_indices] = action.new_values
+                    row = self.basis.get_index(scratch)
+                    if row is None:
+                        continue
+                    y[row] += action.coefficient * amplitude
+
+        return y
+
+    def matmat(self, matrix: npt.ArrayLike) -> npt.NDArray[np.complex128]:
+        x = np.asarray(matrix, dtype=self.dtype)
+        if x.ndim != 2:
+            raise ValueError("matmat expects a two-dimensional array.")
+        if x.shape[0] != self.basis.n_states:
+            raise ValueError(f"Expected matrix shape ({self.basis.n_states}, k), got {x.shape}.")
+
+        y = np.zeros_like(x, dtype=self.dtype)
+        scratch = np.empty(self.basis.layout.n_variables, dtype=np.int64)
+
+        for col, config in enumerate(self.basis.iter_states(copy=False)):
+            amplitudes = x[col, :]
+            if np.all(amplitudes == 0):
+                continue
+
+            for operator in self.operators:
+                for action in operator.apply_update(config):
+                    if abs(action.coefficient) <= self.drop_zero_atol:
+                        continue
+                    scratch[:] = config
+                    scratch[action.variable_indices] = action.new_values
+                    row = self.basis.get_index(scratch)
+                    if row is None:
+                        continue
+                    y[row, :] += action.coefficient * amplitudes
+
+        return y
+
+    def __matmul__(self, rhs: npt.ArrayLike) -> npt.NDArray[np.complex128]:
+        arr = np.asarray(rhs)
+        if arr.ndim == 1:
+            return self.matvec(arr)
+        if arr.ndim == 2:
+            return self.matmat(arr)
+        raise ValueError("Right operand must be a vector or matrix.")
+
+
+@dataclass(frozen=True, slots=True)
+class _BitmaskBasisOperator:
+    """Matrix-like wrapper for bitmask operators on a BinaryEncodedBasis."""
+
+    basis: BinaryEncodedBasis
+    operators: tuple[Any, ...]
+    drop_zero_atol: float = 0.0
+    dtype: npt.DTypeLike = np.complex128
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        return (self.basis.n_states, self.basis.n_states)
+
+    def matvec(self, vector: npt.ArrayLike) -> npt.NDArray[np.complex128]:
+        x = np.asarray(vector, dtype=self.dtype)
+        if x.ndim != 1:
+            raise ValueError("matvec expects a one-dimensional vector.")
+        if x.shape[0] != self.basis.n_states:
+            raise ValueError(f"Expected vector length {self.basis.n_states}, got {x.shape[0]}.")
+
+        y = np.zeros(self.basis.n_states, dtype=self.dtype)
+        index = self.basis.index
+
+        for col, code_obj in enumerate(self.basis.codes):
+            amplitude = x[col]
+            if amplitude == 0:
+                continue
+
+            code = int(code_obj)
+            for operator in self.operators:
+                for action in operator.apply_code(code):
+                    if abs(action.coefficient) <= self.drop_zero_atol:
+                        continue
+                    row = index.get(int(action.code))
+                    if row is None:
+                        continue
+                    y[row] += action.coefficient * amplitude
+
+        return y
+
+    def matmat(self, matrix: npt.ArrayLike) -> npt.NDArray[np.complex128]:
+        x = np.asarray(matrix, dtype=self.dtype)
+        if x.ndim != 2:
+            raise ValueError("matmat expects a two-dimensional array.")
+        if x.shape[0] != self.basis.n_states:
+            raise ValueError(f"Expected matrix shape ({self.basis.n_states}, k), got {x.shape}.")
+
+        y = np.zeros_like(x, dtype=self.dtype)
+        index = self.basis.index
+
+        for col, code_obj in enumerate(self.basis.codes):
+            amplitudes = x[col, :]
+            if np.all(amplitudes == 0):
+                continue
+
+            code = int(code_obj)
+            for operator in self.operators:
+                for action in operator.apply_code(code):
+                    if abs(action.coefficient) <= self.drop_zero_atol:
+                        continue
+                    row = index.get(int(action.code))
+                    if row is None:
+                        continue
+                    y[row, :] += action.coefficient * amplitudes
+
+        return y
+
+    def __matmul__(self, rhs: npt.ArrayLike) -> npt.NDArray[np.complex128]:
+        arr = np.asarray(rhs)
+        if arr.ndim == 1:
+            return self.matvec(arr)
+        if arr.ndim == 2:
+            return self.matmat(arr)
+        raise ValueError("Right operand must be a vector or matrix.")
 
 
 def _spectral_norm(matrix: npt.ArrayLike) -> float:
