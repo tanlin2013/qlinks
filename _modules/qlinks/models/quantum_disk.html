@@ -698,6 +698,9 @@
         <span class="k">for</span> <span class="n">family</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hop_families</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal_hop_pairs</span><span class="p">(</span><span class="n">family</span><span class="p">):</span>
                 <span class="n">support_sites</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_i</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_j</span><span class="p">))</span>
+                <span class="n">support_variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span> <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="n">support_sites</span>
+                <span class="p">)</span>
                 <span class="k">if</span> <span class="n">operator_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">,</span> <span class="s2">&quot;hamiltonian&quot;</span><span class="p">):</span>
                     <span class="n">descriptors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="n">LocalTermDescriptor</span><span class="p">(</span>
@@ -706,6 +709,7 @@
                             <span class="n">operator_kind</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
                             <span class="n">support_links</span><span class="o">=</span><span class="p">(),</span>
                             <span class="n">support_sites</span><span class="o">=</span><span class="n">support_sites</span><span class="p">,</span>
+                            <span class="n">support_variables</span><span class="o">=</span><span class="n">support_variables</span><span class="p">,</span>
                             <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;T_</span><span class="si">{</span><span class="n">family</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
@@ -717,11 +721,82 @@
                             <span class="n">operator_kind</span><span class="o">=</span><span class="s2">&quot;potential&quot;</span><span class="p">,</span>
                             <span class="n">support_links</span><span class="o">=</span><span class="p">(),</span>
                             <span class="n">support_sites</span><span class="o">=</span><span class="n">support_sites</span><span class="p">,</span>
+                            <span class="n">support_variables</span><span class="o">=</span><span class="n">support_variables</span><span class="p">,</span>
                             <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;P_</span><span class="si">{</span><span class="n">family</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
                 <span class="n">term_id</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">descriptors</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQuantumDiskModel.make_local_term">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.SquareQuantumDiskModel.make_local_term">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_local_term</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">descriptor</span><span class="p">:</span> <span class="n">LocalTermDescriptor</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HamiltonianTermSpec</span><span class="p">:</span>
+        <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">!=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;SquareQuantumDiskModel currently supports builder=&#39;sparse&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">term_kind</span> <span class="o">!=</span> <span class="s2">&quot;bond&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SquareQuantumDiskModel local terms currently support bond terms.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">support_sites</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Disk bond descriptors must contain exactly two support sites.&quot;</span><span class="p">)</span>
+
+        <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site</span><span class="p">)</span> <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">support_sites</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">:</span>
+            <span class="n">operators</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">DiskDiagonalHopOperator</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">source_site</span><span class="o">=</span><span class="n">site_i</span><span class="p">,</span>
+                    <span class="n">target_site</span><span class="o">=</span><span class="n">site_j</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_kin</span><span class="p">,</span>
+                    <span class="n">enforce_nearest_neighbor_blockade</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hard_core_nearest_neighbor</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">DiskDiagonalHopOperator</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">source_site</span><span class="o">=</span><span class="n">site_j</span><span class="p">,</span>
+                    <span class="n">target_site</span><span class="o">=</span><span class="n">site_i</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_kin</span><span class="p">),</span>
+                    <span class="n">enforce_nearest_neighbor_blockade</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hard_core_nearest_neighbor</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">HamiltonianTermSpec</span><span class="o">.</span><span class="n">from_operators</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;kinetic_</span><span class="si">{</span><span class="n">descriptor</span><span class="o">.</span><span class="n">term_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">operators</span><span class="o">=</span><span class="n">operators</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;potential&quot;</span><span class="p">:</span>
+            <span class="n">operators</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">DiskDiagonalHopProjector</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">source_site</span><span class="o">=</span><span class="n">site_i</span><span class="p">,</span>
+                    <span class="n">target_site</span><span class="o">=</span><span class="n">site_j</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_pot</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">DiskDiagonalHopProjector</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">source_site</span><span class="o">=</span><span class="n">site_j</span><span class="p">,</span>
+                    <span class="n">target_site</span><span class="o">=</span><span class="n">site_i</span><span class="p">,</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coup_pot</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">HamiltonianTermSpec</span><span class="o">.</span><span class="n">from_operators</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;potential_</span><span class="si">{</span><span class="n">descriptor</span><span class="o">.</span><span class="n">term_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">operators</span><span class="o">=</span><span class="n">operators</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;potential&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;descriptor.operator_kind must be &#39;kinetic&#39; or &#39;potential&#39; for SquareQuantumDiskModel.&quot;</span>
+        <span class="p">)</span></div>
 </div>
 
 

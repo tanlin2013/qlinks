@@ -541,6 +541,527 @@
 
 
 
+<div class="viewcode-block" id="LocalCoherentPatternPair">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalCoherentPatternPair">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalCoherentPatternPair</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detected coherent two-pattern sector in a local RDM.&quot;&quot;&quot;</span>
+
+    <span class="n">pattern_a</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">pattern_b</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">relative_phase</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">hamming_distance</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">equal_weight_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">rank_one_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">is_equal_weight</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">is_singlet_like</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sign_label</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relative_phase</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-8</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;-&quot;</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relative_phase</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-8</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;+&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;phase=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">relative_phase</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="LocalCoherentPatternPair.formula">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalCoherentPatternPair.formula">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">formula</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a compact ket formula for the coherent pair.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_singlet_like</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(|</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern_a</span><span class="si">}</span><span class="s2">&gt; - |</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern_b</span><span class="si">}</span><span class="s2">&gt;) / sqrt(2)&quot;</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relative_phase</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-8</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(|</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern_a</span><span class="si">}</span><span class="s2">&gt; + |</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern_b</span><span class="si">}</span><span class="s2">&gt;) / sqrt(2)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(|</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern_a</span><span class="si">}</span><span class="s2">&gt; + (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">relative_phase</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">) |</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern_b</span><span class="si">}</span><span class="s2">&gt;) / sqrt(2)&quot;</span></div>
+
+
+<div class="viewcode-block" id="LocalCoherentPatternPair.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalCoherentPatternPair.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;pattern_a&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern_a</span><span class="p">,</span>
+            <span class="s2">&quot;pattern_b&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern_b</span><span class="p">,</span>
+            <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span>
+            <span class="s2">&quot;coefficient&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span>
+            <span class="s2">&quot;relative_phase&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_phase</span><span class="p">,</span>
+            <span class="s2">&quot;hamming_distance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hamming_distance</span><span class="p">,</span>
+            <span class="s2">&quot;equal_weight_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">equal_weight_residual</span><span class="p">,</span>
+            <span class="s2">&quot;rank_one_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank_one_residual</span><span class="p">,</span>
+            <span class="s2">&quot;is_equal_weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_equal_weight</span><span class="p">,</span>
+            <span class="s2">&quot;is_singlet_like&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_singlet_like</span><span class="p">,</span>
+            <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">formula</span><span class="p">(),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LocalClassicalPatternSector">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalClassicalPatternSector">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalClassicalPatternSector</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagonal-only local pattern sector not absorbed into a coherent pair.&quot;&quot;&quot;</span>
+
+    <span class="n">pattern</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span>
+
+<div class="viewcode-block" id="LocalClassicalPatternSector.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalClassicalPatternSector.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;pattern&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LocalPlaquetteActivityReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalPlaquetteActivityReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalPlaquetteActivityReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flippability summary for one plaquette fully contained in a readout.&quot;&quot;&quot;</span>
+
+    <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">link_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">local_positions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">n_weighted_patterns</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_flippable_patterns</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">flippable_weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_always_inactive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;always_inactive&quot;</span>
+
+<div class="viewcode-block" id="LocalPlaquetteActivityReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalPlaquetteActivityReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;plaquette_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_id</span><span class="p">,</span>
+            <span class="s2">&quot;link_ids&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_ids</span><span class="p">,</span>
+            <span class="s2">&quot;local_positions&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_positions</span><span class="p">,</span>
+            <span class="s2">&quot;n_weighted_patterns&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_weighted_patterns</span><span class="p">,</span>
+            <span class="s2">&quot;n_flippable_patterns&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_flippable_patterns</span><span class="p">,</span>
+            <span class="s2">&quot;flippable_weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flippable_weight</span><span class="p">,</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LocalStructureReadoutReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalStructureReadoutReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalStructureReadoutReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Automatic structure summary for one local-RDM readout.&quot;&quot;&quot;</span>
+
+    <span class="n">readout</span><span class="p">:</span> <span class="n">LocalReducedDensityMatrixReadout</span>
+    <span class="n">coherent_pairs</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalCoherentPatternPair</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">classical_sectors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalClassicalPatternSector</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">plaquette_activity</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalPlaquetteActivityReport</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">offdiagonal_weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">coherent_weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">classical_weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_coherent_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coherent_pairs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_singlet_like_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pair</span><span class="o">.</span><span class="n">is_singlet_like</span><span class="p">)</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coherent_pairs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inactive_plaquette_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">plaquette_id</span>
+            <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_activity</span>
+            <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;always_inactive&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flippable_plaquette_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">plaquette_id</span>
+            <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_activity</span>
+            <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="s2">&quot;always_inactive&quot;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LocalStructureReadoutReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalStructureReadoutReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;component_index&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">component_index</span><span class="p">,</span>
+            <span class="s2">&quot;component_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">component_id</span><span class="p">,</span>
+            <span class="s2">&quot;variable_indices&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span>
+            <span class="s2">&quot;support_rank&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">support_rank</span><span class="p">,</span>
+            <span class="s2">&quot;nullity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">nullity</span><span class="p">,</span>
+            <span class="s2">&quot;n_coherent_pairs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_coherent_pairs</span><span class="p">,</span>
+            <span class="s2">&quot;n_singlet_like_pairs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_singlet_like_pairs</span><span class="p">,</span>
+            <span class="s2">&quot;n_classical_sectors&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classical_sectors</span><span class="p">),</span>
+            <span class="s2">&quot;coherent_weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">coherent_weight</span><span class="p">,</span>
+            <span class="s2">&quot;classical_weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">classical_weight</span><span class="p">,</span>
+            <span class="s2">&quot;offdiagonal_weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">offdiagonal_weight</span><span class="p">,</span>
+            <span class="s2">&quot;inactive_plaquette_ids&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactive_plaquette_ids</span><span class="p">,</span>
+            <span class="s2">&quot;flippable_plaquette_ids&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flippable_plaquette_ids</span><span class="p">,</span>
+            <span class="s2">&quot;coherent_pairs&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pair</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coherent_pairs</span><span class="p">),</span>
+            <span class="s2">&quot;classical_sectors&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">sector</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">sector</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">classical_sectors</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;plaquette_activity&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_activity</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="LocalStructureReadoutReport.to_text">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.LocalStructureReadoutReport.to_text">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_pairs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">max_classical</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;component=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">component_index</span><span class="si">}</span><span class="s2"> id=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">component_id</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;variables=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">variable_indices</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;  rank/nullity: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">support_rank</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="o">.</span><span class="n">nullity</span><span class="si">}</span><span class="s2">; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;coherent pairs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_coherent_pairs</span><span class="si">}</span><span class="s2">; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;classical sectors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classical_sectors</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coherent_pairs</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  coherent local sectors:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coherent_pairs</span><span class="p">[:</span><span class="n">max_pairs</span><span class="p">]:</span>
+                <span class="n">kind</span> <span class="o">=</span> <span class="s2">&quot;singlet-like&quot;</span> <span class="k">if</span> <span class="n">pair</span><span class="o">.</span><span class="n">is_singlet_like</span> <span class="k">else</span> <span class="s2">&quot;coherent-pair&quot;</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;    - </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">, weight=</span><span class="si">{</span><span class="n">pair</span><span class="o">.</span><span class="n">weight</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;hamming=</span><span class="si">{</span><span class="n">pair</span><span class="o">.</span><span class="n">hamming_distance</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">pair</span><span class="o">.</span><span class="n">formula</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coherent_pairs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_pairs</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    ... </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coherent_pairs</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">max_pairs</span><span class="si">}</span><span class="s2"> more pair(s)&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">classical_sectors</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  diagonal/frozen local sectors:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">sector</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">classical_sectors</span><span class="p">[:</span><span class="n">max_classical</span><span class="p">]:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;    - weight=</span><span class="si">{</span><span class="n">sector</span><span class="o">.</span><span class="n">weight</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">: &quot;</span> <span class="sa">f</span><span class="s2">&quot;|</span><span class="si">{</span><span class="n">sector</span><span class="o">.</span><span class="n">pattern</span><span class="si">}</span><span class="s2">&gt;&lt;</span><span class="si">{</span><span class="n">sector</span><span class="o">.</span><span class="n">pattern</span><span class="si">}</span><span class="s2">|&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classical_sectors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_classical</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;    ... </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classical_sectors</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">max_classical</span><span class="si">}</span><span class="s2"> more sector(s)&quot;</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_activity</span><span class="p">:</span>
+            <span class="n">inactive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactive_plaquette_ids</span>
+            <span class="n">active</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flippable_plaquette_ids</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;  contained QDM plaquettes: &quot;</span> <span class="sa">f</span><span class="s2">&quot;inactive=</span><span class="si">{</span><span class="n">inactive</span><span class="si">}</span><span class="s2">; non-inactive/mixed=</span><span class="si">{</span><span class="n">active</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CageLocalStructureReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.CageLocalStructureReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CageLocalStructureReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Automatic text/formula report for local structure of a cage state.&quot;&quot;&quot;</span>
+
+    <span class="n">readout_reports</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalStructureReadoutReport</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">decomposition</span><span class="p">:</span> <span class="n">ReducedIZMonitorDecomposition</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_readouts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_coherent_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">n_coherent_pairs</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_singlet_like_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">n_singlet_like_pairs</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inactive_plaquette_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span><span class="p">:</span>
+            <span class="n">ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">inactive_plaquette_ids</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flippable_plaquette_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span><span class="p">:</span>
+            <span class="n">ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">flippable_plaquette_ids</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span>
+
+<div class="viewcode-block" id="CageLocalStructureReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.CageLocalStructureReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;decomposition&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decomposition</span><span class="p">,</span>
+            <span class="s2">&quot;n_readouts&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_readouts</span><span class="p">,</span>
+            <span class="s2">&quot;n_coherent_pairs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_coherent_pairs</span><span class="p">,</span>
+            <span class="s2">&quot;n_singlet_like_pairs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_singlet_like_pairs</span><span class="p">,</span>
+            <span class="s2">&quot;inactive_plaquette_ids&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactive_plaquette_ids</span><span class="p">,</span>
+            <span class="s2">&quot;flippable_plaquette_ids&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flippable_plaquette_ids</span><span class="p">,</span>
+            <span class="s2">&quot;readouts&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="CageLocalStructureReport.to_text">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.CageLocalStructureReport.to_text">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_readouts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;Cage local structure report&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;decomposition: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">decomposition</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;readouts: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_readouts</span><span class="si">}</span><span class="s2">; coherent pairs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_coherent_pairs</span><span class="si">}</span><span class="s2">; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;singlet-like pairs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_singlet_like_pairs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactive_plaquette_ids</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">flippable_plaquette_ids</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;QDM plaquette summary: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;inactive=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">inactive_plaquette_ids</span><span class="si">}</span><span class="s2">; &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;non-inactive/mixed=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">flippable_plaquette_ids</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span>
+        <span class="k">if</span> <span class="n">max_readouts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="n">selected</span><span class="p">[:</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_readouts</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">report</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">selected</span><span class="p">):</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">to_text</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_readouts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_readouts</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">... </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">readout_reports</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">max_readouts</span><span class="si">}</span><span class="s2"> more readout(s)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_text</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_real_weight</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hamming_distance</span><span class="p">(</span><span class="n">pattern_a</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">pattern_b</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="o">!=</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pattern_a</span><span class="p">,</span> <span class="n">pattern_b</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_alternating_binary_pattern</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_contained_qdm_plaquette_activity</span><span class="p">(</span>
+    <span class="n">readout</span><span class="p">:</span> <span class="n">LocalReducedDensityMatrixReadout</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalPlaquetteActivityReport</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;plaquette_ids&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;lattice&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">()</span>
+    <span class="n">lattice</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">lattice</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">lattice</span><span class="p">,</span> <span class="s2">&quot;plaquette_links&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">()</span>
+
+    <span class="n">variable_positions</span> <span class="o">=</span> <span class="p">{</span><span class="n">variable</span><span class="p">:</span> <span class="n">pos</span> <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">readout</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)}</span>
+    <span class="n">diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">readout</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">)</span>
+    <span class="n">pattern_weights</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">_as_real_weight</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">weight</span><span class="p">),</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">readout</span><span class="o">.</span><span class="n">local_patterns</span><span class="p">,</span> <span class="n">diagonal</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pattern_weights</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">()</span>
+
+    <span class="n">reports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalPlaquetteActivityReport</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">():</span>
+        <span class="n">link_ids</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="p">)</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_links</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">link</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">variable_positions</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">local_positions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">variable_positions</span><span class="p">[</span><span class="n">link</span><span class="p">]</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">)</span>
+        <span class="n">flippable_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">flippable_weight</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">pattern_weights</span><span class="p">:</span>
+            <span class="n">local_values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="n">pos</span><span class="p">])</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">local_positions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_is_alternating_binary_pattern</span><span class="p">(</span><span class="n">local_values</span><span class="p">):</span>
+                <span class="n">flippable_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">flippable_weight</span> <span class="o">+=</span> <span class="n">weight</span>
+        <span class="k">if</span> <span class="n">flippable_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;always_inactive&quot;</span>
+        <span class="k">elif</span> <span class="n">flippable_count</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">pattern_weights</span><span class="p">):</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;always_flippable&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;mixed&quot;</span>
+        <span class="n">reports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">LocalPlaquetteActivityReport</span><span class="p">(</span>
+                <span class="n">plaquette_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">),</span>
+                <span class="n">link_ids</span><span class="o">=</span><span class="n">link_ids</span><span class="p">,</span>
+                <span class="n">local_positions</span><span class="o">=</span><span class="n">local_positions</span><span class="p">,</span>
+                <span class="n">n_weighted_patterns</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern_weights</span><span class="p">),</span>
+                <span class="n">n_flippable_patterns</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">flippable_count</span><span class="p">),</span>
+                <span class="n">flippable_weight</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">flippable_weight</span><span class="p">),</span>
+                <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">reports</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="analyze_local_rdm_structure">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.analyze_local_rdm_structure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_local_rdm_structure</span><span class="p">(</span>
+    <span class="n">readout</span><span class="p">:</span> <span class="n">LocalReducedDensityMatrixReadout</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">equal_weight_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rank_one_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalStructureReadoutReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Identify simple local structures in one RDM readout.</span>
+
+<span class="sd">    The first version deliberately recognizes only robust, notebook-readable</span>
+<span class="sd">    motifs: rank-one two-pattern coherent sectors and diagonal classical/frozen</span>
+<span class="sd">    sectors.  If a QDM ``model`` is supplied, fully contained plaquettes are also</span>
+<span class="sd">    classified as always inactive, always flippable, or mixed on the RDM support.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">readout</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">patterns</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">readout</span><span class="o">.</span><span class="n">local_patterns</span><span class="p">)</span>
+    <span class="n">diag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="n">equal_tol</span> <span class="o">=</span> <span class="n">tolerance</span> <span class="k">if</span> <span class="n">equal_weight_tolerance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">equal_weight_tolerance</span><span class="p">)</span>
+    <span class="n">rank_tol</span> <span class="o">=</span> <span class="n">tolerance</span> <span class="k">if</span> <span class="n">rank_one_tolerance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">rank_one_tolerance</span><span class="p">)</span>
+
+    <span class="n">used</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">coherent_pairs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalCoherentPatternPair</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">offdiagonal_weight</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">patterns</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">offdiagonal_weight</span> <span class="o">+=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">used</span> <span class="ow">or</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">used</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">weight_i</span> <span class="o">=</span> <span class="n">_as_real_weight</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">diag</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+            <span class="n">weight_j</span> <span class="o">=</span> <span class="n">_as_real_weight</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">diag</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">weight_i</span> <span class="o">&lt;=</span> <span class="n">tolerance</span> <span class="ow">or</span> <span class="n">weight_j</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">rank_residual</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">weight_i</span> <span class="o">*</span> <span class="n">weight_j</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))))</span>
+            <span class="k">if</span> <span class="n">rank_residual</span> <span class="o">&gt;</span> <span class="n">rank_tol</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">equal_residual</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">weight_i</span> <span class="o">-</span> <span class="n">weight_j</span><span class="p">)</span>
+            <span class="n">equal_weight</span> <span class="o">=</span> <span class="n">equal_residual</span> <span class="o">&lt;=</span> <span class="n">equal_tol</span>
+            <span class="n">relative_phase</span> <span class="o">=</span> <span class="n">coeff</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+            <span class="n">is_singlet_like</span> <span class="o">=</span> <span class="n">equal_weight</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">relative_phase</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="n">tolerance</span>
+            <span class="n">coherent_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">LocalCoherentPatternPair</span><span class="p">(</span>
+                    <span class="n">pattern_a</span><span class="o">=</span><span class="n">patterns</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                    <span class="n">pattern_b</span><span class="o">=</span><span class="n">patterns</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                    <span class="n">weight</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">weight_i</span> <span class="o">+</span> <span class="n">weight_j</span><span class="p">),</span>
+                    <span class="n">coefficient</span><span class="o">=</span><span class="n">coeff</span><span class="p">,</span>
+                    <span class="n">relative_phase</span><span class="o">=</span><span class="n">relative_phase</span><span class="p">,</span>
+                    <span class="n">hamming_distance</span><span class="o">=</span><span class="n">_hamming_distance</span><span class="p">(</span><span class="n">patterns</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">patterns</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span>
+                    <span class="n">equal_weight_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">equal_residual</span><span class="p">),</span>
+                    <span class="n">rank_one_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">rank_residual</span><span class="p">),</span>
+                    <span class="n">is_equal_weight</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">equal_weight</span><span class="p">),</span>
+                    <span class="n">is_singlet_like</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">is_singlet_like</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+
+    <span class="n">classical</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalClassicalPatternSector</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">patterns</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">used</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">_as_real_weight</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">diag</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">weight</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">classical</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LocalClassicalPatternSector</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">weight</span><span class="p">)))</span>
+
+    <span class="n">coherent_weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">pair</span><span class="o">.</span><span class="n">weight</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">coherent_pairs</span><span class="p">))</span>
+    <span class="n">classical_weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">sector</span><span class="o">.</span><span class="n">weight</span> <span class="k">for</span> <span class="n">sector</span> <span class="ow">in</span> <span class="n">classical</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">LocalStructureReadoutReport</span><span class="p">(</span>
+        <span class="n">readout</span><span class="o">=</span><span class="n">readout</span><span class="p">,</span>
+        <span class="n">coherent_pairs</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">coherent_pairs</span><span class="p">),</span>
+        <span class="n">classical_sectors</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">classical</span><span class="p">),</span>
+        <span class="n">plaquette_activity</span><span class="o">=</span><span class="n">_contained_qdm_plaquette_activity</span><span class="p">(</span>
+            <span class="n">readout</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">offdiagonal_weight</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">offdiagonal_weight</span><span class="p">),</span>
+        <span class="n">coherent_weight</span><span class="o">=</span><span class="n">coherent_weight</span><span class="p">,</span>
+        <span class="n">classical_weight</span><span class="o">=</span><span class="n">classical_weight</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="local_structure_report_from_readouts">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.local_structure_report_from_readouts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">local_structure_report_from_readouts</span><span class="p">(</span>
+    <span class="n">readouts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalReducedDensityMatrixReadout</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">decomposition</span><span class="p">:</span> <span class="n">ReducedIZMonitorDecomposition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">equal_weight_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rank_one_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageLocalStructureReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build an automatic local-structure report from local RDM readouts.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">CageLocalStructureReport</span><span class="p">(</span>
+        <span class="n">readout_reports</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">analyze_local_rdm_structure</span><span class="p">(</span>
+                <span class="n">readout</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+                <span class="n">equal_weight_tolerance</span><span class="o">=</span><span class="n">equal_weight_tolerance</span><span class="p">,</span>
+                <span class="n">rank_one_tolerance</span><span class="o">=</span><span class="n">rank_one_tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">readout</span> <span class="ow">in</span> <span class="n">readouts</span>
+        <span class="p">),</span>
+        <span class="n">decomposition</span><span class="o">=</span><span class="n">decomposition</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="local_structure_report_from_classification_report">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.local_structure_report_from_classification_report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">local_structure_report_from_classification_report</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">CageClassificationReport</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">decomposition</span><span class="p">:</span> <span class="n">ReducedIZMonitorDecomposition</span> <span class="o">=</span> <span class="s2">&quot;exact_support&quot;</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">matrix_unit_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_matrix_unit_terms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_empty_supports</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">equal_weight_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rank_one_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageLocalStructureReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute reduced-IZ RDM readouts and summarize local cage motifs.&quot;&quot;&quot;</span>
+    <span class="n">readouts</span> <span class="o">=</span> <span class="n">reduced_iz_local_rdm_readouts_from_report</span><span class="p">(</span>
+        <span class="n">report</span><span class="p">,</span>
+        <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+        <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+        <span class="n">decomposition</span><span class="o">=</span><span class="n">decomposition</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="n">matrix_unit_tolerance</span><span class="o">=</span><span class="n">matrix_unit_tolerance</span><span class="p">,</span>
+        <span class="n">max_matrix_unit_terms</span><span class="o">=</span><span class="n">max_matrix_unit_terms</span><span class="p">,</span>
+        <span class="n">include_empty_supports</span><span class="o">=</span><span class="n">include_empty_supports</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">local_structure_report_from_readouts</span><span class="p">(</span>
+        <span class="n">readouts</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">decomposition</span><span class="o">=</span><span class="n">decomposition</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="n">equal_weight_tolerance</span><span class="o">=</span><span class="n">equal_weight_tolerance</span><span class="p">,</span>
+        <span class="n">rank_one_tolerance</span><span class="o">=</span><span class="n">rank_one_tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="SupportPermutationDiagnostic">
 <a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnostics.SupportPermutationDiagnostic">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

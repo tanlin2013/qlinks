@@ -1,0 +1,1145 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.visualizer.disk &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/visualizer/disk';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/visualizer/disk.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.visualizer.disk</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">LineCollection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="kn">import</span> <span class="n">Circle</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareLattice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">VariableLayout</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.visualizer.basis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BasisConfigLabelStyle</span><span class="p">,</span>
+    <span class="n">VisualizerBackend</span><span class="p">,</span>
+    <span class="n">_amplitude_label</span><span class="p">,</span>
+    <span class="n">_select_cage_record</span><span class="p">,</span>
+    <span class="n">_zero_indices_for_mechanism</span><span class="p">,</span>
+    <span class="n">_zero_mechanism_label_map</span><span class="p">,</span>
+    <span class="n">automatic_grid_shape</span><span class="p">,</span>
+    <span class="n">format_basis_config</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="QuantumDiskVisualStyle">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskVisualStyle">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuantumDiskVisualStyle</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Visual style for the square quantum disk basis visualizers.&quot;&quot;&quot;</span>
+
+    <span class="n">site_marker_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">35.0</span>
+    <span class="n">site_marker_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;lightgray&quot;</span>
+    <span class="n">site_marker_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.65</span>
+    <span class="n">site_label_fontsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">8.0</span>
+    <span class="n">site_value_fontsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">8.0</span>
+
+    <span class="n">disk_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.32</span>
+    <span class="n">disk_face_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tab:blue&quot;</span>
+    <span class="n">disk_edge_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+    <span class="n">disk_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.82</span>
+    <span class="n">disk_linewidth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span>
+
+    <span class="n">blockade_edge_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;lightgray&quot;</span>
+    <span class="n">blockade_edge_linewidth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span>
+    <span class="n">blockade_edge_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span>
+
+    <span class="n">hop_bond_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tab:purple&quot;</span>
+    <span class="n">hop_bond_linewidth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.1</span>
+    <span class="n">hop_bond_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span>
+    <span class="n">hop_bond_linestyle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;--&quot;</span>
+
+    <span class="n">occupied_site_value_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;white&quot;</span>
+    <span class="n">empty_site_value_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dimgray&quot;</span>
+
+    <span class="n">axis_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.65</span></div>
+
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_QuantumDiskGridRenderCache</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reusable geometry cache for quantum disk basis-state plots.&quot;&quot;&quot;</span>
+
+    <span class="n">site_xy</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">site_variable_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">site_labels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">blockade_segments</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">hop_segments</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">xlim</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">ylim</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="QuantumDiskConfigurationVisualizer">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskConfigurationVisualizer">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuantumDiskConfigurationVisualizer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw one quantum disk basis configuration on a square lattice.</span>
+
+<span class="sd">    The visualizer interprets binary site variables as disk occupations.  It is</span>
+<span class="sd">    intentionally site-based and therefore avoids the link/dimer-specific</span>
+<span class="sd">    drawing conventions used by :class:`BasisConfigurationVisualizer`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lattice</span><span class="p">:</span> <span class="n">SquareLattice</span>
+    <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">style</span><span class="p">:</span> <span class="n">QuantumDiskVisualStyle</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">QuantumDiskVisualStyle</span><span class="p">)</span>
+    <span class="n">hop_pairs</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">coordinate_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">site_label_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;site_id&quot;</span>
+
+<div class="viewcode-block" id="QuantumDiskConfigurationVisualizer.from_model">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskConfigurationVisualizer.from_model">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_model</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">QuantumDiskVisualStyle</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">coordinate_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">site_label_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;site_id&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumDiskConfigurationVisualizer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a disk visualizer from a disk model instance.&quot;&quot;&quot;</span>
+        <span class="n">hop_pairs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;hop_families&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;diagonal_hop_pairs&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">family</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">hop_families</span><span class="p">:</span>
+                <span class="n">hop_pairs</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">diagonal_hop_pairs</span><span class="p">(</span><span class="n">family</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">lattice</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span> <span class="k">if</span> <span class="n">style</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">QuantumDiskVisualStyle</span><span class="p">(),</span>
+            <span class="n">hop_pairs</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">hop_pairs</span><span class="p">),</span>
+            <span class="n">coordinate_scale</span><span class="o">=</span><span class="n">coordinate_scale</span><span class="p">,</span>
+            <span class="n">site_label_style</span><span class="o">=</span><span class="n">site_label_style</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QuantumDiskConfigurationVisualizer.from_build_result">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskConfigurationVisualizer.from_build_result">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_build_result</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">result</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">QuantumDiskVisualStyle</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">coordinate_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">site_label_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;site_id&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumDiskConfigurationVisualizer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a disk visualizer from a model build result.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_model</span><span class="p">(</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">coordinate_scale</span><span class="o">=</span><span class="n">coordinate_scale</span><span class="p">,</span>
+            <span class="n">site_label_style</span><span class="o">=</span><span class="n">site_label_style</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_as_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;config must be one-dimensional.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">validate_config</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">arr</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Without a VariableLayout, quantum disk configs must have &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;exactly </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="si">}</span><span class="s2"> entries.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">arr</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_config_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">states</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;states must have shape (n_variables,) or (n_states, n_variables).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">validate_batch</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">states</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Without a VariableLayout, quantum disk configs must have &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;exactly </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="si">}</span><span class="s2"> entries.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_site_variable_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_site_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">sites</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_label_style</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_label_style</span> <span class="o">==</span> <span class="s2">&quot;site_id&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_label_style</span> <span class="o">==</span> <span class="s2">&quot;cell&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_label_style</span> <span class="o">==</span> <span class="s2">&quot;site_id_cell&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">(</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;site_label_style must be one of &#39;none&#39;, &#39;site_id&#39;, &#39;cell&#39;, or &#39;site_id_cell&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_site_xy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">site_embedded_position</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">site_ids</span>
+        <span class="p">]</span>
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">xy</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate_scale</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_segments_from_site_pairs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">pairs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+        <span class="n">site_xy</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pairs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="n">site_xy</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="p">)],</span> <span class="n">site_xy</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">)]]</span>
+                <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">pairs</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_blockade_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">target</span><span class="p">))</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">links</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QuantumDiskConfigurationVisualizer.build_render_cache">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskConfigurationVisualizer.build_render_cache">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_render_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_QuantumDiskGridRenderCache</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build reusable disk-plot geometry for this lattice/layout/style.&quot;&quot;&quot;</span>
+        <span class="n">site_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_xy</span><span class="p">()</span>
+        <span class="n">variable_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span> <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">site_ids</span><span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">site_labels</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_label</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span> <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">site_ids</span><span class="p">)</span>
+        <span class="n">blockade_segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_segments_from_site_pairs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blockade_pairs</span><span class="p">(),</span> <span class="n">site_xy</span><span class="p">)</span>
+        <span class="n">hop_segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_segments_from_site_pairs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hop_pairs</span><span class="p">,</span> <span class="n">site_xy</span><span class="p">)</span>
+
+        <span class="n">margin</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">axis_margin</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate_scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">site_xy</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">)</span>
+            <span class="n">ylim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">site_xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">margin</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">site_xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">margin</span><span class="p">))</span>
+            <span class="n">ylim</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">site_xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">margin</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">site_xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">margin</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">_QuantumDiskGridRenderCache</span><span class="p">(</span>
+            <span class="n">site_xy</span><span class="o">=</span><span class="n">site_xy</span><span class="p">,</span>
+            <span class="n">site_variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+            <span class="n">site_labels</span><span class="o">=</span><span class="n">site_labels</span><span class="p">,</span>
+            <span class="n">blockade_segments</span><span class="o">=</span><span class="n">blockade_segments</span><span class="p">,</span>
+            <span class="n">hop_segments</span><span class="o">=</span><span class="n">hop_segments</span><span class="p">,</span>
+            <span class="n">xlim</span><span class="o">=</span><span class="n">xlim</span><span class="p">,</span>
+            <span class="n">ylim</span><span class="o">=</span><span class="n">ylim</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QuantumDiskConfigurationVisualizer.plot">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskConfigurationVisualizer.plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="n">VisualizerBackend</span> <span class="o">=</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span>
+        <span class="n">with_site_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">with_site_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_empty_sites</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">with_blockade_edges</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">with_hop_bonds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">render_cache</span><span class="p">:</span> <span class="n">_QuantumDiskGridRenderCache</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot one quantum disk basis state.&quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">render_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">render_cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_render_cache</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot_with_render_cache</span><span class="p">(</span>
+            <span class="n">arr</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="n">render_cache</span><span class="o">=</span><span class="n">render_cache</span><span class="p">,</span>
+            <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+            <span class="n">with_site_labels</span><span class="o">=</span><span class="n">with_site_labels</span><span class="p">,</span>
+            <span class="n">with_site_values</span><span class="o">=</span><span class="n">with_site_values</span><span class="p">,</span>
+            <span class="n">with_empty_sites</span><span class="o">=</span><span class="n">with_empty_sites</span><span class="p">,</span>
+            <span class="n">with_blockade_edges</span><span class="o">=</span><span class="n">with_blockade_edges</span><span class="p">,</span>
+            <span class="n">with_hop_bonds</span><span class="o">=</span><span class="n">with_hop_bonds</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_plot_with_render_cache</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">ax</span><span class="p">,</span>
+        <span class="n">render_cache</span><span class="p">:</span> <span class="n">_QuantumDiskGridRenderCache</span><span class="p">,</span>
+        <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="n">VisualizerBackend</span> <span class="o">=</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span>
+        <span class="n">with_site_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">with_site_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_empty_sites</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">with_blockade_edges</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">with_hop_bonds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">backend</span> <span class="o">!=</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Quantum disk visualizers currently support backend=&#39;matplotlib&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="n">style</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span>
+        <span class="k">if</span> <span class="n">with_blockade_edges</span> <span class="ow">and</span> <span class="n">render_cache</span><span class="o">.</span><span class="n">blockade_segments</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+                <span class="n">LineCollection</span><span class="p">(</span>
+                    <span class="n">render_cache</span><span class="o">.</span><span class="n">blockade_segments</span><span class="p">,</span>
+                    <span class="n">colors</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">blockade_edge_color</span><span class="p">,</span>
+                    <span class="n">linewidths</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">blockade_edge_linewidth</span><span class="p">,</span>
+                    <span class="n">alpha</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">blockade_edge_alpha</span><span class="p">,</span>
+                    <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">with_hop_bonds</span> <span class="ow">and</span> <span class="n">render_cache</span><span class="o">.</span><span class="n">hop_segments</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+                <span class="n">LineCollection</span><span class="p">(</span>
+                    <span class="n">render_cache</span><span class="o">.</span><span class="n">hop_segments</span><span class="p">,</span>
+                    <span class="n">colors</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">hop_bond_color</span><span class="p">,</span>
+                    <span class="n">linewidths</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">hop_bond_linewidth</span><span class="p">,</span>
+                    <span class="n">alpha</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">hop_bond_alpha</span><span class="p">,</span>
+                    <span class="n">linestyles</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">hop_bond_linestyle</span><span class="p">,</span>
+                    <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">render_cache</span><span class="o">.</span><span class="n">site_variable_indices</span><span class="p">]</span>
+        <span class="n">occupied_mask</span> <span class="o">=</span> <span class="n">values</span> <span class="o">!=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">with_empty_sites</span> <span class="ow">and</span> <span class="n">render_cache</span><span class="o">.</span><span class="n">site_xy</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">empty_xy</span> <span class="o">=</span> <span class="n">render_cache</span><span class="o">.</span><span class="n">site_xy</span><span class="p">[</span><span class="o">~</span><span class="n">occupied_mask</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">empty_xy</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+                    <span class="n">empty_xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="n">empty_xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+                    <span class="n">s</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">site_marker_size</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">site_marker_color</span><span class="p">,</span>
+                    <span class="n">alpha</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">site_marker_alpha</span><span class="p">,</span>
+                    <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="n">radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">style</span><span class="o">.</span><span class="n">disk_radius</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate_scale</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">xy</span> <span class="ow">in</span> <span class="n">render_cache</span><span class="o">.</span><span class="n">site_xy</span><span class="p">[</span><span class="n">occupied_mask</span><span class="p">]:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span>
+                <span class="n">Circle</span><span class="p">(</span>
+                    <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                    <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
+                    <span class="n">facecolor</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">disk_face_color</span><span class="p">,</span>
+                    <span class="n">edgecolor</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">disk_edge_color</span><span class="p">,</span>
+                    <span class="n">linewidth</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">disk_linewidth</span><span class="p">,</span>
+                    <span class="n">alpha</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">disk_alpha</span><span class="p">,</span>
+                    <span class="n">zorder</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">with_site_labels</span> <span class="ow">or</span> <span class="n">with_site_values</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">site_index</span><span class="p">,</span> <span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="nb">zip</span><span class="p">(</span><span class="n">render_cache</span><span class="o">.</span><span class="n">site_xy</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="n">pieces</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">with_site_labels</span><span class="p">:</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="n">render_cache</span><span class="o">.</span><span class="n">site_labels</span><span class="p">[</span><span class="n">site_index</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">label</span><span class="p">:</span>
+                        <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">with_site_values</span><span class="p">:</span>
+                    <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">pieces</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">occupied</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">occupied_mask</span><span class="p">[</span><span class="n">site_index</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                    <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pieces</span><span class="p">),</span>
+                    <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">fontsize</span><span class="o">=</span><span class="p">(</span>
+                        <span class="n">style</span><span class="o">.</span><span class="n">site_value_fontsize</span> <span class="k">if</span> <span class="n">with_site_values</span> <span class="k">else</span> <span class="n">style</span><span class="o">.</span><span class="n">site_label_fontsize</span>
+                    <span class="p">),</span>
+                    <span class="n">color</span><span class="o">=</span><span class="p">(</span>
+                        <span class="n">style</span><span class="o">.</span><span class="n">occupied_site_value_color</span>
+                        <span class="k">if</span> <span class="n">occupied</span>
+                        <span class="k">else</span> <span class="n">style</span><span class="o">.</span><span class="n">empty_site_value_color</span>
+                    <span class="p">),</span>
+                    <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">*</span><span class="n">render_cache</span><span class="o">.</span><span class="n">xlim</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">*</span><span class="n">render_cache</span><span class="o">.</span><span class="n">ylim</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+        <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">ax</span>
+
+<div class="viewcode-block" id="QuantumDiskConfigurationVisualizer.save">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskConfigurationVisualizer.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="QuantumDiskBasisGridVisualizer">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuantumDiskBasisGridVisualizer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot batches of quantum disk basis states.</span>
+
+<span class="sd">    The public methods intentionally mirror the generic</span>
+<span class="sd">    :class:`BasisGridVisualizer` API: ``plot`` for arbitrary basis-state batches,</span>
+<span class="sd">    ``plot_cage_support`` for cage records, and ``plot_interference_zeros`` for</span>
+<span class="sd">    classification reports.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lattice</span><span class="p">:</span> <span class="n">SquareLattice</span>
+    <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">style</span><span class="p">:</span> <span class="n">QuantumDiskVisualStyle</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">QuantumDiskVisualStyle</span><span class="p">)</span>
+    <span class="n">hop_pairs</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">coordinate_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">site_label_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;site_id&quot;</span>
+
+<div class="viewcode-block" id="QuantumDiskBasisGridVisualizer.from_model">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer.from_model">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_model</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">QuantumDiskVisualStyle</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">coordinate_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">site_label_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;site_id&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumDiskBasisGridVisualizer</span><span class="p">:</span>
+        <span class="n">single</span> <span class="o">=</span> <span class="n">QuantumDiskConfigurationVisualizer</span><span class="o">.</span><span class="n">from_model</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">coordinate_scale</span><span class="o">=</span><span class="n">coordinate_scale</span><span class="p">,</span>
+            <span class="n">site_label_style</span><span class="o">=</span><span class="n">site_label_style</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">lattice</span><span class="o">=</span><span class="n">single</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">single</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">single</span><span class="o">.</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">hop_pairs</span><span class="o">=</span><span class="n">single</span><span class="o">.</span><span class="n">hop_pairs</span><span class="p">,</span>
+            <span class="n">coordinate_scale</span><span class="o">=</span><span class="n">single</span><span class="o">.</span><span class="n">coordinate_scale</span><span class="p">,</span>
+            <span class="n">site_label_style</span><span class="o">=</span><span class="n">single</span><span class="o">.</span><span class="n">site_label_style</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QuantumDiskBasisGridVisualizer.from_build_result">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer.from_build_result">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_build_result</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">result</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">QuantumDiskVisualStyle</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">coordinate_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">site_label_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;site_id&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumDiskBasisGridVisualizer</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_model</span><span class="p">(</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">coordinate_scale</span><span class="o">=</span><span class="n">coordinate_scale</span><span class="p">,</span>
+            <span class="n">site_label_style</span><span class="o">=</span><span class="n">site_label_style</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_single_visualizer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumDiskConfigurationVisualizer</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">QuantumDiskConfigurationVisualizer</span><span class="p">(</span>
+            <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">layout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">hop_pairs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hop_pairs</span><span class="p">,</span>
+            <span class="n">coordinate_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate_scale</span><span class="p">,</span>
+            <span class="n">site_label_style</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_label_style</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="QuantumDiskBasisGridVisualizer.build_render_cache">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer.build_render_cache">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_render_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_QuantumDiskGridRenderCache</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a reusable render cache for repeated disk-grid plotting.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_visualizer</span><span class="p">()</span><span class="o">.</span><span class="n">build_render_cache</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="QuantumDiskBasisGridVisualizer.plot">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer.plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">nrows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">start_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_config_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">config_label_style</span><span class="p">:</span> <span class="n">BasisConfigLabelStyle</span> <span class="o">=</span> <span class="s2">&quot;compact&quot;</span><span class="p">,</span>
+        <span class="n">config_label_max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">48</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="n">VisualizerBackend</span> <span class="o">=</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span>
+        <span class="n">suptitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">suptitle_y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.995</span><span class="p">,</span>
+        <span class="n">tight_layout_rect</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">single_plot_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">render_cache</span><span class="p">:</span> <span class="n">_QuantumDiskGridRenderCache</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot a batch of quantum disk basis configurations.&quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;states must have shape (n_variables,) or (n_states, n_variables).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;states must contain at least one configuration.&quot;</span><span class="p">)</span>
+
+        <span class="n">single</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_visualizer</span><span class="p">()</span>
+        <span class="n">single</span><span class="o">.</span><span class="n">_validate_config_batch</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">render_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">render_cache</span> <span class="o">=</span> <span class="n">single</span><span class="o">.</span><span class="n">build_render_cache</span><span class="p">()</span>
+
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">automatic_grid_shape</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nrows</span><span class="o">=</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="n">ncols</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">!=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;labels must have the same length as states.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">figsize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.8</span> <span class="o">*</span> <span class="n">cols</span><span class="p">,</span> <span class="mf">2.8</span> <span class="o">*</span> <span class="n">rows</span><span class="p">)</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">single_plot_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">single_plot_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">plot_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">single_plot_kwargs</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;backend&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;ax&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;render_cache&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span> <span class="o">*</span> <span class="n">cols</span><span class="p">):</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;state </span><span class="si">{</span><span class="n">start_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">show_config_label</span><span class="p">:</span>
+                <span class="n">config_text</span> <span class="o">=</span> <span class="n">format_basis_config</span><span class="p">(</span>
+                    <span class="n">arr</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
+                    <span class="n">style</span><span class="o">=</span><span class="n">config_label_style</span><span class="p">,</span>
+                    <span class="n">max_length</span><span class="o">=</span><span class="n">config_label_max_length</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">config_text</span><span class="p">:</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">config_text</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="n">single</span><span class="o">.</span><span class="n">_plot_with_render_cache</span><span class="p">(</span>
+                <span class="n">arr</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
+                <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                <span class="n">render_cache</span><span class="o">=</span><span class="n">render_cache</span><span class="p">,</span>
+                <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">suptitle</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">suptitle_y</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tight_layout_rect</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tight_layout_rect</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.96</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="n">tight_layout_rect</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span></div>
+
+
+<div class="viewcode-block" id="QuantumDiskBasisGridVisualizer.plot_basis">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer.plot_basis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot all states in a Basis-like object with a ``states`` attribute.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QuantumDiskBasisGridVisualizer.plot_cage_support">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer.plot_cage_support">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_cage_support</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">result_or_record</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">record_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_amplitudes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">amplitude_digits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">suptitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot the disk basis states in one cage support.&quot;&quot;&quot;</span>
+        <span class="n">basis_configs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">basis_configs</span><span class="p">)</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">_select_cage_record</span><span class="p">(</span>
+            <span class="n">result_or_record</span><span class="p">,</span>
+            <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
+            <span class="n">record_index</span><span class="o">=</span><span class="n">record_index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">support</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">support</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">local_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">local_state</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">support</span> <span class="o">=</span> <span class="n">support</span><span class="p">[:</span><span class="n">max_states</span><span class="p">]</span>
+            <span class="n">local_state</span> <span class="o">=</span> <span class="n">local_state</span><span class="p">[:</span><span class="n">max_states</span><span class="p">]</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="n">basis_configs</span><span class="p">[</span><span class="n">support</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">show_amplitudes</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">_amplitude_label</span><span class="p">(</span>
+                        <span class="n">basis_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">),</span>
+                        <span class="n">amplitude</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">amplitude</span><span class="p">),</span>
+                        <span class="n">digits</span><span class="o">=</span><span class="n">amplitude_digits</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">amplitude</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">support</span><span class="p">,</span> <span class="n">local_state</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;basis </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">support</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">suptitle</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Quantum disk cage support, signature=</span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">signature</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;support size=</span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">support</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">suptitle</span><span class="o">=</span><span class="n">suptitle</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QuantumDiskBasisGridVisualizer.plot_interference_zeros">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer.plot_interference_zeros">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_interference_zeros</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">classification_report</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">mechanism</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
+        <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">suptitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot disk basis states corresponding to nontrivial interference zeros.&quot;&quot;&quot;</span>
+        <span class="n">basis_configs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">basis_configs</span><span class="p">)</span>
+        <span class="n">zero_indices</span> <span class="o">=</span> <span class="n">_zero_indices_for_mechanism</span><span class="p">(</span><span class="n">classification_report</span><span class="p">,</span> <span class="n">mechanism</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">zero_indices</span> <span class="o">=</span> <span class="n">zero_indices</span><span class="p">[:</span><span class="n">max_states</span><span class="p">]</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="n">basis_configs</span><span class="p">[</span><span class="n">zero_indices</span><span class="p">]</span>
+        <span class="n">mechanism_labels</span> <span class="o">=</span> <span class="n">_zero_mechanism_label_map</span><span class="p">(</span><span class="n">classification_report</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;zero </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">mechanism_labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">),</span><span class="w"> </span><span class="n">mechanism</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">zero_indices</span>
+            <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mechanism</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="n">suptitle</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Quantum disk interference zeros (</span><span class="si">{</span><span class="n">zero_indices</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> states)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">suptitle</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Quantum disk interference zeros: </span><span class="si">{</span><span class="n">mechanism</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">zero_indices</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> states)&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">suptitle</span><span class="o">=</span><span class="n">suptitle</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="plot_quantum_disk_basis_grid">
+<a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.plot_quantum_disk_basis_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_quantum_disk_basis_grid</span><span class="p">(</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">lattice</span><span class="p">:</span> <span class="n">SquareLattice</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">nrows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">start_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">show_config_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config_label_style</span><span class="p">:</span> <span class="n">BasisConfigLabelStyle</span> <span class="o">=</span> <span class="s2">&quot;compact&quot;</span><span class="p">,</span>
+    <span class="n">config_label_max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">48</span><span class="p">,</span>
+    <span class="n">style</span><span class="p">:</span> <span class="n">QuantumDiskVisualStyle</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">VisualizerBackend</span> <span class="o">=</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span>
+    <span class="n">suptitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">single_plot_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Functional wrapper around :class:`QuantumDiskBasisGridVisualizer`.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">visualizer</span> <span class="o">=</span> <span class="n">QuantumDiskBasisGridVisualizer</span><span class="o">.</span><span class="n">from_build_result</span><span class="p">(</span>
+            <span class="n">result</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">visualizer</span> <span class="o">=</span> <span class="n">QuantumDiskBasisGridVisualizer</span><span class="o">.</span><span class="n">from_model</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lattice</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either result, model, or lattice must be provided.&quot;</span><span class="p">)</span>
+        <span class="n">visualizer</span> <span class="o">=</span> <span class="n">QuantumDiskBasisGridVisualizer</span><span class="p">(</span>
+            <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span> <span class="k">if</span> <span class="n">style</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">QuantumDiskVisualStyle</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">visualizer</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">states</span><span class="p">,</span>
+        <span class="n">nrows</span><span class="o">=</span><span class="n">nrows</span><span class="p">,</span>
+        <span class="n">ncols</span><span class="o">=</span><span class="n">ncols</span><span class="p">,</span>
+        <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">show_config_label</span><span class="o">=</span><span class="n">show_config_label</span><span class="p">,</span>
+        <span class="n">config_label_style</span><span class="o">=</span><span class="n">config_label_style</span><span class="p">,</span>
+        <span class="n">config_label_max_length</span><span class="o">=</span><span class="n">config_label_max_length</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span>
+        <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span>
+        <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+        <span class="n">suptitle</span><span class="o">=</span><span class="n">suptitle</span><span class="p">,</span>
+        <span class="n">single_plot_kwargs</span><span class="o">=</span><span class="n">single_plot_kwargs</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

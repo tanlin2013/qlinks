@@ -373,6 +373,8 @@
 
 <span class="n">LocalBoundaryMode</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;relaxed&quot;</span><span class="p">,</span> <span class="s2">&quot;closed&quot;</span><span class="p">]</span>
 <span class="n">SnakeStripeKindPattern</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="s2">&quot;alternating&quot;</span><span class="p">,</span> <span class="s2">&quot;constant_or_alternating&quot;</span><span class="p">]</span>
+<span class="n">StripeMotifSource</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;snake_stripe&quot;</span><span class="p">]</span>
+<span class="n">StripeMotifSubsetMode</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="LocalQDMCageSearchConfig">
@@ -572,6 +574,52 @@
             <span class="s2">&quot;plaquette_kinds&quot;</span><span class="p">,</span>
             <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span> <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_kinds</span><span class="p">),</span>
         <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="StripeMotifRegionProposalRecord">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.StripeMotifRegionProposalRecord">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StripeMotifRegionProposalRecord</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One small stripe-motif local-region proposal.</span>
+
+<span class="sd">    The proposal is meant to capture the QDM pattern seen in exact cages: a</span>
+<span class="sd">    width-one stripe supplies the global organizing structure, but the coherent</span>
+<span class="sd">    local object is often only a two- or three-plaquette motif on that stripe.</span>
+<span class="sd">    ``source`` records whether the motif was cut from a straight stripe or from</span>
+<span class="sd">    a snake-stripe cycle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">region</span><span class="p">:</span> <span class="n">LocalQDMRegion</span>
+    <span class="n">plaquette_ids</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">source_index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">source_plaquette_ids</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">motif_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">motif_index</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">plaquette_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plaquette_ids</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;plaquette_ids must be one-dimensional.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plaquette_ids</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;plaquette_ids must be non-empty.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;plaquette_ids&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">plaquette_ids</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">source_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_plaquette_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">source_ids</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;source_plaquette_ids must be one-dimensional.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">source_ids</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;source_plaquette_ids must be non-empty.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;source_plaquette_ids&quot;</span><span class="p">,</span> <span class="n">source_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;source_index&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_index</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;motif_size&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">motif_size</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;motif_index&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">motif_index</span><span class="p">))</span></div>
 
 
 
@@ -1065,6 +1113,261 @@
             <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">selected</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
             <span class="n">turn_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">turn_count</span><span class="p">),</span>
             <span class="n">plaquette_kinds</span><span class="o">=</span><span class="n">kinds</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="StripeMotifRegionProposal">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.StripeMotifRegionProposal">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StripeMotifRegionProposal</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate small QDM motif regions cut from stripe-like plaquette paths.</span>
+
+<span class="sd">    This is a fast path for QDM cages whose real-space organization is a</span>
+<span class="sd">    width-one stripe but whose coherent local objects are only small two- or</span>
+<span class="sd">    three-plaquette singlet/triplet motifs.  It first constructs cheap straight</span>
+<span class="sd">    and/or snake stripe skeletons, then emits small motif subsets from each</span>
+<span class="sd">    skeleton.  The ordinary local cage algebra is still used afterward, but on</span>
+<span class="sd">    much smaller regions than a full stripe.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">LocalQDMCageSearchConfig</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">LocalQDMCageSearchConfig</span><span class="p">(</span><span class="n">halo_layers</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">motif_sizes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">sources</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">StripeMotifSource</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;snake_stripe&quot;</span><span class="p">)</span>
+    <span class="n">subset_mode</span><span class="p">:</span> <span class="n">StripeMotifSubsetMode</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span>
+    <span class="n">max_motifs_per_stripe</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">max_records</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">max_links</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">stripe_widths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+    <span class="n">stripe_directions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">plaquette_kinds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">snake_max_plaquettes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">snake_min_plaquettes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">snake_max_turns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">snake_allow_kind_changes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">snake_kind_pattern</span><span class="p">:</span> <span class="n">SnakeStripeKindPattern</span> <span class="o">=</span> <span class="s2">&quot;constant_or_alternating&quot;</span>
+    <span class="n">snake_require_induced_cycle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">snake_winding_vectors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">adapter</span><span class="p">:</span> <span class="n">LocalCageModelAdapter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">motif_sizes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;motif_sizes must be non-empty.&quot;</span><span class="p">)</span>
+        <span class="n">motif_sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">motif_sizes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">size</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">motif_sizes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;motif_sizes must contain positive integers.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;motif_sizes&quot;</span><span class="p">,</span> <span class="n">motif_sizes</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;sources must be non-empty.&quot;</span><span class="p">)</span>
+        <span class="n">bad_sources</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">source</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span> <span class="k">if</span> <span class="n">source</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;snake_stripe&quot;</span><span class="p">}</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">bad_sources</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported stripe motif sources: </span><span class="si">{</span><span class="n">bad_sources</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;sources&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subset_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;subset_mode must be &#39;windows&#39; or &#39;all&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_motifs_per_stripe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_motifs_per_stripe</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_motifs_per_stripe must be non-negative or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_records</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_records</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_records must be non-negative or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_links</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_links must be positive or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_widths</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_widths must be non-empty.&quot;</span><span class="p">)</span>
+        <span class="n">stripe_widths</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="p">)</span> <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_widths</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">width</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">stripe_widths</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_widths must contain positive integers.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;stripe_widths&quot;</span><span class="p">,</span> <span class="n">stripe_widths</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_max_plaquettes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_max_plaquettes</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;snake_max_plaquettes must be positive or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_min_plaquettes</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;snake_min_plaquettes must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">snake_max_plaquettes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_min_plaquettes</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_max_plaquettes</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;snake_min_plaquettes cannot exceed snake_max_plaquettes.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_max_turns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_max_turns</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;snake_max_turns must be non-negative or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_kind_pattern</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;constant&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;alternating&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;constant_or_alternating&quot;</span><span class="p">,</span>
+        <span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;snake_kind_pattern must be &#39;any&#39;, &#39;constant&#39;, &#39;alternating&#39;, &quot;</span>
+                <span class="s2">&quot;or &#39;constant_or_alternating&#39;.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">adapter</span> <span class="o">=</span> <span class="n">local_cage_adapter_for_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapter</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">normalize_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;adapter&quot;</span><span class="p">,</span> <span class="n">adapter</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_directions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">directions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span> <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_directions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">directions</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_directions must be non-empty when provided.&quot;</span><span class="p">)</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;stripe_directions&quot;</span><span class="p">,</span> <span class="n">directions</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_kinds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kinds</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span> <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plaquette_kinds</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">kinds</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;plaquette_kinds must be non-empty when provided.&quot;</span><span class="p">)</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;plaquette_kinds&quot;</span><span class="p">,</span> <span class="n">kinds</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_winding_vectors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">windings</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">winding</span><span class="p">)</span> <span class="k">for</span> <span class="n">winding</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_winding_vectors</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">windings</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;snake_winding_vectors must be non-empty or None.&quot;</span><span class="p">)</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;snake_winding_vectors&quot;</span><span class="p">,</span> <span class="n">windings</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StripeMotifRegionProposal.iter_records">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.StripeMotifRegionProposal.iter_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iter_records</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">StripeMotifRegionProposalRecord</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield small motif records in deterministic stripe-skeleton order.&quot;&quot;&quot;</span>
+        <span class="n">n_emitted</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">source_index</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">ordered_ids</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_source_stripes</span><span class="p">():</span>
+            <span class="n">n_from_source</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">motif_index</span><span class="p">,</span> <span class="n">motif_ids</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="n">_stripe_motif_subsets</span><span class="p">(</span>
+                    <span class="n">ordered_ids</span><span class="p">,</span>
+                    <span class="n">motif_sizes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">motif_sizes</span><span class="p">,</span>
+                    <span class="n">subset_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subset_mode</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_motifs_per_stripe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n_from_source</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">max_motifs_per_stripe</span>
+                <span class="p">):</span>
+                    <span class="k">break</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">motif_ids</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_record</span><span class="p">(</span>
+                    <span class="n">plaquette_ids</span><span class="o">=</span><span class="n">motif_ids</span><span class="p">,</span>
+                    <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+                    <span class="n">source_index</span><span class="o">=</span><span class="n">source_index</span><span class="p">,</span>
+                    <span class="n">source_plaquette_ids</span><span class="o">=</span><span class="n">ordered_ids</span><span class="p">,</span>
+                    <span class="n">motif_index</span><span class="o">=</span><span class="n">motif_index</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="n">n_from_source</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">n_emitted</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">yield</span> <span class="n">record</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_records</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n_emitted</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_records</span><span class="p">):</span>
+                    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="StripeMotifRegionProposal.iter_regions">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.StripeMotifRegionProposal.iter_regions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iter_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">LocalQDMRegion</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield only the local regions from :meth:`iter_records`.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_records</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">record</span><span class="o">.</span><span class="n">region</span></div>
+
+
+<div class="viewcode-block" id="StripeMotifRegionProposal.iter_searchers">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.StripeMotifRegionProposal.iter_searchers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iter_searchers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">LocalCageSearcher</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield ready-to-run local cage searchers for proposed motifs.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_records</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">LocalCageSearcher</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">region</span><span class="o">=</span><span class="n">record</span><span class="o">.</span><span class="n">region</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+                <span class="n">adapter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">adapter</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_iter_source_stripes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
+        <span class="n">source_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="s2">&quot;stripe&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_widths</span><span class="p">:</span>
+                <span class="n">proposal</span> <span class="o">=</span> <span class="n">StripeRegionProposal</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                    <span class="n">directions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stripe_directions</span><span class="p">,</span>
+                    <span class="n">width</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="p">),</span>
+                    <span class="n">plaquette_kinds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plaquette_kinds</span><span class="p">,</span>
+                    <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+                    <span class="n">adapter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">adapter</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">proposal</span><span class="o">.</span><span class="n">iter_records</span><span class="p">():</span>
+                    <span class="n">ordered</span> <span class="o">=</span> <span class="n">_ordered_straight_stripe_plaquettes</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                        <span class="n">record</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">,</span>
+                        <span class="n">direction</span><span class="o">=</span><span class="n">record</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">yield</span> <span class="n">source_index</span><span class="p">,</span> <span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="n">ordered</span>
+                    <span class="n">source_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="s2">&quot;snake_stripe&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span>
+            <span class="n">max_plaquettes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snake_max_plaquettes</span>
+            <span class="k">if</span> <span class="n">max_plaquettes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">max_plaquettes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snake_min_plaquettes</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">motif_sizes</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">proposal</span> <span class="o">=</span> <span class="n">SnakeStripeRegionProposal</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">max_plaquettes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">max_plaquettes</span><span class="p">),</span>
+                <span class="n">min_plaquettes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snake_min_plaquettes</span><span class="p">),</span>
+                <span class="n">max_records</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_records</span><span class="p">,</span>
+                <span class="n">max_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">max_turns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">snake_max_turns</span><span class="p">,</span>
+                <span class="n">plaquette_kinds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plaquette_kinds</span><span class="p">,</span>
+                <span class="n">allow_kind_changes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">snake_allow_kind_changes</span><span class="p">,</span>
+                <span class="n">kind_pattern</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">snake_kind_pattern</span><span class="p">,</span>
+                <span class="n">require_induced_cycle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">snake_require_induced_cycle</span><span class="p">,</span>
+                <span class="n">winding_vectors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">snake_winding_vectors</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+                <span class="n">adapter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">adapter</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">proposal</span><span class="o">.</span><span class="n">iter_records</span><span class="p">():</span>
+                <span class="n">ordered</span> <span class="o">=</span> <span class="n">_ordered_cycle_plaquettes_from_shared_graph</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">ordered</span><span class="p">:</span>
+                    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">source_index</span><span class="p">,</span> <span class="s2">&quot;snake_stripe&quot;</span><span class="p">,</span> <span class="n">ordered</span>
+                <span class="n">source_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">plaquette_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">source_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">source_plaquette_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">motif_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StripeMotifRegionProposalRecord</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">({</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">plaquette_ids</span><span class="p">})),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">selected</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">region</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapter</span><span class="o">.</span><span class="n">build_region_from_plaquettes</span><span class="p">(</span>
+            <span class="n">plaquette_ids</span><span class="o">=</span><span class="n">selected</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">scoring_plaquette_ids</span><span class="o">=</span><span class="n">selected</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">region</span><span class="o">.</span><span class="n">link_ids</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_links</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">StripeMotifRegionProposalRecord</span><span class="p">(</span>
+            <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span>
+            <span class="n">plaquette_ids</span><span class="o">=</span><span class="n">selected</span><span class="p">,</span>
+            <span class="n">source</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">),</span>
+            <span class="n">source_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">source_index</span><span class="p">),</span>
+            <span class="n">source_plaquette_ids</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">source_plaquette_ids</span><span class="p">)),</span>
+            <span class="n">motif_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">selected</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
+            <span class="n">motif_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">motif_index</span><span class="p">),</span>
         <span class="p">)</span></div>
 
 
@@ -1573,6 +1876,10 @@
     <span class="n">min_region_plaquettes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">max_region_links</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">max_regions_per_strategy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">128</span>
+    <span class="n">stripe_motif_sizes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">stripe_motif_sources</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">StripeMotifSource</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;snake_stripe&quot;</span><span class="p">)</span>
+    <span class="n">stripe_motif_subset_mode</span><span class="p">:</span> <span class="n">StripeMotifSubsetMode</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span>
+    <span class="n">stripe_motif_max_motifs_per_stripe</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">stripe_widths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">stripe_directions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">snake_stripe_max_turns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1614,7 +1921,27 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_regions_per_strategy must be non-negative or None.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_strategies</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;region_strategies must be non-empty.&quot;</span><span class="p">)</span>
-        <span class="n">valid_strategies</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;snake_stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;connected&quot;</span><span class="p">,</span> <span class="s2">&quot;adaptive&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_motif_sizes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_motif_sizes must be non-empty.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_motif_sizes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_motif_sizes must contain positive integers.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_motif_sources</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_motif_sources must be non-empty.&quot;</span><span class="p">)</span>
+        <span class="n">bad_motif_sources</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">source</span>
+            <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_motif_sources</span>
+            <span class="k">if</span> <span class="n">source</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;snake_stripe&quot;</span><span class="p">}</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">bad_motif_sources</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported stripe motif sources: </span><span class="si">{</span><span class="n">bad_motif_sources</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_motif_subset_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_motif_subset_mode must be &#39;windows&#39; or &#39;all&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stripe_motif_max_motifs_per_stripe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">stripe_motif_max_motifs_per_stripe</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stripe_motif_max_motifs_per_stripe must be non-negative or None.&quot;</span><span class="p">)</span>
+        <span class="n">valid_strategies</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stripe_motif&quot;</span><span class="p">,</span> <span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;snake_stripe&quot;</span><span class="p">,</span> <span class="s2">&quot;connected&quot;</span><span class="p">,</span> <span class="s2">&quot;adaptive&quot;</span><span class="p">}</span>
         <span class="n">bad_strategies</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">strategy</span> <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_strategies</span> <span class="k">if</span> <span class="n">strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_strategies</span>
         <span class="p">]</span>
@@ -4818,6 +5145,30 @@
     <span class="n">adapter</span><span class="p">:</span> <span class="n">LocalCageModelAdapter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalRegionProposal</span><span class="p">]:</span>
     <span class="n">proposals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalRegionProposal</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s2">&quot;stripe_motif&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">region_strategies</span><span class="p">:</span>
+        <span class="n">proposals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">StripeMotifRegionProposal</span><span class="p">(</span>
+                <span class="n">model</span><span class="p">,</span>
+                <span class="n">motif_sizes</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stripe_motif_sizes</span><span class="p">,</span>
+                <span class="n">sources</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stripe_motif_sources</span><span class="p">,</span>
+                <span class="n">subset_mode</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stripe_motif_subset_mode</span><span class="p">,</span>
+                <span class="n">max_motifs_per_stripe</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stripe_motif_max_motifs_per_stripe</span><span class="p">,</span>
+                <span class="n">max_records</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_regions_per_strategy</span><span class="p">,</span>
+                <span class="n">max_links</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_region_links</span><span class="p">,</span>
+                <span class="n">stripe_widths</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stripe_widths</span><span class="p">,</span>
+                <span class="n">stripe_directions</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stripe_directions</span><span class="p">,</span>
+                <span class="n">plaquette_kinds</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_plaquette_kinds</span><span class="p">,</span>
+                <span class="n">snake_max_plaquettes</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_region_plaquettes</span><span class="p">,</span>
+                <span class="n">snake_min_plaquettes</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">min_region_plaquettes</span><span class="p">,</span>
+                <span class="n">snake_max_turns</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_max_turns</span><span class="p">,</span>
+                <span class="n">snake_allow_kind_changes</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_allow_kind_changes</span><span class="p">,</span>
+                <span class="n">snake_kind_pattern</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_kind_pattern</span><span class="p">,</span>
+                <span class="n">snake_require_induced_cycle</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_require_induced_cycle</span><span class="p">,</span>
+                <span class="n">snake_winding_vectors</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">snake_stripe_winding_vectors</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">local_config</span><span class="p">,</span>
+                <span class="n">adapter</span><span class="o">=</span><span class="n">adapter</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="s2">&quot;stripe&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">region_strategies</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">stripe_widths</span><span class="p">:</span>
             <span class="n">proposals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -6530,6 +6881,91 @@
             <span class="n">kept</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">kept</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ordered_straight_stripe_plaquettes</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">plaquette_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Order plaquettes by anchor coordinate along a straight stripe.&quot;&quot;&quot;</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">plaquette_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">ids</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">pid</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">_stripe_anchor_cell</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">))[</span><span class="nb">int</span><span class="p">(</span><span class="n">direction</span><span class="p">)],</span>
+                <span class="n">_stripe_anchor_cell</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)),</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">),</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stripe_motif_subsets</span><span class="p">(</span>
+    <span class="n">ordered_plaquette_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">motif_sizes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">subset_mode</span><span class="p">:</span> <span class="n">StripeMotifSubsetMode</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield small plaquette subsets from a cyclic stripe skeleton.&quot;&quot;&quot;</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">ordered_plaquette_ids</span><span class="p">)</span>
+    <span class="n">n_plaquettes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ordered</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_plaquettes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">motif_size</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">({</span><span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">motif_sizes</span><span class="p">}):</span>
+        <span class="k">if</span> <span class="n">motif_size</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">motif_size</span> <span class="o">&gt;</span> <span class="n">n_plaquettes</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">subset_mode</span> <span class="o">==</span> <span class="s2">&quot;windows&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_plaquettes</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="n">ordered</span><span class="p">[(</span><span class="n">start</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)</span> <span class="o">%</span> <span class="n">n_plaquettes</span><span class="p">]</span> <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">motif_size</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">ordered</span><span class="p">,</span> <span class="n">motif_size</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">combination</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ordered_cycle_plaquettes_from_shared_graph</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">plaquette_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return one cyclic order when selected plaquettes form a degree-2 cycle.&quot;&quot;&quot;</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">({</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">plaquette_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)}))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">selected</span>
+
+    <span class="n">selected_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
+    <span class="n">neighbor_map</span> <span class="o">=</span> <span class="n">_plaquette_shared_link_neighbor_map</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">induced</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">pid</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span> <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">neighbor_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="p">())</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span> <span class="ow">in</span> <span class="n">selected_set</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">selected</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">neighbors</span> <span class="ow">in</span> <span class="n">induced</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">return</span> <span class="p">()</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="p">[</span><span class="n">start</span><span class="p">]</span>
+    <span class="n">previous</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">choices</span> <span class="o">=</span> <span class="p">[</span><span class="n">neighbor</span> <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">induced</span><span class="p">[</span><span class="n">current</span><span class="p">]</span> <span class="k">if</span> <span class="n">neighbor</span> <span class="o">!=</span> <span class="n">previous</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">choices</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+        <span class="n">next_pid</span> <span class="o">=</span> <span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">next_pid</span> <span class="o">==</span> <span class="n">start</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">next_pid</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+        <span class="n">ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_pid</span><span class="p">)</span>
+        <span class="n">previous</span><span class="p">,</span> <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="p">,</span> <span class="n">next_pid</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ordered</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">()</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_stripe_plaquette_data</span><span class="p">(</span>

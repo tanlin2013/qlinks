@@ -357,7 +357,7 @@
     <span class="n">ModelBuildResult</span><span class="p">,</span>
     <span class="n">SparseBackendName</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.local_terms</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalTermDescriptor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.local_terms</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="n">LocalTermKind</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LindbladProblem</span><span class="p">,</span>
     <span class="n">LocalMatrixUnitTerm</span><span class="p">,</span>
@@ -1766,6 +1766,7 @@
     <span class="n">cage_state</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
     <span class="n">classification_report</span><span class="p">:</span> <span class="n">CageClassificationReport</span><span class="p">,</span>
     <span class="n">z_value</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">local_term_kind</span><span class="p">:</span> <span class="n">LocalTermKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="n">SparseBackendName</span> <span class="o">=</span> <span class="s2">&quot;scipy&quot;</span><span class="p">,</span>
     <span class="n">open_system_backend</span><span class="p">:</span> <span class="n">OpenSystemBackendName</span> <span class="o">=</span> <span class="s2">&quot;scipy&quot;</span><span class="p">,</span>
@@ -1819,6 +1820,9 @@
 <span class="sd">        classification_report: Reduced-IZ classification report for the target.</span>
 <span class="sd">        z_value: Optional sharp type-1 potential value.  If omitted, the value</span>
 <span class="sd">            is inferred when needed.</span>
+<span class="sd">        local_term_kind: Optional local-term geometry filter.  Leave as ``None``</span>
+<span class="sd">            for generic models, or pass values such as ``&quot;plaquette&quot;`` or</span>
+<span class="sd">            ``&quot;bond&quot;`` to restrict the construction to one local-term family.</span>
 <span class="sd">        builder: Local-term matrix builder.</span>
 <span class="sd">        backend: Sparse backend for local-term matrices.</span>
 <span class="sd">        open_system_backend: Backend used for Lindblad diagnostics.</span>
@@ -1909,11 +1913,12 @@
     <span class="n">_record_construction_stage</span><span class="p">(</span><span class="n">timing_collector</span><span class="p">,</span> <span class="s2">&quot;extract_region&quot;</span><span class="p">,</span> <span class="n">stage_start</span><span class="p">)</span>
 
     <span class="n">stage_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
-    <span class="n">kinetic_terms</span><span class="p">,</span> <span class="n">potential_terms</span><span class="p">,</span> <span class="n">potential_by_pid</span> <span class="o">=</span> <span class="n">_plaquette_local_terms_by_operator_kind</span><span class="p">(</span>
-        <span class="n">model</span>
+    <span class="n">kinetic_terms</span><span class="p">,</span> <span class="n">potential_terms</span><span class="p">,</span> <span class="n">potential_by_pid</span> <span class="o">=</span> <span class="n">_local_terms_by_operator_kind</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">term_kind</span><span class="o">=</span><span class="n">local_term_kind</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">inside_kinetic</span><span class="p">,</span> <span class="n">outside_kinetic</span><span class="p">,</span> <span class="n">crossing_kinetic</span> <span class="o">=</span> <span class="n">_partition_plaquette_terms_by_region</span><span class="p">(</span>
+    <span class="n">inside_kinetic</span><span class="p">,</span> <span class="n">outside_kinetic</span><span class="p">,</span> <span class="n">crossing_kinetic</span> <span class="o">=</span> <span class="n">_partition_local_terms_by_region</span><span class="p">(</span>
         <span class="n">kinetic_terms</span><span class="p">,</span>
         <span class="n">region</span><span class="o">.</span><span class="n">variable_index_set</span><span class="p">,</span>
     <span class="p">)</span>
@@ -2051,7 +2056,7 @@
 
             <span class="n">single_component_support_set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">single_component_support</span><span class="p">)</span>
 
-            <span class="n">single_component_support_plaquette_ids</span> <span class="o">=</span> <span class="n">_plaquette_ids_inside_variable_support</span><span class="p">(</span>
+            <span class="n">single_component_support_plaquette_ids</span> <span class="o">=</span> <span class="n">_local_term_ids_inside_variable_support</span><span class="p">(</span>
                 <span class="n">kinetic_terms</span><span class="p">,</span>
                 <span class="n">single_component_support_set</span><span class="p">,</span>
             <span class="p">)</span>
@@ -2511,6 +2516,23 @@
 
 
 
+<div class="viewcode-block" id="build_type1_local_cage_lindblad_construction">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.open_system.build_type1_local_cage_lindblad_construction">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_type1_local_cage_lindblad_construction</span><span class="p">(</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CageLindbladConstruction</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for the generic local-term Type-1 cage Lindblad builder.</span>
+
+<span class="sd">    This name emphasizes that the construction now works with any model that</span>
+<span class="sd">    exposes :class:`~qlinks.models.local_terms.LocalTermDescriptor` objects and</span>
+<span class="sd">    ``build_local_term``; the older</span>
+<span class="sd">    :func:`build_type1_cage_lindblad_construction` name is kept for backward</span>
+<span class="sd">    compatibility with QDM/QLM notebooks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">build_type1_cage_lindblad_construction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_build_jump_operators</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -2780,7 +2802,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">region</span><span class="o">.</span><span class="n">variable_index_set</span><span class="p">)),)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_partition_plaquette_terms_by_region</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_partition_local_terms_by_region</span><span class="p">(</span>
     <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="n">region_variables</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -2802,7 +2824,7 @@
     <span class="n">crossing</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
-        <span class="n">support</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">support_link_set</span>
+        <span class="n">support</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">support_variable_set</span>
 
         <span class="k">if</span> <span class="n">support</span> <span class="o">&lt;=</span> <span class="n">region_variables</span><span class="p">:</span>
             <span class="n">inside</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
@@ -2812,6 +2834,24 @@
             <span class="n">crossing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inside</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">outside</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">crossing</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_partition_plaquette_terms_by_region</span><span class="p">(</span>
+    <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">region_variables</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">variable_index_set</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
+    <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Backward-compatible alias for generic local-term partitioning.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_partition_local_terms_by_region</span><span class="p">(</span>
+        <span class="n">terms</span><span class="p">,</span>
+        <span class="n">region_variables</span><span class="p">,</span>
+        <span class="n">variable_index_set</span><span class="o">=</span><span class="n">variable_index_set</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_select_monitor_terms</span><span class="p">(</span>
@@ -2880,9 +2920,13 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_kinetic_term_support_set</span><span class="p">(</span><span class="n">term</span><span class="p">:</span> <span class="n">LocalTermDescriptor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-    <span class="n">support</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="s2">&quot;support_link_set&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">support</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="s2">&quot;support_variable_set&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">support</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">support</span><span class="p">)</span>
+
+    <span class="n">support_variables</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="s2">&quot;support_variables&quot;</span><span class="p">,</span> <span class="p">())</span>
+    <span class="k">if</span> <span class="n">support_variables</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">support_variables</span><span class="p">)</span>
 
     <span class="n">support_links</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="s2">&quot;support_links&quot;</span><span class="p">,</span> <span class="p">())</span>
     <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">support_links</span><span class="p">)</span>
@@ -4196,7 +4240,7 @@
             <span class="n">component_support_set</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">component_support_plaquette_ids</span> <span class="o">=</span> <span class="n">_plaquette_ids_inside_cached_supports</span><span class="p">(</span>
+        <span class="n">component_support_plaquette_ids</span> <span class="o">=</span> <span class="n">_local_term_ids_inside_cached_supports</span><span class="p">(</span>
             <span class="n">kinetic_term_supports</span><span class="p">,</span>
             <span class="n">component_support_set</span><span class="p">,</span>
         <span class="p">)</span>
@@ -4357,6 +4401,29 @@
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">support</span><span class="p">))</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_local_terms_by_operator_kind</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">term_kind</span><span class="p">:</span> <span class="n">LocalTermKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
+    <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">LocalTermDescriptor</span><span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return local kinetic/potential descriptors from one model query.</span>
+
+<span class="sd">    Calling ``local_term_descriptors`` once avoids rebuilding identical</span>
+<span class="sd">    local-support tuples separately for kinetic and potential terms.</span>
+<span class="sd">    ``term_kind`` may be used to restrict the construction to plaquettes,</span>
+<span class="sd">    bonds, sites, or links.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">local_term_descriptors</span><span class="p">(</span><span class="n">term_kind</span><span class="o">=</span><span class="n">term_kind</span><span class="p">)</span>
+    <span class="n">kinetic_terms</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">)</span>
+    <span class="n">potential_terms</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;potential&quot;</span><span class="p">)</span>
+    <span class="n">potential_by_pid</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">term_id</span><span class="p">):</span> <span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">potential_terms</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">kinetic_terms</span><span class="p">,</span> <span class="n">potential_terms</span><span class="p">,</span> <span class="n">potential_by_pid</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_local_terms_by_operator_kind</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
@@ -4364,22 +4431,14 @@
     <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">LocalTermDescriptor</span><span class="p">],</span>
 <span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return plaquette kinetic/potential descriptors from one model query.</span>
-
-<span class="sd">    Calling ``local_term_descriptors`` once avoids rebuilding identical</span>
-<span class="sd">    plaquette-support tuples separately for kinetic and potential terms.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">terms</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">local_term_descriptors</span><span class="p">(</span><span class="n">term_kind</span><span class="o">=</span><span class="s2">&quot;plaquette&quot;</span><span class="p">)</span>
-    <span class="n">kinetic_terms</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">)</span>
-    <span class="n">potential_terms</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;potential&quot;</span><span class="p">)</span>
-    <span class="n">potential_by_pid</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">term_id</span><span class="p">):</span> <span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">potential_terms</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">kinetic_terms</span><span class="p">,</span> <span class="n">potential_terms</span><span class="p">,</span> <span class="n">potential_by_pid</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Backward-compatible wrapper returning plaquette descriptors.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_local_terms_by_operator_kind</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">term_kind</span><span class="o">=</span><span class="s2">&quot;plaquette&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_term_support_sets</span><span class="p">(</span>
     <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="o">...</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">term</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">support_link_set</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">term</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">support_variable_set</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_select_terms_inside_cached_supports</span><span class="p">(</span>
@@ -4415,7 +4474,7 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_ids_inside_cached_supports</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_local_term_ids_inside_cached_supports</span><span class="p">(</span>
     <span class="n">term_supports</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="o">...</span><span class="p">],</span>
     <span class="n">variable_support</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -4424,29 +4483,55 @@
     <span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_ids_inside_cached_supports</span><span class="p">(</span>
+    <span class="n">term_supports</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">variable_support</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Backward-compatible alias for local term ids inside a support.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_local_term_ids_inside_cached_supports</span><span class="p">(</span><span class="n">term_supports</span><span class="p">,</span> <span class="n">variable_support</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_select_terms_inside_variable_support</span><span class="p">(</span>
     <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="n">variable_support</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">support_link_set</span> <span class="o">&lt;=</span> <span class="n">variable_support</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">support_variable_set</span> <span class="o">&lt;=</span> <span class="n">variable_support</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_local_term_ids_inside_variable_support</span><span class="p">(</span>
+    <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">variable_support</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">term_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">support_variable_set</span> <span class="o">&lt;=</span> <span class="n">variable_support</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_ids_inside_variable_support</span><span class="p">(</span>
     <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="n">variable_support</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">term_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">support_link_set</span> <span class="o">&lt;=</span> <span class="n">variable_support</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Backward-compatible alias for local term ids inside a support.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_local_term_ids_inside_variable_support</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">variable_support</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_ids_touching_variable_support</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_local_term_ids_touching_variable_support</span><span class="p">(</span>
     <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="n">variable_support</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
         <span class="nb">int</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">term_id</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">term</span><span class="o">.</span><span class="n">support_link_set</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">variable_support</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">term</span><span class="o">.</span><span class="n">support_variable_set</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">variable_support</span><span class="p">)</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_ids_touching_variable_support</span><span class="p">(</span>
+    <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">variable_support</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Backward-compatible alias for local term ids touching a support.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_local_term_ids_touching_variable_support</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">variable_support</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_infer_sharp_potential_value</span><span class="p">(</span>

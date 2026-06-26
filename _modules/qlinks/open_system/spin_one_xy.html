@@ -1,0 +1,737 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.open_system.spin_one_xy &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/open_system/spin_one_xy';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/open_system/spin_one_xy.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.open_system.spin_one_xy</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.basis</span><span class="w"> </span><span class="kn">import</span> <span class="n">basis_configs_from_build_result</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelBuildResult</span><span class="p">,</span> <span class="n">SpinOneXYChainModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.spin_one_xy</span><span class="w"> </span><span class="kn">import</span> <span class="n">spin_one_xy_scar_tower_states</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.local_recycling</span><span class="w"> </span><span class="kn">import</span> <span class="n">embed_local_pattern_operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.operators</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_liouvillian</span>
+
+<span class="n">SpinOneXYLeftMultiplier</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;identity&quot;</span><span class="p">,</span> <span class="s2">&quot;sx&quot;</span><span class="p">,</span> <span class="s2">&quot;sz&quot;</span><span class="p">,</span> <span class="s2">&quot;sz2&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="SpinOneXYLindbladConstruction">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.SpinOneXYLindbladConstruction">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpinOneXYLindbladConstruction</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Paper-style local dark-detector Lindblad construction for spin-1 XY scars.</span>
+
+<span class="sd">    The jumps have the form ``J_j = sqrt(gamma) V_j D_j`` with the local dark</span>
+<span class="sd">    detector ``D_j = Sx_j Sx_{j+1} + Sy_j Sy_{j+1}``.  For the paper-like</span>
+<span class="sd">    setting use ``left_multiplier=&#39;sx&#39;``.  Diagonal multipliers such as ``&#39;sz&#39;``</span>
+<span class="sd">    are useful when the build basis is restricted to a fixed total-Sz sector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model</span><span class="p">:</span> <span class="n">SpinOneXYChainModel</span>
+    <span class="n">build_result</span><span class="p">:</span> <span class="n">ModelBuildResult</span>
+    <span class="n">hamiltonian</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">target_labels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">detectors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">left_multipliers</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">bond_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">left_multiplier</span><span class="p">:</span> <span class="n">SpinOneXYLeftMultiplier</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">total_sz</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">max_jump_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">jump_residuals</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">hamiltonian_closure_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">liouvillian</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">liouvillian_zero_mode_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jumps</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_target_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_states</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<div class="viewcode-block" id="SpinOneXYLindbladConstruction.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.SpinOneXYLindbladConstruction.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">length</span><span class="p">),</span>
+            <span class="s2">&quot;boundary_condition&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">),</span>
+            <span class="s2">&quot;total_sz&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_sz</span><span class="p">,</span>
+            <span class="s2">&quot;left_multiplier&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_multiplier</span><span class="p">,</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">),</span>
+            <span class="s2">&quot;n_target_states&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_target_states</span><span class="p">,</span>
+            <span class="s2">&quot;target_labels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_labels</span><span class="p">,</span>
+            <span class="s2">&quot;n_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_jumps</span><span class="p">,</span>
+            <span class="s2">&quot;bond_ids&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bond_ids</span><span class="p">,</span>
+            <span class="s2">&quot;max_jump_residual&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_jump_residual</span><span class="p">),</span>
+            <span class="s2">&quot;hamiltonian_closure_residual&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_closure_residual</span><span class="p">),</span>
+            <span class="s2">&quot;liouvillian_zero_mode_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">liouvillian_zero_mode_count</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="build_spin_one_xy_lindblad_construction">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.build_spin_one_xy_lindblad_construction">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_spin_one_xy_lindblad_construction</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">SpinOneXYChainModel</span><span class="p">,</span>
+    <span class="n">build_result</span><span class="p">:</span> <span class="n">ModelBuildResult</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_labels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">left_multiplier</span><span class="p">:</span> <span class="n">SpinOneXYLeftMultiplier</span> <span class="o">=</span> <span class="s2">&quot;sx&quot;</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">builder</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sparse&quot;</span><span class="p">,</span> <span class="s2">&quot;optimized&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+    <span class="n">check_liouvillian</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">liouvillian_zero_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinOneXYLindbladConstruction</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build paper-style spin-1 XY Lindblad jumps ``J_j = sqrt(gamma) V_j D_j``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model: Spin-1 XY chain model.  Set ``model.total_sz`` to build within a</span>
+<span class="sd">            fixed magnetization sector.</span>
+<span class="sd">        build_result: Optional prebuilt Hamiltonian/basis for ``model``.</span>
+<span class="sd">        target_states: Optional target-state matrix with one state per column.</span>
+<span class="sd">            If omitted, the scar tower vectors present in ``build_result.basis``</span>
+<span class="sd">            are generated automatically.</span>
+<span class="sd">        target_labels: Optional labels for the columns of ``target_states``.</span>
+<span class="sd">        left_multiplier: Local left factor ``V_j``.  Use ``&quot;sx&quot;`` for the</span>
+<span class="sd">            paper-style DFS construction and diagonal choices such as ``&quot;sz&quot;``</span>
+<span class="sd">            for fixed-total-Sz sector tests.</span>
+<span class="sd">        gamma: Lindblad rate; jumps are scaled by ``sqrt(gamma)``.</span>
+<span class="sd">        builder: Matrix builder used when ``build_result`` is not supplied.</span>
+<span class="sd">        check_liouvillian: If true, assemble the Liouvillian and count zero</span>
+<span class="sd">            eigenvalues.  This is intended only for small systems.</span>
+<span class="sd">        liouvillian_zero_tolerance: Tolerance for zero-mode counting.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Construction object containing jumps and dark/closure diagnostics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">gamma</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;gamma must be nonnegative.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">build_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">build_result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+            <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">,</span>
+            <span class="n">basis_solver</span><span class="o">=</span><span class="s2">&quot;dfs&quot;</span><span class="p">,</span>
+            <span class="n">sort_basis</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">on_missing</span><span class="o">=</span><span class="s2">&quot;raise&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">hamiltonian</span> <span class="o">=</span> <span class="n">build_result</span><span class="o">.</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+    <span class="n">basis_configs</span> <span class="o">=</span> <span class="n">basis_configs_from_build_result</span><span class="p">(</span><span class="n">build_result</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">target_states</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">target_matrix</span><span class="p">,</span> <span class="n">generated_labels</span> <span class="o">=</span> <span class="n">spin_one_xy_scar_tower_states</span><span class="p">(</span>
+            <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+            <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">length</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">target_labels</span> <span class="o">=</span> <span class="n">generated_labels</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">target_matrix</span> <span class="o">=</span> <span class="n">_normalize_state_matrix</span><span class="p">(</span><span class="n">target_states</span><span class="p">,</span> <span class="n">expected_dim</span><span class="o">=</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">target_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">target_labels</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;target_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">target_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="k">if</span> <span class="n">target_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No nonzero target states are present in the supplied basis.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_labels</span><span class="p">)</span> <span class="o">!=</span> <span class="n">target_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_labels length must match the number of target states.&quot;</span><span class="p">)</span>
+
+    <span class="n">detectors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">left_multipliers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">bond_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">gamma</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+        <span class="n">source_site</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">target_site</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">source_variable</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="n">source_site</span><span class="p">))</span>
+        <span class="n">target_variable</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="n">target_site</span><span class="p">))</span>
+
+        <span class="n">detector</span> <span class="o">=</span> <span class="n">_embed_spin_one_xy_bond_detector</span><span class="p">(</span>
+            <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+            <span class="n">variable_indices</span><span class="o">=</span><span class="p">(</span><span class="n">source_variable</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="n">_embed_spin_one_left_multiplier</span><span class="p">(</span>
+            <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+            <span class="n">variable_index</span><span class="o">=</span><span class="n">source_variable</span><span class="p">,</span>
+            <span class="n">multiplier</span><span class="o">=</span><span class="n">left_multiplier</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">jump</span> <span class="o">=</span> <span class="p">(</span><span class="n">scale</span> <span class="o">*</span> <span class="p">(</span><span class="n">left</span> <span class="o">@</span> <span class="n">detector</span><span class="p">))</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+        <span class="n">detectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">detector</span><span class="p">)</span>
+        <span class="n">left_multipliers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+        <span class="n">jumps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">jump</span><span class="p">)</span>
+        <span class="n">bond_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+
+    <span class="n">jump_residuals</span> <span class="o">=</span> <span class="n">_jump_residual_matrix</span><span class="p">(</span><span class="n">jumps</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">jumps</span><span class="p">),</span> <span class="n">target_states</span><span class="o">=</span><span class="n">target_matrix</span><span class="p">)</span>
+    <span class="n">max_jump_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">jump_residuals</span><span class="p">))</span> <span class="k">if</span> <span class="n">jump_residuals</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="n">closure_residual</span> <span class="o">=</span> <span class="n">_subspace_closure_residual</span><span class="p">(</span>
+        <span class="n">operator</span><span class="o">=</span><span class="n">hamiltonian</span><span class="p">,</span>
+        <span class="n">target_states</span><span class="o">=</span><span class="n">target_matrix</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">liouvillian</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">zero_mode_count</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">check_liouvillian</span><span class="p">:</span>
+        <span class="n">liouvillian</span> <span class="o">=</span> <span class="n">build_liouvillian</span><span class="p">(</span>
+            <span class="n">hamiltonian</span><span class="p">,</span>
+            <span class="n">jumps</span><span class="p">,</span>
+            <span class="n">sparse_format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">liouvillian</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
+        <span class="n">zero_mode_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">liouvillian_zero_tolerance</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">SpinOneXYLindbladConstruction</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">build_result</span><span class="o">=</span><span class="n">build_result</span><span class="p">,</span>
+        <span class="n">hamiltonian</span><span class="o">=</span><span class="n">hamiltonian</span><span class="p">,</span>
+        <span class="n">target_states</span><span class="o">=</span><span class="n">target_matrix</span><span class="p">,</span>
+        <span class="n">target_labels</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">target_labels</span><span class="p">),</span>
+        <span class="n">jumps</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">jumps</span><span class="p">),</span>
+        <span class="n">detectors</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">detectors</span><span class="p">),</span>
+        <span class="n">left_multipliers</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">left_multipliers</span><span class="p">),</span>
+        <span class="n">bond_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">bond_ids</span><span class="p">),</span>
+        <span class="n">left_multiplier</span><span class="o">=</span><span class="n">left_multiplier</span><span class="p">,</span>
+        <span class="n">gamma</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">gamma</span><span class="p">),</span>
+        <span class="n">total_sz</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">total_sz</span><span class="p">,</span>
+        <span class="n">max_jump_residual</span><span class="o">=</span><span class="n">max_jump_residual</span><span class="p">,</span>
+        <span class="n">jump_residuals</span><span class="o">=</span><span class="n">jump_residuals</span><span class="p">,</span>
+        <span class="n">hamiltonian_closure_residual</span><span class="o">=</span><span class="n">closure_residual</span><span class="p">,</span>
+        <span class="n">liouvillian</span><span class="o">=</span><span class="n">liouvillian</span><span class="p">,</span>
+        <span class="n">liouvillian_zero_mode_count</span><span class="o">=</span><span class="n">zero_mode_count</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_state_matrix</span><span class="p">(</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">expected_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_states must be a vector or a matrix with states in columns.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">expected_dim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_states has incompatible Hilbert-space dimension.&quot;</span><span class="p">)</span>
+
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">normalized</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">normalized</span><span class="p">[:,</span> <span class="n">column</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_states contains a zero vector.&quot;</span><span class="p">)</span>
+        <span class="n">normalized</span><span class="p">[:,</span> <span class="n">column</span><span class="p">]</span> <span class="o">/=</span> <span class="n">norm</span>
+    <span class="k">return</span> <span class="n">normalized</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spin_one_local_patterns</span><span class="p">(</span><span class="n">n_variables</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">n_variables</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
+    <span class="k">if</span> <span class="n">n_variables</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only one- and two-site spin-1 local patterns are supported.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spin_one_sx_matrix</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">value_to_index</span> <span class="o">=</span> <span class="p">{</span><span class="n">value</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">)}</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">source_index</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">target_index</span> <span class="o">=</span> <span class="n">value_to_index</span><span class="p">[</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">target_index</span><span class="p">,</span> <span class="n">source_index</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">m</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">target_index</span> <span class="o">=</span> <span class="n">value_to_index</span><span class="p">[</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">target_index</span><span class="p">,</span> <span class="n">source_index</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">m</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">matrix</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spin_one_sz_matrix</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spin_one_xy_bond_matrix</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="n">patterns</span> <span class="o">=</span> <span class="n">_spin_one_local_patterns</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">pattern_to_index</span> <span class="o">=</span> <span class="p">{</span><span class="n">pattern</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">patterns</span><span class="p">)}</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">patterns</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">patterns</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">source_index</span><span class="p">,</span> <span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">mj</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">patterns</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mi</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">mj</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">mi</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">mj</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">amp</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">mi</span> <span class="o">*</span> <span class="p">(</span><span class="n">mi</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">mj</span> <span class="o">*</span> <span class="p">(</span><span class="n">mj</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">pattern_to_index</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">source_index</span><span class="p">]</span> <span class="o">+=</span> <span class="n">amp</span>
+        <span class="k">if</span> <span class="n">mi</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">mj</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">mi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">mj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">amp</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">mi</span> <span class="o">*</span> <span class="p">(</span><span class="n">mi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">mj</span> <span class="o">*</span> <span class="p">(</span><span class="n">mj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">pattern_to_index</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">source_index</span><span class="p">]</span> <span class="o">+=</span> <span class="n">amp</span>
+
+    <span class="k">return</span> <span class="n">matrix</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_embed_spin_one_xy_bond_detector</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">embed_local_pattern_operator</span><span class="p">(</span>
+        <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">variable_indices</span><span class="p">),</span>
+        <span class="n">local_patterns</span><span class="o">=</span><span class="n">_spin_one_local_patterns</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">local_operator</span><span class="o">=</span><span class="n">_spin_one_xy_bond_matrix</span><span class="p">(),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_embed_spin_one_left_multiplier</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">variable_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">multiplier</span><span class="p">:</span> <span class="n">SpinOneXYLeftMultiplier</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">multiplier</span> <span class="o">==</span> <span class="s2">&quot;identity&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">basis_configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">multiplier</span> <span class="o">==</span> <span class="s2">&quot;sx&quot;</span><span class="p">:</span>
+        <span class="n">local_operator</span> <span class="o">=</span> <span class="n">_spin_one_sx_matrix</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">multiplier</span> <span class="o">==</span> <span class="s2">&quot;sz&quot;</span><span class="p">:</span>
+        <span class="n">local_operator</span> <span class="o">=</span> <span class="n">_spin_one_sz_matrix</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">multiplier</span> <span class="o">==</span> <span class="s2">&quot;sz2&quot;</span><span class="p">:</span>
+        <span class="n">sz</span> <span class="o">=</span> <span class="n">_spin_one_sz_matrix</span><span class="p">()</span>
+        <span class="n">local_operator</span> <span class="o">=</span> <span class="n">sz</span> <span class="o">@</span> <span class="n">sz</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;left_multiplier must be one of &quot;identity&quot;, &quot;sx&quot;, &quot;sz&quot;, or &quot;sz2&quot;.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">embed_local_pattern_operator</span><span class="p">(</span>
+        <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">variable_index</span><span class="p">),),</span>
+        <span class="n">local_patterns</span><span class="o">=</span><span class="n">_spin_one_local_patterns</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">local_operator</span><span class="o">=</span><span class="n">local_operator</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_jump_residual_matrix</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="n">residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">jumps</span><span class="p">),</span> <span class="n">target_states</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">jump_index</span><span class="p">,</span> <span class="n">jump</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">jumps</span><span class="p">):</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">jump</span> <span class="o">@</span> <span class="n">target_states</span>
+        <span class="n">residuals</span><span class="p">[</span><span class="n">jump_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">residuals</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_subspace_closure_residual</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">operator</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">q</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">target_states</span><span class="p">)</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="n">operator</span> <span class="o">@</span> <span class="n">q</span>
+    <span class="n">projected</span> <span class="o">=</span> <span class="n">q</span> <span class="o">@</span> <span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">action</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">action</span> <span class="o">-</span> <span class="n">projected</span><span class="p">))</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
