@@ -44,6 +44,8 @@ from qlinks.variables import VariableLayout
 
 LocalBoundaryMode = Literal["relaxed", "closed"]
 SnakeStripeKindPattern = Literal["any", "constant", "alternating", "constant_or_alternating"]
+StripeMotifSource = Literal["stripe", "snake_stripe"]
+StripeMotifSubsetMode = Literal["windows", "all"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -232,6 +234,49 @@ class SnakeStripeRegionProposalRecord:
             "plaquette_kinds",
             tuple(str(kind) for kind in self.plaquette_kinds),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class StripeMotifRegionProposalRecord:
+    """One small stripe-motif local-region proposal.
+
+    The proposal is meant to capture the QDM pattern seen in exact cages: a
+    width-one stripe supplies the global organizing structure, but the coherent
+    local object is often only a two- or three-plaquette motif on that stripe.
+    ``source`` records whether the motif was cut from a straight stripe or from
+    a snake-stripe cycle.
+    """
+
+    region: LocalQDMRegion
+    plaquette_ids: npt.NDArray[np.int64]
+    source: str
+    source_index: int
+    source_plaquette_ids: npt.NDArray[np.int64]
+    motif_size: int
+    motif_index: int
+
+    def __post_init__(self) -> None:
+        plaquette_ids = np.asarray(self.plaquette_ids, dtype=np.int64)
+        if plaquette_ids.ndim != 1:
+            raise ValueError("plaquette_ids must be one-dimensional.")
+        if plaquette_ids.size == 0:
+            raise ValueError("plaquette_ids must be non-empty.")
+        object.__setattr__(
+            self,
+            "plaquette_ids",
+            np.unique(plaquette_ids).astype(np.int64),
+        )
+
+        source_ids = np.asarray(self.source_plaquette_ids, dtype=np.int64)
+        if source_ids.ndim != 1:
+            raise ValueError("source_plaquette_ids must be one-dimensional.")
+        if source_ids.size == 0:
+            raise ValueError("source_plaquette_ids must be non-empty.")
+        object.__setattr__(self, "source_plaquette_ids", source_ids.copy())
+        object.__setattr__(self, "source", str(self.source))
+        object.__setattr__(self, "source_index", int(self.source_index))
+        object.__setattr__(self, "motif_size", int(self.motif_size))
+        object.__setattr__(self, "motif_index", int(self.motif_index))
 
 
 @dataclass(frozen=True, slots=True)
@@ -689,6 +734,249 @@ class SnakeStripeRegionProposal:
             length=int(selected.size),
             turn_count=int(turn_count),
             plaquette_kinds=kinds,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class StripeMotifRegionProposal:
+    """Generate small QDM motif regions cut from stripe-like plaquette paths.
+
+    This is a fast path for QDM cages whose real-space organization is a
+    width-one stripe but whose coherent local objects are only small two- or
+    three-plaquette singlet/triplet motifs.  It first constructs cheap straight
+    and/or snake stripe skeletons, then emits small motif subsets from each
+    skeleton.  The ordinary local cage algebra is still used afterward, but on
+    much smaller regions than a full stripe.
+    """
+
+    model: object
+    config: LocalQDMCageSearchConfig = field(
+        default_factory=lambda: LocalQDMCageSearchConfig(halo_layers=0)
+    )
+    motif_sizes: tuple[int, ...] = (2, 3)
+    sources: tuple[StripeMotifSource, ...] = ("stripe", "snake_stripe")
+    subset_mode: StripeMotifSubsetMode = "all"
+    max_motifs_per_stripe: int | None = None
+    max_records: int | None = None
+    max_links: int | None = None
+    stripe_widths: tuple[int, ...] = (1,)
+    stripe_directions: tuple[int, ...] | None = None
+    plaquette_kinds: tuple[str, ...] | None = None
+    snake_max_plaquettes: int | None = None
+    snake_min_plaquettes: int = 3
+    snake_max_turns: int | None = None
+    snake_allow_kind_changes: bool = False
+    snake_kind_pattern: SnakeStripeKindPattern = "constant_or_alternating"
+    snake_require_induced_cycle: bool = False
+    snake_winding_vectors: tuple[tuple[int, ...], ...] | None = None
+    adapter: LocalCageModelAdapter | None = None
+
+    def __post_init__(self) -> None:
+        if not self.motif_sizes:
+            raise ValueError("motif_sizes must be non-empty.")
+        motif_sizes = tuple(int(size) for size in self.motif_sizes)
+        if any(size <= 0 for size in motif_sizes):
+            raise ValueError("motif_sizes must contain positive integers.")
+        object.__setattr__(self, "motif_sizes", motif_sizes)
+
+        if not self.sources:
+            raise ValueError("sources must be non-empty.")
+        bad_sources = [
+            source for source in self.sources if source not in {"stripe", "snake_stripe"}
+        ]
+        if bad_sources:
+            raise ValueError(f"Unsupported stripe motif sources: {bad_sources}.")
+        object.__setattr__(self, "sources", tuple(str(source) for source in self.sources))
+
+        if self.subset_mode not in {"windows", "all"}:
+            raise ValueError("subset_mode must be 'windows' or 'all'.")
+        if self.max_motifs_per_stripe is not None and self.max_motifs_per_stripe < 0:
+            raise ValueError("max_motifs_per_stripe must be non-negative or None.")
+        if self.max_records is not None and self.max_records < 0:
+            raise ValueError("max_records must be non-negative or None.")
+        if self.max_links is not None and self.max_links <= 0:
+            raise ValueError("max_links must be positive or None.")
+        if not self.stripe_widths:
+            raise ValueError("stripe_widths must be non-empty.")
+        stripe_widths = tuple(int(width) for width in self.stripe_widths)
+        if any(width <= 0 for width in stripe_widths):
+            raise ValueError("stripe_widths must contain positive integers.")
+        object.__setattr__(self, "stripe_widths", stripe_widths)
+        if self.snake_max_plaquettes is not None and self.snake_max_plaquettes <= 0:
+            raise ValueError("snake_max_plaquettes must be positive or None.")
+        if self.snake_min_plaquettes <= 0:
+            raise ValueError("snake_min_plaquettes must be positive.")
+        if (
+            self.snake_max_plaquettes is not None
+            and self.snake_min_plaquettes > self.snake_max_plaquettes
+        ):
+            raise ValueError("snake_min_plaquettes cannot exceed snake_max_plaquettes.")
+        if self.snake_max_turns is not None and self.snake_max_turns < 0:
+            raise ValueError("snake_max_turns must be non-negative or None.")
+        if self.snake_kind_pattern not in {
+            "any",
+            "constant",
+            "alternating",
+            "constant_or_alternating",
+        }:
+            raise ValueError(
+                "snake_kind_pattern must be 'any', 'constant', 'alternating', "
+                "or 'constant_or_alternating'."
+            )
+
+        adapter = local_cage_adapter_for_model(self.model, self.adapter)
+        config = adapter.normalize_config(self.config)
+        object.__setattr__(self, "adapter", adapter)
+        object.__setattr__(self, "config", config)
+
+        if self.stripe_directions is not None:
+            directions = tuple(int(direction) for direction in self.stripe_directions)
+            if not directions:
+                raise ValueError("stripe_directions must be non-empty when provided.")
+            object.__setattr__(self, "stripe_directions", directions)
+
+        if self.plaquette_kinds is not None:
+            kinds = tuple(str(kind) for kind in self.plaquette_kinds)
+            if not kinds:
+                raise ValueError("plaquette_kinds must be non-empty when provided.")
+            object.__setattr__(self, "plaquette_kinds", kinds)
+
+        if self.snake_winding_vectors is not None:
+            windings = tuple(
+                tuple(int(value) for value in winding) for winding in self.snake_winding_vectors
+            )
+            if not windings:
+                raise ValueError("snake_winding_vectors must be non-empty or None.")
+            object.__setattr__(self, "snake_winding_vectors", windings)
+
+    def iter_records(self) -> Iterator[StripeMotifRegionProposalRecord]:
+        """Yield small motif records in deterministic stripe-skeleton order."""
+        n_emitted = 0
+        seen: set[tuple[int, ...]] = set()
+        for source_index, source, ordered_ids in self._iter_source_stripes():
+            n_from_source = 0
+            for motif_index, motif_ids in enumerate(
+                _stripe_motif_subsets(
+                    ordered_ids,
+                    motif_sizes=self.motif_sizes,
+                    subset_mode=self.subset_mode,
+                )
+            ):
+                if self.max_motifs_per_stripe is not None and n_from_source >= int(
+                    self.max_motifs_per_stripe
+                ):
+                    break
+                key = tuple(sorted(int(pid) for pid in motif_ids))
+                if key in seen:
+                    continue
+                record = self._make_record(
+                    plaquette_ids=motif_ids,
+                    source=source,
+                    source_index=source_index,
+                    source_plaquette_ids=ordered_ids,
+                    motif_index=motif_index,
+                )
+                if record is None:
+                    continue
+                seen.add(key)
+                n_from_source += 1
+                n_emitted += 1
+                yield record
+                if self.max_records is not None and n_emitted >= int(self.max_records):
+                    return
+
+    def iter_regions(self) -> Iterator[LocalQDMRegion]:
+        """Yield only the local regions from :meth:`iter_records`."""
+        for record in self.iter_records():
+            yield record.region
+
+    def iter_searchers(self) -> Iterator[LocalCageSearcher]:
+        """Yield ready-to-run local cage searchers for proposed motifs."""
+        for record in self.iter_records():
+            yield LocalCageSearcher(
+                model=self.model,
+                region=record.region,
+                config=self.config,
+                adapter=self.adapter,
+            )
+
+    def _iter_source_stripes(self) -> Iterator[tuple[int, str, tuple[int, ...]]]:
+        source_index = 0
+        if "stripe" in self.sources:
+            for width in self.stripe_widths:
+                proposal = StripeRegionProposal(
+                    self.model,
+                    directions=self.stripe_directions,
+                    width=int(width),
+                    plaquette_kinds=self.plaquette_kinds,
+                    config=self.config,
+                    adapter=self.adapter,
+                )
+                for record in proposal.iter_records():
+                    ordered = _ordered_straight_stripe_plaquettes(
+                        self.model,
+                        record.plaquette_ids,
+                        direction=record.direction,
+                    )
+                    yield source_index, "stripe", ordered
+                    source_index += 1
+
+        if "snake_stripe" in self.sources:
+            max_plaquettes = self.snake_max_plaquettes
+            if max_plaquettes is None:
+                max_plaquettes = max(self.snake_min_plaquettes, max(self.motif_sizes) + 1)
+            proposal = SnakeStripeRegionProposal(
+                self.model,
+                max_plaquettes=int(max_plaquettes),
+                min_plaquettes=int(self.snake_min_plaquettes),
+                max_records=self.max_records,
+                max_links=None,
+                max_turns=self.snake_max_turns,
+                plaquette_kinds=self.plaquette_kinds,
+                allow_kind_changes=self.snake_allow_kind_changes,
+                kind_pattern=self.snake_kind_pattern,
+                require_induced_cycle=self.snake_require_induced_cycle,
+                winding_vectors=self.snake_winding_vectors,
+                config=self.config,
+                adapter=self.adapter,
+            )
+            for record in proposal.iter_records():
+                ordered = _ordered_cycle_plaquettes_from_shared_graph(
+                    self.model,
+                    record.plaquette_ids,
+                )
+                if not ordered:
+                    ordered = tuple(int(pid) for pid in record.plaquette_ids)
+                yield source_index, "snake_stripe", ordered
+                source_index += 1
+
+    def _make_record(
+        self,
+        *,
+        plaquette_ids: Sequence[int],
+        source: str,
+        source_index: int,
+        source_plaquette_ids: Sequence[int],
+        motif_index: int,
+    ) -> StripeMotifRegionProposalRecord | None:
+        selected = np.asarray(tuple(sorted({int(pid) for pid in plaquette_ids})), dtype=np.int64)
+        if selected.size == 0:
+            return None
+        region = self.adapter.build_region_from_plaquettes(
+            plaquette_ids=selected,
+            config=self.config,
+            scoring_plaquette_ids=selected,
+        )
+        if self.max_links is not None and region.link_ids.size > int(self.max_links):
+            return None
+        return StripeMotifRegionProposalRecord(
+            region=region,
+            plaquette_ids=selected,
+            source=str(source),
+            source_index=int(source_index),
+            source_plaquette_ids=np.asarray(tuple(int(pid) for pid in source_plaquette_ids)),
+            motif_size=int(selected.size),
+            motif_index=int(motif_index),
         )
 
 
@@ -1155,6 +1443,10 @@ class RobustQDMLocalCageSearchConfig:
     min_region_plaquettes: int = 1
     max_region_links: int | None = None
     max_regions_per_strategy: int | None = 128
+    stripe_motif_sizes: tuple[int, ...] = (2, 3)
+    stripe_motif_sources: tuple[StripeMotifSource, ...] = ("stripe", "snake_stripe")
+    stripe_motif_subset_mode: StripeMotifSubsetMode = "all"
+    stripe_motif_max_motifs_per_stripe: int | None = None
     stripe_widths: tuple[int, ...] = (1, 2)
     stripe_directions: tuple[int, ...] | None = None
     snake_stripe_max_turns: int | None = None
@@ -1196,7 +1488,27 @@ class RobustQDMLocalCageSearchConfig:
             raise ValueError("max_regions_per_strategy must be non-negative or None.")
         if not self.region_strategies:
             raise ValueError("region_strategies must be non-empty.")
-        valid_strategies = {"stripe", "snake_stripe", "connected", "adaptive"}
+        if not self.stripe_motif_sizes:
+            raise ValueError("stripe_motif_sizes must be non-empty.")
+        if any(int(size) <= 0 for size in self.stripe_motif_sizes):
+            raise ValueError("stripe_motif_sizes must contain positive integers.")
+        if not self.stripe_motif_sources:
+            raise ValueError("stripe_motif_sources must be non-empty.")
+        bad_motif_sources = [
+            source
+            for source in self.stripe_motif_sources
+            if source not in {"stripe", "snake_stripe"}
+        ]
+        if bad_motif_sources:
+            raise ValueError(f"Unsupported stripe motif sources: {bad_motif_sources}.")
+        if self.stripe_motif_subset_mode not in {"windows", "all"}:
+            raise ValueError("stripe_motif_subset_mode must be 'windows' or 'all'.")
+        if (
+            self.stripe_motif_max_motifs_per_stripe is not None
+            and self.stripe_motif_max_motifs_per_stripe < 0
+        ):
+            raise ValueError("stripe_motif_max_motifs_per_stripe must be non-negative or None.")
+        valid_strategies = {"stripe_motif", "stripe", "snake_stripe", "connected", "adaptive"}
         bad_strategies = [
             strategy for strategy in self.region_strategies if strategy not in valid_strategies
         ]
@@ -4186,6 +4498,30 @@ def _robust_qdm_region_proposals(
     adapter: LocalCageModelAdapter | None = None,
 ) -> list[LocalRegionProposal]:
     proposals: list[LocalRegionProposal] = []
+    if "stripe_motif" in config.region_strategies:
+        proposals.append(
+            StripeMotifRegionProposal(
+                model,
+                motif_sizes=config.stripe_motif_sizes,
+                sources=config.stripe_motif_sources,
+                subset_mode=config.stripe_motif_subset_mode,
+                max_motifs_per_stripe=config.stripe_motif_max_motifs_per_stripe,
+                max_records=config.max_regions_per_strategy,
+                max_links=config.max_region_links,
+                stripe_widths=config.stripe_widths,
+                stripe_directions=config.stripe_directions,
+                plaquette_kinds=config.snake_stripe_plaquette_kinds,
+                snake_max_plaquettes=config.max_region_plaquettes,
+                snake_min_plaquettes=config.min_region_plaquettes,
+                snake_max_turns=config.snake_stripe_max_turns,
+                snake_allow_kind_changes=config.snake_stripe_allow_kind_changes,
+                snake_kind_pattern=config.snake_stripe_kind_pattern,
+                snake_require_induced_cycle=config.snake_stripe_require_induced_cycle,
+                snake_winding_vectors=config.snake_stripe_winding_vectors,
+                config=config.local_config,
+                adapter=adapter,
+            )
+        )
     if "stripe" in config.region_strategies:
         for width in config.stripe_widths:
             proposals.append(
@@ -5889,6 +6225,91 @@ def _deduplicate_local_records(
             kept.append(record)
 
     return kept
+
+
+def _ordered_straight_stripe_plaquettes(
+    model: object,
+    plaquette_ids: Sequence[int] | npt.ArrayLike,
+    *,
+    direction: int,
+) -> tuple[int, ...]:
+    """Order plaquettes by anchor coordinate along a straight stripe."""
+    ids = tuple(int(pid) for pid in np.asarray(plaquette_ids, dtype=np.int64))
+    return tuple(
+        sorted(
+            ids,
+            key=lambda pid: (
+                _stripe_anchor_cell(model, int(pid))[int(direction)],
+                _stripe_anchor_cell(model, int(pid)),
+                int(pid),
+            ),
+        )
+    )
+
+
+def _stripe_motif_subsets(
+    ordered_plaquette_ids: Sequence[int],
+    *,
+    motif_sizes: Sequence[int],
+    subset_mode: StripeMotifSubsetMode,
+) -> Iterator[tuple[int, ...]]:
+    """Yield small plaquette subsets from a cyclic stripe skeleton."""
+    ordered = tuple(int(pid) for pid in ordered_plaquette_ids)
+    n_plaquettes = len(ordered)
+    if n_plaquettes == 0:
+        return
+
+    for motif_size in sorted({int(size) for size in motif_sizes}):
+        if motif_size <= 0 or motif_size > n_plaquettes:
+            continue
+        if subset_mode == "windows":
+            for start in range(n_plaquettes):
+                yield tuple(
+                    ordered[(start + offset) % n_plaquettes] for offset in range(motif_size)
+                )
+            continue
+
+        for combination in itertools.combinations(ordered, motif_size):
+            yield tuple(int(pid) for pid in combination)
+
+
+def _ordered_cycle_plaquettes_from_shared_graph(
+    model: object,
+    plaquette_ids: Sequence[int] | npt.ArrayLike,
+) -> tuple[int, ...]:
+    """Return one cyclic order when selected plaquettes form a degree-2 cycle."""
+    selected = tuple(sorted({int(pid) for pid in np.asarray(plaquette_ids, dtype=np.int64)}))
+    if len(selected) <= 2:
+        return selected
+
+    selected_set = set(selected)
+    neighbor_map = _plaquette_shared_link_neighbor_map(model)
+    induced: dict[int, list[int]] = {
+        pid: sorted(int(nbr) for nbr in neighbor_map.get(pid, ()) if int(nbr) in selected_set)
+        for pid in selected
+    }
+    if any(len(neighbors) != 2 for neighbors in induced.values()):
+        return ()
+
+    start = min(selected)
+    ordered = [start]
+    previous: int | None = None
+    current = start
+    while True:
+        choices = [neighbor for neighbor in induced[current] if neighbor != previous]
+        if not choices:
+            return ()
+        next_pid = choices[0]
+        if next_pid == start:
+            break
+        if next_pid in ordered:
+            return ()
+        ordered.append(next_pid)
+        previous, current = current, next_pid
+
+    if len(ordered) != len(selected):
+        return ()
+    return tuple(int(pid) for pid in ordered)
 
 
 def _stripe_plaquette_data(

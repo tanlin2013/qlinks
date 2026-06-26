@@ -31,6 +31,8 @@ from qlinks.caging import (
     RobustQDMLocalCageSearchContext,
     SnakeStripeRegionProposal,
     SnakeStripeRegionProposalRecord,
+    StripeMotifRegionProposal,
+    StripeMotifRegionProposalRecord,
     StripeRegionProposal,
     certified_qdm_result_from_multi_block_reports,
     certify_qdm_multi_block_padding,
@@ -113,6 +115,82 @@ def test_generic_local_cage_searcher_accepts_explicit_qdm_adapter() -> None:
 
     assert result.local_hilbert_size > 0
     assert result.region.link_ids.size < model.lattice.num_links
+
+
+def test_stripe_motif_region_proposal_yields_small_regions_from_square_stripes() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    proposal = StripeMotifRegionProposal(
+        model,
+        sources=("stripe",),
+        stripe_widths=(1,),
+        stripe_directions=(0,),
+        motif_sizes=(2,),
+        subset_mode="all",
+        max_records=4,
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            prune_inactive_local_basis_states=True,
+            tolerance=1.0e-10,
+        ),
+    )
+
+    records = list(proposal.iter_records())
+
+    assert records
+    assert all(isinstance(record, StripeMotifRegionProposalRecord) for record in records)
+    assert all(record.motif_size == 2 for record in records)
+    assert all(record.source == "stripe" for record in records)
+    assert all(record.region.active_plaquette_ids.size == 2 for record in records)
+    assert all(record.region.link_ids.size < model.lattice.num_links for record in records)
+
+
+def test_robust_qdm_local_cage_search_accepts_stripe_motif_strategy() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    robust_config = RobustQDMLocalCageSearchConfig(
+        region_strategies=("stripe_motif",),
+        stripe_motif_sources=("stripe",),
+        stripe_motif_sizes=(2,),
+        stripe_motif_subset_mode="all",
+        stripe_widths=(1,),
+        stripe_directions=(0,),
+        max_regions_per_strategy=4,
+        block_signatures=((0, 2),),
+        max_records_per_region=2,
+        min_blocks=1,
+        max_blocks=2,
+        max_paddings_per_stage=0,
+        padding_stages=("static",),
+        store_full_states=False,
+    )
+
+    _certified, context = robust_qdm_local_cage_search(
+        model,
+        config=robust_config,
+        return_context=True,
+    )
+
+    assert context.n_regions <= 4
+    assert context.stage_names == ("static",)
+    assert context.padding_config == robust_config.as_multi_padding_config()
 
 
 def test_local_qdm_full_square_4x4_matches_exact_type1_counts() -> None:
