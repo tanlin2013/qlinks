@@ -18,12 +18,16 @@ def test_local_error_set_from_layout_generates_single_variable_errors() -> None:
     assert errors.by_max_weight(1).errors == errors.errors
 
 
-def test_local_error_set_rejects_higher_weight_generic_generation_for_now() -> None:
+def test_local_error_set_from_layout_supports_higher_weight_generation() -> None:
     layout = VariableLayout.from_sites(2, LocalSpace.binary())
 
-    try:
-        LocalErrorSet.from_layout(layout, max_weight=2)
-    except NotImplementedError as exc:
-        assert "max_weight=1" in str(exc)
-    else:  # pragma: no cover
-        raise AssertionError("Expected NotImplementedError.")
+    errors = LocalErrorSet.from_layout(
+        layout,
+        max_weight=2,
+        include_value_diagonal=True,
+        include_transitions=False,
+    )
+
+    assert errors.max_weight == 2
+    assert len(errors.by_exact_weight(2)) == 1
+    assert errors.by_exact_weight(2)[0].name == "prod_value_0__value_1"
