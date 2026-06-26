@@ -152,3 +152,84 @@ def test_diagnose_cage_collection_code_candidate_uses_collection_code_space() ->
     assert report.qec_candidate
     assert report.error_algebra is not None
     assert report.metadata["source"] == "cage_sector_collection"
+
+
+@dataclass(frozen=True)
+class _SectorBuildResult:
+    basis: Basis
+    model: object
+
+
+@dataclass(frozen=True)
+class _FakeWindingModel:
+    layout: object
+    winding_x: int | None = None
+    winding_y: int | None = None
+
+    def allowed_sector_labels(self):
+        return {"winding_x": (0, 2), "winding_y": (0,)}
+
+    def build(self, **_kwargs):
+        if self.winding_x is None and self.winding_y is None:
+            return _SectorBuildResult(full_basis_from_layout(self.layout, sort=True), self)
+
+        configs = {
+            (0, 0): [[0, 0]],
+            (2, 0): [[1, 0]],
+        }[(self.winding_x, self.winding_y)]
+        return _SectorBuildResult(_basis_from_configs(self.layout, configs), self)
+
+
+def _fake_cage_result_factory(build_result, _config):
+    _ = build_result
+    return _CageResult(
+        records=[
+            _Record(
+                support=np.asarray([0], dtype=np.int64),
+                local_state=np.asarray([1.0], dtype=np.complex128),
+                signature=(0, 4),
+            )
+        ]
+    )
+
+
+def test_cage_sector_collection_from_model_sectors_builds_and_searches_sectors() -> None:
+    layout = VariableLayout.from_sites(2, LocalSpace.binary())
+    model = _FakeWindingModel(layout)
+
+    collection = CageSectorCollection.from_model_sectors(
+        model,
+        [(0, 0), (2, 0)],
+        signature=(0, 4),
+        cage_result_factory=_fake_cage_result_factory,
+        ambient_basis_mode="model",
+        source_name_prefix="sector=",
+    )
+
+    assert len(collection) == 2
+    assert collection.ambient_basis.n_states == 4
+    assert collection.counts_by_sector == {"(0, 0)": 1, "(2, 0)": 1}
+    assert collection.metadata["source"] == "model_sector_collection"
+    assert collection.metadata["sector_fields"] == ("winding_x", "winding_y")
+
+    rows = collection.to_ambient_row_vectors()
+    idx_00 = collection.ambient_basis.require_index(np.asarray([0, 0], dtype=np.int64))
+    idx_10 = collection.ambient_basis.require_index(np.asarray([1, 0], dtype=np.int64))
+    np.testing.assert_allclose(rows[:, [idx_00, idx_10]], np.eye(2))
+
+
+def test_cage_sector_collection_from_model_sectors_accepts_mapping_labels() -> None:
+    layout = VariableLayout.from_sites(2, LocalSpace.binary())
+    model = _FakeWindingModel(layout)
+
+    collection = CageSectorCollection.from_model_sectors(
+        model,
+        [
+            {"winding_x": 0, "winding_y": 0},
+            {"winding_x": 2, "winding_y": 0},
+        ],
+        cage_result_factory=_fake_cage_result_factory,
+    )
+
+    assert len(collection) == 2
+    assert collection.ambient_basis.n_states == 2

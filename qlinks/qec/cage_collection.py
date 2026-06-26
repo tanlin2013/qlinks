@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import numpy as np
@@ -206,6 +206,146 @@ class CageSectorCollection:
             cage_result = getattr(value, "cage_result")
             items.append((sector_label, basis, cage_result))
         return cls.from_sector_results(items, **kwargs)
+
+    @classmethod
+    def from_model_sectors(
+        cls,
+        model: Any,
+        sector_labels: Sequence[Any],
+        *,
+        sector_fields: Sequence[str] | None = None,
+        signature: tuple[int, int] | None = None,
+        signatures: Sequence[tuple[int, int]] | None = None,
+        cage_search_config: Any | None = None,
+        build_kwargs: Mapping[str, Any] | None = None,
+        cage_result_factory: Callable[[Any, Any | None], Any] | None = None,
+        ambient_basis: BasisLike | Any | None = None,
+        ambient_basis_mode: str = "union",
+        ambient_model: Any | None = None,
+        ambient_build_kwargs: Mapping[str, Any] | None = None,
+        source_name_prefix: str | None = None,
+        sort_ambient_basis: bool = True,
+        skip_empty_sectors: bool = False,
+        metadata: Mapping[str, object] | None = None,
+    ) -> CageSectorCollection:
+        """Build and search several model sectors, then collect their cage records.
+
+        This convenience constructor is intended for notebook scans over winding
+        sectors.  It is model-generic: a sector label may be a mapping such as
+        ``{"winding_x": 0, "winding_y": 0}``, or a tuple/list whose entries are
+        assigned to ``sector_fields``.  If ``sector_fields`` is omitted, the
+        helper infers them from ``model.allowed_sector_labels()`` when possible,
+        falling back to common winding field pairs such as ``("winding_x",
+        "winding_y")`` and ``("winding_a", "winding_b")``.
+
+        Args:
+            model: Seed model.  The helper creates a sector-specific copy for
+                each requested sector by replacing the sector fields.
+            sector_labels: Intended sector labels, for example ``[(0, 0),
+                (2, 0), (-2, 0)]`` for square/honeycomb winding sectors or
+                ``[{"charge": 0}, {"charge": 2}]`` for custom models.
+            sector_fields: Field names used when tuple-like sector labels are
+                supplied.  Optional for models exposing ``allowed_sector_labels``.
+            signature/signatures: Optional cage-signature filters forwarded to
+                :meth:`from_sector_results`.
+            cage_search_config: Configuration object passed to the cage search
+                factory.  For the default factory this should be a
+                ``CageSearchConfig`` or ``None``.
+            build_kwargs: Keyword arguments passed to ``sector_model.build``.
+            cage_result_factory: Optional callable ``factory(build_result,
+                cage_search_config) -> cage_result``.  When omitted, the helper
+                uses ``CageSearcher.from_model_build_result(...).run()``.
+            ambient_basis: Optional common ambient basis or build result.  If
+                omitted, ``ambient_basis_mode`` controls whether to use the union
+                of sector bases or a basis built from ``ambient_model``/``model``.
+            ambient_basis_mode: ``"union"`` builds a union basis from sector
+                bases.  ``"model"`` builds an ambient basis from
+                ``ambient_model`` if supplied, otherwise from the seed model with
+                the inferred sector fields set to ``None``.
+            ambient_model: Optional model used for ``ambient_basis_mode="model"``.
+            ambient_build_kwargs: Optional build kwargs for the ambient model.
+            source_name_prefix: Optional prefix used in per-sector source names.
+            sort_ambient_basis: Whether to sort automatically built union bases.
+            skip_empty_sectors: If true, sectors whose build basis is empty are
+                skipped before running the cage search.
+            metadata: Optional metadata attached to the returned collection.
+
+        Returns:
+            Cross-sector :class:`CageSectorCollection`.
+        """
+        if len(sector_labels) == 0:
+            raise ValueError("At least one sector label is required.")
+
+        build_kwargs_dict = dict(build_kwargs or {})
+        sector_sources: list[CageSectorSource] = []
+        resolved_sector_fields: tuple[str, ...] | None = None
+
+        for sector_label in sector_labels:
+            updates, label_fields = _sector_updates_from_label(
+                model,
+                sector_label,
+                sector_fields=sector_fields,
+            )
+            if resolved_sector_fields is None:
+                resolved_sector_fields = label_fields
+            sector_model = _replace_model_fields(model, updates)
+            build_result = sector_model.build(**build_kwargs_dict)
+
+            if skip_empty_sectors and _extract_basis(build_result).n_states == 0:
+                continue
+
+            cage_result = _run_cage_search(
+                build_result,
+                cage_search_config=cage_search_config,
+                cage_result_factory=cage_result_factory,
+            )
+            source_name = _format_sector_source_name(source_name_prefix, sector_label)
+            sector_sources.append(
+                CageSectorSource(
+                    sector_label=sector_label,
+                    basis=_extract_basis(build_result),
+                    cage_result=cage_result,
+                    source_name=source_name,
+                )
+            )
+
+        if len(sector_sources) == 0:
+            raise ValueError("No sector sources were collected.")
+
+        if ambient_basis is not None:
+            common_basis = _extract_basis(ambient_basis)
+        elif ambient_basis_mode == "union":
+            common_basis = None
+        elif ambient_basis_mode == "model":
+            fields = resolved_sector_fields or tuple(sector_fields or ())
+            model_for_ambient = ambient_model
+            if model_for_ambient is None:
+                model_for_ambient = _replace_model_fields(
+                    model,
+                    {field_name: None for field_name in fields},
+                )
+            ambient_kwargs = dict(build_kwargs_dict)
+            ambient_kwargs.update(dict(ambient_build_kwargs or {}))
+            common_basis = _extract_basis(model_for_ambient.build(**ambient_kwargs))
+        else:
+            raise ValueError("ambient_basis_mode must be 'union' or 'model'.")
+
+        collection_metadata: dict[str, object] = {
+            "source": "model_sector_collection",
+            "model_type": type(model).__name__,
+            "sector_fields": tuple(resolved_sector_fields or sector_fields or ()),
+            "ambient_basis_mode": ambient_basis_mode,
+        }
+        collection_metadata.update(dict(metadata or {}))
+
+        return cls.from_sector_results(
+            sector_sources,
+            signature=signature,
+            signatures=signatures,
+            ambient_basis=common_basis,
+            sort_ambient_basis=sort_ambient_basis,
+            metadata=collection_metadata,
+        )
 
     def __len__(self) -> int:
         return len(self.entries)
@@ -528,6 +668,113 @@ def _record_signature(record: Any) -> tuple[int, int] | None:
     if signature is None:
         return None
     return _normalize_signature(signature)
+
+
+def _run_cage_search(
+    build_result: Any,
+    *,
+    cage_search_config: Any | None,
+    cage_result_factory: Callable[[Any, Any | None], Any] | None,
+) -> Any:
+    if cage_result_factory is not None:
+        return cage_result_factory(build_result, cage_search_config)
+
+    from qlinks.caging import CageSearcher
+
+    return CageSearcher.from_model_build_result(
+        build_result,
+        config=cage_search_config,
+    ).run()
+
+
+def _sector_updates_from_label(
+    model: Any,
+    sector_label: Any,
+    *,
+    sector_fields: Sequence[str] | None,
+) -> tuple[dict[str, Any], tuple[str, ...]]:
+    if isinstance(sector_label, Mapping):
+        fields = tuple(str(key) for key in sector_label.keys())
+        return dict(sector_label), fields
+
+    label_values = _sector_label_values(sector_label)
+    fields = _resolve_sector_fields(
+        model,
+        n_values=len(label_values),
+        sector_fields=sector_fields,
+    )
+    if len(fields) != len(label_values):
+        raise ValueError(
+            f"sector label {sector_label!r} has {len(label_values)} values, "
+            f"but sector_fields has {len(fields)} entries."
+        )
+    return dict(zip(fields, label_values, strict=True)), fields
+
+
+def _sector_label_values(sector_label: Any) -> tuple[Any, ...]:
+    if isinstance(sector_label, Sequence) and not isinstance(sector_label, (str, bytes)):
+        return tuple(sector_label)
+    return (sector_label,)
+
+
+def _resolve_sector_fields(
+    model: Any,
+    *,
+    n_values: int,
+    sector_fields: Sequence[str] | None,
+) -> tuple[str, ...]:
+    if sector_fields is not None:
+        return tuple(str(field_name) for field_name in sector_fields)
+
+    allowed_method = getattr(model, "allowed_sector_labels", None)
+    if callable(allowed_method):
+        try:
+            allowed = allowed_method()
+        except Exception:  # pragma: no cover - defensive for user-defined models.
+            allowed = {}
+        if isinstance(allowed, Mapping):
+            allowed_fields = tuple(str(key) for key in allowed.keys())
+            if len(allowed_fields) == n_values:
+                return allowed_fields
+
+    common_field_sets = (
+        ("winding_x", "winding_y"),
+        ("winding_a", "winding_b"),
+        ("winding",),
+        ("sector",),
+    )
+    for fields in common_field_sets:
+        if len(fields) == n_values and all(hasattr(model, field_name) for field_name in fields):
+            return fields
+
+    raise ValueError(
+        "Could not infer sector field names. Pass sector_fields explicitly, "
+        "or use mapping sector labels such as {'winding_x': 0, 'winding_y': 0}."
+    )
+
+
+def _replace_model_fields(model: Any, updates: Mapping[str, Any]) -> Any:
+    updates_dict = dict(updates)
+    if not updates_dict:
+        return model
+
+    try:
+        return replace(model, **updates_dict)
+    except TypeError:
+        pass
+
+    import copy
+
+    model_copy = copy.copy(model)
+    for field_name, value in updates_dict.items():
+        setattr(model_copy, field_name, value)
+    return model_copy
+
+
+def _format_sector_source_name(prefix: str | None, sector_label: Any) -> str | None:
+    if prefix is None:
+        return None
+    return f"{prefix}{sector_label!r}"
 
 
 def _normalize_signature(signature: tuple[int, int]) -> tuple[int, int]:
