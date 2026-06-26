@@ -13,6 +13,8 @@ from qlinks.visualizer import (
     LocalBasisGridVisualizer,
     LocalBasisShadowStyle,
     plot_local_basis_grid,
+    plot_local_structure_readout,
+    plot_local_structure_report,
 )
 
 matplotlib.use("Agg")
@@ -30,6 +32,34 @@ class DummyLocalRDMReadout:
 class DummyMatrixUnitTerm:
     target_pattern: tuple[int, ...]
     source_pattern: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class DummyCoherentPair:
+    pattern_a: tuple[int, ...]
+    pattern_b: tuple[int, ...]
+    weight: float
+    sign_label: str = "-"
+    is_singlet_like: bool = True
+    relative_phase: complex = -1.0 + 0.0j
+
+
+@dataclass(frozen=True)
+class DummyClassicalSector:
+    pattern: tuple[int, ...]
+    weight: float
+
+
+@dataclass(frozen=True)
+class DummyLocalStructureReadoutReport:
+    readout: DummyLocalRDMReadout
+    coherent_pairs: tuple[DummyCoherentPair, ...]
+    classical_sectors: tuple[DummyClassicalSector, ...]
+
+
+@dataclass(frozen=True)
+class DummyCageLocalStructureReport:
+    readout_reports: tuple[DummyLocalStructureReadoutReport, ...]
 
 
 def test_plot_local_basis_grid_shadows_links_outside_support() -> None:
@@ -223,5 +253,91 @@ def test_plot_local_basis_grid_filters_to_nonzero_local_operator_patterns() -> N
     assert axes.shape == (1, 1)
     assert "local 1" in axes.flat[0].get_title()
     assert "10" in axes.flat[0].get_title()
+
+    plt.close(fig)
+
+
+def test_local_basis_grid_can_plot_structure_readout() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    reference = np.zeros(layout.n_variables, dtype=np.int64)
+
+    readout = DummyLocalRDMReadout(
+        variable_indices=(0, 1),
+        local_patterns=((1, 0), (0, 1), (1, 1)),
+        component_index=2,
+    )
+    structure = DummyLocalStructureReadoutReport(
+        readout=readout,
+        coherent_pairs=(DummyCoherentPair(pattern_a=(1, 0), pattern_b=(0, 1), weight=0.25),),
+        classical_sectors=(DummyClassicalSector(pattern=(1, 1), weight=0.5),),
+    )
+
+    visualizer = LocalBasisGridVisualizer(lattice=lattice, layout=layout)
+    fig, axes = visualizer.plot_structure_readout(
+        structure,
+        reference_config=reference,
+        include_frozen=True,
+        max_structures=1,
+        max_basis_states=2,
+        max_frozen=1,
+        ncols=2,
+        mode="dimers",
+        show=False,
+        single_plot_kwargs={"with_site_labels": False},
+    )
+
+    assert axes.shape == (2, 2)
+    assert fig._suptitle is not None
+    assert "component 2" in fig._suptitle.get_text()
+    titles = [ax.get_title() for ax in axes.flat[:3]]
+    assert any("singlet 0" in title for title in titles)
+    assert any("frozen 0" in title for title in titles)
+
+    plt.close(fig)
+
+
+def test_plot_local_structure_report_wrapper_is_exported() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    reference = np.zeros(layout.n_variables, dtype=np.int64)
+
+    readout = DummyLocalRDMReadout(
+        variable_indices=(0, 1),
+        local_patterns=((1, 0), (0, 1)),
+        component_index=1,
+    )
+    structure = DummyCageLocalStructureReport(
+        readout_reports=(
+            DummyLocalStructureReadoutReport(
+                readout=readout,
+                coherent_pairs=(
+                    DummyCoherentPair(pattern_a=(1, 0), pattern_b=(0, 1), weight=0.25),
+                ),
+                classical_sectors=(),
+            ),
+        ),
+    )
+
+    fig, axes = plot_local_structure_report(
+        lattice=lattice,
+        layout=layout,
+        structure_report=structure,
+        reference_config=reference,
+        max_readouts=1,
+        max_structures_per_readout=1,
+        ncols=2,
+        mode="values",
+        show=False,
+        single_plot_kwargs={"with_site_labels": False},
+    )
+
+    assert axes.shape == (1, 2)
+    assert fig._suptitle is not None
+    assert "Local entangled structures" in fig._suptitle.get_text()
+    assert visualizer_api.plot_local_structure_readout is plot_local_structure_readout
+    assert visualizer_api.plot_local_structure_report is plot_local_structure_report
+    assert "plot_local_structure_readout" in visualizer_api.__all__
+    assert "plot_local_structure_report" in visualizer_api.__all__
 
     plt.close(fig)

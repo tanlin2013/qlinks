@@ -16,6 +16,8 @@ from qlinks.visualizer.basis import (
     plot_basis_config,
     plot_basis_grid,
     plot_local_basis_grid,
+    plot_local_structure_readout,
+    plot_local_structure_report,
 )
 from qlinks.visualizer.disk import (
     QuantumDiskBasisGridVisualizer,
@@ -88,6 +90,8 @@ __all__ = [
     "plot_basis_config",
     "plot_basis_grid",
     "plot_local_basis_grid",
+    "plot_local_structure_readout",
+    "plot_local_structure_report",
     "plot_quantum_disk_basis_grid",
     "unflatten_operator_index",
 ]

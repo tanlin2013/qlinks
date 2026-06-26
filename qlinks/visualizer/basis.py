@@ -4,7 +4,7 @@ import math
 from dataclasses import dataclass, field
 from itertools import product
 from pathlib import Path
-from typing import Literal, Mapping, Sequence
+from typing import Any, Literal, Mapping, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -97,6 +97,106 @@ class LocalBasisShadowStyle:
     shadow_link_alpha: float = 0.22
     shadow_link_width_scale: float = 0.75
     label_shadowed_variables: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class _LocalStructurePlotEntry:
+    """One local-structure basis pattern to draw."""
+
+    variable_indices: tuple[int, ...]
+    pattern: tuple[int, ...]
+    label: str
+    plaquette_symbols: PlaquetteSymbolStyle
+    show_pattern_label: bool = True
+
+
+def _format_local_structure_coefficient(value: complex) -> str:
+    if abs(value.imag) <= 1e-10:
+        return f"{value.real:.3g}"
+    return f"{value:.3g}"
+
+
+def _structure_component_prefix(readout: Any) -> str:
+    component_index = getattr(readout, "component_index", None)
+    if component_index is None:
+        return ""
+    return f"comp {component_index}: "
+
+
+def _local_structure_entries_from_readout_report(
+    report: Any,
+    *,
+    max_structures: int | None,
+    max_basis_states: int | None,
+    include_frozen: bool,
+    max_frozen: int | None,
+    coherent_plaquette_symbols: PlaquetteSymbolStyle,
+    frozen_plaquette_symbols: PlaquetteSymbolStyle,
+) -> list[_LocalStructurePlotEntry]:
+    readout = report.readout
+    variable_indices = tuple(int(index) for index in readout.variable_indices)
+    prefix = _structure_component_prefix(readout)
+    entries: list[_LocalStructurePlotEntry] = []
+
+    coherent_pairs = tuple(getattr(report, "coherent_pairs", ()))
+    if max_structures is not None:
+        coherent_pairs = coherent_pairs[: int(max_structures)]
+
+    max_states = 2 if max_basis_states is None else max(0, int(max_basis_states))
+
+    for pair_index, pair in enumerate(coherent_pairs):
+        pair_kind = "singlet" if bool(getattr(pair, "is_singlet_like", False)) else "coherent"
+        coeff_labels = ["+1/sqrt(2)"]
+        sign_label = str(getattr(pair, "sign_label", "+"))
+        if sign_label == "+":
+            coeff_labels.append("+1/sqrt(2)")
+        elif sign_label == "-":
+            coeff_labels.append("-1/sqrt(2)")
+        else:
+            _coeff = _format_local_structure_coefficient(
+                getattr(pair, "relative_phase", 1.0 + 0.0j)
+            )
+            coeff_labels.append(f"({_coeff})/sqrt(2)")
+
+        patterns = [
+            tuple(int(v) for v in getattr(pair, "pattern_a")),
+            tuple(int(v) for v in getattr(pair, "pattern_b")),
+        ]
+        for state_index, (pattern, coeff_label) in enumerate(
+            zip(patterns[:max_states], coeff_labels[:max_states], strict=True)
+        ):
+            entries.append(
+                _LocalStructurePlotEntry(
+                    variable_indices=variable_indices,
+                    pattern=pattern,
+                    label=(
+                        f"{prefix}{pair_kind} {pair_index}, state {state_index}\n"
+                        f"{coeff_label}, weight={float(getattr(pair, 'weight', 0.0)):.3g}"
+                    ),
+                    plaquette_symbols=coherent_plaquette_symbols,
+                    show_pattern_label=True,
+                )
+            )
+
+    if include_frozen:
+        classical_sectors = tuple(getattr(report, "classical_sectors", ()))
+        if max_frozen is not None:
+            classical_sectors = classical_sectors[: int(max_frozen)]
+        for sector_index, sector in enumerate(classical_sectors):
+            entries.append(
+                _LocalStructurePlotEntry(
+                    variable_indices=variable_indices,
+                    pattern=tuple(int(v) for v in getattr(sector, "pattern")),
+                    label=(
+                        f"{prefix}frozen {sector_index}\n"
+                        f"weight={float(getattr(sector, 'weight', 0.0)):.3g}"
+                    ),
+                    plaquette_symbols=frozen_plaquette_symbols,
+                    show_pattern_label=True,
+                )
+            )
+
+    return entries
 
 
 @dataclass(frozen=True, slots=True)
@@ -4179,8 +4279,7 @@ class BasisConfigurationVisualizer:
             return str(int(site_id))
 
         raise ValueError(
-            "site_label_style must be 'cell', 'cell_sublattice', "
-            "'sublattice_cell', or 'site_id'."
+            "site_label_style must be 'cell', 'cell_sublattice', 'sublattice_cell', or 'site_id'."
         )
 
     @staticmethod
@@ -4408,7 +4507,7 @@ def _zero_indices_for_mechanism(
     except KeyError as exc:
         allowed = ", ".join(["all", *field_name_by_mechanism])
         raise ValueError(
-            f"Unknown zero mechanism {mechanism!r}. " f"Expected one of: {allowed}."
+            f"Unknown zero mechanism {mechanism!r}. Expected one of: {allowed}."
         ) from exc
 
     return np.asarray(getattr(report, field_name), dtype=np.int64)
@@ -4525,7 +4624,7 @@ class LocalBasisGridVisualizer:
         if show_only_nonzero_matrix_elements:
             if local_operator is None:
                 raise ValueError(
-                    "local_operator is required when " "show_only_nonzero_matrix_elements=True."
+                    "local_operator is required when show_only_nonzero_matrix_elements=True."
                 )
             selected_pattern_indices = _nonzero_local_operator_pattern_indices(
                 local_operator,
@@ -4708,6 +4807,257 @@ class LocalBasisGridVisualizer:
             matrix_element_tolerance=matrix_element_tolerance,
             **plot_kwargs,
         )
+
+    def plot_structure_readout(
+        self,
+        structure_report: Any,
+        *,
+        reference_config: npt.ArrayLike | None = None,
+        max_structures: int | None = None,
+        max_basis_states: int | None = None,
+        include_frozen: bool = True,
+        max_frozen: int | None = None,
+        nrows: int | None = None,
+        ncols: int | None = None,
+        mode: LinkPlotMode = "auto",
+        coherent_plaquette_symbols: PlaquetteSymbolStyle = "auto",
+        frozen_plaquette_symbols: PlaquetteSymbolStyle = "none",
+        figsize: tuple[float, float] | None = None,
+        show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
+        suptitle: str | None = None,
+        suptitle_y: float = 0.995,
+        tight_layout_rect: tuple[float, float, float, float] | None = None,
+        single_plot_kwargs: dict | None = None,
+    ):
+        """Visualize local entangled structures from one readout report.
+
+        Each coherent pair is shown explicitly as a linear superposition of its
+        basis patterns. Frozen/classical sectors are optionally shown afterward
+        without plaquette symbols.
+        """
+        entries = _local_structure_entries_from_readout_report(
+            structure_report,
+            max_structures=max_structures,
+            max_basis_states=max_basis_states,
+            include_frozen=include_frozen,
+            max_frozen=max_frozen,
+            coherent_plaquette_symbols=coherent_plaquette_symbols,
+            frozen_plaquette_symbols=frozen_plaquette_symbols,
+        )
+        if not entries:
+            raise ValueError("No local structures are available to visualize.")
+
+        if suptitle is None:
+            readout = getattr(structure_report, "readout", None)
+            component_index = None if readout is None else getattr(readout, "component_index", None)
+            if component_index is None:
+                suptitle = "Local entangled structures"
+            else:
+                suptitle = f"Local entangled structures, component {component_index}"
+
+        return self._plot_local_structure_entries(
+            entries,
+            reference_config=reference_config,
+            nrows=nrows,
+            ncols=ncols,
+            mode=mode,
+            figsize=figsize,
+            show=show,
+            backend=backend,
+            suptitle=suptitle,
+            suptitle_y=suptitle_y,
+            tight_layout_rect=tight_layout_rect,
+            single_plot_kwargs=single_plot_kwargs,
+        )
+
+    def plot_structure_report(
+        self,
+        structure_report: Any,
+        *,
+        reference_config: npt.ArrayLike | None = None,
+        max_readouts: int | None = None,
+        max_structures_per_readout: int | None = None,
+        max_basis_states: int | None = None,
+        include_frozen: bool = True,
+        max_frozen_per_readout: int | None = None,
+        nrows: int | None = None,
+        ncols: int | None = None,
+        mode: LinkPlotMode = "auto",
+        coherent_plaquette_symbols: PlaquetteSymbolStyle = "auto",
+        frozen_plaquette_symbols: PlaquetteSymbolStyle = "none",
+        figsize: tuple[float, float] | None = None,
+        show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
+        suptitle: str | None = None,
+        suptitle_y: float = 0.995,
+        tight_layout_rect: tuple[float, float, float, float] | None = None,
+        single_plot_kwargs: dict | None = None,
+    ):
+        """Visualize entangled local structures from a cage-level structure report."""
+        readout_reports = tuple(getattr(structure_report, "readout_reports", ()))
+        if max_readouts is not None:
+            readout_reports = readout_reports[: int(max_readouts)]
+
+        entries: list[_LocalStructurePlotEntry] = []
+        for report in readout_reports:
+            entries.extend(
+                _local_structure_entries_from_readout_report(
+                    report,
+                    max_structures=max_structures_per_readout,
+                    max_basis_states=max_basis_states,
+                    include_frozen=include_frozen,
+                    max_frozen=max_frozen_per_readout,
+                    coherent_plaquette_symbols=coherent_plaquette_symbols,
+                    frozen_plaquette_symbols=frozen_plaquette_symbols,
+                )
+            )
+
+        if not entries:
+            raise ValueError("No local structures are available to visualize.")
+
+        if suptitle is None:
+            suptitle = "Local entangled structures"
+
+        return self._plot_local_structure_entries(
+            entries,
+            reference_config=reference_config,
+            nrows=nrows,
+            ncols=ncols,
+            mode=mode,
+            figsize=figsize,
+            show=show,
+            backend=backend,
+            suptitle=suptitle,
+            suptitle_y=suptitle_y,
+            tight_layout_rect=tight_layout_rect,
+            single_plot_kwargs=single_plot_kwargs,
+        )
+
+    def _plot_local_structure_entries(
+        self,
+        entries: Sequence[_LocalStructurePlotEntry],
+        *,
+        reference_config: npt.ArrayLike | None = None,
+        nrows: int | None = None,
+        ncols: int | None = None,
+        mode: LinkPlotMode = "auto",
+        figsize: tuple[float, float] | None = None,
+        show: bool = True,
+        backend: VisualizerBackend = "matplotlib",
+        suptitle: str | None = None,
+        suptitle_y: float = 0.995,
+        tight_layout_rect: tuple[float, float, float, float] | None = None,
+        single_plot_kwargs: dict | None = None,
+    ):
+        reference = self._resolve_reference_config(reference_config)
+        single_visualizer = self._single_visualizer()
+        rows, cols = automatic_grid_shape(len(entries), nrows=nrows, ncols=ncols)
+
+        if figsize is None:
+            figsize = (3.2 * cols, 3.2 * rows)
+
+        fig, axes = plt.subplots(rows, cols, figsize=figsize, squeeze=False)
+
+        if single_plot_kwargs is None:
+            single_plot_kwargs = {}
+
+        plot_kwargs = dict(single_plot_kwargs)
+        with_site_labels = bool(plot_kwargs.pop("with_site_labels", True))
+        with_site_values = bool(plot_kwargs.pop("with_site_values", False))
+        with_link_values = bool(plot_kwargs.pop("with_link_values", False))
+        with_link_ids = bool(plot_kwargs.pop("with_link_ids", False))
+        with_plaquette_symbols_kw = plot_kwargs.pop("with_plaquette_symbols", True)
+        plaquette_symbol_values = plot_kwargs.pop("plaquette_symbol_values", None)
+        plot_kwargs.pop("title", None)
+        plot_kwargs.pop("show", None)
+        plot_kwargs.pop("backend", None)
+        plot_kwargs.pop("ax", None)
+        plot_kwargs.pop("mode", None)
+        plot_kwargs.pop("style", None)
+        plot_kwargs.pop("shadow_style", None)
+        plot_kwargs.pop("periodic_image_mode", None)
+        plot_kwargs.pop("collapse_duplicate_visual_links", None)
+        plot_kwargs.pop("coordinate_scale", None)
+        plot_kwargs.pop("coordinate_transform", None)
+        plot_kwargs.pop("site_label_style", None)
+
+        render_cache_map: dict[
+            tuple[tuple[int, ...], PlaquetteSymbolStyle], _BasisGridRenderCache
+        ] = {}
+        mask_map: dict[
+            tuple[tuple[int, ...], PlaquetteSymbolStyle],
+            tuple[npt.NDArray[np.bool_], npt.NDArray[np.bool_]],
+        ] = {}
+
+        for k, entry in enumerate(entries):
+            ax = axes.flat[k]
+            variable_indices = _normalize_local_variable_indices(entry.variable_indices)
+            pattern_batch = _as_local_basis_patterns(
+                entry.pattern, n_local_variables=len(variable_indices)
+            )
+            embedded_configs = _embed_local_patterns(
+                reference_config=reference,
+                local_patterns=pattern_batch,
+                variable_indices=variable_indices,
+            )
+            config = embedded_configs[0]
+
+            cache_key = (variable_indices, entry.plaquette_symbols)
+            render_cache = render_cache_map.get(cache_key)
+            if render_cache is None:
+                render_cache = single_visualizer.build_grid_render_cache(
+                    reference_config=config,
+                    mode=mode,
+                    plaquette_symbols=entry.plaquette_symbols,
+                )
+                render_cache_map[cache_key] = render_cache
+                mask_map[cache_key] = self._active_artist_masks(
+                    variable_indices=variable_indices,
+                    render_cache=render_cache,
+                )
+            active_link_mask, active_node_mask = mask_map[cache_key]
+
+            single_visualizer._plot_local_basis_with_grid_render_cache(
+                config,
+                ax=ax,
+                render_cache=render_cache,
+                active_link_mask=active_link_mask,
+                active_node_mask=active_node_mask,
+                shadow_style=self.shadow_style,
+                show=False,
+                backend=backend,
+                with_site_labels=with_site_labels,
+                with_site_values=with_site_values,
+                with_link_values=with_link_values,
+                with_link_ids=with_link_ids,
+                with_plaquette_symbols=bool(with_plaquette_symbols_kw)
+                and entry.plaquette_symbols != "none"
+                and render_cache.plaquette_symbol_style != "none",
+                plaquette_symbol_values=plaquette_symbol_values,
+                title=entry.label,
+                **plot_kwargs,
+            )
+
+            if entry.show_pattern_label:
+                pattern_text = format_basis_config(entry.pattern, style="compact", max_length=64)
+                ax.set_title(f"{entry.label}\n{pattern_text}")
+
+        for k in range(len(entries), rows * cols):
+            axes.flat[k].axis("off")
+
+        if suptitle is not None:
+            fig.suptitle(suptitle, y=suptitle_y)
+
+        if tight_layout_rect is None:
+            tight_layout_rect = (0.0, 0.0, 1.0, 0.96 if suptitle is not None else 1.0)
+
+        fig.tight_layout(rect=tight_layout_rect)
+
+        if show:
+            plt.show()
+
+        return fig, axes
 
     def _resolve_reference_config(
         self,
@@ -5209,8 +5559,7 @@ class BasisGridVisualizer:
 
         if suptitle is None:
             suptitle = (
-                f"Cage support, signature={record.signature}, "
-                f"support size={record.support.size}"
+                f"Cage support, signature={record.signature}, support size={record.support.size}"
             )
 
         return self.plot(
@@ -5274,10 +5623,10 @@ class BasisGridVisualizer:
 
         if suptitle is None:
             if mechanism == "all":
-                suptitle = "Nontrivial interference zeros " f"({zero_indices.size} states)"
+                suptitle = f"Nontrivial interference zeros ({zero_indices.size} states)"
             else:
                 suptitle = (
-                    f"Nontrivial interference zeros: {mechanism} " f"({zero_indices.size} states)"
+                    f"Nontrivial interference zeros: {mechanism} ({zero_indices.size} states)"
                 )
 
         return self.plot(
@@ -5419,4 +5768,126 @@ def plot_local_basis_grid(
         local_operator=local_operator,
         show_only_nonzero_matrix_elements=show_only_nonzero_matrix_elements,
         matrix_element_tolerance=matrix_element_tolerance,
+    )
+
+
+def plot_local_structure_readout(
+    lattice: LatticeGraph,
+    structure_report: Any,
+    *,
+    reference_config: npt.ArrayLike | None = None,
+    layout: VariableLayout | None = None,
+    max_structures: int | None = None,
+    max_basis_states: int | None = None,
+    include_frozen: bool = True,
+    max_frozen: int | None = None,
+    nrows: int | None = None,
+    ncols: int | None = None,
+    backend: VisualizerBackend = "matplotlib",
+    mode: LinkPlotMode = "auto",
+    coherent_plaquette_symbols: PlaquetteSymbolStyle = "auto",
+    frozen_plaquette_symbols: PlaquetteSymbolStyle = "none",
+    periodic_image_mode: PeriodicImageMode = "positive_patch",
+    collapse_duplicate_visual_links: bool = True,
+    coordinate_scale: float = 1.0,
+    coordinate_transform: npt.ArrayLike | None = None,
+    site_label_style: SiteLabelStyle = "cell_sublattice",
+    style: LinkVisualStyle | None = None,
+    shadow_style: LocalBasisShadowStyle | None = None,
+    figsize: tuple[float, float] | None = None,
+    show: bool = True,
+    suptitle: str | None = None,
+    single_plot_kwargs: dict | None = None,
+):
+    """Functional wrapper around :meth:`LocalBasisGridVisualizer.plot_structure_readout`."""
+    visualizer = LocalBasisGridVisualizer(
+        lattice=lattice,
+        layout=layout,
+        style=style if style is not None else LinkVisualStyle(),
+        shadow_style=shadow_style if shadow_style is not None else LocalBasisShadowStyle(),
+        periodic_image_mode=periodic_image_mode,
+        collapse_duplicate_visual_links=collapse_duplicate_visual_links,
+        coordinate_scale=coordinate_scale,
+        coordinate_transform=coordinate_transform,
+        site_label_style=site_label_style,
+    )
+    return visualizer.plot_structure_readout(
+        structure_report,
+        reference_config=reference_config,
+        max_structures=max_structures,
+        max_basis_states=max_basis_states,
+        include_frozen=include_frozen,
+        max_frozen=max_frozen,
+        nrows=nrows,
+        ncols=ncols,
+        mode=mode,
+        coherent_plaquette_symbols=coherent_plaquette_symbols,
+        frozen_plaquette_symbols=frozen_plaquette_symbols,
+        figsize=figsize,
+        show=show,
+        backend=backend,
+        suptitle=suptitle,
+        single_plot_kwargs=single_plot_kwargs,
+    )
+
+
+def plot_local_structure_report(
+    lattice: LatticeGraph,
+    structure_report: Any,
+    *,
+    reference_config: npt.ArrayLike | None = None,
+    layout: VariableLayout | None = None,
+    max_readouts: int | None = None,
+    max_structures_per_readout: int | None = None,
+    max_basis_states: int | None = None,
+    include_frozen: bool = True,
+    max_frozen_per_readout: int | None = None,
+    nrows: int | None = None,
+    ncols: int | None = None,
+    backend: VisualizerBackend = "matplotlib",
+    mode: LinkPlotMode = "auto",
+    coherent_plaquette_symbols: PlaquetteSymbolStyle = "auto",
+    frozen_plaquette_symbols: PlaquetteSymbolStyle = "none",
+    periodic_image_mode: PeriodicImageMode = "positive_patch",
+    collapse_duplicate_visual_links: bool = True,
+    coordinate_scale: float = 1.0,
+    coordinate_transform: npt.ArrayLike | None = None,
+    site_label_style: SiteLabelStyle = "cell_sublattice",
+    style: LinkVisualStyle | None = None,
+    shadow_style: LocalBasisShadowStyle | None = None,
+    figsize: tuple[float, float] | None = None,
+    show: bool = True,
+    suptitle: str | None = None,
+    single_plot_kwargs: dict | None = None,
+):
+    """Functional wrapper around :meth:`LocalBasisGridVisualizer.plot_structure_report`."""
+    visualizer = LocalBasisGridVisualizer(
+        lattice=lattice,
+        layout=layout,
+        style=style if style is not None else LinkVisualStyle(),
+        shadow_style=shadow_style if shadow_style is not None else LocalBasisShadowStyle(),
+        periodic_image_mode=periodic_image_mode,
+        collapse_duplicate_visual_links=collapse_duplicate_visual_links,
+        coordinate_scale=coordinate_scale,
+        coordinate_transform=coordinate_transform,
+        site_label_style=site_label_style,
+    )
+    return visualizer.plot_structure_report(
+        structure_report,
+        reference_config=reference_config,
+        max_readouts=max_readouts,
+        max_structures_per_readout=max_structures_per_readout,
+        max_basis_states=max_basis_states,
+        include_frozen=include_frozen,
+        max_frozen_per_readout=max_frozen_per_readout,
+        nrows=nrows,
+        ncols=ncols,
+        mode=mode,
+        coherent_plaquette_symbols=coherent_plaquette_symbols,
+        frozen_plaquette_symbols=frozen_plaquette_symbols,
+        figsize=figsize,
+        show=show,
+        backend=backend,
+        suptitle=suptitle,
+        single_plot_kwargs=single_plot_kwargs,
     )
