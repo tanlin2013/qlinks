@@ -96,6 +96,7 @@ def test_diagnose_cage_code_candidate_accepts_cage_record_like_objects() -> None
         errors=errors,
         signature=(0, 2),
         max_weight=1,
+        include_error_algebra=True,
     )
 
     assert report.code_dimension == 2
@@ -103,3 +104,5 @@ def test_diagnose_cage_code_candidate_accepts_cage_record_like_objects() -> None
     assert report.signature == (0, 2)
     assert report.qec_candidate
     assert report.logical_operators is not None
+    assert report.error_algebra is not None
+    assert report.error_algebra.classification == "scalar_algebra_subspace_code"

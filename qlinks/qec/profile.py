@@ -7,6 +7,7 @@ from typing import Any
 from qlinks.basis import Basis
 from qlinks.encoded.binary_basis import BinaryEncodedBasis
 from qlinks.qec.code_space import CodeSpace
+from qlinks.qec.error_algebra import ProjectedErrorAlgebraReport, diagnose_projected_error_algebra
 from qlinks.qec.error_sets import LocalErrorSet
 from qlinks.qec.knill_laflamme import KnillLaflammeReport, diagnose_knill_laflamme
 from qlinks.qec.logical_operators import LogicalOperatorReport, search_projected_logical_operators
@@ -217,6 +218,7 @@ class QECCodeCandidateReport:
     record_count: int
     local_indistinguishability: LocalIndistinguishabilityReport
     logical_operators: LogicalOperatorReport | None = None
+    error_algebra: ProjectedErrorAlgebraReport | None = None
     classification_labels: tuple[str, ...] = ()
     metadata: dict[str, object] = field(default_factory=dict)
 
@@ -254,6 +256,9 @@ class QECCodeCandidateReport:
                 if self.logical_operators is None
                 else self.logical_operators.to_summary_dict(max_candidates=max_logical_candidates)
             ),
+            "error_algebra": (
+                None if self.error_algebra is None else self.error_algebra.to_summary_dict()
+            ),
         }
 
     def to_text(self, *, max_logical_candidates: int = 5) -> str:
@@ -280,6 +285,8 @@ class QECCodeCandidateReport:
         ]
         if self.logical_operators is not None:
             lines.append(self.logical_operators.to_text(max_candidates=max_logical_candidates))
+        if self.error_algebra is not None:
+            lines.append(self.error_algebra.to_text())
         return "\n".join(lines)
 
     def format_summary(self, *, max_logical_candidates: int = 5) -> str:
@@ -321,6 +328,8 @@ class QECCodeCandidateReport:
             renderables.append(
                 self.logical_operators.to_rich(max_candidates=max_logical_candidates)
             )
+        if self.error_algebra is not None:
+            renderables.append(self.error_algebra.to_rich())
         return Panel(Group(*renderables), title="QEC code candidate")
 
 
@@ -527,6 +536,7 @@ def diagnose_cage_code_candidate(
     max_weight: int | None = None,
     tolerance: float = 1e-10,
     include_logical_operators: bool = True,
+    include_error_algebra: bool = False,
     allow_rank_deficient: bool = True,
     classification_reports: Sequence[Any] = (),
     metadata: Mapping[str, object] | None = None,
@@ -548,6 +558,16 @@ def diagnose_cage_code_candidate(
         if include_logical_operators
         else None
     )
+    algebra_report = (
+        diagnose_projected_error_algebra(
+            code_space,
+            errors,
+            max_weight=max_weight,
+            tolerance=tolerance,
+        )
+        if include_error_algebra
+        else None
+    )
 
     return QECCodeCandidateReport(
         code_space=code_space,
@@ -555,6 +575,7 @@ def diagnose_cage_code_candidate(
         record_count=len(records),
         local_indistinguishability=local_report,
         logical_operators=logical_report,
+        error_algebra=algebra_report,
         classification_labels=_classification_label_tuple(classification_reports),
         metadata=dict(metadata or {}),
     )
@@ -570,6 +591,7 @@ def diagnose_cage_result_code_candidates(
     max_weight: int | None = None,
     tolerance: float = 1e-10,
     include_logical_operators: bool = True,
+    include_error_algebra: bool = False,
     allow_rank_deficient: bool = True,
 ) -> CageQECScanReport:
     """Scan degenerate signature sectors of a ``CageSearchResult`` for QEC behavior."""
@@ -591,6 +613,7 @@ def diagnose_cage_result_code_candidates(
                 max_weight=max_weight,
                 tolerance=tolerance,
                 include_logical_operators=include_logical_operators,
+                include_error_algebra=include_error_algebra,
                 allow_rank_deficient=allow_rank_deficient,
                 metadata={"source": "cage_result"},
             )

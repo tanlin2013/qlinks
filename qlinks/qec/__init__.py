@@ -1,4 +1,9 @@
 from qlinks.qec.code_space import CodeSpace
+from qlinks.qec.error_algebra import (
+    ErrorAlgebraClassification,
+    ProjectedErrorAlgebraReport,
+    diagnose_projected_error_algebra,
+)
 from qlinks.qec.error_sets import (
     ErrorOperator,
     LocalErrorSet,
@@ -30,6 +35,7 @@ from qlinks.qec.profile import (
 __all__ = [
     "CageQECScanReport",
     "CodeSpace",
+    "ErrorAlgebraClassification",
     "ErrorImageReport",
     "ErrorOperator",
     "KnillLaflammePairReport",
@@ -39,6 +45,7 @@ __all__ = [
     "LocalIndistinguishabilityReport",
     "LocalOperatorProduct",
     "LogicalOperatorReport",
+    "ProjectedErrorAlgebraReport",
     "ProjectedLogicalOperator",
     "QECCodeCandidateReport",
     "apply_error_to_code",
@@ -47,5 +54,6 @@ __all__ = [
     "diagnose_cage_result_code_candidates",
     "diagnose_knill_laflamme",
     "diagnose_local_indistinguishability",
+    "diagnose_projected_error_algebra",
     "search_projected_logical_operators",
 ]
