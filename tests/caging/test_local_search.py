@@ -31,6 +31,8 @@ from qlinks.caging import (
     RobustQDMLocalCageSearchContext,
     SnakeStripeRegionProposal,
     SnakeStripeRegionProposalRecord,
+    StripeMotifComponentRegionProposal,
+    StripeMotifComponentRegionProposalRecord,
     StripeMotifRegionProposal,
     StripeMotifRegionProposalRecord,
     StripeRegionProposal,
@@ -115,6 +117,133 @@ def test_generic_local_cage_searcher_accepts_explicit_qdm_adapter() -> None:
 
     assert result.local_hilbert_size > 0
     assert result.region.link_ids.size < model.lattice.num_links
+
+
+def test_stripe_motif_component_proposal_merges_seeded_square_stripes() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    proposal = StripeMotifComponentRegionProposal(
+        model,
+        sources=("stripe",),
+        stripe_widths=(1,),
+        stripe_directions=(0,),
+        motif_sizes=(2,),
+        motif_subset_mode="windows",
+        min_seed_motifs=1,
+        max_seed_motifs_per_stripe=1,
+        component_subset_mode="full",
+        max_components_per_stripe=1,
+        max_records=2,
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            prune_inactive_local_basis_states=True,
+            tolerance=1.0e-10,
+        ),
+    )
+
+    records = list(proposal.iter_records())
+
+    assert records
+    assert all(isinstance(record, StripeMotifComponentRegionProposalRecord) for record in records)
+    assert all(record.source == "stripe" for record in records)
+    assert all(record.component_size == model.lx for record in records)
+    assert all(record.n_seed_motifs >= 1 for record in records)
+    assert all(record.region.active_plaquette_ids.size == model.lx for record in records)
+
+
+def test_stripe_motif_component_proposal_can_emit_triangular_snake_windows() -> None:
+    model = TriangularQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_a=0,
+        winding_b=0,
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    proposal = StripeMotifComponentRegionProposal(
+        model,
+        sources=("snake_stripe",),
+        motif_sizes=(2,),
+        motif_subset_mode="windows",
+        min_seed_motifs=1,
+        max_seed_motifs_per_stripe=1,
+        component_sizes=(4,),
+        component_subset_mode="windows",
+        max_components_per_stripe=1,
+        max_records=4,
+        max_links=30,
+        snake_max_plaquettes=8,
+        snake_min_plaquettes=8,
+        snake_allow_kind_changes=True,
+        snake_kind_pattern="alternating",
+        snake_require_induced_cycle=True,
+        config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            prune_inactive_local_basis_states=True,
+            tolerance=1.0e-10,
+        ),
+    )
+
+    records = list(proposal.iter_records())
+
+    assert records
+    assert all(record.source == "snake_stripe" for record in records)
+    assert all(record.component_size == 4 for record in records)
+    assert all(record.n_seed_motifs >= 1 for record in records)
+    assert all(record.region.link_ids.size <= 30 for record in records)
+
+
+def test_robust_qdm_local_cage_search_accepts_stripe_motif_component_strategy() -> None:
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    robust_config = RobustQDMLocalCageSearchConfig(
+        region_strategies=("stripe_motif_component",),
+        stripe_motif_sources=("stripe",),
+        stripe_motif_sizes=(2,),
+        stripe_motif_subset_mode="windows",
+        stripe_motif_component_subset_mode="full",
+        stripe_motif_component_max_seed_motifs_per_stripe=1,
+        stripe_motif_component_max_components_per_stripe=1,
+        stripe_widths=(1,),
+        stripe_directions=(0,),
+        max_regions_per_strategy=2,
+        block_signatures=((0, 2),),
+        max_records_per_region=1,
+        min_blocks=1,
+        max_blocks=2,
+        max_paddings_per_stage=0,
+        padding_stages=("static",),
+        store_full_states=False,
+    )
+
+    _certified, context = robust_qdm_local_cage_search(
+        model,
+        config=robust_config,
+        return_context=True,
+    )
+
+    assert context.n_regions <= 2
+    assert context.stage_names == ("static",)
+    assert context.padding_config == robust_config.as_multi_padding_config()
 
 
 def test_stripe_motif_region_proposal_yields_small_regions_from_square_stripes() -> None:
