@@ -7,6 +7,7 @@ from qlinks.conventions import square_qdm_staggered_charges
 from qlinks.encoded import binary_encoded_basis_from_flux_basis
 from qlinks.models import (
     HoneycombQLMModel,
+    KagomeQLMModel,
     QLMModel,
     SquareQLMModel,
     TriangularQLMModel,
@@ -623,3 +624,14 @@ def test_square_qlm_sparse_and_bitmask_match_sorted_basis() -> None:
 
     assert_same_physical_flux_basis_order(sparse_result, bitmask_result)
     assert_sparse_allclose(bitmask_result.kinetic, sparse_result.kinetic)
+
+
+def test_kagome_qlm_builds_and_bitmask_matches_sparse() -> None:
+    model = KagomeQLMModel(lx=2, ly=2, boundary_condition="periodic")
+
+    sparse = model.build(builder="sparse", basis_solver="dfs")
+    bitmask = model.build(builder="bitmask", basis_solver="dfs")
+
+    assert sparse.basis.n_states == 600
+    assert sparse.hamiltonian.nnz > 0
+    assert (sparse.hamiltonian - bitmask.hamiltonian).nnz == 0

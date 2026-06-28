@@ -6,6 +6,10 @@ import pytest
 from qlinks.models import (
     HoneycombQDMModel,
     HoneycombQLMModel,
+    KagomeQDMModel,
+    KagomeQLMModel,
+    QDMModel,
+    QLMModel,
     TriangularQDMModel,
     TriangularQLMModel,
 )
@@ -76,3 +80,25 @@ def test_model_smoke(case: ModelSmokeCase) -> None:
         assert len(model.plaquette_ids()) > 0
     else:
         assert len(model.plaquette_ids()) == case.expected_plaquette_count
+
+
+def test_kagome_models_expose_z2_winding_sectors() -> None:
+    qdm = KagomeQDMModel(lx=2, ly=3, boundary_condition="periodic")
+    qlm = KagomeQLMModel(lx=2, ly=2, boundary_condition="periodic")
+
+    assert qdm.allowed_sector_labels() == {"winding_a": (0, 1), "winding_b": (0, 1)}
+    assert qlm.allowed_sector_labels() == {"winding_a": (0, 1), "winding_b": (0, 1)}
+
+    qdm_sector = KagomeQDMModel(
+        lx=2,
+        ly=3,
+        boundary_condition="periodic",
+        winding_a=0,
+        winding_b=0,
+    )
+    assert len(qdm_sector.make_sectors()) == 2
+
+
+def test_generic_model_helpers_construct_kagome_models() -> None:
+    assert isinstance(QDMModel.kagome(2, 3, boundary_condition="periodic"), KagomeQDMModel)
+    assert isinstance(QLMModel.kagome(2, 2, boundary_condition="periodic"), KagomeQLMModel)

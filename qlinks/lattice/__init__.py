@@ -1,6 +1,7 @@
 from qlinks.lattice.chain import ChainLattice
 from qlinks.lattice.graph import LatticeGraph
 from qlinks.lattice.honeycomb import HoneycombLattice
+from qlinks.lattice.kagome import KagomeLattice
 from qlinks.lattice.square import SquareLattice
 from qlinks.lattice.triangular import TriangularLattice
 from qlinks.lattice.types import (
@@ -21,6 +22,7 @@ __all__ = [
     "CellCoord",
     "ChainLattice",
     "HoneycombLattice",
+    "KagomeLattice",
     "LatticeGraph",
     "Link",
     "LinkId",

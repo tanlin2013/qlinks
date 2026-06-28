@@ -7,6 +7,7 @@ from typing import Literal
 from qlinks.constraints import (
     DimerCoveringConstraint,
     HoneycombElectricWindingSector,
+    KagomeZ2WindingSector,
     SquareQDMElectricWindingSector,
     SquareWindingSector,
     TriangularZ2WindingSector,
@@ -21,6 +22,7 @@ from qlinks.encoded import (
 from qlinks.lattice import (
     BoundaryCondition,
     HoneycombLattice,
+    KagomeLattice,
     LatticeGraph,
     SquareLattice,
     TriangularLattice,
@@ -826,6 +828,111 @@ class HoneycombQDMModel(QDMBase):
 
 
 @dataclass(frozen=True)
+class KagomeQDMModel(QDMBase):
+    """Kagome-lattice QDM with hexagon ring-exchange plaquettes.
+
+    This is a minimal kagome QDM backend compatible with the existing QDM
+    machinery: binary link variables, one-dimer-per-site constraints, and
+    alternating dimer flips on kagome hexagons.  The exactly solvable kagome
+    dimer-liquid Hamiltonian has additional star/loop structure; this class is
+    intended as the first qlinks-compatible kagome constrained model layer.
+    """
+
+    lx: int = 2
+    ly: int = 2
+    boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
+    winding_a: int | None = None
+    winding_b: int | None = None
+
+    def _make_lattice(self) -> KagomeLattice:
+        return KagomeLattice(
+            self.lx,
+            self.ly,
+            boundary_condition=self.boundary_condition,
+        )
+
+    def plaquette_ids(self) -> list[int]:
+        return list(self.lattice.qdm_plaquette_ids())
+
+    def _allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        return {
+            "winding_a": KagomeZ2WindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="a",
+                value_convention="binary",
+            ),
+            "winding_b": KagomeZ2WindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="b",
+                value_convention="binary",
+            ),
+        }
+
+    def _nonempty_sector_labels(
+        self,
+        *,
+        solver: BasisSolverName = "dfs",
+    ) -> dict[str, tuple[tuple[int, int], ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        allowed = self.allowed_sector_labels()
+        nonempty: list[tuple[int, int]] = []
+
+        for winding_a, winding_b in product(
+            allowed["winding_a"],
+            allowed["winding_b"],
+        ):
+            trial_model = replace(
+                self,
+                winding_a=winding_a,
+                winding_b=winding_b,
+            )
+            if trial_model.has_basis_state(solver=solver):
+                nonempty.append((int(winding_a), int(winding_b)))
+
+        return {"z2_winding": tuple(nonempty)}
+
+    def make_sectors(
+        self,
+        layout: VariableLayout | None = None,
+    ):
+        if layout is None:
+            layout = self.layout
+
+        sectors = []
+
+        if self.winding_a is not None:
+            sectors.append(
+                KagomeZ2WindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="a",
+                    target=self.winding_a,
+                    value_convention="binary",
+                )
+            )
+
+        if self.winding_b is not None:
+            sectors.append(
+                KagomeZ2WindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="b",
+                    target=self.winding_b,
+                    value_convention="binary",
+                )
+            )
+
+        return tuple(sectors)
+
+
+@dataclass(frozen=True)
 class QDMModel(QDMBase):
     """
     Generic lattice-backed QDM model.
@@ -836,6 +943,7 @@ class QDMModel(QDMBase):
         SquareQDMModel
         TriangularQDMModel
         HoneycombQDMModel
+        KagomeQDMModel
     """
 
     lattice_input: LatticeGraph | None = None
@@ -844,7 +952,7 @@ class QDMModel(QDMBase):
         if self.lattice_input is None:
             raise ValueError(
                 "QDMModel requires lattice_input. "
-                "Use SquareQDMModel, TriangularQDMModel, or HoneycombQDMModel "
+                "Use SquareQDMModel, TriangularQDMModel, HoneycombQDMModel, or KagomeQDMModel "
                 "for built-in geometries."
             )
         return self.lattice_input
@@ -861,6 +969,26 @@ class QDMModel(QDMBase):
         required_count: int = 1,
     ) -> TriangularQDMModel:
         return TriangularQDMModel(
+            lx=lx,
+            ly=ly,
+            boundary_condition=boundary_condition,
+            coup_kin=coup_kin,
+            coup_pot=coup_pot,
+            required_count=required_count,
+        )
+
+    @classmethod
+    def kagome(
+        cls,
+        lx: int,
+        ly: int,
+        *,
+        boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
+        coup_kin: PlaquetteCoupling = -1.0,
+        coup_pot: PlaquetteCoupling = 0.0,
+        required_count: int = 1,
+    ) -> KagomeQDMModel:
+        return KagomeQDMModel(
             lx=lx,
             ly=ly,
             boundary_condition=boundary_condition,

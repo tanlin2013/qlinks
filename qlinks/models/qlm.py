@@ -12,6 +12,7 @@ from qlinks.constraints import (
     ChargeNormalization,
     GaussLawConstraint,
     HoneycombElectricWindingSector,
+    KagomeZ2WindingSector,
     SquareWindingSector,
     TriangularZ2WindingSector,
     WindingTarget,
@@ -27,6 +28,7 @@ from qlinks.encoded import (
 from qlinks.lattice import (
     BoundaryCondition,
     HoneycombLattice,
+    KagomeLattice,
     LatticeGraph,
     SquareLattice,
     TriangularLattice,
@@ -1015,6 +1017,104 @@ class HoneycombQLMModel(QLMBase):
 
 
 @dataclass(frozen=True)
+class KagomeQLMModel(QLMBase):
+    """Kagome-lattice spin-1/2 QLM with hexagon ring exchange."""
+
+    lx: int = 2
+    ly: int = 2
+    boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN
+    winding_a: int | None = None
+    winding_b: int | None = None
+
+    def _make_lattice(self) -> KagomeLattice:
+        return KagomeLattice(
+            self.lx,
+            self.ly,
+            boundary_condition=self.boundary_condition,
+        )
+
+    def plaquette_ids(self) -> list[int]:
+        return list(self.lattice.qlm_plaquette_ids())
+
+    def _allowed_sector_labels(self) -> dict[str, tuple[object, ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        return {
+            "winding_a": KagomeZ2WindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="a",
+                value_convention="flux_pm",
+            ),
+            "winding_b": KagomeZ2WindingSector.allowed_targets(
+                layout=self.layout,
+                lattice=self.lattice,
+                direction="b",
+                value_convention="flux_pm",
+            ),
+        }
+
+    def _nonempty_sector_labels(
+        self,
+        *,
+        solver: BasisSolverName = "dfs",
+    ) -> dict[str, tuple[tuple[int, int], ...]]:
+        if self.lattice.boundary_condition != BoundaryCondition.PERIODIC:
+            return {}
+
+        allowed = self.allowed_sector_labels()
+        nonempty: list[tuple[int, int]] = []
+
+        for winding_a, winding_b in product(
+            allowed["winding_a"],
+            allowed["winding_b"],
+        ):
+            trial_model = replace(
+                self,
+                winding_a=winding_a,
+                winding_b=winding_b,
+            )
+            if trial_model.has_basis_state(solver=solver):
+                nonempty.append((int(winding_a), int(winding_b)))
+
+        return {"z2_winding": tuple(nonempty)}
+
+    def make_sectors(
+        self,
+        layout: VariableLayout | None = None,
+    ):
+        if layout is None:
+            layout = self.layout
+
+        sectors = []
+
+        if self.winding_a is not None:
+            sectors.append(
+                KagomeZ2WindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="a",
+                    target=self.winding_a,
+                    value_convention="flux_pm",
+                )
+            )
+
+        if self.winding_b is not None:
+            sectors.append(
+                KagomeZ2WindingSector(
+                    layout=layout,
+                    lattice=self.lattice,
+                    direction="b",
+                    target=self.winding_b,
+                    value_convention="flux_pm",
+                )
+            )
+
+        return tuple(sectors)
+
+
+@dataclass(frozen=True)
 class QLMModel(QLMBase):
     """
     Generic lattice-backed QLM model.
@@ -1025,6 +1125,7 @@ class QLMModel(QLMBase):
         SquareQLMModel
         TriangularQLMModel
         HoneycombQLMModel
+        KagomeQLMModel
     """
 
     lattice_input: LatticeGraph | None = None
@@ -1033,7 +1134,7 @@ class QLMModel(QLMBase):
         if self.lattice_input is None:
             raise ValueError(
                 "QLMModel requires lattice_input. "
-                "Use SquareQLMModel, TriangularQLMModel, or HoneycombQLMModel "
+                "Use SquareQLMModel, TriangularQLMModel, HoneycombQLMModel, or KagomeQLMModel "
                 "for built-in geometries."
             )
         return self.lattice_input
@@ -1050,6 +1151,26 @@ class QLMModel(QLMBase):
         charges: int | Sequence[int] | npt.NDArray[np.int64] = 0,
     ) -> TriangularQLMModel:
         return TriangularQLMModel(
+            lx=lx,
+            ly=ly,
+            boundary_condition=boundary_condition,
+            coup_kin=coup_kin,
+            coup_pot=coup_pot,
+            charges=charges,
+        )
+
+    @classmethod
+    def kagome(
+        cls,
+        lx: int,
+        ly: int,
+        *,
+        boundary_condition: BoundaryCondition | str = BoundaryCondition.OPEN,
+        coup_kin: PlaquetteCoupling = -1.0,
+        coup_pot: PlaquetteCoupling = 0.0,
+        charges: int | Sequence[int] | npt.NDArray[np.int64] = 0,
+    ) -> KagomeQLMModel:
+        return KagomeQLMModel(
             lx=lx,
             ly=ly,
             boundary_condition=boundary_condition,

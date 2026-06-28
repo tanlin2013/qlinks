@@ -1,7 +1,7 @@
 import numpy as np
 
-from qlinks.constraints import TriangularZ2WindingSector
-from qlinks.lattice import TriangularLattice
+from qlinks.constraints import KagomeZ2WindingSector, TriangularZ2WindingSector
+from qlinks.lattice import KagomeLattice, TriangularLattice
 from qlinks.variables import LocalSpace, VariableLayout
 
 
@@ -169,3 +169,41 @@ def test_triangular_small_torus_keeps_cell_anchored_links() -> None:
     seen = {(lattice.sites[int(link.source)].cell, link.kind) for link in lattice.links}
 
     assert len(seen) == lattice.num_links
+
+
+def test_kagome_z2_winding_sector_binary_values() -> None:
+    lattice = KagomeLattice(2, 3, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    sector = KagomeZ2WindingSector(
+        layout=layout,
+        lattice=lattice,
+        direction="a",
+        target=1,
+        value_convention="binary",
+    )
+
+    assert sector.link_ids.size > 0
+    assert sector.affected_variables().size == sector.link_ids.size
+
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+    assert sector.value(config) == 0
+    config[sector.affected_variables()[0]] = 1
+    assert sector.value(config) == 1
+    assert sector.is_satisfied(config)
+
+
+def test_kagome_z2_winding_allowed_targets() -> None:
+    lattice = KagomeLattice(2, 3, boundary_condition="periodic")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+
+    assert KagomeZ2WindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="a",
+    ) == (0, 1)
+    assert KagomeZ2WindingSector.allowed_targets(
+        layout=layout,
+        lattice=lattice,
+        direction="b",
+    ) == (0, 1)

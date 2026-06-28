@@ -16,6 +16,7 @@ from qlinks.lattice import (
     BoundaryCondition,
     ChainLattice,
     HoneycombLattice,
+    KagomeLattice,
     LatticeGraph,
     SquareLattice,
     TriangularLattice,
@@ -2779,7 +2780,7 @@ class BasisConfigurationVisualizer:
             # a rhombus, not an elementary triangle.
             return n_links == 4
 
-        if isinstance(self.lattice, HoneycombLattice):
+        if isinstance(self.lattice, (HoneycombLattice, KagomeLattice)):
             return n_links == 6
 
         # Conservative generic fallback.
@@ -3945,7 +3946,7 @@ class BasisConfigurationVisualizer:
         if ndim == 2:
             # Honeycomb and triangular lattices can require corner-source links
             # to close boundary plaquettes in the positive patch.
-            if isinstance(self.lattice, (HoneycombLattice, TriangularLattice)):
+            if isinstance(self.lattice, (HoneycombLattice, KagomeLattice, TriangularLattice)):
                 return (
                     (0, 0),
                     (1, 0),
@@ -4205,6 +4206,9 @@ class BasisConfigurationVisualizer:
                 return (-1, 0)
             if kind == "y":
                 return (0, -1)
+
+        if isinstance(self.lattice, KagomeLattice):
+            return self.lattice.link_cell_displacement(kind)
 
         return self._infer_link_cell_displacement(link)
 

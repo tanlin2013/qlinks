@@ -31,6 +31,7 @@ from qlinks.models.local_terms import (
 from qlinks.models.pxp import PXPModel
 from qlinks.models.qdm import (
     HoneycombQDMModel,
+    KagomeQDMModel,
     QDMBase,
     QDMModel,
     SquareQDMModel,
@@ -38,6 +39,7 @@ from qlinks.models.qdm import (
 )
 from qlinks.models.qlm import (
     HoneycombQLMModel,
+    KagomeQLMModel,
     QLMBase,
     QLMModel,
     SquareQLMModel,
@@ -58,6 +60,8 @@ __all__ = [
     "HamiltonianTermSpec",
     "HoneycombQDMModel",
     "HoneycombQLMModel",
+    "KagomeQDMModel",
+    "KagomeQLMModel",
     "LocalOperatorKind",
     "LocalTermDescriptor",
     "LocalTermKind",

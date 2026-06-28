@@ -12,9 +12,11 @@ from qlinks.lattice import (
     SquareLattice,
     TriangularLattice,
 )
+from qlinks.models import KagomeQDMModel, KagomeQLMModel
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     BasisConfigurationVisualizer,
+    BasisGridVisualizer,
     format_basis_config,
     plot_basis_config,
 )
@@ -333,3 +335,42 @@ def test_auto_symbols_follow_inferred_mode_for_flux_layout() -> None:
         )
         == "circulation"
     )
+
+
+def test_kagome_qdm_basis_visualizer_smoke() -> None:
+    model = KagomeQDMModel(lx=2, ly=3, boundary_condition="periodic")
+    build = model.build(builder="sparse", basis_solver="dfs")
+
+    visualizer = BasisConfigurationVisualizer(
+        lattice=model.lattice,
+        layout=build.layout,
+        periodic_image_mode="positive_patch",
+    )
+    ax = visualizer.plot(
+        build.basis.states[0],
+        mode="dimers",
+        with_plaquette_symbols=True,
+        show=False,
+    )
+
+    assert ax is not None
+
+
+def test_kagome_qlm_basis_grid_visualizer_smoke() -> None:
+    model = KagomeQLMModel(lx=2, ly=2, boundary_condition="periodic")
+    build = model.build(builder="sparse", basis_solver="dfs")
+
+    visualizer = BasisGridVisualizer(
+        lattice=model.lattice,
+        layout=build.layout,
+        periodic_image_mode="positive_patch",
+    )
+    fig, axes = visualizer.plot(
+        build.basis.states[:2],
+        mode="arrows",
+        plaquette_symbols="auto",
+        show=False,
+    )
+
+    assert fig is not None
+    assert axes.size >= 2

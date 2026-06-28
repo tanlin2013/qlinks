@@ -7,6 +7,7 @@ import pytest
 from qlinks.builders import is_hermitian_sparse
 from qlinks.models import (
     HoneycombQDMModel,
+    KagomeQDMModel,
     QDMModel,
     SquareQDMModel,
     TriangularQDMModel,
@@ -371,3 +372,14 @@ def test_model_has_basis_state_returns_bool() -> None:
     )
 
     assert isinstance(model.has_basis_state(solver="dfs"), bool)
+
+
+def test_kagome_qdm_builds_and_bitmask_matches_sparse() -> None:
+    model = KagomeQDMModel(lx=2, ly=3, boundary_condition="periodic")
+
+    sparse = model.build(builder="sparse", basis_solver="dfs")
+    bitmask = model.build(builder="bitmask", basis_solver="dfs")
+
+    assert sparse.basis.n_states == 128
+    assert sparse.hamiltonian.nnz > 0
+    assert (sparse.hamiltonian - bitmask.hamiltonian).nnz == 0

@@ -45,6 +45,8 @@ from qlinks.constraints.winding import (
     user_winding_value_from_internal,
 )
 from qlinks.constraints.z2_winding import (
+    KagomeCycleDirection,
+    KagomeZ2WindingSector,
     TriangularCycleDirection,
     TriangularZ2WindingSector,
     Z2CutData,
@@ -66,6 +68,8 @@ __all__ = [
     "FluxNormalization",
     "GaussLawConstraint",
     "HoneycombElectricWindingSector",
+    "KagomeCycleDirection",
+    "KagomeZ2WindingSector",
     "LocalSumConstraint",
     "NearestNeighborBlockadeConstraint",
     "ParitySector",
