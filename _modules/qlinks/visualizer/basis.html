@@ -345,6 +345,7 @@
     <span class="n">BoundaryCondition</span><span class="p">,</span>
     <span class="n">ChainLattice</span><span class="p">,</span>
     <span class="n">HoneycombLattice</span><span class="p">,</span>
+    <span class="n">KagomeLattice</span><span class="p">,</span>
     <span class="n">LatticeGraph</span><span class="p">,</span>
     <span class="n">SquareLattice</span><span class="p">,</span>
     <span class="n">TriangularLattice</span><span class="p">,</span>
@@ -494,8 +495,8 @@
             <span class="n">coeff_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">_coeff</span><span class="si">}</span><span class="s2">)/sqrt(2)&quot;</span><span class="p">)</span>
 
         <span class="n">patterns</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">pair</span><span class="p">,</span> <span class="s2">&quot;pattern_a&quot;</span><span class="p">)),</span>
-            <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">pair</span><span class="p">,</span> <span class="s2">&quot;pattern_b&quot;</span><span class="p">)),</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pair</span><span class="o">.</span><span class="n">pattern_a</span><span class="p">),</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pair</span><span class="o">.</span><span class="n">pattern_b</span><span class="p">),</span>
         <span class="p">]</span>
         <span class="k">for</span> <span class="n">state_index</span><span class="p">,</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">coeff_label</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
             <span class="nb">zip</span><span class="p">(</span><span class="n">patterns</span><span class="p">[:</span><span class="n">max_states</span><span class="p">],</span> <span class="n">coeff_labels</span><span class="p">[:</span><span class="n">max_states</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -521,7 +522,7 @@
             <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">_LocalStructurePlotEntry</span><span class="p">(</span>
                     <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
-                    <span class="n">pattern</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sector</span><span class="p">,</span> <span class="s2">&quot;pattern&quot;</span><span class="p">)),</span>
+                    <span class="n">pattern</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sector</span><span class="o">.</span><span class="n">pattern</span><span class="p">),</span>
                     <span class="n">label</span><span class="o">=</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">frozen </span><span class="si">{</span><span class="n">sector_index</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;weight=</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">sector</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;weight&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">))</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -3134,7 +3135,7 @@
             <span class="c1"># a rhombus, not an elementary triangle.</span>
             <span class="k">return</span> <span class="n">n_links</span> <span class="o">==</span> <span class="mi">4</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="n">HoneycombLattice</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="p">(</span><span class="n">HoneycombLattice</span><span class="p">,</span> <span class="n">KagomeLattice</span><span class="p">)):</span>
             <span class="k">return</span> <span class="n">n_links</span> <span class="o">==</span> <span class="mi">6</span>
 
         <span class="c1"># Conservative generic fallback.</span>
@@ -4300,7 +4301,7 @@
         <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="c1"># Honeycomb and triangular lattices can require corner-source links</span>
             <span class="c1"># to close boundary plaquettes in the positive patch.</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="p">(</span><span class="n">HoneycombLattice</span><span class="p">,</span> <span class="n">TriangularLattice</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="p">(</span><span class="n">HoneycombLattice</span><span class="p">,</span> <span class="n">KagomeLattice</span><span class="p">,</span> <span class="n">TriangularLattice</span><span class="p">)):</span>
                 <span class="k">return</span> <span class="p">(</span>
                     <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
                     <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
@@ -4560,6 +4561,9 @@
                 <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="n">KagomeLattice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">link_cell_displacement</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_link_cell_displacement</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
 

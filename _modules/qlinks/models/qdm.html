@@ -336,6 +336,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DimerCoveringConstraint</span><span class="p">,</span>
     <span class="n">HoneycombElectricWindingSector</span><span class="p">,</span>
+    <span class="n">KagomeZ2WindingSector</span><span class="p">,</span>
     <span class="n">SquareQDMElectricWindingSector</span><span class="p">,</span>
     <span class="n">SquareWindingSector</span><span class="p">,</span>
     <span class="n">TriangularZ2WindingSector</span><span class="p">,</span>
@@ -350,6 +351,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BoundaryCondition</span><span class="p">,</span>
     <span class="n">HoneycombLattice</span><span class="p">,</span>
+    <span class="n">KagomeLattice</span><span class="p">,</span>
     <span class="n">LatticeGraph</span><span class="p">,</span>
     <span class="n">SquareLattice</span><span class="p">,</span>
     <span class="n">TriangularLattice</span><span class="p">,</span>
@@ -1217,6 +1219,120 @@
 
 
 
+<div class="viewcode-block" id="KagomeQDMModel">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.KagomeQDMModel">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">KagomeQDMModel</span><span class="p">(</span><span class="n">QDMBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Kagome-lattice QDM with hexagon ring-exchange plaquettes.</span>
+
+<span class="sd">    This is a minimal kagome QDM backend compatible with the existing QDM</span>
+<span class="sd">    machinery: binary link variables, one-dimer-per-site constraints, and</span>
+<span class="sd">    alternating dimer flips on kagome hexagons.  The exactly solvable kagome</span>
+<span class="sd">    dimer-liquid Hamiltonian has additional star/loop structure; this class is</span>
+<span class="sd">    intended as the first qlinks-compatible kagome constrained model layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">ly</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">BoundaryCondition</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">OPEN</span>
+    <span class="n">winding_a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">winding_b</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_lattice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KagomeLattice</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">KagomeLattice</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ly</span><span class="p">,</span>
+            <span class="n">boundary_condition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="KagomeQDMModel.plaquette_ids">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.KagomeQDMModel.plaquette_ids">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plaquette_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">qdm_plaquette_ids</span><span class="p">())</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_allowed_sector_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">!=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;winding_a&quot;</span><span class="p">:</span> <span class="n">KagomeZ2WindingSector</span><span class="o">.</span><span class="n">allowed_targets</span><span class="p">(</span>
+                <span class="n">layout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+                <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                <span class="n">value_convention</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;winding_b&quot;</span><span class="p">:</span> <span class="n">KagomeZ2WindingSector</span><span class="o">.</span><span class="n">allowed_targets</span><span class="p">(</span>
+                <span class="n">layout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+                <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
+                <span class="n">value_convention</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_nonempty_sector_labels</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">solver</span><span class="p">:</span> <span class="n">BasisSolverName</span> <span class="o">=</span> <span class="s2">&quot;dfs&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">!=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="n">allowed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_sector_labels</span><span class="p">()</span>
+        <span class="n">nonempty</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">winding_a</span><span class="p">,</span> <span class="n">winding_b</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span>
+            <span class="n">allowed</span><span class="p">[</span><span class="s2">&quot;winding_a&quot;</span><span class="p">],</span>
+            <span class="n">allowed</span><span class="p">[</span><span class="s2">&quot;winding_b&quot;</span><span class="p">],</span>
+        <span class="p">):</span>
+            <span class="n">trial_model</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">winding_a</span><span class="o">=</span><span class="n">winding_a</span><span class="p">,</span>
+                <span class="n">winding_b</span><span class="o">=</span><span class="n">winding_b</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">trial_model</span><span class="o">.</span><span class="n">has_basis_state</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">):</span>
+                <span class="n">nonempty</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">winding_a</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">winding_b</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;z2_winding&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nonempty</span><span class="p">)}</span>
+
+<div class="viewcode-block" id="KagomeQDMModel.make_sectors">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.KagomeQDMModel.make_sectors">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_sectors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
+
+        <span class="n">sectors</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">winding_a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">KagomeZ2WindingSector</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">winding_a</span><span class="p">,</span>
+                    <span class="n">value_convention</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">winding_b</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">KagomeZ2WindingSector</span><span class="p">(</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                    <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
+                    <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">winding_b</span><span class="p">,</span>
+                    <span class="n">value_convention</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sectors</span><span class="p">)</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="QDMModel">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.QDMModel">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1230,6 +1346,7 @@
 <span class="sd">        SquareQDMModel</span>
 <span class="sd">        TriangularQDMModel</span>
 <span class="sd">        HoneycombQDMModel</span>
+<span class="sd">        KagomeQDMModel</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">lattice_input</span><span class="p">:</span> <span class="n">LatticeGraph</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1238,7 +1355,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice_input</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;QDMModel requires lattice_input. &quot;</span>
-                <span class="s2">&quot;Use SquareQDMModel, TriangularQDMModel, or HoneycombQDMModel &quot;</span>
+                <span class="s2">&quot;Use SquareQDMModel, TriangularQDMModel, HoneycombQDMModel, or KagomeQDMModel &quot;</span>
                 <span class="s2">&quot;for built-in geometries.&quot;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice_input</span>
@@ -1257,6 +1374,29 @@
         <span class="n">required_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularQDMModel</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TriangularQDMModel</span><span class="p">(</span>
+            <span class="n">lx</span><span class="o">=</span><span class="n">lx</span><span class="p">,</span>
+            <span class="n">ly</span><span class="o">=</span><span class="n">ly</span><span class="p">,</span>
+            <span class="n">boundary_condition</span><span class="o">=</span><span class="n">boundary_condition</span><span class="p">,</span>
+            <span class="n">coup_kin</span><span class="o">=</span><span class="n">coup_kin</span><span class="p">,</span>
+            <span class="n">coup_pot</span><span class="o">=</span><span class="n">coup_pot</span><span class="p">,</span>
+            <span class="n">required_count</span><span class="o">=</span><span class="n">required_count</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QDMModel.kagome">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.qdm.QDMModel.kagome">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">kagome</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">lx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">ly</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">BoundaryCondition</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">OPEN</span><span class="p">,</span>
+        <span class="n">coup_kin</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">coup_pot</span><span class="p">:</span> <span class="n">PlaquetteCoupling</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">required_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KagomeQDMModel</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">KagomeQDMModel</span><span class="p">(</span>
             <span class="n">lx</span><span class="o">=</span><span class="n">lx</span><span class="p">,</span>
             <span class="n">ly</span><span class="o">=</span><span class="n">ly</span><span class="p">,</span>
             <span class="n">boundary_condition</span><span class="o">=</span><span class="n">boundary_condition</span><span class="p">,</span>

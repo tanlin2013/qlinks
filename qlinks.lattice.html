@@ -505,6 +505,17 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.HoneycombLattice.ly"><code class="docutils literal notranslate"><span class="pre">HoneycombLattice.ly</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice"><code class="docutils literal notranslate"><span class="pre">KagomeLattice</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.__init__"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.site_id"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.site_id()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.link_cell_displacement"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.link_cell_displacement()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.qdm_plaquette_ids"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.qdm_plaquette_ids()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.qlm_plaquette_ids"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.qlm_plaquette_ids()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.hexagon_plaquette_id"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.hexagon_plaquette_id()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.lx"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.lx</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.ly"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.ly</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.LatticeGraph"><code class="docutils literal notranslate"><span class="pre">LatticeGraph</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.LatticeGraph.sites"><code class="docutils literal notranslate"><span class="pre">LatticeGraph.sites</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.LatticeGraph.links"><code class="docutils literal notranslate"><span class="pre">LatticeGraph.links</span></code></a></li>
@@ -1519,6 +1530,85 @@ B(x,y-1)</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">KagomeLattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BoundaryCondition.OPEN</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_triangles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_hexagons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/lattice/kagome.html#KagomeLattice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.KagomeLattice" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#qlinks.lattice.graph.LatticeGraph" title="qlinks.lattice.graph.LatticeGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">LatticeGraph</span></code></a></p>
+<p>Two-dimensional kagome lattice with a three-site triangular unit cell.</p>
+<dl>
+<dt>Unit cell:</dt><dd><p>A(x, y), sublattice 0
+B(x, y), sublattice 1
+C(x, y), sublattice 2</p>
+</dd>
+<dt>Primitive vectors:</dt><dd><p>a1 = (1, 0)
+a2 = (1/2, sqrt(3)/2)</p>
+</dd>
+<dt>Link convention:</dt><dd><p>Each unit cell contributes six nearest-neighbor bonds:</p>
+<p>ab       : A(x, y) -&gt; B(x, y)
+ab_prev  : A(x, y) -&gt; B(x - 1, y)
+ac       : A(x, y) -&gt; C(x, y)
+ac_prev  : A(x, y) -&gt; C(x, y - 1)
+bc       : B(x, y) -&gt; C(x, y)
+bc_next  : B(x, y) -&gt; C(x + 1, y - 1)</p>
+</dd>
+<dt>Plaquettes:</dt><dd><p>triangle_up / triangle_down are included for visualization and local
+geometry diagnostics.  Kagome QDM/QLM resonance terms use only the
+hexagon plaquettes returned by <a class="reference internal" href="#qlinks.lattice.KagomeLattice.qdm_plaquette_ids" title="qlinks.lattice.KagomeLattice.qdm_plaquette_ids"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qdm_plaquette_ids()</span></code></a> and
+<a class="reference internal" href="#qlinks.lattice.KagomeLattice.qlm_plaquette_ids" title="qlinks.lattice.KagomeLattice.qlm_plaquette_ids"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qlm_plaquette_ids()</span></code></a>.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BoundaryCondition.OPEN</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_triangles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_hexagons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/lattice/kagome.html#KagomeLattice.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.KagomeLattice.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice.site_id">
+<span class="sig-name descname"><span class="pre">site_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sublattice</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/lattice/kagome.html#KagomeLattice.site_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.KagomeLattice.site_id" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice.link_cell_displacement">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">link_cell_displacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/lattice/kagome.html#KagomeLattice.link_cell_displacement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.KagomeLattice.link_cell_displacement" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice.qdm_plaquette_ids">
+<span class="sig-name descname"><span class="pre">qdm_plaquette_ids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/lattice/kagome.html#KagomeLattice.qdm_plaquette_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.KagomeLattice.qdm_plaquette_ids" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice.qlm_plaquette_ids">
+<span class="sig-name descname"><span class="pre">qlm_plaquette_ids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/lattice/kagome.html#KagomeLattice.qlm_plaquette_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.KagomeLattice.qlm_plaquette_ids" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice.hexagon_plaquette_id">
+<span class="sig-name descname"><span class="pre">hexagon_plaquette_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/lattice/kagome.html#KagomeLattice.hexagon_plaquette_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.KagomeLattice.hexagon_plaquette_id" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice.lx">
+<span class="sig-name descname"><span class="pre">lx</span></span><a class="headerlink" href="#qlinks.lattice.KagomeLattice.lx" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qlinks.lattice.KagomeLattice.ly">
+<span class="sig-name descname"><span class="pre">ly</span></span><a class="headerlink" href="#qlinks.lattice.KagomeLattice.ly" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qlinks.lattice.LatticeGraph">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.lattice.</span></span><span class="sig-name descname"><span class="pre">LatticeGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaquettes=()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_condition=BoundaryCondition.OPEN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translations=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/lattice/graph.html#LatticeGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.lattice.LatticeGraph" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
@@ -2354,6 +2444,17 @@ plaquettes on triangular lattices.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.HoneycombLattice.hexagon_plaquette_id"><code class="docutils literal notranslate"><span class="pre">HoneycombLattice.hexagon_plaquette_id()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.HoneycombLattice.lx"><code class="docutils literal notranslate"><span class="pre">HoneycombLattice.lx</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.HoneycombLattice.ly"><code class="docutils literal notranslate"><span class="pre">HoneycombLattice.ly</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice"><code class="docutils literal notranslate"><span class="pre">KagomeLattice</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.__init__"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.site_id"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.site_id()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.link_cell_displacement"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.link_cell_displacement()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.qdm_plaquette_ids"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.qdm_plaquette_ids()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.qlm_plaquette_ids"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.qlm_plaquette_ids()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.hexagon_plaquette_id"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.hexagon_plaquette_id()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.lx"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.lx</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.KagomeLattice.ly"><code class="docutils literal notranslate"><span class="pre">KagomeLattice.ly</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.lattice.LatticeGraph"><code class="docutils literal notranslate"><span class="pre">LatticeGraph</span></code></a><ul class="nav section-nav flex-column">

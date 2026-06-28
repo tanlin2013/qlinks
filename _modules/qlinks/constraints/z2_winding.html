@@ -336,7 +336,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSectorCondition</span><span class="p">,</span> <span class="n">ConstraintPropagation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundaryCondition</span><span class="p">,</span> <span class="n">TriangularLattice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundaryCondition</span><span class="p">,</span> <span class="n">KagomeLattice</span><span class="p">,</span> <span class="n">TriangularLattice</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">VariableLayout</span>
 
 <span class="n">TriangularCycleDirection</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]</span>
@@ -638,6 +638,241 @@
                 <span class="sa">f</span><span class="s2">&quot;Illegal </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> target </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> for &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;direction=</span><span class="si">{</span><span class="n">direction</span><span class="si">!r}</span><span class="s2">. Allowed targets are </span><span class="si">{</span><span class="n">allowed</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">KagomeCycleDirection</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="KagomeZ2WindingSector">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.z2_winding.KagomeZ2WindingSector">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">KagomeZ2WindingSector</span><span class="p">(</span><span class="n">BaseSectorCondition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Z2 topological winding sector for kagome QDM/QLM on a torus.</span>
+
+<span class="sd">    The sector is the parity of occupied/electric-positive kagome links crossing</span>
+<span class="sd">    a non-contractible cut of the triangular Bravais torus.  The labels</span>
+<span class="sd">    ``direction=&quot;a&quot;`` and ``direction=&quot;b&quot;`` refer to the two primitive cell</span>
+<span class="sd">    directions, not to a bond kind.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span>
+    <span class="n">lattice</span><span class="p">:</span> <span class="n">KagomeLattice</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="n">KagomeCycleDirection</span>
+    <span class="n">target</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">value_convention</span><span class="p">:</span> <span class="n">Z2ValueConvention</span> <span class="o">=</span> <span class="s2">&quot;binary&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;kagome_z2_winding_sector&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_link_image_shift</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">lattice</span><span class="p">:</span> <span class="n">KagomeLattice</span><span class="p">,</span>
+        <span class="n">link_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">lattice</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span>
+        <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">lattice</span><span class="o">.</span><span class="n">link_cell_displacement</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">kind</span><span class="p">))</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="n">lattice</span><span class="o">.</span><span class="n">sites</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source</span><span class="p">)]</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">lattice</span><span class="o">.</span><span class="n">sites</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">target</span><span class="p">)]</span>
+
+        <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">tx</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">expected_tx</span> <span class="o">=</span> <span class="n">sx</span> <span class="o">+</span> <span class="n">dx</span>
+        <span class="n">expected_ty</span> <span class="o">=</span> <span class="n">sy</span> <span class="o">+</span> <span class="n">dy</span>
+
+        <span class="n">delta_x</span> <span class="o">=</span> <span class="n">expected_tx</span> <span class="o">-</span> <span class="n">tx</span>
+        <span class="n">delta_y</span> <span class="o">=</span> <span class="n">expected_ty</span> <span class="o">-</span> <span class="n">ty</span>
+
+        <span class="k">if</span> <span class="n">delta_x</span> <span class="o">%</span> <span class="n">lattice</span><span class="o">.</span><span class="n">lx</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Link </span><span class="si">{</span><span class="n">link_id</span><span class="si">}</span><span class="s2"> has inconsistent x image shift: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;expected target x </span><span class="si">{</span><span class="n">expected_tx</span><span class="si">}</span><span class="s2">, stored target x </span><span class="si">{</span><span class="n">tx</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">delta_y</span> <span class="o">%</span> <span class="n">lattice</span><span class="o">.</span><span class="n">ly</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Link </span><span class="si">{</span><span class="n">link_id</span><span class="si">}</span><span class="s2"> has inconsistent y image shift: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;expected target y </span><span class="si">{</span><span class="n">expected_ty</span><span class="si">}</span><span class="s2">, stored target y </span><span class="si">{</span><span class="n">ty</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">delta_x</span> <span class="o">//</span> <span class="n">lattice</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span> <span class="n">delta_y</span> <span class="o">//</span> <span class="n">lattice</span><span class="o">.</span><span class="n">ly</span>
+
+<div class="viewcode-block" id="KagomeZ2WindingSector.cut_data">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.z2_winding.KagomeZ2WindingSector.cut_data">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cut_data</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">lattice</span><span class="p">:</span> <span class="n">KagomeLattice</span><span class="p">,</span>
+        <span class="n">direction</span><span class="p">:</span> <span class="n">KagomeCycleDirection</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Z2CutData</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lattice</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">!=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;KagomeZ2WindingSector requires periodic boundary conditions.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;direction must be &#39;a&#39; or &#39;b&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="n">direction_axis</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;a&quot;</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">link_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">lattice</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+            <span class="n">image_shift</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_link_image_shift</span><span class="p">(</span>
+                <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
+                <span class="n">link_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">image_shift</span><span class="p">[</span><span class="n">direction_axis</span><span class="p">])</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">link_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">link_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No links cross the kagome </span><span class="si">{</span><span class="n">direction</span><span class="si">!r}</span><span class="s2"> Z2 cut.&quot;</span><span class="p">)</span>
+
+        <span class="n">variable_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">layout</span><span class="o">.</span><span class="n">link_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">))</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">link_ids</span><span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Z2CutData</span><span class="p">(</span>
+            <span class="n">link_ids</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">link_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cut_data</span><span class="p">(</span>
+            <span class="n">layout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_link_ids&quot;</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">link_ids</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_variable_indices&quot;</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_n_cut_links&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">variable_indices</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_target</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">layout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span>
+            <span class="n">value_convention</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">value_convention</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_link_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">variable_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+<div class="viewcode-block" id="KagomeZ2WindingSector.affected_variables">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.z2_winding.KagomeZ2WindingSector.affected_variables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">affected_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_occupation_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_convention</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_convention</span> <span class="o">==</span> <span class="s2">&quot;flux_pm&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">((</span><span class="n">values</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported value convention: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value_convention</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KagomeZ2WindingSector.value">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.z2_winding.KagomeZ2WindingSector.value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">]</span>
+        <span class="n">occ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_occupation_values</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">occ</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="KagomeZ2WindingSector.is_satisfied">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.z2_winding.KagomeZ2WindingSector.is_satisfied">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_satisfied</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span></div>
+
+
+<div class="viewcode-block" id="KagomeZ2WindingSector.partial_check">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.z2_winding.KagomeZ2WindingSector.partial_check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">partial_check</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">propagate</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">assigned_mask</span><span class="p">)</span><span class="o">.</span><span class="n">consistent</span></div>
+
+
+<div class="viewcode-block" id="KagomeZ2WindingSector.propagate">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.z2_winding.KagomeZ2WindingSector.propagate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">propagate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">assigned_mask</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstraintPropagation</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">assigned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">assigned_mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">assigned_local</span> <span class="o">=</span> <span class="n">assigned</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">]</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">[</span><span class="n">assigned_local</span><span class="p">]]</span>
+        <span class="n">current_parity</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_occupation_values</span><span class="p">(</span><span class="n">values</span><span class="p">))</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">unassigned_variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_indices</span><span class="p">[</span><span class="o">~</span><span class="n">assigned_local</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">unassigned_variables</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">current_parity</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">no_change</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">unassigned_variables</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">unassigned_variables</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">needed_parity</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> <span class="o">-</span> <span class="n">current_parity</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span>
+            <span class="n">local_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">local_space</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">local_occupations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_occupation_values</span><span class="p">(</span><span class="n">local_values</span><span class="p">)</span>
+            <span class="n">allowed_values</span> <span class="o">=</span> <span class="n">local_values</span><span class="p">[(</span><span class="n">local_occupations</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="n">needed_parity</span><span class="p">]</span>
+            <span class="n">unique_allowed_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">allowed_values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">unique_allowed_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">contradiction</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">unique_allowed_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="p">(</span>
+                    <span class="n">forced_assignments</span><span class="o">=</span><span class="p">((</span><span class="n">variable_index</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">unique_allowed_values</span><span class="p">[</span><span class="mi">0</span><span class="p">])),)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ConstraintPropagation</span><span class="o">.</span><span class="n">no_change</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="KagomeZ2WindingSector.allowed_targets">
+<a class="viewcode-back" href="../../../qlinks.constraints.html#qlinks.constraints.z2_winding.KagomeZ2WindingSector.allowed_targets">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">allowed_targets</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+        <span class="n">lattice</span><span class="p">:</span> <span class="n">KagomeLattice</span><span class="p">,</span>
+        <span class="n">direction</span><span class="p">:</span> <span class="n">KagomeCycleDirection</span><span class="p">,</span>
+        <span class="n">value_convention</span><span class="p">:</span> <span class="n">Z2ValueConvention</span> <span class="o">=</span> <span class="s2">&quot;binary&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">cut_data</span><span class="p">(</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value_convention</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span> <span class="s2">&quot;flux_pm&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;value_convention must be &#39;binary&#39; or &#39;flux_pm&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
