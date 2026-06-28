@@ -27,7 +27,10 @@ repos:
     rev: 7.3.0
     hooks:
     -   id: flake8
-        additional_dependencies: [Flake8-pyproject]
+        additional_dependencies:
+        - Flake8-pyproject==1.2.4
+        - flake8-bugbear==25.11.29
+        - pep8-naming==0.14.1
 
 -   repo: https://github.com/python-poetry/poetry
     rev: 2.4.1
