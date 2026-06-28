@@ -152,9 +152,9 @@ class LogicalOperatorReport:
 
         from qlinks.qec.reporting import add_summary_rows, format_float, require_rich
 
-        _group, Panel, Table, _text = require_rich("LogicalOperatorReport")
+        _group, panel_cls, table_cls, _text = require_rich("LogicalOperatorReport")
         best = self.best_candidate
-        overview = Table.grid(padding=(0, 2))
+        overview = table_cls.grid(padding=(0, 2))
         overview.add_column(style="bold")
         overview.add_column()
         add_summary_rows(
@@ -170,7 +170,7 @@ class LogicalOperatorReport:
             ),
         )
 
-        table = Table(title="Top projected operators")
+        table = table_cls(title="Top projected operators")
         table.add_column("name")
         table.add_column("weight", justify="right")
         table.add_column("logical strength", justify="right")
@@ -187,7 +187,7 @@ class LogicalOperatorReport:
                 str(candidate.support_variables),
             )
 
-        return Panel(Group(overview, table), title="Projected logical operators")
+        return panel_cls(Group(overview, table), title="Projected logical operators")
 
 
 def search_projected_logical_operators(

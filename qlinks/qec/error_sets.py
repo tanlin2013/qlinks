@@ -392,8 +392,8 @@ class LocalErrorSet:
 
         from qlinks.qec.reporting import add_summary_rows, require_rich
 
-        _group, Panel, Table, _text = require_rich("LocalErrorSet")
-        overview = Table.grid(padding=(0, 2))
+        _group, panel_cls, table_cls, _text = require_rich("LocalErrorSet")
+        overview = table_cls.grid(padding=(0, 2))
         overview.add_column(style="bold")
         overview.add_column()
         summary = self.to_summary_dict(max_errors=max_errors)
@@ -407,7 +407,7 @@ class LocalErrorSet:
             ),
         )
 
-        error_table = Table(title="Preview errors")
+        error_table = table_cls(title="Preview errors")
         error_table.add_column("name")
         error_table.add_column("kind")
         error_table.add_column("weight", justify="right")
@@ -422,7 +422,7 @@ class LocalErrorSet:
         if len(self.errors) > max_errors:
             error_table.caption = f"Showing {max_errors} of {len(self.errors)} errors"
 
-        return Panel(Group(overview, error_table), title=f"Local error set: {self.name}")
+        return panel_cls(Group(overview, error_table), title=f"Local error set: {self.name}")
 
 
 def _single_variable_error_operators(

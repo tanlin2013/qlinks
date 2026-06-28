@@ -203,7 +203,7 @@ class CageSectorCollection:
                 items.append((sector_label, value[0], value[1]))
                 continue
             basis = _extract_basis(value)
-            cage_result = getattr(value, "cage_result")
+            cage_result = value.cage_result
             items.append((sector_label, basis, cage_result))
         return cls.from_sector_results(items, **kwargs)
 
@@ -512,9 +512,9 @@ class CageSectorCollection:
 
         from qlinks.qec.reporting import add_summary_rows, require_rich
 
-        _group, Panel, Table, _text = require_rich("CageSectorCollection")
+        _group, panel_cls, table_cls, _text = require_rich("CageSectorCollection")
         summary = self.to_summary_dict(max_entries=max_entries)
-        overview = Table.grid(padding=(0, 2))
+        overview = table_cls.grid(padding=(0, 2))
         overview.add_column(style="bold")
         overview.add_column()
         add_summary_rows(
@@ -528,7 +528,7 @@ class CageSectorCollection:
             ),
         )
 
-        table = Table(title="Preview records")
+        table = table_cls(title="Preview records")
         table.add_column("sector")
         table.add_column("signature")
         table.add_column("record", justify="right")
@@ -543,7 +543,7 @@ class CageSectorCollection:
         if len(self.entries) > max_entries:
             table.caption = f"Showing {max_entries} of {len(self.entries)} records"
 
-        return Panel(Group(overview, table), title="Cage sector collection")
+        return panel_cls(Group(overview, table), title="Cage sector collection")
 
 
 def union_basis_from_sector_bases(
@@ -607,8 +607,8 @@ def _record_vector(record: Any, basis: BasisLike) -> npt.NDArray[np.complex128]:
             )
         return vector
 
-    support = np.asarray(getattr(record, "support"), dtype=np.int64)
-    local_state = np.asarray(getattr(record, "local_state"), dtype=np.complex128)
+    support = np.asarray(record.support, dtype=np.int64)
+    local_state = np.asarray(record.local_state, dtype=np.complex128)
     if support.ndim != 1 or local_state.ndim != 1 or support.size != local_state.size:
         raise ValueError("Each cage record must provide matching support/local_state arrays.")
 

@@ -165,8 +165,8 @@ class LocalIndistinguishabilityReport:
 
         from qlinks.qec.reporting import add_summary_rows, format_bool, format_float, require_rich
 
-        _group, Panel, Table, _text = require_rich("LocalIndistinguishabilityReport")
-        overview = Table.grid(padding=(0, 2))
+        _group, panel_cls, table_cls, _text = require_rich("LocalIndistinguishabilityReport")
+        overview = table_cls.grid(padding=(0, 2))
         overview.add_column(style="bold")
         overview.add_column()
         add_summary_rows(
@@ -184,7 +184,7 @@ class LocalIndistinguishabilityReport:
             ),
         )
 
-        table = Table(title="Weight scan")
+        table = table_cls(title="Weight scan")
         table.add_column("max weight", justify="right")
         table.add_column("errors", justify="right")
         table.add_column("passes KL")
@@ -203,7 +203,7 @@ class LocalIndistinguishabilityReport:
                 str(summary.dominant_failure),
             )
 
-        return Panel(
+        return panel_cls(
             Group(overview, table),
             title=f"Local indistinguishability profile: {self.error_set_name}",
         )
@@ -304,8 +304,8 @@ class QECCodeCandidateReport:
 
         from qlinks.qec.reporting import add_summary_rows, format_bool, require_rich
 
-        _group, Panel, Table, _text = require_rich("QECCodeCandidateReport")
-        overview = Table.grid(padding=(0, 2))
+        _group, panel_cls, table_cls, _text = require_rich("QECCodeCandidateReport")
+        overview = table_cls.grid(padding=(0, 2))
         overview.add_column(style="bold")
         overview.add_column()
         add_summary_rows(
@@ -330,7 +330,7 @@ class QECCodeCandidateReport:
             )
         if self.error_algebra is not None:
             renderables.append(self.error_algebra.to_rich())
-        return Panel(Group(*renderables), title="QEC code candidate")
+        return panel_cls(Group(*renderables), title="QEC code candidate")
 
 
 @dataclass(frozen=True, slots=True)
@@ -441,9 +441,9 @@ class CageQECScanReport:
 
         from qlinks.qec.reporting import add_summary_rows, format_bool, require_rich
 
-        _group, Panel, Table, _text = require_rich("CageQECScanReport")
+        _group, panel_cls, table_cls, _text = require_rich("CageQECScanReport")
         best = self.best_by_indistinguishability_weight
-        overview = Table.grid(padding=(0, 2))
+        overview = table_cls.grid(padding=(0, 2))
         overview.add_column(style="bold")
         overview.add_column()
         add_summary_rows(
@@ -459,7 +459,7 @@ class CageQECScanReport:
             ),
         )
 
-        table = Table(title="Candidate overview")
+        table = table_cls(title="Candidate overview")
         table.add_column("signature")
         table.add_column("dim", justify="right")
         table.add_column("records", justify="right")
@@ -478,7 +478,7 @@ class CageQECScanReport:
         if len(self.candidate_reports) > max_candidates:
             table.caption = f"Showing {max_candidates} of {len(self.candidate_reports)} candidates"
 
-        return Panel(Group(overview, table), title="Cage QEC scan")
+        return panel_cls(Group(overview, table), title="Cage QEC scan")
 
 
 def diagnose_local_indistinguishability(

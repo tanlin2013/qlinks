@@ -143,8 +143,8 @@ class ProjectedErrorAlgebraReport:
         """Return a rich renderable projected-error-algebra summary."""
         from qlinks.qec.reporting import add_summary_rows, format_bool, require_rich
 
-        _group, Panel, Table, _text = require_rich("ProjectedErrorAlgebraReport")
-        table = Table.grid(padding=(0, 2))
+        _group, panel_cls, table_cls, _text = require_rich("ProjectedErrorAlgebraReport")
+        table = table_cls.grid(padding=(0, 2))
         table.add_column(style="bold")
         table.add_column()
         add_summary_rows(
@@ -165,7 +165,7 @@ class ProjectedErrorAlgebraReport:
                 ("interpretation", self.interpretation),
             ),
         )
-        return Panel(table, title=f"Projected error algebra: {self.error_set_name}")
+        return panel_cls(table, title=f"Projected error algebra: {self.error_set_name}")
 
 
 def diagnose_projected_error_algebra(

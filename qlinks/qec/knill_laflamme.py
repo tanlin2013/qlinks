@@ -264,8 +264,8 @@ class KnillLaflammeReport:
 
         from qlinks.qec.reporting import add_summary_rows, format_bool, format_float, require_rich
 
-        _group, Panel, Table, _text = require_rich("KnillLaflammeReport")
-        overview = Table.grid(padding=(0, 2))
+        _group, panel_cls, table_cls, _text = require_rich("KnillLaflammeReport")
+        overview = table_cls.grid(padding=(0, 2))
         overview.add_column(style="bold")
         overview.add_column()
         add_summary_rows(
@@ -281,7 +281,7 @@ class KnillLaflammeReport:
             ),
         )
 
-        pair_table = Table(title="Worst KL pairs")
+        pair_table = table_cls(title="Worst KL pairs")
         pair_table.add_column("left")
         pair_table.add_column("right")
         pair_table.add_column("rel KL", justify="right")
@@ -300,7 +300,7 @@ class KnillLaflammeReport:
                 pair.dominant_failure,
             )
 
-        leakage_table = Table(title="Largest leakage images")
+        leakage_table = table_cls(title="Largest leakage images")
         leakage_table.add_column("error")
         leakage_table.add_column("relative leakage", justify="right")
         leakage_table.add_column("||leakage||_F", justify="right")
@@ -317,7 +317,7 @@ class KnillLaflammeReport:
                 str(image.support_variables),
             )
 
-        return Panel(
+        return panel_cls(
             Group(overview, pair_table, leakage_table),
             title=f"Knill-Laflamme report: {self.error_set_name}",
         )

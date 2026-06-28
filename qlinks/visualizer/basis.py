@@ -160,8 +160,8 @@ def _local_structure_entries_from_readout_report(
             coeff_labels.append(f"({_coeff})/sqrt(2)")
 
         patterns = [
-            tuple(int(v) for v in getattr(pair, "pattern_a")),
-            tuple(int(v) for v in getattr(pair, "pattern_b")),
+            tuple(int(v) for v in pair.pattern_a),
+            tuple(int(v) for v in pair.pattern_b),
         ]
         for state_index, (pattern, coeff_label) in enumerate(
             zip(patterns[:max_states], coeff_labels[:max_states], strict=True)
@@ -187,7 +187,7 @@ def _local_structure_entries_from_readout_report(
             entries.append(
                 _LocalStructurePlotEntry(
                     variable_indices=variable_indices,
-                    pattern=tuple(int(v) for v in getattr(sector, "pattern")),
+                    pattern=tuple(int(v) for v in sector.pattern),
                     label=(
                         f"{prefix}frozen {sector_index}\n"
                         f"weight={float(getattr(sector, 'weight', 0.0)):.3g}"

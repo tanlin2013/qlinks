@@ -276,8 +276,8 @@ class CageSectorMatchingReport:
 
         from qlinks.qec.reporting import add_summary_rows, format_bool, format_float, require_rich
 
-        _group, Panel, Table, _text = require_rich("CageSectorMatchingReport")
-        overview = Table.grid(padding=(0, 2))
+        _group, panel_cls, table_cls, _text = require_rich("CageSectorMatchingReport")
+        overview = table_cls.grid(padding=(0, 2))
         overview.add_column(style="bold")
         overview.add_column()
         add_summary_rows(
@@ -295,7 +295,7 @@ class CageSectorMatchingReport:
             ),
         )
 
-        table = Table(title="Top matched subsets")
+        table = table_cls(title="Top matched subsets")
         table.add_column("score", justify="right")
         table.add_column("max pairwise", justify="right")
         table.add_column("mean pairwise", justify="right")
@@ -313,7 +313,7 @@ class CageSectorMatchingReport:
         if len(self.candidates) > max_candidates:
             table.caption = f"Showing {max_candidates} of {len(self.candidates)} candidates"
 
-        return Panel(Group(overview, table), title="Cage sector matching report")
+        return panel_cls(Group(overview, table), title="Cage sector matching report")
 
 
 @dataclass(frozen=True, slots=True)

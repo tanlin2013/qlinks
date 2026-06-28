@@ -214,8 +214,8 @@ class CodeSpace:
                 row_vectors[row, :] = vector
                 continue
 
-            support = np.asarray(getattr(record, "support"), dtype=np.int64)
-            local_state = np.asarray(getattr(record, "local_state"), dtype=np.complex128)
+            support = np.asarray(record.support, dtype=np.int64)
+            local_state = np.asarray(record.local_state, dtype=np.complex128)
             if support.ndim != 1 or local_state.ndim != 1 or support.size != local_state.size:
                 raise ValueError(
                     "Each compact cage record must provide matching support/local_state."
@@ -252,7 +252,7 @@ class CodeSpace:
         is the intended producer, but the loose dependency keeps this class
         independent of the collection module.
         """
-        ambient_basis = getattr(collection, "ambient_basis")
+        ambient_basis = collection.ambient_basis
         row_vectors = collection.to_ambient_row_vectors()
         default_labels = tuple(labels)
         if not default_labels:
@@ -340,8 +340,8 @@ class CodeSpace:
         """Return a rich renderable summary of the code space."""
         from qlinks.qec.reporting import add_summary_rows, require_rich
 
-        _group, Panel, Table, _text = require_rich("CodeSpace")
-        table = Table.grid(padding=(0, 2))
+        _group, panel_cls, table_cls, _text = require_rich("CodeSpace")
+        table = table_cls.grid(padding=(0, 2))
         table.add_column(style="bold")
         table.add_column()
         add_summary_rows(
@@ -352,4 +352,4 @@ class CodeSpace:
                 ("labels", tuple(repr(label) for label in self.labels)),
             ),
         )
-        return Panel(table, title="Code space")
+        return panel_cls(table, title="Code space")
