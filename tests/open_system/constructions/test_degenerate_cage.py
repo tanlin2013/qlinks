@@ -157,3 +157,39 @@ def test_degenerate_cage_lindblad_construction_from_records_validates_signature(
     assert construction.record_signature == (0, 4)
     assert construction.manifold_dimension == 2
     assert construction.n_jumps == 1
+
+
+def test_degenerate_construction_reports_full_local_support_when_no_nullity():
+    build_result = _two_bit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=np.eye(4, dtype=np.complex128),
+        local_regions=((0, 1),),
+    )
+
+    assert construction.n_jumps == 0
+    report = construction.local_subspace_support_report
+    summary = report.to_summary_dict()
+    assert summary["n_regions"] == 1
+    assert summary["n_regions_with_nullity"] == 0
+    assert summary["all_regions_have_full_local_support"] is True
+    assert summary["entries"][0]["status"] == "full_local_support"
+    assert summary["entries"][0]["parent_detector_directions"] == 0
+
+
+def test_degenerate_construction_rich_reports_render():
+    from rich.console import Console
+
+    build_result = _two_bit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_two_state_manifold_rows(),
+        local_regions=((0, 1),),
+    )
+
+    console = Console(record=True, width=120)
+    console.print(construction)
+    rendered = console.export_text()
+    assert "Degenerate cage Lindblad construction" in rendered
+    assert "Local manifold-support report" in rendered
+    assert "selected" in rendered

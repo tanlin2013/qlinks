@@ -199,6 +199,274 @@ class LocalRecyclingBuildResult:
             for selection in self.selections
         )
 
+    def to_subspace_support_report(self) -> "LocalSubspaceSupportReport":
+        """Return a local-support/nullity report for the scanned regions."""
+        return local_subspace_support_report_from_recycling_build_result(self)
+
+
+@dataclass(frozen=True, slots=True)
+class LocalSubspaceSupportReportEntry:
+    """Local support/nullity diagnostics for one candidate region.
+
+    The local RDM is the reduced density matrix of the normalized projector onto
+    a target subspace.  ``nullity`` is the number of local source directions
+    annihilated by the target manifold.  If it is zero, no strictly local
+    right-detector ``D_R`` on this region can satisfy ``D_R P_M = 0``.
+    """
+
+    variable_indices: tuple[int, ...]
+    local_dim: int
+    support_rank: int
+    nullity: int
+    support_trace: float
+    min_nonzero_eigenvalue: float | None
+    max_eigenvalue: float | None
+    n_candidate_jumps: int
+    n_selected_jumps: int
+
+    @property
+    def n_variables(self) -> int:
+        return len(self.variable_indices)
+
+    @property
+    def has_local_null_detector(self) -> bool:
+        return self.nullity > 0
+
+    @property
+    def has_selected_recycler(self) -> bool:
+        return self.n_selected_jumps > 0
+
+    @property
+    def parent_detector_directions(self) -> int:
+        # Operators annihilating the local support have arbitrary output from
+        # every local null-source direction.
+        return int(self.local_dim * self.nullity)
+
+    @property
+    def minimum_block_reset_channels(self) -> int:
+        if self.support_rank <= 0 or self.nullity <= 0:
+            return 0
+        return int((self.nullity + self.support_rank - 1) // self.support_rank)
+
+    @property
+    def status(self) -> str:
+        if self.nullity == 0:
+            return "full_local_support"
+        if self.n_selected_jumps > 0:
+            return "selected_recyclers"
+        if self.n_candidate_jumps > 0:
+            return "candidates_not_selected"
+        return "null_detectors_no_inflow"
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "variable_indices": self.variable_indices,
+            "n_variables": self.n_variables,
+            "local_dim": self.local_dim,
+            "support_rank": self.support_rank,
+            "nullity": self.nullity,
+            "support_trace": self.support_trace,
+            "min_nonzero_eigenvalue": self.min_nonzero_eigenvalue,
+            "max_eigenvalue": self.max_eigenvalue,
+            "parent_detector_directions": self.parent_detector_directions,
+            "minimum_block_reset_channels": self.minimum_block_reset_channels,
+            "n_candidate_jumps": self.n_candidate_jumps,
+            "n_selected_jumps": self.n_selected_jumps,
+            "status": self.status,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LocalSubspaceSupportReport:
+    """Local-support report explaining manifold recycler availability."""
+
+    entries: tuple[LocalSubspaceSupportReportEntry, ...]
+
+    @property
+    def n_regions(self) -> int:
+        return len(self.entries)
+
+    @property
+    def n_regions_with_nullity(self) -> int:
+        return sum(1 for entry in self.entries if entry.nullity > 0)
+
+    @property
+    def n_regions_with_selected_recyclers(self) -> int:
+        return sum(1 for entry in self.entries if entry.n_selected_jumps > 0)
+
+    @property
+    def total_candidate_jumps(self) -> int:
+        return sum(entry.n_candidate_jumps for entry in self.entries)
+
+    @property
+    def total_selected_jumps(self) -> int:
+        return sum(entry.n_selected_jumps for entry in self.entries)
+
+    @property
+    def all_regions_have_full_local_support(self) -> bool:
+        return self.n_regions > 0 and self.n_regions_with_nullity == 0
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_regions": self.n_regions,
+            "n_regions_with_nullity": self.n_regions_with_nullity,
+            "n_regions_with_selected_recyclers": self.n_regions_with_selected_recyclers,
+            "total_candidate_jumps": self.total_candidate_jumps,
+            "total_selected_jumps": self.total_selected_jumps,
+            "all_regions_have_full_local_support": self.all_regions_have_full_local_support,
+            "entries": [entry.to_summary_dict() for entry in self.entries],
+        }
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_regions: int = 24):
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "LocalSubspaceSupportReport.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        overview.add_row("regions", str(self.n_regions))
+        overview.add_row("regions with local nullity", str(self.n_regions_with_nullity))
+        overview.add_row(
+            "regions with selected recyclers",
+            str(self.n_regions_with_selected_recyclers),
+        )
+        overview.add_row("candidate jumps", str(self.total_candidate_jumps))
+        overview.add_row("selected jumps", str(self.total_selected_jumps))
+        overview.add_row(
+            "all full local support",
+            str(self.all_regions_have_full_local_support),
+        )
+
+        table = Table(title="Local manifold support by region")
+        table.add_column("region", style="bold")
+        table.add_column("dim", justify="right")
+        table.add_column("rank", justify="right")
+        table.add_column("null", justify="right")
+        table.add_column("parent dirs", justify="right")
+        table.add_column("block min", justify="right")
+        table.add_column("cand", justify="right")
+        table.add_column("sel", justify="right")
+        table.add_column("status")
+
+        shown = self.entries[: max(int(max_regions), 0)]
+        for entry in shown:
+            table.add_row(
+                str(entry.variable_indices),
+                str(entry.local_dim),
+                str(entry.support_rank),
+                str(entry.nullity),
+                str(entry.parent_detector_directions),
+                str(entry.minimum_block_reset_channels),
+                str(entry.n_candidate_jumps),
+                str(entry.n_selected_jumps),
+                _rich_status_for_local_subspace_entry(entry),
+            )
+
+        if len(self.entries) > len(shown):
+            table.add_row(
+                "…",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                f"{len(self.entries) - len(shown)} more regions",
+            )
+
+        return Panel(
+            Group(overview, table),
+            title=Text("Local manifold-support report", style="bold cyan"),
+            border_style="cyan",
+        )
+
+
+def local_subspace_support_report_from_recycling_build_result(
+    build_result: LocalRecyclingBuildResult,
+) -> LocalSubspaceSupportReport:
+    """Summarize local RDM support/nullity and selected recyclers by region."""
+    selected_counts: dict[tuple[int, ...], int] = {}
+    for selection in build_result.selections:
+        key = tuple(int(index) for index in selection.candidate.variable_indices)
+        selected_counts[key] = selected_counts.get(key, 0) + 1
+
+    entries: list[LocalSubspaceSupportReportEntry] = []
+    for scan_result in build_result.scan_results:
+        rdm = scan_result.reduced_density_matrix
+        support_eigenvalues = tuple(float(value) for value in rdm.eigenvalues[-rdm.support_rank :])
+        key = tuple(int(index) for index in rdm.variable_indices)
+        entries.append(
+            LocalSubspaceSupportReportEntry(
+                variable_indices=key,
+                local_dim=rdm.local_dim,
+                support_rank=rdm.support_rank,
+                nullity=rdm.nullity,
+                support_trace=float(np.trace(rdm.density_matrix).real),
+                min_nonzero_eigenvalue=(min(support_eigenvalues) if support_eigenvalues else None),
+                max_eigenvalue=(max(support_eigenvalues) if support_eigenvalues else None),
+                n_candidate_jumps=scan_result.n_candidates,
+                n_selected_jumps=selected_counts.get(key, 0),
+            )
+        )
+
+    return LocalSubspaceSupportReport(entries=tuple(entries))
+
+
+def _rich_status_for_local_subspace_entry(entry: LocalSubspaceSupportReportEntry) -> str:
+    if entry.status == "full_local_support":
+        return "[yellow]full local support[/yellow]"
+    if entry.status == "selected_recyclers":
+        return "[green]selected[/green]"
+    if entry.status == "candidates_not_selected":
+        return "[yellow]not selected[/yellow]"
+    return "[red]no inflow candidates[/red]"
+
+
+def local_subspace_support_report_for_subspace(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    states: npt.ArrayLike,
+    regions: tuple[tuple[int, ...], ...],
+    source: RecyclingJumpSource = "local_rdm_block_reset",
+    deduplicate_regions: bool = False,
+    max_jumps_per_region: int = 1,
+    rdm_tolerance: float = 1e-10,
+    dark_tolerance: float = 1e-10,
+    inflow_tolerance: float = 1e-12,
+    max_candidates_per_region: int | None = None,
+    prefer_sparse: bool = True,
+    two_pattern_tolerance: float = 1e-8,
+) -> LocalSubspaceSupportReport:
+    """Build only the local manifold-support report for candidate regions."""
+    return local_subspace_support_report_from_recycling_build_result(
+        build_local_recycling_jumps_from_subspace_regions(
+            basis_configs=basis_configs,
+            states=states,
+            regions=regions,
+            source=source,
+            deduplicate_regions=deduplicate_regions,
+            max_jumps_per_region=max_jumps_per_region,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            max_candidates_per_region=max_candidates_per_region,
+            prefer_sparse=prefer_sparse,
+            two_pattern_tolerance=two_pattern_tolerance,
+        )
+    )
+
 
 def _local_pattern_basis_context_from_basis(
     *,

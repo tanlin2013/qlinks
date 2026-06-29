@@ -113,3 +113,30 @@ def test_diagnose_dark_manifold_flags_extra_external_dark_sector():
     assert diagnostics.extra_nondecaying_mode_count > 0
     assert diagnostics.bad_common_jump_kernel_dimension > 0
     assert diagnostics.likely_attractive_dark_manifold is False
+
+
+def test_dark_manifold_diagnostics_rich_report_renders():
+    from rich.console import Console
+
+    hamiltonian = np.zeros((3, 3), dtype=np.complex128)
+    manifold = np.column_stack([_basis_vector(3, 0), _basis_vector(3, 1)])
+    jumps = [
+        np.array(
+            [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+            dtype=np.complex128,
+        )
+    ]
+
+    diagnostics = diagnose_dark_manifold(
+        hamiltonian=hamiltonian,
+        jumps=jumps,
+        target_states=manifold,
+        liouvillian_spectrum_method="dense",
+    )
+
+    console = Console(record=True, width=120)
+    console.print(diagnostics)
+    rendered = console.export_text()
+    assert "Dark-manifold diagnostics" in rendered
+    assert "Target manifold checks" in rendered
+    assert "Liouvillian spectrum" in rendered

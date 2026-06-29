@@ -17,8 +17,10 @@ from qlinks.open_system.constructions.cage import _local_terms_by_operator_kind
 from qlinks.open_system.diagnostics import DarkManifoldDiagnostics, diagnose_dark_manifold
 from qlinks.open_system.local_recycling import (
     LocalRecyclingBuildResult,
+    LocalSubspaceSupportReport,
     RecyclingJumpSource,
     build_local_recycling_jumps_from_subspace_regions,
+    local_subspace_support_report_from_recycling_build_result,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
 from qlinks.open_system.solvers import LindbladProblem
@@ -216,6 +218,10 @@ def _manifold_density_matrix(
     return projector / float(manifold_basis.shape[1])
 
 
+def _format_float(value: float) -> str:
+    return f"{value:.3e}"
+
+
 @dataclass(frozen=True, slots=True)
 class DegenerateCageLindbladConstruction:
     """Lindblad construction targeting a cage-state manifold in one sector.
@@ -255,6 +261,16 @@ class DegenerateCageLindbladConstruction:
     def target_density_matrix(self) -> NDArray[np.complex128]:
         return _manifold_density_matrix(self.manifold_basis)
 
+    @property
+    def local_subspace_support_report(self) -> LocalSubspaceSupportReport:
+        """Explain local manifold support/nullity for each recycling region."""
+        return local_subspace_support_report_from_recycling_build_result(
+            self.recycling_build_result
+        )
+
+    def __rich__(self):
+        return self.to_rich()
+
     def to_summary_dict(self) -> dict[str, object]:
         return {
             "hilbert_dimension": self.hilbert_dimension,
@@ -269,9 +285,58 @@ class DegenerateCageLindbladConstruction:
             "jump_residuals": self.jump_residuals,
             "inflow_norm": self.inflow_norm,
             "liouvillian_residual": self.liouvillian_residual,
+            "local_subspace_support": self.local_subspace_support_report.to_summary_dict(),
             "recycling_variable_indices": self.recycling_build_result.variable_indices,
             "recycling_alpha_beta_indices": self.recycling_build_result.alpha_beta_indices,
         }
+
+    def to_rich(self, *, max_regions: int = 24):
+        """Return a rich renderable summary of the degenerate construction."""
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "DegenerateCageLindbladConstruction.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        overview.add_row("Hilbert dimension", str(self.hilbert_dimension))
+        overview.add_row("manifold dimension", str(self.manifold_dimension))
+        overview.add_row("record signature", str(self.record_signature))
+        overview.add_row("jumps", str(self.n_jumps))
+        overview.add_row("regions", str(len(self.local_regions)))
+        overview.add_row("recycling source", str(self.recycling_jump_source))
+
+        checks = Table(title="Construction checks")
+        checks.add_column("quantity", style="bold")
+        checks.add_column("value", justify="right")
+        checks.add_row("H closure residual", _format_float(self.hamiltonian_closure_residual))
+        checks.add_row("max ||J_mu P_M||", _format_float(self.max_jump_residual))
+        checks.add_row("inflow norm", _format_float(self.inflow_norm))
+        checks.add_row(
+            "||L(P_M/m)||",
+            (
+                "not checked"
+                if self.liouvillian_residual is None
+                else _format_float(float(self.liouvillian_residual))
+            ),
+        )
+
+        return Panel(
+            Group(
+                overview,
+                checks,
+                self.local_subspace_support_report.to_rich(max_regions=max_regions),
+            ),
+            title=Text("Degenerate cage Lindblad construction", style="bold cyan"),
+            border_style="cyan",
+        )
 
     def to_lindblad_problem(
         self,

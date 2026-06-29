@@ -1376,6 +1376,132 @@ class DarkManifoldDiagnostics:
             "likely_attractive_dark_manifold": self.likely_attractive_dark_manifold,
         }
 
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self):
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "DarkManifoldDiagnostics.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        overview.add_row("Hilbert dimension", str(self.dim))
+        overview.add_row("number of jumps", str(self.n_jumps))
+        overview.add_row("manifold dimension", str(self.manifold_dimension))
+        overview.add_row(
+            "likely attractive dark manifold",
+            str(self.likely_attractive_dark_manifold),
+        )
+
+        target = Table(title="Target manifold checks")
+        target.add_column("quantity", style="bold")
+        target.add_column("value", justify="right")
+        target.add_column("status", justify="center")
+        target.add_row(
+            "||(I-P_M) H P_M||",
+            _format_float(self.hamiltonian_closure_residual),
+            _status_for_residual(self.hamiltonian_closure_residual),
+        )
+        target.add_row(
+            "max ||J_mu P_M||",
+            _format_float(self.max_target_jump_residual),
+            _status_for_residual(self.max_target_jump_residual),
+        )
+        target.add_row(
+            "||L(P_M/m)||",
+            _format_float(self.target_density_liouvillian_residual),
+            _status_for_residual(self.target_density_liouvillian_residual),
+        )
+        target.add_row(
+            "inflow ||P_M J Q_M||",
+            _format_float(self.inflow_norm),
+            "[green]yes[/green]" if self.inflow_norm > 1e-12 else "[yellow]none[/yellow]",
+        )
+
+        jump_kernel = Table(title="Common jump kernel")
+        jump_kernel.add_column("quantity", style="bold")
+        jump_kernel.add_column("value", justify="right")
+        jump_kernel.add_row("dim intersection ker J_mu", str(self.common_jump_kernel_dimension))
+        jump_kernel.add_row(
+            "target projection onto kernel",
+            _format_float(self.target_projection_onto_common_kernel),
+        )
+        jump_kernel.add_row(
+            "target distance from kernel",
+            _format_float(self.target_distance_from_common_kernel),
+        )
+        jump_kernel.add_row("target in kernel", str(self.target_in_common_jump_kernel))
+        jump_kernel.add_row(
+            "bad complement kernel dim",
+            str(self.bad_common_jump_kernel_dimension),
+        )
+        jump_kernel.add_row(
+            "bad-kernel IPRs",
+            _format_float_tuple(self.bad_common_jump_kernel_iprs),
+        )
+
+        internal = Table(title="Internal non-decaying modes")
+        internal.add_column("quantity", style="bold")
+        internal.add_column("value", justify="right")
+        internal.add_row(
+            "expected zero modes",
+            str(self.expected_internal_zero_mode_count),
+        )
+        internal.add_row(
+            "expected peripheral modes",
+            str(self.expected_internal_peripheral_mode_count),
+        )
+        internal.add_row(
+            "matched internal modes",
+            _format_optional_int(self.matched_internal_nondecaying_mode_count),
+        )
+        internal.add_row(
+            "missing internal modes",
+            _format_optional_int(self.missing_internal_nondecaying_mode_count),
+        )
+
+        liouvillian = Table(title="Liouvillian spectrum")
+        liouvillian.add_column("quantity", style="bold")
+        liouvillian.add_column("value", justify="right")
+        liouvillian.add_row("spectrum method", self.liouvillian_spectrum_method)
+        liouvillian.add_row(
+            "zero-mode count",
+            _format_optional_int(
+                self.liouvillian_zero_mode_count,
+                lower_bound=self.liouvillian_zero_mode_count_is_lower_bound,
+            ),
+        )
+        liouvillian.add_row(
+            "peripheral mode count",
+            _format_optional_int(self.liouvillian_peripheral_mode_count),
+        )
+        liouvillian.add_row(
+            "extra non-decaying modes",
+            _format_optional_int(self.extra_nondecaying_mode_count),
+        )
+        liouvillian.add_row("extra zero modes", _format_optional_int(self.extra_zero_mode_count))
+        liouvillian.add_row(
+            "absolute spectral gap",
+            _format_float_or_none(self.liouvillian_spectral_gap),
+        )
+        liouvillian.add_row("decay gap", _format_float_or_none(self.liouvillian_decay_gap))
+        liouvillian.add_row("external decay gap", _format_float_or_none(self.external_decay_gap))
+
+        return Panel(
+            Group(overview, target, jump_kernel, internal, liouvillian),
+            title=Text("Dark-manifold diagnostics", style="bold cyan"),
+            border_style="cyan",
+        )
+
 
 def diagnose_dark_manifold(
     *,
@@ -2649,6 +2775,12 @@ def _format_float_tuple(
 
     head = ", ".join(_format_float(value) for value in values[:max_items])
     return f"{head}, ... ({len(values)} total)"
+
+
+def _format_optional_int(value: int | None, *, lower_bound: bool = False) -> str:
+    if value is None:
+        return "not checked"
+    return f"{value}{'+' if lower_bound else ''}"
 
 
 def _status_for_residual(
