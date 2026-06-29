@@ -525,7 +525,7 @@ construction routines.</p>
 <p>The open-system layer is intended for Lindblad dark-state engineering and
 verification around cage states.  The high-level caging entry point constructs a
 problem from a type-1 cage, its classification report, and model metadata:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_type1_cage_lindblad_construction</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.constructions</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_type1_cage_lindblad_construction</span>
 
 <span class="n">construction</span> <span class="o">=</span> <span class="n">build_type1_cage_lindblad_construction</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>

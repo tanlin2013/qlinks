@@ -691,6 +691,153 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_state_matrix_columns</span><span class="p">(</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state vector has incompatible dimension.&quot;</span><span class="p">)</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">dim</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">dim</span><span class="p">:</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state matrix must have shape (dim, n_states) or &quot;</span> <span class="s2">&quot;(n_states, dim).&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;states must be a vector or a two-dimensional matrix.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state matrix must contain at least one state.&quot;</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="n">rank_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">r</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">tolerance</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">rank_mask</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state matrix has numerical rank zero.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">q</span><span class="p">[:,</span> <span class="p">:</span><span class="n">rank</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_local_reduced_density_matrix_from_basis_context_and_states</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">context</span><span class="p">:</span> <span class="n">_LocalPatternBasisContext</span><span class="p">,</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalReducedDensityMatrix</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the local RDM of the normalized projector onto a state subspace.&quot;&quot;&quot;</span>
+    <span class="n">state_basis</span> <span class="o">=</span> <span class="n">_normalize_state_matrix_columns</span><span class="p">(</span>
+        <span class="n">states</span><span class="p">,</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">density_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">state_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">state_basis</span><span class="p">[:,</span> <span class="n">state_index</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">basis_indices</span><span class="p">,</span> <span class="n">local_indices</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">environment_groups</span><span class="p">:</span>
+            <span class="n">group_amplitudes</span> <span class="o">=</span> <span class="n">amplitudes</span><span class="p">[</span><span class="n">basis_indices</span><span class="p">]</span>
+            <span class="n">density_matrix</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">local_indices</span><span class="p">,</span> <span class="n">local_indices</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span>
+                <span class="n">group_amplitudes</span><span class="p">,</span>
+                <span class="n">group_amplitudes</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span>
+            <span class="p">)</span>
+
+    <span class="n">density_matrix</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">density_matrix</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">density_matrix</span> <span class="o">+</span> <span class="n">density_matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">density_matrix</span><span class="p">)</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="n">support_mask</span> <span class="o">=</span> <span class="n">eigenvalues</span> <span class="o">&gt;</span> <span class="n">tolerance</span>
+    <span class="n">null_mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">support_mask</span>
+
+    <span class="k">return</span> <span class="n">LocalReducedDensityMatrix</span><span class="p">(</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span>
+        <span class="n">local_patterns</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">local_patterns</span><span class="p">,</span>
+        <span class="n">density_matrix</span><span class="o">=</span><span class="n">density_matrix</span><span class="p">,</span>
+        <span class="n">eigenvalues</span><span class="o">=</span><span class="n">eigenvalues</span><span class="p">,</span>
+        <span class="n">support_basis</span><span class="o">=</span><span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">support_mask</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="n">null_basis</span><span class="o">=</span><span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">null_mask</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="local_reduced_density_matrix_from_state_matrix">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.local_reduced_density_matrix_from_state_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">local_reduced_density_matrix_from_state_matrix</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalReducedDensityMatrix</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the local RDM of the normalized projector onto a state subspace.</span>
+
+<span class="sd">    ``states`` may have shape ``(dim, n_states)`` or ``(n_states, dim)``.  The</span>
+<span class="sd">    columns are orthonormalized before tracing out the environment, so callers</span>
+<span class="sd">    may pass linearly dependent cage representatives without changing the local</span>
+<span class="sd">    support.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">_local_pattern_basis_context_from_basis</span><span class="p">(</span>
+        <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_local_reduced_density_matrix_from_basis_context_and_states</span><span class="p">(</span>
+        <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+        <span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="score_recycling_jump_for_subspace">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.score_recycling_jump_for_subspace">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">score_recycling_jump_for_subspace</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">jump</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return residual/inflow/outflow diagnostics for a target subspace.</span>
+
+<span class="sd">    The target subspace is represented by an orthonormal basis ``Q``.  The</span>
+<span class="sd">    returned values are Frobenius norms of ``J Q`` and ``J^† Q``; when ``J Q=0``</span>
+<span class="sd">    the second norm equals the direct inflow block ``Q_perp J^† Q``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">jump_matrix</span> <span class="o">=</span> <span class="n">jump</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">jump</span><span class="p">,</span> <span class="s2">&quot;tocsr&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">jump</span><span class="p">)</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jump_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">state_basis</span> <span class="o">=</span> <span class="n">_normalize_state_matrix_columns</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="n">target_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jump_matrix</span> <span class="o">@</span> <span class="n">state_basis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">adjoint_target_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jump_matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state_basis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">overlap</span> <span class="o">=</span> <span class="n">state_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">target_action</span>
+
+    <span class="n">target_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">target_action</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">adjoint_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">adjoint_target_action</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">overlap_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">overlap</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">target_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">target_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+    <span class="n">inflow_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">adjoint_norm_sq</span> <span class="o">-</span> <span class="n">overlap_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+    <span class="n">outflow_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">target_norm_sq</span> <span class="o">-</span> <span class="n">overlap_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+    <span class="n">projector_commutator_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">target_norm_sq</span> <span class="o">+</span> <span class="n">adjoint_norm_sq</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">overlap_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">target_residual</span><span class="p">,</span>
+        <span class="n">inflow_norm</span><span class="p">,</span>
+        <span class="n">outflow_norm</span><span class="p">,</span>
+        <span class="n">projector_commutator_norm</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_embedding_context_from_basis_context</span><span class="p">(</span>
     <span class="n">context</span><span class="p">:</span> <span class="n">_LocalPatternBasisContext</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_LocalPatternEmbeddingContext</span><span class="p">:</span>
@@ -1505,6 +1652,281 @@
         <span class="n">reduced_density_matrix</span><span class="o">=</span><span class="n">reduced_density_matrix</span><span class="p">,</span>
         <span class="n">candidates</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">candidates</span><span class="p">),</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_scan_local_block_reset_recycling_candidates_for_subspace</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">rdm_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">dark_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">inflow_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalRecyclingScanResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scan compressed block-reset recyclers for a target subspace.&quot;&quot;&quot;</span>
+    <span class="n">basis_context</span> <span class="o">=</span> <span class="n">_local_pattern_basis_context_from_basis</span><span class="p">(</span>
+        <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">state_basis</span> <span class="o">=</span> <span class="n">_normalize_state_matrix_columns</span><span class="p">(</span>
+        <span class="n">states</span><span class="p">,</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">basis_context</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">reduced_density_matrix</span> <span class="o">=</span> <span class="n">_local_reduced_density_matrix_from_basis_context_and_states</span><span class="p">(</span>
+        <span class="n">context</span><span class="o">=</span><span class="n">basis_context</span><span class="p">,</span>
+        <span class="n">states</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">support_basis</span> <span class="o">=</span> <span class="n">reduced_density_matrix</span><span class="o">.</span><span class="n">support_basis</span>
+    <span class="n">null_basis</span> <span class="o">=</span> <span class="n">reduced_density_matrix</span><span class="o">.</span><span class="n">null_basis</span>
+    <span class="n">support_rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">support_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">nullity</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">null_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">support_rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nullity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LocalRecyclingScanResult</span><span class="p">(</span>
+            <span class="n">reduced_density_matrix</span><span class="o">=</span><span class="n">reduced_density_matrix</span><span class="p">,</span>
+            <span class="n">candidates</span><span class="o">=</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="n">embedding_context</span> <span class="o">=</span> <span class="n">_embedding_context_from_basis_context</span><span class="p">(</span><span class="n">basis_context</span><span class="p">)</span>
+    <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalRecyclingCandidate</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nullity</span><span class="p">,</span> <span class="n">support_rank</span><span class="p">):</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">null_basis</span><span class="p">[:,</span> <span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">support_rank</span><span class="p">]</span>
+        <span class="n">block_rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">local_operator</span> <span class="o">=</span> <span class="n">support_basis</span><span class="p">[:,</span> <span class="p">:</span><span class="n">block_rank</span><span class="p">]</span> <span class="o">@</span> <span class="n">block</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">jump</span> <span class="o">=</span> <span class="n">_embed_local_pattern_operator_from_context</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">=</span><span class="n">embedding_context</span><span class="p">,</span>
+            <span class="n">local_operator</span><span class="o">=</span><span class="n">local_operator</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="p">(</span>
+            <span class="n">target_residual</span><span class="p">,</span>
+            <span class="n">inflow_norm</span><span class="p">,</span>
+            <span class="n">outflow_norm</span><span class="p">,</span>
+            <span class="n">projector_commutator_norm</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">score_recycling_jump_for_subspace</span><span class="p">(</span>
+            <span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span>
+            <span class="n">states</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">target_residual</span> <span class="o">&gt;</span> <span class="n">dark_tolerance</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">inflow_norm</span> <span class="o">&lt;=</span> <span class="n">inflow_tolerance</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">LocalRecyclingCandidate</span><span class="p">(</span>
+                <span class="n">variable_indices</span><span class="o">=</span><span class="n">reduced_density_matrix</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span>
+                <span class="n">alpha_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">beta_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">),</span>
+                <span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span>
+                <span class="n">target_residual</span><span class="o">=</span><span class="n">target_residual</span><span class="p">,</span>
+                <span class="n">inflow_norm</span><span class="o">=</span><span class="n">inflow_norm</span><span class="p">,</span>
+                <span class="n">outflow_norm</span><span class="o">=</span><span class="n">outflow_norm</span><span class="p">,</span>
+                <span class="n">projector_commutator_norm</span><span class="o">=</span><span class="n">projector_commutator_norm</span><span class="p">,</span>
+                <span class="n">local_alpha_vector</span><span class="o">=</span><span class="n">support_basis</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+                <span class="n">local_beta_vector</span><span class="o">=</span><span class="n">block</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+                <span class="n">local_operator</span><span class="o">=</span><span class="n">local_operator</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">candidates</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">candidates</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">candidate</span><span class="p">:</span> <span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">beta_index</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">target_residual</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">jump</span><span class="o">.</span><span class="n">nnz</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">LocalRecyclingScanResult</span><span class="p">(</span>
+        <span class="n">reduced_density_matrix</span><span class="o">=</span><span class="n">reduced_density_matrix</span><span class="p">,</span>
+        <span class="n">candidates</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">candidates</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="scan_local_recycling_candidates_for_subspace">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.scan_local_recycling_candidates_for_subspace">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">scan_local_recycling_candidates_for_subspace</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">rdm_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">dark_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">inflow_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">max_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalRecyclingScanResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scan local rank-one recycling jumps from a target subspace RDM.&quot;&quot;&quot;</span>
+    <span class="n">basis_context</span> <span class="o">=</span> <span class="n">_local_pattern_basis_context_from_basis</span><span class="p">(</span>
+        <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">state_basis</span> <span class="o">=</span> <span class="n">_normalize_state_matrix_columns</span><span class="p">(</span>
+        <span class="n">states</span><span class="p">,</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">basis_context</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">reduced_density_matrix</span> <span class="o">=</span> <span class="n">_local_reduced_density_matrix_from_basis_context_and_states</span><span class="p">(</span>
+        <span class="n">context</span><span class="o">=</span><span class="n">basis_context</span><span class="p">,</span>
+        <span class="n">states</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">support_basis</span> <span class="o">=</span> <span class="n">reduced_density_matrix</span><span class="o">.</span><span class="n">support_basis</span>
+    <span class="n">null_basis</span> <span class="o">=</span> <span class="n">reduced_density_matrix</span><span class="o">.</span><span class="n">null_basis</span>
+    <span class="n">support_rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">support_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">nullity</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">null_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalRecyclingCandidate</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">support_rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nullity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LocalRecyclingScanResult</span><span class="p">(</span>
+            <span class="n">reduced_density_matrix</span><span class="o">=</span><span class="n">reduced_density_matrix</span><span class="p">,</span>
+            <span class="n">candidates</span><span class="o">=</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="n">embedding_context</span> <span class="o">=</span> <span class="n">_embedding_context_from_basis_context</span><span class="p">(</span><span class="n">basis_context</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">alpha_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">support_rank</span><span class="p">):</span>
+        <span class="n">alpha_vector</span> <span class="o">=</span> <span class="n">support_basis</span><span class="p">[:,</span> <span class="n">alpha_index</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">beta_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nullity</span><span class="p">):</span>
+            <span class="n">beta_vector</span> <span class="o">=</span> <span class="n">null_basis</span><span class="p">[:,</span> <span class="n">beta_index</span><span class="p">]</span>
+            <span class="n">local_operator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">alpha_vector</span><span class="p">,</span> <span class="n">beta_vector</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+            <span class="n">jump</span> <span class="o">=</span> <span class="n">_embed_local_pattern_operator_from_context</span><span class="p">(</span>
+                <span class="n">context</span><span class="o">=</span><span class="n">embedding_context</span><span class="p">,</span>
+                <span class="n">local_operator</span><span class="o">=</span><span class="n">local_operator</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="p">(</span>
+                <span class="n">target_residual</span><span class="p">,</span>
+                <span class="n">inflow_norm</span><span class="p">,</span>
+                <span class="n">outflow_norm</span><span class="p">,</span>
+                <span class="n">projector_commutator_norm</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">score_recycling_jump_for_subspace</span><span class="p">(</span>
+                <span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span>
+                <span class="n">states</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+                <span class="n">tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">target_residual</span> <span class="o">&gt;</span> <span class="n">dark_tolerance</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">inflow_norm</span> <span class="o">&lt;=</span> <span class="n">inflow_tolerance</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">LocalRecyclingCandidate</span><span class="p">(</span>
+                    <span class="n">variable_indices</span><span class="o">=</span><span class="n">reduced_density_matrix</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span>
+                    <span class="n">alpha_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">alpha_index</span><span class="p">),</span>
+                    <span class="n">beta_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">beta_index</span><span class="p">),</span>
+                    <span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span>
+                    <span class="n">target_residual</span><span class="o">=</span><span class="n">target_residual</span><span class="p">,</span>
+                    <span class="n">inflow_norm</span><span class="o">=</span><span class="n">inflow_norm</span><span class="p">,</span>
+                    <span class="n">outflow_norm</span><span class="o">=</span><span class="n">outflow_norm</span><span class="p">,</span>
+                    <span class="n">projector_commutator_norm</span><span class="o">=</span><span class="n">projector_commutator_norm</span><span class="p">,</span>
+                    <span class="n">local_alpha_vector</span><span class="o">=</span><span class="n">alpha_vector</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+                    <span class="n">local_beta_vector</span><span class="o">=</span><span class="n">beta_vector</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="n">candidates</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">candidates</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">candidate</span><span class="p">:</span> <span class="p">(</span>
+            <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">target_residual</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">jump</span><span class="o">.</span><span class="n">nnz</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_candidates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span><span class="n">max_candidates</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">LocalRecyclingScanResult</span><span class="p">(</span>
+        <span class="n">reduced_density_matrix</span><span class="o">=</span><span class="n">reduced_density_matrix</span><span class="p">,</span>
+        <span class="n">candidates</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">candidates</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_local_recycling_jumps_from_subspace_regions">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.build_local_recycling_jumps_from_subspace_regions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_local_recycling_jumps_from_subspace_regions</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">regions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">RecyclingJumpSource</span> <span class="o">=</span> <span class="s2">&quot;local_rdm_block_reset&quot;</span><span class="p">,</span>
+    <span class="n">deduplicate_regions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">max_jumps_per_region</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">rdm_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">dark_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">inflow_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span>
+    <span class="n">max_candidates_per_region</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">prefer_sparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">two_pattern_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalRecyclingBuildResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scan local recycling jumps that annihilate a target state subspace.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LocalRecyclingBuildResult</span><span class="p">(</span><span class="n">scan_results</span><span class="o">=</span><span class="p">(),</span> <span class="n">selections</span><span class="o">=</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;local_rdm_two_pattern&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;local_rdm_two_pattern is only implemented for a single target state. &quot;</span>
+            <span class="s2">&quot;Use local_rdm_rank_one, local_rdm_null_basis, or local_rdm_block_reset &quot;</span>
+            <span class="s2">&quot;for a target subspace.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">scan_results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalRecyclingScanResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">selections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalRecyclingSelection</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">scan_result_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">LocalRecyclingScanResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">selected_region_keys</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">:</span>
+        <span class="n">region_key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">region</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">deduplicate_regions</span> <span class="ow">and</span> <span class="n">region_key</span> <span class="ow">in</span> <span class="n">selected_region_keys</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">selected_region_keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">region_key</span><span class="p">)</span>
+
+        <span class="n">scan_result</span> <span class="o">=</span> <span class="n">scan_result_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">region_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scan_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;local_rdm_block_reset&quot;</span><span class="p">:</span>
+                <span class="n">scan_result</span> <span class="o">=</span> <span class="n">_scan_local_block_reset_recycling_candidates_for_subspace</span><span class="p">(</span>
+                    <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+                    <span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">,</span>
+                    <span class="n">variable_indices</span><span class="o">=</span><span class="n">region_key</span><span class="p">,</span>
+                    <span class="n">rdm_tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+                    <span class="n">dark_tolerance</span><span class="o">=</span><span class="n">dark_tolerance</span><span class="p">,</span>
+                    <span class="n">inflow_tolerance</span><span class="o">=</span><span class="n">inflow_tolerance</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">scan_result</span> <span class="o">=</span> <span class="n">scan_local_recycling_candidates_for_subspace</span><span class="p">(</span>
+                    <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+                    <span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">,</span>
+                    <span class="n">variable_indices</span><span class="o">=</span><span class="n">region_key</span><span class="p">,</span>
+                    <span class="n">rdm_tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+                    <span class="n">dark_tolerance</span><span class="o">=</span><span class="n">dark_tolerance</span><span class="p">,</span>
+                    <span class="n">inflow_tolerance</span><span class="o">=</span><span class="n">inflow_tolerance</span><span class="p">,</span>
+                    <span class="n">max_candidates</span><span class="o">=</span><span class="n">max_candidates_per_region</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">scan_result_cache</span><span class="p">[</span><span class="n">region_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">scan_result</span>
+
+        <span class="n">scan_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scan_result</span><span class="p">)</span>
+        <span class="n">selections</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">select_local_recycling_candidates</span><span class="p">(</span>
+                <span class="n">scan_result</span><span class="o">=</span><span class="n">scan_result</span><span class="p">,</span>
+                <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+                <span class="n">max_candidates</span><span class="o">=</span><span class="n">max_jumps_per_region</span><span class="p">,</span>
+                <span class="n">prefer_sparse</span><span class="o">=</span><span class="n">prefer_sparse</span><span class="p">,</span>
+                <span class="n">two_pattern_tolerance</span><span class="o">=</span><span class="n">two_pattern_tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">LocalRecyclingBuildResult</span><span class="p">(</span>
+        <span class="n">scan_results</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">scan_results</span><span class="p">),</span>
+        <span class="n">selections</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selections</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="build_local_recycling_jumps_from_regions">

@@ -619,6 +619,8 @@
 </ul>
 </li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.local_reduced_density_matrix_from_state"><code class="docutils literal notranslate"><span class="pre">local_reduced_density_matrix_from_state()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.local_reduced_density_matrix_from_state_matrix"><code class="docutils literal notranslate"><span class="pre">local_reduced_density_matrix_from_state_matrix()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.score_recycling_jump_for_subspace"><code class="docutils literal notranslate"><span class="pre">score_recycling_jump_for_subspace()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.embed_local_pattern_operator"><code class="docutils literal notranslate"><span class="pre">embed_local_pattern_operator()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.score_recycling_jump"><code class="docutils literal notranslate"><span class="pre">score_recycling_jump()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.scan_local_recycling_candidates"><code class="docutils literal notranslate"><span class="pre">scan_local_recycling_candidates()</span></code></a></li>
@@ -626,6 +628,8 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.local_operator_matrix_unit_expansion"><code class="docutils literal notranslate"><span class="pre">local_operator_matrix_unit_expansion()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.detect_two_pattern_recycling_structure"><code class="docutils literal notranslate"><span class="pre">detect_two_pattern_recycling_structure()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.select_local_recycling_candidates"><code class="docutils literal notranslate"><span class="pre">select_local_recycling_candidates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.scan_local_recycling_candidates_for_subspace"><code class="docutils literal notranslate"><span class="pre">scan_local_recycling_candidates_for_subspace()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.build_local_recycling_jumps_from_subspace_regions"><code class="docutils literal notranslate"><span class="pre">build_local_recycling_jumps_from_subspace_regions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.build_local_recycling_jumps_from_regions"><code class="docutils literal notranslate"><span class="pre">build_local_recycling_jumps_from_regions()</span></code></a></li>
 </ul>
 </li>
@@ -1156,30 +1160,6 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SparseLindbladOperators.__init__"><code class="docutils literal notranslate"><span class="pre">SparseLindbladOperators.__init__()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.model"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.model</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.build_result"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.build_result</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.hamiltonian"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.hamiltonian</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.target_states"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.target_states</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.target_labels"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.target_labels</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.jumps"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.jumps</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.detectors"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.detectors</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.left_multipliers"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.left_multipliers</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.bond_ids"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.bond_ids</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.left_multiplier"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.left_multiplier</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.gamma"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.gamma</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.total_sz"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.total_sz</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.max_jump_residual"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.max_jump_residual</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.jump_residuals"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.jump_residuals</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.hamiltonian_closure_residual"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.hamiltonian_closure_residual</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.liouvillian"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.liouvillian</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.liouvillian_zero_mode_count"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.liouvillian_zero_mode_count</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.n_jumps"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.n_jumps</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.n_target_states"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.n_target_states</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.to_summary_dict"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.to_summary_dict()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.__init__"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.__init__()</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.TrajectoryResult"><code class="docutils literal notranslate"><span class="pre">TrajectoryResult</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.TrajectoryResult.times"><code class="docutils literal notranslate"><span class="pre">TrajectoryResult.times</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.TrajectoryResult.states"><code class="docutils literal notranslate"><span class="pre">TrajectoryResult.states</span></code></a></li>
@@ -1208,7 +1188,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_liouvillian"><code class="docutils literal notranslate"><span class="pre">build_liouvillian()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_liouvillian_from_prepared"><code class="docutils literal notranslate"><span class="pre">build_liouvillian_from_prepared()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_local_recycling_jumps_from_regions"><code class="docutils literal notranslate"><span class="pre">build_local_recycling_jumps_from_regions()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_spin_one_xy_lindblad_construction"><code class="docutils literal notranslate"><span class="pre">build_spin_one_xy_lindblad_construction()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_local_recycling_jumps_from_subspace_regions"><code class="docutils literal notranslate"><span class="pre">build_local_recycling_jumps_from_subspace_regions()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.density_matrix_from_state"><code class="docutils literal notranslate"><span class="pre">density_matrix_from_state()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.density_matrix_from_state_matrix"><code class="docutils literal notranslate"><span class="pre">density_matrix_from_state_matrix()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.detect_two_pattern_recycling_structure"><code class="docutils literal notranslate"><span class="pre">detect_two_pattern_recycling_structure()</span></code></a></li>
@@ -1230,6 +1210,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_operator_matrix_unit_expansion"><code class="docutils literal notranslate"><span class="pre">local_operator_matrix_unit_expansion()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_rank_one_matrix_unit_expansion"><code class="docutils literal notranslate"><span class="pre">local_rank_one_matrix_unit_expansion()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_reduced_density_matrix_from_state"><code class="docutils literal notranslate"><span class="pre">local_reduced_density_matrix_from_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_reduced_density_matrix_from_state_matrix"><code class="docutils literal notranslate"><span class="pre">local_reduced_density_matrix_from_state_matrix()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.normalize_state"><code class="docutils literal notranslate"><span class="pre">normalize_state()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.observable_vs_time"><code class="docutils literal notranslate"><span class="pre">observable_vs_time()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.prepare_dense_lindblad_operators"><code class="docutils literal notranslate"><span class="pre">prepare_dense_lindblad_operators()</span></code></a></li>
@@ -1243,7 +1224,9 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.run_quantum_jump_trajectory"><code class="docutils literal notranslate"><span class="pre">run_quantum_jump_trajectory()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.sample_lindblad_mcwf"><code class="docutils literal notranslate"><span class="pre">sample_lindblad_mcwf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.scan_local_recycling_candidates"><code class="docutils literal notranslate"><span class="pre">scan_local_recycling_candidates()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.scan_local_recycling_candidates_for_subspace"><code class="docutils literal notranslate"><span class="pre">scan_local_recycling_candidates_for_subspace()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.score_recycling_jump"><code class="docutils literal notranslate"><span class="pre">score_recycling_jump()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.score_recycling_jump_for_subspace"><code class="docutils literal notranslate"><span class="pre">score_recycling_jump_for_subspace()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.select_local_recycling_candidates"><code class="docutils literal notranslate"><span class="pre">select_local_recycling_candidates()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.solve_lindblad"><code class="docutils literal notranslate"><span class="pre">solve_lindblad()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.unvectorize_density_matrix"><code class="docutils literal notranslate"><span class="pre">unvectorize_density_matrix()</span></code></a></li>
@@ -1481,7 +1464,7 @@ diagnostics.</p>
 <dd><p>Absolute errors of <code class="docutils literal notranslate"><span class="pre">Tr(rho)</span></code> from one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1492,7 +1475,7 @@ diagnostics.</p>
 <dd><p>Frobenius norm of anti-Hermitian parts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1503,7 +1486,7 @@ diagnostics.</p>
 <dd><p>Smallest density-matrix eigenvalue at each time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1514,7 +1497,7 @@ diagnostics.</p>
 <dd><p><code class="docutils literal notranslate"><span class="pre">Tr(rho^2)</span></code> values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1525,7 +1508,7 @@ diagnostics.</p>
 <dd><p>Optional fidelity with a target state/density matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1536,7 +1519,7 @@ diagnostics.</p>
 <dd><p>Optional norm of the Lindblad RHS at each time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1547,7 +1530,7 @@ diagnostics.</p>
 <dd><p>Optional time grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1580,7 +1563,7 @@ diagnostics.</p>
 <dd><p>Optional number of trajectories per time point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1591,44 +1574,44 @@ diagnostics.</p>
 <dd><p>Optional norm errors for pure-state trajectories.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">trace_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id5" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">trace_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id5" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id6">
-<span class="sig-name descname"><span class="pre">hermiticity_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id6" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hermiticity_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id6" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id7">
-<span class="sig-name descname"><span class="pre">min_eigenvalues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id7" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">min_eigenvalues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id7" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id8">
-<span class="sig-name descname"><span class="pre">purities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id8" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">purities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id8" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id9">
-<span class="sig-name descname"><span class="pre">fidelities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id9" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fidelities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id9" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id10">
-<span class="sig-name descname"><span class="pre">lindblad_residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id10" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">lindblad_residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id10" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id11">
-<span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id11" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id11" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -1643,12 +1626,12 @@ diagnostics.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id14">
-<span class="sig-name descname"><span class="pre">trajectory_counts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id14" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">trajectory_counts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id14" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id15">
-<span class="sig-name descname"><span class="pre">state_norm_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id15" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">state_norm_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id15" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1704,7 +1687,7 @@ diagnostics.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.open_system.diagnostics.JumpSpanDiagnostics.gram_eigenvalues">
-<span class="sig-name descname"><span class="pre">gram_eigenvalues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#qlinks.open_system.diagnostics.JumpSpanDiagnostics.gram_eigenvalues" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gram_eigenvalues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#qlinks.open_system.diagnostics.JumpSpanDiagnostics.gram_eigenvalues" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -2943,6 +2926,29 @@ and null vectors for block-reset candidates.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="qlinks.open_system.local_recycling.local_reduced_density_matrix_from_state_matrix">
+<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.local_recycling.</span></span><span class="sig-name descname"><span class="pre">local_reduced_density_matrix_from_state_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#local_reduced_density_matrix_from_state_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.local_recycling.local_reduced_density_matrix_from_state_matrix" title="Link to this definition">#</a></dt>
+<dd><p>Compute the local RDM of the normalized projector onto a state subspace.</p>
+<p><code class="docutils literal notranslate"><span class="pre">states</span></code> may have shape <code class="docutils literal notranslate"><span class="pre">(dim,</span> <span class="pre">n_states)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_states,</span> <span class="pre">dim)</span></code>.  The
+columns are orthonormalized before tracing out the environment, so callers
+may pass linearly dependent cage representatives without changing the local
+support.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.open_system.local_recycling.score_recycling_jump_for_subspace">
+<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.local_recycling.</span></span><span class="sig-name descname"><span class="pre">score_recycling_jump_for_subspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#score_recycling_jump_for_subspace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.local_recycling.score_recycling_jump_for_subspace" title="Link to this definition">#</a></dt>
+<dd><p>Return residual/inflow/outflow diagnostics for a target subspace.</p>
+<p>The target subspace is represented by an orthonormal basis <code class="docutils literal notranslate"><span class="pre">Q</span></code>.  The
+returned values are Frobenius norms of <code class="docutils literal notranslate"><span class="pre">J</span> <span class="pre">Q</span></code> and <code class="docutils literal notranslate"><span class="pre">J^†</span> <span class="pre">Q</span></code>; when <code class="docutils literal notranslate"><span class="pre">J</span> <span class="pre">Q=0</span></code>
+the second norm equals the direct inflow block <code class="docutils literal notranslate"><span class="pre">Q_perp</span> <span class="pre">J^†</span> <span class="pre">Q</span></code>.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="qlinks.open_system.local_recycling.embed_local_pattern_operator">
 <span class="sig-prename descclassname"><span class="pre">qlinks.open_system.local_recycling.</span></span><span class="sig-name descname"><span class="pre">embed_local_pattern_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_patterns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_operator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#embed_local_pattern_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.local_recycling.embed_local_pattern_operator" title="Link to this definition">#</a></dt>
 <dd><p>Embed a local operator into the constrained full basis.</p>
@@ -3014,6 +3020,22 @@ direction.  This source instead selects one good target-support vector
 <code class="docutils literal notranslate"><span class="pre">max_candidates</span></code> argument is intentionally ignored for both null-basis and
 block-reset sources, because their counts are determined by the local RDM
 ranks.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.open_system.local_recycling.scan_local_recycling_candidates_for_subspace">
+<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.local_recycling.</span></span><span class="sig-name descname"><span class="pre">scan_local_recycling_candidates_for_subspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rdm_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dark_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflow_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#scan_local_recycling_candidates_for_subspace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.local_recycling.scan_local_recycling_candidates_for_subspace" title="Link to this definition">#</a></dt>
+<dd><p>Scan local rank-one recycling jumps from a target subspace RDM.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.open_system.local_recycling.build_local_recycling_jumps_from_subspace_regions">
+<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.local_recycling.</span></span><span class="sig-name descname"><span class="pre">build_local_recycling_jumps_from_subspace_regions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'local_rdm_block_reset'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deduplicate_regions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_jumps_per_region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rdm_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dark_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflow_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_candidates_per_region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefer_sparse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">two_pattern_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#build_local_recycling_jumps_from_subspace_regions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.local_recycling.build_local_recycling_jumps_from_subspace_regions" title="Link to this definition">#</a></dt>
+<dd><p>Scan local recycling jumps that annihilate a target state subspace.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -3499,7 +3521,7 @@ steps.</p>
 <dd><p>Time grid used by the evolution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3562,7 +3584,7 @@ empty tuple for non-RK4 methods.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id43">
-<span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id43" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id43" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -3678,7 +3700,7 @@ methods that reuse those caches.</p>
 <li><p><strong>hamiltonian</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>) – Hamiltonian matrix.</p></li>
 <li><p><strong>jumps</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em>) – Lindblad jump operators.</p></li>
 <li><p><strong>density_matrix_initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>) – Initial density matrix.</p></li>
-<li><p><strong>times</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>) – Strictly increasing one-dimensional time grid.</p></li>
+<li><p><strong>times</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – Strictly increasing one-dimensional time grid.</p></li>
 <li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'auto'</em><em>, </em><em>'krylov'</em><em>, </em><em>'rk4_matrix'</em><em>, </em><em>'rk4_sparse_matrix'</em><em>, </em><em>'rk4_liouville'</em><em>]</em>) – Solver method, or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
 <li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'scipy'</em><em>, </em><em>'cupy'</em><em>]</em>) – Open-system backend name.</p></li>
 <li><p><strong>options</strong> (<a class="reference internal" href="#qlinks.open_system.solvers.LindbladEvolutionOptions" title="qlinks.open_system.solvers.LindbladEvolutionOptions"><em>LindbladEvolutionOptions</em></a><em> | </em><em>None</em>) – Optional full options object.  When supplied, <code class="docutils literal notranslate"><span class="pre">method</span></code> and
@@ -3761,7 +3783,7 @@ methods that reuse those caches.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dim</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Hilbert-space dimension.</p></li>
 <li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional effective rank.  If <code class="docutils literal notranslate"><span class="pre">None</span></code>, use full rank <code class="docutils literal notranslate"><span class="pre">dim</span></code>.</p></li>
-<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.4)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – NumPy random generator or seed.</p></li>
+<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – NumPy random generator or seed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -3784,7 +3806,7 @@ methods that reuse those caches.</p>
 <li><p><strong>kind</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'pure'</em><em>, </em><em>'mixed'</em><em>, </em><em>'maximally_mixed'</em><em>]</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;pure&quot;</span></code> for <code class="docutils literal notranslate"><span class="pre">|psi&gt;&lt;psi|</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;mixed&quot;</span></code> for a Ginibre
 mixed state.</p></li>
 <li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional effective rank for <code class="docutils literal notranslate"><span class="pre">kind=&quot;mixed&quot;</span></code>.</p></li>
-<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.4)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – NumPy random generator or seed.</p></li>
+<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – NumPy random generator or seed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -4117,10 +4139,10 @@ The returned matrix is the average projector over columns.</p>
 <li><p><strong>times</strong> (<em>NDArray</em><em>[</em><em>float64</em><em>]</em>) – Strictly increasing time grid.</p></li>
 <li><p><strong>state_initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>) – Fixed initial pure state used for every trajectory.
 Mutually exclusive with <code class="docutils literal notranslate"><span class="pre">state_sampler</span></code>.</p></li>
-<li><p><strong>state_sampler</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.4)"><em>Generator</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional callable that samples an initial pure state from
+<li><p><strong>state_sampler</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><em>Generator</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional callable that samples an initial pure state from
 a NumPy random generator.</p></li>
 <li><p><strong>options</strong> (<a class="reference internal" href="#qlinks.open_system.stochastic_schrodinger.McwfOptions" title="qlinks.open_system.stochastic_schrodinger.McwfOptions"><em>McwfOptions</em></a><em> | </em><em>None</em>) – MCWF sampling and storage options.</p></li>
-<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.4)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional RNG or seed.  Overrides <code class="docutils literal notranslate"><span class="pre">options.seed</span></code> when supplied.</p></li>
+<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional RNG or seed.  Overrides <code class="docutils literal notranslate"><span class="pre">options.seed</span></code> when supplied.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -4694,7 +4716,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p>Absolute errors of <code class="docutils literal notranslate"><span class="pre">Tr(rho)</span></code> from one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4705,7 +4727,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p>Frobenius norm of anti-Hermitian parts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4716,7 +4738,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p>Smallest density-matrix eigenvalue at each time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4727,7 +4749,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p><code class="docutils literal notranslate"><span class="pre">Tr(rho^2)</span></code> values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4738,7 +4760,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p>Optional fidelity with a target state/density matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4749,7 +4771,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p>Optional norm of the Lindblad RHS at each time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4760,7 +4782,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p>Optional time grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4793,7 +4815,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p>Optional number of trajectories per time point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4804,44 +4826,44 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 <dd><p>Optional norm errors for pure-state trajectories.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a> | None</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id59">
-<span class="sig-name descname"><span class="pre">trace_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id59" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">trace_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id59" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id60">
-<span class="sig-name descname"><span class="pre">hermiticity_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id60" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hermiticity_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id60" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id61">
-<span class="sig-name descname"><span class="pre">min_eigenvalues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id61" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">min_eigenvalues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id61" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id62">
-<span class="sig-name descname"><span class="pre">purities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id62" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">purities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id62" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id63">
-<span class="sig-name descname"><span class="pre">fidelities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id63" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fidelities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id63" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id64">
-<span class="sig-name descname"><span class="pre">lindblad_residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id64" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">lindblad_residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id64" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id65">
-<span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id65" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id65" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -4856,12 +4878,12 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id68">
-<span class="sig-name descname"><span class="pre">trajectory_counts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id68" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">trajectory_counts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id68" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id69">
-<span class="sig-name descname"><span class="pre">state_norm_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id69" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">state_norm_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#id69" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -4917,7 +4939,7 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.open_system.JumpSpanDiagnostics.gram_eigenvalues">
-<span class="sig-name descname"><span class="pre">gram_eigenvalues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#qlinks.open_system.JumpSpanDiagnostics.gram_eigenvalues" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gram_eigenvalues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#qlinks.open_system.JumpSpanDiagnostics.gram_eigenvalues" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -5200,7 +5222,7 @@ steps.</p>
 <dd><p>Time grid used by the evolution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5263,7 +5285,7 @@ empty tuple for non-RK4 methods.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id82">
-<span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id82" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#id82" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -6196,128 +6218,6 @@ monitored subspace before dissipation acts.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">SpinOneXYLindbladConstruction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hamiltonian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jumps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_multipliers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bond_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_multiplier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_jump_residual</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump_residuals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hamiltonian_closure_residual</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">liouvillian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">liouvillian_zero_mode_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/spin_one_xy.html#SpinOneXYLindbladConstruction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Paper-style local dark-detector Lindblad construction for spin-1 XY scars.</p>
-<p>The jumps have the form <code class="docutils literal notranslate"><span class="pre">J_j</span> <span class="pre">=</span> <span class="pre">sqrt(gamma)</span> <span class="pre">V_j</span> <span class="pre">D_j</span></code> with the local dark
-detector <code class="docutils literal notranslate"><span class="pre">D_j</span> <span class="pre">=</span> <span class="pre">Sx_j</span> <span class="pre">Sx_{j+1}</span> <span class="pre">+</span> <span class="pre">Sy_j</span> <span class="pre">Sy_{j+1}</span></code>.  For the paper-like
-setting use <code class="docutils literal notranslate"><span class="pre">left_multiplier='sx'</span></code>.  Diagonal multipliers such as <code class="docutils literal notranslate"><span class="pre">'sz'</span></code>
-are useful when the build basis is restricted to a fixed total-Sz sector.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.model">
-<span class="sig-name descname"><span class="pre">model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="qlinks.models.html#qlinks.models.spin_one_xy.SpinOneXYChainModel" title="qlinks.models.spin_one_xy.SpinOneXYChainModel"><span class="pre">SpinOneXYChainModel</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.model" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.build_result">
-<span class="sig-name descname"><span class="pre">build_result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="qlinks.models.html#qlinks.models.base.ModelBuildResult" title="qlinks.models.base.ModelBuildResult"><span class="pre">ModelBuildResult</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.build_result" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.hamiltonian">
-<span class="sig-name descname"><span class="pre">hamiltonian</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.hamiltonian" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.target_states">
-<span class="sig-name descname"><span class="pre">target_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">complex128</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.target_states" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.target_labels">
-<span class="sig-name descname"><span class="pre">target_labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.target_labels" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.jumps">
-<span class="sig-name descname"><span class="pre">jumps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.jumps" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.detectors">
-<span class="sig-name descname"><span class="pre">detectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.detectors" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.left_multipliers">
-<span class="sig-name descname"><span class="pre">left_multipliers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.left_multipliers" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.bond_ids">
-<span class="sig-name descname"><span class="pre">bond_ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.bond_ids" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.left_multiplier">
-<span class="sig-name descname"><span class="pre">left_multiplier</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'identity'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sx'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sz'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sz2'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.left_multiplier" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.gamma">
-<span class="sig-name descname"><span class="pre">gamma</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.gamma" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.total_sz">
-<span class="sig-name descname"><span class="pre">total_sz</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.total_sz" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.max_jump_residual">
-<span class="sig-name descname"><span class="pre">max_jump_residual</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.max_jump_residual" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.jump_residuals">
-<span class="sig-name descname"><span class="pre">jump_residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.jump_residuals" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.hamiltonian_closure_residual">
-<span class="sig-name descname"><span class="pre">hamiltonian_closure_residual</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.hamiltonian_closure_residual" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.liouvillian">
-<span class="sig-name descname"><span class="pre">liouvillian</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.liouvillian" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.liouvillian_zero_mode_count">
-<span class="sig-name descname"><span class="pre">liouvillian_zero_mode_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.liouvillian_zero_mode_count" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.n_jumps">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_jumps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.n_jumps" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.n_target_states">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_target_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.n_target_states" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.to_summary_dict">
-<span class="sig-name descname"><span class="pre">to_summary_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/spin_one_xy.html#SpinOneXYLindbladConstruction.to_summary_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.to_summary_dict" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qlinks.open_system.SpinOneXYLindbladConstruction.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hamiltonian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jumps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_multipliers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bond_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_multiplier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_jump_residual</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump_residuals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hamiltonian_closure_residual</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">liouvillian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">liouvillian_zero_mode_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qlinks.open_system.SpinOneXYLindbladConstruction.__init__" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="qlinks.open_system.TrajectoryResult">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">TrajectoryResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump_times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_errors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/stochastic_schrodinger.html#TrajectoryResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.TrajectoryResult" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
@@ -6538,35 +6438,10 @@ per component.  The default keeps the historical behavior.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="qlinks.open_system.build_spin_one_xy_lindblad_construction">
-<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">build_spin_one_xy_lindblad_construction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sparse'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_liouvillian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">liouvillian_zero_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-09</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/spin_one_xy.html#build_spin_one_xy_lindblad_construction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.build_spin_one_xy_lindblad_construction" title="Link to this definition">#</a></dt>
-<dd><p>Build paper-style spin-1 XY Lindblad jumps <code class="docutils literal notranslate"><span class="pre">J_j</span> <span class="pre">=</span> <span class="pre">sqrt(gamma)</span> <span class="pre">V_j</span> <span class="pre">D_j</span></code>.</p>
+<dt class="sig sig-object py" id="qlinks.open_system.build_local_recycling_jumps_from_subspace_regions">
+<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">build_local_recycling_jumps_from_subspace_regions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'local_rdm_block_reset'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deduplicate_regions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_jumps_per_region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rdm_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dark_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflow_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_candidates_per_region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefer_sparse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">two_pattern_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#build_local_recycling_jumps_from_subspace_regions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.build_local_recycling_jumps_from_subspace_regions" title="Link to this definition">#</a></dt>
+<dd><p>Scan local recycling jumps that annihilate a target state subspace.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference internal" href="qlinks.models.html#qlinks.models.spin_one_xy.SpinOneXYChainModel" title="qlinks.models.spin_one_xy.SpinOneXYChainModel"><em>SpinOneXYChainModel</em></a>) – Spin-1 XY chain model.  Set <code class="docutils literal notranslate"><span class="pre">model.total_sz</span></code> to build within a
-fixed magnetization sector.</p></li>
-<li><p><strong>build_result</strong> (<a class="reference internal" href="qlinks.models.html#qlinks.models.base.ModelBuildResult" title="qlinks.models.base.ModelBuildResult"><em>ModelBuildResult</em></a><em> | </em><em>None</em>) – Optional prebuilt Hamiltonian/basis for <code class="docutils literal notranslate"><span class="pre">model</span></code>.</p></li>
-<li><p><strong>target_states</strong> (<em>ArrayLike</em><em> | </em><em>None</em>) – Optional target-state matrix with one state per column.
-If omitted, the scar tower vectors present in <code class="docutils literal notranslate"><span class="pre">build_result.basis</span></code>
-are generated automatically.</p></li>
-<li><p><strong>target_labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>) – Optional labels for the columns of <code class="docutils literal notranslate"><span class="pre">target_states</span></code>.</p></li>
-<li><p><strong>left_multiplier</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'identity'</em><em>, </em><em>'sx'</em><em>, </em><em>'sz'</em><em>, </em><em>'sz2'</em><em>]</em>) – Local left factor <code class="docutils literal notranslate"><span class="pre">V_j</span></code>.  Use <code class="docutils literal notranslate"><span class="pre">&quot;sx&quot;</span></code> for the
-paper-style DFS construction and diagonal choices such as <code class="docutils literal notranslate"><span class="pre">&quot;sz&quot;</span></code>
-for fixed-total-Sz sector tests.</p></li>
-<li><p><strong>gamma</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Lindblad rate; jumps are scaled by <code class="docutils literal notranslate"><span class="pre">sqrt(gamma)</span></code>.</p></li>
-<li><p><strong>builder</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'sparse'</em><em>, </em><em>'optimized'</em><em>]</em>) – Matrix builder used when <code class="docutils literal notranslate"><span class="pre">build_result</span></code> is not supplied.</p></li>
-<li><p><strong>check_liouvillian</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – If true, assemble the Liouvillian and count zero
-eigenvalues.  This is intended only for small systems.</p></li>
-<li><p><strong>liouvillian_zero_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Tolerance for zero-mode counting.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Construction object containing jumps and dark/closure diagnostics.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#qlinks.open_system.SpinOneXYLindbladConstruction" title="qlinks.open_system.spin_one_xy.SpinOneXYLindbladConstruction"><em>SpinOneXYLindbladConstruction</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -6832,6 +6707,18 @@ into the target local support.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="qlinks.open_system.local_reduced_density_matrix_from_state_matrix">
+<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">local_reduced_density_matrix_from_state_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#local_reduced_density_matrix_from_state_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.local_reduced_density_matrix_from_state_matrix" title="Link to this definition">#</a></dt>
+<dd><p>Compute the local RDM of the normalized projector onto a state subspace.</p>
+<p><code class="docutils literal notranslate"><span class="pre">states</span></code> may have shape <code class="docutils literal notranslate"><span class="pre">(dim,</span> <span class="pre">n_states)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_states,</span> <span class="pre">dim)</span></code>.  The
+columns are orthonormalized before tracing out the environment, so callers
+may pass linearly dependent cage representatives without changing the local
+support.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="qlinks.open_system.normalize_state">
 <span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">normalize_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/states.html#normalize_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.normalize_state" title="Link to this definition">#</a></dt>
 <dd><p>Return a normalized complex state vector.</p>
@@ -6890,7 +6777,7 @@ into the target local support.</p>
 <li><p><strong>kind</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'pure'</em><em>, </em><em>'mixed'</em><em>, </em><em>'maximally_mixed'</em><em>]</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;pure&quot;</span></code> for <code class="docutils literal notranslate"><span class="pre">|psi&gt;&lt;psi|</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;mixed&quot;</span></code> for a Ginibre
 mixed state.</p></li>
 <li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional effective rank for <code class="docutils literal notranslate"><span class="pre">kind=&quot;mixed&quot;</span></code>.</p></li>
-<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.4)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – NumPy random generator or seed.</p></li>
+<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – NumPy random generator or seed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -6916,7 +6803,7 @@ mixed state.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dim</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Hilbert-space dimension.</p></li>
 <li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional effective rank.  If <code class="docutils literal notranslate"><span class="pre">None</span></code>, use full rank <code class="docutils literal notranslate"><span class="pre">dim</span></code>.</p></li>
-<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.4)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – NumPy random generator or seed.</p></li>
+<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – NumPy random generator or seed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -6967,10 +6854,10 @@ it raises an error and asks the caller to refine the time grid.</p>
 <li><p><strong>times</strong> (<em>NDArray</em><em>[</em><em>float64</em><em>]</em>) – Strictly increasing time grid.</p></li>
 <li><p><strong>state_initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>) – Fixed initial pure state used for every trajectory.
 Mutually exclusive with <code class="docutils literal notranslate"><span class="pre">state_sampler</span></code>.</p></li>
-<li><p><strong>state_sampler</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.4)"><em>Generator</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional callable that samples an initial pure state from
+<li><p><strong>state_sampler</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><em>Generator</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional callable that samples an initial pure state from
 a NumPy random generator.</p></li>
 <li><p><strong>options</strong> (<a class="reference internal" href="#qlinks.open_system.stochastic_schrodinger.McwfOptions" title="qlinks.open_system.stochastic_schrodinger.McwfOptions"><em>McwfOptions</em></a><em> | </em><em>None</em>) – MCWF sampling and storage options.</p></li>
-<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.4)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional RNG or seed.  Overrides <code class="docutils literal notranslate"><span class="pre">options.seed</span></code> when supplied.</p></li>
+<li><p><strong>rng</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><em>Generator</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Optional RNG or seed.  Overrides <code class="docutils literal notranslate"><span class="pre">options.seed</span></code> when supplied.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -6992,6 +6879,14 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="qlinks.open_system.scan_local_recycling_candidates_for_subspace">
+<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">scan_local_recycling_candidates_for_subspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rdm_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dark_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflow_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#scan_local_recycling_candidates_for_subspace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.scan_local_recycling_candidates_for_subspace" title="Link to this definition">#</a></dt>
+<dd><p>Scan local rank-one recycling jumps from a target subspace RDM.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="qlinks.open_system.score_recycling_jump">
 <span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">score_recycling_jump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#score_recycling_jump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.score_recycling_jump" title="Link to this definition">#</a></dt>
 <dd><p>Return target residual, inflow, outflow, and projector commutator.</p>
@@ -6999,6 +6894,17 @@ optional low-rank state snapshots, and optional stored trajectories.</p>
 operators.  They can be evaluated from <code class="docutils literal notranslate"><span class="pre">J|psi&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">J^dagger|psi&gt;</span></code>
 without materializing the dense projectors <code class="docutils literal notranslate"><span class="pre">|psi&gt;&lt;psi|</span></code> and
 <code class="docutils literal notranslate"><span class="pre">I-|psi&gt;&lt;psi|</span></code>.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="qlinks.open_system.score_recycling_jump_for_subspace">
+<span class="sig-prename descclassname"><span class="pre">qlinks.open_system.</span></span><span class="sig-name descname"><span class="pre">score_recycling_jump_for_subspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/open_system/local_recycling.html#score_recycling_jump_for_subspace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.open_system.score_recycling_jump_for_subspace" title="Link to this definition">#</a></dt>
+<dd><p>Return residual/inflow/outflow diagnostics for a target subspace.</p>
+<p>The target subspace is represented by an orthonormal basis <code class="docutils literal notranslate"><span class="pre">Q</span></code>.  The
+returned values are Frobenius norms of <code class="docutils literal notranslate"><span class="pre">J</span> <span class="pre">Q</span></code> and <code class="docutils literal notranslate"><span class="pre">J^†</span> <span class="pre">Q</span></code>; when <code class="docutils literal notranslate"><span class="pre">J</span> <span class="pre">Q=0</span></code>
+the second norm equals the direct inflow block <code class="docutils literal notranslate"><span class="pre">Q_perp</span> <span class="pre">J^†</span> <span class="pre">Q</span></code>.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -7033,7 +6939,7 @@ ranks.</p>
 <li><p><strong>hamiltonian</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>) – Hamiltonian matrix.</p></li>
 <li><p><strong>jumps</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em>) – Lindblad jump operators.</p></li>
 <li><p><strong>density_matrix_initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>) – Initial density matrix.</p></li>
-<li><p><strong>times</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>) – Strictly increasing one-dimensional time grid.</p></li>
+<li><p><strong>times</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – Strictly increasing one-dimensional time grid.</p></li>
 <li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'auto'</em><em>, </em><em>'krylov'</em><em>, </em><em>'rk4_matrix'</em><em>, </em><em>'rk4_sparse_matrix'</em><em>, </em><em>'rk4_liouville'</em><em>]</em>) – Solver method, or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
 <li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'scipy'</em><em>, </em><em>'cupy'</em><em>]</em>) – Open-system backend name.</p></li>
 <li><p><strong>options</strong> (<a class="reference internal" href="#qlinks.open_system.solvers.LindbladEvolutionOptions" title="qlinks.open_system.solvers.LindbladEvolutionOptions"><em>LindbladEvolutionOptions</em></a><em> | </em><em>None</em>) – Optional full options object.  When supplied, <code class="docutils literal notranslate"><span class="pre">method</span></code> and
@@ -7462,6 +7368,8 @@ ranks.</p>
 </ul>
 </li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.local_reduced_density_matrix_from_state"><code class="docutils literal notranslate"><span class="pre">local_reduced_density_matrix_from_state()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.local_reduced_density_matrix_from_state_matrix"><code class="docutils literal notranslate"><span class="pre">local_reduced_density_matrix_from_state_matrix()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.score_recycling_jump_for_subspace"><code class="docutils literal notranslate"><span class="pre">score_recycling_jump_for_subspace()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.embed_local_pattern_operator"><code class="docutils literal notranslate"><span class="pre">embed_local_pattern_operator()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.score_recycling_jump"><code class="docutils literal notranslate"><span class="pre">score_recycling_jump()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.scan_local_recycling_candidates"><code class="docutils literal notranslate"><span class="pre">scan_local_recycling_candidates()</span></code></a></li>
@@ -7469,6 +7377,8 @@ ranks.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.local_operator_matrix_unit_expansion"><code class="docutils literal notranslate"><span class="pre">local_operator_matrix_unit_expansion()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.detect_two_pattern_recycling_structure"><code class="docutils literal notranslate"><span class="pre">detect_two_pattern_recycling_structure()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.select_local_recycling_candidates"><code class="docutils literal notranslate"><span class="pre">select_local_recycling_candidates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.scan_local_recycling_candidates_for_subspace"><code class="docutils literal notranslate"><span class="pre">scan_local_recycling_candidates_for_subspace()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.build_local_recycling_jumps_from_subspace_regions"><code class="docutils literal notranslate"><span class="pre">build_local_recycling_jumps_from_subspace_regions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_recycling.build_local_recycling_jumps_from_regions"><code class="docutils literal notranslate"><span class="pre">build_local_recycling_jumps_from_regions()</span></code></a></li>
 </ul>
 </li>
@@ -7999,30 +7909,6 @@ ranks.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SparseLindbladOperators.__init__"><code class="docutils literal notranslate"><span class="pre">SparseLindbladOperators.__init__()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.model"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.model</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.build_result"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.build_result</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.hamiltonian"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.hamiltonian</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.target_states"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.target_states</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.target_labels"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.target_labels</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.jumps"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.jumps</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.detectors"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.detectors</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.left_multipliers"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.left_multipliers</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.bond_ids"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.bond_ids</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.left_multiplier"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.left_multiplier</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.gamma"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.gamma</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.total_sz"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.total_sz</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.max_jump_residual"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.max_jump_residual</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.jump_residuals"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.jump_residuals</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.hamiltonian_closure_residual"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.hamiltonian_closure_residual</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.liouvillian"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.liouvillian</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.liouvillian_zero_mode_count"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.liouvillian_zero_mode_count</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.n_jumps"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.n_jumps</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.n_target_states"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.n_target_states</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.to_summary_dict"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.to_summary_dict()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.SpinOneXYLindbladConstruction.__init__"><code class="docutils literal notranslate"><span class="pre">SpinOneXYLindbladConstruction.__init__()</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.TrajectoryResult"><code class="docutils literal notranslate"><span class="pre">TrajectoryResult</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.TrajectoryResult.times"><code class="docutils literal notranslate"><span class="pre">TrajectoryResult.times</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.TrajectoryResult.states"><code class="docutils literal notranslate"><span class="pre">TrajectoryResult.states</span></code></a></li>
@@ -8051,7 +7937,7 @@ ranks.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_liouvillian"><code class="docutils literal notranslate"><span class="pre">build_liouvillian()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_liouvillian_from_prepared"><code class="docutils literal notranslate"><span class="pre">build_liouvillian_from_prepared()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_local_recycling_jumps_from_regions"><code class="docutils literal notranslate"><span class="pre">build_local_recycling_jumps_from_regions()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_spin_one_xy_lindblad_construction"><code class="docutils literal notranslate"><span class="pre">build_spin_one_xy_lindblad_construction()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.build_local_recycling_jumps_from_subspace_regions"><code class="docutils literal notranslate"><span class="pre">build_local_recycling_jumps_from_subspace_regions()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.density_matrix_from_state"><code class="docutils literal notranslate"><span class="pre">density_matrix_from_state()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.density_matrix_from_state_matrix"><code class="docutils literal notranslate"><span class="pre">density_matrix_from_state_matrix()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.detect_two_pattern_recycling_structure"><code class="docutils literal notranslate"><span class="pre">detect_two_pattern_recycling_structure()</span></code></a></li>
@@ -8073,6 +7959,7 @@ ranks.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_operator_matrix_unit_expansion"><code class="docutils literal notranslate"><span class="pre">local_operator_matrix_unit_expansion()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_rank_one_matrix_unit_expansion"><code class="docutils literal notranslate"><span class="pre">local_rank_one_matrix_unit_expansion()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_reduced_density_matrix_from_state"><code class="docutils literal notranslate"><span class="pre">local_reduced_density_matrix_from_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.local_reduced_density_matrix_from_state_matrix"><code class="docutils literal notranslate"><span class="pre">local_reduced_density_matrix_from_state_matrix()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.normalize_state"><code class="docutils literal notranslate"><span class="pre">normalize_state()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.observable_vs_time"><code class="docutils literal notranslate"><span class="pre">observable_vs_time()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.prepare_dense_lindblad_operators"><code class="docutils literal notranslate"><span class="pre">prepare_dense_lindblad_operators()</span></code></a></li>
@@ -8086,7 +7973,9 @@ ranks.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.run_quantum_jump_trajectory"><code class="docutils literal notranslate"><span class="pre">run_quantum_jump_trajectory()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.sample_lindblad_mcwf"><code class="docutils literal notranslate"><span class="pre">sample_lindblad_mcwf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.scan_local_recycling_candidates"><code class="docutils literal notranslate"><span class="pre">scan_local_recycling_candidates()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.scan_local_recycling_candidates_for_subspace"><code class="docutils literal notranslate"><span class="pre">scan_local_recycling_candidates_for_subspace()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.score_recycling_jump"><code class="docutils literal notranslate"><span class="pre">score_recycling_jump()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.score_recycling_jump_for_subspace"><code class="docutils literal notranslate"><span class="pre">score_recycling_jump_for_subspace()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.select_local_recycling_candidates"><code class="docutils literal notranslate"><span class="pre">select_local_recycling_candidates()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.solve_lindblad"><code class="docutils literal notranslate"><span class="pre">solve_lindblad()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.open_system.unvectorize_density_matrix"><code class="docutils literal notranslate"><span class="pre">unvectorize_density_matrix()</span></code></a></li>
