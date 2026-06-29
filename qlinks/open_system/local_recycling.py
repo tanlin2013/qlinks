@@ -338,6 +338,147 @@ def local_reduced_density_matrix_from_state(
     )
 
 
+def _normalize_state_matrix_columns(
+    states: npt.ArrayLike,
+    *,
+    dim: int,
+    tolerance: float = 1e-10,
+) -> npt.NDArray[np.complex128]:
+    matrix = np.asarray(states, dtype=np.complex128)
+
+    if matrix.ndim == 1:
+        if matrix.size != dim:
+            raise ValueError("state vector has incompatible dimension.")
+        matrix = matrix.reshape(dim, 1)
+    elif matrix.ndim == 2:
+        if matrix.shape[0] == dim:
+            pass
+        elif matrix.shape[1] == dim:
+            matrix = matrix.T
+        else:
+            raise ValueError("state matrix must have shape (dim, n_states) or " "(n_states, dim).")
+    else:
+        raise ValueError("states must be a vector or a two-dimensional matrix.")
+
+    if matrix.shape[1] == 0:
+        raise ValueError("state matrix must contain at least one state.")
+
+    q, r = np.linalg.qr(matrix)
+    rank_mask = np.abs(np.diag(r)) > tolerance
+    rank = int(np.count_nonzero(rank_mask))
+
+    if rank == 0:
+        raise ValueError("state matrix has numerical rank zero.")
+
+    return q[:, :rank].astype(np.complex128, copy=False)
+
+
+def _local_reduced_density_matrix_from_basis_context_and_states(
+    *,
+    context: _LocalPatternBasisContext,
+    states: npt.ArrayLike,
+    tolerance: float = 1e-10,
+) -> LocalReducedDensityMatrix:
+    """Return the local RDM of the normalized projector onto a state subspace."""
+    state_basis = _normalize_state_matrix_columns(
+        states,
+        dim=context.dim,
+        tolerance=tolerance,
+    )
+    density_matrix = np.zeros((context.local_dim, context.local_dim), dtype=np.complex128)
+
+    for state_index in range(state_basis.shape[1]):
+        amplitudes = state_basis[:, state_index]
+        for basis_indices, local_indices in context.environment_groups:
+            group_amplitudes = amplitudes[basis_indices]
+            density_matrix[np.ix_(local_indices, local_indices)] += np.outer(
+                group_amplitudes,
+                group_amplitudes.conj(),
+            )
+
+    density_matrix /= float(state_basis.shape[1])
+    density_matrix = 0.5 * (density_matrix + density_matrix.conj().T)
+
+    eigenvalues, eigenvectors = np.linalg.eigh(density_matrix)
+    eigenvalues = np.asarray(eigenvalues, dtype=np.float64)
+
+    support_mask = eigenvalues > tolerance
+    null_mask = ~support_mask
+
+    return LocalReducedDensityMatrix(
+        variable_indices=context.variable_indices,
+        local_patterns=context.local_patterns,
+        density_matrix=density_matrix,
+        eigenvalues=eigenvalues,
+        support_basis=eigenvectors[:, support_mask].astype(np.complex128),
+        null_basis=eigenvectors[:, null_mask].astype(np.complex128),
+    )
+
+
+def local_reduced_density_matrix_from_state_matrix(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    states: npt.ArrayLike,
+    variable_indices: tuple[int, ...] | list[int],
+    tolerance: float = 1e-10,
+) -> LocalReducedDensityMatrix:
+    """Compute the local RDM of the normalized projector onto a state subspace.
+
+    ``states`` may have shape ``(dim, n_states)`` or ``(n_states, dim)``.  The
+    columns are orthonormalized before tracing out the environment, so callers
+    may pass linearly dependent cage representatives without changing the local
+    support.
+    """
+    context = _local_pattern_basis_context_from_basis(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    return _local_reduced_density_matrix_from_basis_context_and_states(
+        context=context,
+        states=states,
+        tolerance=tolerance,
+    )
+
+
+def score_recycling_jump_for_subspace(
+    *,
+    jump: Any,
+    states: npt.ArrayLike,
+    tolerance: float = 1e-10,
+) -> tuple[float, float, float, float]:
+    """Return residual/inflow/outflow diagnostics for a target subspace.
+
+    The target subspace is represented by an orthonormal basis ``Q``.  The
+    returned values are Frobenius norms of ``J Q`` and ``J^† Q``; when ``J Q=0``
+    the second norm equals the direct inflow block ``Q_perp J^† Q``.
+    """
+    jump_matrix = jump.tocsr() if hasattr(jump, "tocsr") else sp.csr_array(jump)
+    dim = int(jump_matrix.shape[1])
+    state_basis = _normalize_state_matrix_columns(states, dim=dim, tolerance=tolerance)
+
+    target_action = np.asarray(jump_matrix @ state_basis, dtype=np.complex128)
+    adjoint_target_action = np.asarray(jump_matrix.conj().T @ state_basis, dtype=np.complex128)
+    overlap = state_basis.conj().T @ target_action
+
+    target_norm_sq = float(np.linalg.norm(target_action) ** 2)
+    adjoint_norm_sq = float(np.linalg.norm(adjoint_target_action) ** 2)
+    overlap_norm_sq = float(np.linalg.norm(overlap) ** 2)
+
+    target_residual = float(np.sqrt(max(target_norm_sq, 0.0)))
+    inflow_norm = float(np.sqrt(max(adjoint_norm_sq - overlap_norm_sq, 0.0)))
+    outflow_norm = float(np.sqrt(max(target_norm_sq - overlap_norm_sq, 0.0)))
+    projector_commutator_norm = float(
+        np.sqrt(max(target_norm_sq + adjoint_norm_sq - 2.0 * overlap_norm_sq, 0.0))
+    )
+
+    return (
+        target_residual,
+        inflow_norm,
+        outflow_norm,
+        projector_commutator_norm,
+    )
+
+
 def _embedding_context_from_basis_context(
     context: _LocalPatternBasisContext,
 ) -> _LocalPatternEmbeddingContext:
@@ -1130,6 +1271,275 @@ def _scan_local_block_reset_recycling_candidates(
     return LocalRecyclingScanResult(
         reduced_density_matrix=reduced_density_matrix,
         candidates=tuple(candidates),
+    )
+
+
+def _scan_local_block_reset_recycling_candidates_for_subspace(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    states: npt.ArrayLike,
+    variable_indices: tuple[int, ...] | list[int],
+    rdm_tolerance: float = 1e-10,
+    dark_tolerance: float = 1e-10,
+    inflow_tolerance: float = 1e-10,
+) -> LocalRecyclingScanResult:
+    """Scan compressed block-reset recyclers for a target subspace."""
+    basis_context = _local_pattern_basis_context_from_basis(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    state_basis = _normalize_state_matrix_columns(
+        states,
+        dim=basis_context.dim,
+        tolerance=rdm_tolerance,
+    )
+    reduced_density_matrix = _local_reduced_density_matrix_from_basis_context_and_states(
+        context=basis_context,
+        states=state_basis,
+        tolerance=rdm_tolerance,
+    )
+
+    support_basis = reduced_density_matrix.support_basis
+    null_basis = reduced_density_matrix.null_basis
+    support_rank = int(support_basis.shape[1])
+    nullity = int(null_basis.shape[1])
+
+    if support_rank == 0 or nullity == 0:
+        return LocalRecyclingScanResult(
+            reduced_density_matrix=reduced_density_matrix,
+            candidates=(),
+        )
+
+    embedding_context = _embedding_context_from_basis_context(basis_context)
+    candidates: list[LocalRecyclingCandidate] = []
+
+    for start in range(0, nullity, support_rank):
+        block = null_basis[:, start : start + support_rank]
+        block_rank = int(block.shape[1])
+        local_operator = support_basis[:, :block_rank] @ block.conj().T
+        jump = _embed_local_pattern_operator_from_context(
+            context=embedding_context,
+            local_operator=local_operator.astype(np.complex128, copy=False),
+        )
+        (
+            target_residual,
+            inflow_norm,
+            outflow_norm,
+            projector_commutator_norm,
+        ) = score_recycling_jump_for_subspace(
+            jump=jump,
+            states=state_basis,
+            tolerance=rdm_tolerance,
+        )
+
+        if target_residual > dark_tolerance:
+            continue
+        if inflow_norm <= inflow_tolerance:
+            continue
+
+        candidates.append(
+            LocalRecyclingCandidate(
+                variable_indices=reduced_density_matrix.variable_indices,
+                alpha_index=0,
+                beta_index=int(start),
+                jump=jump,
+                target_residual=target_residual,
+                inflow_norm=inflow_norm,
+                outflow_norm=outflow_norm,
+                projector_commutator_norm=projector_commutator_norm,
+                local_alpha_vector=support_basis[:, 0].astype(np.complex128),
+                local_beta_vector=block[:, 0].astype(np.complex128),
+                local_operator=local_operator.astype(np.complex128, copy=False),
+            )
+        )
+
+    candidates = sorted(
+        candidates,
+        key=lambda candidate: (
+            int(candidate.beta_index),
+            float(candidate.target_residual),
+            int(candidate.jump.nnz),
+        ),
+    )
+
+    return LocalRecyclingScanResult(
+        reduced_density_matrix=reduced_density_matrix,
+        candidates=tuple(candidates),
+    )
+
+
+def scan_local_recycling_candidates_for_subspace(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    states: npt.ArrayLike,
+    variable_indices: tuple[int, ...] | list[int],
+    rdm_tolerance: float = 1e-10,
+    dark_tolerance: float = 1e-10,
+    inflow_tolerance: float = 1e-10,
+    max_candidates: int | None = None,
+) -> LocalRecyclingScanResult:
+    """Scan local rank-one recycling jumps from a target subspace RDM."""
+    basis_context = _local_pattern_basis_context_from_basis(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    state_basis = _normalize_state_matrix_columns(
+        states,
+        dim=basis_context.dim,
+        tolerance=rdm_tolerance,
+    )
+    reduced_density_matrix = _local_reduced_density_matrix_from_basis_context_and_states(
+        context=basis_context,
+        states=state_basis,
+        tolerance=rdm_tolerance,
+    )
+
+    support_basis = reduced_density_matrix.support_basis
+    null_basis = reduced_density_matrix.null_basis
+    support_rank = int(support_basis.shape[1])
+    nullity = int(null_basis.shape[1])
+    candidates: list[LocalRecyclingCandidate] = []
+
+    if support_rank == 0 or nullity == 0:
+        return LocalRecyclingScanResult(
+            reduced_density_matrix=reduced_density_matrix,
+            candidates=(),
+        )
+
+    embedding_context = _embedding_context_from_basis_context(basis_context)
+
+    for alpha_index in range(support_rank):
+        alpha_vector = support_basis[:, alpha_index]
+        for beta_index in range(nullity):
+            beta_vector = null_basis[:, beta_index]
+            local_operator = np.outer(alpha_vector, beta_vector.conj())
+            jump = _embed_local_pattern_operator_from_context(
+                context=embedding_context,
+                local_operator=local_operator,
+            )
+            (
+                target_residual,
+                inflow_norm,
+                outflow_norm,
+                projector_commutator_norm,
+            ) = score_recycling_jump_for_subspace(
+                jump=jump,
+                states=state_basis,
+                tolerance=rdm_tolerance,
+            )
+
+            if target_residual > dark_tolerance:
+                continue
+            if inflow_norm <= inflow_tolerance:
+                continue
+
+            candidates.append(
+                LocalRecyclingCandidate(
+                    variable_indices=reduced_density_matrix.variable_indices,
+                    alpha_index=int(alpha_index),
+                    beta_index=int(beta_index),
+                    jump=jump,
+                    target_residual=target_residual,
+                    inflow_norm=inflow_norm,
+                    outflow_norm=outflow_norm,
+                    projector_commutator_norm=projector_commutator_norm,
+                    local_alpha_vector=alpha_vector.astype(np.complex128),
+                    local_beta_vector=beta_vector.astype(np.complex128),
+                )
+            )
+
+    candidates = sorted(
+        candidates,
+        key=lambda candidate: (
+            -float(candidate.inflow_norm),
+            float(candidate.target_residual),
+            int(candidate.jump.nnz),
+        ),
+    )
+
+    if max_candidates is not None:
+        candidates = candidates[:max_candidates]
+
+    return LocalRecyclingScanResult(
+        reduced_density_matrix=reduced_density_matrix,
+        candidates=tuple(candidates),
+    )
+
+
+def build_local_recycling_jumps_from_subspace_regions(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    states: npt.ArrayLike,
+    regions: tuple[tuple[int, ...], ...],
+    source: RecyclingJumpSource = "local_rdm_block_reset",
+    deduplicate_regions: bool = False,
+    max_jumps_per_region: int = 1,
+    rdm_tolerance: float = 1e-10,
+    dark_tolerance: float = 1e-10,
+    inflow_tolerance: float = 1e-12,
+    max_candidates_per_region: int | None = None,
+    prefer_sparse: bool = True,
+    two_pattern_tolerance: float = 1e-8,
+) -> LocalRecyclingBuildResult:
+    """Scan local recycling jumps that annihilate a target state subspace."""
+    if source == "none":
+        return LocalRecyclingBuildResult(scan_results=(), selections=())
+
+    if source == "local_rdm_two_pattern":
+        raise NotImplementedError(
+            "local_rdm_two_pattern is only implemented for a single target state. "
+            "Use local_rdm_rank_one, local_rdm_null_basis, or local_rdm_block_reset "
+            "for a target subspace."
+        )
+
+    scan_results: list[LocalRecyclingScanResult] = []
+    selections: list[LocalRecyclingSelection] = []
+    scan_result_cache: dict[tuple[int, ...], LocalRecyclingScanResult] = {}
+    selected_region_keys: set[tuple[int, ...]] = set()
+
+    for region in regions:
+        region_key = tuple(int(index) for index in region)
+        if deduplicate_regions and region_key in selected_region_keys:
+            continue
+        selected_region_keys.add(region_key)
+
+        scan_result = scan_result_cache.get(region_key)
+        if scan_result is None:
+            if source == "local_rdm_block_reset":
+                scan_result = _scan_local_block_reset_recycling_candidates_for_subspace(
+                    basis_configs=basis_configs,
+                    states=states,
+                    variable_indices=region_key,
+                    rdm_tolerance=rdm_tolerance,
+                    dark_tolerance=dark_tolerance,
+                    inflow_tolerance=inflow_tolerance,
+                )
+            else:
+                scan_result = scan_local_recycling_candidates_for_subspace(
+                    basis_configs=basis_configs,
+                    states=states,
+                    variable_indices=region_key,
+                    rdm_tolerance=rdm_tolerance,
+                    dark_tolerance=dark_tolerance,
+                    inflow_tolerance=inflow_tolerance,
+                    max_candidates=max_candidates_per_region,
+                )
+            scan_result_cache[region_key] = scan_result
+
+        scan_results.append(scan_result)
+        selections.extend(
+            select_local_recycling_candidates(
+                scan_result=scan_result,
+                source=source,
+                max_candidates=max_jumps_per_region,
+                prefer_sparse=prefer_sparse,
+                two_pattern_tolerance=two_pattern_tolerance,
+            )
+        )
+
+    return LocalRecyclingBuildResult(
+        scan_results=tuple(scan_results),
+        selections=tuple(selections),
     )
 
 
