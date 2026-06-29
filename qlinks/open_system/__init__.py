@@ -64,11 +64,6 @@ from qlinks.open_system.solvers import (
     Rk4StepPolicy,
     solve_lindblad,
 )
-from qlinks.open_system.spin_one_xy import (
-    SpinOneXYLeftMultiplier,
-    SpinOneXYLindbladConstruction,
-    build_spin_one_xy_lindblad_construction,
-)
 from qlinks.open_system.states import (
     DensityMatrixKind,
     density_matrix_from_state,
@@ -122,8 +117,6 @@ __all__ = [
     "RecyclingJumpSource",
     "Rk4StepPolicy",
     "SparseLindbladOperators",
-    "SpinOneXYLeftMultiplier",
-    "SpinOneXYLindbladConstruction",
     "TrajectoryResult",
     "TwoPatternRecyclingStructure",
     "analyze_lindblad_evolution",
@@ -132,7 +125,6 @@ __all__ = [
     "build_liouvillian",
     "build_liouvillian_from_prepared",
     "build_local_recycling_jumps_from_regions",
-    "build_spin_one_xy_lindblad_construction",
     "density_matrix_from_state",
     "density_matrix_from_state_matrix",
     "detect_two_pattern_recycling_structure",

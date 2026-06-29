@@ -17,6 +17,7 @@ PUBLIC_MODULES = (
     "qlinks.lattice",
     "qlinks.models",
     "qlinks.open_system",
+    "qlinks.open_system.constructions",
     "qlinks.operators",
     "qlinks.variables",
     "qlinks.visualizer",
@@ -28,7 +29,7 @@ EXPECTED_EXPORTS = {
         "VariableOrderStrategy",
         "ValueOrderStrategy",
     },
-    "qlinks.caging": {
+    "qlinks.open_system.constructions": {
         "JumpOperatorDesign",
         "MonitorSource",
         "ReducedIZMonitorContent",

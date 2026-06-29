@@ -187,7 +187,7 @@ problem from a type-1 cage, its classification report, and model metadata:
 
 .. code-block:: python
 
-   from qlinks.caging import build_type1_cage_lindblad_construction
+   from qlinks.open_system.constructions import build_type1_cage_lindblad_construction
 
    construction = build_type1_cage_lindblad_construction(
        model=model,

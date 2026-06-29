@@ -9,7 +9,18 @@ from qlinks.caging.classification import (
     InterferenceZeroReport,
     LocalTransitionPattern,
 )
-from qlinks.caging.open_system import (
+from qlinks.encoded import BinaryEncodedBasis
+from qlinks.models import LocalTermDescriptor
+from qlinks.open_system import (
+    LindbladEvolutionOptions,
+    LocalRecyclingBuildResult,
+    LocalRecyclingCandidate,
+    LocalRecyclingScanResult,
+    LocalRecyclingSelection,
+    LocalReducedDensityMatrix,
+    initial_density_matrix,
+)
+from qlinks.open_system.constructions.cage import (
     CageLindbladConstruction,
     _build_component_decomposition_jump_operators,
     _build_jump_operators,
@@ -34,17 +45,6 @@ from qlinks.caging.open_system import (
     _select_jump_terms,
     _select_monitor_terms,
     _transition_pattern_key,
-)
-from qlinks.encoded import BinaryEncodedBasis
-from qlinks.models import LocalTermDescriptor
-from qlinks.open_system import (
-    LindbladEvolutionOptions,
-    LocalRecyclingBuildResult,
-    LocalRecyclingCandidate,
-    LocalRecyclingScanResult,
-    LocalRecyclingSelection,
-    LocalReducedDensityMatrix,
-    initial_density_matrix,
 )
 from qlinks.variables import LocalSpace, VariableLayout
 
