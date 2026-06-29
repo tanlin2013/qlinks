@@ -107,6 +107,14 @@ def test_degenerate_cage_lindblad_construction_from_states():
         np.diag([0.5, 0.0, 0.0, 0.5]),
     )
 
+    diagnostics = construction.diagnose_manifold(
+        hamiltonian=build_result.hamiltonian,
+        liouvillian_spectrum_method="dense",
+    )
+    assert diagnostics.manifold_dimension == 2
+    assert diagnostics.max_target_jump_residual < 1e-12
+    assert diagnostics.expected_internal_zero_mode_count == 4
+
 
 def test_degenerate_cage_lindblad_construction_infers_regions_from_model():
     build_result = _two_bit_build_result()

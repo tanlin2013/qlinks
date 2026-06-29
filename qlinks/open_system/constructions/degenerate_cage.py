@@ -14,6 +14,7 @@ from qlinks.models.base import ModelBuildResult
 from qlinks.models.local_terms import LocalTermKind
 from qlinks.open_system.backend import OpenSystemBackendName
 from qlinks.open_system.constructions.cage import _local_terms_by_operator_kind
+from qlinks.open_system.diagnostics import DarkManifoldDiagnostics, diagnose_dark_manifold
 from qlinks.open_system.local_recycling import (
     LocalRecyclingBuildResult,
     RecyclingJumpSource,
@@ -296,6 +297,32 @@ class DegenerateCageLindbladConstruction:
             backend=backend,
         )
         return problem.build_liouvillian(sparse_format=sparse_format)
+
+    def diagnose_manifold(
+        self,
+        *,
+        hamiltonian: Any,
+        backend: str | None = None,
+        kernel_tolerance: float = 1e-10,
+        liouvillian_zero_tolerance: float = 1e-9,
+        check_liouvillian_spectrum: bool = True,
+        max_liouvillian_dense_dimension: int = 4096,
+        liouvillian_spectrum_method: Literal["auto", "dense", "sparse", "none"] = "auto",
+        sparse_liouvillian_eigenvalue_count: int = 32,
+    ) -> DarkManifoldDiagnostics:
+        """Return manifold-aware dark/attractiveness diagnostics."""
+        return diagnose_dark_manifold(
+            hamiltonian=hamiltonian,
+            jumps=self.jumps,
+            target_states=self.manifold_basis,
+            backend=self.open_system_backend if backend is None else backend,
+            kernel_tolerance=kernel_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            check_liouvillian_spectrum=check_liouvillian_spectrum,
+            max_liouvillian_dense_dimension=max_liouvillian_dense_dimension,
+            liouvillian_spectrum_method=liouvillian_spectrum_method,
+            sparse_liouvillian_eigenvalue_count=sparse_liouvillian_eigenvalue_count,
+        )
 
 
 def build_degenerate_cage_lindblad_construction(
