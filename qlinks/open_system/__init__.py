@@ -51,6 +51,12 @@ from qlinks.open_system.local_recycling import (
     score_recycling_jump_for_subspace,
     select_local_recycling_candidates,
 )
+from qlinks.open_system.manifold_detectors import (
+    DarkOperatorTerm,
+    ManifoldDarkOperatorBasisReport,
+    ManifoldDarkOperatorCandidate,
+    diagnose_manifold_dark_operator_basis,
+)
 from qlinks.open_system.operators import (
     DenseLindbladOperators,
     SparseLindbladOperators,
@@ -103,6 +109,7 @@ __all__ = [
     "AbsorbingProjectorJumpDiagnostics",
     "AbsorbingProjectorSymmetryDiagnostics",
     "DarkManifoldDiagnostics",
+    "DarkOperatorTerm",
     "DarkSubspaceDiagnostics",
     "DenseLindbladOperators",
     "DensityMatrixKind",
@@ -123,6 +130,8 @@ __all__ = [
     "LocalReducedDensityMatrix",
     "LocalSubspaceSupportReport",
     "LocalSubspaceSupportReportEntry",
+    "ManifoldDarkOperatorBasisReport",
+    "ManifoldDarkOperatorCandidate",
     "McwfOptions",
     "MonitorKernelClosureDiagnostics",
     "OpenSystemBackend",
@@ -146,6 +155,7 @@ __all__ = [
     "diagnose_dark_manifold",
     "diagnose_dark_subspace",
     "diagnose_jump_span",
+    "diagnose_manifold_dark_operator_basis",
     "diagnose_monitor_kernel_closure",
     "effective_hamiltonian",
     "embed_local_pattern_operator",

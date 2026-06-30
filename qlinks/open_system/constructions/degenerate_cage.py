@@ -22,6 +22,10 @@ from qlinks.open_system.local_recycling import (
     build_local_recycling_jumps_from_subspace_regions,
     local_subspace_support_report_from_recycling_build_result,
 )
+from qlinks.open_system.manifold_detectors import (
+    ManifoldDarkOperatorBasisReport,
+    diagnose_manifold_dark_operator_basis,
+)
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
 from qlinks.open_system.solvers import LindbladProblem
 
@@ -387,6 +391,30 @@ class DegenerateCageLindbladConstruction:
             max_liouvillian_dense_dimension=max_liouvillian_dense_dimension,
             liouvillian_spectrum_method=liouvillian_spectrum_method,
             sparse_liouvillian_eigenvalue_count=sparse_liouvillian_eigenvalue_count,
+        )
+
+    def diagnose_dark_operator_basis(
+        self,
+        *,
+        operators: tuple[Any, ...] | list[Any],
+        operator_names: tuple[str, ...] | list[str] | None = None,
+        tolerance: float = 1.0e-10,
+        coefficient_tolerance: float = 1.0e-8,
+        max_candidates: int | None = 16,
+    ) -> ManifoldDarkOperatorBasisReport:
+        """Find collective operator combinations ``D`` with ``D P_M = 0``.
+
+        This is useful when every small region has full local RDM support, so no
+        strictly local parent projector exists, but sums of local terms may still
+        annihilate the manifold by interference/cancellation.
+        """
+        return diagnose_manifold_dark_operator_basis(
+            states=self.manifold_basis,
+            operators=operators,
+            operator_names=operator_names,
+            tolerance=tolerance,
+            coefficient_tolerance=coefficient_tolerance,
+            max_candidates=max_candidates,
         )
 
 
