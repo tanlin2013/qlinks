@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.sparse as sp
 
-from qlinks.basis import basis_configs_from_build_result
+from qlinks.basis import basis_configs_from_build_result, full_basis_from_layout
 from qlinks.caging import (
     CageRecord,
     CageState,
@@ -14,9 +14,11 @@ from qlinks.caging import (
     sga_ladder_basis_diagnostic_from_cage_records,
     sga_operator_diagnostic,
 )
+from qlinks.encoded import BinaryEncodedBasis
 from qlinks.models import LocalTermDescriptor, SpinOneXYChainModel
 from qlinks.models.spin_one_xy import spin_one_xy_scar_tower_states
 from qlinks.open_system.local_recycling import embed_local_pattern_operator
+from qlinks.variables import LocalSpace, VariableLayout
 
 
 def _matrix_unit(target: int, source: int, size: int = 3):
@@ -158,6 +160,49 @@ def test_local_term_operator_basis_uses_model_local_term_interface() -> None:
     assert len(basis.operators) == 2
     assert basis.descriptors[0].support_variable_set == frozenset({0, 1})
     assert basis.to_summary_dict()["n_operators"] == 2
+
+
+def test_local_term_operator_basis_infers_bitmask_builder_from_build_result() -> None:
+    seen_builders: list[str] = []
+
+    @dataclass(frozen=True)
+    class _BuildResult:
+        basis: object
+
+    @dataclass(frozen=True)
+    class _BitmaskAwareFakeModel:
+        def local_term_descriptors(self, *, operator_kind=None, term_kind=None):
+            del operator_kind, term_kind
+            return (
+                LocalTermDescriptor(
+                    term_id=0,
+                    term_kind="bond",
+                    operator_kind="kinetic",
+                    support_links=(),
+                    support_variables=(0, 1),
+                    label="K0",
+                ),
+            )
+
+        def build_local_term(self, descriptor, build_result, *, builder, backend, on_missing):
+            del descriptor, build_result, backend, on_missing
+            seen_builders.append(builder)
+            return _matrix_unit(1, 0)
+
+    layout = VariableLayout.from_sites(2, LocalSpace.binary())
+    encoded_basis = BinaryEncodedBasis.from_basis(
+        full_basis_from_layout(layout, sort=True),
+        sort=False,
+    )
+
+    basis = local_term_operator_basis(
+        model=_BitmaskAwareFakeModel(),
+        build_result=_BuildResult(basis=encoded_basis),
+        operator_kind="kinetic",
+    )
+
+    assert basis.operator_names == ("K0",)
+    assert seen_builders == ["bitmask"]
 
 
 def _spin_one_bimagnon_raising_basis(

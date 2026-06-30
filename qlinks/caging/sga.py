@@ -23,6 +23,7 @@ import numpy.typing as npt
 import scipy.sparse as sp
 
 from qlinks.caging.search import CageRecord
+from qlinks.encoded import BinaryEncodedBasis
 from qlinks.models.local_terms import (
     LocalOperatorKind,
     LocalTermDescriptor,
@@ -511,13 +512,25 @@ def sga_ladder_basis_diagnostic_from_cage_records(
     )
 
 
+def _infer_local_term_builder(build_result: Any, *, builder: str | None) -> str:
+    """Infer the local-term builder from a model build result when possible."""
+    if builder is not None:
+        return builder
+
+    basis = getattr(build_result, "basis", None)
+    if isinstance(basis, BinaryEncodedBasis):
+        return "bitmask"
+
+    return "sparse"
+
+
 def local_term_operator_basis(
     *,
     model: Any,
     build_result: Any,
     operator_kind: LocalOperatorKind | None = "kinetic",
     term_kind: LocalTermKind | None = None,
-    builder: str = "sparse",
+    builder: str | None = None,
     backend: str = "scipy",
     on_missing: str = "skip",
 ) -> LocalTermOperatorBasis:
@@ -525,9 +538,13 @@ def local_term_operator_basis(
 
     This is the model-generic entry point for QDM/QLM/disk/spin-chain scans.  It
     relies only on ``model.local_term_descriptors`` and ``model.build_local_term``.
+    When ``builder`` is omitted, the builder is inferred from ``build_result`` so
+    bitmask-built bases are rebuilt with the bitmask local-term backend.
     """
     if not hasattr(model, "local_term_descriptors") or not hasattr(model, "build_local_term"):
         raise TypeError("model must expose local_term_descriptors() and build_local_term().")
+
+    effective_builder = _infer_local_term_builder(build_result, builder=builder)
 
     descriptors = tuple(
         model.local_term_descriptors(
@@ -544,7 +561,7 @@ def local_term_operator_basis(
         model.build_local_term(
             descriptor,
             build_result,
-            builder=builder,
+            builder=effective_builder,
             backend=backend,
             on_missing=on_missing,
         )
