@@ -25,8 +25,10 @@ from qlinks.open_system.local_recycling import (
 from qlinks.open_system.manifold_detectors import (
     DressedManifoldDarkDetectorReport,
     ManifoldDarkOperatorBasisReport,
+    RecycledManifoldDarkDetectorReport,
     diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
+    diagnose_recycled_manifold_dark_detectors,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
 from qlinks.open_system.solvers import LindbladProblem
@@ -455,6 +457,58 @@ class DegenerateCageLindbladConstruction:
             dark_tolerance=dark_tolerance,
             inflow_tolerance=inflow_tolerance,
             max_detectors=max_detectors,
+            sort_by_inflow=sort_by_inflow,
+        )
+
+    def diagnose_recycled_dark_detectors(
+        self,
+        *,
+        basis_configs: NDArray[np.integer],
+        detector_operators: tuple[Any, ...] | list[Any],
+        local_regions: Sequence[Sequence[int]] | None = None,
+        detector_coefficients: NDArray[np.complex128] | None = None,
+        dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+        detector_operator_names: tuple[str, ...] | list[str] | None = None,
+        detector_names: tuple[str, ...] | list[str] | None = None,
+        recycler_source: Literal[
+            "matrix_units",
+            "rdm_support_matrix_units",
+        ] = "rdm_support_matrix_units",
+        tolerance: float = 1.0e-10,
+        rdm_tolerance: float = 1.0e-10,
+        dark_tolerance: float = 1.0e-10,
+        inflow_tolerance: float = 1.0e-12,
+        max_detectors: int | None = None,
+        max_report_candidates: int | None = 256,
+        sort_by_inflow: bool = True,
+    ) -> RecycledManifoldDarkDetectorReport:
+        """Test local recycler-dressed jumps ``J = R D``.
+
+        This is the degenerate-manifold analogue of the successful single-cage
+        recycler idea.  The right detector ``D`` guarantees
+        ``J P_M = R D P_M = 0``.  The local recycler ``R`` is therefore allowed
+        to be a general local matrix unit or RDM-support reset operator, and is
+        scored by its direct inflow ``||P_M J (I-P_M)||_F``.
+        """
+        regions = (
+            self.local_regions if local_regions is None else _normalize_local_regions(local_regions)
+        )
+        return diagnose_recycled_manifold_dark_detectors(
+            states=self.manifold_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            local_regions=regions,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            max_detectors=max_detectors,
+            max_report_candidates=max_report_candidates,
             sort_by_inflow=sort_by_inflow,
         )
 

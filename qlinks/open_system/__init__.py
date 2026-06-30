@@ -57,8 +57,11 @@ from qlinks.open_system.manifold_detectors import (
     DressedManifoldDarkDetectorReport,
     ManifoldDarkOperatorBasisReport,
     ManifoldDarkOperatorCandidate,
+    RecycledManifoldDarkDetectorCandidate,
+    RecycledManifoldDarkDetectorReport,
     diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
+    diagnose_recycled_manifold_dark_detectors,
 )
 from qlinks.open_system.operators import (
     DenseLindbladOperators,
@@ -141,6 +144,8 @@ __all__ = [
     "MonitorKernelClosureDiagnostics",
     "OpenSystemBackend",
     "OpenSystemBackendName",
+    "RecycledManifoldDarkDetectorCandidate",
+    "RecycledManifoldDarkDetectorReport",
     "RecyclingJumpSource",
     "Rk4StepPolicy",
     "SparseLindbladOperators",
@@ -163,6 +168,7 @@ __all__ = [
     "diagnose_jump_span",
     "diagnose_manifold_dark_operator_basis",
     "diagnose_monitor_kernel_closure",
+    "diagnose_recycled_manifold_dark_detectors",
     "effective_hamiltonian",
     "embed_local_pattern_operator",
     "estimate_lindblad_scale",

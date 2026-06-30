@@ -150,3 +150,74 @@ def test_construction_method_tests_dressed_dark_detector_report_and_rich_render(
     assert "Dressed manifold dark-detector report" in rendered
     assert "candidates with inflow" in rendered
     assert "X0" in rendered
+
+
+def _single_qutrit_build_result():
+    basis = _ArrayBasis([[0], [1], [2]])
+    hamiltonian = sp.csr_array((3, 3), dtype=np.complex128)
+    return SimpleNamespace(basis=basis, hamiltonian=hamiltonian)
+
+
+def _single_qutrit_target_state():
+    return np.asarray([1.0, 0.0, 0.0], dtype=np.complex128)
+
+
+def _single_qutrit_detector():
+    return sp.diags([0.0, 1.0, 0.0], format="csr", dtype=np.complex128)
+
+
+def test_recycled_dark_detector_finds_inflow_from_local_rdm_recycler():
+    from qlinks.open_system import diagnose_recycled_manifold_dark_detectors
+
+    report = diagnose_recycled_manifold_dark_detectors(
+        states=_single_qutrit_target_state(),
+        basis_configs=np.asarray([[0], [1], [2]], dtype=np.int64),
+        detector_operators=(_single_qutrit_detector(),),
+        detector_coefficients=np.asarray([1.0]),
+        detector_operator_names=("D1",),
+        local_regions=((0,),),
+        recycler_source="rdm_support_matrix_units",
+    )
+
+    summary = report.to_summary_dict()
+    assert summary["n_detectors"] == 1
+    assert summary["n_regions"] == 1
+    assert summary["max_region_size"] == 1
+    assert summary["n_tested_candidates"] == 3
+    assert summary["n_candidates_with_inflow"] >= 1
+    assert summary["has_attractive_candidates"] is True
+    assert summary["best_inflow_norm"] > 0.0
+    assert summary["candidates"][0]["relative_dark_residual"] < 1e-12
+    assert summary["candidates"][0]["inflow_norm"] > 0.0
+    assert "support_0" in summary["candidates"][0]["recycler_name"]
+
+
+def test_construction_method_tests_recycled_dark_detector_report_and_rich_render():
+    build_result = _single_qutrit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_single_qutrit_target_state(),
+        local_regions=((0,),),
+    )
+
+    report = construction.diagnose_recycled_dark_detectors(
+        basis_configs=build_result.basis.states,
+        detector_operators=(_single_qutrit_detector(),),
+        detector_coefficients=np.asarray([1.0]),
+        detector_operator_names=("D1",),
+        recycler_source="matrix_units",
+    )
+
+    assert report.n_candidates_with_inflow >= 1
+    assert report.best_inflow_norm > 0.0
+    assert report.max_region_size == 1
+    assert report.n_tested_candidates == 9
+
+    from rich.console import Console
+
+    console = Console(record=True, width=120)
+    console.print(report)
+    rendered = console.export_text()
+    assert "Recycled manifold dark-detector report" in rendered
+    assert "candidates with inflow" in rendered
+    assert "D1" in rendered
