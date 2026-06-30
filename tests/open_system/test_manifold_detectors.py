@@ -87,3 +87,66 @@ def test_manifold_dark_operator_basis_direct_api_and_rich_render():
     assert "Manifold dark-operator basis report" in rendered
     assert "dark-detector nullity" in rendered
     assert "Z0" in rendered or "Z1" in rendered
+
+
+def _single_site_x0_operator():
+    rows = np.asarray([2, 3, 0, 1], dtype=np.int64)
+    cols = np.asarray([0, 1, 2, 3], dtype=np.int64)
+    data = np.ones(4, dtype=np.complex128)
+    return sp.csr_array((data, (rows, cols)), shape=(4, 4))
+
+
+def test_dressed_dark_detector_finds_direct_inflow_from_left_multiplier():
+    from qlinks.open_system import diagnose_dressed_manifold_dark_detectors
+
+    z0, z1 = _single_site_z_operators()
+    x0 = _single_site_x0_operator()
+    report = diagnose_dressed_manifold_dark_detectors(
+        states=_equal_bit_manifold_rows(),
+        detector_operators=(z0, z1),
+        detector_coefficients=np.asarray([1.0, -1.0]),
+        detector_operator_names=("Z0", "Z1"),
+        left_multipliers=(x0,),
+        left_multiplier_names=("X0",),
+    )
+
+    summary = report.to_summary_dict()
+    assert summary["n_detectors"] == 1
+    assert summary["n_left_multipliers"] == 1
+    assert summary["n_candidates_with_inflow"] == 1
+    assert summary["has_attractive_candidates"] is True
+    assert summary["best_inflow_norm"] > 0.0
+    assert summary["candidates"][0]["relative_dark_residual"] < 1e-12
+    assert summary["candidates"][0]["inflow_norm"] > 0.0
+
+
+def test_construction_method_tests_dressed_dark_detector_report_and_rich_render():
+    build_result = _two_qubit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_equal_bit_manifold_rows(),
+        local_regions=((0,), (1,)),
+    )
+    dark_report = construction.diagnose_dark_operator_basis(
+        operators=_single_site_z_operators(),
+        operator_names=("Z0", "Z1"),
+    )
+
+    report = construction.diagnose_dressed_dark_detectors(
+        detector_operators=_single_site_z_operators(),
+        dark_operator_report=dark_report,
+        left_multipliers=(_single_site_x0_operator(),),
+        left_multiplier_names=("X0",),
+    )
+
+    assert report.n_candidates_with_inflow == 1
+    assert report.best_inflow_norm > 0.0
+
+    from rich.console import Console
+
+    console = Console(record=True, width=120)
+    console.print(report)
+    rendered = console.export_text()
+    assert "Dressed manifold dark-detector report" in rendered
+    assert "candidates with inflow" in rendered
+    assert "X0" in rendered

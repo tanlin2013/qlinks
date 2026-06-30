@@ -23,7 +23,9 @@ from qlinks.open_system.local_recycling import (
     local_subspace_support_report_from_recycling_build_result,
 )
 from qlinks.open_system.manifold_detectors import (
+    DressedManifoldDarkDetectorReport,
     ManifoldDarkOperatorBasisReport,
+    diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
@@ -415,6 +417,45 @@ class DegenerateCageLindbladConstruction:
             tolerance=tolerance,
             coefficient_tolerance=coefficient_tolerance,
             max_candidates=max_candidates,
+        )
+
+    def diagnose_dressed_dark_detectors(
+        self,
+        *,
+        detector_operators: tuple[Any, ...] | list[Any],
+        left_multipliers: tuple[Any, ...] | list[Any],
+        detector_coefficients: NDArray[np.complex128] | None = None,
+        dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+        detector_operator_names: tuple[str, ...] | list[str] | None = None,
+        left_multiplier_names: tuple[str, ...] | list[str] | None = None,
+        detector_names: tuple[str, ...] | list[str] | None = None,
+        tolerance: float = 1.0e-10,
+        dark_tolerance: float = 1.0e-10,
+        inflow_tolerance: float = 1.0e-12,
+        max_detectors: int | None = None,
+        sort_by_inflow: bool = True,
+    ) -> DressedManifoldDarkDetectorReport:
+        """Test dressed jumps ``J = V D`` built from manifold-dark detectors.
+
+        A nonzero inflow norm is a necessary condition for attraction into the
+        target manifold.  This diagnostic does not by itself prove absence of
+        invariant complement sectors; use ``diagnose_manifold`` on selected
+        jumps for that stronger check.
+        """
+        return diagnose_dressed_manifold_dark_detectors(
+            states=self.manifold_basis,
+            detector_operators=detector_operators,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            left_multipliers=left_multipliers,
+            detector_operator_names=detector_operator_names,
+            left_multiplier_names=left_multiplier_names,
+            detector_names=detector_names,
+            tolerance=tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            max_detectors=max_detectors,
+            sort_by_inflow=sort_by_inflow,
         )
 
 

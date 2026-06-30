@@ -53,8 +53,11 @@ from qlinks.open_system.local_recycling import (
 )
 from qlinks.open_system.manifold_detectors import (
     DarkOperatorTerm,
+    DressedManifoldDarkDetectorCandidate,
+    DressedManifoldDarkDetectorReport,
     ManifoldDarkOperatorBasisReport,
     ManifoldDarkOperatorCandidate,
+    diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
 )
 from qlinks.open_system.operators import (
@@ -114,6 +117,8 @@ __all__ = [
     "DenseLindbladOperators",
     "DensityMatrixKind",
     "DensityMatrixVerification",
+    "DressedManifoldDarkDetectorCandidate",
+    "DressedManifoldDarkDetectorReport",
     "EnsembleResult",
     "EvolutionDiagnostics",
     "JumpSpanDiagnostics",
@@ -154,6 +159,7 @@ __all__ = [
     "diagnose_absorbing_projector_symmetry",
     "diagnose_dark_manifold",
     "diagnose_dark_subspace",
+    "diagnose_dressed_manifold_dark_detectors",
     "diagnose_jump_span",
     "diagnose_manifold_dark_operator_basis",
     "diagnose_monitor_kernel_closure",
