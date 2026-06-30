@@ -495,6 +495,7 @@ class RecycledManifoldDarkDetectorReport:
     local_dims: tuple[int, ...]
     recycler_source: str
     n_tested_candidates: int
+    n_nonzero_candidates: int
     dark_tolerance: float
     inflow_tolerance: float
     candidates: tuple[RecycledManifoldDarkDetectorCandidate, ...]
@@ -527,6 +528,10 @@ class RecycledManifoldDarkDetectorReport:
     @property
     def n_reported_candidates(self) -> int:
         return len(self.candidates)
+
+    @property
+    def candidate_report_is_truncated(self) -> bool:
+        return self.n_reported_candidates < self.n_nonzero_candidates
 
     @property
     def n_dark_candidates(self) -> int:
@@ -567,7 +572,9 @@ class RecycledManifoldDarkDetectorReport:
             "recycler_source": self.recycler_source,
             "total_local_recyclers_per_detector": self.total_local_recyclers_per_detector,
             "n_tested_candidates": self.n_tested_candidates,
+            "n_nonzero_candidates": self.n_nonzero_candidates,
             "n_reported_candidates": self.n_reported_candidates,
+            "candidate_report_is_truncated": self.candidate_report_is_truncated,
             "n_dark_candidates": self.n_dark_candidates,
             "n_candidates_with_inflow": self.n_candidates_with_inflow,
             "has_attractive_candidates": self.has_attractive_candidates,
@@ -603,7 +610,9 @@ class RecycledManifoldDarkDetectorReport:
         overview.add_row("max local dim", str(self.max_local_dim))
         overview.add_row("recycler source", self.recycler_source)
         overview.add_row("tested candidates", str(self.n_tested_candidates))
+        overview.add_row("nonzero candidates", str(self.n_nonzero_candidates))
         overview.add_row("reported candidates", str(self.n_reported_candidates))
+        overview.add_row("truncated report", str(self.candidate_report_is_truncated))
         overview.add_row("candidates with inflow", str(self.n_candidates_with_inflow))
         overview.add_row("best inflow", f"{self.best_inflow_norm:.3e}")
 
@@ -724,8 +733,12 @@ class RecycledManifoldJumpSelectionReport:
         return int(self.candidate_report.n_tested_candidates)
 
     @property
+    def n_nonzero_candidates(self) -> int:
+        return int(self.candidate_report.n_nonzero_candidates)
+
+    @property
     def candidate_report_is_truncated(self) -> bool:
-        return self.n_reported_candidates < self.n_tested_candidates
+        return self.candidate_report.candidate_report_is_truncated
 
     @property
     def candidate_pool_is_truncated(self) -> bool:
@@ -800,6 +813,7 @@ class RecycledManifoldJumpSelectionReport:
             "hilbert_dimension": self.hilbert_dimension,
             "candidate_pool_size": self.candidate_pool_size,
             "n_reported_candidates": self.n_reported_candidates,
+            "n_nonzero_candidates": self.n_nonzero_candidates,
             "n_tested_candidates": self.n_tested_candidates,
             "candidate_report_was_expanded": self.candidate_report_was_expanded,
             "candidate_pool_was_limited": self.candidate_pool_was_limited,
@@ -848,8 +862,8 @@ class RecycledManifoldJumpSelectionReport:
         overview.add_row("manifold dimension", str(self.manifold_dimension))
         overview.add_row("candidate pool", str(self.candidate_pool_size))
         overview.add_row(
-            "reported/tested candidates",
-            f"{self.n_reported_candidates}/{self.n_tested_candidates}",
+            "reported/nonzero/tested candidates",
+            f"{self.n_reported_candidates}/{self.n_nonzero_candidates}/{self.n_tested_candidates}",
         )
         overview.add_row("expanded report", str(self.candidate_report_was_expanded))
         overview.add_row("pool truncated", str(self.candidate_pool_is_truncated))
@@ -918,6 +932,162 @@ class RecycledManifoldJumpSelectionReport:
             Group(overview, table),
             title=Text("Recycled manifold jump-selection report", style="bold green"),
             border_style="green",
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class RecycledManifoldCandidateFamilyKernelReport:
+    """Common-kernel diagnostic for an entire recycled-detector family.
+
+    This report answers a different question from greedy subset selection: if
+    *all* eligible local candidates are used as jumps, does the family itself
+    remove the complement common jump kernel?  If the bad kernel remains
+    nonzero for the full family, no subset of that candidate family can remove
+    it.
+    """
+
+    manifold_dimension: int
+    hilbert_dimension: int
+    candidate_report: RecycledManifoldDarkDetectorReport
+    candidate_report_was_expanded: bool
+    dark_tolerance: float
+    inflow_tolerance: float
+    candidate_jumps: tuple[sp.csr_array, ...]
+    diagnostics: Any
+
+    @property
+    def n_candidate_jumps(self) -> int:
+        return len(self.candidate_jumps)
+
+    @property
+    def n_reported_candidates(self) -> int:
+        return self.candidate_report.n_reported_candidates
+
+    @property
+    def n_nonzero_candidates(self) -> int:
+        return self.candidate_report.n_nonzero_candidates
+
+    @property
+    def n_tested_candidates(self) -> int:
+        return self.candidate_report.n_tested_candidates
+
+    @property
+    def candidate_report_is_truncated(self) -> bool:
+        return self.candidate_report.candidate_report_is_truncated
+
+    @property
+    def total_jump_nnz(self) -> int:
+        return int(sum(jump.nnz for jump in self.candidate_jumps))
+
+    @property
+    def max_jump_nnz(self) -> int:
+        return int(max((jump.nnz for jump in self.candidate_jumps), default=0))
+
+    @property
+    def family_bad_common_jump_kernel_dimension(self) -> int:
+        return int(self.diagnostics.bad_common_jump_kernel_dimension)
+
+    @property
+    def family_common_jump_kernel_dimension(self) -> int:
+        return int(self.diagnostics.common_jump_kernel_dimension)
+
+    @property
+    def family_inflow_norm(self) -> float:
+        return float(self.diagnostics.inflow_norm)
+
+    @property
+    def complement_common_kernel_removed(self) -> bool:
+        return self.family_bad_common_jump_kernel_dimension == 0
+
+    @property
+    def bad_kernel_iprs(self) -> tuple[float, ...]:
+        return tuple(float(value) for value in self.diagnostics.bad_common_jump_kernel_iprs)
+
+    @property
+    def bad_kernel_ipr_min(self) -> float | None:
+        values = self.bad_kernel_iprs
+        if len(values) == 0:
+            return None
+        return float(min(values))
+
+    @property
+    def bad_kernel_ipr_max(self) -> float | None:
+        values = self.bad_kernel_iprs
+        if len(values) == 0:
+            return None
+        return float(max(values))
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "manifold_dimension": self.manifold_dimension,
+            "hilbert_dimension": self.hilbert_dimension,
+            "n_candidate_jumps": self.n_candidate_jumps,
+            "n_reported_candidates": self.n_reported_candidates,
+            "n_nonzero_candidates": self.n_nonzero_candidates,
+            "n_tested_candidates": self.n_tested_candidates,
+            "candidate_report_was_expanded": self.candidate_report_was_expanded,
+            "candidate_report_is_truncated": self.candidate_report_is_truncated,
+            "total_jump_nnz": self.total_jump_nnz,
+            "max_jump_nnz": self.max_jump_nnz,
+            "family_common_jump_kernel_dimension": self.family_common_jump_kernel_dimension,
+            "family_bad_common_jump_kernel_dimension": (
+                self.family_bad_common_jump_kernel_dimension
+            ),
+            "family_inflow_norm": self.family_inflow_norm,
+            "complement_common_kernel_removed": self.complement_common_kernel_removed,
+            "bad_kernel_ipr_min": self.bad_kernel_ipr_min,
+            "bad_kernel_ipr_max": self.bad_kernel_ipr_max,
+            "dark_tolerance": self.dark_tolerance,
+            "inflow_tolerance": self.inflow_tolerance,
+            "diagnostics": self.diagnostics.to_summary_dict(),
+        }
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self):
+        try:
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "RecycledManifoldCandidateFamilyKernelReport.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        table = Table.grid(padding=(0, 2))
+        table.add_column(style="bold")
+        table.add_column()
+        table.add_row("Hilbert dimension", str(self.hilbert_dimension))
+        table.add_row("manifold dimension", str(self.manifold_dimension))
+        table.add_row("candidate jumps", str(self.n_candidate_jumps))
+        table.add_row(
+            "reported/nonzero/tested candidates",
+            f"{self.n_reported_candidates}/{self.n_nonzero_candidates}/{self.n_tested_candidates}",
+        )
+        table.add_row("expanded report", str(self.candidate_report_was_expanded))
+        table.add_row("report truncated", str(self.candidate_report_is_truncated))
+        table.add_row("common jump kernel", str(self.family_common_jump_kernel_dimension))
+        table.add_row("bad complement kernel", str(self.family_bad_common_jump_kernel_dimension))
+        table.add_row("complement kernel removed", str(self.complement_common_kernel_removed))
+        table.add_row("family inflow", f"{self.family_inflow_norm:.3e}")
+        table.add_row("total jump nnz", str(self.total_jump_nnz))
+        table.add_row("max jump nnz", str(self.max_jump_nnz))
+        table.add_row(
+            "bad-kernel IPR range",
+            (
+                "none"
+                if self.bad_kernel_ipr_min is None
+                else f"{self.bad_kernel_ipr_min:.3e} .. {self.bad_kernel_ipr_max:.3e}"
+            ),
+        )
+
+        style = "green" if self.complement_common_kernel_removed else "red"
+        return Panel(
+            table,
+            title=Text("Recycled candidate-family common-kernel report", style=f"bold {style}"),
+            border_style=style,
         )
 
 
@@ -1522,6 +1692,7 @@ def diagnose_recycled_manifold_dark_detectors(
 
     candidate_buffer: list[RecycledManifoldDarkDetectorCandidate] = []
     n_tested_candidates = 0
+    n_nonzero_candidates = 0
 
     for detector_index, (
         detector,
@@ -1544,6 +1715,7 @@ def diagnose_recycled_manifold_dark_detectors(
                 )
                 if recycler.nnz == 0:
                     continue
+                n_nonzero_candidates += 1
 
                 jump = (recycler @ detector).tocsr()
                 dark_residual = float(np.linalg.norm(jump @ state_basis))
@@ -1622,6 +1794,7 @@ def diagnose_recycled_manifold_dark_detectors(
         local_dims=local_dims,
         recycler_source=recycler_source,
         n_tested_candidates=int(n_tested_candidates),
+        n_nonzero_candidates=int(n_nonzero_candidates),
         dark_tolerance=float(dark_tolerance),
         inflow_tolerance=float(inflow_tolerance),
         candidates=tuple(candidate_buffer),
@@ -1719,6 +1892,132 @@ def _recycled_jump_for_candidate(
     return (recycler @ detector).tocsr()
 
 
+def diagnose_recycled_manifold_candidate_family_kernel(
+    *,
+    hamiltonian: Any,
+    states: npt.ArrayLike,
+    basis_configs: npt.NDArray[np.integer],
+    detector_operators: tuple[Any, ...] | list[Any],
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    detector_coefficients: npt.ArrayLike | None = None,
+    dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+    candidate_report: RecycledManifoldDarkDetectorReport | None = None,
+    detector_operator_names: tuple[str, ...] | list[str] | None = None,
+    detector_names: tuple[str, ...] | list[str] | None = None,
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ] = "rdm_support_matrix_units",
+    tolerance: float = 1.0e-10,
+    rdm_tolerance: float = 1.0e-10,
+    dark_tolerance: float = 1.0e-10,
+    inflow_tolerance: float = 1.0e-12,
+    kernel_tolerance: float = 1.0e-10,
+    liouvillian_zero_tolerance: float = 1.0e-9,
+    max_detectors: int | None = None,
+    expand_candidate_report: bool = True,
+) -> RecycledManifoldCandidateFamilyKernelReport:
+    """Diagnose the common jump kernel of the full recycled-detector family.
+
+    This is the decisive follow-up when greedy selection saturates at a
+    nonzero complement kernel.  If the family of all eligible local candidates
+    still has a bad common jump kernel, no subset selected from that family can
+    remove it.  If the family removes the kernel but the greedy subset does not,
+    the problem is the subset-selection heuristic rather than the operator
+    family.
+    """
+    from qlinks.open_system.diagnostics import diagnose_dark_manifold
+
+    regions = _normalize_local_regions(local_regions)
+    state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
+    dim = int(state_basis.shape[0])
+    manifold_dimension = int(state_basis.shape[1])
+
+    candidate_report_was_expanded = False
+    if candidate_report is None:
+        candidate_report = diagnose_recycled_manifold_dark_detectors(
+            states=state_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            max_detectors=max_detectors,
+            max_report_candidates=None,
+            sort_by_inflow=True,
+        )
+    elif expand_candidate_report and candidate_report.candidate_report_is_truncated:
+        candidate_report = diagnose_recycled_manifold_dark_detectors(
+            states=state_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            max_detectors=max_detectors,
+            max_report_candidates=None,
+            sort_by_inflow=True,
+        )
+        candidate_report_was_expanded = True
+
+    eligible_candidates = tuple(
+        candidate
+        for candidate in candidate_report.candidates
+        if candidate.relative_dark_residual <= dark_tolerance
+        and candidate.inflow_norm > inflow_tolerance
+    )
+    candidate_jumps = tuple(
+        _recycled_jump_for_candidate(
+            candidate=candidate,
+            states=state_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+        )
+        for candidate in eligible_candidates
+    )
+
+    diagnostics = diagnose_dark_manifold(
+        hamiltonian=hamiltonian,
+        jumps=candidate_jumps,
+        target_states=state_basis,
+        kernel_tolerance=kernel_tolerance,
+        liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+        check_liouvillian_spectrum=False,
+        liouvillian_spectrum_method="none",
+    )
+
+    return RecycledManifoldCandidateFamilyKernelReport(
+        manifold_dimension=manifold_dimension,
+        hilbert_dimension=dim,
+        candidate_report=candidate_report,
+        candidate_report_was_expanded=candidate_report_was_expanded,
+        dark_tolerance=float(dark_tolerance),
+        inflow_tolerance=float(inflow_tolerance),
+        candidate_jumps=candidate_jumps,
+        diagnostics=diagnostics,
+    )
+
+
 def select_recycled_manifold_dark_detector_jumps(
     *,
     hamiltonian: Any,
@@ -1795,10 +2094,7 @@ def select_recycled_manifold_dark_detector_jumps(
             max_report_candidates=max_candidate_pool,
             sort_by_inflow=True,
         )
-    elif (
-        expand_candidate_report
-        and len(candidate_report.candidates) < candidate_report.n_tested_candidates
-    ):
+    elif expand_candidate_report and candidate_report.candidate_report_is_truncated:
         candidate_report = diagnose_recycled_manifold_dark_detectors(
             states=state_basis,
             basis_configs=basis_configs,

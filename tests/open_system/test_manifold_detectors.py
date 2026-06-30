@@ -330,3 +330,55 @@ def test_construction_selects_recycled_dark_detector_jumps_and_rich_render():
     assert "Recycled manifold jump-selection report" in rendered
     assert "complement kernel removed" in rendered
     assert "selected jumps" in rendered
+
+
+def test_recycled_candidate_family_kernel_report_removes_complement_kernel():
+    from qlinks.open_system import diagnose_recycled_manifold_candidate_family_kernel
+
+    build_result = _single_qutrit_build_result()
+    report = diagnose_recycled_manifold_candidate_family_kernel(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+    )
+
+    assert report.n_candidate_jumps > 0
+    assert report.n_nonzero_candidates == report.n_reported_candidates
+    assert report.family_bad_common_jump_kernel_dimension == 0
+    assert report.complement_common_kernel_removed is True
+    assert report.family_inflow_norm > 0.0
+
+    from rich.console import Console
+
+    console = Console(record=True, width=120)
+    console.print(report)
+    rendered = console.export_text()
+    assert "Recycled candidate-family common-kernel report" in rendered
+    assert "bad complement kernel" in rendered
+
+
+def test_construction_recycled_candidate_family_kernel_report():
+    build_result = _single_qutrit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_single_qutrit_target_state(),
+        local_regions=((0,),),
+    )
+
+    report = construction.diagnose_recycled_candidate_family_kernel(
+        hamiltonian=build_result.hamiltonian,
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        recycler_source="rdm_support_matrix_units",
+    )
+
+    assert report.n_candidate_jumps > 0
+    assert report.family_bad_common_jump_kernel_dimension == 0
+    assert report.to_summary_dict()["complement_common_kernel_removed"] is True

@@ -25,10 +25,12 @@ from qlinks.open_system.local_recycling import (
 from qlinks.open_system.manifold_detectors import (
     DressedManifoldDarkDetectorReport,
     ManifoldDarkOperatorBasisReport,
+    RecycledManifoldCandidateFamilyKernelReport,
     RecycledManifoldDarkDetectorReport,
     RecycledManifoldJumpSelectionReport,
     diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
+    diagnose_recycled_manifold_candidate_family_kernel,
     diagnose_recycled_manifold_dark_detectors,
     select_recycled_manifold_dark_detector_jumps,
 )
@@ -512,6 +514,59 @@ class DegenerateCageLindbladConstruction:
             max_detectors=max_detectors,
             max_report_candidates=max_report_candidates,
             sort_by_inflow=sort_by_inflow,
+        )
+
+    def diagnose_recycled_candidate_family_kernel(
+        self,
+        *,
+        hamiltonian: Any,
+        basis_configs: NDArray[np.integer],
+        detector_operators: tuple[Any, ...] | list[Any],
+        local_regions: Sequence[Sequence[int]] | None = None,
+        detector_coefficients: NDArray[np.complex128] | None = None,
+        dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+        candidate_report: RecycledManifoldDarkDetectorReport | None = None,
+        detector_operator_names: tuple[str, ...] | list[str] | None = None,
+        detector_names: tuple[str, ...] | list[str] | None = None,
+        recycler_source: Literal[
+            "matrix_units",
+            "rdm_support_matrix_units",
+        ] = "rdm_support_matrix_units",
+        tolerance: float = 1.0e-10,
+        rdm_tolerance: float = 1.0e-10,
+        dark_tolerance: float = 1.0e-10,
+        inflow_tolerance: float = 1.0e-12,
+        kernel_tolerance: float = 1.0e-10,
+        liouvillian_zero_tolerance: float = 1.0e-9,
+        max_detectors: int | None = None,
+        expand_candidate_report: bool = True,
+    ) -> RecycledManifoldCandidateFamilyKernelReport:
+        """
+        Check whether the full recycled-detector candidate family removes the complement kernel.
+        """
+        regions = (
+            self.local_regions if local_regions is None else _normalize_local_regions(local_regions)
+        )
+        return diagnose_recycled_manifold_candidate_family_kernel(
+            hamiltonian=hamiltonian,
+            states=self.manifold_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            candidate_report=candidate_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            kernel_tolerance=kernel_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            max_detectors=max_detectors,
+            expand_candidate_report=expand_candidate_report,
         )
 
     def select_recycled_dark_detector_jumps(
