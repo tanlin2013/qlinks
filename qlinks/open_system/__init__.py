@@ -66,6 +66,7 @@ from qlinks.open_system.manifold_detectors import (
     diagnose_manifold_dark_operator_basis,
     diagnose_recycled_manifold_candidate_family_kernel,
     diagnose_recycled_manifold_dark_detectors,
+    expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
 )
 from qlinks.open_system.operators import (
@@ -182,6 +183,7 @@ __all__ = [
     "embed_local_pattern_operator",
     "estimate_lindblad_scale",
     "estimate_lindblad_scale_prepared",
+    "expand_local_regions_to_pair_unions",
     "expectation",
     "get_open_system_backend",
     "initial_density_matrix",

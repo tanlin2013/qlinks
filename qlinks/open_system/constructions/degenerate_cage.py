@@ -32,6 +32,7 @@ from qlinks.open_system.manifold_detectors import (
     diagnose_manifold_dark_operator_basis,
     diagnose_recycled_manifold_candidate_family_kernel,
     diagnose_recycled_manifold_dark_detectors,
+    expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
@@ -464,6 +465,29 @@ class DegenerateCageLindbladConstruction:
             sort_by_inflow=sort_by_inflow,
         )
 
+    def local_region_pair_unions(
+        self,
+        *,
+        pair_mode: Literal["overlap", "all"] = "overlap",
+        min_overlap: int = 1,
+        max_region_size: int | None = None,
+        include_single_regions: bool = False,
+    ) -> tuple[tuple[int, ...], ...]:
+        """Return two-region recycler supports derived from this construction.
+
+        For QDM plaquette regions, ``pair_mode="overlap"`` and
+        ``min_overlap=1`` generate adjacent two-plaquette unions.  These
+        regions can be passed as ``local_regions`` to recycled-detector
+        diagnostics/selectors.
+        """
+        return expand_local_regions_to_pair_unions(
+            self.local_regions,
+            pair_mode=pair_mode,
+            min_overlap=min_overlap,
+            max_region_size=max_region_size,
+            include_single_regions=include_single_regions,
+        )
+
     def diagnose_recycled_dark_detectors(
         self,
         *,
@@ -597,6 +621,7 @@ class DegenerateCageLindbladConstruction:
         target_bad_kernel_dimension: int = 0,
         allow_non_improving: bool = False,
         expand_candidate_report: bool = False,
+        selection_strategy: Literal["diagnostics", "kernel_projection"] = "diagnostics",
     ) -> RecycledManifoldJumpSelectionReport:
         """Greedily select a small local recycled-detector jump subset.
 
@@ -631,6 +656,7 @@ class DegenerateCageLindbladConstruction:
             target_bad_kernel_dimension=target_bad_kernel_dimension,
             allow_non_improving=allow_non_improving,
             expand_candidate_report=expand_candidate_report,
+            selection_strategy=selection_strategy,
         )
 
 

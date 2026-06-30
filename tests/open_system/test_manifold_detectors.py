@@ -382,3 +382,56 @@ def test_construction_recycled_candidate_family_kernel_report():
     assert report.n_candidate_jumps > 0
     assert report.family_bad_common_jump_kernel_dimension == 0
     assert report.to_summary_dict()["complement_common_kernel_removed"] is True
+
+
+def test_expand_local_regions_to_pair_unions_overlap_and_all_modes():
+    from qlinks.open_system import expand_local_regions_to_pair_unions
+
+    regions = ((0, 1), (1, 2), (3, 4))
+
+    overlap_pairs = expand_local_regions_to_pair_unions(regions)
+    assert overlap_pairs == ((0, 1, 2),)
+
+    all_pairs = expand_local_regions_to_pair_unions(regions, pair_mode="all")
+    assert all_pairs == ((0, 1, 2), (0, 1, 3, 4), (1, 2, 3, 4))
+
+    bounded_pairs = expand_local_regions_to_pair_unions(
+        regions,
+        pair_mode="all",
+        max_region_size=3,
+        include_single_regions=True,
+    )
+    assert bounded_pairs == ((0, 1), (1, 2), (3, 4), (0, 1, 2))
+
+
+def test_degenerate_construction_local_region_pair_unions():
+    build_result = _two_qubit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_equal_bit_manifold_rows(),
+        local_regions=((0,), (1,)),
+    )
+
+    assert construction.local_region_pair_unions(pair_mode="all") == ((0, 1),)
+
+
+def test_recycled_jump_selection_kernel_projection_strategy():
+    from qlinks.open_system import select_recycled_manifold_dark_detector_jumps
+
+    build_result = _single_qutrit_build_result()
+    report = select_recycled_manifold_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        max_candidate_pool=None,
+        selection_strategy="kernel_projection",
+    )
+
+    assert report.complement_common_kernel_removed is True
+    assert report.final_bad_common_jump_kernel_dimension == 0
+    assert report.n_selected_jumps <= 2

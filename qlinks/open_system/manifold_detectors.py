@@ -1490,6 +1490,76 @@ def _normalize_local_regions(
     return tuple(regions)
 
 
+def expand_local_regions_to_pair_unions(
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    *,
+    pair_mode: Literal["overlap", "all"] = "overlap",
+    min_overlap: int = 1,
+    max_region_size: int | None = None,
+    include_single_regions: bool = False,
+) -> tuple[tuple[int, ...], ...]:
+    """Return unions of pairs of local regions, useful for two-block recyclers.
+
+    The single-plaquette recycled-detector family can leave residual bad kernel
+    sectors when the target manifold is built from two-plaquette singlet-like
+    structures.  This helper creates bounded two-region supports that can be
+    supplied to ``diagnose_recycled_manifold_dark_detectors`` or
+    ``diagnose_recycled_manifold_candidate_family_kernel`` as ``local_regions``.
+
+    Args:
+        local_regions: Base local regions, usually plaquette supports.
+        pair_mode: ``"overlap"`` keeps only pairs sharing at least
+            ``min_overlap`` variables; ``"all"`` keeps all unordered pairs.
+        min_overlap: Minimum number of shared variables when
+            ``pair_mode="overlap"``.
+        max_region_size: Optional upper bound on the size of the union.
+        include_single_regions: Whether to prepend the original regions.
+
+    Returns:
+        Deduplicated sorted variable-index unions.
+    """
+    if pair_mode not in {"overlap", "all"}:
+        raise ValueError('pair_mode must be "overlap" or "all".')
+    if min_overlap < 0:
+        raise ValueError("min_overlap must be non-negative.")
+    if max_region_size is not None and max_region_size <= 0:
+        raise ValueError("max_region_size must be positive when provided.")
+
+    base_regions = _normalize_local_regions(local_regions)
+    expanded: list[tuple[int, ...]] = []
+    seen: set[tuple[int, ...]] = set()
+
+    def maybe_add(region: tuple[int, ...]) -> None:
+        if max_region_size is not None and len(region) > max_region_size:
+            return
+        if region in seen:
+            return
+        seen.add(region)
+        expanded.append(region)
+
+    if include_single_regions:
+        for region in base_regions:
+            maybe_add(region)
+
+    region_sets = [set(region) for region in base_regions]
+    for left_index, left in enumerate(base_regions):
+        left_set = region_sets[left_index]
+        for right_index in range(left_index + 1, len(base_regions)):
+            right = base_regions[right_index]
+            overlap = len(left_set.intersection(region_sets[right_index]))
+            if pair_mode == "overlap" and overlap < min_overlap:
+                continue
+            maybe_add(tuple(sorted(set(left).union(right))))
+
+    if len(expanded) == 0:
+        raise ValueError(
+            "No pair-union regions were generated. Relax pair_mode/min_overlap "
+            "or max_region_size, or pass include_single_regions=True."
+        )
+
+    return tuple(expanded)
+
+
 def _pattern_name(pattern: tuple[int, ...]) -> str:
     return "(" + ",".join(str(int(value)) for value in pattern) + ")"
 
@@ -1932,7 +2002,6 @@ def diagnose_recycled_manifold_candidate_family_kernel(
     state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
     dim = int(state_basis.shape[0])
     manifold_dimension = int(state_basis.shape[1])
-
     candidate_report_was_expanded = False
     if candidate_report is None:
         candidate_report = diagnose_recycled_manifold_dark_detectors(
@@ -2018,6 +2087,43 @@ def diagnose_recycled_manifold_candidate_family_kernel(
     )
 
 
+def _orthogonal_complement_basis(
+    basis: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> npt.NDArray[np.complex128]:
+    """Return an orthonormal basis of the complement of ``span(basis)``."""
+    q, _ = _normalize_state_columns(basis, tolerance=tolerance)
+    _u, singular_values, vh = np.linalg.svd(q.conj().T, full_matrices=True)
+    singular_scale = float(singular_values[0]) if singular_values.size else 1.0
+    cutoff = max(float(tolerance), float(tolerance) * singular_scale)
+    rank = int(np.count_nonzero(singular_values > cutoff))
+    return vh.conj().T[:, rank:].astype(np.complex128, copy=False)
+
+
+def _right_kernel_basis(
+    matrix: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> npt.NDArray[np.complex128]:
+    """Return an orthonormal basis for the right kernel of ``matrix``."""
+    if matrix.ndim != 2:
+        raise ValueError("matrix must be two-dimensional.")
+    n_columns = int(matrix.shape[1])
+    if n_columns == 0:
+        return np.zeros((0, 0), dtype=np.complex128)
+
+    _u, singular_values, vh = np.linalg.svd(matrix, full_matrices=True)
+    if singular_values.size == 0:
+        rank = 0
+    else:
+        cutoff = max(float(tolerance), float(np.sqrt(tolerance)) * float(singular_values[0]))
+        rank = int(np.count_nonzero(singular_values > cutoff))
+    if rank >= n_columns:
+        return np.zeros((n_columns, 0), dtype=np.complex128)
+    return vh.conj().T[:, rank:].astype(np.complex128, copy=False)
+
+
 def select_recycled_manifold_dark_detector_jumps(
     *,
     hamiltonian: Any,
@@ -2046,6 +2152,7 @@ def select_recycled_manifold_dark_detector_jumps(
     target_bad_kernel_dimension: int = 0,
     allow_non_improving: bool = False,
     expand_candidate_report: bool = False,
+    selection_strategy: Literal["diagnostics", "kernel_projection"] = "diagnostics",
 ) -> RecycledManifoldJumpSelectionReport:
     """Greedily select a small recycled-detector jump subset.
 
@@ -2066,6 +2173,11 @@ def select_recycled_manifold_dark_detector_jumps(
     and use the full local recycler candidate family.  This is often the right
     follow-up when a small inflow-ranked pool leaves a low-dimensional bad
     complement kernel.
+
+    ``selection_strategy="kernel_projection"`` is faster for large two-region
+    recycler pools: it updates the current complement common kernel directly by
+    applying each candidate to the current bad subspace, and runs the full
+    diagnostics only once at the end.
     """
     from qlinks.open_system.diagnostics import diagnose_dark_manifold
 
@@ -2073,6 +2185,8 @@ def select_recycled_manifold_dark_detector_jumps(
     state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
     dim = int(state_basis.shape[0])
     manifold_dimension = int(state_basis.shape[1])
+    if selection_strategy not in {"diagnostics", "kernel_projection"}:
+        raise ValueError('selection_strategy must be "diagnostics" or "kernel_projection".')
 
     candidate_report_was_expanded = False
     if candidate_report is None:
@@ -2152,65 +2266,127 @@ def select_recycled_manifold_dark_detector_jumps(
     current_bad_dimension = dim - manifold_dimension
     final_diagnostics = None
 
-    for _step_index in range(max(int(max_selected_jumps), 0)):
-        best_entry = None
-        for candidate in pool:
-            candidate_id = id(candidate)
-            if candidate_id in selected_ids:
-                continue
-            trial_jumps = tuple(selected_jumps + [candidate_jumps[candidate_id]])
-            diagnostics = diagnose_dark_manifold(
-                hamiltonian=hamiltonian,
-                jumps=trial_jumps,
-                target_states=state_basis,
-                kernel_tolerance=kernel_tolerance,
-                liouvillian_zero_tolerance=liouvillian_zero_tolerance,
-                check_liouvillian_spectrum=False,
-                liouvillian_spectrum_method="none",
-            )
-            score = (
-                diagnostics.bad_common_jump_kernel_dimension,
-                diagnostics.max_target_jump_residual,
-                -diagnostics.inflow_norm,
-                -candidate.inflow_norm,
-                candidate.jump_nnz,
-                candidate.detector_index,
-                candidate.region_index,
-                candidate.recycler_index,
-            )
-            if best_entry is None or score < best_entry[0]:
-                best_entry = (score, candidate, candidate_jumps[candidate_id], diagnostics)
-
-        if best_entry is None:
-            break
-
-        _, best_candidate, best_jump, best_diagnostics = best_entry
-        if (
-            not allow_non_improving
-            and best_diagnostics.bad_common_jump_kernel_dimension >= current_bad_dimension
-        ):
-            break
-
-        selected_candidates.append(best_candidate)
-        selected_jumps.append(best_jump)
-        selected_ids.add(id(best_candidate))
-        current_bad_dimension = int(best_diagnostics.bad_common_jump_kernel_dimension)
-        final_diagnostics = best_diagnostics
-        steps.append(
-            RecycledManifoldJumpSelectionStep(
-                step_index=len(steps),
-                candidate=best_candidate,
-                bad_common_jump_kernel_dimension=current_bad_dimension,
-                inflow_norm=float(best_diagnostics.inflow_norm),
-                max_target_jump_residual=float(best_diagnostics.max_target_jump_residual),
-                n_selected_jumps=len(selected_jumps),
-            )
+    if selection_strategy == "kernel_projection":
+        current_bad_basis = _orthogonal_complement_basis(
+            state_basis,
+            tolerance=kernel_tolerance,
         )
+        current_bad_dimension = int(current_bad_basis.shape[1])
+        cumulative_inflow_squared = 0.0
+        max_target_jump_residual = 0.0
 
-        if current_bad_dimension <= target_bad_kernel_dimension:
-            break
+        for _step_index in range(max(int(max_selected_jumps), 0)):
+            best_entry = None
+            for candidate in pool:
+                candidate_id = id(candidate)
+                if candidate_id in selected_ids:
+                    continue
+                jump = candidate_jumps[candidate_id]
+                image = np.asarray(jump @ current_bad_basis, dtype=np.complex128)
+                kernel_basis = _right_kernel_basis(image, tolerance=kernel_tolerance)
+                next_bad_dimension = int(kernel_basis.shape[1])
+                score = (
+                    next_bad_dimension,
+                    -candidate.inflow_norm,
+                    candidate.jump_nnz,
+                    candidate.detector_index,
+                    candidate.region_index,
+                    candidate.recycler_index,
+                )
+                if best_entry is None or score < best_entry[0]:
+                    best_entry = (score, candidate, jump, kernel_basis)
 
-    if selected_jumps and final_diagnostics is None:
+            if best_entry is None:
+                break
+
+            _, best_candidate, best_jump, best_kernel_basis = best_entry
+            next_bad_dimension = int(best_kernel_basis.shape[1])
+            if not allow_non_improving and next_bad_dimension >= current_bad_dimension:
+                break
+
+            selected_candidates.append(best_candidate)
+            selected_jumps.append(best_jump)
+            selected_ids.add(id(best_candidate))
+            current_bad_basis = current_bad_basis @ best_kernel_basis
+            current_bad_dimension = next_bad_dimension
+            cumulative_inflow_squared += float(best_candidate.inflow_norm) ** 2
+            max_target_jump_residual = max(
+                max_target_jump_residual,
+                float(best_candidate.dark_residual),
+            )
+            steps.append(
+                RecycledManifoldJumpSelectionStep(
+                    step_index=len(steps),
+                    candidate=best_candidate,
+                    bad_common_jump_kernel_dimension=current_bad_dimension,
+                    inflow_norm=float(np.sqrt(cumulative_inflow_squared)),
+                    max_target_jump_residual=max_target_jump_residual,
+                    n_selected_jumps=len(selected_jumps),
+                )
+            )
+
+            if current_bad_dimension <= target_bad_kernel_dimension:
+                break
+    else:
+        for _step_index in range(max(int(max_selected_jumps), 0)):
+            best_entry = None
+            for candidate in pool:
+                candidate_id = id(candidate)
+                if candidate_id in selected_ids:
+                    continue
+                trial_jumps = tuple(selected_jumps + [candidate_jumps[candidate_id]])
+                diagnostics = diagnose_dark_manifold(
+                    hamiltonian=hamiltonian,
+                    jumps=trial_jumps,
+                    target_states=state_basis,
+                    kernel_tolerance=kernel_tolerance,
+                    liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+                    check_liouvillian_spectrum=False,
+                    liouvillian_spectrum_method="none",
+                )
+                score = (
+                    diagnostics.bad_common_jump_kernel_dimension,
+                    diagnostics.max_target_jump_residual,
+                    -diagnostics.inflow_norm,
+                    -candidate.inflow_norm,
+                    candidate.jump_nnz,
+                    candidate.detector_index,
+                    candidate.region_index,
+                    candidate.recycler_index,
+                )
+                if best_entry is None or score < best_entry[0]:
+                    best_entry = (score, candidate, candidate_jumps[candidate_id], diagnostics)
+
+            if best_entry is None:
+                break
+
+            _, best_candidate, best_jump, best_diagnostics = best_entry
+            if (
+                not allow_non_improving
+                and best_diagnostics.bad_common_jump_kernel_dimension >= current_bad_dimension
+            ):
+                break
+
+            selected_candidates.append(best_candidate)
+            selected_jumps.append(best_jump)
+            selected_ids.add(id(best_candidate))
+            current_bad_dimension = int(best_diagnostics.bad_common_jump_kernel_dimension)
+            final_diagnostics = best_diagnostics
+            steps.append(
+                RecycledManifoldJumpSelectionStep(
+                    step_index=len(steps),
+                    candidate=best_candidate,
+                    bad_common_jump_kernel_dimension=current_bad_dimension,
+                    inflow_norm=float(best_diagnostics.inflow_norm),
+                    max_target_jump_residual=float(best_diagnostics.max_target_jump_residual),
+                    n_selected_jumps=len(selected_jumps),
+                )
+            )
+
+            if current_bad_dimension <= target_bad_kernel_dimension:
+                break
+
+    if selected_jumps:
         final_diagnostics = diagnose_dark_manifold(
             hamiltonian=hamiltonian,
             jumps=tuple(selected_jumps),
