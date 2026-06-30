@@ -659,6 +659,203 @@ class RecycledManifoldDarkDetectorReport:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class RecycledManifoldJumpSelectionStep:
+    """One greedy selection step for recycled dark-detector jumps."""
+
+    step_index: int
+    candidate: RecycledManifoldDarkDetectorCandidate
+    bad_common_jump_kernel_dimension: int
+    inflow_norm: float
+    max_target_jump_residual: float
+    n_selected_jumps: int
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "step_index": self.step_index,
+            "candidate": self.candidate.to_summary_dict(),
+            "bad_common_jump_kernel_dimension": self.bad_common_jump_kernel_dimension,
+            "inflow_norm": self.inflow_norm,
+            "max_target_jump_residual": self.max_target_jump_residual,
+            "n_selected_jumps": self.n_selected_jumps,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class RecycledManifoldJumpSelectionReport:
+    """Greedy small-subset selection report for recycled dark-detector jumps.
+
+    The report owns the selected jump operators.  The summary intentionally omits
+    raw sparse matrices, but ``report.jumps`` can be passed directly to
+    :func:`qlinks.open_system.diagnose_dark_manifold` or a Lindblad solver.
+    The stopping criterion uses the common jump kernel in the complement of the
+    target manifold.  Reaching zero is a strong sufficient condition that no
+    complement vector is dark under all selected jumps.
+    """
+
+    manifold_dimension: int
+    hilbert_dimension: int
+    candidate_pool_size: int
+    max_selected_jumps: int
+    target_bad_kernel_dimension: int
+    dark_tolerance: float
+    inflow_tolerance: float
+    jumps: tuple[sp.csr_array, ...]
+    steps: tuple[RecycledManifoldJumpSelectionStep, ...]
+    final_diagnostics: Any | None
+    candidate_report: RecycledManifoldDarkDetectorReport
+
+    @property
+    def n_selected_jumps(self) -> int:
+        return len(self.jumps)
+
+    @property
+    def selected_candidates(self) -> tuple[RecycledManifoldDarkDetectorCandidate, ...]:
+        return tuple(step.candidate for step in self.steps)
+
+    @property
+    def final_bad_common_jump_kernel_dimension(self) -> int | None:
+        if self.final_diagnostics is None:
+            return None
+        return int(self.final_diagnostics.bad_common_jump_kernel_dimension)
+
+    @property
+    def final_inflow_norm(self) -> float | None:
+        if self.final_diagnostics is None:
+            return None
+        return float(self.final_diagnostics.inflow_norm)
+
+    @property
+    def complement_common_kernel_removed(self) -> bool | None:
+        final_bad = self.final_bad_common_jump_kernel_dimension
+        if final_bad is None:
+            return None
+        return final_bad <= self.target_bad_kernel_dimension
+
+    @property
+    def total_jump_nnz(self) -> int:
+        return int(sum(jump.nnz for jump in self.jumps))
+
+    @property
+    def max_jump_nnz(self) -> int:
+        return int(max((jump.nnz for jump in self.jumps), default=0))
+
+    @property
+    def selected_region_indices(self) -> tuple[int, ...]:
+        return tuple(step.candidate.region_index for step in self.steps)
+
+    @property
+    def selected_detector_indices(self) -> tuple[int, ...]:
+        return tuple(step.candidate.detector_index for step in self.steps)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "manifold_dimension": self.manifold_dimension,
+            "hilbert_dimension": self.hilbert_dimension,
+            "candidate_pool_size": self.candidate_pool_size,
+            "max_selected_jumps": self.max_selected_jumps,
+            "target_bad_kernel_dimension": self.target_bad_kernel_dimension,
+            "n_selected_jumps": self.n_selected_jumps,
+            "selected_region_indices": self.selected_region_indices,
+            "selected_detector_indices": self.selected_detector_indices,
+            "total_jump_nnz": self.total_jump_nnz,
+            "max_jump_nnz": self.max_jump_nnz,
+            "final_bad_common_jump_kernel_dimension": (self.final_bad_common_jump_kernel_dimension),
+            "final_inflow_norm": self.final_inflow_norm,
+            "complement_common_kernel_removed": self.complement_common_kernel_removed,
+            "dark_tolerance": self.dark_tolerance,
+            "inflow_tolerance": self.inflow_tolerance,
+            "steps": tuple(step.to_summary_dict() for step in self.steps),
+            "final_diagnostics": (
+                None if self.final_diagnostics is None else self.final_diagnostics.to_summary_dict()
+            ),
+        }
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_steps: int = 24):
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "RecycledManifoldJumpSelectionReport.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        overview.add_row("Hilbert dimension", str(self.hilbert_dimension))
+        overview.add_row("manifold dimension", str(self.manifold_dimension))
+        overview.add_row("candidate pool", str(self.candidate_pool_size))
+        overview.add_row("selected jumps", str(self.n_selected_jumps))
+        overview.add_row("target bad-kernel dim", str(self.target_bad_kernel_dimension))
+        overview.add_row(
+            "final bad-kernel dim",
+            (
+                "not checked"
+                if self.final_bad_common_jump_kernel_dimension is None
+                else str(self.final_bad_common_jump_kernel_dimension)
+            ),
+        )
+        overview.add_row("complement kernel removed", str(self.complement_common_kernel_removed))
+        overview.add_row(
+            "final inflow",
+            "not checked" if self.final_inflow_norm is None else f"{self.final_inflow_norm:.3e}",
+        )
+        overview.add_row("total jump nnz", str(self.total_jump_nnz))
+
+        table = Table(title="Greedy selected recycled dark-detector jumps")
+        table.add_column("step", justify="right")
+        table.add_column("detector")
+        table.add_column("region")
+        table.add_column("recycler")
+        table.add_column("candidate inflow", justify="right")
+        table.add_column("bad kernel", justify="right")
+        table.add_column("selected", justify="right")
+        table.add_column("jump nnz", justify="right")
+
+        for step in self.steps[: max(int(max_steps), 0)]:
+            candidate = step.candidate
+            table.add_row(
+                str(step.step_index),
+                candidate.detector_name,
+                str(candidate.variable_indices),
+                candidate.recycler_name,
+                f"{candidate.inflow_norm:.3e}",
+                str(step.bad_common_jump_kernel_dimension),
+                str(step.n_selected_jumps),
+                str(candidate.jump_nnz),
+                style=(
+                    "green"
+                    if step.bad_common_jump_kernel_dimension <= self.target_bad_kernel_dimension
+                    else ""
+                ),
+            )
+
+        if len(self.steps) > max_steps:
+            table.add_row(
+                "…",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                f"{len(self.steps) - max_steps} more steps",
+            )
+
+        return Panel(
+            Group(overview, table),
+            title=Text("Recycled manifold jump-selection report", style="bold green"),
+            border_style="green",
+        )
+
+
 def _combined_operator_frobenius_norm(
     *,
     operators: tuple[sp.csr_array, ...],
@@ -1363,6 +1560,282 @@ def diagnose_recycled_manifold_dark_detectors(
         dark_tolerance=float(dark_tolerance),
         inflow_tolerance=float(inflow_tolerance),
         candidates=tuple(candidate_buffer),
+    )
+
+
+def _recycled_jump_for_candidate(
+    *,
+    candidate: RecycledManifoldDarkDetectorCandidate,
+    states: npt.ArrayLike,
+    basis_configs: npt.NDArray[np.integer],
+    detector_operators: tuple[Any, ...] | list[Any],
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    detector_coefficients: npt.ArrayLike | None = None,
+    dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ] = "rdm_support_matrix_units",
+    tolerance: float = 1.0e-10,
+    rdm_tolerance: float = 1.0e-10,
+) -> sp.csr_array:
+    """Rebuild the sparse jump operator for a reported recycled candidate."""
+    from qlinks.open_system.local_recycling import (
+        _embed_local_pattern_operator_from_context,
+        _embedding_context_from_basis_context,
+        _local_pattern_basis_context_from_basis,
+        _local_reduced_density_matrix_from_basis_context_and_states,
+    )
+
+    detector_matrices = tuple(_as_csr(operator) for operator in detector_operators)
+    if len(detector_matrices) == 0:
+        raise ValueError("detector_operators must contain at least one matrix.")
+
+    state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
+    dim = int(state_basis.shape[0])
+    basis_array = np.asarray(basis_configs)
+    if basis_array.ndim != 2 or basis_array.shape[0] != dim:
+        raise ValueError("basis_configs must have shape (hilbert_dimension, n_variables).")
+
+    for operator in detector_matrices:
+        if operator.shape != (dim, dim):
+            raise ValueError(
+                "operator has incompatible shape: " f"{operator.shape} != {(dim, dim)}."
+            )
+
+    if detector_coefficients is None:
+        if dark_operator_report is None:
+            raise ValueError(
+                "Pass detector_coefficients or dark_operator_report to define detectors."
+            )
+        detector_coefficients = np.column_stack(
+            [report_candidate.coefficients for report_candidate in dark_operator_report.candidates]
+        )
+
+    coefficients = _normalize_detector_coefficients(
+        detector_coefficients,
+        n_operators=len(detector_matrices),
+    )
+    if candidate.detector_index < 0 or candidate.detector_index >= coefficients.shape[1]:
+        raise ValueError("candidate.detector_index is out of range for detector coefficients.")
+
+    detector = _combined_operator(
+        operators=detector_matrices,
+        coefficients=coefficients[:, candidate.detector_index],
+    )
+
+    regions = _normalize_local_regions(local_regions)
+    if candidate.region_index < 0 or candidate.region_index >= len(regions):
+        raise ValueError("candidate.region_index is out of range for local_regions.")
+
+    context = _local_pattern_basis_context_from_basis(
+        basis_configs=basis_array,
+        variable_indices=regions[candidate.region_index],
+    )
+    embedding_context = _embedding_context_from_basis_context(context)
+    rdm = _local_reduced_density_matrix_from_basis_context_and_states(
+        context=context,
+        states=state_basis,
+        tolerance=rdm_tolerance,
+    )
+    recycler_specs = _local_recycler_specs(
+        local_patterns=rdm.local_patterns,
+        support_basis=rdm.support_basis,
+        recycler_source=recycler_source,
+    )
+    if candidate.recycler_index < 0 or candidate.recycler_index >= len(recycler_specs):
+        raise ValueError("candidate.recycler_index is out of range for recycler specs.")
+
+    _, local_operator = recycler_specs[candidate.recycler_index]
+    recycler = _embed_local_pattern_operator_from_context(
+        context=embedding_context,
+        local_operator=local_operator,
+    )
+    return (recycler @ detector).tocsr()
+
+
+def select_recycled_manifold_dark_detector_jumps(
+    *,
+    hamiltonian: Any,
+    states: npt.ArrayLike,
+    basis_configs: npt.NDArray[np.integer],
+    detector_operators: tuple[Any, ...] | list[Any],
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    detector_coefficients: npt.ArrayLike | None = None,
+    dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+    candidate_report: RecycledManifoldDarkDetectorReport | None = None,
+    detector_operator_names: tuple[str, ...] | list[str] | None = None,
+    detector_names: tuple[str, ...] | list[str] | None = None,
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ] = "rdm_support_matrix_units",
+    tolerance: float = 1.0e-10,
+    rdm_tolerance: float = 1.0e-10,
+    dark_tolerance: float = 1.0e-10,
+    inflow_tolerance: float = 1.0e-12,
+    kernel_tolerance: float = 1.0e-10,
+    liouvillian_zero_tolerance: float = 1.0e-9,
+    max_detectors: int | None = None,
+    max_candidate_pool: int | None = 128,
+    max_selected_jumps: int = 16,
+    target_bad_kernel_dimension: int = 0,
+    allow_non_improving: bool = False,
+) -> RecycledManifoldJumpSelectionReport:
+    """Greedily select a small recycled-detector jump subset.
+
+    The candidate family is ``J=R D``: ``D`` is a collective detector dark on
+    the target manifold, and ``R`` is a local matrix-unit/RDM-support recycler.
+    The selector first keeps the best direct-inflow candidates, then adds jumps
+    one at a time to minimize the complement common jump-kernel dimension
+
+        dim( intersection_mu ker J_mu  ∩  P_M^perp ).
+
+    Reaching ``target_bad_kernel_dimension=0`` is a strong, jump-only sufficient
+    condition that no complement vector remains dark under all selected jumps.
+    It is stronger than the true invariant-subspace condition including ``H``,
+    but cheaper and useful before expensive Liouvillian spectrum checks.
+    """
+    from qlinks.open_system.diagnostics import diagnose_dark_manifold
+
+    regions = _normalize_local_regions(local_regions)
+    state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
+    dim = int(state_basis.shape[0])
+    manifold_dimension = int(state_basis.shape[1])
+
+    if candidate_report is None:
+        candidate_report = diagnose_recycled_manifold_dark_detectors(
+            states=state_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            max_detectors=max_detectors,
+            max_report_candidates=max_candidate_pool,
+            sort_by_inflow=True,
+        )
+
+    pool = [
+        candidate
+        for candidate in candidate_report.candidates
+        if candidate.relative_dark_residual <= dark_tolerance
+        and candidate.inflow_norm > inflow_tolerance
+    ]
+    if max_candidate_pool is not None:
+        pool = pool[: max(int(max_candidate_pool), 0)]
+
+    candidate_jumps = {
+        id(candidate): _recycled_jump_for_candidate(
+            candidate=candidate,
+            states=state_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+        )
+        for candidate in pool
+    }
+
+    selected_candidates: list[RecycledManifoldDarkDetectorCandidate] = []
+    selected_jumps: list[sp.csr_array] = []
+    selected_ids: set[int] = set()
+    steps: list[RecycledManifoldJumpSelectionStep] = []
+    current_bad_dimension = dim - manifold_dimension
+    final_diagnostics = None
+
+    for _step_index in range(max(int(max_selected_jumps), 0)):
+        best_entry = None
+        for candidate in pool:
+            candidate_id = id(candidate)
+            if candidate_id in selected_ids:
+                continue
+            trial_jumps = tuple(selected_jumps + [candidate_jumps[candidate_id]])
+            diagnostics = diagnose_dark_manifold(
+                hamiltonian=hamiltonian,
+                jumps=trial_jumps,
+                target_states=state_basis,
+                kernel_tolerance=kernel_tolerance,
+                liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+                check_liouvillian_spectrum=False,
+                liouvillian_spectrum_method="none",
+            )
+            score = (
+                diagnostics.bad_common_jump_kernel_dimension,
+                diagnostics.max_target_jump_residual,
+                -diagnostics.inflow_norm,
+                -candidate.inflow_norm,
+                candidate.jump_nnz,
+                candidate.detector_index,
+                candidate.region_index,
+                candidate.recycler_index,
+            )
+            if best_entry is None or score < best_entry[0]:
+                best_entry = (score, candidate, candidate_jumps[candidate_id], diagnostics)
+
+        if best_entry is None:
+            break
+
+        _, best_candidate, best_jump, best_diagnostics = best_entry
+        if (
+            not allow_non_improving
+            and best_diagnostics.bad_common_jump_kernel_dimension >= current_bad_dimension
+        ):
+            break
+
+        selected_candidates.append(best_candidate)
+        selected_jumps.append(best_jump)
+        selected_ids.add(id(best_candidate))
+        current_bad_dimension = int(best_diagnostics.bad_common_jump_kernel_dimension)
+        final_diagnostics = best_diagnostics
+        steps.append(
+            RecycledManifoldJumpSelectionStep(
+                step_index=len(steps),
+                candidate=best_candidate,
+                bad_common_jump_kernel_dimension=current_bad_dimension,
+                inflow_norm=float(best_diagnostics.inflow_norm),
+                max_target_jump_residual=float(best_diagnostics.max_target_jump_residual),
+                n_selected_jumps=len(selected_jumps),
+            )
+        )
+
+        if current_bad_dimension <= target_bad_kernel_dimension:
+            break
+
+    if selected_jumps and final_diagnostics is None:
+        final_diagnostics = diagnose_dark_manifold(
+            hamiltonian=hamiltonian,
+            jumps=tuple(selected_jumps),
+            target_states=state_basis,
+            kernel_tolerance=kernel_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            check_liouvillian_spectrum=False,
+            liouvillian_spectrum_method="none",
+        )
+
+    return RecycledManifoldJumpSelectionReport(
+        manifold_dimension=manifold_dimension,
+        hilbert_dimension=dim,
+        candidate_pool_size=len(pool),
+        max_selected_jumps=int(max_selected_jumps),
+        target_bad_kernel_dimension=int(target_bad_kernel_dimension),
+        dark_tolerance=float(dark_tolerance),
+        inflow_tolerance=float(inflow_tolerance),
+        jumps=tuple(selected_jumps),
+        steps=tuple(steps),
+        final_diagnostics=final_diagnostics,
+        candidate_report=candidate_report,
     )
 
 

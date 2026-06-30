@@ -221,3 +221,69 @@ def test_construction_method_tests_recycled_dark_detector_report_and_rich_render
     assert "Recycled manifold dark-detector report" in rendered
     assert "candidates with inflow" in rendered
     assert "D1" in rendered
+
+
+def _single_qutrit_detector_pair():
+    d1 = sp.diags([0.0, 1.0, 0.0], format="csr", dtype=np.complex128)
+    d2 = sp.diags([0.0, 0.0, 1.0], format="csr", dtype=np.complex128)
+    return d1, d2
+
+
+def test_select_recycled_dark_detector_jumps_removes_complement_kernel():
+    from qlinks.open_system import select_recycled_manifold_dark_detector_jumps
+
+    build_result = _single_qutrit_build_result()
+    selection = select_recycled_manifold_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        max_candidate_pool=18,
+        max_selected_jumps=4,
+    )
+
+    summary = selection.to_summary_dict()
+    assert summary["n_selected_jumps"] == 2
+    assert summary["final_bad_common_jump_kernel_dimension"] == 0
+    assert summary["complement_common_kernel_removed"] is True
+    assert summary["final_inflow_norm"] > 0.0
+    assert len(selection.jumps) == 2
+    assert selection.final_diagnostics is not None
+    assert selection.final_diagnostics.bad_common_jump_kernel_dimension == 0
+
+
+def test_construction_selects_recycled_dark_detector_jumps_and_rich_render():
+    build_result = _single_qutrit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_single_qutrit_target_state(),
+        local_regions=((0,),),
+    )
+
+    selection = construction.select_recycled_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        recycler_source="rdm_support_matrix_units",
+        max_candidate_pool=6,
+        max_selected_jumps=4,
+    )
+
+    assert selection.n_selected_jumps == 2
+    assert selection.complement_common_kernel_removed is True
+    assert selection.final_bad_common_jump_kernel_dimension == 0
+
+    from rich.console import Console
+
+    console = Console(record=True, width=120)
+    console.print(selection)
+    rendered = console.export_text()
+    assert "Recycled manifold jump-selection report" in rendered
+    assert "complement kernel removed" in rendered
+    assert "selected jumps" in rendered

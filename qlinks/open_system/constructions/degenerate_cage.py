@@ -26,9 +26,11 @@ from qlinks.open_system.manifold_detectors import (
     DressedManifoldDarkDetectorReport,
     ManifoldDarkOperatorBasisReport,
     RecycledManifoldDarkDetectorReport,
+    RecycledManifoldJumpSelectionReport,
     diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
     diagnose_recycled_manifold_dark_detectors,
+    select_recycled_manifold_dark_detector_jumps,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
 from qlinks.open_system.solvers import LindbladProblem
@@ -510,6 +512,68 @@ class DegenerateCageLindbladConstruction:
             max_detectors=max_detectors,
             max_report_candidates=max_report_candidates,
             sort_by_inflow=sort_by_inflow,
+        )
+
+    def select_recycled_dark_detector_jumps(
+        self,
+        *,
+        hamiltonian: Any,
+        basis_configs: NDArray[np.integer],
+        detector_operators: tuple[Any, ...] | list[Any],
+        local_regions: Sequence[Sequence[int]] | None = None,
+        detector_coefficients: NDArray[np.complex128] | None = None,
+        dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+        candidate_report: RecycledManifoldDarkDetectorReport | None = None,
+        detector_operator_names: tuple[str, ...] | list[str] | None = None,
+        detector_names: tuple[str, ...] | list[str] | None = None,
+        recycler_source: Literal[
+            "matrix_units",
+            "rdm_support_matrix_units",
+        ] = "rdm_support_matrix_units",
+        tolerance: float = 1.0e-10,
+        rdm_tolerance: float = 1.0e-10,
+        dark_tolerance: float = 1.0e-10,
+        inflow_tolerance: float = 1.0e-12,
+        kernel_tolerance: float = 1.0e-10,
+        liouvillian_zero_tolerance: float = 1.0e-9,
+        max_detectors: int | None = None,
+        max_candidate_pool: int | None = 128,
+        max_selected_jumps: int = 16,
+        target_bad_kernel_dimension: int = 0,
+        allow_non_improving: bool = False,
+    ) -> RecycledManifoldJumpSelectionReport:
+        """Greedily select a small local recycled-detector jump subset.
+
+        This promotes the necessary-condition recycler scan into an actual jump
+        set and checks, after each addition, whether the common jump kernel in
+        the complement of the target manifold has been removed.
+        """
+        regions = (
+            self.local_regions if local_regions is None else _normalize_local_regions(local_regions)
+        )
+        return select_recycled_manifold_dark_detector_jumps(
+            hamiltonian=hamiltonian,
+            states=self.manifold_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            candidate_report=candidate_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            kernel_tolerance=kernel_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            max_detectors=max_detectors,
+            max_candidate_pool=max_candidate_pool,
+            max_selected_jumps=max_selected_jumps,
+            target_bad_kernel_dimension=target_bad_kernel_dimension,
+            allow_non_improving=allow_non_improving,
         )
 
 
