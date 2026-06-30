@@ -704,6 +704,8 @@ class RecycledManifoldJumpSelectionReport:
     steps: tuple[RecycledManifoldJumpSelectionStep, ...]
     final_diagnostics: Any | None
     candidate_report: RecycledManifoldDarkDetectorReport
+    candidate_report_was_expanded: bool = False
+    candidate_pool_was_limited: bool = False
 
     @property
     def n_selected_jumps(self) -> int:
@@ -712,6 +714,50 @@ class RecycledManifoldJumpSelectionReport:
     @property
     def selected_candidates(self) -> tuple[RecycledManifoldDarkDetectorCandidate, ...]:
         return tuple(step.candidate for step in self.steps)
+
+    @property
+    def n_reported_candidates(self) -> int:
+        return len(self.candidate_report.candidates)
+
+    @property
+    def n_tested_candidates(self) -> int:
+        return int(self.candidate_report.n_tested_candidates)
+
+    @property
+    def candidate_report_is_truncated(self) -> bool:
+        return self.n_reported_candidates < self.n_tested_candidates
+
+    @property
+    def candidate_pool_is_truncated(self) -> bool:
+        return bool(self.candidate_pool_was_limited)
+
+    @property
+    def stopped_with_available_candidates(self) -> bool:
+        return (
+            self.final_bad_common_jump_kernel_dimension is not None
+            and self.final_bad_common_jump_kernel_dimension > self.target_bad_kernel_dimension
+            and self.candidate_pool_is_truncated
+        )
+
+    @property
+    def final_bad_kernel_iprs(self) -> tuple[float, ...]:
+        if self.final_diagnostics is None:
+            return ()
+        return tuple(float(value) for value in self.final_diagnostics.bad_common_jump_kernel_iprs)
+
+    @property
+    def final_bad_kernel_ipr_min(self) -> float | None:
+        values = self.final_bad_kernel_iprs
+        if len(values) == 0:
+            return None
+        return float(min(values))
+
+    @property
+    def final_bad_kernel_ipr_max(self) -> float | None:
+        values = self.final_bad_kernel_iprs
+        if len(values) == 0:
+            return None
+        return float(max(values))
 
     @property
     def final_bad_common_jump_kernel_dimension(self) -> int | None:
@@ -753,6 +799,13 @@ class RecycledManifoldJumpSelectionReport:
             "manifold_dimension": self.manifold_dimension,
             "hilbert_dimension": self.hilbert_dimension,
             "candidate_pool_size": self.candidate_pool_size,
+            "n_reported_candidates": self.n_reported_candidates,
+            "n_tested_candidates": self.n_tested_candidates,
+            "candidate_report_was_expanded": self.candidate_report_was_expanded,
+            "candidate_pool_was_limited": self.candidate_pool_was_limited,
+            "candidate_report_is_truncated": self.candidate_report_is_truncated,
+            "candidate_pool_is_truncated": self.candidate_pool_is_truncated,
+            "stopped_with_available_candidates": self.stopped_with_available_candidates,
             "max_selected_jumps": self.max_selected_jumps,
             "target_bad_kernel_dimension": self.target_bad_kernel_dimension,
             "n_selected_jumps": self.n_selected_jumps,
@@ -763,6 +816,8 @@ class RecycledManifoldJumpSelectionReport:
             "final_bad_common_jump_kernel_dimension": (self.final_bad_common_jump_kernel_dimension),
             "final_inflow_norm": self.final_inflow_norm,
             "complement_common_kernel_removed": self.complement_common_kernel_removed,
+            "final_bad_kernel_ipr_min": self.final_bad_kernel_ipr_min,
+            "final_bad_kernel_ipr_max": self.final_bad_kernel_ipr_max,
             "dark_tolerance": self.dark_tolerance,
             "inflow_tolerance": self.inflow_tolerance,
             "steps": tuple(step.to_summary_dict() for step in self.steps),
@@ -792,6 +847,12 @@ class RecycledManifoldJumpSelectionReport:
         overview.add_row("Hilbert dimension", str(self.hilbert_dimension))
         overview.add_row("manifold dimension", str(self.manifold_dimension))
         overview.add_row("candidate pool", str(self.candidate_pool_size))
+        overview.add_row(
+            "reported/tested candidates",
+            f"{self.n_reported_candidates}/{self.n_tested_candidates}",
+        )
+        overview.add_row("expanded report", str(self.candidate_report_was_expanded))
+        overview.add_row("pool truncated", str(self.candidate_pool_is_truncated))
         overview.add_row("selected jumps", str(self.n_selected_jumps))
         overview.add_row("target bad-kernel dim", str(self.target_bad_kernel_dimension))
         overview.add_row(
@@ -808,6 +869,10 @@ class RecycledManifoldJumpSelectionReport:
             "not checked" if self.final_inflow_norm is None else f"{self.final_inflow_norm:.3e}",
         )
         overview.add_row("total jump nnz", str(self.total_jump_nnz))
+        overview.add_row(
+            "stopped with available candidates",
+            str(self.stopped_with_available_candidates),
+        )
 
         table = Table(title="Greedy selected recycled dark-detector jumps")
         table.add_column("step", justify="right")
@@ -1681,6 +1746,7 @@ def select_recycled_manifold_dark_detector_jumps(
     max_selected_jumps: int = 16,
     target_bad_kernel_dimension: int = 0,
     allow_non_improving: bool = False,
+    expand_candidate_report: bool = False,
 ) -> RecycledManifoldJumpSelectionReport:
     """Greedily select a small recycled-detector jump subset.
 
@@ -1695,6 +1761,12 @@ def select_recycled_manifold_dark_detector_jumps(
     condition that no complement vector remains dark under all selected jumps.
     It is stronger than the true invariant-subspace condition including ``H``,
     but cheaper and useful before expensive Liouvillian spectrum checks.
+
+    If ``candidate_report`` is a truncated diagnostic report, set
+    ``expand_candidate_report=True`` and ``max_candidate_pool=None`` to rescan
+    and use the full local recycler candidate family.  This is often the right
+    follow-up when a small inflow-ranked pool leaves a low-dimensional bad
+    complement kernel.
     """
     from qlinks.open_system.diagnostics import diagnose_dark_manifold
 
@@ -1703,6 +1775,7 @@ def select_recycled_manifold_dark_detector_jumps(
     dim = int(state_basis.shape[0])
     manifold_dimension = int(state_basis.shape[1])
 
+    candidate_report_was_expanded = False
     if candidate_report is None:
         candidate_report = diagnose_recycled_manifold_dark_detectors(
             states=state_basis,
@@ -1722,15 +1795,43 @@ def select_recycled_manifold_dark_detector_jumps(
             max_report_candidates=max_candidate_pool,
             sort_by_inflow=True,
         )
+    elif (
+        expand_candidate_report
+        and len(candidate_report.candidates) < candidate_report.n_tested_candidates
+    ):
+        candidate_report = diagnose_recycled_manifold_dark_detectors(
+            states=state_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            max_detectors=max_detectors,
+            max_report_candidates=max_candidate_pool,
+            sort_by_inflow=True,
+        )
+        candidate_report_was_expanded = True
 
-    pool = [
+    eligible_pool = [
         candidate
         for candidate in candidate_report.candidates
         if candidate.relative_dark_residual <= dark_tolerance
         and candidate.inflow_norm > inflow_tolerance
     ]
-    if max_candidate_pool is not None:
-        pool = pool[: max(int(max_candidate_pool), 0)]
+    candidate_pool_was_limited = False
+    if max_candidate_pool is None:
+        pool = eligible_pool
+    else:
+        pool_limit = max(int(max_candidate_pool), 0)
+        candidate_pool_was_limited = len(eligible_pool) > pool_limit
+        pool = eligible_pool[:pool_limit]
 
     candidate_jumps = {
         id(candidate): _recycled_jump_for_candidate(
@@ -1836,6 +1937,8 @@ def select_recycled_manifold_dark_detector_jumps(
         steps=tuple(steps),
         final_diagnostics=final_diagnostics,
         candidate_report=candidate_report,
+        candidate_report_was_expanded=candidate_report_was_expanded,
+        candidate_pool_was_limited=candidate_pool_was_limited,
     )
 
 

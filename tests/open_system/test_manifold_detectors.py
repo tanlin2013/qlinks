@@ -256,6 +256,49 @@ def test_select_recycled_dark_detector_jumps_removes_complement_kernel():
     assert selection.final_diagnostics.bad_common_jump_kernel_dimension == 0
 
 
+def test_select_recycled_dark_detector_jumps_expands_truncated_report():
+    from qlinks.open_system import (
+        diagnose_recycled_manifold_dark_detectors,
+        select_recycled_manifold_dark_detector_jumps,
+    )
+
+    build_result = _single_qutrit_build_result()
+    truncated_report = diagnose_recycled_manifold_dark_detectors(
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        max_report_candidates=1,
+    )
+
+    assert len(truncated_report.candidates) == 1
+    assert truncated_report.n_tested_candidates > 1
+
+    selection = select_recycled_manifold_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        candidate_report=truncated_report,
+        max_candidate_pool=None,
+        max_selected_jumps=4,
+        expand_candidate_report=True,
+    )
+
+    assert selection.candidate_report_was_expanded is True
+    assert selection.n_reported_candidates == selection.n_tested_candidates
+    assert selection.candidate_report_is_truncated is False
+    assert selection.candidate_pool_is_truncated is False
+    assert selection.complement_common_kernel_removed is True
+
+
 def test_construction_selects_recycled_dark_detector_jumps_and_rich_render():
     build_result = _single_qutrit_build_result()
     construction = build_degenerate_cage_lindblad_construction(

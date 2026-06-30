@@ -541,6 +541,7 @@ class DegenerateCageLindbladConstruction:
         max_selected_jumps: int = 16,
         target_bad_kernel_dimension: int = 0,
         allow_non_improving: bool = False,
+        expand_candidate_report: bool = False,
     ) -> RecycledManifoldJumpSelectionReport:
         """Greedily select a small local recycled-detector jump subset.
 
@@ -574,6 +575,7 @@ class DegenerateCageLindbladConstruction:
             max_selected_jumps=max_selected_jumps,
             target_bad_kernel_dimension=target_bad_kernel_dimension,
             allow_non_improving=allow_non_improving,
+            expand_candidate_report=expand_candidate_report,
         )
 
 
