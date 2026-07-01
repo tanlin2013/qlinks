@@ -460,3 +460,60 @@ def test_recycled_jump_selection_kernel_projection_strategy():
     assert report.complement_common_kernel_removed is True
     assert report.final_bad_common_jump_kernel_dimension == 0
     assert report.n_selected_jumps <= 2
+
+
+def test_recycled_residual_kernel_report_identifies_unseen_complement_sector():
+    from qlinks.open_system import diagnose_recycled_manifold_residual_kernel
+
+    build_result = _single_qutrit_build_result()
+    d1, d2 = _single_qutrit_detector_pair()
+    report = diagnose_recycled_manifold_residual_kernel(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=(d1,),
+        detector_coefficients=np.asarray([1.0]),
+        detector_operator_names=("D1",),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        operator_groups=(("projectors", (d1, d2), ("D1", "D2")),),
+    )
+
+    summary = report.to_summary_dict()
+    assert summary["residual_dimension"] == 1
+    assert summary["family_report"]["family_bad_common_jump_kernel_dimension"] == 1
+    assert summary["hamiltonian_keeps_residual_sector"] is True
+    assert summary["operator_action_reports"][0]["n_operators"] == 2
+    assert summary["operator_action_reports"][0]["total_action_norm"] > 0.0
+    assert summary["local_support_entries"][0]["residual_support_rank"] == 1
+
+
+def test_construction_recycled_residual_kernel_report_and_rich_render():
+    build_result = _single_qutrit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_single_qutrit_target_state(),
+        local_regions=((0,),),
+    )
+    d1, d2 = _single_qutrit_detector_pair()
+
+    report = construction.diagnose_recycled_residual_kernel(
+        hamiltonian=build_result.hamiltonian,
+        basis_configs=build_result.basis.states,
+        detector_operators=(d1,),
+        detector_coefficients=np.asarray([1.0]),
+        detector_operator_names=("D1",),
+        recycler_source="matrix_units",
+        operator_groups=(("projectors", (d1, d2), ("D1", "D2")),),
+    )
+
+    assert report.residual_dimension == 1
+    assert report.family_report.family_bad_common_jump_kernel_dimension == 1
+
+    from rich.console import Console
+
+    console = Console(record=True, width=120)
+    console.print(report)
+    rendered = console.export_text()
+    assert "Recycled residual-kernel report" in rendered
+    assert "residual bad-kernel dimension" in rendered

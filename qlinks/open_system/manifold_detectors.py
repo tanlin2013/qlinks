@@ -2535,6 +2535,719 @@ def diagnose_recycled_manifold_candidate_family_kernel(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class ResidualKernelOperatorActionEntry:
+    """Action of one probe operator on the residual bad-kernel subspace."""
+
+    operator_index: int
+    operator_name: str
+    action_norm: float
+    target_component_norm: float
+    residual_component_norm: float
+    outside_component_norm: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "operator_index": self.operator_index,
+            "operator_name": self.operator_name,
+            "action_norm": self.action_norm,
+            "target_component_norm": self.target_component_norm,
+            "residual_component_norm": self.residual_component_norm,
+            "outside_component_norm": self.outside_component_norm,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResidualKernelOperatorActionReport:
+    """Probe-operator action on the residual bad-kernel subspace."""
+
+    group_name: str
+    n_operators: int
+    entries: tuple[ResidualKernelOperatorActionEntry, ...]
+
+    @property
+    def total_action_norm(self) -> float:
+        return float(np.sqrt(sum(entry.action_norm**2 for entry in self.entries)))
+
+    @property
+    def total_target_component_norm(self) -> float:
+        return float(np.sqrt(sum(entry.target_component_norm**2 for entry in self.entries)))
+
+    @property
+    def total_residual_component_norm(self) -> float:
+        return float(np.sqrt(sum(entry.residual_component_norm**2 for entry in self.entries)))
+
+    @property
+    def total_outside_component_norm(self) -> float:
+        return float(np.sqrt(sum(entry.outside_component_norm**2 for entry in self.entries)))
+
+    @property
+    def max_target_component_norm(self) -> float:
+        return max((entry.target_component_norm for entry in self.entries), default=0.0)
+
+    @property
+    def max_outside_component_norm(self) -> float:
+        return max((entry.outside_component_norm for entry in self.entries), default=0.0)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "group_name": self.group_name,
+            "n_operators": self.n_operators,
+            "total_action_norm": self.total_action_norm,
+            "total_target_component_norm": self.total_target_component_norm,
+            "total_residual_component_norm": self.total_residual_component_norm,
+            "total_outside_component_norm": self.total_outside_component_norm,
+            "max_target_component_norm": self.max_target_component_norm,
+            "max_outside_component_norm": self.max_outside_component_norm,
+            "entries": tuple(entry.to_summary_dict() for entry in self.entries),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResidualKernelLocalSupportEntry:
+    """Local support comparison between target and residual bad-kernel subspaces."""
+
+    variable_indices: tuple[int, ...]
+    local_dim: int
+    target_support_rank: int
+    target_nullity: int
+    residual_support_rank: int
+    residual_nullity: int
+    combined_support_rank: int
+    combined_nullity: int
+    residual_support_outside_target_norm: float
+
+    @property
+    def n_variables(self) -> int:
+        return len(self.variable_indices)
+
+    @property
+    def residual_support_inside_target(self) -> bool:
+        return self.residual_support_outside_target_norm <= 1.0e-10
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "variable_indices": self.variable_indices,
+            "n_variables": self.n_variables,
+            "local_dim": self.local_dim,
+            "target_support_rank": self.target_support_rank,
+            "target_nullity": self.target_nullity,
+            "residual_support_rank": self.residual_support_rank,
+            "residual_nullity": self.residual_nullity,
+            "combined_support_rank": self.combined_support_rank,
+            "combined_nullity": self.combined_nullity,
+            "residual_support_outside_target_norm": self.residual_support_outside_target_norm,
+            "residual_support_inside_target": self.residual_support_inside_target,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class RecycledManifoldResidualKernelReport:
+    """Diagnostics for the residual complement kernel left by a recycled family.
+
+    The report focuses on the bad subspace
+
+        B = (cap_mu ker J_mu) cap M^perp,
+
+    where ``J_mu`` ranges over the chosen recycled-detector family.  It is meant
+    to distinguish a mere subset-selection failure from a structural residual
+    sector that the current local operator family cannot see.
+    """
+
+    manifold_dimension: int
+    hilbert_dimension: int
+    family_report: RecycledManifoldCandidateFamilyKernelReport
+    residual_basis: npt.NDArray[np.complex128]
+    hamiltonian_target_coupling_norm: float
+    hamiltonian_residual_block_norm: float
+    hamiltonian_outside_residual_norm: float
+    hamiltonian_residual_eigenvalues: tuple[complex, ...]
+    operator_action_reports: tuple[ResidualKernelOperatorActionReport, ...]
+    local_support_entries: tuple[ResidualKernelLocalSupportEntry, ...]
+    kernel_tolerance: float
+
+    @property
+    def residual_dimension(self) -> int:
+        return int(self.residual_basis.shape[1])
+
+    @property
+    def residual_iprs(self) -> tuple[float, ...]:
+        return tuple(
+            _state_ipr(self.residual_basis[:, index]) for index in range(self.residual_dimension)
+        )
+
+    @property
+    def residual_ipr_min(self) -> float | None:
+        values = self.residual_iprs
+        if len(values) == 0:
+            return None
+        return float(min(values))
+
+    @property
+    def residual_ipr_max(self) -> float | None:
+        values = self.residual_iprs
+        if len(values) == 0:
+            return None
+        return float(max(values))
+
+    @property
+    def hamiltonian_keeps_residual_sector(self) -> bool:
+        return (
+            self.hamiltonian_target_coupling_norm <= self.kernel_tolerance
+            and self.hamiltonian_outside_residual_norm <= self.kernel_tolerance
+        )
+
+    @property
+    def n_local_support_entries(self) -> int:
+        return len(self.local_support_entries)
+
+    @property
+    def all_local_residual_support_inside_target(self) -> bool:
+        return all(entry.residual_support_inside_target for entry in self.local_support_entries)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "manifold_dimension": self.manifold_dimension,
+            "hilbert_dimension": self.hilbert_dimension,
+            "residual_dimension": self.residual_dimension,
+            "residual_ipr_min": self.residual_ipr_min,
+            "residual_ipr_max": self.residual_ipr_max,
+            "hamiltonian_target_coupling_norm": self.hamiltonian_target_coupling_norm,
+            "hamiltonian_residual_block_norm": self.hamiltonian_residual_block_norm,
+            "hamiltonian_outside_residual_norm": self.hamiltonian_outside_residual_norm,
+            "hamiltonian_keeps_residual_sector": self.hamiltonian_keeps_residual_sector,
+            "hamiltonian_residual_eigenvalues": tuple(
+                complex(value) for value in self.hamiltonian_residual_eigenvalues
+            ),
+            "operator_action_reports": tuple(
+                report.to_summary_dict() for report in self.operator_action_reports
+            ),
+            "n_local_support_entries": self.n_local_support_entries,
+            "all_local_residual_support_inside_target": (
+                self.all_local_residual_support_inside_target
+            ),
+            "local_support_entries": tuple(
+                entry.to_summary_dict() for entry in self.local_support_entries
+            ),
+            "family_report": self.family_report.to_summary_dict(),
+        }
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_operator_rows: int = 12, max_local_rows: int = 16):
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "RecycledManifoldResidualKernelReport.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        overview.add_row("Hilbert dimension", str(self.hilbert_dimension))
+        overview.add_row("manifold dimension", str(self.manifold_dimension))
+        overview.add_row("residual bad-kernel dimension", str(self.residual_dimension))
+        overview.add_row(
+            "residual IPR range",
+            (
+                "none"
+                if self.residual_ipr_min is None
+                else f"{self.residual_ipr_min:.3e} .. {self.residual_ipr_max:.3e}"
+            ),
+        )
+        overview.add_row("H target coupling", f"{self.hamiltonian_target_coupling_norm:.3e}")
+        overview.add_row("H outside residual", f"{self.hamiltonian_outside_residual_norm:.3e}")
+        overview.add_row("H keeps residual sector", str(self.hamiltonian_keeps_residual_sector))
+        overview.add_row(
+            "local residual support inside target",
+            str(self.all_local_residual_support_inside_target),
+        )
+
+        operator_table = Table(title="Probe-operator action on residual kernel")
+        operator_table.add_column("group")
+        operator_table.add_column("operators", justify="right")
+        operator_table.add_column("||O B||", justify="right")
+        operator_table.add_column("target", justify="right")
+        operator_table.add_column("residual", justify="right")
+        operator_table.add_column("outside", justify="right")
+        for report in self.operator_action_reports[: max(int(max_operator_rows), 0)]:
+            operator_table.add_row(
+                report.group_name,
+                str(report.n_operators),
+                f"{report.total_action_norm:.3e}",
+                f"{report.total_target_component_norm:.3e}",
+                f"{report.total_residual_component_norm:.3e}",
+                f"{report.total_outside_component_norm:.3e}",
+            )
+
+        local_table = Table(title="Local support comparison")
+        local_table.add_column("region")
+        local_table.add_column("dim", justify="right")
+        local_table.add_column("target rank", justify="right")
+        local_table.add_column("residual rank", justify="right")
+        local_table.add_column("combined rank", justify="right")
+        local_table.add_column("resid outside target", justify="right")
+        for entry in self.local_support_entries[: max(int(max_local_rows), 0)]:
+            local_table.add_row(
+                str(entry.variable_indices),
+                str(entry.local_dim),
+                str(entry.target_support_rank),
+                str(entry.residual_support_rank),
+                str(entry.combined_support_rank),
+                f"{entry.residual_support_outside_target_norm:.3e}",
+            )
+        if len(self.local_support_entries) > max_local_rows:
+            local_table.add_row(
+                "…",
+                "",
+                "",
+                "",
+                "",
+                f"{len(self.local_support_entries) - max_local_rows} more regions",
+            )
+
+        return Panel(
+            Group(overview, operator_table, local_table),
+            title=Text("Recycled residual-kernel report", style="bold red"),
+            border_style="red" if self.residual_dimension else "green",
+        )
+
+
+def _bad_kernel_basis_from_recycled_family(
+    *,
+    states: npt.ArrayLike,
+    basis_configs: npt.NDArray[np.integer],
+    detector_operators: tuple[Any, ...] | list[Any],
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    candidates: tuple[RecycledManifoldDarkDetectorCandidate, ...],
+    detector_coefficients: npt.ArrayLike | None = None,
+    dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ] = "rdm_support_matrix_units",
+    tolerance: float = 1.0e-10,
+    rdm_tolerance: float = 1.0e-10,
+    kernel_tolerance: float = 1.0e-10,
+    max_detectors: int | None = None,
+) -> npt.NDArray[np.complex128]:
+    """Return the bad complement common kernel for a recycled family."""
+    from qlinks.open_system.local_recycling import (
+        _embed_local_pattern_operator_from_context,
+        _embedding_context_from_basis_context,
+        _local_pattern_basis_context_from_basis,
+        _local_reduced_density_matrix_from_basis_context_and_states,
+    )
+
+    state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
+    dim = int(state_basis.shape[0])
+
+    detector_matrices = tuple(_as_csr(operator) for operator in detector_operators)
+    coefficients = _detector_coefficients_from_report(
+        detector_coefficients=detector_coefficients,
+        dark_operator_report=dark_operator_report,
+        n_operators=len(detector_matrices),
+        max_detectors=max_detectors,
+    )
+    detectors = tuple(
+        _combined_operator(
+            operators=detector_matrices,
+            coefficients=coefficients[:, detector_index],
+        )
+        for detector_index in range(coefficients.shape[1])
+    )
+
+    basis_array = np.asarray(basis_configs)
+    if basis_array.ndim != 2 or basis_array.shape[0] != dim:
+        raise ValueError("basis_configs must have shape (hilbert_dimension, n_variables).")
+
+    regions = _normalize_local_regions(local_regions)
+    contexts = tuple(
+        _local_pattern_basis_context_from_basis(
+            basis_configs=basis_array,
+            variable_indices=region,
+        )
+        for region in regions
+    )
+    embedding_contexts = tuple(
+        _embedding_context_from_basis_context(context) for context in contexts
+    )
+    rdms = tuple(
+        _local_reduced_density_matrix_from_basis_context_and_states(
+            context=context,
+            states=state_basis,
+            tolerance=rdm_tolerance,
+        )
+        for context in contexts
+    )
+    recycler_specs_by_region = tuple(
+        _local_recycler_specs(
+            local_patterns=rdm.local_patterns,
+            support_basis=rdm.support_basis,
+            recycler_source=recycler_source,
+        )
+        for rdm in rdms
+    )
+    recycler_cache: dict[tuple[int, int], sp.csr_array] = {}
+
+    complement_basis = _orthogonal_complement_basis(state_basis, tolerance=kernel_tolerance)
+    complement_dimension = int(complement_basis.shape[1])
+    if complement_dimension == 0:
+        return np.zeros((dim, 0), dtype=np.complex128)
+
+    family_gram = np.zeros(
+        (complement_dimension, complement_dimension),
+        dtype=np.complex128,
+    )
+
+    for candidate in candidates:
+        if candidate.detector_index < 0 or candidate.detector_index >= len(detectors):
+            raise ValueError("candidate.detector_index is out of range for detector coefficients.")
+        if candidate.region_index < 0 or candidate.region_index >= len(regions):
+            raise ValueError("candidate.region_index is out of range for local_regions.")
+        recycler_specs = recycler_specs_by_region[candidate.region_index]
+        if candidate.recycler_index < 0 or candidate.recycler_index >= len(recycler_specs):
+            raise ValueError("candidate.recycler_index is out of range for recycler specs.")
+
+        cache_key = (int(candidate.region_index), int(candidate.recycler_index))
+        recycler = recycler_cache.get(cache_key)
+        if recycler is None:
+            _, local_operator = recycler_specs[candidate.recycler_index]
+            recycler = _embed_local_pattern_operator_from_context(
+                context=embedding_contexts[candidate.region_index],
+                local_operator=local_operator,
+            ).tocsr()
+            recycler_cache[cache_key] = recycler
+
+        jump = (recycler @ detectors[candidate.detector_index]).tocsr()
+        if jump.nnz == 0:
+            continue
+        image = np.asarray(jump @ complement_basis, dtype=np.complex128)
+        family_gram += image.conj().T @ image
+
+    family_gram = 0.5 * (family_gram + family_gram.conj().T)
+    eigenvalues, eigenvectors = np.linalg.eigh(family_gram)
+    largest = float(np.max(np.maximum(eigenvalues.real, 0.0))) if eigenvalues.size else 0.0
+    cutoff = max(float(kernel_tolerance), float(kernel_tolerance) * max(largest, 1.0))
+    kernel_mask = np.asarray(eigenvalues.real <= cutoff, dtype=bool)
+    return (complement_basis @ eigenvectors[:, kernel_mask]).astype(np.complex128, copy=False)
+
+
+def _operator_action_report_on_residual_kernel(
+    *,
+    group_name: str,
+    operators: tuple[Any, ...] | list[Any],
+    operator_names: tuple[str, ...] | list[str] | None,
+    target_basis: npt.NDArray[np.complex128],
+    residual_basis: npt.NDArray[np.complex128],
+    max_entries: int | None,
+) -> ResidualKernelOperatorActionReport:
+    matrices = tuple(_as_csr(operator) for operator in operators)
+    if operator_names is None:
+        names = tuple(f"O_{index}" for index in range(len(matrices)))
+    else:
+        names = tuple(str(name) for name in operator_names)
+        if len(names) != len(matrices):
+            raise ValueError("operator_names length must match operators.")
+
+    dim = int(target_basis.shape[0])
+    if residual_basis.shape[0] != dim:
+        raise ValueError("residual_basis has incompatible dimension.")
+    for matrix in matrices:
+        if matrix.shape != (dim, dim):
+            raise ValueError("operator has incompatible shape for residual-kernel report.")
+
+    entries: list[ResidualKernelOperatorActionEntry] = []
+    for operator_index, matrix in enumerate(matrices):
+        action = np.asarray(matrix @ residual_basis, dtype=np.complex128)
+        target_component = target_basis.conj().T @ action
+        residual_component = residual_basis.conj().T @ action
+        projected = target_basis @ target_component + residual_basis @ residual_component
+        outside = action - projected
+        entries.append(
+            ResidualKernelOperatorActionEntry(
+                operator_index=operator_index,
+                operator_name=names[operator_index],
+                action_norm=float(np.linalg.norm(action)),
+                target_component_norm=float(np.linalg.norm(target_component)),
+                residual_component_norm=float(np.linalg.norm(residual_component)),
+                outside_component_norm=float(np.linalg.norm(outside)),
+            )
+        )
+
+    sorted_entries = tuple(
+        sorted(
+            entries,
+            key=lambda entry: (
+                -entry.action_norm,
+                -entry.target_component_norm,
+                entry.operator_index,
+            ),
+        )
+    )
+    if max_entries is not None:
+        sorted_entries = sorted_entries[: max(int(max_entries), 0)]
+    return ResidualKernelOperatorActionReport(
+        group_name=str(group_name),
+        n_operators=len(matrices),
+        entries=sorted_entries,
+    )
+
+
+def _residual_local_support_entries(
+    *,
+    target_basis: npt.NDArray[np.complex128],
+    residual_basis: npt.NDArray[np.complex128],
+    basis_configs: npt.NDArray[np.integer],
+    local_regions: tuple[tuple[int, ...], ...],
+    tolerance: float,
+) -> tuple[ResidualKernelLocalSupportEntry, ...]:
+    from qlinks.open_system.local_recycling import (
+        _local_pattern_basis_context_from_basis,
+        _local_reduced_density_matrix_from_basis_context_and_states,
+    )
+
+    if residual_basis.shape[1] == 0:
+        return ()
+
+    basis_array = np.asarray(basis_configs)
+    entries: list[ResidualKernelLocalSupportEntry] = []
+    for region in local_regions:
+        context = _local_pattern_basis_context_from_basis(
+            basis_configs=basis_array,
+            variable_indices=region,
+        )
+        target_rdm = _local_reduced_density_matrix_from_basis_context_and_states(
+            context=context,
+            states=target_basis,
+            tolerance=tolerance,
+        )
+        residual_rdm = _local_reduced_density_matrix_from_basis_context_and_states(
+            context=context,
+            states=residual_basis,
+            tolerance=tolerance,
+        )
+        combined_rdm = _local_reduced_density_matrix_from_basis_context_and_states(
+            context=context,
+            states=np.column_stack([target_basis, residual_basis]),
+            tolerance=tolerance,
+        )
+
+        target_support = target_rdm.support_basis
+        residual_support = residual_rdm.support_basis
+        if residual_support.shape[1] == 0:
+            outside_norm = 0.0
+        elif target_support.shape[1] == 0:
+            outside_norm = float(np.linalg.norm(residual_support))
+        else:
+            projected = target_support @ (target_support.conj().T @ residual_support)
+            outside_norm = float(np.linalg.norm(residual_support - projected))
+
+        entries.append(
+            ResidualKernelLocalSupportEntry(
+                variable_indices=tuple(int(index) for index in region),
+                local_dim=context.local_dim,
+                target_support_rank=target_rdm.support_rank,
+                target_nullity=target_rdm.nullity,
+                residual_support_rank=residual_rdm.support_rank,
+                residual_nullity=residual_rdm.nullity,
+                combined_support_rank=combined_rdm.support_rank,
+                combined_nullity=combined_rdm.nullity,
+                residual_support_outside_target_norm=outside_norm,
+            )
+        )
+    return tuple(entries)
+
+
+def diagnose_recycled_manifold_residual_kernel(
+    *,
+    hamiltonian: Any,
+    states: npt.ArrayLike,
+    basis_configs: npt.NDArray[np.integer],
+    detector_operators: tuple[Any, ...] | list[Any],
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    detector_coefficients: npt.ArrayLike | None = None,
+    dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+    candidate_report: RecycledManifoldDarkDetectorReport | None = None,
+    family_report: RecycledManifoldCandidateFamilyKernelReport | None = None,
+    detector_operator_names: tuple[str, ...] | list[str] | None = None,
+    detector_names: tuple[str, ...] | list[str] | None = None,
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ] = "rdm_support_matrix_units",
+    operator_groups: (
+        tuple[
+            tuple[str, tuple[Any, ...] | list[Any], tuple[str, ...] | list[str] | None],
+            ...,
+        ]
+        | None
+    ) = None,
+    local_support_regions: (
+        tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]] | None
+    ) = None,
+    tolerance: float = 1.0e-10,
+    rdm_tolerance: float = 1.0e-10,
+    dark_tolerance: float = 1.0e-10,
+    inflow_tolerance: float = 1.0e-12,
+    kernel_tolerance: float = 1.0e-10,
+    liouvillian_zero_tolerance: float = 1.0e-9,
+    max_detectors: int | None = None,
+    expand_candidate_report: bool = True,
+    max_operator_entries: int | None = 64,
+) -> RecycledManifoldResidualKernelReport:
+    """Diagnose the residual bad kernel left by a recycled-detector family.
+
+    This function first computes the full-family common jump kernel for the
+    specified recycled-detector candidates.  It then extracts the bad complement
+    subspace and reports whether the Hamiltonian and optional probe-operator
+    groups couple that subspace to the target manifold, leave it invariant, or
+    push it outside the target-plus-residual sector.
+    """
+    regions = _normalize_local_regions(local_regions)
+    target_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
+    dim = int(target_basis.shape[0])
+    manifold_dimension = int(target_basis.shape[1])
+
+    if family_report is None:
+        family_report = diagnose_recycled_manifold_candidate_family_kernel(
+            hamiltonian=hamiltonian,
+            states=target_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            candidate_report=candidate_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            kernel_tolerance=kernel_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            max_detectors=max_detectors,
+            expand_candidate_report=expand_candidate_report,
+            kernel_method="streamed",
+            store_candidate_jumps=False,
+        )
+
+    if family_report.candidate_report_is_truncated and expand_candidate_report:
+        candidate_report = diagnose_recycled_manifold_dark_detectors(
+            states=target_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            max_detectors=max_detectors,
+            max_report_candidates=None,
+            sort_by_inflow=True,
+        )
+    else:
+        candidate_report = family_report.candidate_report
+
+    eligible_candidates = tuple(
+        candidate
+        for candidate in candidate_report.candidates
+        if candidate.relative_dark_residual <= dark_tolerance
+        and candidate.inflow_norm > inflow_tolerance
+    )
+    residual_basis = _bad_kernel_basis_from_recycled_family(
+        states=target_basis,
+        basis_configs=basis_configs,
+        detector_operators=detector_operators,
+        local_regions=regions,
+        candidates=eligible_candidates,
+        detector_coefficients=detector_coefficients,
+        dark_operator_report=dark_operator_report,
+        recycler_source=recycler_source,
+        tolerance=tolerance,
+        rdm_tolerance=rdm_tolerance,
+        kernel_tolerance=kernel_tolerance,
+        max_detectors=max_detectors,
+    )
+
+    hamiltonian_matrix = _as_csr(hamiltonian)
+    if hamiltonian_matrix.shape != (dim, dim):
+        raise ValueError("hamiltonian must have shape (hilbert_dimension, hilbert_dimension).")
+
+    if residual_basis.shape[1] == 0:
+        hamiltonian_target_coupling_norm = 0.0
+        hamiltonian_residual_block_norm = 0.0
+        hamiltonian_outside_residual_norm = 0.0
+        hamiltonian_residual_eigenvalues: tuple[complex, ...] = ()
+    else:
+        h_residual = np.asarray(hamiltonian_matrix @ residual_basis, dtype=np.complex128)
+        h_target_block = target_basis.conj().T @ h_residual
+        h_residual_block = residual_basis.conj().T @ h_residual
+        projected = target_basis @ h_target_block + residual_basis @ h_residual_block
+        h_outside = h_residual - projected
+        hamiltonian_target_coupling_norm = float(np.linalg.norm(h_target_block))
+        hamiltonian_residual_block_norm = float(np.linalg.norm(h_residual_block))
+        hamiltonian_outside_residual_norm = float(np.linalg.norm(h_outside))
+        h_residual_block = 0.5 * (h_residual_block + h_residual_block.conj().T)
+        hamiltonian_residual_eigenvalues = tuple(
+            complex(value) for value in np.linalg.eigvalsh(h_residual_block)
+        )
+
+    action_reports: list[ResidualKernelOperatorActionReport] = []
+    if operator_groups is not None:
+        for group_name, operators, operator_names in operator_groups:
+            action_reports.append(
+                _operator_action_report_on_residual_kernel(
+                    group_name=group_name,
+                    operators=operators,
+                    operator_names=operator_names,
+                    target_basis=target_basis,
+                    residual_basis=residual_basis,
+                    max_entries=max_operator_entries,
+                )
+            )
+
+    support_regions = (
+        regions
+        if local_support_regions is None
+        else _normalize_local_regions(local_support_regions)
+    )
+    local_entries = _residual_local_support_entries(
+        target_basis=target_basis,
+        residual_basis=residual_basis,
+        basis_configs=basis_configs,
+        local_regions=support_regions,
+        tolerance=rdm_tolerance,
+    )
+
+    return RecycledManifoldResidualKernelReport(
+        manifold_dimension=manifold_dimension,
+        hilbert_dimension=dim,
+        family_report=family_report,
+        residual_basis=residual_basis,
+        hamiltonian_target_coupling_norm=hamiltonian_target_coupling_norm,
+        hamiltonian_residual_block_norm=hamiltonian_residual_block_norm,
+        hamiltonian_outside_residual_norm=hamiltonian_outside_residual_norm,
+        hamiltonian_residual_eigenvalues=hamiltonian_residual_eigenvalues,
+        operator_action_reports=tuple(action_reports),
+        local_support_entries=local_entries,
+        kernel_tolerance=float(kernel_tolerance),
+    )
+
+
 def _orthogonal_complement_basis(
     basis: npt.NDArray[np.complex128],
     *,

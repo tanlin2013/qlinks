@@ -28,10 +28,12 @@ from qlinks.open_system.manifold_detectors import (
     RecycledManifoldCandidateFamilyKernelReport,
     RecycledManifoldDarkDetectorReport,
     RecycledManifoldJumpSelectionReport,
+    RecycledManifoldResidualKernelReport,
     diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
     diagnose_recycled_manifold_candidate_family_kernel,
     diagnose_recycled_manifold_dark_detectors,
+    diagnose_recycled_manifold_residual_kernel,
     expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
 )
@@ -595,6 +597,76 @@ class DegenerateCageLindbladConstruction:
             expand_candidate_report=expand_candidate_report,
             kernel_method=kernel_method,
             store_candidate_jumps=store_candidate_jumps,
+        )
+
+    def diagnose_recycled_residual_kernel(
+        self,
+        *,
+        hamiltonian: Any,
+        basis_configs: NDArray[np.integer],
+        detector_operators: tuple[Any, ...] | list[Any],
+        local_regions: Sequence[Sequence[int]] | None = None,
+        detector_coefficients: NDArray[np.complex128] | None = None,
+        dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+        candidate_report: RecycledManifoldDarkDetectorReport | None = None,
+        family_report: RecycledManifoldCandidateFamilyKernelReport | None = None,
+        detector_operator_names: tuple[str, ...] | list[str] | None = None,
+        detector_names: tuple[str, ...] | list[str] | None = None,
+        recycler_source: Literal[
+            "matrix_units",
+            "rdm_support_matrix_units",
+        ] = "rdm_support_matrix_units",
+        operator_groups: (
+            tuple[
+                tuple[str, tuple[Any, ...] | list[Any], tuple[str, ...] | list[str] | None],
+                ...,
+            ]
+            | None
+        ) = None,
+        local_support_regions: Sequence[Sequence[int]] | None = None,
+        tolerance: float = 1.0e-10,
+        rdm_tolerance: float = 1.0e-10,
+        dark_tolerance: float = 1.0e-10,
+        inflow_tolerance: float = 1.0e-12,
+        kernel_tolerance: float = 1.0e-10,
+        liouvillian_zero_tolerance: float = 1.0e-9,
+        max_detectors: int | None = None,
+        expand_candidate_report: bool = True,
+        max_operator_entries: int | None = 64,
+    ) -> RecycledManifoldResidualKernelReport:
+        """Diagnose the residual bad kernel left by a recycled-detector family."""
+        regions = (
+            self.local_regions if local_regions is None else _normalize_local_regions(local_regions)
+        )
+        support_regions = (
+            None
+            if local_support_regions is None
+            else _normalize_local_regions(local_support_regions)
+        )
+        return diagnose_recycled_manifold_residual_kernel(
+            hamiltonian=hamiltonian,
+            states=self.manifold_basis,
+            basis_configs=basis_configs,
+            detector_operators=detector_operators,
+            local_regions=regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            candidate_report=candidate_report,
+            family_report=family_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            operator_groups=operator_groups,
+            local_support_regions=support_regions,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            kernel_tolerance=kernel_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            max_detectors=max_detectors,
+            expand_candidate_report=expand_candidate_report,
+            max_operator_entries=max_operator_entries,
         )
 
     def select_recycled_dark_detector_jumps(
