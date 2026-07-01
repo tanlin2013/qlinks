@@ -193,3 +193,74 @@ def test_degenerate_construction_rich_reports_render():
     assert "Degenerate cage Lindblad construction" in rendered
     assert "Local manifold-support report" in rendered
     assert "selected" in rendered
+
+
+def test_degenerate_jump_design_workflow_reuses_existing_stages():
+    build_result = _two_bit_build_result()
+    target_state = np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
+    d1 = sp.diags([0.0, 1.0, 0.0, 0.0], format="csr", dtype=np.complex128)
+    d2 = sp.diags([0.0, 0.0, 1.0, 1.0], format="csr", dtype=np.complex128)
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=target_state,
+        local_regions=((0, 1),),
+    )
+
+    workflow = construction.design_dark_manifold_jumps(
+        hamiltonian=build_result.hamiltonian,
+        basis_configs=build_result.basis.states,
+        detector_operators=(d1, d2),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_region_mode="construction",
+        recycled_recycler_source="matrix_units",
+        targeted_operator_source="matrix_units",
+        max_recycled_selected_jumps=4,
+        max_targeted_selected_jumps=4,
+        liouvillian_spectrum_method="none",
+    )
+
+    summary = workflow.to_summary_dict()
+    assert summary["dark_detector_nullity"] == 2
+    assert summary["n_recycled_jumps"] >= 2
+    assert summary["combined_bad_common_jump_kernel_dimension"] == 0
+    assert summary["combined_complement_common_kernel_removed"] is True
+    assert summary["likely_successful_common_kernel_design"] is True
+    assert len(workflow.jumps) == workflow.n_jumps
+    problem = workflow.to_lindblad_problem(hamiltonian=build_result.hamiltonian)
+    assert problem.jumps == workflow.jumps
+
+
+def test_degenerate_jump_design_workflow_rich_render():
+    from rich.console import Console
+
+    build_result = _two_bit_build_result()
+    target_state = np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
+    d1 = sp.diags([0.0, 1.0, 0.0, 0.0], format="csr", dtype=np.complex128)
+    d2 = sp.diags([0.0, 0.0, 1.0, 1.0], format="csr", dtype=np.complex128)
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=target_state,
+        local_regions=((0, 1),),
+    )
+
+    workflow = construction.design_dark_manifold_jumps(
+        hamiltonian=build_result.hamiltonian,
+        basis_configs=build_result.basis.states,
+        detector_operators=(d1, d2),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_region_mode="construction",
+        recycled_recycler_source="matrix_units",
+        targeted_operator_source="matrix_units",
+        max_recycled_selected_jumps=4,
+        max_targeted_selected_jumps=4,
+        liouvillian_spectrum_method="none",
+    )
+
+    console = Console(record=True, width=120)
+    console.print(workflow)
+    rendered = console.export_text()
+    assert "Degenerate cage jump-design workflow" in rendered
+    assert "Workflow stages" in rendered
+    assert "combined bad" in rendered

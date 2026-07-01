@@ -26,6 +26,7 @@ _CAGE_EXPORTS = {
 
 _DEGENERATE_CAGE_EXPORTS = {
     "DegenerateCageLindbladConstruction",
+    "DegenerateCageJumpDesignWorkflowReport",
     "LocalRegionSource",
     "build_degenerate_cage_lindblad_construction",
 }

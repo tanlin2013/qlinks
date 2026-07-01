@@ -242,6 +242,234 @@ def _format_float(value: float) -> str:
 
 
 @dataclass(frozen=True, slots=True)
+class DegenerateCageJumpDesignWorkflowReport:
+    """End-to-end jump-design workflow for a degenerate cage manifold.
+
+    The report packages the currently successful cheap design loop:
+
+    1. find collective dark detectors from a local operator basis,
+    2. select a compact recycled-detector ``R D`` jump subset,
+    3. diagnose the full recycled-detector family residual kernel,
+    4. search direct local dark jumps that hit that residual kernel, and
+    5. select a compact targeted subset against the combined common kernel.
+
+    The final acceptance criterion is the common-kernel diagnostic stored in
+    ``targeted_selection``; no Liouvillian spectrum is required unless requested.
+    """
+
+    dark_operator_report: ManifoldDarkOperatorBasisReport
+    recycled_report: RecycledManifoldDarkDetectorReport
+    recycled_selection: RecycledManifoldJumpSelectionReport
+    family_report: RecycledManifoldCandidateFamilyKernelReport
+    residual_report: RecycledManifoldResidualKernelReport
+    targeted_report: TargetedResidualKernelLinearSearchReport
+    targeted_selection: TargetedResidualKernelJumpSelectionReport
+    recycled_local_regions: tuple[tuple[int, ...], ...]
+    targeted_local_regions: tuple[tuple[int, ...], ...]
+    recycled_region_mode: str
+    targeted_region_mode: str
+    recycled_recycler_source: str
+    targeted_operator_source: str
+
+    @property
+    def manifold_dimension(self) -> int:
+        return int(self.targeted_selection.manifold_dimension)
+
+    @property
+    def hilbert_dimension(self) -> int:
+        return int(self.targeted_selection.hilbert_dimension)
+
+    @property
+    def jumps(self) -> tuple[sp.csr_array, ...]:
+        """Return the final combined jump list."""
+        return self.targeted_selection.all_jumps
+
+    @property
+    def recycled_jumps(self) -> tuple[sp.csr_array, ...]:
+        return self.recycled_selection.jumps
+
+    @property
+    def targeted_jumps(self) -> tuple[sp.csr_array, ...]:
+        return self.targeted_selection.jumps
+
+    @property
+    def n_jumps(self) -> int:
+        return len(self.jumps)
+
+    @property
+    def final_diagnostics(self) -> DarkManifoldDiagnostics | None:
+        return self.targeted_selection.final_diagnostics
+
+    @property
+    def complement_common_kernel_removed(self) -> bool | None:
+        return self.targeted_selection.combined_complement_common_kernel_removed
+
+    @property
+    def likely_successful_common_kernel_design(self) -> bool:
+        return self.complement_common_kernel_removed is True
+
+    def to_lindblad_problem(
+        self,
+        *,
+        hamiltonian: Any,
+        backend: str | None = None,
+    ) -> LindbladProblem:
+        return LindbladProblem(
+            hamiltonian=hamiltonian,
+            jumps=self.jumps,
+            backend="scipy" if backend is None else backend,
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        final_diagnostics = self.final_diagnostics
+        return {
+            "hilbert_dimension": self.hilbert_dimension,
+            "manifold_dimension": self.manifold_dimension,
+            "n_final_jumps": self.n_jumps,
+            "n_recycled_jumps": self.recycled_selection.n_selected_jumps,
+            "n_targeted_jumps": self.targeted_selection.n_selected_jumps,
+            "recycled_region_mode": self.recycled_region_mode,
+            "targeted_region_mode": self.targeted_region_mode,
+            "n_recycled_regions": len(self.recycled_local_regions),
+            "n_targeted_regions": len(self.targeted_local_regions),
+            "max_recycled_region_size": max(
+                (len(region) for region in self.recycled_local_regions),
+                default=0,
+            ),
+            "max_targeted_region_size": max(
+                (len(region) for region in self.targeted_local_regions),
+                default=0,
+            ),
+            "recycled_recycler_source": self.recycled_recycler_source,
+            "targeted_operator_source": self.targeted_operator_source,
+            "dark_detector_nullity": self.dark_operator_report.detector_nullity,
+            "recycled_candidate_pool_size": self.recycled_selection.candidate_pool_size,
+            "recycled_bad_common_kernel_dimension": (
+                self.recycled_selection.final_bad_common_jump_kernel_dimension
+            ),
+            "recycled_complement_kernel_removed": (
+                self.recycled_selection.complement_common_kernel_removed
+            ),
+            "recycled_inflow_norm": self.recycled_selection.final_inflow_norm,
+            "family_candidate_jumps": self.family_report.n_candidate_jumps,
+            "family_bad_common_jump_kernel_dimension": (
+                self.family_report.family_bad_common_jump_kernel_dimension
+            ),
+            "family_complement_kernel_removed": (
+                self.family_report.complement_common_kernel_removed
+            ),
+            "residual_dimension": self.residual_report.residual_dimension,
+            "targeted_candidates": self.targeted_report.n_candidates,
+            "targeted_candidates_hitting_residual": (
+                self.targeted_report.n_candidates_hitting_residual
+            ),
+            "targeted_reported_candidates_remove_residual": (
+                self.targeted_report.reported_candidates_remove_residual_kernel
+            ),
+            "targeted_selection_target": self.targeted_selection.selection_target,
+            "targeted_initial_selection_kernel_dimension": (
+                self.targeted_selection.initial_selection_kernel_dimension
+            ),
+            "targeted_final_selection_kernel_dimension": (
+                self.targeted_selection.final_selection_kernel_dimension
+            ),
+            "targeted_selection_kernel_removed": (self.targeted_selection.selection_kernel_removed),
+            "combined_bad_common_jump_kernel_dimension": (
+                self.targeted_selection.combined_bad_common_jump_kernel_dimension
+            ),
+            "combined_complement_common_kernel_removed": (
+                self.targeted_selection.combined_complement_common_kernel_removed
+            ),
+            "combined_inflow_norm": self.targeted_selection.combined_inflow_norm,
+            "max_target_jump_residual": (
+                None if final_diagnostics is None else final_diagnostics.max_target_jump_residual
+            ),
+            "h_closure_residual": (
+                None
+                if final_diagnostics is None
+                else final_diagnostics.hamiltonian_closure_residual
+            ),
+            "likely_successful_common_kernel_design": (self.likely_successful_common_kernel_design),
+        }
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self):
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "DegenerateCageJumpDesignWorkflowReport.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        summary = self.to_summary_dict()
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        for key in (
+            "hilbert_dimension",
+            "manifold_dimension",
+            "n_final_jumps",
+            "n_recycled_jumps",
+            "n_targeted_jumps",
+            "dark_detector_nullity",
+            "combined_bad_common_jump_kernel_dimension",
+            "combined_complement_common_kernel_removed",
+            "combined_inflow_norm",
+            "likely_successful_common_kernel_design",
+        ):
+            overview.add_row(key.replace("_", " "), str(summary[key]))
+
+        stages = Table(title="Workflow stages")
+        stages.add_column("stage", style="bold")
+        stages.add_column("key result")
+        stages.add_row(
+            "dark detectors",
+            f"nullity={self.dark_operator_report.detector_nullity}",
+        )
+        stages.add_row(
+            "recycled selection",
+            (
+                f"selected={self.recycled_selection.n_selected_jumps}, "
+                f"bad={self.recycled_selection.final_bad_common_jump_kernel_dimension}"
+            ),
+        )
+        stages.add_row(
+            "full recycled family",
+            (
+                f"jumps={self.family_report.n_candidate_jumps}, "
+                f"bad={self.family_report.family_bad_common_jump_kernel_dimension}"
+            ),
+        )
+        stages.add_row("residual kernel", f"dim={self.residual_report.residual_dimension}")
+        stages.add_row(
+            "targeted search",
+            (
+                f"candidates={self.targeted_report.n_candidates}, "
+                f"hits={self.targeted_report.n_candidates_hitting_residual}"
+            ),
+        )
+        stages.add_row(
+            "targeted selection",
+            (
+                f"selected={self.targeted_selection.n_selected_jumps}, "
+                f"combined bad={self.targeted_selection.combined_bad_common_jump_kernel_dimension}"
+            ),
+        )
+
+        return Panel(
+            Group(overview, stages),
+            title=Text("Degenerate cage jump-design workflow", style="bold cyan"),
+            border_style=("green" if self.likely_successful_common_kernel_design else "yellow"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class DegenerateCageLindbladConstruction:
     """Lindblad construction targeting a cage-state manifold in one sector.
 
@@ -855,6 +1083,283 @@ class DegenerateCageLindbladConstruction:
             allow_non_improving=allow_non_improving,
             expand_candidate_report=expand_candidate_report,
             selection_strategy=selection_strategy,
+        )
+
+    def design_dark_manifold_jumps(
+        self,
+        *,
+        hamiltonian: Any,
+        basis_configs: NDArray[np.integer],
+        detector_operators: tuple[Any, ...] | list[Any],
+        detector_coefficients: NDArray[np.complex128] | None = None,
+        detector_operator_names: tuple[str, ...] | list[str] | None = None,
+        detector_names: tuple[str, ...] | list[str] | None = None,
+        dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+        recycled_report: RecycledManifoldDarkDetectorReport | None = None,
+        recycled_selection: RecycledManifoldJumpSelectionReport | None = None,
+        family_report: RecycledManifoldCandidateFamilyKernelReport | None = None,
+        residual_report: RecycledManifoldResidualKernelReport | None = None,
+        targeted_report: TargetedResidualKernelLinearSearchReport | None = None,
+        recycled_local_regions: Sequence[Sequence[int]] | None = None,
+        targeted_local_regions: Sequence[Sequence[int]] | None = None,
+        local_region_mode: Literal["construction", "pair_unions"] = "pair_unions",
+        pair_mode: Literal["overlap", "all"] = "overlap",
+        min_pair_overlap: int = 1,
+        max_pair_region_size: int | None = 7,
+        include_single_regions_in_pairs: bool = False,
+        recycled_recycler_source: Literal[
+            "matrix_units",
+            "rdm_support_matrix_units",
+        ] = "matrix_units",
+        targeted_operator_source: Literal[
+            "matrix_units",
+            "rdm_support_matrix_units",
+        ] = "matrix_units",
+        tolerance: float = 1.0e-10,
+        rdm_tolerance: float = 1.0e-10,
+        dark_tolerance: float = 1.0e-10,
+        inflow_tolerance: float = 1.0e-12,
+        kernel_tolerance: float = 1.0e-10,
+        liouvillian_zero_tolerance: float = 1.0e-9,
+        max_detectors: int | None = None,
+        dark_operator_max_candidates: int | None = 16,
+        max_recycled_report_candidates: int | None = None,
+        max_recycled_candidate_pool: int | None = None,
+        max_recycled_selected_jumps: int = 16,
+        recycled_target_bad_kernel_dimension: int = 0,
+        recycled_allow_non_improving: bool = False,
+        recycled_selection_strategy: Literal[
+            "diagnostics",
+            "kernel_projection",
+        ] = "kernel_projection",
+        residual_operator_groups: (
+            tuple[
+                tuple[str, tuple[Any, ...] | list[Any], tuple[str, ...] | list[str] | None],
+                ...,
+            ]
+            | None
+        ) = None,
+        residual_local_support_regions: Sequence[Sequence[int]] | None = None,
+        max_residual_operator_entries: int | None = 64,
+        max_targeted_modes_per_region: int = 3,
+        max_targeted_report_candidates: int | None = 64,
+        max_targeted_local_dim: int | None = 20,
+        max_targeted_selected_jumps: int = 16,
+        targeted_selection_target: Literal[
+            "reported_residual_kernel",
+            "combined_common_kernel",
+        ] = "combined_common_kernel",
+        targeted_target_residual_kernel_dimension: int = 0,
+        targeted_allow_non_improving: bool = False,
+        check_final_manifold_diagnostics: bool = True,
+        liouvillian_spectrum_method: Literal[
+            "auto",
+            "dense",
+            "sparse",
+            "none",
+        ] = "none",
+        sparse_liouvillian_eigenvalue_count: int = 32,
+    ) -> DegenerateCageJumpDesignWorkflowReport:
+        """Run the reusable cheap jump-design workflow for a dark manifold.
+
+        The default region/source choices are tuned for QDM-style plaquette
+        cages: adjacent two-plaquette unions and matrix-unit recyclers.  The
+        method avoids Liouvillian spectra by default and uses common-kernel
+        diagnostics as the acceptance criterion.
+        """
+
+        def resolve_regions(
+            explicit_regions: Sequence[Sequence[int]] | None,
+        ) -> tuple[tuple[int, ...], ...]:
+            if explicit_regions is not None:
+                return _normalize_local_regions(explicit_regions)
+            if local_region_mode == "construction":
+                return self.local_regions
+            if local_region_mode == "pair_unions":
+                return self.local_region_pair_unions(
+                    pair_mode=pair_mode,
+                    min_overlap=min_pair_overlap,
+                    max_region_size=max_pair_region_size,
+                    include_single_regions=include_single_regions_in_pairs,
+                )
+            raise ValueError('local_region_mode must be "construction" or "pair_unions".')
+
+        recycled_regions = resolve_regions(recycled_local_regions)
+        targeted_regions = resolve_regions(targeted_local_regions)
+        if len(recycled_regions) == 0:
+            raise ValueError("recycled local-region list is empty.")
+        if len(targeted_regions) == 0:
+            raise ValueError("targeted local-region list is empty.")
+
+        if dark_operator_report is None:
+            dark_operator_report = self.diagnose_dark_operator_basis(
+                operators=detector_operators,
+                operator_names=detector_operator_names,
+                tolerance=tolerance,
+                max_candidates=dark_operator_max_candidates,
+            )
+
+        if recycled_report is None:
+            recycled_report = self.diagnose_recycled_dark_detectors(
+                basis_configs=basis_configs,
+                detector_operators=detector_operators,
+                local_regions=recycled_regions,
+                detector_coefficients=detector_coefficients,
+                dark_operator_report=dark_operator_report,
+                detector_operator_names=detector_operator_names,
+                detector_names=detector_names,
+                recycler_source=recycled_recycler_source,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+                dark_tolerance=dark_tolerance,
+                inflow_tolerance=inflow_tolerance,
+                max_detectors=max_detectors,
+                max_report_candidates=max_recycled_report_candidates,
+            )
+
+        if recycled_selection is None:
+            recycled_selection = self.select_recycled_dark_detector_jumps(
+                hamiltonian=hamiltonian,
+                basis_configs=basis_configs,
+                detector_operators=detector_operators,
+                local_regions=recycled_regions,
+                detector_coefficients=detector_coefficients,
+                dark_operator_report=dark_operator_report,
+                candidate_report=recycled_report,
+                detector_operator_names=detector_operator_names,
+                detector_names=detector_names,
+                recycler_source=recycled_recycler_source,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+                dark_tolerance=dark_tolerance,
+                inflow_tolerance=inflow_tolerance,
+                kernel_tolerance=kernel_tolerance,
+                liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+                max_detectors=max_detectors,
+                max_candidate_pool=max_recycled_candidate_pool,
+                max_selected_jumps=max_recycled_selected_jumps,
+                target_bad_kernel_dimension=recycled_target_bad_kernel_dimension,
+                allow_non_improving=recycled_allow_non_improving,
+                expand_candidate_report=True,
+                selection_strategy=recycled_selection_strategy,
+            )
+
+        if family_report is None:
+            family_report = self.diagnose_recycled_candidate_family_kernel(
+                hamiltonian=hamiltonian,
+                basis_configs=basis_configs,
+                detector_operators=detector_operators,
+                local_regions=recycled_regions,
+                detector_coefficients=detector_coefficients,
+                dark_operator_report=dark_operator_report,
+                candidate_report=recycled_report,
+                detector_operator_names=detector_operator_names,
+                detector_names=detector_names,
+                recycler_source=recycled_recycler_source,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+                dark_tolerance=dark_tolerance,
+                inflow_tolerance=inflow_tolerance,
+                kernel_tolerance=kernel_tolerance,
+                liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+                max_detectors=max_detectors,
+                expand_candidate_report=True,
+                kernel_method="streamed",
+                store_candidate_jumps=False,
+            )
+
+        support_regions = (
+            None
+            if residual_local_support_regions is None
+            else _normalize_local_regions(residual_local_support_regions)
+        )
+        if residual_report is None:
+            residual_report = self.diagnose_recycled_residual_kernel(
+                hamiltonian=hamiltonian,
+                basis_configs=basis_configs,
+                detector_operators=detector_operators,
+                local_regions=recycled_regions,
+                detector_coefficients=detector_coefficients,
+                dark_operator_report=dark_operator_report,
+                candidate_report=recycled_report,
+                family_report=family_report,
+                detector_operator_names=detector_operator_names,
+                detector_names=detector_names,
+                recycler_source=recycled_recycler_source,
+                operator_groups=residual_operator_groups,
+                local_support_regions=support_regions,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+                dark_tolerance=dark_tolerance,
+                inflow_tolerance=inflow_tolerance,
+                kernel_tolerance=kernel_tolerance,
+                liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+                max_detectors=max_detectors,
+                expand_candidate_report=True,
+                max_operator_entries=max_residual_operator_entries,
+            )
+
+        if targeted_report is None:
+            targeted_report = self.diagnose_targeted_residual_kernel_linear_search(
+                basis_configs=basis_configs,
+                local_regions=targeted_regions,
+                residual_report=residual_report,
+                detector_operators=detector_operators,
+                residual_family_local_regions=recycled_regions,
+                detector_coefficients=detector_coefficients,
+                dark_operator_report=dark_operator_report,
+                candidate_report=recycled_report,
+                family_report=family_report,
+                detector_operator_names=detector_operator_names,
+                detector_names=detector_names,
+                recycler_source=recycled_recycler_source,
+                operator_source=targeted_operator_source,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+                dark_tolerance=dark_tolerance,
+                inflow_tolerance=inflow_tolerance,
+                kernel_tolerance=kernel_tolerance,
+                max_detectors=max_detectors,
+                max_modes_per_region=max_targeted_modes_per_region,
+                max_report_candidates=max_targeted_report_candidates,
+                max_local_dim=max_targeted_local_dim,
+            )
+
+        targeted_selection = self.select_targeted_residual_kernel_jumps(
+            targeted_report=targeted_report,
+            hamiltonian=hamiltonian,
+            base_jumps=recycled_selection.jumps,
+            max_selected_jumps=max_targeted_selected_jumps,
+            target_residual_kernel_dimension=targeted_target_residual_kernel_dimension,
+            selection_target=targeted_selection_target,
+            allow_non_improving=targeted_allow_non_improving,
+            kernel_tolerance=kernel_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            check_manifold_diagnostics=check_final_manifold_diagnostics,
+            liouvillian_spectrum_method=liouvillian_spectrum_method,
+            sparse_liouvillian_eigenvalue_count=sparse_liouvillian_eigenvalue_count,
+        )
+
+        return DegenerateCageJumpDesignWorkflowReport(
+            dark_operator_report=dark_operator_report,
+            recycled_report=recycled_report,
+            recycled_selection=recycled_selection,
+            family_report=family_report,
+            residual_report=residual_report,
+            targeted_report=targeted_report,
+            targeted_selection=targeted_selection,
+            recycled_local_regions=recycled_regions,
+            targeted_local_regions=targeted_regions,
+            recycled_region_mode=(
+                local_region_mode if recycled_local_regions is None else "explicit"
+            ),
+            targeted_region_mode=(
+                local_region_mode if targeted_local_regions is None else "explicit"
+            ),
+            recycled_recycler_source=recycled_recycler_source,
+            targeted_operator_source=targeted_operator_source,
         )
 
 
