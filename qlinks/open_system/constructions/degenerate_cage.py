@@ -564,6 +564,8 @@ class DegenerateCageLindbladConstruction:
         liouvillian_zero_tolerance: float = 1.0e-9,
         max_detectors: int | None = None,
         expand_candidate_report: bool = True,
+        kernel_method: Literal["streamed", "diagnostics"] = "streamed",
+        store_candidate_jumps: bool = False,
     ) -> RecycledManifoldCandidateFamilyKernelReport:
         """
         Check whether the full recycled-detector candidate family removes the complement kernel.
@@ -591,6 +593,8 @@ class DegenerateCageLindbladConstruction:
             liouvillian_zero_tolerance=liouvillian_zero_tolerance,
             max_detectors=max_detectors,
             expand_candidate_report=expand_candidate_report,
+            kernel_method=kernel_method,
+            store_candidate_jumps=store_candidate_jumps,
         )
 
     def select_recycled_dark_detector_jumps(

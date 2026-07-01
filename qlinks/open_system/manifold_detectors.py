@@ -936,6 +936,135 @@ class RecycledManifoldJumpSelectionReport:
 
 
 @dataclass(frozen=True, slots=True)
+class RecycledFamilyKernelDiagnostics:
+    """Lightweight dark-manifold kernel diagnostics for a streamed jump family.
+
+    This mirrors the common-kernel fields of :class:`DarkManifoldDiagnostics`
+    without requiring every jump operator to be materialized at once.  It is
+    intended for large recycled-detector families where the decisive question is
+    whether the whole family removes the complement common jump kernel.
+    """
+
+    dim: int
+    n_jumps: int
+    manifold_dimension: int
+    hamiltonian_closure_residual: float
+    max_target_jump_residual: float
+    target_density_liouvillian_residual: float
+    inflow_norm: float
+    common_jump_kernel_dimension: int
+    target_projection_onto_common_kernel: float
+    target_distance_from_common_kernel: float
+    target_in_common_jump_kernel: bool
+    bad_common_jump_kernel_dimension: int
+    bad_common_jump_kernel_iprs: tuple[float, ...]
+    internal_hamiltonian_eigenvalues: tuple[complex, ...]
+    expected_internal_zero_mode_count: int
+    expected_internal_peripheral_mode_count: int
+    liouvillian_zero_tolerance: float
+
+    @property
+    def target_jump_residuals(self) -> tuple[float, ...]:
+        # The streamed diagnostic keeps only the maximum residual to avoid
+        # storing one value per candidate jump.
+        return ()
+
+    @property
+    def expected_internal_liouvillian_eigenvalues(self) -> tuple[complex, ...]:
+        return _internal_liouvillian_eigenvalues_from_energies(
+            self.internal_hamiltonian_eigenvalues
+        )
+
+    @property
+    def liouvillian_zero_mode_count(self) -> None:
+        return None
+
+    @property
+    def liouvillian_zero_mode_count_is_lower_bound(self) -> bool:
+        return False
+
+    @property
+    def liouvillian_spectral_gap(self) -> None:
+        return None
+
+    @property
+    def liouvillian_decay_gap(self) -> None:
+        return None
+
+    @property
+    def liouvillian_peripheral_mode_count(self) -> None:
+        return None
+
+    @property
+    def liouvillian_spectrum_method(self) -> str:
+        return "streamed_kernel"
+
+    @property
+    def liouvillian_eigenvalues(self) -> tuple[complex, ...]:
+        return ()
+
+    @property
+    def matched_internal_nondecaying_mode_count(self) -> None:
+        return None
+
+    @property
+    def missing_internal_nondecaying_mode_count(self) -> None:
+        return None
+
+    @property
+    def extra_nondecaying_mode_count(self) -> None:
+        return None
+
+    @property
+    def extra_zero_mode_count(self) -> None:
+        return None
+
+    @property
+    def external_decay_gap(self) -> None:
+        return None
+
+    @property
+    def likely_attractive_dark_manifold(self) -> None:
+        return None
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "dim": self.dim,
+            "n_jumps": self.n_jumps,
+            "manifold_dimension": self.manifold_dimension,
+            "h_closure_residual": self.hamiltonian_closure_residual,
+            "max_target_jump_residual": self.max_target_jump_residual,
+            "target_density_liouvillian_residual": self.target_density_liouvillian_residual,
+            "inflow_norm": self.inflow_norm,
+            "common_jump_kernel_dimension": self.common_jump_kernel_dimension,
+            "target_projection_onto_common_kernel": self.target_projection_onto_common_kernel,
+            "target_distance_from_common_kernel": self.target_distance_from_common_kernel,
+            "target_in_common_jump_kernel": self.target_in_common_jump_kernel,
+            "bad_common_jump_kernel_dimension": self.bad_common_jump_kernel_dimension,
+            "bad_common_jump_kernel_iprs": self.bad_common_jump_kernel_iprs,
+            "internal_hamiltonian_eigenvalues": [
+                complex(value) for value in self.internal_hamiltonian_eigenvalues
+            ],
+            "expected_internal_zero_mode_count": self.expected_internal_zero_mode_count,
+            "expected_internal_peripheral_mode_count": (
+                self.expected_internal_peripheral_mode_count
+            ),
+            "liouvillian_zero_mode_count": None,
+            "liouvillian_zero_mode_count_is_lower_bound": False,
+            "liouvillian_spectral_gap": None,
+            "liouvillian_decay_gap": None,
+            "liouvillian_peripheral_mode_count": None,
+            "liouvillian_spectrum_method": self.liouvillian_spectrum_method,
+            "matched_internal_nondecaying_mode_count": None,
+            "missing_internal_nondecaying_mode_count": None,
+            "extra_nondecaying_mode_count": None,
+            "extra_zero_mode_count": None,
+            "external_decay_gap": None,
+            "likely_attractive_dark_manifold": None,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class RecycledManifoldCandidateFamilyKernelReport:
     """Common-kernel diagnostic for an entire recycled-detector family.
 
@@ -954,9 +1083,14 @@ class RecycledManifoldCandidateFamilyKernelReport:
     inflow_tolerance: float
     candidate_jumps: tuple[sp.csr_array, ...]
     diagnostics: Any
+    candidate_jump_count: int | None = None
+    candidate_total_jump_nnz: int | None = None
+    candidate_max_jump_nnz: int | None = None
 
     @property
     def n_candidate_jumps(self) -> int:
+        if self.candidate_jump_count is not None:
+            return int(self.candidate_jump_count)
         return len(self.candidate_jumps)
 
     @property
@@ -977,10 +1111,14 @@ class RecycledManifoldCandidateFamilyKernelReport:
 
     @property
     def total_jump_nnz(self) -> int:
+        if self.candidate_total_jump_nnz is not None:
+            return int(self.candidate_total_jump_nnz)
         return int(sum(jump.nnz for jump in self.candidate_jumps))
 
     @property
     def max_jump_nnz(self) -> int:
+        if self.candidate_max_jump_nnz is not None:
+            return int(self.candidate_max_jump_nnz)
         return int(max((jump.nnz for jump in self.candidate_jumps), default=0))
 
     @property
@@ -994,6 +1132,10 @@ class RecycledManifoldCandidateFamilyKernelReport:
     @property
     def family_inflow_norm(self) -> float:
         return float(self.diagnostics.inflow_norm)
+
+    @property
+    def family_kernel_method(self) -> str:
+        return str(getattr(self.diagnostics, "liouvillian_spectrum_method", "unknown"))
 
     @property
     def complement_common_kernel_removed(self) -> bool:
@@ -1034,6 +1176,7 @@ class RecycledManifoldCandidateFamilyKernelReport:
                 self.family_bad_common_jump_kernel_dimension
             ),
             "family_inflow_norm": self.family_inflow_norm,
+            "family_kernel_method": self.family_kernel_method,
             "complement_common_kernel_removed": self.complement_common_kernel_removed,
             "bad_kernel_ipr_min": self.bad_kernel_ipr_min,
             "bad_kernel_ipr_max": self.bad_kernel_ipr_max,
@@ -1068,6 +1211,7 @@ class RecycledManifoldCandidateFamilyKernelReport:
         )
         table.add_row("expanded report", str(self.candidate_report_was_expanded))
         table.add_row("report truncated", str(self.candidate_report_is_truncated))
+        table.add_row("kernel method", self.family_kernel_method)
         table.add_row("common jump kernel", str(self.family_common_jump_kernel_dimension))
         table.add_row("bad complement kernel", str(self.family_bad_common_jump_kernel_dimension))
         table.add_row("complement kernel removed", str(self.complement_common_kernel_removed))
@@ -1962,6 +2106,258 @@ def _recycled_jump_for_candidate(
     return (recycler @ detector).tocsr()
 
 
+def _internal_liouvillian_eigenvalues_from_energies(
+    energies: tuple[complex, ...],
+) -> tuple[complex, ...]:
+    return tuple(-1j * (left - right) for left in energies for right in energies)
+
+
+def _state_ipr(state: npt.NDArray[np.complex128]) -> float:
+    norm_sq = float(np.vdot(state, state).real)
+    if norm_sq <= 0.0:
+        return 0.0
+    probabilities = np.abs(state) ** 2 / norm_sq
+    return float(np.sum(probabilities * probabilities))
+
+
+def _hamiltonian_projector_commutator_residual(
+    *,
+    hamiltonian: sp.csr_array,
+    state_basis: npt.NDArray[np.complex128],
+) -> float:
+    manifold_dimension = int(state_basis.shape[1])
+    density = state_basis @ state_basis.conj().T / float(manifold_dimension)
+    action_left = np.asarray(hamiltonian @ density, dtype=np.complex128)
+    action_right = np.asarray((density @ hamiltonian).astype(np.complex128))
+    return float(np.linalg.norm(-1j * (action_left - action_right)))
+
+
+def _detector_coefficients_from_report(
+    *,
+    detector_coefficients: npt.ArrayLike | None,
+    dark_operator_report: ManifoldDarkOperatorBasisReport | None,
+    n_operators: int,
+    max_detectors: int | None,
+) -> npt.NDArray[np.complex128]:
+    if detector_coefficients is None:
+        if dark_operator_report is None:
+            raise ValueError(
+                "Pass detector_coefficients or dark_operator_report to define detectors."
+            )
+        detector_coefficients = np.column_stack(
+            [candidate.coefficients for candidate in dark_operator_report.candidates]
+        )
+    coefficients = _normalize_detector_coefficients(
+        detector_coefficients,
+        n_operators=n_operators,
+    )
+    if max_detectors is not None:
+        coefficients = coefficients[:, : max(int(max_detectors), 0)]
+    return coefficients
+
+
+def _stream_recycled_family_kernel_diagnostics(
+    *,
+    hamiltonian: Any,
+    states: npt.ArrayLike,
+    basis_configs: npt.NDArray[np.integer],
+    detector_operators: tuple[Any, ...] | list[Any],
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    candidates: tuple[RecycledManifoldDarkDetectorCandidate, ...],
+    detector_coefficients: npt.ArrayLike | None,
+    dark_operator_report: ManifoldDarkOperatorBasisReport | None,
+    recycler_source: Literal["matrix_units", "rdm_support_matrix_units"],
+    tolerance: float,
+    rdm_tolerance: float,
+    kernel_tolerance: float,
+    liouvillian_zero_tolerance: float,
+    max_detectors: int | None,
+) -> tuple[RecycledFamilyKernelDiagnostics, int, int, int]:
+    from qlinks.open_system.local_recycling import (
+        _embed_local_pattern_operator_from_context,
+        _embedding_context_from_basis_context,
+        _local_pattern_basis_context_from_basis,
+        _local_reduced_density_matrix_from_basis_context_and_states,
+    )
+
+    state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
+    dim = int(state_basis.shape[0])
+    manifold_dimension = int(state_basis.shape[1])
+
+    hamiltonian_matrix = _as_csr(hamiltonian)
+    if hamiltonian_matrix.shape != (dim, dim):
+        raise ValueError("hamiltonian must have shape (hilbert_dimension, hilbert_dimension).")
+
+    detector_matrices = tuple(_as_csr(operator) for operator in detector_operators)
+    if len(detector_matrices) == 0:
+        raise ValueError("detector_operators must contain at least one matrix.")
+    for operator in detector_matrices:
+        if operator.shape != (dim, dim):
+            raise ValueError(
+                "operator has incompatible shape: " f"{operator.shape} != {(dim, dim)}."
+            )
+
+    coefficients = _detector_coefficients_from_report(
+        detector_coefficients=detector_coefficients,
+        dark_operator_report=dark_operator_report,
+        n_operators=len(detector_matrices),
+        max_detectors=max_detectors,
+    )
+    detectors = tuple(
+        _combined_operator(
+            operators=detector_matrices,
+            coefficients=coefficients[:, detector_index],
+        )
+        for detector_index in range(coefficients.shape[1])
+    )
+
+    basis_array = np.asarray(basis_configs)
+    if basis_array.ndim != 2 or basis_array.shape[0] != dim:
+        raise ValueError("basis_configs must have shape (hilbert_dimension, n_variables).")
+
+    regions = _normalize_local_regions(local_regions)
+    contexts = tuple(
+        _local_pattern_basis_context_from_basis(
+            basis_configs=basis_array,
+            variable_indices=region,
+        )
+        for region in regions
+    )
+    embedding_contexts = tuple(
+        _embedding_context_from_basis_context(context) for context in contexts
+    )
+    rdms = tuple(
+        _local_reduced_density_matrix_from_basis_context_and_states(
+            context=context,
+            states=state_basis,
+            tolerance=rdm_tolerance,
+        )
+        for context in contexts
+    )
+    recycler_specs_by_region = tuple(
+        _local_recycler_specs(
+            local_patterns=rdm.local_patterns,
+            support_basis=rdm.support_basis,
+            recycler_source=recycler_source,
+        )
+        for rdm in rdms
+    )
+    recycler_cache: dict[tuple[int, int], sp.csr_array] = {}
+
+    complement_basis = _orthogonal_complement_basis(state_basis, tolerance=kernel_tolerance)
+    complement_dimension = int(complement_basis.shape[1])
+    family_gram = np.zeros(
+        (complement_dimension, complement_dimension),
+        dtype=np.complex128,
+    )
+    total_jump_nnz = 0
+    max_jump_nnz = 0
+    max_target_jump_residual = 0.0
+    inflow_squared = 0.0
+    n_jumps = 0
+
+    for candidate in candidates:
+        if candidate.detector_index < 0 or candidate.detector_index >= len(detectors):
+            raise ValueError("candidate.detector_index is out of range for detector coefficients.")
+        if candidate.region_index < 0 or candidate.region_index >= len(regions):
+            raise ValueError("candidate.region_index is out of range for local_regions.")
+        recycler_specs = recycler_specs_by_region[candidate.region_index]
+        if candidate.recycler_index < 0 or candidate.recycler_index >= len(recycler_specs):
+            raise ValueError("candidate.recycler_index is out of range for recycler specs.")
+
+        cache_key = (int(candidate.region_index), int(candidate.recycler_index))
+        recycler = recycler_cache.get(cache_key)
+        if recycler is None:
+            _, local_operator = recycler_specs[candidate.recycler_index]
+            recycler = _embed_local_pattern_operator_from_context(
+                context=embedding_contexts[candidate.region_index],
+                local_operator=local_operator,
+            ).tocsr()
+            recycler_cache[cache_key] = recycler
+
+        jump = (recycler @ detectors[candidate.detector_index]).tocsr()
+        if jump.nnz == 0:
+            continue
+        n_jumps += 1
+        total_jump_nnz += int(jump.nnz)
+        max_jump_nnz = max(max_jump_nnz, int(jump.nnz))
+        max_target_jump_residual = max(
+            max_target_jump_residual,
+            float(np.linalg.norm(jump @ state_basis)),
+        )
+        inflow_squared += float(candidate.inflow_norm) ** 2
+
+        if complement_dimension > 0:
+            image = np.asarray(jump @ complement_basis, dtype=np.complex128)
+            family_gram += image.conj().T @ image
+
+    if complement_dimension == 0:
+        bad_basis = np.zeros((dim, 0), dtype=np.complex128)
+    else:
+        family_gram = 0.5 * (family_gram + family_gram.conj().T)
+        eigenvalues, eigenvectors = np.linalg.eigh(family_gram)
+        largest = float(np.max(np.maximum(eigenvalues.real, 0.0))) if eigenvalues.size else 0.0
+        cutoff = max(float(kernel_tolerance), float(kernel_tolerance) * max(largest, 1.0))
+        kernel_mask = np.asarray(eigenvalues.real <= cutoff, dtype=bool)
+        bad_basis = complement_basis @ eigenvectors[:, kernel_mask]
+
+    bad_dimension = int(bad_basis.shape[1])
+    common_dimension = int(manifold_dimension + bad_dimension)
+    bad_iprs = tuple(_state_ipr(bad_basis[:, index]) for index in range(bad_dimension))
+
+    hamiltonian_action = np.asarray(hamiltonian_matrix @ state_basis, dtype=np.complex128)
+    internal_hamiltonian = state_basis.conj().T @ hamiltonian_action
+    projected_hamiltonian_action = state_basis @ internal_hamiltonian
+    hamiltonian_closure_residual = float(
+        np.linalg.norm(hamiltonian_action - projected_hamiltonian_action)
+    )
+    internal_hamiltonian = 0.5 * (internal_hamiltonian + internal_hamiltonian.conj().T)
+    internal_hamiltonian_eigenvalues = tuple(
+        complex(value) for value in np.linalg.eigvalsh(internal_hamiltonian)
+    )
+    expected_internal_liouvillian_eigenvalues = _internal_liouvillian_eigenvalues_from_energies(
+        internal_hamiltonian_eigenvalues
+    )
+    expected_internal_zero_mode_count = int(
+        sum(
+            abs(value) <= liouvillian_zero_tolerance
+            for value in expected_internal_liouvillian_eigenvalues
+        )
+    )
+    expected_internal_peripheral_mode_count = int(
+        len(expected_internal_liouvillian_eigenvalues) - expected_internal_zero_mode_count
+    )
+
+    target_density_liouvillian_residual = _hamiltonian_projector_commutator_residual(
+        hamiltonian=hamiltonian_matrix,
+        state_basis=state_basis,
+    )
+    target_in_common_jump_kernel = max_target_jump_residual <= kernel_tolerance
+    target_distance = 0.0 if target_in_common_jump_kernel else float("nan")
+    target_projection = float(np.sqrt(manifold_dimension)) if target_in_common_jump_kernel else 0.0
+
+    diagnostics = RecycledFamilyKernelDiagnostics(
+        dim=dim,
+        n_jumps=n_jumps,
+        manifold_dimension=manifold_dimension,
+        hamiltonian_closure_residual=hamiltonian_closure_residual,
+        max_target_jump_residual=max_target_jump_residual,
+        target_density_liouvillian_residual=target_density_liouvillian_residual,
+        inflow_norm=float(np.sqrt(max(inflow_squared, 0.0))),
+        common_jump_kernel_dimension=common_dimension,
+        target_projection_onto_common_kernel=target_projection,
+        target_distance_from_common_kernel=target_distance,
+        target_in_common_jump_kernel=bool(target_in_common_jump_kernel),
+        bad_common_jump_kernel_dimension=bad_dimension,
+        bad_common_jump_kernel_iprs=bad_iprs,
+        internal_hamiltonian_eigenvalues=internal_hamiltonian_eigenvalues,
+        expected_internal_zero_mode_count=expected_internal_zero_mode_count,
+        expected_internal_peripheral_mode_count=expected_internal_peripheral_mode_count,
+        liouvillian_zero_tolerance=float(liouvillian_zero_tolerance),
+    )
+    return diagnostics, n_jumps, total_jump_nnz, max_jump_nnz
+
+
 def diagnose_recycled_manifold_candidate_family_kernel(
     *,
     hamiltonian: Any,
@@ -1986,6 +2382,8 @@ def diagnose_recycled_manifold_candidate_family_kernel(
     liouvillian_zero_tolerance: float = 1.0e-9,
     max_detectors: int | None = None,
     expand_candidate_report: bool = True,
+    kernel_method: Literal["streamed", "diagnostics"] = "streamed",
+    store_candidate_jumps: bool = False,
 ) -> RecycledManifoldCandidateFamilyKernelReport:
     """Diagnose the common jump kernel of the full recycled-detector family.
 
@@ -2049,31 +2447,78 @@ def diagnose_recycled_manifold_candidate_family_kernel(
         if candidate.relative_dark_residual <= dark_tolerance
         and candidate.inflow_norm > inflow_tolerance
     )
-    candidate_jumps = tuple(
-        _recycled_jump_for_candidate(
-            candidate=candidate,
-            states=state_basis,
-            basis_configs=basis_configs,
-            detector_operators=detector_operators,
-            local_regions=regions,
-            detector_coefficients=detector_coefficients,
-            dark_operator_report=dark_operator_report,
-            recycler_source=recycler_source,
-            tolerance=tolerance,
-            rdm_tolerance=rdm_tolerance,
-        )
-        for candidate in eligible_candidates
-    )
+    if kernel_method not in {"streamed", "diagnostics"}:
+        raise ValueError('kernel_method must be "streamed" or "diagnostics".')
 
-    diagnostics = diagnose_dark_manifold(
-        hamiltonian=hamiltonian,
-        jumps=candidate_jumps,
-        target_states=state_basis,
-        kernel_tolerance=kernel_tolerance,
-        liouvillian_zero_tolerance=liouvillian_zero_tolerance,
-        check_liouvillian_spectrum=False,
-        liouvillian_spectrum_method="none",
-    )
+    candidate_jumps: tuple[sp.csr_array, ...] = ()
+    candidate_jump_count: int | None = None
+    candidate_total_jump_nnz: int | None = None
+    candidate_max_jump_nnz: int | None = None
+
+    if kernel_method == "streamed":
+        diagnostics, jump_count, total_jump_nnz, max_jump_nnz = (
+            _stream_recycled_family_kernel_diagnostics(
+                hamiltonian=hamiltonian,
+                states=state_basis,
+                basis_configs=basis_configs,
+                detector_operators=detector_operators,
+                local_regions=regions,
+                candidates=eligible_candidates,
+                detector_coefficients=detector_coefficients,
+                dark_operator_report=dark_operator_report,
+                recycler_source=recycler_source,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+                kernel_tolerance=kernel_tolerance,
+                liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+                max_detectors=max_detectors,
+            )
+        )
+        candidate_jump_count = jump_count
+        candidate_total_jump_nnz = total_jump_nnz
+        candidate_max_jump_nnz = max_jump_nnz
+        if store_candidate_jumps:
+            candidate_jumps = tuple(
+                _recycled_jump_for_candidate(
+                    candidate=candidate,
+                    states=state_basis,
+                    basis_configs=basis_configs,
+                    detector_operators=detector_operators,
+                    local_regions=regions,
+                    detector_coefficients=detector_coefficients,
+                    dark_operator_report=dark_operator_report,
+                    recycler_source=recycler_source,
+                    tolerance=tolerance,
+                    rdm_tolerance=rdm_tolerance,
+                )
+                for candidate in eligible_candidates
+            )
+    else:
+        candidate_jumps = tuple(
+            _recycled_jump_for_candidate(
+                candidate=candidate,
+                states=state_basis,
+                basis_configs=basis_configs,
+                detector_operators=detector_operators,
+                local_regions=regions,
+                detector_coefficients=detector_coefficients,
+                dark_operator_report=dark_operator_report,
+                recycler_source=recycler_source,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+            )
+            for candidate in eligible_candidates
+        )
+
+        diagnostics = diagnose_dark_manifold(
+            hamiltonian=hamiltonian,
+            jumps=candidate_jumps,
+            target_states=state_basis,
+            kernel_tolerance=kernel_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            check_liouvillian_spectrum=False,
+            liouvillian_spectrum_method="none",
+        )
 
     return RecycledManifoldCandidateFamilyKernelReport(
         manifold_dimension=manifold_dimension,
@@ -2084,6 +2529,9 @@ def diagnose_recycled_manifold_candidate_family_kernel(
         inflow_tolerance=float(inflow_tolerance),
         candidate_jumps=candidate_jumps,
         diagnostics=diagnostics,
+        candidate_jump_count=candidate_jump_count,
+        candidate_total_jump_nnz=candidate_total_jump_nnz,
+        candidate_max_jump_nnz=candidate_max_jump_nnz,
     )
 
 

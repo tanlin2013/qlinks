@@ -352,6 +352,8 @@ def test_recycled_candidate_family_kernel_report_removes_complement_kernel():
     assert report.family_bad_common_jump_kernel_dimension == 0
     assert report.complement_common_kernel_removed is True
     assert report.family_inflow_norm > 0.0
+    assert report.family_kernel_method == "streamed_kernel"
+    assert report.to_summary_dict()["family_kernel_method"] == "streamed_kernel"
 
     from rich.console import Console
 
@@ -360,6 +362,28 @@ def test_recycled_candidate_family_kernel_report_removes_complement_kernel():
     rendered = console.export_text()
     assert "Recycled candidate-family common-kernel report" in rendered
     assert "bad complement kernel" in rendered
+
+
+def test_recycled_candidate_family_kernel_diagnostics_method_stores_jumps():
+    from qlinks.open_system import diagnose_recycled_manifold_candidate_family_kernel
+
+    build_result = _single_qutrit_build_result()
+    report = diagnose_recycled_manifold_candidate_family_kernel(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        kernel_method="diagnostics",
+    )
+
+    assert report.n_candidate_jumps == len(report.candidate_jumps)
+    assert report.n_candidate_jumps > 0
+    assert report.family_kernel_method == "none"
+    assert report.family_bad_common_jump_kernel_dimension == 0
 
 
 def test_construction_recycled_candidate_family_kernel_report():
@@ -380,6 +404,7 @@ def test_construction_recycled_candidate_family_kernel_report():
     )
 
     assert report.n_candidate_jumps > 0
+    assert report.family_kernel_method == "streamed_kernel"
     assert report.family_bad_common_jump_kernel_dimension == 0
     assert report.to_summary_dict()["complement_common_kernel_removed"] is True
 
