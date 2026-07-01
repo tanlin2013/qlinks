@@ -29,11 +29,13 @@ from qlinks.open_system.manifold_detectors import (
     RecycledManifoldDarkDetectorReport,
     RecycledManifoldJumpSelectionReport,
     RecycledManifoldResidualKernelReport,
+    TargetedResidualKernelLinearSearchReport,
     diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
     diagnose_recycled_manifold_candidate_family_kernel,
     diagnose_recycled_manifold_dark_detectors,
     diagnose_recycled_manifold_residual_kernel,
+    diagnose_targeted_residual_kernel_linear_search,
     expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
 )
@@ -667,6 +669,77 @@ class DegenerateCageLindbladConstruction:
             max_detectors=max_detectors,
             expand_candidate_report=expand_candidate_report,
             max_operator_entries=max_operator_entries,
+        )
+
+    def diagnose_targeted_residual_kernel_linear_search(
+        self,
+        *,
+        basis_configs: NDArray[np.integer],
+        local_regions: Sequence[Sequence[int]] | None = None,
+        residual_basis: NDArray[np.complex128] | None = None,
+        residual_report: RecycledManifoldResidualKernelReport | None = None,
+        detector_operators: tuple[Any, ...] | list[Any] | None = None,
+        residual_family_local_regions: Sequence[Sequence[int]] | None = None,
+        detector_coefficients: NDArray[np.complex128] | None = None,
+        dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+        candidate_report: RecycledManifoldDarkDetectorReport | None = None,
+        family_report: RecycledManifoldCandidateFamilyKernelReport | None = None,
+        detector_operator_names: tuple[str, ...] | list[str] | None = None,
+        detector_names: tuple[str, ...] | list[str] | None = None,
+        recycler_source: Literal[
+            "matrix_units",
+            "rdm_support_matrix_units",
+        ] = "rdm_support_matrix_units",
+        operator_source: Literal[
+            "matrix_units",
+            "rdm_support_matrix_units",
+        ] = "matrix_units",
+        tolerance: float = 1.0e-10,
+        rdm_tolerance: float = 1.0e-10,
+        dark_tolerance: float = 1.0e-10,
+        inflow_tolerance: float = 1.0e-12,
+        kernel_tolerance: float = 1.0e-10,
+        max_detectors: int | None = None,
+        max_modes_per_region: int = 1,
+        max_report_candidates: int | None = 32,
+        max_local_dim: int | None = None,
+        coefficient_tolerance: float = 1.0e-8,
+    ) -> TargetedResidualKernelLinearSearchReport:
+        """Search local dark jumps that directly hit a residual bad kernel."""
+        regions = (
+            self.local_regions if local_regions is None else _normalize_local_regions(local_regions)
+        )
+        family_regions = (
+            None
+            if residual_family_local_regions is None
+            else _normalize_local_regions(residual_family_local_regions)
+        )
+        return diagnose_targeted_residual_kernel_linear_search(
+            states=self.manifold_basis,
+            basis_configs=basis_configs,
+            local_regions=regions,
+            residual_basis=residual_basis,
+            residual_report=residual_report,
+            detector_operators=detector_operators,
+            residual_family_local_regions=family_regions,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            candidate_report=candidate_report,
+            family_report=family_report,
+            detector_operator_names=detector_operator_names,
+            detector_names=detector_names,
+            recycler_source=recycler_source,
+            operator_source=operator_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            kernel_tolerance=kernel_tolerance,
+            max_detectors=max_detectors,
+            max_modes_per_region=max_modes_per_region,
+            max_report_candidates=max_report_candidates,
+            max_local_dim=max_local_dim,
+            coefficient_tolerance=coefficient_tolerance,
         )
 
     def select_recycled_dark_detector_jumps(

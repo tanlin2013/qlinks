@@ -517,3 +517,51 @@ def test_construction_recycled_residual_kernel_report_and_rich_render():
     rendered = console.export_text()
     assert "Recycled residual-kernel report" in rendered
     assert "residual bad-kernel dimension" in rendered
+
+
+def test_targeted_residual_kernel_linear_search_finds_local_dark_jump():
+    from qlinks.open_system import diagnose_targeted_residual_kernel_linear_search
+
+    build_result = _single_qutrit_build_result()
+    residual_basis = np.asarray([0.0, 1.0, 0.0], dtype=np.complex128)
+    report = diagnose_targeted_residual_kernel_linear_search(
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        local_regions=((0,),),
+        residual_basis=residual_basis,
+        operator_source="matrix_units",
+    )
+
+    summary = report.to_summary_dict()
+    assert summary["residual_dimension"] == 1
+    assert summary["has_targeted_solution"] is True
+    assert summary["best_residual_target_inflow_norm"] > 0.0
+    assert summary["candidates"][0]["relative_dark_residual"] < 1e-12
+    assert summary["candidates"][0]["residual_target_inflow_norm"] > 0.0
+    assert len(report.candidate_jumps) >= 1
+
+
+def test_construction_targeted_residual_kernel_linear_search_and_rich_render():
+    build_result = _single_qutrit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_single_qutrit_target_state(),
+        local_regions=((0,),),
+    )
+
+    report = construction.diagnose_targeted_residual_kernel_linear_search(
+        basis_configs=build_result.basis.states,
+        residual_basis=np.asarray([0.0, 1.0, 0.0], dtype=np.complex128),
+        operator_source="matrix_units",
+    )
+
+    assert report.has_targeted_solution is True
+    assert report.best_residual_target_inflow_norm > 0.0
+
+    from rich.console import Console
+
+    console = Console(record=True, width=120)
+    console.print(report)
+    rendered = console.export_text()
+    assert "Targeted residual-kernel linear search" in rendered
+    assert "hits residual" in rendered

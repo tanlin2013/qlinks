@@ -2819,6 +2819,310 @@ class RecycledManifoldResidualKernelReport:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class TargetedResidualKernelLinearTerm:
+    """One local matrix-unit term in a targeted residual-kernel jump."""
+
+    operator_index: int
+    operator_name: str
+    coefficient: complex
+    weight: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "operator_index": self.operator_index,
+            "operator_name": self.operator_name,
+            "coefficient": self.coefficient,
+            "weight": self.weight,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TargetedResidualKernelLinearCandidate:
+    """A local jump candidate found by constrained residual-kernel search."""
+
+    candidate_index: int
+    region_index: int
+    variable_indices: tuple[int, ...]
+    local_dim: int
+    operator_source: str
+    dark_constraint_rank: int
+    dark_nullity: int
+    singular_value: float
+    residual_target_inflow_norm: float
+    dark_residual: float
+    relative_dark_residual: float
+    total_inflow_norm: float
+    target_block_norm: float
+    jump_frobenius_norm: float
+    jump_nnz: int
+    coefficients: npt.NDArray[np.complex128]
+    terms: tuple[TargetedResidualKernelLinearTerm, ...]
+
+    @property
+    def n_variables(self) -> int:
+        return len(self.variable_indices)
+
+    @property
+    def n_terms(self) -> int:
+        return len(self.terms)
+
+    @property
+    def is_dark(self) -> bool:
+        return self.relative_dark_residual <= 1.0e-10
+
+    @property
+    def hits_residual_kernel(self) -> bool:
+        return self.residual_target_inflow_norm > 1.0e-12
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "candidate_index": self.candidate_index,
+            "region_index": self.region_index,
+            "variable_indices": self.variable_indices,
+            "n_variables": self.n_variables,
+            "local_dim": self.local_dim,
+            "operator_source": self.operator_source,
+            "dark_constraint_rank": self.dark_constraint_rank,
+            "dark_nullity": self.dark_nullity,
+            "singular_value": self.singular_value,
+            "residual_target_inflow_norm": self.residual_target_inflow_norm,
+            "dark_residual": self.dark_residual,
+            "relative_dark_residual": self.relative_dark_residual,
+            "total_inflow_norm": self.total_inflow_norm,
+            "target_block_norm": self.target_block_norm,
+            "jump_frobenius_norm": self.jump_frobenius_norm,
+            "jump_nnz": self.jump_nnz,
+            "n_terms": self.n_terms,
+            "coefficients": tuple(complex(value) for value in self.coefficients),
+            "terms": tuple(term.to_summary_dict() for term in self.terms),
+            "is_dark": self.is_dark,
+            "hits_residual_kernel": self.hits_residual_kernel,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TargetedResidualKernelLinearSearchReport:
+    """Constrained local search targeting a recycled-family residual kernel.
+
+    For each local region with operator basis ``O_a``, the search solves
+
+        sum_a c_a O_a P_M = 0
+
+    and, inside that dark nullspace, maximizes
+
+        ||P_M (sum_a c_a O_a) B||_F,
+
+    where ``B`` is the residual bad common-kernel basis left by a recycled
+    detector family.  This tests whether local jumps outside the factorized
+    ``R D`` family can directly remove the residual sector.
+    """
+
+    manifold_dimension: int
+    hilbert_dimension: int
+    residual_basis: npt.NDArray[np.complex128]
+    region_variable_indices: tuple[tuple[int, ...], ...]
+    operator_source: str
+    family_report: RecycledManifoldCandidateFamilyKernelReport | None
+    candidates: tuple[TargetedResidualKernelLinearCandidate, ...]
+    candidate_jumps: tuple[sp.csr_array, ...]
+    tolerance: float
+    dark_tolerance: float
+    inflow_tolerance: float
+
+    @property
+    def residual_dimension(self) -> int:
+        return int(self.residual_basis.shape[1])
+
+    @property
+    def n_regions(self) -> int:
+        return len(self.region_variable_indices)
+
+    @property
+    def n_candidates(self) -> int:
+        return len(self.candidates)
+
+    @property
+    def max_region_size(self) -> int:
+        return max((len(region) for region in self.region_variable_indices), default=0)
+
+    @property
+    def max_local_dim(self) -> int:
+        return max((candidate.local_dim for candidate in self.candidates), default=0)
+
+    @property
+    def n_regions_with_dark_nullity(self) -> int:
+        return sum(candidate.dark_nullity > 0 for candidate in self.candidates)
+
+    @property
+    def n_candidates_hitting_residual(self) -> int:
+        return sum(
+            candidate.relative_dark_residual <= self.dark_tolerance
+            and candidate.residual_target_inflow_norm > self.inflow_tolerance
+            for candidate in self.candidates
+        )
+
+    @property
+    def best_residual_target_inflow_norm(self) -> float:
+        return max(
+            (candidate.residual_target_inflow_norm for candidate in self.candidates), default=0.0
+        )
+
+    @property
+    def best_total_inflow_norm(self) -> float:
+        return max((candidate.total_inflow_norm for candidate in self.candidates), default=0.0)
+
+    @property
+    def has_targeted_solution(self) -> bool:
+        return self.n_candidates_hitting_residual > 0
+
+    def residual_kernel_dimension_after_candidate_prefix(
+        self,
+        n_candidates: int | None = None,
+        *,
+        tolerance: float | None = None,
+    ) -> int:
+        """Return residual-kernel dimension after the first reported jumps."""
+        residual_dimension = int(self.residual_basis.shape[1])
+        if residual_dimension == 0:
+            return 0
+        n_used = len(self.candidate_jumps) if n_candidates is None else max(int(n_candidates), 0)
+        if n_used == 0:
+            return residual_dimension
+        gram = np.zeros((residual_dimension, residual_dimension), dtype=np.complex128)
+        for jump in self.candidate_jumps[:n_used]:
+            image = np.asarray(jump @ self.residual_basis, dtype=np.complex128)
+            gram += image.conj().T @ image
+        gram = 0.5 * (gram + gram.conj().T)
+        eigenvalues = np.linalg.eigvalsh(gram).real
+        largest = float(np.max(np.maximum(eigenvalues, 0.0))) if eigenvalues.size else 0.0
+        cutoff = self.tolerance if tolerance is None else float(tolerance)
+        cutoff = max(cutoff, cutoff * max(largest, 1.0))
+        return int(np.count_nonzero(eigenvalues <= cutoff))
+
+    @property
+    def reported_candidate_residual_kernel_dimension(self) -> int:
+        return self.residual_kernel_dimension_after_candidate_prefix(None)
+
+    @property
+    def reported_candidates_remove_residual_kernel(self) -> bool:
+        return self.reported_candidate_residual_kernel_dimension == 0
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "manifold_dimension": self.manifold_dimension,
+            "hilbert_dimension": self.hilbert_dimension,
+            "residual_dimension": self.residual_dimension,
+            "n_regions": self.n_regions,
+            "region_variable_indices": self.region_variable_indices,
+            "max_region_size": self.max_region_size,
+            "max_local_dim": self.max_local_dim,
+            "operator_source": self.operator_source,
+            "n_candidates": self.n_candidates,
+            "n_regions_with_dark_nullity": self.n_regions_with_dark_nullity,
+            "n_candidates_hitting_residual": self.n_candidates_hitting_residual,
+            "has_targeted_solution": self.has_targeted_solution,
+            "reported_candidate_residual_kernel_dimension": (
+                self.reported_candidate_residual_kernel_dimension
+            ),
+            "reported_candidates_remove_residual_kernel": (
+                self.reported_candidates_remove_residual_kernel
+            ),
+            "best_residual_target_inflow_norm": self.best_residual_target_inflow_norm,
+            "best_total_inflow_norm": self.best_total_inflow_norm,
+            "family_bad_common_jump_kernel_dimension": (
+                None
+                if self.family_report is None
+                else self.family_report.family_bad_common_jump_kernel_dimension
+            ),
+            "tolerance": self.tolerance,
+            "dark_tolerance": self.dark_tolerance,
+            "inflow_tolerance": self.inflow_tolerance,
+            "candidates": tuple(candidate.to_summary_dict() for candidate in self.candidates),
+        }
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_candidates: int = 16, max_terms: int = 6):
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "TargetedResidualKernelLinearSearchReport.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        overview.add_row("Hilbert dimension", str(self.hilbert_dimension))
+        overview.add_row("manifold dimension", str(self.manifold_dimension))
+        overview.add_row("residual dimension", str(self.residual_dimension))
+        overview.add_row("regions", str(self.n_regions))
+        overview.add_row("max region size", str(self.max_region_size))
+        overview.add_row("operator source", self.operator_source)
+        overview.add_row("candidates", str(self.n_candidates))
+        overview.add_row("hits residual", str(self.n_candidates_hitting_residual))
+        overview.add_row(
+            "reported residual kernel",
+            str(self.reported_candidate_residual_kernel_dimension),
+        )
+        overview.add_row("best residual inflow", f"{self.best_residual_target_inflow_norm:.3e}")
+        overview.add_row("best total inflow", f"{self.best_total_inflow_norm:.3e}")
+
+        table = Table(title="Targeted residual-kernel local dark jumps")
+        table.add_column("#", justify="right")
+        table.add_column("region")
+        table.add_column("dim", justify="right")
+        table.add_column("dark null", justify="right")
+        table.add_column("resid inflow", justify="right")
+        table.add_column("dark resid", justify="right")
+        table.add_column("||J||", justify="right")
+        table.add_column("terms")
+
+        for candidate in self.candidates[: max(int(max_candidates), 0)]:
+            term_text = ", ".join(
+                f"{term.coefficient:.3g}·{term.operator_name}"
+                for term in candidate.terms[: max(int(max_terms), 0)]
+            )
+            if candidate.n_terms > max_terms:
+                term_text += f", … {candidate.n_terms - max_terms} more"
+            style = "green" if candidate.hits_residual_kernel else ""
+            table.add_row(
+                str(candidate.candidate_index),
+                str(candidate.variable_indices),
+                str(candidate.local_dim),
+                str(candidate.dark_nullity),
+                f"{candidate.residual_target_inflow_norm:.3e}",
+                f"{candidate.relative_dark_residual:.3e}",
+                f"{candidate.jump_frobenius_norm:.3e}",
+                term_text,
+                style=style,
+            )
+
+        if len(self.candidates) > max_candidates:
+            table.add_row(
+                "…",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                f"{len(self.candidates) - max_candidates} more candidates",
+            )
+
+        return Panel(
+            Group(overview, table),
+            title=Text("Targeted residual-kernel linear search", style="bold blue"),
+            border_style="green" if self.has_targeted_solution else "red",
+        )
+
+
 def _bad_kernel_basis_from_recycled_family(
     *,
     states: npt.ArrayLike,
@@ -3245,6 +3549,362 @@ def diagnose_recycled_manifold_residual_kernel(
         operator_action_reports=tuple(action_reports),
         local_support_entries=local_entries,
         kernel_tolerance=float(kernel_tolerance),
+    )
+
+
+def _right_kernel_basis_from_gram_matrix(
+    matrix: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> npt.NDArray[np.complex128]:
+    """Return a right-kernel basis via the smaller column Gram matrix.
+
+    This is useful when ``matrix`` is tall and has at most a few hundred
+    columns.  It avoids the much more expensive full SVD used by the generic
+    helper while preserving the same relative singular-value cutoff semantics.
+    """
+    if matrix.ndim != 2:
+        raise ValueError("matrix must be two-dimensional.")
+    n_columns = int(matrix.shape[1])
+    if n_columns == 0:
+        return np.zeros((0, 0), dtype=np.complex128)
+    if matrix.shape[0] == 0:
+        return np.eye(n_columns, dtype=np.complex128)
+
+    gram = matrix.conj().T @ matrix
+    gram = 0.5 * (gram + gram.conj().T)
+    eigenvalues, eigenvectors = np.linalg.eigh(gram)
+    eigenvalues = np.maximum(eigenvalues.real, 0.0)
+    largest_singular = float(np.sqrt(np.max(eigenvalues))) if eigenvalues.size else 0.0
+    cutoff = max(float(tolerance), float(tolerance) * max(largest_singular, 1.0))
+    kernel_mask = eigenvalues <= cutoff * cutoff
+    return eigenvectors[:, kernel_mask].astype(np.complex128, copy=False)
+
+
+def diagnose_targeted_residual_kernel_linear_search(
+    *,
+    states: npt.ArrayLike,
+    basis_configs: npt.NDArray[np.integer],
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    residual_basis: npt.ArrayLike | None = None,
+    residual_report: RecycledManifoldResidualKernelReport | None = None,
+    detector_operators: tuple[Any, ...] | list[Any] | None = None,
+    residual_family_local_regions: (
+        tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]] | None
+    ) = None,
+    detector_coefficients: npt.ArrayLike | None = None,
+    dark_operator_report: ManifoldDarkOperatorBasisReport | None = None,
+    candidate_report: RecycledManifoldDarkDetectorReport | None = None,
+    family_report: RecycledManifoldCandidateFamilyKernelReport | None = None,
+    detector_operator_names: tuple[str, ...] | list[str] | None = None,
+    detector_names: tuple[str, ...] | list[str] | None = None,
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ] = "rdm_support_matrix_units",
+    operator_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ] = "matrix_units",
+    tolerance: float = 1.0e-10,
+    rdm_tolerance: float = 1.0e-10,
+    dark_tolerance: float = 1.0e-10,
+    inflow_tolerance: float = 1.0e-12,
+    kernel_tolerance: float = 1.0e-10,
+    max_detectors: int | None = None,
+    max_modes_per_region: int = 1,
+    max_report_candidates: int | None = 32,
+    max_local_dim: int | None = None,
+    coefficient_tolerance: float = 1.0e-8,
+) -> TargetedResidualKernelLinearSearchReport:
+    """Search local dark jumps that directly target a residual bad kernel.
+
+    This is stronger than optimizing linear combinations of the factorized
+    recycled-detector family ``R D``.  For each supplied local region, it builds
+    a local operator basis ``O_a`` and solves the constrained problem
+
+        sum_a c_a O_a P_M = 0,
+
+    then ranks dark combinations by their action
+
+        ||P_M (sum_a c_a O_a) B||_F,
+
+    where ``B`` is the residual complement common kernel left by a recycled
+    detector family.
+    """
+    from qlinks.open_system.local_recycling import (
+        _embed_local_pattern_operator_from_context,
+        _embedding_context_from_basis_context,
+        _local_pattern_basis_context_from_basis,
+        _local_reduced_density_matrix_from_basis_context_and_states,
+    )
+
+    target_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
+    dim = int(target_basis.shape[0])
+    manifold_dimension = int(target_basis.shape[1])
+    basis_array = np.asarray(basis_configs)
+    if basis_array.ndim != 2 or basis_array.shape[0] != dim:
+        raise ValueError("basis_configs must have shape (hilbert_dimension, n_variables).")
+
+    report_family = family_report
+    if residual_report is not None:
+        bad_basis = np.asarray(residual_report.residual_basis, dtype=np.complex128)
+        report_family = residual_report.family_report
+    elif residual_basis is not None:
+        bad_basis, _ = _normalize_state_columns(residual_basis, tolerance=tolerance)
+    else:
+        if detector_operators is None:
+            raise ValueError(
+                "Pass residual_basis, residual_report, or detector_operators to infer "
+                "the recycled-family residual kernel."
+            )
+        family_regions = _normalize_local_regions(
+            local_regions
+            if residual_family_local_regions is None
+            else residual_family_local_regions
+        )
+        if family_report is not None:
+            candidate_report = family_report.candidate_report
+        if candidate_report is None:
+            candidate_report = diagnose_recycled_manifold_dark_detectors(
+                states=target_basis,
+                basis_configs=basis_array,
+                detector_operators=detector_operators,
+                local_regions=family_regions,
+                detector_coefficients=detector_coefficients,
+                dark_operator_report=dark_operator_report,
+                detector_operator_names=detector_operator_names,
+                detector_names=detector_names,
+                recycler_source=recycler_source,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+                dark_tolerance=dark_tolerance,
+                inflow_tolerance=inflow_tolerance,
+                max_detectors=max_detectors,
+                max_report_candidates=None,
+                sort_by_inflow=True,
+            )
+        eligible_candidates = tuple(
+            candidate
+            for candidate in candidate_report.candidates
+            if candidate.relative_dark_residual <= dark_tolerance
+            and candidate.inflow_norm > inflow_tolerance
+        )
+        bad_basis = _bad_kernel_basis_from_recycled_family(
+            states=target_basis,
+            basis_configs=basis_array,
+            detector_operators=detector_operators,
+            local_regions=family_regions,
+            candidates=eligible_candidates,
+            detector_coefficients=detector_coefficients,
+            dark_operator_report=dark_operator_report,
+            recycler_source=recycler_source,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+            kernel_tolerance=kernel_tolerance,
+            max_detectors=max_detectors,
+        )
+
+    if bad_basis.ndim == 1:
+        bad_basis = bad_basis.reshape(dim, 1)
+    if bad_basis.ndim != 2 or bad_basis.shape[0] != dim:
+        raise ValueError("residual_basis has incompatible shape.")
+    if bad_basis.shape[1] > 0:
+        # Re-orthonormalize and explicitly remove any numerical target component.
+        bad_basis = bad_basis - target_basis @ (target_basis.conj().T @ bad_basis)
+        bad_basis, _ = _normalize_state_columns(bad_basis, tolerance=tolerance)
+    else:
+        bad_basis = np.zeros((dim, 0), dtype=np.complex128)
+
+    regions = _normalize_local_regions(local_regions)
+    candidates: list[TargetedResidualKernelLinearCandidate] = []
+    candidate_jumps: list[sp.csr_array] = []
+
+    for region_index, region in enumerate(regions):
+        context = _local_pattern_basis_context_from_basis(
+            basis_configs=basis_array,
+            variable_indices=region,
+        )
+        rdm = _local_reduced_density_matrix_from_basis_context_and_states(
+            context=context,
+            states=target_basis,
+            tolerance=rdm_tolerance,
+        )
+        if max_local_dim is not None and rdm.local_dim > max_local_dim:
+            continue
+
+        specs = _local_recycler_specs(
+            local_patterns=rdm.local_patterns,
+            support_basis=rdm.support_basis,
+            recycler_source=operator_source,
+        )
+        if len(specs) == 0:
+            continue
+
+        embedding_context = _embedding_context_from_basis_context(context)
+        local_ops = tuple(
+            _embed_local_pattern_operator_from_context(
+                context=embedding_context,
+                local_operator=local_operator,
+            ).tocsr()
+            for _name, local_operator in specs
+        )
+        nonzero_indices = [index for index, operator in enumerate(local_ops) if operator.nnz > 0]
+        if len(nonzero_indices) == 0:
+            continue
+        local_ops = tuple(local_ops[index] for index in nonzero_indices)
+        spec_names = tuple(specs[index][0] for index in nonzero_indices)
+
+        dark_matrix = np.column_stack(
+            [
+                np.asarray(operator @ target_basis, dtype=np.complex128).reshape(-1)
+                for operator in local_ops
+            ]
+        )
+        dark_kernel = _right_kernel_basis_from_gram_matrix(dark_matrix, tolerance=dark_tolerance)
+        dark_nullity = int(dark_kernel.shape[1])
+        dark_rank = int(dark_kernel.shape[0] - dark_nullity)
+        if dark_nullity == 0:
+            continue
+
+        if bad_basis.shape[1] == 0:
+            inflow_matrix = np.zeros((0, len(local_ops)), dtype=np.complex128)
+        else:
+            inflow_matrix = np.column_stack(
+                [
+                    (
+                        target_basis.conj().T
+                        @ np.asarray(operator @ bad_basis, dtype=np.complex128)
+                    ).reshape(-1)
+                    for operator in local_ops
+                ]
+            )
+        restricted_inflow = inflow_matrix @ dark_kernel
+        if restricted_inflow.size == 0:
+            singular_values = np.zeros((0,), dtype=np.float64)
+            right_vectors = np.zeros((dark_nullity, 0), dtype=np.complex128)
+        else:
+            _u, singular_values, vh = np.linalg.svd(restricted_inflow, full_matrices=False)
+            right_vectors = vh.conj().T
+
+        n_modes = min(max(int(max_modes_per_region), 0), int(right_vectors.shape[1]))
+        for mode_index in range(n_modes):
+            coefficients = np.asarray(
+                dark_kernel @ right_vectors[:, mode_index], dtype=np.complex128
+            )
+            coefficient_norm = float(np.linalg.norm(coefficients))
+            if coefficient_norm == 0.0:
+                continue
+            coefficients = coefficients / coefficient_norm
+            jump = sp.csr_array((dim, dim), dtype=np.complex128)
+            for coefficient, operator in zip(coefficients, local_ops, strict=True):
+                if abs(coefficient) <= 0.0:
+                    continue
+                jump = jump + coefficient * operator
+            jump = jump.tocsr()
+            if jump.nnz == 0:
+                continue
+
+            dark_residual = float(np.linalg.norm(jump @ target_basis))
+            jump_norm = float(sp.linalg.norm(jump))
+            relative_dark_residual = dark_residual / max(jump_norm, 1.0)
+            residual_target_action = target_basis.conj().T @ np.asarray(
+                jump @ bad_basis,
+                dtype=np.complex128,
+            )
+            residual_target_inflow_norm = float(np.linalg.norm(residual_target_action))
+            total_inflow_norm, target_block_norm = _projected_inflow_norm(
+                jump=jump,
+                state_basis=target_basis,
+            )
+            terms = tuple(
+                TargetedResidualKernelLinearTerm(
+                    operator_index=int(index),
+                    operator_name=spec_names[index],
+                    coefficient=complex(coefficient),
+                    weight=float(abs(coefficient)),
+                )
+                for index, coefficient in sorted(
+                    enumerate(coefficients),
+                    key=lambda item: -abs(item[1]),
+                )
+                if abs(coefficient) > coefficient_tolerance
+            )
+            candidates.append(
+                TargetedResidualKernelLinearCandidate(
+                    candidate_index=len(candidates),
+                    region_index=int(region_index),
+                    variable_indices=tuple(int(value) for value in region),
+                    local_dim=int(rdm.local_dim),
+                    operator_source=operator_source,
+                    dark_constraint_rank=dark_rank,
+                    dark_nullity=dark_nullity,
+                    singular_value=float(singular_values[mode_index]),
+                    residual_target_inflow_norm=residual_target_inflow_norm,
+                    dark_residual=dark_residual,
+                    relative_dark_residual=float(relative_dark_residual),
+                    total_inflow_norm=total_inflow_norm,
+                    target_block_norm=target_block_norm,
+                    jump_frobenius_norm=jump_norm,
+                    jump_nnz=int(jump.nnz),
+                    coefficients=coefficients,
+                    terms=terms,
+                )
+            )
+            candidate_jumps.append(jump)
+
+    order = sorted(
+        range(len(candidates)),
+        key=lambda index: (
+            candidates[index].relative_dark_residual > dark_tolerance,
+            -candidates[index].residual_target_inflow_norm,
+            -candidates[index].total_inflow_norm,
+            candidates[index].jump_nnz,
+            candidates[index].region_index,
+        ),
+    )
+    if max_report_candidates is not None:
+        order = order[: max(int(max_report_candidates), 0)]
+
+    sorted_candidates: list[TargetedResidualKernelLinearCandidate] = []
+    sorted_jumps: list[sp.csr_array] = []
+    for new_index, old_index in enumerate(order):
+        candidate = candidates[old_index]
+        sorted_candidates.append(
+            TargetedResidualKernelLinearCandidate(
+                candidate_index=new_index,
+                region_index=candidate.region_index,
+                variable_indices=candidate.variable_indices,
+                local_dim=candidate.local_dim,
+                operator_source=candidate.operator_source,
+                dark_constraint_rank=candidate.dark_constraint_rank,
+                dark_nullity=candidate.dark_nullity,
+                singular_value=candidate.singular_value,
+                residual_target_inflow_norm=candidate.residual_target_inflow_norm,
+                dark_residual=candidate.dark_residual,
+                relative_dark_residual=candidate.relative_dark_residual,
+                total_inflow_norm=candidate.total_inflow_norm,
+                target_block_norm=candidate.target_block_norm,
+                jump_frobenius_norm=candidate.jump_frobenius_norm,
+                jump_nnz=candidate.jump_nnz,
+                coefficients=candidate.coefficients,
+                terms=candidate.terms,
+            )
+        )
+        sorted_jumps.append(candidate_jumps[old_index])
+
+    return TargetedResidualKernelLinearSearchReport(
+        manifold_dimension=manifold_dimension,
+        hilbert_dimension=dim,
+        residual_basis=bad_basis,
+        region_variable_indices=regions,
+        operator_source=operator_source,
+        family_report=report_family,
+        candidates=tuple(sorted_candidates),
+        candidate_jumps=tuple(sorted_jumps),
+        tolerance=float(tolerance),
+        dark_tolerance=float(dark_tolerance),
+        inflow_tolerance=float(inflow_tolerance),
     )
 
 
