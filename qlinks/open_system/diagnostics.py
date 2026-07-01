@@ -2522,16 +2522,33 @@ def _kernel_basis_orthogonal_to_manifold(
     manifold_basis: np.ndarray,
     tolerance: float,
 ) -> np.ndarray:
+    """Return the part of ``basis`` orthogonal to ``manifold_basis``.
+
+    ``basis`` is typically an orthonormal common jump-kernel basis whose
+    columns are arbitrary SVD vectors.  Projecting each column separately can
+    produce spurious complement vectors when the whole subspace equals the
+    target manifold but individual columns are only numerically aligned.  Use
+    the principal-angle/nullspace formulation instead: vectors in
+    ``span(basis)`` orthogonal to the manifold are ``basis @ c`` with
+    ``manifold_basis† basis c = 0``.
+    """
     if basis.shape[1] == 0:
         return np.zeros((manifold_basis.shape[0], 0), dtype=np.complex128)
 
-    projected = basis - manifold_basis @ (manifold_basis.conj().T @ basis)
-    column_norms = np.linalg.norm(projected, axis=0)
-    keep = column_norms > tolerance
-    if not np.any(keep):
+    overlap = manifold_basis.conj().T @ basis
+    _u, singular_values, vh = np.linalg.svd(overlap, full_matrices=True)
+    if singular_values.size == 0:
+        rank = 0
+    else:
+        cutoff = max(float(tolerance), float(np.sqrt(tolerance)) * float(singular_values[0]))
+        rank = int(np.count_nonzero(singular_values > cutoff))
+
+    if rank >= basis.shape[1]:
         return np.zeros((manifold_basis.shape[0], 0), dtype=np.complex128)
 
-    return _orthonormal_column_basis(projected[:, keep], tolerance=tolerance)
+    coefficients = vh.conj().T[:, rank:]
+    complement = basis @ coefficients
+    return _orthonormal_column_basis(complement, tolerance=tolerance)
 
 
 def _manifold_inflow_norm(

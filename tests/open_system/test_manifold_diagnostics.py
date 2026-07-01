@@ -140,3 +140,33 @@ def test_dark_manifold_diagnostics_rich_report_renders():
     assert "Dark-manifold diagnostics" in rendered
     assert "Target manifold checks" in rendered
     assert "Liouvillian spectrum" in rendered
+
+
+def test_dark_manifold_bad_kernel_uses_subspace_not_columnwise_projection():
+    hamiltonian = np.zeros((3, 3), dtype=np.complex128)
+    target = np.column_stack([_basis_vector(3, 0), _basis_vector(3, 1)])
+    # Two dark jumps whose common kernel is a slightly rotated basis for the
+    # same two-dimensional target subspace.  Column-wise projection would see a
+    # tiny component outside the target in each arbitrary kernel vector and can
+    # misclassify a spurious bad direction at tight tolerances.
+    epsilon = 2.0e-10
+    kernel_vector_0 = np.asarray([1.0, 0.0, epsilon], dtype=np.complex128)
+    kernel_vector_0 = kernel_vector_0 / np.linalg.norm(kernel_vector_0)
+    kernel_vector_1 = _basis_vector(3, 1)
+    leaking_direction = np.cross(
+        kernel_vector_0.real,
+        kernel_vector_1.real,
+    ).astype(np.complex128)
+    leaking_direction = leaking_direction / np.linalg.norm(leaking_direction)
+    jump = np.outer(_basis_vector(3, 0), leaking_direction.conj())
+
+    diagnostics = diagnose_dark_manifold(
+        hamiltonian=hamiltonian,
+        jumps=(jump,),
+        target_states=target,
+        kernel_tolerance=1.0e-10,
+        liouvillian_spectrum_method="none",
+    )
+
+    assert diagnostics.common_jump_kernel_dimension == 2
+    assert diagnostics.bad_common_jump_kernel_dimension == 0
