@@ -752,6 +752,10 @@ class DegenerateCageLindbladConstruction:
         base_jumps: Sequence[Any] = (),
         max_selected_jumps: int = 16,
         target_residual_kernel_dimension: int = 0,
+        selection_target: Literal[
+            "reported_residual_kernel",
+            "combined_common_kernel",
+        ] = "reported_residual_kernel",
         allow_non_improving: bool = False,
         kernel_tolerance: float = 1.0e-10,
         dark_tolerance: float = 1.0e-10,
@@ -763,8 +767,11 @@ class DegenerateCageLindbladConstruction:
     ) -> TargetedResidualKernelJumpSelectionReport:
         """Greedily select targeted residual-kernel jumps.
 
-        If ``hamiltonian`` is supplied, the returned report also contains a
-        dark-manifold diagnostic for ``base_jumps + selected targeted jumps``.
+        Use ``selection_target="combined_common_kernel"`` to keep adding
+        targeted jumps until the bad common jump-kernel of ``base_jumps`` plus
+        selected targeted jumps is removed.  If ``hamiltonian`` is supplied, the
+        returned report also contains a dark-manifold diagnostic for the
+        combined jump list.
         """
         return select_targeted_residual_kernel_jumps(
             targeted_report=targeted_report,
@@ -773,6 +780,7 @@ class DegenerateCageLindbladConstruction:
             base_jumps=tuple(base_jumps),
             max_selected_jumps=max_selected_jumps,
             target_residual_kernel_dimension=target_residual_kernel_dimension,
+            selection_target=selection_target,
             allow_non_improving=allow_non_improving,
             kernel_tolerance=kernel_tolerance,
             dark_tolerance=dark_tolerance,

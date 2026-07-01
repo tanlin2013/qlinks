@@ -3157,6 +3157,9 @@ class TargetedResidualKernelJumpSelectionReport:
     jumps: tuple[sp.csr_array, ...]
     steps: tuple[TargetedResidualKernelJumpSelectionStep, ...]
     final_diagnostics: Any | None
+    selection_target: Literal["reported_residual_kernel", "combined_common_kernel"]
+    initial_selection_kernel_dimension: int
+    target_selection_kernel_dimension: int
     kernel_tolerance: float
     dark_tolerance: float
     inflow_tolerance: float
@@ -3187,13 +3190,29 @@ class TargetedResidualKernelJumpSelectionReport:
 
     @property
     def final_residual_kernel_dimension(self) -> int:
-        if len(self.steps) == 0:
-            return self.residual_dimension
-        return int(self.steps[-1].residual_kernel_dimension)
+        current_basis = np.asarray(
+            self.targeted_report.residual_basis,
+            dtype=np.complex128,
+        )
+        for jump in self.jumps:
+            image = np.asarray(jump @ current_basis, dtype=np.complex128)
+            kernel_basis = _right_kernel_basis(image, tolerance=self.kernel_tolerance)
+            current_basis = current_basis @ kernel_basis
+        return int(current_basis.shape[1])
 
     @property
     def residual_kernel_removed(self) -> bool:
         return self.final_residual_kernel_dimension <= self.target_residual_kernel_dimension
+
+    @property
+    def final_selection_kernel_dimension(self) -> int:
+        if len(self.steps) == 0:
+            return self.initial_selection_kernel_dimension
+        return int(self.steps[-1].residual_kernel_dimension)
+
+    @property
+    def selection_kernel_removed(self) -> bool:
+        return self.final_selection_kernel_dimension <= self.target_selection_kernel_dimension
 
     @property
     def total_selected_jump_nnz(self) -> int:
@@ -3232,6 +3251,9 @@ class TargetedResidualKernelJumpSelectionReport:
             "hilbert_dimension": self.hilbert_dimension,
             "residual_dimension": self.residual_dimension,
             "target_residual_kernel_dimension": self.target_residual_kernel_dimension,
+            "selection_target": self.selection_target,
+            "initial_selection_kernel_dimension": self.initial_selection_kernel_dimension,
+            "target_selection_kernel_dimension": self.target_selection_kernel_dimension,
             "max_selected_jumps": self.max_selected_jumps,
             "n_base_jumps": self.n_base_jumps,
             "n_selected_jumps": self.n_selected_jumps,
@@ -3242,6 +3264,8 @@ class TargetedResidualKernelJumpSelectionReport:
             "max_selected_jump_nnz": self.max_selected_jump_nnz,
             "final_residual_kernel_dimension": self.final_residual_kernel_dimension,
             "residual_kernel_removed": self.residual_kernel_removed,
+            "final_selection_kernel_dimension": self.final_selection_kernel_dimension,
+            "selection_kernel_removed": self.selection_kernel_removed,
             "combined_bad_common_jump_kernel_dimension": (
                 self.combined_bad_common_jump_kernel_dimension
             ),
@@ -3279,11 +3303,13 @@ class TargetedResidualKernelJumpSelectionReport:
         overview.add_row("Hilbert dimension", str(self.hilbert_dimension))
         overview.add_row("manifold dimension", str(self.manifold_dimension))
         overview.add_row("residual dimension", str(self.residual_dimension))
+        overview.add_row("selection target", self.selection_target)
+        overview.add_row("initial selection kernel", str(self.initial_selection_kernel_dimension))
         overview.add_row("base jumps", str(self.n_base_jumps))
         overview.add_row("selected targeted jumps", str(self.n_selected_jumps))
         overview.add_row("combined jumps", str(self.n_combined_jumps))
         overview.add_row("final residual kernel", str(self.final_residual_kernel_dimension))
-        overview.add_row("residual kernel removed", str(self.residual_kernel_removed))
+        overview.add_row("selection kernel removed", str(self.selection_kernel_removed))
         overview.add_row(
             "combined bad kernel",
             (
@@ -3304,7 +3330,7 @@ class TargetedResidualKernelJumpSelectionReport:
         table = Table(title="Greedy selected targeted residual-kernel jumps")
         table.add_column("step", justify="right")
         table.add_column("region")
-        table.add_column("residual kernel", justify="right")
+        table.add_column("selection kernel", justify="right")
         table.add_column("resid inflow", justify="right")
         table.add_column("total inflow", justify="right")
         table.add_column("jump nnz", justify="right")
@@ -3338,7 +3364,7 @@ class TargetedResidualKernelJumpSelectionReport:
         return Panel(
             Group(overview, table),
             title=Text("Targeted residual-kernel jump-selection report", style="bold blue"),
-            border_style="green" if self.residual_kernel_removed else "red",
+            border_style="green" if self.selection_kernel_removed else "red",
         )
 
 
@@ -4141,6 +4167,34 @@ def _orthogonal_complement_basis(
     return vh.conj().T[:, rank:].astype(np.complex128, copy=False)
 
 
+def _bad_common_kernel_basis_for_jumps(
+    *,
+    jumps: tuple[sp.csr_array, ...],
+    target_basis: npt.NDArray[np.complex128],
+    dim: int,
+    tolerance: float,
+) -> npt.NDArray[np.complex128]:
+    """Return the complement common kernel for a concrete jump list."""
+    from qlinks.open_system.diagnostics import (
+        _common_kernel_basis_from_sparse_operators,
+        _kernel_basis_orthogonal_to_manifold,
+    )
+
+    if len(jumps) == 0:
+        common_kernel_basis = np.eye(int(dim), dtype=np.complex128)
+    else:
+        common_kernel_basis = _common_kernel_basis_from_sparse_operators(
+            operators=jumps,
+            dim=int(dim),
+            tolerance=float(tolerance),
+        )
+    return _kernel_basis_orthogonal_to_manifold(
+        basis=common_kernel_basis,
+        manifold_basis=target_basis,
+        tolerance=float(tolerance),
+    )
+
+
 def _right_kernel_basis(
     matrix: npt.NDArray[np.complex128],
     *,
@@ -4172,6 +4226,10 @@ def select_targeted_residual_kernel_jumps(
     base_jumps: tuple[Any, ...] | list[Any] = (),
     max_selected_jumps: int = 16,
     target_residual_kernel_dimension: int = 0,
+    selection_target: Literal[
+        "reported_residual_kernel",
+        "combined_common_kernel",
+    ] = "reported_residual_kernel",
     allow_non_improving: bool = False,
     kernel_tolerance: float = 1.0e-10,
     dark_tolerance: float = 1.0e-10,
@@ -4184,12 +4242,18 @@ def select_targeted_residual_kernel_jumps(
     """Greedily select targeted local jumps removing a residual bad kernel.
 
     The input report is produced by
-    :func:`diagnose_targeted_residual_kernel_linear_search`.  This selector
-    works only on the residual basis stored in that report: at each step it
-    chooses the candidate jump that gives the smallest remaining kernel inside
-    the current residual subspace.  Optional ``base_jumps`` are carried through
-    to the final dark-manifold diagnostic, which is useful when the residual
-    basis was defined as the bad kernel left by a recycled-detector family.
+    :func:`diagnose_targeted_residual_kernel_linear_search`.
+
+    With ``selection_target="reported_residual_kernel"`` this preserves the
+    original behavior: each step minimizes the remaining kernel inside the
+    residual basis stored in ``targeted_report``.  With
+    ``selection_target="combined_common_kernel"`` the selector instead starts
+    from the complement common jump-kernel of the supplied ``base_jumps`` and
+    greedily minimizes the combined bad kernel of ``base_jumps`` plus the
+    targeted candidates.  The latter is the right mode after a compressed
+    recycled-detector subset leaves a small complement kernel that is not
+    identical to the full-family residual basis used to create the targeted
+    report.
     """
     from qlinks.open_system.diagnostics import diagnose_dark_manifold
 
@@ -4201,31 +4265,63 @@ def select_targeted_residual_kernel_jumps(
     if residual_basis.shape[0] != dim:
         raise ValueError("targeted_report has inconsistent residual-basis dimension.")
 
+    if selection_target not in {"reported_residual_kernel", "combined_common_kernel"}:
+        raise ValueError(
+            'selection_target must be "reported_residual_kernel" or "combined_common_kernel".'
+        )
+
     base_jump_tuple = tuple(_as_csr(jump) for jump in base_jumps)
     for jump in base_jump_tuple:
         if jump.shape != (dim, dim):
             raise ValueError("base_jumps must have shape (hilbert_dimension, hilbert_dimension).")
 
-    eligible = [
-        (candidate, _as_csr(jump))
-        for candidate, jump in zip(
-            targeted_report.candidates,
-            targeted_report.candidate_jumps,
-            strict=True,
+    if selection_target == "combined_common_kernel":
+        if states is None:
+            raise ValueError(
+                "states must be supplied when selection_target='combined_common_kernel'."
+            )
+        target_basis, _ = _normalize_state_columns(states, tolerance=kernel_tolerance)
+        if target_basis.shape[0] != dim:
+            raise ValueError("states has incompatible Hilbert-space dimension.")
+        current_basis = _bad_common_kernel_basis_for_jumps(
+            jumps=base_jump_tuple,
+            target_basis=target_basis,
+            dim=dim,
+            tolerance=kernel_tolerance,
         )
-        if candidate.relative_dark_residual <= dark_tolerance
-        and candidate.residual_target_inflow_norm > inflow_tolerance
-    ]
+        eligible = [
+            (candidate, _as_csr(jump))
+            for candidate, jump in zip(
+                targeted_report.candidates,
+                targeted_report.candidate_jumps,
+                strict=True,
+            )
+            if candidate.relative_dark_residual <= dark_tolerance
+            and candidate.total_inflow_norm > inflow_tolerance
+        ]
+    else:
+        current_basis = residual_basis
+        eligible = [
+            (candidate, _as_csr(jump))
+            for candidate, jump in zip(
+                targeted_report.candidates,
+                targeted_report.candidate_jumps,
+                strict=True,
+            )
+            if candidate.relative_dark_residual <= dark_tolerance
+            and candidate.residual_target_inflow_norm > inflow_tolerance
+        ]
 
     selected_candidates: list[TargetedResidualKernelLinearCandidate] = []
     selected_jumps: list[sp.csr_array] = []
     selected_ids: set[int] = set()
     steps: list[TargetedResidualKernelJumpSelectionStep] = []
-    current_basis = residual_basis
-    current_dimension = residual_dimension
+    initial_selection_kernel_dimension = int(current_basis.shape[1])
+    current_dimension = initial_selection_kernel_dimension
+    target_selection_kernel_dimension = int(target_residual_kernel_dimension)
 
     for _step_index in range(max(int(max_selected_jumps), 0)):
-        if current_dimension <= target_residual_kernel_dimension:
+        if current_dimension <= target_selection_kernel_dimension:
             break
         best_entry = None
         for candidate, jump in eligible:
@@ -4289,6 +4385,9 @@ def select_targeted_residual_kernel_jumps(
         max_selected_jumps=max(int(max_selected_jumps), 0),
         target_residual_kernel_dimension=int(target_residual_kernel_dimension),
         targeted_report=targeted_report,
+        selection_target=selection_target,
+        initial_selection_kernel_dimension=initial_selection_kernel_dimension,
+        target_selection_kernel_dimension=target_selection_kernel_dimension,
         base_jumps=base_jump_tuple,
         jumps=tuple(selected_jumps),
         steps=tuple(steps),

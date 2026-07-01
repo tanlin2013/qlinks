@@ -634,3 +634,87 @@ def test_construction_selects_targeted_residual_kernel_jumps_and_rich_render():
     rendered = console.export_text()
     assert "Targeted residual-kernel jump-selection report" in rendered
     assert "final residual kernel" in rendered
+
+
+def test_targeted_selector_can_minimize_combined_common_kernel_beyond_reported_residual():
+    from qlinks.open_system import select_targeted_residual_kernel_jumps
+    from qlinks.open_system.manifold_detectors import (
+        TargetedResidualKernelLinearCandidate,
+        TargetedResidualKernelLinearSearchReport,
+    )
+
+    target_state = np.asarray([1.0, 0.0, 0.0], dtype=np.complex128)
+    residual_basis = np.asarray([[0.0], [1.0], [0.0]], dtype=np.complex128)
+    jump_1 = sp.csr_array(
+        ([1.0], ([0], [1])),
+        shape=(3, 3),
+        dtype=np.complex128,
+    )
+    jump_2 = sp.csr_array(
+        ([1.0], ([0], [2])),
+        shape=(3, 3),
+        dtype=np.complex128,
+    )
+
+    def candidate(index: int, residual_inflow: float) -> TargetedResidualKernelLinearCandidate:
+        return TargetedResidualKernelLinearCandidate(
+            candidate_index=index,
+            region_index=index,
+            variable_indices=(index,),
+            local_dim=3,
+            operator_source="manual",
+            dark_constraint_rank=1,
+            dark_nullity=1,
+            singular_value=residual_inflow,
+            residual_target_inflow_norm=residual_inflow,
+            dark_residual=0.0,
+            relative_dark_residual=0.0,
+            total_inflow_norm=1.0,
+            target_block_norm=0.0,
+            jump_frobenius_norm=1.0,
+            jump_nnz=1,
+            coefficients=np.asarray([1.0], dtype=np.complex128),
+            terms=(),
+        )
+
+    targeted = TargetedResidualKernelLinearSearchReport(
+        manifold_dimension=1,
+        hilbert_dimension=3,
+        residual_basis=residual_basis,
+        region_variable_indices=((1,), (2,)),
+        operator_source="manual",
+        family_report=None,
+        candidates=(candidate(0, 1.0), candidate(1, 0.0)),
+        candidate_jumps=(jump_1, jump_2),
+        tolerance=1e-10,
+        dark_tolerance=1e-10,
+        inflow_tolerance=1e-12,
+    )
+
+    reported_selection = select_targeted_residual_kernel_jumps(
+        targeted_report=targeted,
+        hamiltonian=sp.csr_array((3, 3), dtype=np.complex128),
+        states=target_state,
+        max_selected_jumps=4,
+        selection_target="reported_residual_kernel",
+    )
+    assert reported_selection.n_selected_jumps == 1
+    assert reported_selection.residual_kernel_removed is True
+    assert reported_selection.combined_bad_common_jump_kernel_dimension == 1
+
+    combined_selection = select_targeted_residual_kernel_jumps(
+        targeted_report=targeted,
+        hamiltonian=sp.csr_array((3, 3), dtype=np.complex128),
+        states=target_state,
+        max_selected_jumps=4,
+        selection_target="combined_common_kernel",
+    )
+    summary = combined_selection.to_summary_dict()
+    assert summary["selection_target"] == "combined_common_kernel"
+    assert summary["initial_selection_kernel_dimension"] == 2
+    assert summary["n_selected_jumps"] == 2
+    assert summary["final_residual_kernel_dimension"] == 0
+    assert summary["final_selection_kernel_dimension"] == 0
+    assert summary["selection_kernel_removed"] is True
+    assert summary["combined_bad_common_jump_kernel_dimension"] == 0
+    assert summary["combined_complement_common_kernel_removed"] is True
