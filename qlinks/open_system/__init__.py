@@ -66,6 +66,8 @@ from qlinks.open_system.manifold_detectors import (
     ResidualKernelLocalSupportEntry,
     ResidualKernelOperatorActionEntry,
     ResidualKernelOperatorActionReport,
+    TargetedResidualKernelJumpSelectionReport,
+    TargetedResidualKernelJumpSelectionStep,
     TargetedResidualKernelLinearCandidate,
     TargetedResidualKernelLinearSearchReport,
     TargetedResidualKernelLinearTerm,
@@ -77,6 +79,7 @@ from qlinks.open_system.manifold_detectors import (
     diagnose_targeted_residual_kernel_linear_search,
     expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
+    select_targeted_residual_kernel_jumps,
 )
 from qlinks.open_system.operators import (
     DenseLindbladOperators,
@@ -171,6 +174,8 @@ __all__ = [
     "ResidualKernelOperatorActionReport",
     "Rk4StepPolicy",
     "SparseLindbladOperators",
+    "TargetedResidualKernelJumpSelectionReport",
+    "TargetedResidualKernelJumpSelectionStep",
     "TargetedResidualKernelLinearCandidate",
     "TargetedResidualKernelLinearSearchReport",
     "TargetedResidualKernelLinearTerm",
@@ -233,6 +238,7 @@ __all__ = [
     "score_recycling_jump_for_subspace",
     "select_local_recycling_candidates",
     "select_recycled_manifold_dark_detector_jumps",
+    "select_targeted_residual_kernel_jumps",
     "solve_lindblad",
     "unvectorize_density_matrix",
     "vectorize_density_matrix",

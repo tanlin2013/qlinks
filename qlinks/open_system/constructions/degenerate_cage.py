@@ -29,6 +29,7 @@ from qlinks.open_system.manifold_detectors import (
     RecycledManifoldDarkDetectorReport,
     RecycledManifoldJumpSelectionReport,
     RecycledManifoldResidualKernelReport,
+    TargetedResidualKernelJumpSelectionReport,
     TargetedResidualKernelLinearSearchReport,
     diagnose_dressed_manifold_dark_detectors,
     diagnose_manifold_dark_operator_basis,
@@ -38,6 +39,7 @@ from qlinks.open_system.manifold_detectors import (
     diagnose_targeted_residual_kernel_linear_search,
     expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
+    select_targeted_residual_kernel_jumps,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
 from qlinks.open_system.solvers import LindbladProblem
@@ -740,6 +742,45 @@ class DegenerateCageLindbladConstruction:
             max_report_candidates=max_report_candidates,
             max_local_dim=max_local_dim,
             coefficient_tolerance=coefficient_tolerance,
+        )
+
+    def select_targeted_residual_kernel_jumps(
+        self,
+        *,
+        targeted_report: TargetedResidualKernelLinearSearchReport,
+        hamiltonian: Any | None = None,
+        base_jumps: Sequence[Any] = (),
+        max_selected_jumps: int = 16,
+        target_residual_kernel_dimension: int = 0,
+        allow_non_improving: bool = False,
+        kernel_tolerance: float = 1.0e-10,
+        dark_tolerance: float = 1.0e-10,
+        inflow_tolerance: float = 1.0e-12,
+        liouvillian_zero_tolerance: float = 1.0e-9,
+        check_manifold_diagnostics: bool = True,
+        liouvillian_spectrum_method: Literal["auto", "dense", "sparse", "none"] = "none",
+        sparse_liouvillian_eigenvalue_count: int = 32,
+    ) -> TargetedResidualKernelJumpSelectionReport:
+        """Greedily select targeted residual-kernel jumps.
+
+        If ``hamiltonian`` is supplied, the returned report also contains a
+        dark-manifold diagnostic for ``base_jumps + selected targeted jumps``.
+        """
+        return select_targeted_residual_kernel_jumps(
+            targeted_report=targeted_report,
+            hamiltonian=hamiltonian,
+            states=self.manifold_basis,
+            base_jumps=tuple(base_jumps),
+            max_selected_jumps=max_selected_jumps,
+            target_residual_kernel_dimension=target_residual_kernel_dimension,
+            allow_non_improving=allow_non_improving,
+            kernel_tolerance=kernel_tolerance,
+            dark_tolerance=dark_tolerance,
+            inflow_tolerance=inflow_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            check_manifold_diagnostics=check_manifold_diagnostics,
+            liouvillian_spectrum_method=liouvillian_spectrum_method,
+            sparse_liouvillian_eigenvalue_count=sparse_liouvillian_eigenvalue_count,
         )
 
     def select_recycled_dark_detector_jumps(

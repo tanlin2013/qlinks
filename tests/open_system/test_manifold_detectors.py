@@ -565,3 +565,72 @@ def test_construction_targeted_residual_kernel_linear_search_and_rich_render():
     rendered = console.export_text()
     assert "Targeted residual-kernel linear search" in rendered
     assert "hits residual" in rendered
+
+
+def test_select_targeted_residual_kernel_jumps_removes_reported_residual():
+    from qlinks.open_system import (
+        diagnose_targeted_residual_kernel_linear_search,
+        select_targeted_residual_kernel_jumps,
+    )
+
+    build_result = _single_qutrit_build_result()
+    residual_basis = np.asarray([0.0, 1.0, 0.0], dtype=np.complex128)
+    targeted = diagnose_targeted_residual_kernel_linear_search(
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        local_regions=((0,),),
+        residual_basis=residual_basis,
+        operator_source="matrix_units",
+    )
+    _d1, d2 = _single_qutrit_detector_pair()
+
+    selection = select_targeted_residual_kernel_jumps(
+        targeted_report=targeted,
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        base_jumps=(d2,),
+        max_selected_jumps=2,
+        liouvillian_spectrum_method="none",
+    )
+
+    summary = selection.to_summary_dict()
+    assert summary["n_base_jumps"] == 1
+    assert summary["n_selected_jumps"] == 1
+    assert summary["final_residual_kernel_dimension"] == 0
+    assert summary["residual_kernel_removed"] is True
+    assert summary["combined_bad_common_jump_kernel_dimension"] == 0
+    assert summary["combined_complement_common_kernel_removed"] is True
+    assert len(selection.all_jumps) == 2
+
+
+def test_construction_selects_targeted_residual_kernel_jumps_and_rich_render():
+    build_result = _single_qutrit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_single_qutrit_target_state(),
+        local_regions=((0,),),
+    )
+    targeted = construction.diagnose_targeted_residual_kernel_linear_search(
+        basis_configs=build_result.basis.states,
+        residual_basis=np.asarray([0.0, 1.0, 0.0], dtype=np.complex128),
+        operator_source="matrix_units",
+    )
+    _d1, d2 = _single_qutrit_detector_pair()
+
+    selection = construction.select_targeted_residual_kernel_jumps(
+        targeted_report=targeted,
+        hamiltonian=build_result.hamiltonian,
+        base_jumps=(d2,),
+        max_selected_jumps=2,
+    )
+
+    assert selection.residual_kernel_removed is True
+    assert selection.combined_bad_common_jump_kernel_dimension == 0
+
+    from rich.console import Console
+
+    console = Console(record=True, width=120)
+    console.print(selection)
+    rendered = console.export_text()
+    assert "Targeted residual-kernel jump-selection report" in rendered
+    assert "final residual kernel" in rendered

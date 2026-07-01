@@ -2952,7 +2952,9 @@ class TargetedResidualKernelLinearSearchReport:
 
     @property
     def n_regions_with_dark_nullity(self) -> int:
-        return sum(candidate.dark_nullity > 0 for candidate in self.candidates)
+        return len(
+            {candidate.region_index for candidate in self.candidates if candidate.dark_nullity > 0}
+        )
 
     @property
     def n_candidates_hitting_residual(self) -> int:
@@ -3120,6 +3122,223 @@ class TargetedResidualKernelLinearSearchReport:
             Group(overview, table),
             title=Text("Targeted residual-kernel linear search", style="bold blue"),
             border_style="green" if self.has_targeted_solution else "red",
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class TargetedResidualKernelJumpSelectionStep:
+    """One greedy step selecting a targeted residual-kernel jump."""
+
+    step_index: int
+    candidate: TargetedResidualKernelLinearCandidate
+    residual_kernel_dimension: int
+    n_selected_jumps: int
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "step_index": self.step_index,
+            "candidate": self.candidate.to_summary_dict(),
+            "residual_kernel_dimension": self.residual_kernel_dimension,
+            "n_selected_jumps": self.n_selected_jumps,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TargetedResidualKernelJumpSelectionReport:
+    """Greedy subset of targeted local jumps that removes a residual kernel."""
+
+    manifold_dimension: int
+    hilbert_dimension: int
+    residual_dimension: int
+    max_selected_jumps: int
+    target_residual_kernel_dimension: int
+    targeted_report: TargetedResidualKernelLinearSearchReport
+    base_jumps: tuple[sp.csr_array, ...]
+    jumps: tuple[sp.csr_array, ...]
+    steps: tuple[TargetedResidualKernelJumpSelectionStep, ...]
+    final_diagnostics: Any | None
+    kernel_tolerance: float
+    dark_tolerance: float
+    inflow_tolerance: float
+
+    @property
+    def n_selected_jumps(self) -> int:
+        return len(self.jumps)
+
+    @property
+    def n_base_jumps(self) -> int:
+        return len(self.base_jumps)
+
+    @property
+    def n_combined_jumps(self) -> int:
+        return self.n_base_jumps + self.n_selected_jumps
+
+    @property
+    def all_jumps(self) -> tuple[sp.csr_array, ...]:
+        return self.base_jumps + self.jumps
+
+    @property
+    def selected_candidates(self) -> tuple[TargetedResidualKernelLinearCandidate, ...]:
+        return tuple(step.candidate for step in self.steps)
+
+    @property
+    def selected_region_indices(self) -> tuple[int, ...]:
+        return tuple(step.candidate.region_index for step in self.steps)
+
+    @property
+    def final_residual_kernel_dimension(self) -> int:
+        if len(self.steps) == 0:
+            return self.residual_dimension
+        return int(self.steps[-1].residual_kernel_dimension)
+
+    @property
+    def residual_kernel_removed(self) -> bool:
+        return self.final_residual_kernel_dimension <= self.target_residual_kernel_dimension
+
+    @property
+    def total_selected_jump_nnz(self) -> int:
+        return int(sum(jump.nnz for jump in self.jumps))
+
+    @property
+    def total_combined_jump_nnz(self) -> int:
+        return int(sum(jump.nnz for jump in self.all_jumps))
+
+    @property
+    def max_selected_jump_nnz(self) -> int:
+        return int(max((jump.nnz for jump in self.jumps), default=0))
+
+    @property
+    def combined_bad_common_jump_kernel_dimension(self) -> int | None:
+        if self.final_diagnostics is None:
+            return None
+        return int(self.final_diagnostics.bad_common_jump_kernel_dimension)
+
+    @property
+    def combined_inflow_norm(self) -> float | None:
+        if self.final_diagnostics is None:
+            return None
+        return float(self.final_diagnostics.inflow_norm)
+
+    @property
+    def combined_complement_common_kernel_removed(self) -> bool | None:
+        value = self.combined_bad_common_jump_kernel_dimension
+        if value is None:
+            return None
+        return value == 0
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "manifold_dimension": self.manifold_dimension,
+            "hilbert_dimension": self.hilbert_dimension,
+            "residual_dimension": self.residual_dimension,
+            "target_residual_kernel_dimension": self.target_residual_kernel_dimension,
+            "max_selected_jumps": self.max_selected_jumps,
+            "n_base_jumps": self.n_base_jumps,
+            "n_selected_jumps": self.n_selected_jumps,
+            "n_combined_jumps": self.n_combined_jumps,
+            "selected_region_indices": self.selected_region_indices,
+            "total_selected_jump_nnz": self.total_selected_jump_nnz,
+            "total_combined_jump_nnz": self.total_combined_jump_nnz,
+            "max_selected_jump_nnz": self.max_selected_jump_nnz,
+            "final_residual_kernel_dimension": self.final_residual_kernel_dimension,
+            "residual_kernel_removed": self.residual_kernel_removed,
+            "combined_bad_common_jump_kernel_dimension": (
+                self.combined_bad_common_jump_kernel_dimension
+            ),
+            "combined_inflow_norm": self.combined_inflow_norm,
+            "combined_complement_common_kernel_removed": (
+                self.combined_complement_common_kernel_removed
+            ),
+            "kernel_tolerance": self.kernel_tolerance,
+            "dark_tolerance": self.dark_tolerance,
+            "inflow_tolerance": self.inflow_tolerance,
+            "steps": tuple(step.to_summary_dict() for step in self.steps),
+            "final_diagnostics": (
+                None if self.final_diagnostics is None else self.final_diagnostics.to_summary_dict()
+            ),
+        }
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self, *, max_steps: int = 24):
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "TargetedResidualKernelJumpSelectionReport.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        overview.add_row("Hilbert dimension", str(self.hilbert_dimension))
+        overview.add_row("manifold dimension", str(self.manifold_dimension))
+        overview.add_row("residual dimension", str(self.residual_dimension))
+        overview.add_row("base jumps", str(self.n_base_jumps))
+        overview.add_row("selected targeted jumps", str(self.n_selected_jumps))
+        overview.add_row("combined jumps", str(self.n_combined_jumps))
+        overview.add_row("final residual kernel", str(self.final_residual_kernel_dimension))
+        overview.add_row("residual kernel removed", str(self.residual_kernel_removed))
+        overview.add_row(
+            "combined bad kernel",
+            (
+                "not checked"
+                if self.combined_bad_common_jump_kernel_dimension is None
+                else str(self.combined_bad_common_jump_kernel_dimension)
+            ),
+        )
+        overview.add_row(
+            "combined inflow",
+            (
+                "not checked"
+                if self.combined_inflow_norm is None
+                else f"{self.combined_inflow_norm:.3e}"
+            ),
+        )
+
+        table = Table(title="Greedy selected targeted residual-kernel jumps")
+        table.add_column("step", justify="right")
+        table.add_column("region")
+        table.add_column("residual kernel", justify="right")
+        table.add_column("resid inflow", justify="right")
+        table.add_column("total inflow", justify="right")
+        table.add_column("jump nnz", justify="right")
+        table.add_column("terms", justify="right")
+        for step in self.steps[: max(int(max_steps), 0)]:
+            candidate = step.candidate
+            table.add_row(
+                str(step.step_index),
+                str(candidate.variable_indices),
+                str(step.residual_kernel_dimension),
+                f"{candidate.residual_target_inflow_norm:.3e}",
+                f"{candidate.total_inflow_norm:.3e}",
+                str(candidate.jump_nnz),
+                str(candidate.n_terms),
+                style=(
+                    "green"
+                    if step.residual_kernel_dimension <= self.target_residual_kernel_dimension
+                    else ""
+                ),
+            )
+        if len(self.steps) > max_steps:
+            table.add_row(
+                "…",
+                "",
+                "",
+                "",
+                "",
+                "",
+                f"{len(self.steps) - max_steps} more steps",
+            )
+        return Panel(
+            Group(overview, table),
+            title=Text("Targeted residual-kernel jump-selection report", style="bold blue"),
+            border_style="green" if self.residual_kernel_removed else "red",
         )
 
 
@@ -3943,6 +4162,141 @@ def _right_kernel_basis(
     if rank >= n_columns:
         return np.zeros((n_columns, 0), dtype=np.complex128)
     return vh.conj().T[:, rank:].astype(np.complex128, copy=False)
+
+
+def select_targeted_residual_kernel_jumps(
+    *,
+    targeted_report: TargetedResidualKernelLinearSearchReport,
+    hamiltonian: Any | None = None,
+    states: npt.ArrayLike | None = None,
+    base_jumps: tuple[Any, ...] | list[Any] = (),
+    max_selected_jumps: int = 16,
+    target_residual_kernel_dimension: int = 0,
+    allow_non_improving: bool = False,
+    kernel_tolerance: float = 1.0e-10,
+    dark_tolerance: float = 1.0e-10,
+    inflow_tolerance: float = 1.0e-12,
+    liouvillian_zero_tolerance: float = 1.0e-9,
+    check_manifold_diagnostics: bool = True,
+    liouvillian_spectrum_method: Literal["auto", "dense", "sparse", "none"] = "none",
+    sparse_liouvillian_eigenvalue_count: int = 32,
+) -> TargetedResidualKernelJumpSelectionReport:
+    """Greedily select targeted local jumps removing a residual bad kernel.
+
+    The input report is produced by
+    :func:`diagnose_targeted_residual_kernel_linear_search`.  This selector
+    works only on the residual basis stored in that report: at each step it
+    chooses the candidate jump that gives the smallest remaining kernel inside
+    the current residual subspace.  Optional ``base_jumps`` are carried through
+    to the final dark-manifold diagnostic, which is useful when the residual
+    basis was defined as the bad kernel left by a recycled-detector family.
+    """
+    from qlinks.open_system.diagnostics import diagnose_dark_manifold
+
+    residual_basis = np.asarray(targeted_report.residual_basis, dtype=np.complex128)
+    if residual_basis.ndim != 2:
+        raise ValueError("targeted_report.residual_basis must be two-dimensional.")
+    residual_dimension = int(residual_basis.shape[1])
+    dim = int(targeted_report.hilbert_dimension)
+    if residual_basis.shape[0] != dim:
+        raise ValueError("targeted_report has inconsistent residual-basis dimension.")
+
+    base_jump_tuple = tuple(_as_csr(jump) for jump in base_jumps)
+    for jump in base_jump_tuple:
+        if jump.shape != (dim, dim):
+            raise ValueError("base_jumps must have shape (hilbert_dimension, hilbert_dimension).")
+
+    eligible = [
+        (candidate, _as_csr(jump))
+        for candidate, jump in zip(
+            targeted_report.candidates,
+            targeted_report.candidate_jumps,
+            strict=True,
+        )
+        if candidate.relative_dark_residual <= dark_tolerance
+        and candidate.residual_target_inflow_norm > inflow_tolerance
+    ]
+
+    selected_candidates: list[TargetedResidualKernelLinearCandidate] = []
+    selected_jumps: list[sp.csr_array] = []
+    selected_ids: set[int] = set()
+    steps: list[TargetedResidualKernelJumpSelectionStep] = []
+    current_basis = residual_basis
+    current_dimension = residual_dimension
+
+    for _step_index in range(max(int(max_selected_jumps), 0)):
+        if current_dimension <= target_residual_kernel_dimension:
+            break
+        best_entry = None
+        for candidate, jump in eligible:
+            candidate_id = id(candidate)
+            if candidate_id in selected_ids:
+                continue
+            image = np.asarray(jump @ current_basis, dtype=np.complex128)
+            kernel_basis = _right_kernel_basis(image, tolerance=kernel_tolerance)
+            next_dimension = int(kernel_basis.shape[1])
+            score = (
+                next_dimension,
+                -candidate.residual_target_inflow_norm,
+                -candidate.total_inflow_norm,
+                candidate.jump_nnz,
+                candidate.n_terms,
+                candidate.region_index,
+                candidate.candidate_index,
+            )
+            if best_entry is None or score < best_entry[0]:
+                best_entry = (score, candidate, jump, kernel_basis)
+
+        if best_entry is None:
+            break
+
+        _score, candidate, jump, kernel_basis = best_entry
+        next_dimension = int(kernel_basis.shape[1])
+        if not allow_non_improving and next_dimension >= current_dimension:
+            break
+
+        selected_candidates.append(candidate)
+        selected_jumps.append(jump)
+        selected_ids.add(id(candidate))
+        current_basis = current_basis @ kernel_basis
+        current_dimension = next_dimension
+        steps.append(
+            TargetedResidualKernelJumpSelectionStep(
+                step_index=len(steps),
+                candidate=candidate,
+                residual_kernel_dimension=current_dimension,
+                n_selected_jumps=len(selected_jumps),
+            )
+        )
+
+    final_diagnostics = None
+    if check_manifold_diagnostics and hamiltonian is not None and states is not None:
+        final_diagnostics = diagnose_dark_manifold(
+            hamiltonian=hamiltonian,
+            jumps=base_jump_tuple + tuple(selected_jumps),
+            target_states=states,
+            kernel_tolerance=kernel_tolerance,
+            liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+            check_liouvillian_spectrum=liouvillian_spectrum_method != "none",
+            liouvillian_spectrum_method=liouvillian_spectrum_method,
+            sparse_liouvillian_eigenvalue_count=sparse_liouvillian_eigenvalue_count,
+        )
+
+    return TargetedResidualKernelJumpSelectionReport(
+        manifold_dimension=targeted_report.manifold_dimension,
+        hilbert_dimension=targeted_report.hilbert_dimension,
+        residual_dimension=residual_dimension,
+        max_selected_jumps=max(int(max_selected_jumps), 0),
+        target_residual_kernel_dimension=int(target_residual_kernel_dimension),
+        targeted_report=targeted_report,
+        base_jumps=base_jump_tuple,
+        jumps=tuple(selected_jumps),
+        steps=tuple(steps),
+        final_diagnostics=final_diagnostics,
+        kernel_tolerance=float(kernel_tolerance),
+        dark_tolerance=float(dark_tolerance),
+        inflow_tolerance=float(inflow_tolerance),
+    )
 
 
 def select_recycled_manifold_dark_detector_jumps(
