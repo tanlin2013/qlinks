@@ -3141,11 +3141,29 @@ class TargetedResidualKernelLinearSearchReport:
 
     @property
     def reported_candidate_residual_kernel_dimension(self) -> int:
+        """Residual-family kernel dimension after all reported targeted candidates.
+
+        This is the dimension of the residual bad kernel supplied to this
+        targeted search after applying the reported candidate jumps. In the
+        end-to-end workflow this is the residual left by the full recycled
+        detector family, not necessarily the bad common kernel left by a
+        compact selected recycled subset.
+        """
         return self.residual_kernel_dimension_after_candidate_prefix(None)
+
+    @property
+    def reported_candidate_family_residual_kernel_dimension(self) -> int:
+        """Alias with explicit workflow terminology."""
+        return self.reported_candidate_residual_kernel_dimension
 
     @property
     def reported_candidates_remove_residual_kernel(self) -> bool:
         return self.reported_candidate_residual_kernel_dimension == 0
+
+    @property
+    def reported_candidates_remove_family_residual_kernel(self) -> bool:
+        """Whether reported candidates remove the full-family residual kernel."""
+        return self.reported_candidates_remove_residual_kernel
 
     def to_summary_dict(self) -> dict[str, object]:
         return {
@@ -3175,8 +3193,14 @@ class TargetedResidualKernelLinearSearchReport:
             "reported_candidate_residual_kernel_dimension": (
                 self.reported_candidate_residual_kernel_dimension
             ),
+            "reported_candidate_family_residual_kernel_dimension": (
+                self.reported_candidate_family_residual_kernel_dimension
+            ),
             "reported_candidates_remove_residual_kernel": (
                 self.reported_candidates_remove_residual_kernel
+            ),
+            "reported_candidates_remove_family_residual_kernel": (
+                self.reported_candidates_remove_family_residual_kernel
             ),
             "best_residual_target_inflow_norm": self.best_residual_target_inflow_norm,
             "best_total_inflow_norm": self.best_total_inflow_norm,
@@ -3218,8 +3242,8 @@ class TargetedResidualKernelLinearSearchReport:
         overview.add_row("candidates", str(self.n_candidates))
         overview.add_row("hits residual", str(self.n_candidates_hitting_residual))
         overview.add_row(
-            "reported residual kernel",
-            str(self.reported_candidate_residual_kernel_dimension),
+            "reported family residual kernel",
+            str(self.reported_candidate_family_residual_kernel_dimension),
         )
         overview.add_row("best residual inflow", f"{self.best_residual_target_inflow_norm:.3e}")
         overview.add_row("best total inflow", f"{self.best_total_inflow_norm:.3e}")

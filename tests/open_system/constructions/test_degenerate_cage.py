@@ -226,6 +226,9 @@ def test_degenerate_jump_design_workflow_reuses_existing_stages():
     assert summary["combined_bad_common_jump_kernel_dimension"] == 0
     assert summary["combined_complement_common_kernel_removed"] is True
     assert summary["likely_successful_common_kernel_design"] is True
+    assert "targeted_reported_candidates_remove_family_residual" in summary
+    assert "targeted_selected_candidates_remove_family_residual" in summary
+    assert "targeted_selection_removes_combined_kernel" in summary
     assert len(workflow.jumps) == workflow.n_jumps
     problem = workflow.to_lindblad_problem(hamiltonian=build_result.hamiltonian)
     assert problem.jumps == workflow.jumps

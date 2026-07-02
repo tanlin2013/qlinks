@@ -399,8 +399,22 @@ class DegenerateCageJumpDesignWorkflowReport:
             "targeted_candidates_hitting_residual": (
                 self.targeted_report.n_candidates_hitting_residual
             ),
+            "targeted_reported_family_residual_kernel_dimension": (
+                self.targeted_report.reported_candidate_family_residual_kernel_dimension
+            ),
+            "targeted_reported_candidates_remove_family_residual": (
+                self.targeted_report.reported_candidates_remove_family_residual_kernel
+            ),
+            # Backward-compatible alias. Prefer the explicit
+            # ``targeted_reported_candidates_remove_family_residual`` key in new code.
             "targeted_reported_candidates_remove_residual": (
                 self.targeted_report.reported_candidates_remove_residual_kernel
+            ),
+            "targeted_selected_family_residual_kernel_dimension": (
+                self.targeted_selection.final_residual_kernel_dimension
+            ),
+            "targeted_selected_candidates_remove_family_residual": (
+                self.targeted_selection.residual_kernel_removed
             ),
             "targeted_selection_target": self.targeted_selection.selection_target,
             "targeted_initial_selection_kernel_dimension": (
@@ -410,6 +424,11 @@ class DegenerateCageJumpDesignWorkflowReport:
                 self.targeted_selection.final_selection_kernel_dimension
             ),
             "targeted_selection_kernel_removed": (self.targeted_selection.selection_kernel_removed),
+            "targeted_selection_removes_combined_kernel": (
+                self.targeted_selection.selection_kernel_removed
+                if self.targeted_selection.selection_target == "combined_common_kernel"
+                else None
+            ),
             "combined_bad_common_jump_kernel_dimension": (
                 self.targeted_selection.combined_bad_common_jump_kernel_dimension
             ),
@@ -504,13 +523,17 @@ class DegenerateCageJumpDesignWorkflowReport:
             "targeted search",
             (
                 f"candidates={self.targeted_report.n_candidates}, "
-                f"hits={self.targeted_report.n_candidates_hitting_residual}"
+                f"hits family residual={self.targeted_report.n_candidates_hitting_residual}, "
+                f"family residual dim="
+                f"{self.targeted_report.reported_candidate_family_residual_kernel_dimension}"
             ),
         )
         stages.add_row(
             "targeted selection",
             (
                 f"selected={self.targeted_selection.n_selected_jumps}, "
+                f"target={self.targeted_selection.selection_target}, "
+                f"selection dim={self.targeted_selection.final_selection_kernel_dimension}, "
                 f"combined bad={self.targeted_selection.combined_bad_common_jump_kernel_dimension}"
             ),
         )
@@ -526,7 +549,14 @@ class DegenerateCageJumpDesignWorkflowReport:
         return Panel(
             Group(overview, stages),
             title=Text("Degenerate cage jump-design workflow", style="bold cyan"),
-            border_style=("green" if self.likely_successful_common_kernel_design else "yellow"),
+            border_style=(
+                "green"
+                if (
+                    self.likely_successful_common_kernel_design
+                    or self.likely_successful_h_invariant_design is True
+                )
+                else "yellow"
+            ),
         )
 
 
