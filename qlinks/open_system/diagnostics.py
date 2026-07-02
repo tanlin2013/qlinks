@@ -1503,6 +1503,277 @@ class DarkManifoldDiagnostics:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class CommonKernelHamiltonianInvariantSectorReport:
+    """Cheap obstruction diagnostic inside the common jump kernel.
+
+    The common jump-kernel condition ``cap_mu ker J_mu = M`` is sufficient but
+    stronger than necessary.  A complement vector in the common kernel is only a
+    Hamiltonian-stable dark obstruction if its whole Krylov orbit under ``H``
+    remains inside the common jump kernel.  This report computes the largest
+    such subspace inside ``(cap_mu ker J_mu) cap M^perp`` using a small dense
+    nullspace problem.
+    """
+
+    dim: int
+    n_jumps: int
+    manifold_dimension: int
+    common_jump_kernel_dimension: int
+    bad_common_jump_kernel_dimension: int
+    bad_h_invariant_kernel_dimension: int
+    h_leakage_norm_from_bad_kernel: float
+    h_leakage_norm_from_invariant_kernel: float
+    h_target_coupling_norm_from_bad_kernel: float
+    h_bad_block_norm: float
+    h_invariant_block_eigenvalues: tuple[complex, ...]
+    bad_h_invariant_kernel_iprs: tuple[float, ...]
+    target_in_common_jump_kernel: bool
+    kernel_tolerance: float
+
+    @property
+    def has_bad_common_kernel(self) -> bool:
+        return self.bad_common_jump_kernel_dimension > 0
+
+    @property
+    def has_bad_h_invariant_kernel(self) -> bool:
+        return self.bad_h_invariant_kernel_dimension > 0
+
+    @property
+    def likely_attractive_by_h_invariant_kernel(self) -> bool:
+        return self.target_in_common_jump_kernel and not self.has_bad_h_invariant_kernel
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "dim": self.dim,
+            "n_jumps": self.n_jumps,
+            "manifold_dimension": self.manifold_dimension,
+            "common_jump_kernel_dimension": self.common_jump_kernel_dimension,
+            "bad_common_jump_kernel_dimension": self.bad_common_jump_kernel_dimension,
+            "bad_h_invariant_kernel_dimension": self.bad_h_invariant_kernel_dimension,
+            "h_leakage_norm_from_bad_kernel": self.h_leakage_norm_from_bad_kernel,
+            "h_leakage_norm_from_invariant_kernel": (self.h_leakage_norm_from_invariant_kernel),
+            "h_target_coupling_norm_from_bad_kernel": (self.h_target_coupling_norm_from_bad_kernel),
+            "h_bad_block_norm": self.h_bad_block_norm,
+            "h_invariant_block_eigenvalues": tuple(
+                complex(value) for value in self.h_invariant_block_eigenvalues
+            ),
+            "bad_h_invariant_kernel_iprs": self.bad_h_invariant_kernel_iprs,
+            "target_in_common_jump_kernel": self.target_in_common_jump_kernel,
+            "kernel_tolerance": self.kernel_tolerance,
+            "has_bad_common_kernel": self.has_bad_common_kernel,
+            "has_bad_h_invariant_kernel": self.has_bad_h_invariant_kernel,
+            "likely_attractive_by_h_invariant_kernel": (
+                self.likely_attractive_by_h_invariant_kernel
+            ),
+        }
+
+    def __rich__(self):
+        return self.to_rich()
+
+    def to_rich(self):
+        try:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+        except ImportError as exc:
+            raise ImportError(
+                "CommonKernelHamiltonianInvariantSectorReport.to_rich() requires rich. "
+                "Install it with `pip install rich`."
+            ) from exc
+
+        overview = Table.grid(padding=(0, 2))
+        overview.add_column(style="bold")
+        overview.add_column()
+        overview.add_row("Hilbert dimension", str(self.dim))
+        overview.add_row("number of jumps", str(self.n_jumps))
+        overview.add_row("manifold dimension", str(self.manifold_dimension))
+        overview.add_row("common kernel dimension", str(self.common_jump_kernel_dimension))
+        overview.add_row("bad common kernel dimension", str(self.bad_common_jump_kernel_dimension))
+        overview.add_row(
+            "bad H-invariant kernel dimension",
+            str(self.bad_h_invariant_kernel_dimension),
+        )
+        overview.add_row(
+            "likely attractive by H-invariant kernel",
+            str(self.likely_attractive_by_h_invariant_kernel),
+        )
+
+        leakage = Table(title="Hamiltonian leakage")
+        leakage.add_column("quantity", style="bold")
+        leakage.add_column("value", justify="right")
+        leakage.add_row(
+            "||(I-P_K) H B_bad||",
+            _format_float(self.h_leakage_norm_from_bad_kernel),
+        )
+        leakage.add_row(
+            "||(I-P_K) H B_inv||",
+            _format_float(self.h_leakage_norm_from_invariant_kernel),
+        )
+        leakage.add_row(
+            "||P_M H B_bad||",
+            _format_float(self.h_target_coupling_norm_from_bad_kernel),
+        )
+        leakage.add_row("||B_bad† H B_bad||", _format_float(self.h_bad_block_norm))
+        leakage.add_row(
+            "bad invariant IPRs",
+            _format_float_tuple(self.bad_h_invariant_kernel_iprs),
+        )
+
+        return Panel(
+            Group(overview, leakage),
+            title=Text("Common-kernel H-invariant sector", style="bold cyan"),
+            border_style=("green" if self.likely_attractive_by_h_invariant_kernel else "yellow"),
+        )
+
+
+def diagnose_common_kernel_h_invariant_sector(
+    *,
+    hamiltonian: Any,
+    jumps: list[Any] | tuple[Any, ...],
+    target_states: npt.ArrayLike,
+    kernel_tolerance: float = 1.0e-10,
+) -> CommonKernelHamiltonianInvariantSectorReport:
+    """Diagnose Hamiltonian-stable obstructions inside the common jump kernel.
+
+    This is a cheap alternative to a Liouvillian spectrum check.  It first
+    computes the common jump kernel ``K = cap_mu ker J_mu`` and the bad
+    complement ``B = K cap M^perp``.  It then computes the largest subspace of
+    ``B`` whose Hamiltonian Krylov orbit stays inside ``K``.  Only this
+    H-invariant part is a purely dark Hamiltonian-stable complement sector.
+    """
+    hamiltonian_sparse = _as_scipy_csr_matrix(hamiltonian)
+    dim = int(hamiltonian_sparse.shape[0])
+    if hamiltonian_sparse.shape != (dim, dim):
+        raise ValueError("hamiltonian must be a square matrix.")
+
+    manifold_basis = _orthonormal_target_state_matrix(
+        target_states,
+        dim=dim,
+        tolerance=kernel_tolerance,
+    )
+    manifold_dimension = int(manifold_basis.shape[1])
+
+    jumps_sparse = tuple(_as_scipy_csr_matrix(jump) for jump in jumps)
+    for jump in jumps_sparse:
+        if jump.shape != (dim, dim):
+            raise ValueError("Every jump operator must have shape (dim, dim).")
+
+    common_kernel_basis = _common_kernel_basis_from_sparse_operators(
+        operators=jumps_sparse,
+        dim=dim,
+        tolerance=kernel_tolerance,
+    )
+    common_jump_kernel_dimension = int(common_kernel_basis.shape[1])
+
+    target_projection_onto_common_kernel, target_distance_from_common_kernel = (
+        _subspace_projection_and_distance(
+            subspace_basis=manifold_basis,
+            containing_basis=common_kernel_basis,
+        )
+    )
+    max_target_jump_residual = max(
+        (float(np.linalg.norm(jump @ manifold_basis)) for jump in jumps_sparse),
+        default=0.0,
+    )
+    target_in_common_jump_kernel = (
+        target_distance_from_common_kernel <= np.sqrt(kernel_tolerance)
+        or max_target_jump_residual <= kernel_tolerance
+    )
+
+    bad_basis = _kernel_basis_orthogonal_to_manifold(
+        basis=common_kernel_basis,
+        manifold_basis=manifold_basis,
+        tolerance=kernel_tolerance,
+    )
+    bad_dimension = int(bad_basis.shape[1])
+
+    if bad_dimension == 0:
+        return CommonKernelHamiltonianInvariantSectorReport(
+            dim=dim,
+            n_jumps=len(jumps_sparse),
+            manifold_dimension=manifold_dimension,
+            common_jump_kernel_dimension=common_jump_kernel_dimension,
+            bad_common_jump_kernel_dimension=0,
+            bad_h_invariant_kernel_dimension=0,
+            h_leakage_norm_from_bad_kernel=0.0,
+            h_leakage_norm_from_invariant_kernel=0.0,
+            h_target_coupling_norm_from_bad_kernel=0.0,
+            h_bad_block_norm=0.0,
+            h_invariant_block_eigenvalues=(),
+            bad_h_invariant_kernel_iprs=(),
+            target_in_common_jump_kernel=bool(target_in_common_jump_kernel),
+            kernel_tolerance=float(kernel_tolerance),
+        )
+
+    h_bad = np.asarray(hamiltonian_sparse @ bad_basis, dtype=np.complex128)
+    if common_jump_kernel_dimension == 0:
+        projected_to_common = np.zeros_like(h_bad)
+    else:
+        projected_to_common = common_kernel_basis @ (common_kernel_basis.conj().T @ h_bad)
+    leakage = h_bad - projected_to_common
+    h_leakage_norm_from_bad_kernel = float(np.linalg.norm(leakage))
+    h_target_coupling_norm_from_bad_kernel = float(np.linalg.norm(manifold_basis.conj().T @ h_bad))
+
+    bad_block = bad_basis.conj().T @ h_bad
+    bad_block = 0.5 * (bad_block + bad_block.conj().T)
+    h_bad_block_norm = float(np.linalg.norm(bad_block))
+
+    # Find vectors c in bad coordinates such that all H-Krylov iterates stay in
+    # the common jump kernel: L A^n c = 0 for n=0,...,bad_dimension-1, where
+    # L=(I-P_K)HB and A=B†HB.
+    constraints: list[np.ndarray] = []
+    power = np.eye(bad_dimension, dtype=np.complex128)
+    for _power_index in range(bad_dimension):
+        constraints.append(leakage @ power)
+        power = bad_block @ power
+    krylov_constraint = np.vstack(constraints)
+    invariant_coefficients = _nullspace_basis(
+        krylov_constraint,
+        tolerance=kernel_tolerance,
+    )
+
+    invariant_basis = bad_basis @ invariant_coefficients
+    invariant_basis = _orthonormal_column_basis(invariant_basis, tolerance=kernel_tolerance)
+    invariant_dimension = int(invariant_basis.shape[1])
+
+    if invariant_dimension == 0:
+        h_leakage_norm_from_invariant_kernel = 0.0
+        h_invariant_block_eigenvalues: tuple[complex, ...] = ()
+        bad_h_invariant_kernel_iprs: tuple[float, ...] = ()
+    else:
+        h_invariant = np.asarray(hamiltonian_sparse @ invariant_basis, dtype=np.complex128)
+        projected_h_invariant = common_kernel_basis @ (common_kernel_basis.conj().T @ h_invariant)
+        h_leakage_norm_from_invariant_kernel = float(
+            np.linalg.norm(h_invariant - projected_h_invariant)
+        )
+        invariant_block = invariant_basis.conj().T @ h_invariant
+        invariant_block = 0.5 * (invariant_block + invariant_block.conj().T)
+        h_invariant_block_eigenvalues = tuple(
+            complex(value) for value in np.linalg.eigvalsh(invariant_block)
+        )
+        bad_h_invariant_kernel_iprs = tuple(
+            _state_ipr(invariant_basis[:, index]) for index in range(invariant_dimension)
+        )
+
+    return CommonKernelHamiltonianInvariantSectorReport(
+        dim=dim,
+        n_jumps=len(jumps_sparse),
+        manifold_dimension=manifold_dimension,
+        common_jump_kernel_dimension=common_jump_kernel_dimension,
+        bad_common_jump_kernel_dimension=bad_dimension,
+        bad_h_invariant_kernel_dimension=invariant_dimension,
+        h_leakage_norm_from_bad_kernel=h_leakage_norm_from_bad_kernel,
+        h_leakage_norm_from_invariant_kernel=h_leakage_norm_from_invariant_kernel,
+        h_target_coupling_norm_from_bad_kernel=h_target_coupling_norm_from_bad_kernel,
+        h_bad_block_norm=h_bad_block_norm,
+        h_invariant_block_eigenvalues=h_invariant_block_eigenvalues,
+        bad_h_invariant_kernel_iprs=bad_h_invariant_kernel_iprs,
+        target_in_common_jump_kernel=bool(target_in_common_jump_kernel),
+        kernel_tolerance=float(kernel_tolerance),
+    )
+
+
 def diagnose_dark_manifold(
     *,
     hamiltonian: Any,

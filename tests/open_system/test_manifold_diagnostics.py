@@ -170,3 +170,48 @@ def test_dark_manifold_bad_kernel_uses_subspace_not_columnwise_projection():
 
     assert diagnostics.common_jump_kernel_dimension == 2
     assert diagnostics.bad_common_jump_kernel_dimension == 0
+
+
+def test_common_kernel_h_invariant_sector_ignores_h_leaking_bad_vector():
+    from qlinks.open_system import diagnose_common_kernel_h_invariant_sector
+
+    hamiltonian = np.zeros((3, 3), dtype=np.complex128)
+    hamiltonian[1, 2] = 1.0
+    hamiltonian[2, 1] = 1.0
+    target = _basis_vector(3, 0)
+    jump = np.outer(_basis_vector(3, 0), _basis_vector(3, 1).conj())
+
+    report = diagnose_common_kernel_h_invariant_sector(
+        hamiltonian=hamiltonian,
+        jumps=(jump,),
+        target_states=target,
+        kernel_tolerance=1.0e-10,
+    )
+
+    assert report.common_jump_kernel_dimension == 2
+    assert report.bad_common_jump_kernel_dimension == 1
+    assert report.h_leakage_norm_from_bad_kernel > 0.9
+    assert report.bad_h_invariant_kernel_dimension == 0
+    assert report.likely_attractive_by_h_invariant_kernel is True
+
+
+def test_common_kernel_h_invariant_sector_flags_h_closed_bad_vector():
+    from qlinks.open_system import diagnose_common_kernel_h_invariant_sector
+
+    hamiltonian = np.zeros((3, 3), dtype=np.complex128)
+    target = _basis_vector(3, 0)
+    jump = np.outer(_basis_vector(3, 0), _basis_vector(3, 1).conj())
+
+    report = diagnose_common_kernel_h_invariant_sector(
+        hamiltonian=hamiltonian,
+        jumps=(jump,),
+        target_states=target,
+        kernel_tolerance=1.0e-10,
+    )
+
+    assert report.common_jump_kernel_dimension == 2
+    assert report.bad_common_jump_kernel_dimension == 1
+    assert report.h_leakage_norm_from_bad_kernel < 1.0e-12
+    assert report.bad_h_invariant_kernel_dimension == 1
+    assert report.likely_attractive_by_h_invariant_kernel is False
+    assert report.to_summary_dict()["has_bad_h_invariant_kernel"] is True

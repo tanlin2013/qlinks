@@ -14,7 +14,12 @@ from qlinks.models.base import ModelBuildResult
 from qlinks.models.local_terms import LocalTermKind
 from qlinks.open_system.backend import OpenSystemBackendName
 from qlinks.open_system.constructions.cage import _local_terms_by_operator_kind
-from qlinks.open_system.diagnostics import DarkManifoldDiagnostics, diagnose_dark_manifold
+from qlinks.open_system.diagnostics import (
+    CommonKernelHamiltonianInvariantSectorReport,
+    DarkManifoldDiagnostics,
+    diagnose_common_kernel_h_invariant_sector,
+    diagnose_dark_manifold,
+)
 from qlinks.open_system.local_recycling import (
     LocalRecyclingBuildResult,
     LocalSubspaceSupportReport,
@@ -265,6 +270,7 @@ class DegenerateCageJumpDesignWorkflowReport:
     residual_report: RecycledManifoldResidualKernelReport
     targeted_report: TargetedResidualKernelLinearSearchReport
     targeted_selection: TargetedResidualKernelJumpSelectionReport
+    h_invariant_report: CommonKernelHamiltonianInvariantSectorReport | None
     recycled_local_regions: tuple[tuple[int, ...], ...]
     targeted_local_regions: tuple[tuple[int, ...], ...]
     recycled_region_mode: str
@@ -308,6 +314,12 @@ class DegenerateCageJumpDesignWorkflowReport:
     @property
     def likely_successful_common_kernel_design(self) -> bool:
         return self.complement_common_kernel_removed is True
+
+    @property
+    def likely_successful_h_invariant_design(self) -> bool | None:
+        if self.h_invariant_report is None:
+            return None
+        return self.h_invariant_report.likely_attractive_by_h_invariant_kernel
 
     def to_lindblad_problem(
         self,
@@ -405,6 +417,22 @@ class DegenerateCageJumpDesignWorkflowReport:
                 self.targeted_selection.combined_complement_common_kernel_removed
             ),
             "combined_inflow_norm": self.targeted_selection.combined_inflow_norm,
+            "h_invariant_bad_kernel_dimension": (
+                None
+                if self.h_invariant_report is None
+                else self.h_invariant_report.bad_h_invariant_kernel_dimension
+            ),
+            "h_invariant_common_bad_kernel_dimension": (
+                None
+                if self.h_invariant_report is None
+                else self.h_invariant_report.bad_common_jump_kernel_dimension
+            ),
+            "h_invariant_leakage_norm_from_bad_kernel": (
+                None
+                if self.h_invariant_report is None
+                else self.h_invariant_report.h_leakage_norm_from_bad_kernel
+            ),
+            "likely_successful_h_invariant_design": (self.likely_successful_h_invariant_design),
             "max_target_jump_residual": (
                 None if final_diagnostics is None else final_diagnostics.max_target_jump_residual
             ),
@@ -446,6 +474,7 @@ class DegenerateCageJumpDesignWorkflowReport:
             "combined_complement_common_kernel_removed",
             "combined_inflow_norm",
             "likely_successful_common_kernel_design",
+            "likely_successful_h_invariant_design",
         ):
             overview.add_row(key.replace("_", " "), str(summary[key]))
 
@@ -485,6 +514,14 @@ class DegenerateCageJumpDesignWorkflowReport:
                 f"combined bad={self.targeted_selection.combined_bad_common_jump_kernel_dimension}"
             ),
         )
+        if self.h_invariant_report is not None:
+            stages.add_row(
+                "H-invariant kernel",
+                (
+                    f"bad={self.h_invariant_report.bad_h_invariant_kernel_dimension}, "
+                    f"success={self.h_invariant_report.likely_attractive_by_h_invariant_kernel}"
+                ),
+            )
 
         return Panel(
             Group(overview, stages),
@@ -1231,6 +1268,7 @@ class DegenerateCageLindbladConstruction:
         targeted_target_residual_kernel_dimension: int = 0,
         targeted_allow_non_improving: bool = False,
         check_final_manifold_diagnostics: bool = True,
+        check_h_invariant_sector: bool = True,
         liouvillian_spectrum_method: Literal[
             "auto",
             "dense",
@@ -1445,6 +1483,15 @@ class DegenerateCageLindbladConstruction:
             sparse_liouvillian_eigenvalue_count=sparse_liouvillian_eigenvalue_count,
         )
 
+        h_invariant_report = None
+        if check_h_invariant_sector:
+            h_invariant_report = diagnose_common_kernel_h_invariant_sector(
+                hamiltonian=hamiltonian,
+                jumps=targeted_selection.all_jumps,
+                target_states=self.manifold_basis,
+                kernel_tolerance=kernel_tolerance,
+            )
+
         return DegenerateCageJumpDesignWorkflowReport(
             dark_operator_report=dark_operator_report,
             recycled_report=recycled_report,
@@ -1453,6 +1500,7 @@ class DegenerateCageLindbladConstruction:
             residual_report=residual_report,
             targeted_report=targeted_report,
             targeted_selection=targeted_selection,
+            h_invariant_report=h_invariant_report,
             recycled_local_regions=recycled_regions,
             targeted_local_regions=targeted_regions,
             recycled_region_mode=(

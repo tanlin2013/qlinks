@@ -8,6 +8,7 @@ from qlinks.open_system.backend import (
 from qlinks.open_system.diagnostics import (
     AbsorbingProjectorJumpDiagnostics,
     AbsorbingProjectorSymmetryDiagnostics,
+    CommonKernelHamiltonianInvariantSectorReport,
     DarkManifoldDiagnostics,
     DarkSubspaceDiagnostics,
     DensityMatrixVerification,
@@ -17,6 +18,7 @@ from qlinks.open_system.diagnostics import (
     MonitorKernelClosureDiagnostics,
     analyze_lindblad_evolution,
     diagnose_absorbing_projector_symmetry,
+    diagnose_common_kernel_h_invariant_sector,
     diagnose_dark_manifold,
     diagnose_dark_subspace,
     diagnose_jump_span,
@@ -133,6 +135,7 @@ from qlinks.open_system.stochastic_schrodinger import (
 __all__ = [
     "AbsorbingProjectorJumpDiagnostics",
     "AbsorbingProjectorSymmetryDiagnostics",
+    "CommonKernelHamiltonianInvariantSectorReport",
     "DarkManifoldDiagnostics",
     "DarkOperatorTerm",
     "DarkSubspaceDiagnostics",
@@ -193,6 +196,7 @@ __all__ = [
     "density_matrix_from_state_matrix",
     "detect_two_pattern_recycling_structure",
     "diagnose_absorbing_projector_symmetry",
+    "diagnose_common_kernel_h_invariant_sector",
     "diagnose_dark_manifold",
     "diagnose_dark_subspace",
     "diagnose_dressed_manifold_dark_detectors",
