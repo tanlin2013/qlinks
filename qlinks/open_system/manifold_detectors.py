@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import combinations
 from typing import Any, Literal
 
 import numpy as np
@@ -1704,6 +1705,104 @@ def expand_local_regions_to_pair_unions(
     return tuple(expanded)
 
 
+def expand_local_regions_to_cluster_unions(
+    local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
+    *,
+    cluster_size: int = 3,
+    cluster_mode: Literal["overlap_connected", "all"] = "overlap_connected",
+    min_overlap: int = 1,
+    max_region_size: int | None = None,
+    include_single_regions: bool = False,
+    include_smaller_clusters: bool = False,
+) -> tuple[tuple[int, ...], ...]:
+    """Return bounded unions of multiple local regions.
+
+    This generalizes :func:`expand_local_regions_to_pair_unions` to three- or
+    four-region recycler/patch supports.  ``cluster_mode="overlap_connected"``
+    keeps only clusters that are connected in the overlap graph of the base
+    regions; this is the natural setting for connected multi-plaquette QDM
+    patches.
+
+    Args:
+        local_regions: Base local regions, usually single-plaquette supports.
+        cluster_size: Number of base regions to union in the largest clusters.
+        cluster_mode: ``"overlap_connected"`` keeps clusters connected through
+            overlaps of at least ``min_overlap`` variables; ``"all"`` keeps all
+            unordered clusters.
+        min_overlap: Minimum overlap used to define adjacency for
+            ``cluster_mode="overlap_connected"``.
+        max_region_size: Optional upper bound on the size of the variable union.
+        include_single_regions: Whether to include the original base regions.
+        include_smaller_clusters: Whether to include all cluster sizes from two
+            through ``cluster_size`` instead of only the requested size.
+
+    Returns:
+        Deduplicated sorted variable-index unions.
+    """
+    if cluster_mode not in {"overlap_connected", "all"}:
+        raise ValueError('cluster_mode must be "overlap_connected" or "all".')
+    if cluster_size < 2:
+        raise ValueError("cluster_size must be at least two.")
+    if min_overlap < 0:
+        raise ValueError("min_overlap must be non-negative.")
+    if max_region_size is not None and max_region_size <= 0:
+        raise ValueError("max_region_size must be positive when provided.")
+
+    base_regions = _normalize_local_regions(local_regions)
+    expanded: list[tuple[int, ...]] = []
+    seen: set[tuple[int, ...]] = set()
+
+    def maybe_add(region: tuple[int, ...]) -> None:
+        if max_region_size is not None and len(region) > max_region_size:
+            return
+        if region in seen:
+            return
+        seen.add(region)
+        expanded.append(region)
+
+    if include_single_regions:
+        for region in base_regions:
+            maybe_add(region)
+
+    region_sets = [set(region) for region in base_regions]
+
+    def is_overlap_connected(indices: tuple[int, ...]) -> bool:
+        if len(indices) <= 1:
+            return True
+        remaining = set(indices[1:])
+        frontier = [indices[0]]
+        visited = {indices[0]}
+        while frontier:
+            left_index = frontier.pop()
+            left_set = region_sets[left_index]
+            for right_index in tuple(remaining):
+                overlap = len(left_set.intersection(region_sets[right_index]))
+                if overlap < min_overlap:
+                    continue
+                remaining.remove(right_index)
+                visited.add(right_index)
+                frontier.append(right_index)
+        return len(visited) == len(indices)
+
+    cluster_sizes = range(2, cluster_size + 1) if include_smaller_clusters else (cluster_size,)
+    for size in cluster_sizes:
+        for indices in combinations(range(len(base_regions)), size):
+            if cluster_mode == "overlap_connected" and not is_overlap_connected(indices):
+                continue
+            union: set[int] = set()
+            for index in indices:
+                union.update(base_regions[index])
+            maybe_add(tuple(sorted(union)))
+
+    if len(expanded) == 0:
+        raise ValueError(
+            "No cluster-union regions were generated. Relax cluster_mode/min_overlap "
+            "or max_region_size, reduce cluster_size, or pass include_single_regions=True."
+        )
+
+    return tuple(expanded)
+
+
 def _pattern_name(pattern: tuple[int, ...]) -> str:
     return "(" + ",".join(str(int(value)) for value in pattern) + ")"
 
@@ -2929,6 +3028,15 @@ class TargetedResidualKernelLinearSearchReport:
     tolerance: float
     dark_tolerance: float
     inflow_tolerance: float
+    n_regions_evaluated: int = 0
+    n_regions_skipped_by_local_dim: int = 0
+    n_regions_with_no_recycler_specs: int = 0
+    n_regions_with_no_nonzero_local_operators: int = 0
+    n_regions_with_zero_dark_nullity: int = 0
+    n_regions_with_dark_nullity_detected: int = -1
+    n_regions_with_zero_residual_inflow: int = 0
+    n_candidate_modes_generated: int = -1
+    max_encountered_local_dim: int = 0
 
     @property
     def residual_dimension(self) -> int:
@@ -2948,13 +3056,42 @@ class TargetedResidualKernelLinearSearchReport:
 
     @property
     def max_local_dim(self) -> int:
-        return max((candidate.local_dim for candidate in self.candidates), default=0)
+        return max(
+            self.max_encountered_local_dim,
+            max((candidate.local_dim for candidate in self.candidates), default=0),
+        )
 
     @property
     def n_regions_with_dark_nullity(self) -> int:
+        if self.n_regions_with_dark_nullity_detected >= 0:
+            return self.n_regions_with_dark_nullity_detected
         return len(
             {candidate.region_index for candidate in self.candidates if candidate.dark_nullity > 0}
         )
+
+    @property
+    def n_reported_candidate_modes(self) -> int:
+        return len(self.candidates)
+
+    @property
+    def n_generated_candidate_modes(self) -> int:
+        if self.n_candidate_modes_generated >= 0:
+            return self.n_candidate_modes_generated
+        return len(self.candidates)
+
+    @property
+    def targeted_search_failure_counts(self) -> dict[str, int]:
+        return {
+            "n_regions_evaluated": self.n_regions_evaluated,
+            "n_regions_skipped_by_local_dim": self.n_regions_skipped_by_local_dim,
+            "n_regions_with_no_recycler_specs": self.n_regions_with_no_recycler_specs,
+            "n_regions_with_no_nonzero_local_operators": (
+                self.n_regions_with_no_nonzero_local_operators
+            ),
+            "n_regions_with_zero_dark_nullity": self.n_regions_with_zero_dark_nullity,
+            "n_regions_with_dark_nullity": self.n_regions_with_dark_nullity,
+            "n_regions_with_zero_residual_inflow": self.n_regions_with_zero_residual_inflow,
+        }
 
     @property
     def n_candidates_hitting_residual(self) -> int:
@@ -3021,7 +3158,18 @@ class TargetedResidualKernelLinearSearchReport:
             "max_local_dim": self.max_local_dim,
             "operator_source": self.operator_source,
             "n_candidates": self.n_candidates,
+            "n_generated_candidate_modes": self.n_generated_candidate_modes,
+            "n_reported_candidate_modes": self.n_reported_candidate_modes,
+            "n_regions_evaluated": self.n_regions_evaluated,
+            "n_regions_skipped_by_local_dim": self.n_regions_skipped_by_local_dim,
+            "n_regions_with_no_recycler_specs": self.n_regions_with_no_recycler_specs,
+            "n_regions_with_no_nonzero_local_operators": (
+                self.n_regions_with_no_nonzero_local_operators
+            ),
+            "n_regions_with_zero_dark_nullity": self.n_regions_with_zero_dark_nullity,
             "n_regions_with_dark_nullity": self.n_regions_with_dark_nullity,
+            "n_regions_with_zero_residual_inflow": self.n_regions_with_zero_residual_inflow,
+            "targeted_search_failure_counts": self.targeted_search_failure_counts,
             "n_candidates_hitting_residual": self.n_candidates_hitting_residual,
             "has_targeted_solution": self.has_targeted_solution,
             "reported_candidate_residual_kernel_dimension": (
@@ -3964,8 +4112,17 @@ def diagnose_targeted_residual_kernel_linear_search(
     regions = _normalize_local_regions(local_regions)
     candidates: list[TargetedResidualKernelLinearCandidate] = []
     candidate_jumps: list[sp.csr_array] = []
+    n_regions_evaluated = 0
+    n_regions_skipped_by_local_dim = 0
+    n_regions_with_no_recycler_specs = 0
+    n_regions_with_no_nonzero_local_operators = 0
+    n_regions_with_zero_dark_nullity = 0
+    n_regions_with_dark_nullity_detected = 0
+    n_regions_with_zero_residual_inflow = 0
+    max_encountered_local_dim = 0
 
     for region_index, region in enumerate(regions):
+        n_regions_evaluated += 1
         context = _local_pattern_basis_context_from_basis(
             basis_configs=basis_array,
             variable_indices=region,
@@ -3975,7 +4132,9 @@ def diagnose_targeted_residual_kernel_linear_search(
             states=target_basis,
             tolerance=rdm_tolerance,
         )
+        max_encountered_local_dim = max(max_encountered_local_dim, int(rdm.local_dim))
         if max_local_dim is not None and rdm.local_dim > max_local_dim:
+            n_regions_skipped_by_local_dim += 1
             continue
 
         specs = _local_recycler_specs(
@@ -3984,6 +4143,7 @@ def diagnose_targeted_residual_kernel_linear_search(
             recycler_source=operator_source,
         )
         if len(specs) == 0:
+            n_regions_with_no_recycler_specs += 1
             continue
 
         embedding_context = _embedding_context_from_basis_context(context)
@@ -3996,6 +4156,7 @@ def diagnose_targeted_residual_kernel_linear_search(
         )
         nonzero_indices = [index for index, operator in enumerate(local_ops) if operator.nnz > 0]
         if len(nonzero_indices) == 0:
+            n_regions_with_no_nonzero_local_operators += 1
             continue
         local_ops = tuple(local_ops[index] for index in nonzero_indices)
         spec_names = tuple(specs[index][0] for index in nonzero_indices)
@@ -4010,7 +4171,10 @@ def diagnose_targeted_residual_kernel_linear_search(
         dark_nullity = int(dark_kernel.shape[1])
         dark_rank = int(dark_kernel.shape[0] - dark_nullity)
         if dark_nullity == 0:
+            n_regions_with_zero_dark_nullity += 1
             continue
+        n_regions_with_dark_nullity_detected += 1
+        region_has_residual_inflow = False
 
         if bad_basis.shape[1] == 0:
             inflow_matrix = np.zeros((0, len(local_ops)), dtype=np.complex128)
@@ -4058,6 +4222,8 @@ def diagnose_targeted_residual_kernel_linear_search(
                 dtype=np.complex128,
             )
             residual_target_inflow_norm = float(np.linalg.norm(residual_target_action))
+            if residual_target_inflow_norm > inflow_tolerance:
+                region_has_residual_inflow = True
             total_inflow_norm, target_block_norm = _projected_inflow_norm(
                 jump=jump,
                 state_basis=target_basis,
@@ -4097,6 +4263,11 @@ def diagnose_targeted_residual_kernel_linear_search(
                 )
             )
             candidate_jumps.append(jump)
+
+        if not region_has_residual_inflow:
+            n_regions_with_zero_residual_inflow += 1
+
+    n_candidate_modes_generated = len(candidates)
 
     order = sorted(
         range(len(candidates)),
@@ -4150,6 +4321,15 @@ def diagnose_targeted_residual_kernel_linear_search(
         tolerance=float(tolerance),
         dark_tolerance=float(dark_tolerance),
         inflow_tolerance=float(inflow_tolerance),
+        n_regions_evaluated=int(n_regions_evaluated),
+        n_regions_skipped_by_local_dim=int(n_regions_skipped_by_local_dim),
+        n_regions_with_no_recycler_specs=int(n_regions_with_no_recycler_specs),
+        n_regions_with_no_nonzero_local_operators=int(n_regions_with_no_nonzero_local_operators),
+        n_regions_with_zero_dark_nullity=int(n_regions_with_zero_dark_nullity),
+        n_regions_with_dark_nullity_detected=int(n_regions_with_dark_nullity_detected),
+        n_regions_with_zero_residual_inflow=int(n_regions_with_zero_residual_inflow),
+        n_candidate_modes_generated=int(n_candidate_modes_generated),
+        max_encountered_local_dim=int(max_encountered_local_dim),
     )
 
 

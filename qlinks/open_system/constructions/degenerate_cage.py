@@ -37,6 +37,7 @@ from qlinks.open_system.manifold_detectors import (
     diagnose_recycled_manifold_dark_detectors,
     diagnose_recycled_manifold_residual_kernel,
     diagnose_targeted_residual_kernel_linear_search,
+    expand_local_regions_to_cluster_unions,
     expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
     select_targeted_residual_kernel_jumps,
@@ -360,6 +361,29 @@ class DegenerateCageJumpDesignWorkflowReport:
             ),
             "residual_dimension": self.residual_report.residual_dimension,
             "targeted_candidates": self.targeted_report.n_candidates,
+            "targeted_generated_candidate_modes": (
+                self.targeted_report.n_generated_candidate_modes
+            ),
+            "targeted_reported_candidate_modes": self.targeted_report.n_reported_candidate_modes,
+            "targeted_regions_skipped_by_local_dim": (
+                self.targeted_report.n_regions_skipped_by_local_dim
+            ),
+            "targeted_regions_with_no_recycler_specs": (
+                self.targeted_report.n_regions_with_no_recycler_specs
+            ),
+            "targeted_regions_with_no_nonzero_local_operators": (
+                self.targeted_report.n_regions_with_no_nonzero_local_operators
+            ),
+            "targeted_regions_with_zero_dark_nullity": (
+                self.targeted_report.n_regions_with_zero_dark_nullity
+            ),
+            "targeted_regions_with_dark_nullity": (
+                self.targeted_report.n_regions_with_dark_nullity
+            ),
+            "targeted_regions_with_zero_residual_inflow": (
+                self.targeted_report.n_regions_with_zero_residual_inflow
+            ),
+            "targeted_search_failure_counts": (self.targeted_report.targeted_search_failure_counts),
             "targeted_candidates_hitting_residual": (
                 self.targeted_report.n_candidates_hitting_residual
             ),
@@ -720,6 +744,33 @@ class DegenerateCageLindbladConstruction:
             min_overlap=min_overlap,
             max_region_size=max_region_size,
             include_single_regions=include_single_regions,
+        )
+
+    def local_region_cluster_unions(
+        self,
+        *,
+        cluster_size: int = 3,
+        cluster_mode: Literal["overlap_connected", "all"] = "overlap_connected",
+        min_overlap: int = 1,
+        max_region_size: int | None = None,
+        include_single_regions: bool = False,
+        include_smaller_clusters: bool = False,
+    ) -> tuple[tuple[int, ...], ...]:
+        """Return multi-region recycler supports derived from this construction.
+
+        For QDM plaquette regions, ``cluster_mode="overlap_connected"`` and
+        ``min_overlap=1`` generate connected multi-plaquette patches.  This is
+        useful when pair-union direct targeted jumps cannot hit a residual
+        complement kernel.
+        """
+        return expand_local_regions_to_cluster_unions(
+            self.local_regions,
+            cluster_size=cluster_size,
+            cluster_mode=cluster_mode,
+            min_overlap=min_overlap,
+            max_region_size=max_region_size,
+            include_single_regions=include_single_regions,
+            include_smaller_clusters=include_smaller_clusters,
         )
 
     def diagnose_recycled_dark_detectors(
@@ -1102,11 +1153,39 @@ class DegenerateCageLindbladConstruction:
         targeted_report: TargetedResidualKernelLinearSearchReport | None = None,
         recycled_local_regions: Sequence[Sequence[int]] | None = None,
         targeted_local_regions: Sequence[Sequence[int]] | None = None,
-        local_region_mode: Literal["construction", "pair_unions"] = "pair_unions",
+        local_region_mode: Literal[
+            "construction",
+            "pair_unions",
+            "cluster_unions",
+        ] = "pair_unions",
+        recycled_region_mode: (
+            Literal[
+                "construction",
+                "pair_unions",
+                "cluster_unions",
+            ]
+            | None
+        ) = None,
+        targeted_region_mode: (
+            Literal[
+                "construction",
+                "pair_unions",
+                "cluster_unions",
+            ]
+            | None
+        ) = None,
         pair_mode: Literal["overlap", "all"] = "overlap",
         min_pair_overlap: int = 1,
         max_pair_region_size: int | None = 7,
         include_single_regions_in_pairs: bool = False,
+        cluster_size: int = 3,
+        recycled_cluster_size: int | None = None,
+        targeted_cluster_size: int | None = None,
+        cluster_mode: Literal["overlap_connected", "all"] = "overlap_connected",
+        min_cluster_overlap: int = 1,
+        max_cluster_region_size: int | None = None,
+        include_single_regions_in_clusters: bool = False,
+        include_smaller_clusters: bool = False,
         recycled_recycler_source: Literal[
             "matrix_units",
             "rdm_support_matrix_units",
@@ -1170,22 +1249,46 @@ class DegenerateCageLindbladConstruction:
 
         def resolve_regions(
             explicit_regions: Sequence[Sequence[int]] | None,
+            *,
+            mode: Literal["construction", "pair_unions", "cluster_unions"],
+            cluster_size_override: int | None,
         ) -> tuple[tuple[int, ...], ...]:
             if explicit_regions is not None:
                 return _normalize_local_regions(explicit_regions)
-            if local_region_mode == "construction":
+            if mode == "construction":
                 return self.local_regions
-            if local_region_mode == "pair_unions":
+            if mode == "pair_unions":
                 return self.local_region_pair_unions(
                     pair_mode=pair_mode,
                     min_overlap=min_pair_overlap,
                     max_region_size=max_pair_region_size,
                     include_single_regions=include_single_regions_in_pairs,
                 )
-            raise ValueError('local_region_mode must be "construction" or "pair_unions".')
+            if mode == "cluster_unions":
+                return self.local_region_cluster_unions(
+                    cluster_size=cluster_size_override or cluster_size,
+                    cluster_mode=cluster_mode,
+                    min_overlap=min_cluster_overlap,
+                    max_region_size=max_cluster_region_size,
+                    include_single_regions=include_single_regions_in_clusters,
+                    include_smaller_clusters=include_smaller_clusters,
+                )
+            raise ValueError(
+                'region mode must be "construction", "pair_unions", or "cluster_unions".'
+            )
 
-        recycled_regions = resolve_regions(recycled_local_regions)
-        targeted_regions = resolve_regions(targeted_local_regions)
+        resolved_recycled_region_mode = recycled_region_mode or local_region_mode
+        resolved_targeted_region_mode = targeted_region_mode or local_region_mode
+        recycled_regions = resolve_regions(
+            recycled_local_regions,
+            mode=resolved_recycled_region_mode,
+            cluster_size_override=recycled_cluster_size,
+        )
+        targeted_regions = resolve_regions(
+            targeted_local_regions,
+            mode=resolved_targeted_region_mode,
+            cluster_size_override=targeted_cluster_size,
+        )
         if len(recycled_regions) == 0:
             raise ValueError("recycled local-region list is empty.")
         if len(targeted_regions) == 0:
@@ -1353,10 +1456,10 @@ class DegenerateCageLindbladConstruction:
             recycled_local_regions=recycled_regions,
             targeted_local_regions=targeted_regions,
             recycled_region_mode=(
-                local_region_mode if recycled_local_regions is None else "explicit"
+                resolved_recycled_region_mode if recycled_local_regions is None else "explicit"
             ),
             targeted_region_mode=(
-                local_region_mode if targeted_local_regions is None else "explicit"
+                resolved_targeted_region_mode if targeted_local_regions is None else "explicit"
             ),
             recycled_recycler_source=recycled_recycler_source,
             targeted_operator_source=targeted_operator_source,

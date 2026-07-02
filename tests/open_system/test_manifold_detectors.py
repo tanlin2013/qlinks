@@ -429,6 +429,43 @@ def test_expand_local_regions_to_pair_unions_overlap_and_all_modes():
     assert bounded_pairs == ((0, 1), (1, 2), (3, 4), (0, 1, 2))
 
 
+def test_expand_local_regions_to_cluster_unions_overlap_connected_and_all_modes():
+    from qlinks.open_system import expand_local_regions_to_cluster_unions
+
+    regions = ((0, 1), (1, 2), (2, 3), (4, 5))
+
+    connected = expand_local_regions_to_cluster_unions(
+        regions,
+        cluster_size=3,
+        cluster_mode="overlap_connected",
+    )
+    assert connected == ((0, 1, 2, 3),)
+
+    all_clusters = expand_local_regions_to_cluster_unions(
+        regions,
+        cluster_size=3,
+        cluster_mode="all",
+    )
+    assert all_clusters == (
+        (0, 1, 2, 3),
+        (0, 1, 2, 4, 5),
+        (0, 1, 2, 3, 4, 5),
+        (1, 2, 3, 4, 5),
+    )
+
+    with_smaller = expand_local_regions_to_cluster_unions(
+        regions,
+        cluster_size=3,
+        cluster_mode="overlap_connected",
+        include_single_regions=True,
+        include_smaller_clusters=True,
+        max_region_size=4,
+    )
+    assert (0, 1) in with_smaller
+    assert (0, 1, 2) in with_smaller
+    assert (1, 2, 3) in with_smaller
+
+
 def test_degenerate_construction_local_region_pair_unions():
     build_result = _two_qubit_build_result()
     construction = build_degenerate_cage_lindblad_construction(
@@ -438,6 +475,20 @@ def test_degenerate_construction_local_region_pair_unions():
     )
 
     assert construction.local_region_pair_unions(pair_mode="all") == ((0, 1),)
+
+
+def test_degenerate_construction_local_region_cluster_unions():
+    build_result = _two_qubit_build_result()
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=_equal_bit_manifold_rows(),
+        local_regions=((0,), (1,), (0, 1)),
+    )
+
+    assert construction.local_region_cluster_unions(
+        cluster_size=3,
+        cluster_mode="overlap_connected",
+    ) == ((0, 1),)
 
 
 def test_recycled_jump_selection_kernel_projection_strategy():
