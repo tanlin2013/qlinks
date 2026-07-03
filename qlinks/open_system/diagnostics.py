@@ -1627,6 +1627,75 @@ class CommonKernelHamiltonianInvariantSectorReport:
         )
 
 
+def bad_h_invariant_common_kernel_basis(
+    *,
+    hamiltonian: Any,
+    jumps: list[Any] | tuple[Any, ...],
+    target_states: npt.ArrayLike,
+    kernel_tolerance: float = 1.0e-10,
+) -> np.ndarray:
+    """Return the bad H-invariant sector inside the common jump kernel.
+
+    The returned columns form an orthonormal basis for the largest subspace of
+    ``(cap_mu ker J_mu) cap M^perp`` whose Hamiltonian orbit stays inside the
+    common jump kernel.  An empty ``(dim, 0)`` array means the selected jumps
+    have no Hamiltonian-stable dark obstruction outside the target manifold.
+
+    This helper exposes the obstruction basis used internally by
+    :func:`diagnose_common_kernel_h_invariant_sector`, so jump-design routines
+    can add a targeted completion stage without recomputing or interpreting a
+    Liouvillian spectrum.
+    """
+    hamiltonian_sparse = _as_scipy_csr_matrix(hamiltonian)
+    dim = int(hamiltonian_sparse.shape[0])
+    if hamiltonian_sparse.shape != (dim, dim):
+        raise ValueError("hamiltonian must be a square matrix.")
+
+    manifold_basis = _orthonormal_target_state_matrix(
+        target_states,
+        dim=dim,
+        tolerance=kernel_tolerance,
+    )
+
+    jumps_sparse = tuple(_as_scipy_csr_matrix(jump) for jump in jumps)
+    for jump in jumps_sparse:
+        if jump.shape != (dim, dim):
+            raise ValueError("Every jump operator must have shape (dim, dim).")
+
+    common_kernel_basis = _common_kernel_basis_from_sparse_operators(
+        operators=jumps_sparse,
+        dim=dim,
+        tolerance=kernel_tolerance,
+    )
+    bad_basis = _kernel_basis_orthogonal_to_manifold(
+        basis=common_kernel_basis,
+        manifold_basis=manifold_basis,
+        tolerance=kernel_tolerance,
+    )
+    bad_dimension = int(bad_basis.shape[1])
+    if bad_dimension == 0:
+        return np.zeros((dim, 0), dtype=np.complex128)
+
+    h_bad = np.asarray(hamiltonian_sparse @ bad_basis, dtype=np.complex128)
+    if common_kernel_basis.shape[1] == 0:
+        projected_to_common = np.zeros_like(h_bad)
+    else:
+        projected_to_common = common_kernel_basis @ (common_kernel_basis.conj().T @ h_bad)
+    leakage = h_bad - projected_to_common
+
+    bad_block = bad_basis.conj().T @ h_bad
+    bad_block = 0.5 * (bad_block + bad_block.conj().T)
+
+    invariant_coefficients = _largest_h_invariant_subspace_inside_leakage_kernel(
+        leakage=leakage,
+        bad_block=bad_block,
+        tolerance=kernel_tolerance,
+    )
+
+    invariant_basis = bad_basis @ invariant_coefficients
+    return _orthonormal_column_basis(invariant_basis, tolerance=kernel_tolerance)
+
+
 def diagnose_common_kernel_h_invariant_sector(
     *,
     hamiltonian: Any,

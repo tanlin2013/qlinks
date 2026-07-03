@@ -241,3 +241,25 @@ def test_common_kernel_h_invariant_sector_survives_svd_nonconvergence(monkeypatc
     assert report.bad_common_jump_kernel_dimension == 2
     assert report.bad_h_invariant_kernel_dimension == 2
     assert report.likely_attractive_by_h_invariant_kernel is False
+
+
+def test_bad_h_invariant_common_kernel_basis_returns_obstruction_vectors():
+    from qlinks.open_system import bad_h_invariant_common_kernel_basis
+
+    target_state = np.asarray([1.0, 0.0, 0.0], dtype=np.complex128)
+    jump = np.array(
+        [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    hamiltonian = np.zeros((3, 3), dtype=np.complex128)
+
+    basis = bad_h_invariant_common_kernel_basis(
+        hamiltonian=hamiltonian,
+        jumps=(jump,),
+        target_states=target_state,
+    )
+
+    assert basis.shape == (3, 1)
+    assert np.linalg.norm(jump @ basis) < 1e-12
+    assert abs(np.vdot(target_state, basis[:, 0])) < 1e-12
+    np.testing.assert_allclose(basis.conj().T @ basis, np.eye(1), atol=1e-12)

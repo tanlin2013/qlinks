@@ -17,6 +17,7 @@ from qlinks.open_system.constructions.cage import _local_terms_by_operator_kind
 from qlinks.open_system.diagnostics import (
     CommonKernelHamiltonianInvariantSectorReport,
     DarkManifoldDiagnostics,
+    bad_h_invariant_common_kernel_basis,
     diagnose_common_kernel_h_invariant_sector,
     diagnose_dark_manifold,
 )
@@ -1148,6 +1149,7 @@ class DegenerateCageLindbladConstruction:
             "matrix_units",
             "rdm_support_matrix_units",
         ] = "matrix_units",
+        residual_objective: Literal["target_inflow", "action_norm"] = "target_inflow",
         tolerance: float = 1.0e-10,
         rdm_tolerance: float = 1.0e-10,
         dark_tolerance: float = 1.0e-10,
@@ -1184,6 +1186,7 @@ class DegenerateCageLindbladConstruction:
             detector_names=detector_names,
             recycler_source=recycler_source,
             operator_source=operator_source,
+            residual_objective=residual_objective,
             tolerance=tolerance,
             rdm_tolerance=rdm_tolerance,
             dark_tolerance=dark_tolerance,
@@ -1403,6 +1406,10 @@ class DegenerateCageLindbladConstruction:
         max_targeted_report_candidates: int | None = 64,
         max_targeted_local_dim: int | None = 20,
         max_targeted_selected_jumps: int = 16,
+        targeted_residual_objective: Literal["target_inflow", "action_norm"] = "target_inflow",
+        max_h_invariant_completion_modes_per_region: int | None = None,
+        max_h_invariant_completion_report_candidates: int | None = None,
+        max_h_invariant_completion_selected_jumps: int | None = None,
         targeted_selection_target: Literal[
             "reported_residual_kernel",
             "combined_common_kernel",
@@ -1421,6 +1428,7 @@ class DegenerateCageLindbladConstruction:
         design_mode: Literal[
             "full",
             "h_invariant_fast",
+            "h_invariant_completion",
             "recycled_screening",
         ] = "full",
     ) -> DegenerateCageJumpDesignWorkflowReport:
@@ -1473,9 +1481,15 @@ class DegenerateCageLindbladConstruction:
                 'region mode must be "construction", "pair_unions", or "cluster_unions".'
             )
 
-        if design_mode not in {"full", "h_invariant_fast", "recycled_screening"}:
+        if design_mode not in {
+            "full",
+            "h_invariant_fast",
+            "h_invariant_completion",
+            "recycled_screening",
+        }:
             raise ValueError(
-                'design_mode must be "full", "h_invariant_fast", or ' '"recycled_screening".'
+                'design_mode must be "full", "h_invariant_fast", '
+                '"h_invariant_completion", or "recycled_screening".'
             )
 
         resolved_recycled_region_mode = recycled_region_mode or local_region_mode
@@ -1596,6 +1610,130 @@ class DegenerateCageLindbladConstruction:
                     early_stop_reason="recycled_h_invariant_success",
                 )
 
+        if design_mode == "h_invariant_completion" and check_h_invariant_sector:
+            recycled_h_invariant_report = diagnose_common_kernel_h_invariant_sector(
+                hamiltonian=hamiltonian,
+                jumps=recycled_selection.jumps,
+                target_states=self.manifold_basis,
+                kernel_tolerance=kernel_tolerance,
+            )
+            if recycled_h_invariant_report.likely_attractive_by_h_invariant_kernel:
+                return DegenerateCageJumpDesignWorkflowReport(
+                    dark_operator_report=dark_operator_report,
+                    recycled_report=recycled_report,
+                    recycled_selection=recycled_selection,
+                    family_report=None,
+                    residual_report=None,
+                    targeted_report=None,
+                    targeted_selection=None,
+                    h_invariant_report=recycled_h_invariant_report,
+                    recycled_local_regions=recycled_regions,
+                    targeted_local_regions=(),
+                    recycled_region_mode=(
+                        resolved_recycled_region_mode
+                        if recycled_local_regions is None
+                        else "explicit"
+                    ),
+                    targeted_region_mode="skipped",
+                    recycled_recycler_source=recycled_recycler_source,
+                    targeted_operator_source=targeted_operator_source,
+                    design_mode=design_mode,
+                    early_stop_reason="recycled_h_invariant_success",
+                )
+
+            h_invariant_basis = bad_h_invariant_common_kernel_basis(
+                hamiltonian=hamiltonian,
+                jumps=recycled_selection.jumps,
+                target_states=self.manifold_basis,
+                kernel_tolerance=kernel_tolerance,
+            )
+            targeted_regions = resolve_regions(
+                targeted_local_regions,
+                mode=resolved_targeted_region_mode,
+                cluster_size_override=targeted_cluster_size,
+            )
+            if len(targeted_regions) == 0:
+                raise ValueError("targeted local-region list is empty.")
+
+            if targeted_report is None:
+                targeted_report = self.diagnose_targeted_residual_kernel_linear_search(
+                    basis_configs=basis_configs,
+                    local_regions=targeted_regions,
+                    residual_basis=h_invariant_basis,
+                    operator_source=targeted_operator_source,
+                    residual_objective="action_norm",
+                    tolerance=tolerance,
+                    rdm_tolerance=rdm_tolerance,
+                    dark_tolerance=dark_tolerance,
+                    inflow_tolerance=inflow_tolerance,
+                    kernel_tolerance=kernel_tolerance,
+                    max_modes_per_region=(
+                        max_targeted_modes_per_region
+                        if max_h_invariant_completion_modes_per_region is None
+                        else max_h_invariant_completion_modes_per_region
+                    ),
+                    max_report_candidates=(
+                        max_targeted_report_candidates
+                        if max_h_invariant_completion_report_candidates is None
+                        else max_h_invariant_completion_report_candidates
+                    ),
+                    max_local_dim=max_targeted_local_dim,
+                )
+
+            targeted_selection = self.select_targeted_residual_kernel_jumps(
+                targeted_report=targeted_report,
+                hamiltonian=hamiltonian,
+                base_jumps=recycled_selection.jumps,
+                max_selected_jumps=(
+                    max_targeted_selected_jumps
+                    if max_h_invariant_completion_selected_jumps is None
+                    else max_h_invariant_completion_selected_jumps
+                ),
+                target_residual_kernel_dimension=targeted_target_residual_kernel_dimension,
+                selection_target="combined_common_kernel",
+                allow_non_improving=targeted_allow_non_improving,
+                kernel_tolerance=kernel_tolerance,
+                dark_tolerance=dark_tolerance,
+                inflow_tolerance=inflow_tolerance,
+                liouvillian_zero_tolerance=liouvillian_zero_tolerance,
+                check_manifold_diagnostics=check_final_manifold_diagnostics,
+                liouvillian_spectrum_method=liouvillian_spectrum_method,
+                sparse_liouvillian_eigenvalue_count=sparse_liouvillian_eigenvalue_count,
+            )
+            completed_h_invariant_report = diagnose_common_kernel_h_invariant_sector(
+                hamiltonian=hamiltonian,
+                jumps=targeted_selection.all_jumps,
+                target_states=self.manifold_basis,
+                kernel_tolerance=kernel_tolerance,
+            )
+
+            return DegenerateCageJumpDesignWorkflowReport(
+                dark_operator_report=dark_operator_report,
+                recycled_report=recycled_report,
+                recycled_selection=recycled_selection,
+                family_report=None,
+                residual_report=None,
+                targeted_report=targeted_report,
+                targeted_selection=targeted_selection,
+                h_invariant_report=completed_h_invariant_report,
+                recycled_local_regions=recycled_regions,
+                targeted_local_regions=targeted_regions,
+                recycled_region_mode=(
+                    resolved_recycled_region_mode if recycled_local_regions is None else "explicit"
+                ),
+                targeted_region_mode=(
+                    resolved_targeted_region_mode if targeted_local_regions is None else "explicit"
+                ),
+                recycled_recycler_source=recycled_recycler_source,
+                targeted_operator_source=targeted_operator_source,
+                design_mode=design_mode,
+                early_stop_reason=(
+                    "h_invariant_completion_success"
+                    if completed_h_invariant_report.likely_attractive_by_h_invariant_kernel
+                    else "h_invariant_completion_incomplete"
+                ),
+            )
+
         if family_report is None:
             family_report = self.diagnose_recycled_candidate_family_kernel(
                 hamiltonian=hamiltonian,
@@ -1674,6 +1812,7 @@ class DegenerateCageLindbladConstruction:
                 detector_names=detector_names,
                 recycler_source=recycled_recycler_source,
                 operator_source=targeted_operator_source,
+                residual_objective=targeted_residual_objective,
                 tolerance=tolerance,
                 rdm_tolerance=rdm_tolerance,
                 dark_tolerance=dark_tolerance,

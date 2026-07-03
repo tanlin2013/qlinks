@@ -345,3 +345,45 @@ def test_degenerate_jump_design_workflow_recycled_screening_stops_after_recycled
     assert workflow.targeted_selection is None
     assert workflow.final_diagnostics is None
     assert workflow.jumps == workflow.recycled_jumps
+
+
+def test_degenerate_jump_design_h_invariant_completion_targets_remaining_bad_sector():
+    build_result = SimpleNamespace(
+        basis=_ArrayBasis([[0], [1], [2]]),
+        hamiltonian=sp.csr_array((3, 3), dtype=np.complex128),
+    )
+    target_state = np.asarray([1.0, 0.0, 0.0], dtype=np.complex128)
+    d1 = sp.diags([0.0, 1.0, 0.0], format="csr", dtype=np.complex128)
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=target_state,
+        local_regions=((0,),),
+    )
+
+    workflow = construction.design_dark_manifold_jumps(
+        hamiltonian=build_result.hamiltonian,
+        basis_configs=build_result.basis.states,
+        detector_operators=(d1,),
+        detector_coefficients=np.asarray([1.0], dtype=np.complex128),
+        detector_operator_names=("D1",),
+        local_region_mode="construction",
+        recycled_recycler_source="matrix_units",
+        targeted_operator_source="matrix_units",
+        max_recycled_selected_jumps=1,
+        max_h_invariant_completion_selected_jumps=2,
+        design_mode="h_invariant_completion",
+        check_final_manifold_diagnostics=True,
+    )
+
+    summary = workflow.to_summary_dict()
+    assert summary["design_mode"] == "h_invariant_completion"
+    assert summary["early_stop_reason"] == "h_invariant_completion_success"
+    assert summary["n_recycled_jumps"] == 1
+    assert summary["n_targeted_jumps"] == 1
+    assert summary["targeted_candidates"] >= 1
+    assert workflow.targeted_report is not None
+    assert workflow.targeted_report.residual_objective == "action_norm"
+    assert workflow.targeted_report.best_residual_score_norm > 0.0
+    assert workflow.h_invariant_report is not None
+    assert workflow.h_invariant_report.bad_h_invariant_kernel_dimension == 0
+    assert workflow.likely_successful_h_invariant_design is True

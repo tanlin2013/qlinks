@@ -3426,6 +3426,9 @@ class TargetedResidualKernelLinearCandidate:
     jump_nnz: int
     coefficients: npt.NDArray[np.complex128]
     terms: tuple[TargetedResidualKernelLinearTerm, ...]
+    residual_action_norm: float = 0.0
+    residual_score_norm: float = 0.0
+    residual_objective: str = "target_inflow"
 
     @property
     def n_variables(self) -> int:
@@ -3441,7 +3444,7 @@ class TargetedResidualKernelLinearCandidate:
 
     @property
     def hits_residual_kernel(self) -> bool:
-        return self.residual_target_inflow_norm > 1.0e-12
+        return max(self.residual_score_norm, self.residual_target_inflow_norm) > 1.0e-12
 
     def to_summary_dict(self) -> dict[str, object]:
         return {
@@ -3455,6 +3458,12 @@ class TargetedResidualKernelLinearCandidate:
             "dark_nullity": self.dark_nullity,
             "singular_value": self.singular_value,
             "residual_target_inflow_norm": self.residual_target_inflow_norm,
+            "residual_action_norm": self.residual_action_norm,
+            "residual_score_norm": max(
+                self.residual_score_norm,
+                self.residual_target_inflow_norm,
+            ),
+            "residual_objective": self.residual_objective,
             "dark_residual": self.dark_residual,
             "relative_dark_residual": self.relative_dark_residual,
             "total_inflow_norm": self.total_inflow_norm,
@@ -3477,13 +3486,18 @@ class TargetedResidualKernelLinearSearchReport:
 
         sum_a c_a O_a P_M = 0
 
-    and, inside that dark nullspace, maximizes
+    and, inside that dark nullspace, maximizes either
 
-        ||P_M (sum_a c_a O_a) B||_F,
+        ||P_M (sum_a c_a O_a) B||_F
+
+    or
+
+        ||(sum_a c_a O_a) B||_F,
 
     where ``B`` is the residual bad common-kernel basis left by a recycled
-    detector family.  This tests whether local jumps outside the factorized
-    ``R D`` family can directly remove the residual sector.
+    detector family.  The first objective emphasizes direct inflow to the
+    target manifold; the second directly attacks a remaining dark kernel sector
+    even when it does not couple to the target in one jump.
     """
 
     manifold_dimension: int
@@ -3497,6 +3511,7 @@ class TargetedResidualKernelLinearSearchReport:
     tolerance: float
     dark_tolerance: float
     inflow_tolerance: float
+    residual_objective: str = "target_inflow"
     n_regions_evaluated: int = 0
     n_regions_skipped_by_local_dim: int = 0
     n_regions_with_no_recycler_specs: int = 0
@@ -3566,7 +3581,8 @@ class TargetedResidualKernelLinearSearchReport:
     def n_candidates_hitting_residual(self) -> int:
         return sum(
             candidate.relative_dark_residual <= self.dark_tolerance
-            and candidate.residual_target_inflow_norm > self.inflow_tolerance
+            and max(candidate.residual_score_norm, candidate.residual_target_inflow_norm)
+            > self.inflow_tolerance
             for candidate in self.candidates
         )
 
@@ -3574,6 +3590,20 @@ class TargetedResidualKernelLinearSearchReport:
     def best_residual_target_inflow_norm(self) -> float:
         return max(
             (candidate.residual_target_inflow_norm for candidate in self.candidates), default=0.0
+        )
+
+    @property
+    def best_residual_action_norm(self) -> float:
+        return max((candidate.residual_action_norm for candidate in self.candidates), default=0.0)
+
+    @property
+    def best_residual_score_norm(self) -> float:
+        return max(
+            (
+                max(candidate.residual_score_norm, candidate.residual_target_inflow_norm)
+                for candidate in self.candidates
+            ),
+            default=0.0,
         )
 
     @property
@@ -3644,6 +3674,7 @@ class TargetedResidualKernelLinearSearchReport:
             "max_region_size": self.max_region_size,
             "max_local_dim": self.max_local_dim,
             "operator_source": self.operator_source,
+            "residual_objective": self.residual_objective,
             "n_candidates": self.n_candidates,
             "n_generated_candidate_modes": self.n_generated_candidate_modes,
             "n_reported_candidate_modes": self.n_reported_candidate_modes,
@@ -3672,6 +3703,8 @@ class TargetedResidualKernelLinearSearchReport:
                 self.reported_candidates_remove_family_residual_kernel
             ),
             "best_residual_target_inflow_norm": self.best_residual_target_inflow_norm,
+            "best_residual_action_norm": self.best_residual_action_norm,
+            "best_residual_score_norm": self.best_residual_score_norm,
             "best_total_inflow_norm": self.best_total_inflow_norm,
             "family_bad_common_jump_kernel_dimension": (
                 None
@@ -3708,13 +3741,16 @@ class TargetedResidualKernelLinearSearchReport:
         overview.add_row("regions", str(self.n_regions))
         overview.add_row("max region size", str(self.max_region_size))
         overview.add_row("operator source", self.operator_source)
+        overview.add_row("residual objective", self.residual_objective)
         overview.add_row("candidates", str(self.n_candidates))
         overview.add_row("hits residual", str(self.n_candidates_hitting_residual))
         overview.add_row(
             "reported family residual kernel",
             str(self.reported_candidate_family_residual_kernel_dimension),
         )
-        overview.add_row("best residual inflow", f"{self.best_residual_target_inflow_norm:.3e}")
+        overview.add_row("best target inflow", f"{self.best_residual_target_inflow_norm:.3e}")
+        overview.add_row("best residual action", f"{self.best_residual_action_norm:.3e}")
+        overview.add_row("best residual score", f"{self.best_residual_score_norm:.3e}")
         overview.add_row("best total inflow", f"{self.best_total_inflow_norm:.3e}")
 
         table = Table(title="Targeted residual-kernel local dark jumps")
@@ -3722,7 +3758,8 @@ class TargetedResidualKernelLinearSearchReport:
         table.add_column("region")
         table.add_column("dim", justify="right")
         table.add_column("dark null", justify="right")
-        table.add_column("resid inflow", justify="right")
+        table.add_column("resid score", justify="right")
+        table.add_column("target inflow", justify="right")
         table.add_column("dark resid", justify="right")
         table.add_column("||J||", justify="right")
         table.add_column("terms")
@@ -3740,6 +3777,7 @@ class TargetedResidualKernelLinearSearchReport:
                 str(candidate.variable_indices),
                 str(candidate.local_dim),
                 str(candidate.dark_nullity),
+                f"{max(candidate.residual_score_norm, candidate.residual_target_inflow_norm):.3e}",
                 f"{candidate.residual_target_inflow_norm:.3e}",
                 f"{candidate.relative_dark_residual:.3e}",
                 f"{candidate.jump_frobenius_norm:.3e}",
@@ -3750,6 +3788,7 @@ class TargetedResidualKernelLinearSearchReport:
         if len(self.candidates) > max_candidates:
             table.add_row(
                 "…",
+                "",
                 "",
                 "",
                 "",
@@ -4492,6 +4531,7 @@ def diagnose_targeted_residual_kernel_linear_search(
         "matrix_units",
         "rdm_support_matrix_units",
     ] = "matrix_units",
+    residual_objective: Literal["target_inflow", "action_norm"] = "target_inflow",
     tolerance: float = 1.0e-10,
     rdm_tolerance: float = 1.0e-10,
     dark_tolerance: float = 1.0e-10,
@@ -4531,6 +4571,8 @@ def diagnose_targeted_residual_kernel_linear_search(
     basis_array = np.asarray(basis_configs)
     if basis_array.ndim != 2 or basis_array.shape[0] != dim:
         raise ValueError("basis_configs must have shape (hilbert_dimension, n_variables).")
+    if residual_objective not in {"target_inflow", "action_norm"}:
+        raise ValueError('residual_objective must be "target_inflow" or "action_norm".')
 
     report_family = family_report
     if residual_report is not None:
@@ -4670,9 +4712,9 @@ def diagnose_targeted_residual_kernel_linear_search(
         region_has_residual_inflow = False
 
         if bad_basis.shape[1] == 0:
-            inflow_matrix = np.zeros((0, len(local_ops)), dtype=np.complex128)
-        else:
-            inflow_matrix = np.column_stack(
+            score_matrix = np.zeros((0, len(local_ops)), dtype=np.complex128)
+        elif residual_objective == "target_inflow":
+            score_matrix = np.column_stack(
                 [
                     (
                         target_basis.conj().T
@@ -4681,7 +4723,14 @@ def diagnose_targeted_residual_kernel_linear_search(
                     for operator in local_ops
                 ]
             )
-        restricted_inflow = inflow_matrix @ dark_kernel
+        else:
+            score_matrix = np.column_stack(
+                [
+                    np.asarray(operator @ bad_basis, dtype=np.complex128).reshape(-1)
+                    for operator in local_ops
+                ]
+            )
+        restricted_inflow = score_matrix @ dark_kernel
         if restricted_inflow.size == 0:
             singular_values = np.zeros((0,), dtype=np.float64)
             right_vectors = np.zeros((dark_nullity, 0), dtype=np.complex128)
@@ -4710,12 +4759,16 @@ def diagnose_targeted_residual_kernel_linear_search(
             dark_residual = float(np.linalg.norm(jump @ target_basis))
             jump_norm = float(sp.linalg.norm(jump))
             relative_dark_residual = dark_residual / max(jump_norm, 1.0)
-            residual_target_action = target_basis.conj().T @ np.asarray(
-                jump @ bad_basis,
-                dtype=np.complex128,
-            )
+            bad_action = np.asarray(jump @ bad_basis, dtype=np.complex128)
+            residual_action_norm = float(np.linalg.norm(bad_action))
+            residual_target_action = target_basis.conj().T @ bad_action
             residual_target_inflow_norm = float(np.linalg.norm(residual_target_action))
-            if residual_target_inflow_norm > inflow_tolerance:
+            residual_score_norm = (
+                residual_target_inflow_norm
+                if residual_objective == "target_inflow"
+                else residual_action_norm
+            )
+            if residual_score_norm > inflow_tolerance:
                 region_has_residual_inflow = True
             total_inflow_norm, target_block_norm = _projected_inflow_norm(
                 jump=jump,
@@ -4745,6 +4798,9 @@ def diagnose_targeted_residual_kernel_linear_search(
                     dark_nullity=dark_nullity,
                     singular_value=float(singular_values[mode_index]),
                     residual_target_inflow_norm=residual_target_inflow_norm,
+                    residual_action_norm=residual_action_norm,
+                    residual_score_norm=residual_score_norm,
+                    residual_objective=residual_objective,
                     dark_residual=dark_residual,
                     relative_dark_residual=float(relative_dark_residual),
                     total_inflow_norm=total_inflow_norm,
@@ -4766,6 +4822,10 @@ def diagnose_targeted_residual_kernel_linear_search(
         range(len(candidates)),
         key=lambda index: (
             candidates[index].relative_dark_residual > dark_tolerance,
+            -max(
+                candidates[index].residual_score_norm,
+                candidates[index].residual_target_inflow_norm,
+            ),
             -candidates[index].residual_target_inflow_norm,
             -candidates[index].total_inflow_norm,
             candidates[index].jump_nnz,
@@ -4790,6 +4850,9 @@ def diagnose_targeted_residual_kernel_linear_search(
                 dark_nullity=candidate.dark_nullity,
                 singular_value=candidate.singular_value,
                 residual_target_inflow_norm=candidate.residual_target_inflow_norm,
+                residual_action_norm=candidate.residual_action_norm,
+                residual_score_norm=candidate.residual_score_norm,
+                residual_objective=candidate.residual_objective,
                 dark_residual=candidate.dark_residual,
                 relative_dark_residual=candidate.relative_dark_residual,
                 total_inflow_norm=candidate.total_inflow_norm,
@@ -4808,6 +4871,7 @@ def diagnose_targeted_residual_kernel_linear_search(
         residual_basis=bad_basis,
         region_variable_indices=regions,
         operator_source=operator_source,
+        residual_objective=residual_objective,
         family_report=report_family,
         candidates=tuple(sorted_candidates),
         candidate_jumps=tuple(sorted_jumps),
@@ -4971,7 +5035,12 @@ def select_targeted_residual_kernel_jumps(
                 strict=True,
             )
             if candidate.relative_dark_residual <= dark_tolerance
-            and candidate.total_inflow_norm > inflow_tolerance
+            and max(
+                candidate.residual_score_norm,
+                candidate.residual_target_inflow_norm,
+                candidate.total_inflow_norm,
+            )
+            > inflow_tolerance
         ]
     else:
         current_basis = residual_basis
@@ -4983,7 +5052,8 @@ def select_targeted_residual_kernel_jumps(
                 strict=True,
             )
             if candidate.relative_dark_residual <= dark_tolerance
-            and candidate.residual_target_inflow_norm > inflow_tolerance
+            and max(candidate.residual_score_norm, candidate.residual_target_inflow_norm)
+            > inflow_tolerance
         ]
 
     selected_candidates: list[TargetedResidualKernelLinearCandidate] = []
@@ -5007,6 +5077,7 @@ def select_targeted_residual_kernel_jumps(
             next_dimension = int(kernel_basis.shape[1])
             score = (
                 next_dimension,
+                -max(candidate.residual_score_norm, candidate.residual_target_inflow_norm),
                 -candidate.residual_target_inflow_norm,
                 -candidate.total_inflow_norm,
                 candidate.jump_nnz,
