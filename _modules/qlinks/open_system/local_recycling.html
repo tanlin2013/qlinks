@@ -546,7 +546,299 @@
                 <span class="nb">int</span><span class="p">(</span><span class="n">selection</span><span class="o">.</span><span class="n">candidate</span><span class="o">.</span><span class="n">beta_index</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">selection</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selections</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LocalRecyclingBuildResult.to_subspace_support_report">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.LocalRecyclingBuildResult.to_subspace_support_report">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_subspace_support_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;LocalSubspaceSupportReport&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a local-support/nullity report for the scanned regions.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">local_subspace_support_report_from_recycling_build_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LocalSubspaceSupportReportEntry">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.LocalSubspaceSupportReportEntry">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalSubspaceSupportReportEntry</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Local support/nullity diagnostics for one candidate region.</span>
+
+<span class="sd">    The local RDM is the reduced density matrix of the normalized projector onto</span>
+<span class="sd">    a target subspace.  ``nullity`` is the number of local source directions</span>
+<span class="sd">    annihilated by the target manifold.  If it is zero, no strictly local</span>
+<span class="sd">    right-detector ``D_R`` on this region can satisfy ``D_R P_M = 0``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">local_dim</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">support_rank</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">nullity</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">support_trace</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">min_nonzero_eigenvalue</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">max_eigenvalue</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">n_candidate_jumps</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_selected_jumps</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_local_null_detector</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullity</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_selected_recycler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_selected_jumps</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parent_detector_directions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># Operators annihilating the local support have arbitrary output from</span>
+        <span class="c1"># every local null-source direction.</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_dim</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullity</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">minimum_block_reset_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_rank</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullity</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nullity</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_rank</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_rank</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;full_local_support&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_selected_jumps</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;selected_recyclers&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_candidate_jumps</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;candidates_not_selected&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;null_detectors_no_inflow&quot;</span>
+
+<div class="viewcode-block" id="LocalSubspaceSupportReportEntry.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.LocalSubspaceSupportReportEntry.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;variable_indices&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span>
+            <span class="s2">&quot;n_variables&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_variables</span><span class="p">,</span>
+            <span class="s2">&quot;local_dim&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_dim</span><span class="p">,</span>
+            <span class="s2">&quot;support_rank&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_rank</span><span class="p">,</span>
+            <span class="s2">&quot;nullity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullity</span><span class="p">,</span>
+            <span class="s2">&quot;support_trace&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_trace</span><span class="p">,</span>
+            <span class="s2">&quot;min_nonzero_eigenvalue&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_nonzero_eigenvalue</span><span class="p">,</span>
+            <span class="s2">&quot;max_eigenvalue&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_eigenvalue</span><span class="p">,</span>
+            <span class="s2">&quot;parent_detector_directions&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_detector_directions</span><span class="p">,</span>
+            <span class="s2">&quot;minimum_block_reset_channels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_block_reset_channels</span><span class="p">,</span>
+            <span class="s2">&quot;n_candidate_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_candidate_jumps</span><span class="p">,</span>
+            <span class="s2">&quot;n_selected_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_selected_jumps</span><span class="p">,</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LocalSubspaceSupportReport">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.LocalSubspaceSupportReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalSubspaceSupportReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Local-support report explaining manifold recycler availability.&quot;&quot;&quot;</span>
+
+    <span class="n">entries</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalSubspaceSupportReportEntry</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_regions_with_nullity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">nullity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_regions_with_selected_recyclers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">n_selected_jumps</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_candidate_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">n_candidate_jumps</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_selected_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">n_selected_jumps</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">all_regions_have_full_local_support</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_regions</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_regions_with_nullity</span> <span class="o">==</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="LocalSubspaceSupportReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.LocalSubspaceSupportReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;n_regions&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_regions</span><span class="p">,</span>
+            <span class="s2">&quot;n_regions_with_nullity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_regions_with_nullity</span><span class="p">,</span>
+            <span class="s2">&quot;n_regions_with_selected_recyclers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_regions_with_selected_recyclers</span><span class="p">,</span>
+            <span class="s2">&quot;total_candidate_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_candidate_jumps</span><span class="p">,</span>
+            <span class="s2">&quot;total_selected_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_selected_jumps</span><span class="p">,</span>
+            <span class="s2">&quot;all_regions_have_full_local_support&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_regions_have_full_local_support</span><span class="p">,</span>
+            <span class="s2">&quot;entries&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">entry</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">],</span>
+        <span class="p">}</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__rich__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_rich</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LocalSubspaceSupportReport.to_rich">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.LocalSubspaceSupportReport.to_rich">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_rich</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_regions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Group</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">rich.panel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">rich.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">rich.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">Text</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">&quot;LocalSubspaceSupportReport.to_rich() requires rich. &quot;</span>
+                <span class="s2">&quot;Install it with `pip install rich`.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="n">overview</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_column</span><span class="p">()</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;regions&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_regions</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;regions with local nullity&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_regions_with_nullity</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;regions with selected recyclers&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_regions_with_selected_recyclers</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;candidate jumps&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_candidate_jumps</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;selected jumps&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_selected_jumps</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;all full local support&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_regions_have_full_local_support</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Local manifold support by region&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;region&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;dim&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;rank&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;null&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;parent dirs&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;block min&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;cand&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;sel&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span>
+
+        <span class="n">shown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">[:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_regions</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">shown</span><span class="p">:</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">local_dim</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">support_rank</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">nullity</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">parent_detector_directions</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">minimum_block_reset_channels</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">n_candidate_jumps</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">n_selected_jumps</span><span class="p">),</span>
+                <span class="n">_rich_status_for_local_subspace_entry</span><span class="p">(</span><span class="n">entry</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">shown</span><span class="p">):</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+                <span class="s2">&quot;…&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">shown</span><span class="p">)</span><span class="si">}</span><span class="s2"> more regions&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Panel</span><span class="p">(</span>
+            <span class="n">Group</span><span class="p">(</span><span class="n">overview</span><span class="p">,</span> <span class="n">table</span><span class="p">),</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">Text</span><span class="p">(</span><span class="s2">&quot;Local manifold-support report&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold cyan&quot;</span><span class="p">),</span>
+            <span class="n">border_style</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="local_subspace_support_report_from_recycling_build_result">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.local_subspace_support_report_from_recycling_build_result">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">local_subspace_support_report_from_recycling_build_result</span><span class="p">(</span>
+    <span class="n">build_result</span><span class="p">:</span> <span class="n">LocalRecyclingBuildResult</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalSubspaceSupportReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Summarize local RDM support/nullity and selected recyclers by region.&quot;&quot;&quot;</span>
+    <span class="n">selected_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">selection</span> <span class="ow">in</span> <span class="n">build_result</span><span class="o">.</span><span class="n">selections</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">selection</span><span class="o">.</span><span class="n">candidate</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+        <span class="n">selected_counts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">selected_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalSubspaceSupportReportEntry</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">scan_result</span> <span class="ow">in</span> <span class="n">build_result</span><span class="o">.</span><span class="n">scan_results</span><span class="p">:</span>
+        <span class="n">rdm</span> <span class="o">=</span> <span class="n">scan_result</span><span class="o">.</span><span class="n">reduced_density_matrix</span>
+        <span class="n">support_eigenvalues</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">rdm</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="o">-</span><span class="n">rdm</span><span class="o">.</span><span class="n">support_rank</span> <span class="p">:])</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">rdm</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+        <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">LocalSubspaceSupportReportEntry</span><span class="p">(</span>
+                <span class="n">variable_indices</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                <span class="n">local_dim</span><span class="o">=</span><span class="n">rdm</span><span class="o">.</span><span class="n">local_dim</span><span class="p">,</span>
+                <span class="n">support_rank</span><span class="o">=</span><span class="n">rdm</span><span class="o">.</span><span class="n">support_rank</span><span class="p">,</span>
+                <span class="n">nullity</span><span class="o">=</span><span class="n">rdm</span><span class="o">.</span><span class="n">nullity</span><span class="p">,</span>
+                <span class="n">support_trace</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">rdm</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">),</span>
+                <span class="n">min_nonzero_eigenvalue</span><span class="o">=</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">support_eigenvalues</span><span class="p">)</span> <span class="k">if</span> <span class="n">support_eigenvalues</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">max_eigenvalue</span><span class="o">=</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">support_eigenvalues</span><span class="p">)</span> <span class="k">if</span> <span class="n">support_eigenvalues</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">n_candidate_jumps</span><span class="o">=</span><span class="n">scan_result</span><span class="o">.</span><span class="n">n_candidates</span><span class="p">,</span>
+                <span class="n">n_selected_jumps</span><span class="o">=</span><span class="n">selected_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">LocalSubspaceSupportReport</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">entries</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rich_status_for_local_subspace_entry</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">LocalSubspaceSupportReportEntry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;full_local_support&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;[yellow]full local support[/yellow]&quot;</span>
+    <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;selected_recyclers&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;[green]selected[/green]&quot;</span>
+    <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;candidates_not_selected&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;[yellow]not selected[/yellow]&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;[red]no inflow candidates[/red]&quot;</span>
+
+
+<div class="viewcode-block" id="local_subspace_support_report_for_subspace">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.caging.local_subspace_support_report_for_subspace">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">local_subspace_support_report_for_subspace</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">regions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">RecyclingJumpSource</span> <span class="o">=</span> <span class="s2">&quot;local_rdm_block_reset&quot;</span><span class="p">,</span>
+    <span class="n">deduplicate_regions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">max_jumps_per_region</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">rdm_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">dark_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">inflow_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span>
+    <span class="n">max_candidates_per_region</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">prefer_sparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">two_pattern_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalSubspaceSupportReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build only the local manifold-support report for candidate regions.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">local_subspace_support_report_from_recycling_build_result</span><span class="p">(</span>
+        <span class="n">build_local_recycling_jumps_from_subspace_regions</span><span class="p">(</span>
+            <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+            <span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">,</span>
+            <span class="n">regions</span><span class="o">=</span><span class="n">regions</span><span class="p">,</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+            <span class="n">deduplicate_regions</span><span class="o">=</span><span class="n">deduplicate_regions</span><span class="p">,</span>
+            <span class="n">max_jumps_per_region</span><span class="o">=</span><span class="n">max_jumps_per_region</span><span class="p">,</span>
+            <span class="n">rdm_tolerance</span><span class="o">=</span><span class="n">rdm_tolerance</span><span class="p">,</span>
+            <span class="n">dark_tolerance</span><span class="o">=</span><span class="n">dark_tolerance</span><span class="p">,</span>
+            <span class="n">inflow_tolerance</span><span class="o">=</span><span class="n">inflow_tolerance</span><span class="p">,</span>
+            <span class="n">max_candidates_per_region</span><span class="o">=</span><span class="n">max_candidates_per_region</span><span class="p">,</span>
+            <span class="n">prefer_sparse</span><span class="o">=</span><span class="n">prefer_sparse</span><span class="p">,</span>
+            <span class="n">two_pattern_tolerance</span><span class="o">=</span><span class="n">two_pattern_tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span></div>
 
 
 
