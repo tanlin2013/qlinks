@@ -638,14 +638,19 @@ class HamiltonianModelBase:
         """
         validate_builder_name(builder)
 
+        operator_layout, build_basis = self.model_builder._prepare_local_term_build(
+            build_result=build_result,
+            builder=builder,
+        )
+
         term = self.make_local_term(
             descriptor,
-            build_result.layout,
+            operator_layout,
             builder=builder,
         )
 
         return self.model_builder._build_term_matrix(
-            basis=build_result.basis,
+            basis=build_basis,
             term=term,
             builder=builder,
             backend=backend,
@@ -802,6 +807,80 @@ class GenericModelBuilder:
             on_missing=on_missing,
             drop_zero_atol=drop_zero_atol,
         ).hamiltonian
+
+    def _prepare_local_term_build(
+        self,
+        *,
+        build_result: ModelBuildResult,
+        builder: HamiltonianBuilderName,
+    ) -> tuple[VariableLayout, Basis | BinaryEncodedBasis]:
+        """Return the operator layout and basis representation for one local term.
+
+        ``ModelBuildResult.basis`` stores the representation used by the
+        aggregate Hamiltonian builder.  Local-term reconstruction is often used
+        downstream with a different builder, for example sparse local detector
+        matrices built from a bitmask QDM result.  Convert between compatible
+        representations while preserving the basis ordering.
+        """
+        validate_builder_name(builder)
+
+        basis = build_result.basis
+
+        if builder == "bitmask":
+            if isinstance(basis, BinaryEncodedBasis):
+                return basis.layout, basis
+
+            if isinstance(basis, Basis):
+                encoded_basis = BinaryEncodedBasis.from_basis(basis, sort=False)
+                return encoded_basis.layout, encoded_basis
+
+            raise TypeError("build_result.basis must be Basis or BinaryEncodedBasis.")
+
+        if isinstance(basis, Basis):
+            return build_result.layout, basis
+
+        if isinstance(basis, BinaryEncodedBasis):
+            if not self._encoded_basis_matches_physical_layout(basis, build_result.layout):
+                raise TypeError(
+                    f"builder='{builder}' requires an array Basis in the physical "
+                    "layout. The supplied build_result contains an encoded basis "
+                    "with a different operator layout; use builder='bitmask' or "
+                    "rebuild the model with builder='sparse'."
+                )
+
+            array_basis = basis.to_array_basis()
+            if array_basis.layout is not build_result.layout:
+                array_basis = Basis.from_states(build_result.layout, array_basis.states)
+
+            return build_result.layout, array_basis
+
+        raise TypeError("build_result.basis must be Basis or BinaryEncodedBasis.")
+
+    @staticmethod
+    def _encoded_basis_matches_physical_layout(
+        basis: BinaryEncodedBasis,
+        layout: VariableLayout,
+    ) -> bool:
+        if basis.layout.n_variables != layout.n_variables:
+            return False
+
+        for variable_index in range(layout.n_variables):
+            encoded_spec = basis.layout.spec(variable_index)
+            physical_spec = layout.spec(variable_index)
+
+            if encoded_spec.kind != physical_spec.kind:
+                return False
+
+            if encoded_spec.geometry_index != physical_spec.geometry_index:
+                return False
+
+            if not np.array_equal(
+                encoded_spec.local_space.values,
+                physical_spec.local_space.values,
+            ):
+                return False
+
+        return True
 
     def _build_term_matrix(
         self,

@@ -134,3 +134,108 @@ def test_local_term_descriptor_caches_support_link_set() -> None:
     assert term.support_link_set is term.support_link_set
     assert term.is_inside_links(set(term.support_links))
     assert term.is_disjoint_from_links(set())
+
+
+def test_qdm_local_terms_sparse_from_bitmask_build_result() -> None:
+    model = SquareQDMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="open",
+        coup_kin=-1.0,
+        coup_pot=1.0,
+    )
+
+    sparse_result = model.build(
+        basis_solver="dfs",
+        builder="sparse",
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+    bitmask_result = model.build(
+        basis=sparse_result.basis,
+        builder="bitmask",
+        backend="scipy",
+        on_missing="raise",
+    )
+
+    for operator_kind, expected_matrix_name in (
+        ("kinetic", "kinetic"),
+        ("potential", "potential"),
+    ):
+        local_terms = model.local_term_descriptors(operator_kind=operator_kind)
+        local_matrices = [
+            model.build_local_term(term, bitmask_result, backend="scipy") for term in local_terms
+        ]
+
+        reconstructed = sum(local_matrices[1:], local_matrices[0])
+        expected = getattr(bitmask_result, expected_matrix_name)
+
+        assert_sparse_allclose(reconstructed, expected)
+
+
+def test_qdm_local_terms_bitmask_from_sparse_build_result() -> None:
+    model = SquareQDMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="open",
+        coup_kin=-1.0,
+        coup_pot=1.0,
+    )
+
+    result = model.build(
+        basis_solver="dfs",
+        builder="sparse",
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    for operator_kind, expected_matrix_name in (
+        ("kinetic", "kinetic"),
+        ("potential", "potential"),
+    ):
+        local_terms = model.local_term_descriptors(operator_kind=operator_kind)
+        local_matrices = [
+            model.build_local_term(term, result, builder="bitmask", backend="scipy")
+            for term in local_terms
+        ]
+
+        reconstructed = sum(local_matrices[1:], local_matrices[0])
+        expected = getattr(result, expected_matrix_name)
+
+        assert_sparse_allclose(reconstructed, expected)
+
+
+def test_qlm_local_terms_bitmask_use_encoded_operator_layout() -> None:
+    model = SquareQLMModel(
+        lx=2,
+        ly=2,
+        boundary_condition="open",
+        coup_kin=-1.0,
+        coup_pot=1.0,
+        charges=0,
+    )
+
+    result = model.build(
+        basis_solver="dfs",
+        builder="bitmask",
+        backend="scipy",
+        sort_basis=True,
+        on_missing="raise",
+    )
+
+    for operator_kind, expected_matrix_name in (
+        ("kinetic", "kinetic"),
+        ("potential", "potential"),
+    ):
+        local_terms = model.local_term_descriptors(operator_kind=operator_kind)
+        local_matrices = [
+            model.build_local_term(term, result, builder="bitmask", backend="scipy")
+            for term in local_terms
+        ]
+
+        reconstructed = sum(local_matrices[1:], local_matrices[0])
+        expected = getattr(result, expected_matrix_name)
+
+        assert_sparse_allclose(reconstructed, expected)
