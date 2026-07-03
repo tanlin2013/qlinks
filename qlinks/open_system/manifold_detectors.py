@@ -1304,7 +1304,19 @@ def diagnose_manifold_dark_operator_basis(
     ]
     constraint_matrix = np.column_stack(action_columns).astype(np.complex128, copy=False)
 
-    _, singular_values, vh = np.linalg.svd(constraint_matrix, full_matrices=True)
+    # The constraint matrix is usually tall in production QDM runs:
+    # ``(hilbert_dimension * manifold_dimension) x n_operators``.  A full SVD
+    # would materialize the huge left-unitary matrix and can dominate or even
+    # time out before any jump selection starts.  We only need right singular
+    # vectors in operator-coefficient space, so the economy SVD is complete
+    # whenever rows >= columns.  Keep full_matrices=True only for genuinely
+    # underdetermined systems, where the economy Vh would omit the extra
+    # nullspace directions.
+    full_matrices = constraint_matrix.shape[0] < constraint_matrix.shape[1]
+    _, singular_values, vh = np.linalg.svd(
+        constraint_matrix,
+        full_matrices=full_matrices,
+    )
     if singular_values.size == 0:
         cutoff = float(tolerance)
         rank = 0
@@ -1400,6 +1412,273 @@ def _projected_inflow_norm(
     target_block_norm_sq = float(np.linalg.norm(target_block) ** 2)
     inflow_sq = max(left_projected_norm_sq - target_block_norm_sq, 0.0)
     return float(np.sqrt(inflow_sq)), float(np.sqrt(target_block_norm_sq))
+
+
+def _diagonal_vector_if_diagonal(
+    operator: sp.csr_array,
+    *,
+    tolerance: float,
+) -> npt.NDArray[np.complex128] | None:
+    """Return the diagonal when a sparse operator has no off-diagonal support."""
+    coo = operator.tocoo()
+    off_diagonal_mask = coo.row != coo.col
+    if np.any(np.abs(coo.data[off_diagonal_mask]) > tolerance):
+        return None
+    return np.asarray(operator.diagonal(), dtype=np.complex128)
+
+
+def _embedded_matrix_unit_metrics_with_diagonal_right_factor(
+    *,
+    embedding_context: Any,
+    target_local_index: int,
+    source_local_index: int,
+    right_diagonal: npt.NDArray[np.complex128],
+    state_basis: npt.NDArray[np.complex128],
+    zero_tolerance: float,
+) -> tuple[float, float, float, int, float, int] | None:
+    """Fast score ``J = |target><source|_R D`` for diagonal ``D``."""
+    transition_mask = (embedding_context.target_local_indices == int(target_local_index)) & (
+        embedding_context.source_local_indices == int(source_local_index)
+    )
+    if not np.any(transition_mask):
+        return None
+
+    source_indices = embedding_context.source_full_indices[transition_mask]
+    target_indices = embedding_context.target_full_indices[transition_mask]
+    jump_values = right_diagonal[source_indices]
+    jump_mask = np.abs(jump_values) > zero_tolerance
+    jump_nnz = int(np.count_nonzero(jump_mask))
+    if jump_nnz == 0:
+        return None
+
+    source_indices = source_indices[jump_mask]
+    target_indices = target_indices[jump_mask]
+    jump_values = jump_values[jump_mask]
+
+    # Matrix units have unit entries on each constrained-basis transition.
+    recycler_nnz = int(np.count_nonzero(transition_mask))
+    recycler_frobenius_norm = float(np.sqrt(recycler_nnz))
+
+    adjoint_action = np.zeros_like(state_basis, dtype=np.complex128)
+    conjugated_values = np.conj(jump_values)
+    for state_index in range(state_basis.shape[1]):
+        np.add.at(
+            adjoint_action[:, state_index],
+            source_indices,
+            conjugated_values * state_basis[target_indices, state_index],
+        )
+
+    target_block = adjoint_action.conj().T @ state_basis
+    target_block_norm_sq = float(np.linalg.norm(target_block) ** 2)
+    adjoint_norm_sq = float(np.linalg.norm(adjoint_action) ** 2)
+    inflow_norm = float(np.sqrt(max(adjoint_norm_sq - target_block_norm_sq, 0.0)))
+    jump_frobenius_norm = float(np.linalg.norm(jump_values))
+    return (
+        inflow_norm,
+        float(np.sqrt(max(target_block_norm_sq, 0.0))),
+        jump_frobenius_norm,
+        jump_nnz,
+        recycler_frobenius_norm,
+        recycler_nnz,
+    )
+
+
+def _embedded_local_operator_metrics_with_diagonal_right_factor(
+    *,
+    embedding_context: Any,
+    local_operator: npt.NDArray[np.complex128],
+    right_diagonal: npt.NDArray[np.complex128],
+    state_basis: npt.NDArray[np.complex128],
+    zero_tolerance: float,
+) -> tuple[float, float, float, int, float, int] | None:
+    """Score ``J = R D`` without materializing sparse matrices when ``D`` is diagonal.
+
+    The generic recycled-detector scan used to build every embedded local
+    recycler ``R``, multiply it by the detector ``D``, and then multiply the
+    resulting sparse matrix by the target-manifold basis.  In QDM production
+    runs the detector basis is normally diagonal plaquette-projector data.  For
+    that common case, the nonzero entries of ``J`` are just the embedded local
+    entries of ``R`` scaled by the source-basis diagonal of ``D``.  Computing the
+    projected inflow directly from these arrays avoids hundreds of thousands of
+    tiny CSR constructions and sparse products.
+    """
+    if local_operator.shape != (embedding_context.local_dim, embedding_context.local_dim):
+        raise ValueError(
+            "local_operator has incompatible shape: "
+            f"{local_operator.shape} != "
+            f"{(embedding_context.local_dim, embedding_context.local_dim)}."
+        )
+    if embedding_context.source_full_indices.size == 0:
+        return None
+
+    local_values = np.asarray(
+        local_operator[
+            embedding_context.target_local_indices,
+            embedding_context.source_local_indices,
+        ],
+        dtype=np.complex128,
+    )
+    recycler_mask = np.abs(local_values) > zero_tolerance
+    recycler_nnz = int(np.count_nonzero(recycler_mask))
+    if recycler_nnz == 0:
+        return None
+
+    source_indices = embedding_context.source_full_indices
+    target_indices = embedding_context.target_full_indices
+    jump_values = local_values * right_diagonal[source_indices]
+    jump_mask = np.abs(jump_values) > zero_tolerance
+    jump_nnz = int(np.count_nonzero(jump_mask))
+    if jump_nnz == 0:
+        return None
+
+    jump_values = jump_values[jump_mask]
+    source_indices = source_indices[jump_mask]
+    target_indices = target_indices[jump_mask]
+
+    adjoint_action = np.zeros_like(state_basis, dtype=np.complex128)
+    conjugated_values = np.conj(jump_values)
+    for state_index in range(state_basis.shape[1]):
+        np.add.at(
+            adjoint_action[:, state_index],
+            source_indices,
+            conjugated_values * state_basis[target_indices, state_index],
+        )
+
+    target_block = adjoint_action.conj().T @ state_basis
+    target_block_norm_sq = float(np.linalg.norm(target_block) ** 2)
+    adjoint_norm_sq = float(np.linalg.norm(adjoint_action) ** 2)
+    inflow_norm = float(np.sqrt(max(adjoint_norm_sq - target_block_norm_sq, 0.0)))
+
+    jump_frobenius_norm = float(np.linalg.norm(jump_values))
+    recycler_frobenius_norm = float(np.linalg.norm(local_values[recycler_mask]))
+    return (
+        inflow_norm,
+        float(np.sqrt(max(target_block_norm_sq, 0.0))),
+        jump_frobenius_norm,
+        jump_nnz,
+        recycler_frobenius_norm,
+        recycler_nnz,
+    )
+
+
+def _embedded_matrix_unit_times_diagonal_as_csr(
+    *,
+    embedding_context: Any,
+    target_local_index: int,
+    source_local_index: int,
+    right_diagonal: npt.NDArray[np.complex128],
+    dim: int,
+    zero_tolerance: float,
+) -> sp.csr_array:
+    """Build ``|target><source|_R D`` directly for diagonal ``D``."""
+    transition_mask = (embedding_context.target_local_indices == int(target_local_index)) & (
+        embedding_context.source_local_indices == int(source_local_index)
+    )
+    if not np.any(transition_mask):
+        return sp.csr_array((dim, dim), dtype=np.complex128)
+
+    source_indices = embedding_context.source_full_indices[transition_mask]
+    target_indices = embedding_context.target_full_indices[transition_mask]
+    jump_values = np.asarray(right_diagonal[source_indices], dtype=np.complex128)
+    jump_mask = np.abs(jump_values) > zero_tolerance
+    if not np.any(jump_mask):
+        return sp.csr_array((dim, dim), dtype=np.complex128)
+
+    return sp.csr_array(
+        (
+            jump_values[jump_mask],
+            (target_indices[jump_mask], source_indices[jump_mask]),
+        ),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+
+
+def _embedded_local_operator_times_diagonal_as_csr(
+    *,
+    embedding_context: Any,
+    local_operator: npt.NDArray[np.complex128],
+    right_diagonal: npt.NDArray[np.complex128],
+    dim: int,
+    zero_tolerance: float,
+) -> sp.csr_array:
+    """Build embedded ``R D`` directly when ``D`` is diagonal."""
+    if local_operator.shape != (embedding_context.local_dim, embedding_context.local_dim):
+        raise ValueError(
+            "local_operator has incompatible shape: "
+            f"{local_operator.shape} != "
+            f"{(embedding_context.local_dim, embedding_context.local_dim)}."
+        )
+    if embedding_context.source_full_indices.size == 0:
+        return sp.csr_array((dim, dim), dtype=np.complex128)
+
+    local_values = np.asarray(
+        local_operator[
+            embedding_context.target_local_indices,
+            embedding_context.source_local_indices,
+        ],
+        dtype=np.complex128,
+    )
+    recycler_mask = np.abs(local_values) > zero_tolerance
+    if not np.any(recycler_mask):
+        return sp.csr_array((dim, dim), dtype=np.complex128)
+
+    source_indices = embedding_context.source_full_indices
+    target_indices = embedding_context.target_full_indices
+    jump_values = local_values * right_diagonal[source_indices]
+    jump_mask = np.abs(jump_values) > zero_tolerance
+    if not np.any(jump_mask):
+        return sp.csr_array((dim, dim), dtype=np.complex128)
+
+    return sp.csr_array(
+        (
+            jump_values[jump_mask],
+            (target_indices[jump_mask], source_indices[jump_mask]),
+        ),
+        shape=(dim, dim),
+        dtype=np.complex128,
+    )
+
+
+def _recycled_candidate_sort_key(
+    candidate: RecycledManifoldDarkDetectorCandidate,
+    *,
+    dark_tolerance: float,
+) -> tuple[bool, float, float, int, int, int, int]:
+    return (
+        candidate.relative_dark_residual > dark_tolerance,
+        -candidate.inflow_norm,
+        candidate.relative_dark_residual,
+        candidate.jump_nnz,
+        candidate.detector_index,
+        candidate.region_index,
+        candidate.recycler_index,
+    )
+
+
+def _append_ranked_recycled_candidate(
+    candidates: list[RecycledManifoldDarkDetectorCandidate],
+    candidate: RecycledManifoldDarkDetectorCandidate,
+    *,
+    max_report_candidates: int | None,
+    dark_tolerance: float,
+) -> None:
+    candidates.append(candidate)
+    if max_report_candidates is None:
+        return
+    limit = max(int(max_report_candidates), 0)
+    if limit == 0:
+        candidates.clear()
+        return
+    if len(candidates) <= limit:
+        return
+    candidates.sort(
+        key=lambda item: _recycled_candidate_sort_key(
+            item,
+            dark_tolerance=dark_tolerance,
+        )
+    )
+    del candidates[limit:]
 
 
 def _normalize_detector_coefficients(
@@ -1992,7 +2271,7 @@ def diagnose_recycled_manifold_dark_detectors(
     )
     local_dims = tuple(int(rdm.local_dim) for rdm in rdms)
 
-    detectors: list[tuple[sp.csr_array, float, float]] = []
+    detectors: list[tuple[sp.csr_array, float, float, npt.NDArray[np.complex128] | None]] = []
     for detector_index in range(coefficients.shape[1]):
         detector = _combined_operator(
             operators=detector_matrices,
@@ -2001,7 +2280,18 @@ def diagnose_recycled_manifold_dark_detectors(
         detector_action_residual = float(np.linalg.norm(detector @ state_basis))
         detector_norm = float(sp.linalg.norm(detector))
         detector_relative_residual = detector_action_residual / max(detector_norm, 1.0)
-        detectors.append((detector, detector_action_residual, detector_relative_residual))
+        detector_diagonal = _diagonal_vector_if_diagonal(
+            detector,
+            tolerance=tolerance,
+        )
+        detectors.append(
+            (
+                detector,
+                detector_action_residual,
+                detector_relative_residual,
+                detector_diagonal,
+            )
+        )
 
     candidate_buffer: list[RecycledManifoldDarkDetectorCandidate] = []
     n_tested_candidates = 0
@@ -2011,10 +2301,75 @@ def diagnose_recycled_manifold_dark_detectors(
         detector,
         detector_action_residual,
         detector_relative_residual,
+        detector_diagonal,
     ) in enumerate(detectors):
         for region_index, (embedding_context, rdm) in enumerate(
             zip(embedding_contexts, rdms, strict=True)
         ):
+            if recycler_source == "matrix_units" and detector_diagonal is not None:
+                for target_index, target_pattern in enumerate(rdm.local_patterns):
+                    for source_index, source_pattern in enumerate(rdm.local_patterns):
+                        recycler_index = target_index * rdm.local_dim + source_index
+                        recycler_name = (
+                            f"{_pattern_name(target_pattern)}<-" f"{_pattern_name(source_pattern)}"
+                        )
+                        n_tested_candidates += 1
+                        fast_metrics = _embedded_matrix_unit_metrics_with_diagonal_right_factor(
+                            embedding_context=embedding_context,
+                            target_local_index=target_index,
+                            source_local_index=source_index,
+                            right_diagonal=detector_diagonal,
+                            state_basis=state_basis,
+                            zero_tolerance=0.0,
+                        )
+                        if fast_metrics is None:
+                            continue
+
+                        (
+                            inflow_norm,
+                            target_block_norm,
+                            jump_norm,
+                            jump_nnz,
+                            recycler_frobenius_norm,
+                            recycler_nnz,
+                        ) = fast_metrics
+                        n_nonzero_candidates += 1
+                        dark_residual = float(detector_action_residual * recycler_frobenius_norm)
+                        relative_dark_residual = dark_residual / max(jump_norm, 1.0)
+                        candidate = RecycledManifoldDarkDetectorCandidate(
+                            candidate_index=n_nonzero_candidates - 1,
+                            detector_index=int(detector_index),
+                            detector_name=names[detector_index],
+                            region_index=int(region_index),
+                            variable_indices=rdm.variable_indices,
+                            local_dim=rdm.local_dim,
+                            recycler_index=int(recycler_index),
+                            recycler_name=recycler_name,
+                            dark_residual=dark_residual,
+                            relative_dark_residual=float(relative_dark_residual),
+                            inflow_norm=inflow_norm,
+                            jump_frobenius_norm=jump_norm,
+                            target_block_norm=target_block_norm,
+                            detector_action_residual=detector_action_residual,
+                            detector_relative_action_residual=float(detector_relative_residual),
+                            recycler_frobenius_norm=recycler_frobenius_norm,
+                            recycler_nnz=recycler_nnz,
+                            jump_nnz=jump_nnz,
+                        )
+                        if sort_by_inflow:
+                            _append_ranked_recycled_candidate(
+                                candidate_buffer,
+                                candidate,
+                                max_report_candidates=max_report_candidates,
+                                dark_tolerance=dark_tolerance,
+                            )
+                        elif max_report_candidates is None or len(candidate_buffer) < max(
+                            int(max_report_candidates),
+                            0,
+                        ):
+                            candidate_buffer.append(candidate)
+                continue
+
             recycler_specs = _local_recycler_specs(
                 local_patterns=rdm.local_patterns,
                 support_basis=rdm.support_basis,
@@ -2022,24 +2377,58 @@ def diagnose_recycled_manifold_dark_detectors(
             )
             for recycler_index, (recycler_name, local_operator) in enumerate(recycler_specs):
                 n_tested_candidates += 1
-                recycler = _embed_local_pattern_operator_from_context(
-                    context=embedding_context,
-                    local_operator=local_operator,
-                )
-                if recycler.nnz == 0:
-                    continue
-                n_nonzero_candidates += 1
 
-                jump = (recycler @ detector).tocsr()
-                dark_residual = float(np.linalg.norm(jump @ state_basis))
-                jump_norm = float(sp.linalg.norm(jump))
-                relative_dark_residual = dark_residual / max(jump_norm, 1.0)
-                inflow_norm, target_block_norm = _projected_inflow_norm(
-                    jump=jump,
-                    state_basis=state_basis,
-                )
+                fast_metrics = None
+                if detector_diagonal is not None:
+                    fast_metrics = _embedded_local_operator_metrics_with_diagonal_right_factor(
+                        embedding_context=embedding_context,
+                        local_operator=local_operator,
+                        right_diagonal=detector_diagonal,
+                        state_basis=state_basis,
+                        zero_tolerance=0.0,
+                    )
+
+                if fast_metrics is None:
+                    recycler = _embed_local_pattern_operator_from_context(
+                        context=embedding_context,
+                        local_operator=local_operator,
+                    )
+                    if recycler.nnz == 0:
+                        continue
+
+                    jump = (recycler @ detector).tocsr()
+                    if jump.nnz == 0:
+                        continue
+                    n_nonzero_candidates += 1
+
+                    dark_residual = float(np.linalg.norm(jump @ state_basis))
+                    jump_norm = float(sp.linalg.norm(jump))
+                    relative_dark_residual = dark_residual / max(jump_norm, 1.0)
+                    inflow_norm, target_block_norm = _projected_inflow_norm(
+                        jump=jump,
+                        state_basis=state_basis,
+                    )
+                    recycler_frobenius_norm = float(sp.linalg.norm(recycler))
+                    recycler_nnz = int(recycler.nnz)
+                    jump_nnz = int(jump.nnz)
+                else:
+                    (
+                        inflow_norm,
+                        target_block_norm,
+                        jump_norm,
+                        jump_nnz,
+                        recycler_frobenius_norm,
+                        recycler_nnz,
+                    ) = fast_metrics
+                    n_nonzero_candidates += 1
+                    # Darkness comes from the right detector: J Q = R (D Q).
+                    # This inexpensive bound is exact when the detector is
+                    # exactly dark, which is the intended use of this scan.
+                    dark_residual = float(detector_action_residual * recycler_frobenius_norm)
+                    relative_dark_residual = dark_residual / max(jump_norm, 1.0)
+
                 candidate = RecycledManifoldDarkDetectorCandidate(
-                    candidate_index=len(candidate_buffer),
+                    candidate_index=n_nonzero_candidates - 1,
                     detector_index=int(detector_index),
                     detector_name=names[detector_index],
                     region_index=int(region_index),
@@ -2054,20 +2443,29 @@ def diagnose_recycled_manifold_dark_detectors(
                     target_block_norm=target_block_norm,
                     detector_action_residual=detector_action_residual,
                     detector_relative_action_residual=float(detector_relative_residual),
-                    recycler_frobenius_norm=float(sp.linalg.norm(recycler)),
-                    recycler_nnz=int(recycler.nnz),
-                    jump_nnz=int(jump.nnz),
+                    recycler_frobenius_norm=recycler_frobenius_norm,
+                    recycler_nnz=recycler_nnz,
+                    jump_nnz=jump_nnz,
                 )
-                candidate_buffer.append(candidate)
+                if sort_by_inflow:
+                    _append_ranked_recycled_candidate(
+                        candidate_buffer,
+                        candidate,
+                        max_report_candidates=max_report_candidates,
+                        dark_tolerance=dark_tolerance,
+                    )
+                elif max_report_candidates is None or len(candidate_buffer) < max(
+                    int(max_report_candidates),
+                    0,
+                ):
+                    candidate_buffer.append(candidate)
 
     if sort_by_inflow:
         candidate_buffer = sorted(
             candidate_buffer,
-            key=lambda candidate: (
-                candidate.relative_dark_residual > dark_tolerance,
-                -candidate.inflow_norm,
-                candidate.relative_dark_residual,
-                candidate.jump_nnz,
+            key=lambda candidate: _recycled_candidate_sort_key(
+                candidate,
+                dark_tolerance=dark_tolerance,
             ),
         )
 
@@ -2112,6 +2510,77 @@ def diagnose_recycled_manifold_dark_detectors(
         inflow_tolerance=float(inflow_tolerance),
         candidates=tuple(candidate_buffer),
     )
+
+
+def _recycled_jump_for_candidate_from_cache(
+    *,
+    candidate: RecycledManifoldDarkDetectorCandidate,
+    dim: int,
+    detector_matrices: tuple[sp.csr_array, ...],
+    detector_coefficients: npt.NDArray[np.complex128],
+    detector_diagonals: dict[int, npt.NDArray[np.complex128] | None],
+    embedding_contexts: dict[int, Any],
+    rdms: dict[int, Any],
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ],
+    zero_tolerance: float,
+) -> sp.csr_array:
+    """Rebuild a candidate jump using cached local contexts and detectors."""
+    from qlinks.open_system.local_recycling import _embed_local_pattern_operator_from_context
+
+    detector_diagonal = detector_diagonals.get(candidate.detector_index)
+    embedding_context = embedding_contexts[candidate.region_index]
+
+    if detector_diagonal is not None:
+        if recycler_source == "matrix_units":
+            target_index, source_index = divmod(
+                int(candidate.recycler_index),
+                int(candidate.local_dim),
+            )
+            return _embedded_matrix_unit_times_diagonal_as_csr(
+                embedding_context=embedding_context,
+                target_local_index=target_index,
+                source_local_index=source_index,
+                right_diagonal=detector_diagonal,
+                dim=dim,
+                zero_tolerance=zero_tolerance,
+            )
+
+        rdm = rdms[candidate.region_index]
+        recycler_specs = _local_recycler_specs(
+            local_patterns=rdm.local_patterns,
+            support_basis=rdm.support_basis,
+            recycler_source=recycler_source,
+        )
+        _, local_operator = recycler_specs[candidate.recycler_index]
+        return _embedded_local_operator_times_diagonal_as_csr(
+            embedding_context=embedding_context,
+            local_operator=local_operator,
+            right_diagonal=detector_diagonal,
+            dim=dim,
+            zero_tolerance=zero_tolerance,
+        )
+
+    rdm = rdms[candidate.region_index]
+    detector = _combined_operator(
+        operators=detector_matrices,
+        coefficients=detector_coefficients[:, candidate.detector_index],
+    )
+    recycler_specs = _local_recycler_specs(
+        local_patterns=rdm.local_patterns,
+        support_basis=rdm.support_basis,
+        recycler_source=recycler_source,
+    )
+    if candidate.recycler_index < 0 or candidate.recycler_index >= len(recycler_specs):
+        raise ValueError("candidate.recycler_index is out of range for recycler specs.")
+    _, local_operator = recycler_specs[candidate.recycler_index]
+    recycler = _embed_local_pattern_operator_from_context(
+        context=embedding_context,
+        local_operator=local_operator,
+    )
+    return (recycler @ detector).tocsr()
 
 
 def _recycled_jump_for_candidate(
@@ -4411,7 +4880,8 @@ def _right_kernel_basis(
     if n_columns == 0:
         return np.zeros((0, 0), dtype=np.complex128)
 
-    _u, singular_values, vh = np.linalg.svd(matrix, full_matrices=True)
+    full_matrices = matrix.shape[0] < matrix.shape[1]
+    _u, singular_values, vh = np.linalg.svd(matrix, full_matrices=full_matrices)
     if singular_values.size == 0:
         rank = 0
     else:
@@ -4630,7 +5100,10 @@ def select_recycled_manifold_dark_detector_jumps(
     target_bad_kernel_dimension: int = 0,
     allow_non_improving: bool = False,
     expand_candidate_report: bool = False,
-    selection_strategy: Literal["diagnostics", "kernel_projection"] = "diagnostics",
+    selection_strategy: Literal[
+        "diagnostics", "kernel_projection", "ranked_inflow"
+    ] = "diagnostics",
+    check_final_diagnostics: bool | None = None,
 ) -> RecycledManifoldJumpSelectionReport:
     """Greedily select a small recycled-detector jump subset.
 
@@ -4655,7 +5128,11 @@ def select_recycled_manifold_dark_detector_jumps(
     ``selection_strategy="kernel_projection"`` is faster for large two-region
     recycler pools: it updates the current complement common kernel directly by
     applying each candidate to the current bad subspace, and runs the full
-    diagnostics only once at the end.
+    diagnostics only once at the end.  ``"ranked_inflow"`` is the production
+    preselection mode for large scans: it trusts the inflow-ranked candidate
+    report and selects the top candidates directly.  By default this production
+    mode skips the expensive final common-kernel diagnostic; pass
+    ``check_final_diagnostics=True`` when you want the full certificate.
     """
     from qlinks.open_system.diagnostics import diagnose_dark_manifold
 
@@ -4663,8 +5140,12 @@ def select_recycled_manifold_dark_detector_jumps(
     state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
     dim = int(state_basis.shape[0])
     manifold_dimension = int(state_basis.shape[1])
-    if selection_strategy not in {"diagnostics", "kernel_projection"}:
-        raise ValueError('selection_strategy must be "diagnostics" or "kernel_projection".')
+    if selection_strategy not in {"diagnostics", "kernel_projection", "ranked_inflow"}:
+        raise ValueError(
+            'selection_strategy must be "diagnostics", "kernel_projection", or ' '"ranked_inflow".'
+        )
+    if check_final_diagnostics is None:
+        check_final_diagnostics = selection_strategy != "ranked_inflow"
 
     candidate_report_was_expanded = False
     if candidate_report is None:
@@ -4721,18 +5202,75 @@ def select_recycled_manifold_dark_detector_jumps(
         candidate_pool_was_limited = len(eligible_pool) > pool_limit
         pool = eligible_pool[:pool_limit]
 
-    candidate_jumps = {
-        id(candidate): _recycled_jump_for_candidate(
-            candidate=candidate,
-            states=state_basis,
-            basis_configs=basis_configs,
-            detector_operators=detector_operators,
-            local_regions=regions,
-            detector_coefficients=detector_coefficients,
-            dark_operator_report=dark_operator_report,
-            recycler_source=recycler_source,
+    detector_matrices = tuple(_as_csr(operator) for operator in detector_operators)
+    if detector_coefficients is None:
+        if dark_operator_report is None:
+            raise ValueError(
+                "Pass detector_coefficients or dark_operator_report to define detectors."
+            )
+        detector_coefficients = np.column_stack(
+            [candidate.coefficients for candidate in dark_operator_report.candidates]
+        )
+    coefficients = _normalize_detector_coefficients(
+        detector_coefficients,
+        n_operators=len(detector_matrices),
+    )
+
+    from qlinks.open_system.local_recycling import (
+        _embedding_context_from_basis_context,
+        _local_pattern_basis_context_from_basis,
+        _local_reduced_density_matrix_from_basis_context_and_states,
+    )
+
+    basis_array = np.asarray(basis_configs)
+    used_region_indices = sorted({int(candidate.region_index) for candidate in pool})
+    contexts = {
+        region_index: _local_pattern_basis_context_from_basis(
+            basis_configs=basis_array,
+            variable_indices=regions[region_index],
+        )
+        for region_index in used_region_indices
+    }
+    embedding_contexts = {
+        region_index: _embedding_context_from_basis_context(context)
+        for region_index, context in contexts.items()
+    }
+    rdms = (
+        {}
+        if recycler_source == "matrix_units"
+        else {
+            region_index: _local_reduced_density_matrix_from_basis_context_and_states(
+                context=context,
+                states=state_basis,
+                tolerance=rdm_tolerance,
+            )
+            for region_index, context in contexts.items()
+        }
+    )
+
+    used_detector_indices = {candidate.detector_index for candidate in pool}
+    detector_diagonals: dict[int, npt.NDArray[np.complex128] | None] = {}
+    for detector_index in used_detector_indices:
+        detector = _combined_operator(
+            operators=detector_matrices,
+            coefficients=coefficients[:, detector_index],
+        )
+        detector_diagonals[detector_index] = _diagonal_vector_if_diagonal(
+            detector,
             tolerance=tolerance,
-            rdm_tolerance=rdm_tolerance,
+        )
+
+    candidate_jumps = {
+        id(candidate): _recycled_jump_for_candidate_from_cache(
+            candidate=candidate,
+            dim=dim,
+            detector_matrices=detector_matrices,
+            detector_coefficients=coefficients,
+            detector_diagonals=detector_diagonals,
+            embedding_contexts=embedding_contexts,
+            rdms=rdms,
+            recycler_source=recycler_source,
+            zero_tolerance=0.0,
         )
         for candidate in pool
     }
@@ -4744,7 +5282,31 @@ def select_recycled_manifold_dark_detector_jumps(
     current_bad_dimension = dim - manifold_dimension
     final_diagnostics = None
 
-    if selection_strategy == "kernel_projection":
+    if selection_strategy == "ranked_inflow":
+        selected_candidates = list(pool[: max(int(max_selected_jumps), 0)])
+        selected_jumps = [candidate_jumps[id(candidate)] for candidate in selected_candidates]
+        selected_ids = {id(candidate) for candidate in selected_candidates}
+
+        cumulative_inflow_squared = 0.0
+        max_target_jump_residual = 0.0
+        for selected_candidate in selected_candidates:
+            cumulative_inflow_squared += float(selected_candidate.inflow_norm) ** 2
+            max_target_jump_residual = max(
+                max_target_jump_residual,
+                float(selected_candidate.dark_residual),
+            )
+            steps.append(
+                RecycledManifoldJumpSelectionStep(
+                    step_index=len(steps),
+                    candidate=selected_candidate,
+                    bad_common_jump_kernel_dimension=current_bad_dimension,
+                    inflow_norm=float(np.sqrt(cumulative_inflow_squared)),
+                    max_target_jump_residual=max_target_jump_residual,
+                    n_selected_jumps=len(steps) + 1,
+                )
+            )
+
+    elif selection_strategy == "kernel_projection":
         current_bad_basis = _orthogonal_complement_basis(
             state_basis,
             tolerance=kernel_tolerance,
@@ -4864,7 +5426,7 @@ def select_recycled_manifold_dark_detector_jumps(
             if current_bad_dimension <= target_bad_kernel_dimension:
                 break
 
-    if selected_jumps:
+    if selected_jumps and check_final_diagnostics:
         final_diagnostics = diagnose_dark_manifold(
             hamiltonian=hamiltonian,
             jumps=tuple(selected_jumps),

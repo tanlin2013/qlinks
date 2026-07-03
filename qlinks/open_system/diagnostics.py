@@ -2946,9 +2946,13 @@ def _nullspace_basis(
     if matrix.size == 0:
         return np.eye(matrix.shape[1], dtype=np.complex128)
 
+    # A full SVD is only needed for underdetermined matrices.  For tall
+    # stacked-jump matrices, economy SVD keeps the complete right-singular
+    # space while avoiding a huge unused left-unitary allocation.
+    full_matrices = matrix.shape[0] < matrix.shape[1]
     _left_vectors, singular_values, right_vectors_dagger = np.linalg.svd(
         matrix,
-        full_matrices=True,
+        full_matrices=full_matrices,
     )
 
     n_columns = matrix.shape[1]

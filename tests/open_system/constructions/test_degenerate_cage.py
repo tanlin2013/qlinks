@@ -306,3 +306,42 @@ def test_degenerate_jump_design_workflow_rich_render():
     assert "Degenerate cage jump-design workflow" in rendered
     assert "Workflow stages" in rendered
     assert "combined bad" in rendered
+
+
+def test_degenerate_jump_design_workflow_recycled_screening_stops_after_recycled_stage():
+    build_result = _two_bit_build_result()
+    target_state = np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
+    d1 = sp.diags([0.0, 1.0, 0.0, 0.0], format="csr", dtype=np.complex128)
+    d2 = sp.diags([0.0, 0.0, 1.0, 1.0], format="csr", dtype=np.complex128)
+    construction = build_degenerate_cage_lindblad_construction(
+        build_result=build_result,
+        states=target_state,
+        local_regions=((0, 1),),
+    )
+
+    workflow = construction.design_dark_manifold_jumps(
+        hamiltonian=build_result.hamiltonian,
+        basis_configs=build_result.basis.states,
+        detector_operators=(d1, d2),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_region_mode="construction",
+        recycled_recycler_source="matrix_units",
+        max_recycled_selected_jumps=2,
+        design_mode="recycled_screening",
+        check_recycled_selection_diagnostics=False,
+    )
+
+    summary = workflow.to_summary_dict()
+    assert summary["design_mode"] == "recycled_screening"
+    assert summary["early_stop_reason"] == "recycled_screening"
+    assert summary["n_recycled_jumps"] == 2
+    assert summary["n_targeted_jumps"] == 0
+    assert summary["targeted_candidates"] is None
+    assert summary["combined_bad_common_jump_kernel_dimension"] is None
+    assert workflow.family_report is None
+    assert workflow.residual_report is None
+    assert workflow.targeted_report is None
+    assert workflow.targeted_selection is None
+    assert workflow.final_diagnostics is None
+    assert workflow.jumps == workflow.recycled_jumps

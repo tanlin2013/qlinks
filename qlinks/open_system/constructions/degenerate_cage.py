@@ -292,8 +292,9 @@ class DegenerateCageJumpDesignWorkflowReport:
     def jumps(self) -> tuple[sp.csr_array, ...]:
         """Return the final combined jump list.
 
-        In ``design_mode="h_invariant_fast"`` the workflow may stop after
-        recycled-jump selection, before residual and targeted stages are run.
+        In ``design_mode="h_invariant_fast"`` or ``"recycled_screening"`` the
+        workflow may stop after recycled-jump selection, before residual and
+        targeted stages are run.
         In that case the final jump list is simply the recycled subset.
         """
         if self.targeted_selection is None:
@@ -1270,7 +1271,10 @@ class DegenerateCageLindbladConstruction:
         target_bad_kernel_dimension: int = 0,
         allow_non_improving: bool = False,
         expand_candidate_report: bool = False,
-        selection_strategy: Literal["diagnostics", "kernel_projection"] = "diagnostics",
+        selection_strategy: Literal[
+            "diagnostics", "kernel_projection", "ranked_inflow"
+        ] = "diagnostics",
+        check_final_diagnostics: bool | None = None,
     ) -> RecycledManifoldJumpSelectionReport:
         """Greedily select a small local recycled-detector jump subset.
 
@@ -1306,6 +1310,7 @@ class DegenerateCageLindbladConstruction:
             allow_non_improving=allow_non_improving,
             expand_candidate_report=expand_candidate_report,
             selection_strategy=selection_strategy,
+            check_final_diagnostics=check_final_diagnostics,
         )
 
     def design_dark_manifold_jumps(
@@ -1382,7 +1387,9 @@ class DegenerateCageLindbladConstruction:
         recycled_selection_strategy: Literal[
             "diagnostics",
             "kernel_projection",
-        ] = "kernel_projection",
+            "ranked_inflow",
+        ] = "ranked_inflow",
+        check_recycled_selection_diagnostics: bool | None = None,
         residual_operator_groups: (
             tuple[
                 tuple[str, tuple[Any, ...] | list[Any], tuple[str, ...] | list[str] | None],
@@ -1414,6 +1421,7 @@ class DegenerateCageLindbladConstruction:
         design_mode: Literal[
             "full",
             "h_invariant_fast",
+            "recycled_screening",
         ] = "full",
     ) -> DegenerateCageJumpDesignWorkflowReport:
         """Run the reusable cheap jump-design workflow for a dark manifold.
@@ -1428,6 +1436,11 @@ class DegenerateCageLindbladConstruction:
         remaining common-kernel complement has no Hamiltonian-invariant sector.
         If that cheaper physical criterion succeeds, it returns immediately and
         skips the full-family residual scan and targeted local-jump search.
+
+        In ``design_mode="recycled_screening"``, the workflow deliberately stops
+        after the recycled selector.  This is the production preselection mode
+        for large triangular-style scans where constructing a good jump pool is
+        useful, but a full common-kernel certificate should be run separately.
         """
 
         def resolve_regions(
@@ -1460,8 +1473,10 @@ class DegenerateCageLindbladConstruction:
                 'region mode must be "construction", "pair_unions", or "cluster_unions".'
             )
 
-        if design_mode not in {"full", "h_invariant_fast"}:
-            raise ValueError('design_mode must be "full" or "h_invariant_fast".')
+        if design_mode not in {"full", "h_invariant_fast", "recycled_screening"}:
+            raise ValueError(
+                'design_mode must be "full", "h_invariant_fast", or ' '"recycled_screening".'
+            )
 
         resolved_recycled_region_mode = recycled_region_mode or local_region_mode
         resolved_targeted_region_mode = targeted_region_mode or local_region_mode
@@ -1523,8 +1538,31 @@ class DegenerateCageLindbladConstruction:
                 max_selected_jumps=max_recycled_selected_jumps,
                 target_bad_kernel_dimension=recycled_target_bad_kernel_dimension,
                 allow_non_improving=recycled_allow_non_improving,
-                expand_candidate_report=True,
+                expand_candidate_report=recycled_selection_strategy != "ranked_inflow",
                 selection_strategy=recycled_selection_strategy,
+                check_final_diagnostics=check_recycled_selection_diagnostics,
+            )
+
+        if design_mode == "recycled_screening":
+            return DegenerateCageJumpDesignWorkflowReport(
+                dark_operator_report=dark_operator_report,
+                recycled_report=recycled_report,
+                recycled_selection=recycled_selection,
+                family_report=None,
+                residual_report=None,
+                targeted_report=None,
+                targeted_selection=None,
+                h_invariant_report=None,
+                recycled_local_regions=recycled_regions,
+                targeted_local_regions=(),
+                recycled_region_mode=(
+                    resolved_recycled_region_mode if recycled_local_regions is None else "explicit"
+                ),
+                targeted_region_mode="skipped",
+                recycled_recycler_source=recycled_recycler_source,
+                targeted_operator_source=targeted_operator_source,
+                design_mode=design_mode,
+                early_stop_reason="recycled_screening",
             )
 
         if design_mode == "h_invariant_fast" and check_h_invariant_sector:

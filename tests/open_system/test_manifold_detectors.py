@@ -293,7 +293,8 @@ def test_select_recycled_dark_detector_jumps_expands_truncated_report():
     )
 
     assert selection.candidate_report_was_expanded is True
-    assert selection.n_reported_candidates == selection.n_tested_candidates
+    assert selection.n_reported_candidates == selection.n_nonzero_candidates
+    assert selection.n_reported_candidates < selection.n_tested_candidates
     assert selection.candidate_report_is_truncated is False
     assert selection.candidate_pool_is_truncated is False
     assert selection.complement_common_kernel_removed is True
