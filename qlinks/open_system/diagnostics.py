@@ -1719,17 +1719,9 @@ def diagnose_common_kernel_h_invariant_sector(
     bad_block = 0.5 * (bad_block + bad_block.conj().T)
     h_bad_block_norm = float(np.linalg.norm(bad_block))
 
-    # Find vectors c in bad coordinates such that all H-Krylov iterates stay in
-    # the common jump kernel: L A^n c = 0 for n=0,...,bad_dimension-1, where
-    # L=(I-P_K)HB and A=B†HB.
-    constraints: list[np.ndarray] = []
-    power = np.eye(bad_dimension, dtype=np.complex128)
-    for _power_index in range(bad_dimension):
-        constraints.append(leakage @ power)
-        power = bad_block @ power
-    krylov_constraint = np.vstack(constraints)
-    invariant_coefficients = _nullspace_basis(
-        krylov_constraint,
+    invariant_coefficients = _largest_h_invariant_subspace_inside_leakage_kernel(
+        leakage=leakage,
+        bad_block=bad_block,
         tolerance=kernel_tolerance,
     )
 
@@ -2807,17 +2799,13 @@ def _kernel_basis_orthogonal_to_manifold(
         return np.zeros((manifold_basis.shape[0], 0), dtype=np.complex128)
 
     overlap = manifold_basis.conj().T @ basis
-    _u, singular_values, vh = np.linalg.svd(overlap, full_matrices=True)
-    if singular_values.size == 0:
-        rank = 0
-    else:
-        cutoff = max(float(tolerance), float(np.sqrt(tolerance)) * float(singular_values[0]))
-        rank = int(np.count_nonzero(singular_values > cutoff))
+    overlap_scale = float(np.linalg.norm(overlap, ord="fro"))
+    cutoff = max(float(tolerance), float(np.sqrt(tolerance)) * max(1.0, overlap_scale))
+    coefficients = _nullspace_basis(overlap, tolerance=cutoff)
 
-    if rank >= basis.shape[1]:
+    if coefficients.shape[1] == 0:
         return np.zeros((manifold_basis.shape[0], 0), dtype=np.complex128)
 
-    coefficients = vh.conj().T[:, rank:]
     complement = basis @ coefficients
     return _orthonormal_column_basis(complement, tolerance=tolerance)
 
@@ -2938,6 +2926,162 @@ def _common_jump_kernel_basis(
     return _nullspace_basis(stacked, tolerance=tolerance)
 
 
+def _largest_h_invariant_subspace_inside_leakage_kernel(
+    *,
+    leakage: np.ndarray,
+    bad_block: np.ndarray,
+    tolerance: float,
+) -> np.ndarray:
+    """Return bad-coordinate vectors in ``ker(leakage)`` invariant under ``bad_block``.
+
+    The direct Krylov certificate stacks ``leakage @ bad_block**n`` for every
+    ``n`` and then computes one large dense nullspace.  That is fragile for the
+    triangular-QDM production cases: the stacked matrix is very tall and can
+    trigger LAPACK ``SVD did not converge`` failures.  This computes the same
+    largest invariant subspace by fixed-point intersections,
+
+    ``S <- {x in S : bad_block @ x in S}``, starting from ``S = ker(leakage)``.
+
+    Each nullspace problem has only ``bad_dimension`` rows and the current
+    subspace dimension columns, so the dense linear algebra remains bounded by
+    the selected jump set rather than by the full Krylov stack.
+    """
+    bad_dimension = int(bad_block.shape[0])
+    if bad_dimension == 0:
+        return np.zeros((0, 0), dtype=np.complex128)
+
+    if not np.all(np.isfinite(leakage)) or not np.all(np.isfinite(bad_block)):
+        raise ValueError("H-invariant kernel diagnostic received non-finite matrix entries.")
+
+    current = _nullspace_basis_by_gram(leakage, tolerance=tolerance)
+    current = _orthonormal_column_basis(current, tolerance=tolerance)
+    if current.shape[1] == 0:
+        return np.zeros((bad_dimension, 0), dtype=np.complex128)
+
+    for _iteration in range(bad_dimension):
+        image = bad_block @ current
+        projected = current @ (current.conj().T @ image)
+        escape = image - projected
+        if float(np.linalg.norm(escape)) <= tolerance:
+            return current.astype(np.complex128, copy=False)
+
+        surviving_coordinates = _nullspace_basis_by_gram(
+            escape,
+            tolerance=tolerance,
+        )
+        if surviving_coordinates.shape[1] == 0:
+            return np.zeros((bad_dimension, 0), dtype=np.complex128)
+
+        next_current = current @ surviving_coordinates
+        next_current = _orthonormal_column_basis(next_current, tolerance=tolerance)
+        if next_current.shape[1] == 0:
+            return np.zeros((bad_dimension, 0), dtype=np.complex128)
+
+        if next_current.shape[1] == current.shape[1]:
+            current = next_current
+            continue
+        current = next_current
+
+    return current.astype(np.complex128, copy=False)
+
+
+def _nullspace_basis_by_gram(
+    matrix: np.ndarray,
+    *,
+    tolerance: float,
+) -> np.ndarray:
+    """Return a right-nullspace basis using the Hermitian Gram matrix.
+
+    This is a robust fallback for tall matrices where a direct SVD can be both
+    slow and numerically fragile.  The Gram path squares the condition number,
+    so it is used only where a production diagnostic prefers a conservative,
+    non-crashing certificate over an exact singular spectrum.
+    """
+    if matrix.size == 0:
+        return np.eye(matrix.shape[1], dtype=np.complex128)
+    matrix = np.asarray(matrix, dtype=np.complex128)
+    if not np.all(np.isfinite(matrix)):
+        raise ValueError("Cannot compute a nullspace for a matrix with non-finite entries.")
+
+    gram = matrix.conj().T @ matrix
+    return _kernel_basis_from_hermitian_gram(gram, tolerance=tolerance)
+
+
+def _kernel_basis_from_hermitian_gram(
+    gram: np.ndarray,
+    *,
+    tolerance: float,
+) -> np.ndarray:
+    gram = np.asarray(gram, dtype=np.complex128)
+    if gram.ndim != 2 or gram.shape[0] != gram.shape[1]:
+        raise ValueError("gram matrix must be square.")
+    dimension = int(gram.shape[0])
+    if dimension == 0:
+        return np.zeros((0, 0), dtype=np.complex128)
+    if not np.all(np.isfinite(gram)):
+        raise ValueError("Cannot diagonalize a Gram matrix with non-finite entries.")
+
+    gram = 0.5 * (gram + gram.conj().T)
+    try:
+        eigenvalues, eigenvectors = np.linalg.eigh(gram)
+    except np.linalg.LinAlgError:
+        eigenvalues, eigenvectors = scipy_linalg.eigh(
+            gram,
+            check_finite=True,
+            driver="evd",
+        )
+
+    eigenvalues = np.maximum(np.real(eigenvalues), 0.0)
+    eigenvalue_scale = float(np.max(eigenvalues)) if eigenvalues.size else 0.0
+    roundoff_threshold = (
+        100.0 * np.finfo(np.float64).eps * max(1.0, eigenvalue_scale) * max(1, dimension)
+    )
+    eigenvalue_threshold = max(float(tolerance) * float(tolerance), roundoff_threshold)
+    keep = eigenvalues <= eigenvalue_threshold
+    if not np.any(keep):
+        return np.zeros((dimension, 0), dtype=np.complex128)
+    return eigenvectors[:, keep].astype(np.complex128, copy=False)
+
+
+def _range_basis_from_hermitian_gram(
+    matrix: np.ndarray,
+    *,
+    tolerance: float,
+) -> np.ndarray:
+    """Orthonormalize columns from a right Gram eigendecomposition fallback."""
+    if matrix.shape[1] == 0:
+        return np.zeros((matrix.shape[0], 0), dtype=np.complex128)
+    matrix = np.asarray(matrix, dtype=np.complex128)
+    if not np.all(np.isfinite(matrix)):
+        raise ValueError("Cannot orthonormalize a matrix with non-finite entries.")
+
+    gram = matrix.conj().T @ matrix
+    gram = 0.5 * (gram + gram.conj().T)
+    try:
+        eigenvalues, eigenvectors = np.linalg.eigh(gram)
+    except np.linalg.LinAlgError:
+        eigenvalues, eigenvectors = scipy_linalg.eigh(
+            gram,
+            check_finite=True,
+            driver="evd",
+        )
+
+    eigenvalues = np.maximum(np.real(eigenvalues), 0.0)
+    eigenvalue_scale = float(np.max(eigenvalues)) if eigenvalues.size else 0.0
+    roundoff_threshold = (
+        100.0 * np.finfo(np.float64).eps * max(1.0, eigenvalue_scale) * max(1, matrix.shape[1])
+    )
+    eigenvalue_threshold = max(float(tolerance) * float(tolerance), roundoff_threshold)
+    keep = eigenvalues > eigenvalue_threshold
+    if not np.any(keep):
+        return np.zeros((matrix.shape[0], 0), dtype=np.complex128)
+
+    kept_eigenvectors = eigenvectors[:, keep]
+    kept_eigenvalues = eigenvalues[keep]
+    basis = matrix @ (kept_eigenvectors / np.sqrt(kept_eigenvalues)[None, :])
+    return basis.astype(np.complex128, copy=False)
+
+
 def _nullspace_basis(
     matrix: np.ndarray,
     *,
@@ -2946,14 +3090,25 @@ def _nullspace_basis(
     if matrix.size == 0:
         return np.eye(matrix.shape[1], dtype=np.complex128)
 
+    matrix = np.asarray(matrix, dtype=np.complex128)
+    if not np.all(np.isfinite(matrix)):
+        raise ValueError("Cannot compute a nullspace for a matrix with non-finite entries.")
+
     # A full SVD is only needed for underdetermined matrices.  For tall
     # stacked-jump matrices, economy SVD keeps the complete right-singular
     # space while avoiding a huge unused left-unitary allocation.
     full_matrices = matrix.shape[0] < matrix.shape[1]
-    _left_vectors, singular_values, right_vectors_dagger = np.linalg.svd(
-        matrix,
-        full_matrices=full_matrices,
-    )
+    try:
+        _left_vectors, singular_values, right_vectors_dagger = np.linalg.svd(
+            matrix,
+            full_matrices=full_matrices,
+        )
+    except np.linalg.LinAlgError:
+        # LAPACK occasionally fails to converge on very tall, ill-conditioned
+        # diagnostic matrices even though the right Gram matrix is small.  Fall
+        # back to the Hermitian path so production diagnostics report a
+        # conservative kernel instead of crashing.
+        return _nullspace_basis_by_gram(matrix, tolerance=tolerance)
 
     n_columns = matrix.shape[1]
     rank = int(np.count_nonzero(singular_values > tolerance))
@@ -3019,10 +3174,17 @@ def _orthonormal_column_basis(
     if matrix.shape[1] == 0:
         return np.zeros((matrix.shape[0], 0), dtype=np.complex128)
 
-    left_vectors, singular_values, _right_vectors_dagger = np.linalg.svd(
-        matrix,
-        full_matrices=False,
-    )
+    matrix = np.asarray(matrix, dtype=np.complex128)
+    if not np.all(np.isfinite(matrix)):
+        raise ValueError("Cannot orthonormalize a matrix with non-finite entries.")
+
+    try:
+        left_vectors, singular_values, _right_vectors_dagger = np.linalg.svd(
+            matrix,
+            full_matrices=False,
+        )
+    except np.linalg.LinAlgError:
+        return _range_basis_from_hermitian_gram(matrix, tolerance=tolerance)
 
     rank = int(np.count_nonzero(singular_values > tolerance))
 

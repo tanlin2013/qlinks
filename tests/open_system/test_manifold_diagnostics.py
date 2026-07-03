@@ -215,3 +215,29 @@ def test_common_kernel_h_invariant_sector_flags_h_closed_bad_vector():
     assert report.bad_h_invariant_kernel_dimension == 1
     assert report.likely_attractive_by_h_invariant_kernel is False
     assert report.to_summary_dict()["has_bad_h_invariant_kernel"] is True
+
+
+def test_common_kernel_h_invariant_sector_survives_svd_nonconvergence(monkeypatch):
+    import qlinks.open_system.diagnostics as diagnostics
+    from qlinks.open_system import diagnose_common_kernel_h_invariant_sector
+
+    def raising_svd(*_args, **_kwargs):
+        raise np.linalg.LinAlgError("SVD did not converge")
+
+    monkeypatch.setattr(diagnostics.np.linalg, "svd", raising_svd)
+
+    hamiltonian = np.zeros((4, 4), dtype=np.complex128)
+    target = _basis_vector(4, 0)
+    jump = np.outer(_basis_vector(4, 0), _basis_vector(4, 1).conj())
+
+    report = diagnose_common_kernel_h_invariant_sector(
+        hamiltonian=hamiltonian,
+        jumps=(jump,),
+        target_states=target,
+        kernel_tolerance=1.0e-10,
+    )
+
+    assert report.common_jump_kernel_dimension == 3
+    assert report.bad_common_jump_kernel_dimension == 2
+    assert report.bad_h_invariant_kernel_dimension == 2
+    assert report.likely_attractive_by_h_invariant_kernel is False
