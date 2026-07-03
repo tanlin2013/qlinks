@@ -266,10 +266,10 @@ class DegenerateCageJumpDesignWorkflowReport:
     dark_operator_report: ManifoldDarkOperatorBasisReport
     recycled_report: RecycledManifoldDarkDetectorReport
     recycled_selection: RecycledManifoldJumpSelectionReport
-    family_report: RecycledManifoldCandidateFamilyKernelReport
-    residual_report: RecycledManifoldResidualKernelReport
-    targeted_report: TargetedResidualKernelLinearSearchReport
-    targeted_selection: TargetedResidualKernelJumpSelectionReport
+    family_report: RecycledManifoldCandidateFamilyKernelReport | None
+    residual_report: RecycledManifoldResidualKernelReport | None
+    targeted_report: TargetedResidualKernelLinearSearchReport | None
+    targeted_selection: TargetedResidualKernelJumpSelectionReport | None
     h_invariant_report: CommonKernelHamiltonianInvariantSectorReport | None
     recycled_local_regions: tuple[tuple[int, ...], ...]
     targeted_local_regions: tuple[tuple[int, ...], ...]
@@ -277,18 +277,27 @@ class DegenerateCageJumpDesignWorkflowReport:
     targeted_region_mode: str
     recycled_recycler_source: str
     targeted_operator_source: str
+    design_mode: str = "full"
+    early_stop_reason: str | None = None
 
     @property
     def manifold_dimension(self) -> int:
-        return int(self.targeted_selection.manifold_dimension)
+        return int(self.dark_operator_report.manifold_dimension)
 
     @property
     def hilbert_dimension(self) -> int:
-        return int(self.targeted_selection.hilbert_dimension)
+        return int(self.dark_operator_report.hilbert_dimension)
 
     @property
     def jumps(self) -> tuple[sp.csr_array, ...]:
-        """Return the final combined jump list."""
+        """Return the final combined jump list.
+
+        In ``design_mode="h_invariant_fast"`` the workflow may stop after
+        recycled-jump selection, before residual and targeted stages are run.
+        In that case the final jump list is simply the recycled subset.
+        """
+        if self.targeted_selection is None:
+            return self.recycled_selection.jumps
         return self.targeted_selection.all_jumps
 
     @property
@@ -297,6 +306,8 @@ class DegenerateCageJumpDesignWorkflowReport:
 
     @property
     def targeted_jumps(self) -> tuple[sp.csr_array, ...]:
+        if self.targeted_selection is None:
+            return ()
         return self.targeted_selection.jumps
 
     @property
@@ -305,10 +316,14 @@ class DegenerateCageJumpDesignWorkflowReport:
 
     @property
     def final_diagnostics(self) -> DarkManifoldDiagnostics | None:
+        if self.targeted_selection is None:
+            return self.recycled_selection.final_diagnostics
         return self.targeted_selection.final_diagnostics
 
     @property
     def complement_common_kernel_removed(self) -> bool | None:
+        if self.targeted_selection is None:
+            return self.recycled_selection.complement_common_kernel_removed
         return self.targeted_selection.combined_complement_common_kernel_removed
 
     @property
@@ -335,12 +350,67 @@ class DegenerateCageJumpDesignWorkflowReport:
 
     def to_summary_dict(self) -> dict[str, object]:
         final_diagnostics = self.final_diagnostics
+        family_report = self.family_report
+        residual_report = self.residual_report
+        targeted_report = self.targeted_report
+        targeted_selection = self.targeted_selection
+
+        if targeted_selection is None:
+            n_targeted_jumps = 0
+            targeted_selected_family_residual_kernel_dimension = None
+            targeted_selected_candidates_remove_family_residual = None
+            targeted_selection_target = None
+            targeted_initial_selection_kernel_dimension = None
+            targeted_final_selection_kernel_dimension = None
+            targeted_selection_kernel_removed = None
+            targeted_selection_removes_combined_kernel = None
+            combined_bad_common_jump_kernel_dimension = (
+                self.recycled_selection.final_bad_common_jump_kernel_dimension
+            )
+            combined_complement_common_kernel_removed = (
+                self.recycled_selection.complement_common_kernel_removed
+            )
+            combined_inflow_norm = self.recycled_selection.final_inflow_norm
+        else:
+            n_targeted_jumps = targeted_selection.n_selected_jumps
+            targeted_selected_family_residual_kernel_dimension = (
+                targeted_selection.final_residual_kernel_dimension
+            )
+            targeted_selected_candidates_remove_family_residual = (
+                targeted_selection.residual_kernel_removed
+            )
+            targeted_selection_target = targeted_selection.selection_target
+            targeted_initial_selection_kernel_dimension = (
+                targeted_selection.initial_selection_kernel_dimension
+            )
+            targeted_final_selection_kernel_dimension = (
+                targeted_selection.final_selection_kernel_dimension
+            )
+            targeted_selection_kernel_removed = targeted_selection.selection_kernel_removed
+            targeted_selection_removes_combined_kernel = (
+                targeted_selection.selection_kernel_removed
+                if targeted_selection.selection_target == "combined_common_kernel"
+                else None
+            )
+            combined_bad_common_jump_kernel_dimension = (
+                targeted_selection.combined_bad_common_jump_kernel_dimension
+            )
+            combined_complement_common_kernel_removed = (
+                targeted_selection.combined_complement_common_kernel_removed
+            )
+            combined_inflow_norm = targeted_selection.combined_inflow_norm
+
+        targeted_failure_counts = (
+            None if targeted_report is None else targeted_report.targeted_search_failure_counts
+        )
         return {
             "hilbert_dimension": self.hilbert_dimension,
             "manifold_dimension": self.manifold_dimension,
+            "design_mode": self.design_mode,
+            "early_stop_reason": self.early_stop_reason,
             "n_final_jumps": self.n_jumps,
             "n_recycled_jumps": self.recycled_selection.n_selected_jumps,
-            "n_targeted_jumps": self.targeted_selection.n_selected_jumps,
+            "n_targeted_jumps": n_targeted_jumps,
             "recycled_region_mode": self.recycled_region_mode,
             "targeted_region_mode": self.targeted_region_mode,
             "n_recycled_regions": len(self.recycled_local_regions),
@@ -364,78 +434,96 @@ class DegenerateCageJumpDesignWorkflowReport:
                 self.recycled_selection.complement_common_kernel_removed
             ),
             "recycled_inflow_norm": self.recycled_selection.final_inflow_norm,
-            "family_candidate_jumps": self.family_report.n_candidate_jumps,
+            "family_candidate_jumps": (
+                None if family_report is None else family_report.n_candidate_jumps
+            ),
             "family_bad_common_jump_kernel_dimension": (
-                self.family_report.family_bad_common_jump_kernel_dimension
+                None
+                if family_report is None
+                else family_report.family_bad_common_jump_kernel_dimension
             ),
             "family_complement_kernel_removed": (
-                self.family_report.complement_common_kernel_removed
+                None if family_report is None else family_report.complement_common_kernel_removed
             ),
-            "residual_dimension": self.residual_report.residual_dimension,
-            "targeted_candidates": self.targeted_report.n_candidates,
+            "residual_dimension": (
+                None if residual_report is None else residual_report.residual_dimension
+            ),
+            "targeted_candidates": (
+                None if targeted_report is None else targeted_report.n_candidates
+            ),
             "targeted_generated_candidate_modes": (
-                self.targeted_report.n_generated_candidate_modes
+                None if targeted_report is None else targeted_report.n_generated_candidate_modes
             ),
-            "targeted_reported_candidate_modes": self.targeted_report.n_reported_candidate_modes,
+            "targeted_reported_candidate_modes": (
+                None if targeted_report is None else targeted_report.n_reported_candidate_modes
+            ),
             "targeted_regions_skipped_by_local_dim": (
-                self.targeted_report.n_regions_skipped_by_local_dim
+                None if targeted_report is None else targeted_report.n_regions_skipped_by_local_dim
             ),
             "targeted_regions_with_no_recycler_specs": (
-                self.targeted_report.n_regions_with_no_recycler_specs
+                None
+                if targeted_report is None
+                else targeted_report.n_regions_with_no_recycler_specs
             ),
             "targeted_regions_with_no_nonzero_local_operators": (
-                self.targeted_report.n_regions_with_no_nonzero_local_operators
+                None
+                if targeted_report is None
+                else targeted_report.n_regions_with_no_nonzero_local_operators
             ),
             "targeted_regions_with_zero_dark_nullity": (
-                self.targeted_report.n_regions_with_zero_dark_nullity
+                None
+                if targeted_report is None
+                else targeted_report.n_regions_with_zero_dark_nullity
             ),
             "targeted_regions_with_dark_nullity": (
-                self.targeted_report.n_regions_with_dark_nullity
+                None if targeted_report is None else targeted_report.n_regions_with_dark_nullity
             ),
             "targeted_regions_with_zero_residual_inflow": (
-                self.targeted_report.n_regions_with_zero_residual_inflow
+                None
+                if targeted_report is None
+                else targeted_report.n_regions_with_zero_residual_inflow
             ),
-            "targeted_search_failure_counts": (self.targeted_report.targeted_search_failure_counts),
+            "targeted_search_failure_counts": targeted_failure_counts,
             "targeted_candidates_hitting_residual": (
-                self.targeted_report.n_candidates_hitting_residual
+                None if targeted_report is None else targeted_report.n_candidates_hitting_residual
             ),
             "targeted_reported_family_residual_kernel_dimension": (
-                self.targeted_report.reported_candidate_family_residual_kernel_dimension
+                None
+                if targeted_report is None
+                else targeted_report.reported_candidate_family_residual_kernel_dimension
             ),
             "targeted_reported_candidates_remove_family_residual": (
-                self.targeted_report.reported_candidates_remove_family_residual_kernel
+                None
+                if targeted_report is None
+                else targeted_report.reported_candidates_remove_family_residual_kernel
             ),
             # Backward-compatible alias. Prefer the explicit
             # ``targeted_reported_candidates_remove_family_residual`` key in new code.
             "targeted_reported_candidates_remove_residual": (
-                self.targeted_report.reported_candidates_remove_residual_kernel
+                None
+                if targeted_report is None
+                else targeted_report.reported_candidates_remove_residual_kernel
             ),
             "targeted_selected_family_residual_kernel_dimension": (
-                self.targeted_selection.final_residual_kernel_dimension
+                targeted_selected_family_residual_kernel_dimension
             ),
             "targeted_selected_candidates_remove_family_residual": (
-                self.targeted_selection.residual_kernel_removed
+                targeted_selected_candidates_remove_family_residual
             ),
-            "targeted_selection_target": self.targeted_selection.selection_target,
+            "targeted_selection_target": targeted_selection_target,
             "targeted_initial_selection_kernel_dimension": (
-                self.targeted_selection.initial_selection_kernel_dimension
+                targeted_initial_selection_kernel_dimension
             ),
-            "targeted_final_selection_kernel_dimension": (
-                self.targeted_selection.final_selection_kernel_dimension
-            ),
-            "targeted_selection_kernel_removed": (self.targeted_selection.selection_kernel_removed),
+            "targeted_final_selection_kernel_dimension": targeted_final_selection_kernel_dimension,
+            "targeted_selection_kernel_removed": targeted_selection_kernel_removed,
             "targeted_selection_removes_combined_kernel": (
-                self.targeted_selection.selection_kernel_removed
-                if self.targeted_selection.selection_target == "combined_common_kernel"
-                else None
+                targeted_selection_removes_combined_kernel
             ),
-            "combined_bad_common_jump_kernel_dimension": (
-                self.targeted_selection.combined_bad_common_jump_kernel_dimension
-            ),
+            "combined_bad_common_jump_kernel_dimension": combined_bad_common_jump_kernel_dimension,
             "combined_complement_common_kernel_removed": (
-                self.targeted_selection.combined_complement_common_kernel_removed
+                combined_complement_common_kernel_removed
             ),
-            "combined_inflow_norm": self.targeted_selection.combined_inflow_norm,
+            "combined_inflow_norm": combined_inflow_norm,
             "h_invariant_bad_kernel_dimension": (
                 None
                 if self.h_invariant_report is None
@@ -511,32 +599,49 @@ class DegenerateCageJumpDesignWorkflowReport:
                 f"bad={self.recycled_selection.final_bad_common_jump_kernel_dimension}"
             ),
         )
+        if self.family_report is None:
+            stages.add_row("full recycled family", "skipped")
+        else:
+            stages.add_row(
+                "full recycled family",
+                (
+                    f"jumps={self.family_report.n_candidate_jumps}, "
+                    f"bad={self.family_report.family_bad_common_jump_kernel_dimension}"
+                ),
+            )
         stages.add_row(
-            "full recycled family",
+            "residual kernel",
             (
-                f"jumps={self.family_report.n_candidate_jumps}, "
-                f"bad={self.family_report.family_bad_common_jump_kernel_dimension}"
+                "skipped"
+                if self.residual_report is None
+                else f"dim={self.residual_report.residual_dimension}"
             ),
         )
-        stages.add_row("residual kernel", f"dim={self.residual_report.residual_dimension}")
-        stages.add_row(
-            "targeted search",
-            (
-                f"candidates={self.targeted_report.n_candidates}, "
-                f"hits family residual={self.targeted_report.n_candidates_hitting_residual}, "
-                f"family residual dim="
-                f"{self.targeted_report.reported_candidate_family_residual_kernel_dimension}"
-            ),
-        )
-        stages.add_row(
-            "targeted selection",
-            (
-                f"selected={self.targeted_selection.n_selected_jumps}, "
-                f"target={self.targeted_selection.selection_target}, "
-                f"selection dim={self.targeted_selection.final_selection_kernel_dimension}, "
-                f"combined bad={self.targeted_selection.combined_bad_common_jump_kernel_dimension}"
-            ),
-        )
+        if self.targeted_report is None:
+            stages.add_row("targeted search", "skipped")
+        else:
+            stages.add_row(
+                "targeted search",
+                (
+                    f"candidates={self.targeted_report.n_candidates}, "
+                    f"hits family residual={self.targeted_report.n_candidates_hitting_residual}, "
+                    f"family residual dim="
+                    f"{self.targeted_report.reported_candidate_family_residual_kernel_dimension}"
+                ),
+            )
+        if self.targeted_selection is None:
+            stages.add_row("targeted selection", "skipped")
+        else:
+            stages.add_row(
+                "targeted selection",
+                (
+                    f"selected={self.targeted_selection.n_selected_jumps}, "
+                    f"target={self.targeted_selection.selection_target}, "
+                    f"selection dim={self.targeted_selection.final_selection_kernel_dimension}, "
+                    f"combined bad="
+                    f"{self.targeted_selection.combined_bad_common_jump_kernel_dimension}"
+                ),
+            )
         if self.h_invariant_report is not None:
             stages.add_row(
                 "H-invariant kernel",
@@ -1306,6 +1411,10 @@ class DegenerateCageLindbladConstruction:
             "none",
         ] = "none",
         sparse_liouvillian_eigenvalue_count: int = 32,
+        design_mode: Literal[
+            "full",
+            "h_invariant_fast",
+        ] = "full",
     ) -> DegenerateCageJumpDesignWorkflowReport:
         """Run the reusable cheap jump-design workflow for a dark manifold.
 
@@ -1313,6 +1422,12 @@ class DegenerateCageLindbladConstruction:
         cages: adjacent two-plaquette unions and matrix-unit recyclers.  The
         method avoids Liouvillian spectra by default and uses common-kernel
         diagnostics as the acceptance criterion.
+
+        In ``design_mode="h_invariant_fast"``, the workflow first runs only
+        the dark-detector and recycled-jump stages, then checks whether the
+        remaining common-kernel complement has no Hamiltonian-invariant sector.
+        If that cheaper physical criterion succeeds, it returns immediately and
+        skips the full-family residual scan and targeted local-jump search.
         """
 
         def resolve_regions(
@@ -1345,6 +1460,9 @@ class DegenerateCageLindbladConstruction:
                 'region mode must be "construction", "pair_unions", or "cluster_unions".'
             )
 
+        if design_mode not in {"full", "h_invariant_fast"}:
+            raise ValueError('design_mode must be "full" or "h_invariant_fast".')
+
         resolved_recycled_region_mode = recycled_region_mode or local_region_mode
         resolved_targeted_region_mode = targeted_region_mode or local_region_mode
         recycled_regions = resolve_regions(
@@ -1352,15 +1470,9 @@ class DegenerateCageLindbladConstruction:
             mode=resolved_recycled_region_mode,
             cluster_size_override=recycled_cluster_size,
         )
-        targeted_regions = resolve_regions(
-            targeted_local_regions,
-            mode=resolved_targeted_region_mode,
-            cluster_size_override=targeted_cluster_size,
-        )
+        targeted_regions: tuple[tuple[int, ...], ...] = ()
         if len(recycled_regions) == 0:
             raise ValueError("recycled local-region list is empty.")
-        if len(targeted_regions) == 0:
-            raise ValueError("targeted local-region list is empty.")
 
         if dark_operator_report is None:
             dark_operator_report = self.diagnose_dark_operator_basis(
@@ -1414,6 +1526,37 @@ class DegenerateCageLindbladConstruction:
                 expand_candidate_report=True,
                 selection_strategy=recycled_selection_strategy,
             )
+
+        if design_mode == "h_invariant_fast" and check_h_invariant_sector:
+            recycled_h_invariant_report = diagnose_common_kernel_h_invariant_sector(
+                hamiltonian=hamiltonian,
+                jumps=recycled_selection.jumps,
+                target_states=self.manifold_basis,
+                kernel_tolerance=kernel_tolerance,
+            )
+            if recycled_h_invariant_report.likely_attractive_by_h_invariant_kernel:
+                return DegenerateCageJumpDesignWorkflowReport(
+                    dark_operator_report=dark_operator_report,
+                    recycled_report=recycled_report,
+                    recycled_selection=recycled_selection,
+                    family_report=None,
+                    residual_report=None,
+                    targeted_report=None,
+                    targeted_selection=None,
+                    h_invariant_report=recycled_h_invariant_report,
+                    recycled_local_regions=recycled_regions,
+                    targeted_local_regions=(),
+                    recycled_region_mode=(
+                        resolved_recycled_region_mode
+                        if recycled_local_regions is None
+                        else "explicit"
+                    ),
+                    targeted_region_mode="skipped",
+                    recycled_recycler_source=recycled_recycler_source,
+                    targeted_operator_source=targeted_operator_source,
+                    design_mode=design_mode,
+                    early_stop_reason="recycled_h_invariant_success",
+                )
 
         if family_report is None:
             family_report = self.diagnose_recycled_candidate_family_kernel(
@@ -1469,6 +1612,14 @@ class DegenerateCageLindbladConstruction:
                 expand_candidate_report=True,
                 max_operator_entries=max_residual_operator_entries,
             )
+
+        targeted_regions = resolve_regions(
+            targeted_local_regions,
+            mode=resolved_targeted_region_mode,
+            cluster_size_override=targeted_cluster_size,
+        )
+        if len(targeted_regions) == 0:
+            raise ValueError("targeted local-region list is empty.")
 
         if targeted_report is None:
             targeted_report = self.diagnose_targeted_residual_kernel_linear_search(
@@ -1541,6 +1692,7 @@ class DegenerateCageLindbladConstruction:
             ),
             recycled_recycler_source=recycled_recycler_source,
             targeted_operator_source=targeted_operator_source,
+            design_mode=design_mode,
         )
 
 
