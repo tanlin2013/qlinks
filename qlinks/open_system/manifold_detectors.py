@@ -2563,19 +2563,34 @@ def _recycled_jump_for_candidate_from_cache(
             zero_tolerance=zero_tolerance,
         )
 
-    rdm = rdms[candidate.region_index]
     detector = _combined_operator(
         operators=detector_matrices,
         coefficients=detector_coefficients[:, candidate.detector_index],
     )
-    recycler_specs = _local_recycler_specs(
-        local_patterns=rdm.local_patterns,
-        support_basis=rdm.support_basis,
-        recycler_source=recycler_source,
-    )
-    if candidate.recycler_index < 0 or candidate.recycler_index >= len(recycler_specs):
-        raise ValueError("candidate.recycler_index is out of range for recycler specs.")
-    _, local_operator = recycler_specs[candidate.recycler_index]
+
+    if recycler_source == "matrix_units":
+        local_dim = int(candidate.local_dim)
+        if local_dim != int(embedding_context.local_dim):
+            raise ValueError(
+                "candidate.local_dim is incompatible with the cached embedding context."
+            )
+        n_matrix_units = local_dim * local_dim
+        if candidate.recycler_index < 0 or candidate.recycler_index >= n_matrix_units:
+            raise ValueError("candidate.recycler_index is out of range for matrix-unit recyclers.")
+        target_index, source_index = divmod(int(candidate.recycler_index), local_dim)
+        local_operator = np.zeros((local_dim, local_dim), dtype=np.complex128)
+        local_operator[target_index, source_index] = 1.0
+    else:
+        rdm = rdms[candidate.region_index]
+        recycler_specs = _local_recycler_specs(
+            local_patterns=rdm.local_patterns,
+            support_basis=rdm.support_basis,
+            recycler_source=recycler_source,
+        )
+        if candidate.recycler_index < 0 or candidate.recycler_index >= len(recycler_specs):
+            raise ValueError("candidate.recycler_index is out of range for recycler specs.")
+        _, local_operator = recycler_specs[candidate.recycler_index]
+
     recycler = _embed_local_pattern_operator_from_context(
         context=embedding_context,
         local_operator=local_operator,

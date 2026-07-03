@@ -229,6 +229,42 @@ def _single_qutrit_detector_pair():
     return d1, d2
 
 
+def _single_qutrit_offdiagonal_detector():
+    rows = np.asarray([1], dtype=np.int64)
+    cols = np.asarray([2], dtype=np.int64)
+    data = np.ones(1, dtype=np.complex128)
+    return sp.csr_array((data, (rows, cols)), shape=(3, 3))
+
+
+def test_select_recycled_matrix_unit_jumps_with_nondiagonal_detector():
+    from qlinks.open_system import select_recycled_manifold_dark_detector_jumps
+
+    build_result = _single_qutrit_build_result()
+    detector = _single_qutrit_offdiagonal_detector()
+
+    selection = select_recycled_manifold_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=(detector,),
+        detector_coefficients=np.asarray([1.0]),
+        detector_operator_names=("T12",),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        max_candidate_pool=None,
+        max_selected_jumps=1,
+        selection_strategy="ranked_inflow",
+        check_final_diagnostics=True,
+    )
+
+    assert selection.n_selected_jumps == 1
+    assert selection.selected_candidates[0].recycler_name == "(0)<-(1)"
+    assert selection.jumps[0].nnz == 1
+    assert selection.jumps[0][0, 2] == 1.0
+    assert selection.final_diagnostics is not None
+    assert selection.final_diagnostics.max_target_jump_residual < 1e-12
+
+
 def test_select_recycled_dark_detector_jumps_removes_complement_kernel():
     from qlinks.open_system import select_recycled_manifold_dark_detector_jumps
 
