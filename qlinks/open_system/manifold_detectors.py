@@ -99,6 +99,84 @@ class ManifoldDarkOperatorCandidate:
 
 
 @dataclass(frozen=True, slots=True)
+class DarkDetectorMatrixReadout:
+    """Coefficient readout for a collective dark detector.
+
+    This intentionally does not store a dense global matrix.  The detector is a
+    linear combination of the supplied detector operator family; the readout is
+    meant for inspecting the algebraic structure of that combination.
+    """
+
+    detector_index: int
+    label: str
+    coefficients: npt.NDArray[np.complex128]
+    operator_names: tuple[str, ...]
+    terms: tuple[DarkOperatorTerm, ...]
+    action_residual: float
+    relative_action_residual: float
+    operator_frobenius_norm: float
+
+    @property
+    def n_terms(self) -> int:
+        return len(self.terms)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "detector_index": self.detector_index,
+            "label": self.label,
+            "coefficients": tuple(complex(value) for value in self.coefficients),
+            "operator_names": self.operator_names,
+            "n_terms": self.n_terms,
+            "terms": tuple(term.to_summary_dict() for term in self.terms),
+            "action_residual": self.action_residual,
+            "relative_action_residual": self.relative_action_residual,
+            "operator_frobenius_norm": self.operator_frobenius_norm,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LocalOperatorMatrixReadout:
+    """Local matrix readout compatible with ``LocalBasisGridVisualizer``.
+
+    The visualizer only requires ``variable_indices``, ``local_patterns``, and a
+    ``local_operator``/``density_matrix`` attribute.  This readout carries the
+    extra candidate metadata needed to interpret selected Lindblad recyclers and
+    targeted completion operators in notebooks.
+    """
+
+    label: str
+    source: str
+    variable_indices: tuple[int, ...]
+    local_patterns: tuple[tuple[int, ...], ...]
+    local_operator: npt.NDArray[np.complex128]
+    metadata: tuple[tuple[str, object], ...] = ()
+
+    @property
+    def local_dim(self) -> int:
+        return len(self.local_patterns)
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        return tuple(int(value) for value in self.local_operator.shape)
+
+    @property
+    def nnz(self) -> int:
+        return int(np.count_nonzero(np.abs(self.local_operator) > 0.0))
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "label": self.label,
+            "source": self.source,
+            "variable_indices": self.variable_indices,
+            "local_patterns": self.local_patterns,
+            "local_dim": self.local_dim,
+            "shape": self.shape,
+            "nnz": self.nnz,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ManifoldDarkOperatorBasisReport:
     """Nullspace report for collective local operators dark on a manifold.
 
@@ -132,6 +210,43 @@ class ManifoldDarkOperatorBasisReport:
     @property
     def has_dark_detectors(self) -> bool:
         return self.detector_nullity > 0
+
+    def detector_readout(self, detector_index: int = 0) -> DarkDetectorMatrixReadout:
+        """Return a coefficient readout for one dark detector candidate."""
+        candidate = self.candidates[int(detector_index)]
+        return DarkDetectorMatrixReadout(
+            detector_index=int(candidate.candidate_index),
+            label=f"detector_{candidate.candidate_index}",
+            coefficients=np.asarray(candidate.coefficients, dtype=np.complex128),
+            operator_names=self.operator_names,
+            terms=candidate.terms,
+            action_residual=float(candidate.action_residual),
+            relative_action_residual=float(candidate.relative_action_residual),
+            operator_frobenius_norm=float(candidate.operator_frobenius_norm),
+        )
+
+    def detector_readouts(
+        self,
+        *,
+        max_readouts: int | None = None,
+    ) -> tuple[DarkDetectorMatrixReadout, ...]:
+        """Return coefficient readouts for reported dark detector candidates."""
+        candidates = self.candidates
+        if max_readouts is not None:
+            candidates = candidates[: max(int(max_readouts), 0)]
+        return tuple(
+            DarkDetectorMatrixReadout(
+                detector_index=int(candidate.candidate_index),
+                label=f"detector_{candidate.candidate_index}",
+                coefficients=np.asarray(candidate.coefficients, dtype=np.complex128),
+                operator_names=self.operator_names,
+                terms=candidate.terms,
+                action_residual=float(candidate.action_residual),
+                relative_action_residual=float(candidate.relative_action_residual),
+                operator_frobenius_norm=float(candidate.operator_frobenius_norm),
+            )
+            for candidate in candidates
+        )
 
     def to_summary_dict(self) -> dict[str, object]:
         return {
@@ -807,6 +922,37 @@ class RecycledManifoldJumpSelectionReport:
     @property
     def selected_detector_indices(self) -> tuple[int, ...]:
         return tuple(step.candidate.detector_index for step in self.steps)
+
+    def selected_recycler_readouts(
+        self,
+        *,
+        basis_configs: npt.NDArray[np.integer],
+        states: npt.ArrayLike | None = None,
+        max_readouts: int | None = None,
+        tolerance: float = 1.0e-10,
+        rdm_tolerance: float = 1.0e-10,
+    ) -> tuple[LocalOperatorMatrixReadout, ...]:
+        """Return local-matrix readouts for selected recycled jump recyclers.
+
+        The returned objects can be passed directly to
+        ``LocalBasisGridVisualizer.plot_readout``.  For
+        ``rdm_support_matrix_units`` recyclers, pass the target state/manifold
+        through ``states`` so the local RDM support basis can be reconstructed.
+        """
+        candidates = self.selected_candidates
+        if max_readouts is not None:
+            candidates = candidates[: max(int(max_readouts), 0)]
+        return tuple(
+            _local_operator_from_recycler_candidate(
+                candidate=candidate,
+                basis_configs=basis_configs,
+                states=states,
+                recycler_source=self.candidate_report.recycler_source,
+                tolerance=tolerance,
+                rdm_tolerance=rdm_tolerance,
+            )
+            for candidate in candidates
+        )
 
     def to_summary_dict(self) -> dict[str, object]:
         return {
@@ -2084,6 +2230,188 @@ def expand_local_regions_to_cluster_unions(
 
 def _pattern_name(pattern: tuple[int, ...]) -> str:
     return "(" + ",".join(str(int(value)) for value in pattern) + ")"
+
+
+def _local_patterns_from_basis_configs(
+    *,
+    basis_configs: npt.NDArray[np.integer],
+    variable_indices: tuple[int, ...],
+) -> tuple[tuple[int, ...], ...]:
+    basis_array = np.asarray(basis_configs)
+    if basis_array.ndim != 2:
+        raise ValueError("basis_configs must have shape (hilbert_dimension, n_variables).")
+    if len(variable_indices) == 0:
+        raise ValueError("variable_indices must be nonempty.")
+    if any(index < 0 or index >= basis_array.shape[1] for index in variable_indices):
+        raise ValueError("variable_indices contains out-of-range entries.")
+    variable_index_array = np.asarray(variable_indices, dtype=np.int64)
+    return tuple(
+        sorted(
+            {tuple(int(value) for value in config[variable_index_array]) for config in basis_array}
+        )
+    )
+
+
+def _matrix_unit_local_operator(
+    *,
+    local_dim: int,
+    recycler_index: int,
+) -> npt.NDArray[np.complex128]:
+    if local_dim <= 0:
+        raise ValueError("local_dim must be positive.")
+    n_matrix_units = int(local_dim) * int(local_dim)
+    if recycler_index < 0 or recycler_index >= n_matrix_units:
+        raise ValueError("recycler_index is out of range for matrix-unit recyclers.")
+    target_index, source_index = divmod(int(recycler_index), int(local_dim))
+    local_operator = np.zeros((int(local_dim), int(local_dim)), dtype=np.complex128)
+    local_operator[target_index, source_index] = 1.0
+    return local_operator
+
+
+def _local_operator_from_matrix_unit_terms(
+    *,
+    local_patterns: tuple[tuple[int, ...], ...],
+    terms: tuple[Any, ...],
+) -> npt.NDArray[np.complex128]:
+    pattern_to_index = {pattern: index for index, pattern in enumerate(local_patterns)}
+    local_dim = len(local_patterns)
+    local_operator = np.zeros((local_dim, local_dim), dtype=np.complex128)
+    for term in terms:
+        name = str(term.operator_name)
+        coefficient = complex(term.coefficient)
+        if "<-" not in name:
+            raise ValueError(
+                "Cannot build a matrix readout from non-matrix-unit term name " f"{name!r}."
+            )
+        target_text, source_text = name.split("<-", 1)
+        target_pattern = tuple(
+            int(value) for value in target_text.strip()[1:-1].split(",") if value
+        )
+        source_pattern = tuple(
+            int(value) for value in source_text.strip()[1:-1].split(",") if value
+        )
+        try:
+            target_index = pattern_to_index[target_pattern]
+            source_index = pattern_to_index[source_pattern]
+        except KeyError as exc:
+            raise ValueError(
+                "matrix-unit term contains a pattern that is absent from local_patterns."
+            ) from exc
+        local_operator[target_index, source_index] += coefficient
+    return local_operator
+
+
+def _local_operator_from_recycler_candidate(
+    *,
+    candidate: RecycledManifoldDarkDetectorCandidate,
+    basis_configs: npt.NDArray[np.integer],
+    states: npt.ArrayLike | None,
+    recycler_source: Literal["matrix_units", "rdm_support_matrix_units"],
+    tolerance: float,
+    rdm_tolerance: float,
+) -> LocalOperatorMatrixReadout:
+    variable_indices = tuple(int(value) for value in candidate.variable_indices)
+    local_patterns = _local_patterns_from_basis_configs(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    if len(local_patterns) != int(candidate.local_dim):
+        raise ValueError(
+            "basis_configs/local_patterns are incompatible with the selected candidate."
+        )
+
+    if recycler_source == "matrix_units":
+        local_operator = _matrix_unit_local_operator(
+            local_dim=candidate.local_dim,
+            recycler_index=candidate.recycler_index,
+        )
+    elif recycler_source == "rdm_support_matrix_units":
+        if states is None:
+            raise ValueError("states are required to read rdm_support_matrix_units recyclers.")
+        from qlinks.open_system.local_recycling import (
+            _local_pattern_basis_context_from_basis,
+            _local_reduced_density_matrix_from_basis_context_and_states,
+        )
+
+        state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
+        context = _local_pattern_basis_context_from_basis(
+            basis_configs=np.asarray(basis_configs),
+            variable_indices=variable_indices,
+            local_patterns=local_patterns,
+        )
+        rdm = _local_reduced_density_matrix_from_basis_context_and_states(
+            context=context,
+            states=state_basis,
+            tolerance=rdm_tolerance,
+        )
+        specs = _local_recycler_specs(
+            local_patterns=rdm.local_patterns,
+            support_basis=rdm.support_basis,
+            recycler_source=recycler_source,
+        )
+        if candidate.recycler_index < 0 or candidate.recycler_index >= len(specs):
+            raise ValueError("candidate.recycler_index is out of range for recycler specs.")
+        _name, local_operator = specs[int(candidate.recycler_index)]
+    else:
+        raise ValueError("recycler_source must be 'matrix_units' or 'rdm_support_matrix_units'.")
+
+    return LocalOperatorMatrixReadout(
+        label=f"recycled_{candidate.candidate_index}_{candidate.recycler_name}",
+        source="recycled_recycler",
+        variable_indices=variable_indices,
+        local_patterns=local_patterns,
+        local_operator=np.asarray(local_operator, dtype=np.complex128),
+        metadata=(
+            ("candidate_index", int(candidate.candidate_index)),
+            ("detector_index", int(candidate.detector_index)),
+            ("detector_name", candidate.detector_name),
+            ("region_index", int(candidate.region_index)),
+            ("recycler_index", int(candidate.recycler_index)),
+            ("recycler_name", candidate.recycler_name),
+            ("inflow_norm", float(candidate.inflow_norm)),
+            ("jump_nnz", int(candidate.jump_nnz)),
+        ),
+    )
+
+
+def _local_operator_from_targeted_candidate(
+    *,
+    candidate: TargetedResidualKernelLinearCandidate,
+    basis_configs: npt.NDArray[np.integer],
+) -> LocalOperatorMatrixReadout:
+    variable_indices = tuple(int(value) for value in candidate.variable_indices)
+    local_patterns = _local_patterns_from_basis_configs(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    if len(local_patterns) != int(candidate.local_dim):
+        raise ValueError(
+            "basis_configs/local_patterns are incompatible with the selected candidate."
+        )
+    if candidate.operator_source != "matrix_units":
+        raise ValueError(
+            "targeted matrix readouts currently support operator_source='matrix_units'."
+        )
+    local_operator = _local_operator_from_matrix_unit_terms(
+        local_patterns=local_patterns,
+        terms=candidate.terms,
+    )
+    return LocalOperatorMatrixReadout(
+        label=f"targeted_{candidate.candidate_index}",
+        source="targeted_operator",
+        variable_indices=variable_indices,
+        local_patterns=local_patterns,
+        local_operator=local_operator,
+        metadata=(
+            ("candidate_index", int(candidate.candidate_index)),
+            ("region_index", int(candidate.region_index)),
+            ("operator_source", candidate.operator_source),
+            ("residual_objective", candidate.residual_objective),
+            ("residual_score_norm", float(candidate.residual_score_norm)),
+            ("total_inflow_norm", float(candidate.total_inflow_norm)),
+            ("jump_nnz", int(candidate.jump_nnz)),
+        ),
+    )
 
 
 def _local_recycler_specs(
@@ -3679,6 +4007,24 @@ class TargetedResidualKernelLinearSearchReport:
         """Whether reported candidates remove the full-family residual kernel."""
         return self.reported_candidates_remove_residual_kernel
 
+    def candidate_readouts(
+        self,
+        *,
+        basis_configs: npt.NDArray[np.integer],
+        max_readouts: int | None = None,
+    ) -> tuple[LocalOperatorMatrixReadout, ...]:
+        """Return local-matrix readouts for reported targeted candidates."""
+        candidates = self.candidates
+        if max_readouts is not None:
+            candidates = candidates[: max(int(max_readouts), 0)]
+        return tuple(
+            _local_operator_from_targeted_candidate(
+                candidate=candidate,
+                basis_configs=basis_configs,
+            )
+            for candidate in candidates
+        )
+
     def to_summary_dict(self) -> dict[str, object]:
         return {
             "manifold_dimension": self.manifold_dimension,
@@ -3882,6 +4228,24 @@ class TargetedResidualKernelJumpSelectionReport:
     @property
     def selected_region_indices(self) -> tuple[int, ...]:
         return tuple(step.candidate.region_index for step in self.steps)
+
+    def selected_operator_readouts(
+        self,
+        *,
+        basis_configs: npt.NDArray[np.integer],
+        max_readouts: int | None = None,
+    ) -> tuple[LocalOperatorMatrixReadout, ...]:
+        """Return local-matrix readouts for selected targeted completion operators."""
+        candidates = self.selected_candidates
+        if max_readouts is not None:
+            candidates = candidates[: max(int(max_readouts), 0)]
+        return tuple(
+            _local_operator_from_targeted_candidate(
+                candidate=candidate,
+                basis_configs=basis_configs,
+            )
+            for candidate in candidates
+        )
 
     @property
     def final_residual_kernel_dimension(self) -> int:

@@ -55,9 +55,11 @@ from qlinks.open_system.local_recycling import (
     select_local_recycling_candidates,
 )
 from qlinks.open_system.manifold_detectors import (
+    DarkDetectorMatrixReadout,
     DarkOperatorTerm,
     DressedManifoldDarkDetectorCandidate,
     DressedManifoldDarkDetectorReport,
+    LocalOperatorMatrixReadout,
     ManifoldDarkOperatorBasisReport,
     ManifoldDarkOperatorCandidate,
     RecycledManifoldCandidateFamilyKernelReport,
@@ -137,6 +139,7 @@ __all__ = [
     "AbsorbingProjectorJumpDiagnostics",
     "AbsorbingProjectorSymmetryDiagnostics",
     "CommonKernelHamiltonianInvariantSectorReport",
+    "DarkDetectorMatrixReadout",
     "DarkManifoldDiagnostics",
     "DarkOperatorTerm",
     "DarkSubspaceDiagnostics",
@@ -154,6 +157,7 @@ __all__ = [
     "LindbladProblem",
     "LindbladSolverMethod",
     "LocalMatrixUnitTerm",
+    "LocalOperatorMatrixReadout",
     "LocalRecyclingBuildResult",
     "LocalRecyclingCandidate",
     "LocalRecyclingScanResult",

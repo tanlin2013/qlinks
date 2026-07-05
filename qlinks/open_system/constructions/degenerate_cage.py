@@ -29,7 +29,9 @@ from qlinks.open_system.local_recycling import (
     local_subspace_support_report_from_recycling_build_result,
 )
 from qlinks.open_system.manifold_detectors import (
+    DarkDetectorMatrixReadout,
     DressedManifoldDarkDetectorReport,
+    LocalOperatorMatrixReadout,
     ManifoldDarkOperatorBasisReport,
     RecycledManifoldCandidateFamilyKernelReport,
     RecycledManifoldDarkDetectorReport,
@@ -315,6 +317,68 @@ class DegenerateCageJumpDesignWorkflowReport:
     @property
     def n_jumps(self) -> int:
         return len(self.jumps)
+
+    def detector_readouts(
+        self,
+        *,
+        max_readouts: int | None = None,
+    ) -> tuple[DarkDetectorMatrixReadout, ...]:
+        """Return coefficient readouts for reported collective dark detectors."""
+        return self.dark_operator_report.detector_readouts(max_readouts=max_readouts)
+
+    def recycled_recycler_readouts(
+        self,
+        *,
+        basis_configs: NDArray[np.integer],
+        states: NDArray[np.complex128] | None = None,
+        max_readouts: int | None = None,
+        tolerance: float = 1.0e-10,
+        rdm_tolerance: float = 1.0e-10,
+    ) -> tuple[LocalOperatorMatrixReadout, ...]:
+        """Return local readouts for selected recycled-stage recyclers.
+
+        Pass ``states`` when the recycled source is ``rdm_support_matrix_units``
+        so the local RDM support-basis recycler can be reconstructed.
+        """
+        return self.recycled_selection.selected_recycler_readouts(
+            basis_configs=basis_configs,
+            states=states,
+            max_readouts=max_readouts,
+            tolerance=tolerance,
+            rdm_tolerance=rdm_tolerance,
+        )
+
+    def targeted_operator_readouts(
+        self,
+        *,
+        basis_configs: NDArray[np.integer],
+        max_readouts: int | None = None,
+    ) -> tuple[LocalOperatorMatrixReadout, ...]:
+        """Return local readouts for selected targeted-completion operators."""
+        if self.targeted_selection is None:
+            return ()
+        return self.targeted_selection.selected_operator_readouts(
+            basis_configs=basis_configs,
+            max_readouts=max_readouts,
+        )
+
+    def local_operator_readouts(
+        self,
+        *,
+        basis_configs: NDArray[np.integer],
+        states: NDArray[np.complex128] | None = None,
+        max_recycled: int | None = None,
+        max_targeted: int | None = None,
+    ) -> tuple[LocalOperatorMatrixReadout, ...]:
+        """Return selected local recycler and targeted-operator readouts."""
+        return self.recycled_recycler_readouts(
+            basis_configs=basis_configs,
+            states=states,
+            max_readouts=max_recycled,
+        ) + self.targeted_operator_readouts(
+            basis_configs=basis_configs,
+            max_readouts=max_targeted,
+        )
 
     @property
     def final_diagnostics(self) -> DarkManifoldDiagnostics | None:

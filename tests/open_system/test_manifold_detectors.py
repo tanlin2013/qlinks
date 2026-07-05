@@ -814,3 +814,76 @@ def test_targeted_selector_can_minimize_combined_common_kernel_beyond_reported_r
     assert summary["selection_kernel_removed"] is True
     assert summary["combined_bad_common_jump_kernel_dimension"] == 0
     assert summary["combined_complement_common_kernel_removed"] is True
+
+
+def test_dark_detector_and_recycled_matrix_readouts_are_available():
+    from qlinks.open_system import (
+        DarkDetectorMatrixReadout,
+        LocalOperatorMatrixReadout,
+        select_recycled_manifold_dark_detector_jumps,
+    )
+
+    build_result = _single_qutrit_build_result()
+    selection = select_recycled_manifold_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=_single_qutrit_detector_pair(),
+        detector_coefficients=np.eye(2, dtype=np.complex128),
+        detector_operator_names=("D1", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        max_candidate_pool=18,
+        max_selected_jumps=1,
+    )
+
+    detector_label = selection.candidate_report.detector_names[0]
+    assert "D1" in detector_label
+
+    readouts = selection.selected_recycler_readouts(
+        basis_configs=build_result.basis.states,
+    )
+    assert len(readouts) == 1
+    readout = readouts[0]
+    assert isinstance(readout, LocalOperatorMatrixReadout)
+    assert readout.variable_indices == (0,)
+    assert readout.local_patterns == ((0,), (1,), (2,))
+    assert readout.local_operator.shape == (3, 3)
+    assert readout.nnz == 1
+    assert any(name in dict(readout.metadata)["detector_name"] for name in ("D1", "D2"))
+
+    dark_report = diagnose_manifold_dark_operator_basis(
+        states=_equal_bit_manifold_rows(),
+        operators=_single_site_z_operators(),
+        operator_names=("Z0", "Z1"),
+    )
+    dark_readouts = dark_report.detector_readouts()
+    assert isinstance(dark_readouts[0], DarkDetectorMatrixReadout)
+    assert dark_readouts[0].n_terms == 2
+    assert dark_readouts[0].operator_names == ("Z0", "Z1")
+
+
+def test_targeted_matrix_unit_candidate_readout():
+    from qlinks.open_system import diagnose_targeted_residual_kernel_linear_search
+
+    build_result = _single_qutrit_build_result()
+    residual_basis = np.asarray([0.0, 1.0, 0.0], dtype=np.complex128)
+    report = diagnose_targeted_residual_kernel_linear_search(
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        local_regions=((0,),),
+        residual_basis=residual_basis,
+        operator_source="matrix_units",
+        max_modes_per_region=1,
+        residual_objective="action_norm",
+    )
+
+    assert report.candidates
+    candidate = report.candidates[0]
+    readout = report.candidate_readouts(
+        basis_configs=build_result.basis.states,
+    )[0]
+    assert readout.source == "targeted_operator"
+    assert readout.variable_indices == candidate.variable_indices
+    assert readout.local_operator.shape == (3, 3)
+    assert readout.nnz >= 1
