@@ -76,6 +76,8 @@ class ManifoldDarkOperatorCandidate:
     action_residual: float
     relative_action_residual: float
     operator_frobenius_norm: float
+    coefficient_ipr: float
+    effective_operator_count: float
     terms: tuple[DarkOperatorTerm, ...]
 
     @property
@@ -93,6 +95,8 @@ class ManifoldDarkOperatorCandidate:
             "action_residual": self.action_residual,
             "relative_action_residual": self.relative_action_residual,
             "operator_frobenius_norm": self.operator_frobenius_norm,
+            "coefficient_ipr": self.coefficient_ipr,
+            "effective_operator_count": self.effective_operator_count,
             "n_terms": self.n_terms,
             "terms": tuple(term.to_summary_dict() for term in self.terms),
         }
@@ -115,6 +119,8 @@ class DarkDetectorMatrixReadout:
     action_residual: float
     relative_action_residual: float
     operator_frobenius_norm: float
+    coefficient_ipr: float
+    effective_operator_count: float
 
     @property
     def n_terms(self) -> int:
@@ -136,6 +142,8 @@ class DarkDetectorMatrixReadout:
             "action_residual": self.action_residual,
             "relative_action_residual": self.relative_action_residual,
             "operator_frobenius_norm": self.operator_frobenius_norm,
+            "coefficient_ipr": self.coefficient_ipr,
+            "effective_operator_count": self.effective_operator_count,
         }
 
 
@@ -231,6 +239,7 @@ class ManifoldDarkOperatorBasisReport:
     cutoff: float
     candidates: tuple[ManifoldDarkOperatorCandidate, ...]
     tolerance: float
+    candidate_strategy: str = "svd_basis"
 
     @property
     def n_operators(self) -> int:
@@ -252,6 +261,8 @@ class ManifoldDarkOperatorBasisReport:
             action_residual=float(candidate.action_residual),
             relative_action_residual=float(candidate.relative_action_residual),
             operator_frobenius_norm=float(candidate.operator_frobenius_norm),
+            coefficient_ipr=float(candidate.coefficient_ipr),
+            effective_operator_count=float(candidate.effective_operator_count),
         )
 
     def detector_readouts(
@@ -273,6 +284,8 @@ class ManifoldDarkOperatorBasisReport:
                 action_residual=float(candidate.action_residual),
                 relative_action_residual=float(candidate.relative_action_residual),
                 operator_frobenius_norm=float(candidate.operator_frobenius_norm),
+                coefficient_ipr=float(candidate.coefficient_ipr),
+                effective_operator_count=float(candidate.effective_operator_count),
             )
             for candidate in candidates
         )
@@ -860,6 +873,9 @@ class RecycledManifoldJumpSelectionReport:
     candidate_report: RecycledManifoldDarkDetectorReport
     candidate_report_was_expanded: bool = False
     candidate_pool_was_limited: bool = False
+    compression_strategy: str = "none"
+    n_compression_passes: int = 0
+    n_compressed_jumps_removed: int = 0
 
     @property
     def n_selected_jumps(self) -> int:
@@ -993,6 +1009,9 @@ class RecycledManifoldJumpSelectionReport:
             "n_tested_candidates": self.n_tested_candidates,
             "candidate_report_was_expanded": self.candidate_report_was_expanded,
             "candidate_pool_was_limited": self.candidate_pool_was_limited,
+            "compression_strategy": self.compression_strategy,
+            "n_compression_passes": self.n_compression_passes,
+            "n_compressed_jumps_removed": self.n_compressed_jumps_removed,
             "candidate_report_is_truncated": self.candidate_report_is_truncated,
             "candidate_pool_is_truncated": self.candidate_pool_is_truncated,
             "stopped_with_available_candidates": self.stopped_with_available_candidates,
@@ -1044,6 +1063,9 @@ class RecycledManifoldJumpSelectionReport:
         overview.add_row("expanded report", str(self.candidate_report_was_expanded))
         overview.add_row("pool truncated", str(self.candidate_pool_is_truncated))
         overview.add_row("selected jumps", str(self.n_selected_jumps))
+        overview.add_row(
+            "compression", f"{self.compression_strategy}, removed={self.n_compressed_jumps_removed}"
+        )
         overview.add_row("target bad-kernel dim", str(self.target_bad_kernel_dimension))
         overview.add_row(
             "final bad-kernel dim",
@@ -1426,6 +1448,113 @@ def _combined_operator_frobenius_norm(
     return float(sp.linalg.norm(combined))
 
 
+def _coefficient_ipr(coefficients: npt.ArrayLike) -> float:
+    values = np.asarray(coefficients, dtype=np.complex128)
+    norm_squared = float(np.vdot(values, values).real)
+    if norm_squared <= 0.0:
+        return 0.0
+    return float(np.sum(np.abs(values) ** 4) / (norm_squared * norm_squared))
+
+
+def _effective_coefficient_count(coefficients: npt.ArrayLike) -> float:
+    ipr = _coefficient_ipr(coefficients)
+    if ipr <= 0.0:
+        return float("inf")
+    return float(1.0 / ipr)
+
+
+def _phase_fixed_normalized_vector(
+    vector: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> npt.NDArray[np.complex128] | None:
+    norm = float(np.linalg.norm(vector))
+    if norm <= tolerance:
+        return None
+    normalized = np.asarray(vector / norm, dtype=np.complex128)
+    pivot = int(np.argmax(np.abs(normalized)))
+    pivot_value = normalized[pivot]
+    if abs(pivot_value) > tolerance:
+        normalized = normalized * np.exp(-1j * np.angle(pivot_value))
+    return normalized
+
+
+def _deduplicate_coefficient_vectors(
+    vectors: list[npt.NDArray[np.complex128]],
+    *,
+    overlap_tolerance: float,
+) -> list[npt.NDArray[np.complex128]]:
+    unique: list[npt.NDArray[np.complex128]] = []
+    for vector in vectors:
+        if any(abs(np.vdot(existing, vector)) >= 1.0 - overlap_tolerance for existing in unique):
+            continue
+        unique.append(vector)
+    return unique
+
+
+def _sparse_ipr_dark_detector_columns(
+    *,
+    nullspace: npt.NDArray[np.complex128],
+    max_candidates: int | None,
+    tolerance: float,
+    overlap_tolerance: float,
+) -> npt.NDArray[np.complex128]:
+    """Return nullspace vectors biased toward small operator support.
+
+    The ordinary SVD basis is arbitrary inside a degenerate dark-detector
+    nullspace.  To get more interpretable detector readouts, project each
+    coordinate unit vector onto the dark nullspace and rank the resulting
+    vectors by coefficient IPR.  This is a cheap deterministic proxy for a
+    sparse/IPR-optimized basis: a high score means the detector is concentrated
+    on fewer supplied local operators.
+    """
+    if nullspace.ndim != 2:
+        raise ValueError("nullspace must be two-dimensional.")
+    n_operators, nullity = nullspace.shape
+    if n_operators == 0 or nullity == 0:
+        return np.zeros((n_operators, 0), dtype=np.complex128)
+
+    projected: list[npt.NDArray[np.complex128]] = []
+    for operator_index in range(n_operators):
+        row = np.asarray(nullspace[operator_index, :], dtype=np.complex128)
+        # Projection of the coordinate vector e_i onto span(nullspace).
+        vector = nullspace @ row.conj()
+        normalized = _phase_fixed_normalized_vector(vector, tolerance=tolerance)
+        if normalized is not None:
+            projected.append(normalized)
+
+    projected.sort(
+        key=lambda vector: (
+            -_coefficient_ipr(vector),
+            int(np.count_nonzero(np.abs(vector) > tolerance)),
+            int(np.argmax(np.abs(vector))),
+        )
+    )
+    unique = _deduplicate_coefficient_vectors(
+        projected,
+        overlap_tolerance=overlap_tolerance,
+    )
+
+    # If coordinate projections produced fewer vectors than requested, append
+    # the orthonormal SVD basis as a robust fallback.
+    for column_index in range(nullity):
+        normalized = _phase_fixed_normalized_vector(
+            np.asarray(nullspace[:, column_index], dtype=np.complex128),
+            tolerance=tolerance,
+        )
+        if normalized is not None:
+            unique = _deduplicate_coefficient_vectors(
+                unique + [normalized],
+                overlap_tolerance=overlap_tolerance,
+            )
+
+    if max_candidates is not None:
+        unique = unique[: max(int(max_candidates), 0)]
+    if len(unique) == 0:
+        return np.zeros((n_operators, 0), dtype=np.complex128)
+    return np.column_stack(unique).astype(np.complex128, copy=False)
+
+
 def diagnose_manifold_dark_operator_basis(
     *,
     states: npt.ArrayLike,
@@ -1434,6 +1563,8 @@ def diagnose_manifold_dark_operator_basis(
     tolerance: float = 1.0e-10,
     coefficient_tolerance: float = 1.0e-8,
     max_candidates: int | None = 16,
+    candidate_strategy: Literal["svd_basis", "coordinate_ipr"] = "svd_basis",
+    candidate_overlap_tolerance: float = 1.0e-7,
 ) -> ManifoldDarkOperatorBasisReport:
     """Find linear combinations of supplied operators annihilating a manifold.
 
@@ -1447,6 +1578,13 @@ def diagnose_manifold_dark_operator_basis(
         coefficient_tolerance: Coefficient magnitude threshold for term readout.
         max_candidates: Maximum number of nullspace candidates to store.  Use
             ``None`` to keep all candidates.
+        candidate_strategy: ``"svd_basis"`` keeps the numerical nullspace basis.
+            ``"coordinate_ipr"`` projects individual supplied operators onto the
+            dark nullspace and ranks the results by coefficient IPR, producing
+            more localized/interpretable detector combinations when the dark
+            solution space is degenerate.
+        candidate_overlap_tolerance: Deduplication tolerance for
+            ``candidate_strategy="coordinate_ipr"``.
 
     Returns:
         A report whose candidate coefficient columns define
@@ -1502,9 +1640,19 @@ def diagnose_manifold_dark_operator_basis(
     nullspace = vh.conj().T[:, rank:]
     detector_nullity = int(nullspace.shape[1])
 
-    candidate_columns = nullspace
-    if max_candidates is not None:
-        candidate_columns = candidate_columns[:, : max(int(max_candidates), 0)]
+    if candidate_strategy not in {"svd_basis", "coordinate_ipr"}:
+        raise ValueError('candidate_strategy must be "svd_basis" or "coordinate_ipr".')
+    if candidate_strategy == "svd_basis":
+        candidate_columns = nullspace
+        if max_candidates is not None:
+            candidate_columns = candidate_columns[:, : max(int(max_candidates), 0)]
+    else:
+        candidate_columns = _sparse_ipr_dark_detector_columns(
+            nullspace=nullspace,
+            max_candidates=max_candidates,
+            tolerance=max(float(tolerance), float(coefficient_tolerance)),
+            overlap_tolerance=float(candidate_overlap_tolerance),
+        )
 
     candidates: list[ManifoldDarkOperatorCandidate] = []
     for candidate_index in range(candidate_columns.shape[1]):
@@ -1519,6 +1667,8 @@ def diagnose_manifold_dark_operator_basis(
             coefficients=coefficients,
         )
         relative_residual = residual / max(operator_norm, 1.0)
+        coefficient_ipr = _coefficient_ipr(coefficients)
+        effective_operator_count = _effective_coefficient_count(coefficients)
 
         terms = tuple(
             DarkOperatorTerm(
@@ -1541,6 +1691,8 @@ def diagnose_manifold_dark_operator_basis(
                 action_residual=residual,
                 relative_action_residual=float(relative_residual),
                 operator_frobenius_norm=operator_norm,
+                coefficient_ipr=coefficient_ipr,
+                effective_operator_count=effective_operator_count,
                 terms=terms,
             )
         )
@@ -1557,6 +1709,7 @@ def diagnose_manifold_dark_operator_basis(
         cutoff=cutoff,
         candidates=tuple(candidates),
         tolerance=float(tolerance),
+        candidate_strategy=candidate_strategy,
     )
 
 
@@ -5582,6 +5735,8 @@ def select_recycled_manifold_dark_detector_jumps(
     selection_strategy: Literal[
         "diagnostics", "kernel_projection", "ranked_inflow"
     ] = "diagnostics",
+    compression_strategy: Literal["none", "h_invariant"] = "none",
+    max_compression_passes: int = 1,
     check_final_diagnostics: bool | None = None,
 ) -> RecycledManifoldJumpSelectionReport:
     """Greedily select a small recycled-detector jump subset.
@@ -5623,6 +5778,8 @@ def select_recycled_manifold_dark_detector_jumps(
         raise ValueError(
             'selection_strategy must be "diagnostics", "kernel_projection", or ' '"ranked_inflow".'
         )
+    if compression_strategy not in {"none", "h_invariant"}:
+        raise ValueError('compression_strategy must be "none" or "h_invariant".')
     if check_final_diagnostics is None:
         check_final_diagnostics = selection_strategy != "ranked_inflow"
 
@@ -5905,6 +6062,88 @@ def select_recycled_manifold_dark_detector_jumps(
             if current_bad_dimension <= target_bad_kernel_dimension:
                 break
 
+    n_compression_passes = 0
+    n_compressed_jumps_removed = 0
+    if compression_strategy == "h_invariant" and len(selected_jumps) > 0:
+        from qlinks.open_system.diagnostics import diagnose_common_kernel_h_invariant_sector
+
+        current_h_report = diagnose_common_kernel_h_invariant_sector(
+            hamiltonian=hamiltonian,
+            jumps=tuple(selected_jumps),
+            target_states=state_basis,
+            kernel_tolerance=kernel_tolerance,
+        )
+        if current_h_report.likely_attractive_by_h_invariant_kernel:
+            max_passes = max(int(max_compression_passes), 0)
+            for _pass_index in range(max_passes):
+                removed_this_pass = False
+                n_compression_passes += 1
+                # Try weak/inexpensive jumps first.  A successful removal keeps
+                # the physical H-invariant certificate true while reducing the
+                # number of implemented recyclers.
+                order = sorted(
+                    range(len(selected_jumps)),
+                    key=lambda index: (
+                        float(selected_candidates[index].inflow_norm),
+                        int(selected_candidates[index].jump_nnz),
+                        int(selected_candidates[index].region_index),
+                        int(selected_candidates[index].recycler_index),
+                    ),
+                )
+                for remove_index in order:
+                    if len(selected_jumps) <= 1:
+                        break
+                    trial_jumps = tuple(
+                        jump for index, jump in enumerate(selected_jumps) if index != remove_index
+                    )
+                    trial_report = diagnose_common_kernel_h_invariant_sector(
+                        hamiltonian=hamiltonian,
+                        jumps=trial_jumps,
+                        target_states=state_basis,
+                        kernel_tolerance=kernel_tolerance,
+                    )
+                    if not trial_report.likely_attractive_by_h_invariant_kernel:
+                        continue
+                    selected_jumps.pop(remove_index)
+                    selected_candidates.pop(remove_index)
+                    selected_ids = {id(candidate) for candidate in selected_candidates}
+                    current_h_report = trial_report
+                    n_compressed_jumps_removed += 1
+                    removed_this_pass = True
+                    break
+                if not removed_this_pass:
+                    break
+
+            # Keep the selected-candidate readouts aligned with the compressed
+            # jump list.  The per-step kernel metadata comes from the original
+            # selection trajectory, but the final diagnostics below is recomputed
+            # on the compressed list when requested.
+            old_step_by_candidate_id = {id(step.candidate): step for step in steps}
+            compressed_steps: list[RecycledManifoldJumpSelectionStep] = []
+            cumulative_inflow_squared = 0.0
+            max_target_jump_residual = 0.0
+            for candidate in selected_candidates:
+                old_step = old_step_by_candidate_id.get(id(candidate))
+                cumulative_inflow_squared += float(candidate.inflow_norm) ** 2
+                max_target_jump_residual = max(
+                    max_target_jump_residual, float(candidate.dark_residual)
+                )
+                compressed_steps.append(
+                    RecycledManifoldJumpSelectionStep(
+                        step_index=len(compressed_steps),
+                        candidate=candidate,
+                        bad_common_jump_kernel_dimension=(
+                            current_bad_dimension
+                            if old_step is None
+                            else old_step.bad_common_jump_kernel_dimension
+                        ),
+                        inflow_norm=float(np.sqrt(cumulative_inflow_squared)),
+                        max_target_jump_residual=max_target_jump_residual,
+                        n_selected_jumps=len(compressed_steps) + 1,
+                    )
+                )
+            steps = compressed_steps
+
     if selected_jumps and check_final_diagnostics:
         final_diagnostics = diagnose_dark_manifold(
             hamiltonian=hamiltonian,
@@ -5930,6 +6169,9 @@ def select_recycled_manifold_dark_detector_jumps(
         candidate_report=candidate_report,
         candidate_report_was_expanded=candidate_report_was_expanded,
         candidate_pool_was_limited=candidate_pool_was_limited,
+        compression_strategy=compression_strategy,
+        n_compression_passes=n_compression_passes,
+        n_compressed_jumps_removed=n_compressed_jumps_removed,
     )
 
 

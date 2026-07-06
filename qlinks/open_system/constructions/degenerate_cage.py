@@ -906,6 +906,8 @@ class DegenerateCageLindbladConstruction:
         tolerance: float = 1.0e-10,
         coefficient_tolerance: float = 1.0e-8,
         max_candidates: int | None = 16,
+        candidate_strategy: Literal["svd_basis", "coordinate_ipr"] = "svd_basis",
+        candidate_overlap_tolerance: float = 1.0e-7,
     ) -> ManifoldDarkOperatorBasisReport:
         """Find collective operator combinations ``D`` with ``D P_M = 0``.
 
@@ -920,6 +922,8 @@ class DegenerateCageLindbladConstruction:
             tolerance=tolerance,
             coefficient_tolerance=coefficient_tolerance,
             max_candidates=max_candidates,
+            candidate_strategy=candidate_strategy,
+            candidate_overlap_tolerance=candidate_overlap_tolerance,
         )
 
     def diagnose_dressed_dark_detectors(
@@ -1341,6 +1345,8 @@ class DegenerateCageLindbladConstruction:
         selection_strategy: Literal[
             "diagnostics", "kernel_projection", "ranked_inflow"
         ] = "diagnostics",
+        compression_strategy: Literal["none", "h_invariant"] = "none",
+        max_compression_passes: int = 1,
         check_final_diagnostics: bool | None = None,
     ) -> RecycledManifoldJumpSelectionReport:
         """Greedily select a small local recycled-detector jump subset.
@@ -1377,6 +1383,8 @@ class DegenerateCageLindbladConstruction:
             allow_non_improving=allow_non_improving,
             expand_candidate_report=expand_candidate_report,
             selection_strategy=selection_strategy,
+            compression_strategy=compression_strategy,
+            max_compression_passes=max_compression_passes,
             check_final_diagnostics=check_final_diagnostics,
         )
 
@@ -1446,6 +1454,8 @@ class DegenerateCageLindbladConstruction:
         liouvillian_zero_tolerance: float = 1.0e-9,
         max_detectors: int | None = None,
         dark_operator_max_candidates: int | None = 16,
+        dark_operator_candidate_strategy: Literal["svd_basis", "coordinate_ipr"] = "svd_basis",
+        dark_operator_candidate_overlap_tolerance: float = 1.0e-7,
         max_recycled_report_candidates: int | None = None,
         max_recycled_candidate_pool: int | None = None,
         max_recycled_selected_jumps: int = 16,
@@ -1456,6 +1466,8 @@ class DegenerateCageLindbladConstruction:
             "kernel_projection",
             "ranked_inflow",
         ] = "ranked_inflow",
+        recycled_compression_strategy: Literal["none", "h_invariant"] = "none",
+        max_recycled_compression_passes: int = 1,
         check_recycled_selection_diagnostics: bool | None = None,
         residual_operator_groups: (
             tuple[
@@ -1573,6 +1585,8 @@ class DegenerateCageLindbladConstruction:
                 operator_names=detector_operator_names,
                 tolerance=tolerance,
                 max_candidates=dark_operator_max_candidates,
+                candidate_strategy=dark_operator_candidate_strategy,
+                candidate_overlap_tolerance=dark_operator_candidate_overlap_tolerance,
             )
 
         if recycled_report is None:
@@ -1618,6 +1632,8 @@ class DegenerateCageLindbladConstruction:
                 allow_non_improving=recycled_allow_non_improving,
                 expand_candidate_report=recycled_selection_strategy != "ranked_inflow",
                 selection_strategy=recycled_selection_strategy,
+                compression_strategy=recycled_compression_strategy,
+                max_compression_passes=max_recycled_compression_passes,
                 check_final_diagnostics=check_recycled_selection_diagnostics,
             )
 

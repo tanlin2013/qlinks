@@ -893,3 +893,86 @@ def test_targeted_matrix_unit_candidate_readout():
     assert readout.variable_indices == candidate.variable_indices
     assert readout.local_operator.shape == (3, 3)
     assert readout.nnz >= 1
+
+
+def test_dark_operator_coordinate_ipr_candidate_prefers_single_local_operator():
+    target = np.asarray([1.0, 0.0], dtype=np.complex128)
+    shared_action = sp.csr_array(
+        (
+            np.asarray([1.0], dtype=np.complex128),
+            (np.asarray([1], dtype=np.int64), np.asarray([0], dtype=np.int64)),
+        ),
+        shape=(2, 2),
+    )
+    target_dark_local = sp.diags([0.0, 1.0], format="csr", dtype=np.complex128)
+
+    report = diagnose_manifold_dark_operator_basis(
+        states=target,
+        operators=(shared_action, shared_action, target_dark_local),
+        operator_names=("A", "A_copy", "P1"),
+        candidate_strategy="coordinate_ipr",
+        max_candidates=1,
+    )
+
+    assert report.candidate_strategy == "coordinate_ipr"
+    assert report.detector_nullity == 2
+    candidate = report.candidates[0]
+    assert candidate.n_terms == 1
+    assert candidate.terms[0].operator_name == "P1"
+    assert candidate.coefficient_ipr == 1.0
+    assert candidate.effective_operator_count == 1.0
+    assert candidate.action_residual < 1e-12
+
+
+def test_recycled_h_invariant_compression_removes_redundant_ranked_recyclers():
+    from qlinks.open_system import (
+        diagnose_common_kernel_h_invariant_sector,
+        select_recycled_manifold_dark_detector_jumps,
+    )
+
+    build_result = _single_qutrit_build_result()
+    d1, d2 = _single_qutrit_detector_pair()
+    detector_coefficients = np.eye(3, dtype=np.complex128)
+
+    uncompressed = select_recycled_manifold_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=(d1, d1, d2),
+        detector_coefficients=detector_coefficients,
+        detector_operator_names=("D1", "D1_copy", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        max_candidate_pool=None,
+        max_selected_jumps=4,
+        selection_strategy="ranked_inflow",
+        check_final_diagnostics=False,
+    )
+    compressed = select_recycled_manifold_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=(d1, d1, d2),
+        detector_coefficients=detector_coefficients,
+        detector_operator_names=("D1", "D1_copy", "D2"),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        max_candidate_pool=None,
+        max_selected_jumps=4,
+        selection_strategy="ranked_inflow",
+        compression_strategy="h_invariant",
+        max_compression_passes=8,
+        check_final_diagnostics=False,
+    )
+
+    assert uncompressed.n_selected_jumps >= 3
+    assert compressed.n_selected_jumps < uncompressed.n_selected_jumps
+    assert compressed.n_compressed_jumps_removed > 0
+    assert compressed.compression_strategy == "h_invariant"
+
+    hcert = diagnose_common_kernel_h_invariant_sector(
+        hamiltonian=build_result.hamiltonian,
+        jumps=compressed.jumps,
+        target_states=_single_qutrit_target_state(),
+    )
+    assert hcert.likely_attractive_by_h_invariant_kernel is True
