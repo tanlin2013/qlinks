@@ -1052,14 +1052,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
 
+        <span class="n">operator_layout</span><span class="p">,</span> <span class="n">build_basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_builder</span><span class="o">.</span><span class="n">_prepare_local_term_build</span><span class="p">(</span>
+            <span class="n">build_result</span><span class="o">=</span><span class="n">build_result</span><span class="p">,</span>
+            <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="n">term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_local_term</span><span class="p">(</span>
             <span class="n">descriptor</span><span class="p">,</span>
-            <span class="n">build_result</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">operator_layout</span><span class="p">,</span>
             <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_builder</span><span class="o">.</span><span class="n">_build_term_matrix</span><span class="p">(</span>
-            <span class="n">basis</span><span class="o">=</span><span class="n">build_result</span><span class="o">.</span><span class="n">basis</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="n">build_basis</span><span class="p">,</span>
             <span class="n">term</span><span class="o">=</span><span class="n">term</span><span class="p">,</span>
             <span class="n">builder</span><span class="o">=</span><span class="n">builder</span><span class="p">,</span>
             <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
@@ -1229,6 +1234,80 @@
             <span class="n">drop_zero_atol</span><span class="o">=</span><span class="n">drop_zero_atol</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">hamiltonian</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_local_term_build</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">build_result</span><span class="p">:</span> <span class="n">ModelBuildResult</span><span class="p">,</span>
+        <span class="n">builder</span><span class="p">:</span> <span class="n">HamiltonianBuilderName</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">VariableLayout</span><span class="p">,</span> <span class="n">Basis</span> <span class="o">|</span> <span class="n">BinaryEncodedBasis</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator layout and basis representation for one local term.</span>
+
+<span class="sd">        ``ModelBuildResult.basis`` stores the representation used by the</span>
+<span class="sd">        aggregate Hamiltonian builder.  Local-term reconstruction is often used</span>
+<span class="sd">        downstream with a different builder, for example sparse local detector</span>
+<span class="sd">        matrices built from a bitmask QDM result.  Convert between compatible</span>
+<span class="sd">        representations while preserving the basis ordering.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">build_result</span><span class="o">.</span><span class="n">basis</span>
+
+        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;bitmask&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">BinaryEncodedBasis</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">basis</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="n">basis</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">Basis</span><span class="p">):</span>
+                <span class="n">encoded_basis</span> <span class="o">=</span> <span class="n">BinaryEncodedBasis</span><span class="o">.</span><span class="n">from_basis</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">encoded_basis</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="n">encoded_basis</span>
+
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;build_result.basis must be Basis or BinaryEncodedBasis.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">Basis</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">build_result</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="n">basis</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">BinaryEncodedBasis</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encoded_basis_matches_physical_layout</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">build_result</span><span class="o">.</span><span class="n">layout</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;builder=&#39;</span><span class="si">{</span><span class="n">builder</span><span class="si">}</span><span class="s2">&#39; requires an array Basis in the physical &quot;</span>
+                    <span class="s2">&quot;layout. The supplied build_result contains an encoded basis &quot;</span>
+                    <span class="s2">&quot;with a different operator layout; use builder=&#39;bitmask&#39; or &quot;</span>
+                    <span class="s2">&quot;rebuild the model with builder=&#39;sparse&#39;.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">array_basis</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">to_array_basis</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">array_basis</span><span class="o">.</span><span class="n">layout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">build_result</span><span class="o">.</span><span class="n">layout</span><span class="p">:</span>
+                <span class="n">array_basis</span> <span class="o">=</span> <span class="n">Basis</span><span class="o">.</span><span class="n">from_states</span><span class="p">(</span><span class="n">build_result</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="n">array_basis</span><span class="o">.</span><span class="n">states</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">build_result</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="n">array_basis</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;build_result.basis must be Basis or BinaryEncodedBasis.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_encoded_basis_matches_physical_layout</span><span class="p">(</span>
+        <span class="n">basis</span><span class="p">:</span> <span class="n">BinaryEncodedBasis</span><span class="p">,</span>
+        <span class="n">layout</span><span class="p">:</span> <span class="n">VariableLayout</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">basis</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span> <span class="o">!=</span> <span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">n_variables</span><span class="p">):</span>
+            <span class="n">encoded_spec</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+            <span class="n">physical_spec</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span><span class="n">variable_index</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">encoded_spec</span><span class="o">.</span><span class="n">kind</span> <span class="o">!=</span> <span class="n">physical_spec</span><span class="o">.</span><span class="n">kind</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">encoded_spec</span><span class="o">.</span><span class="n">geometry_index</span> <span class="o">!=</span> <span class="n">physical_spec</span><span class="o">.</span><span class="n">geometry_index</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+                <span class="n">encoded_spec</span><span class="o">.</span><span class="n">local_space</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                <span class="n">physical_spec</span><span class="o">.</span><span class="n">local_space</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_term_matrix</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>

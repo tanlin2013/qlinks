@@ -2022,6 +2022,78 @@
 
 
 
+<div class="viewcode-block" id="bad_h_invariant_common_kernel_basis">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.bad_h_invariant_common_kernel_basis">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bad_h_invariant_common_kernel_basis</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">hamiltonian</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">kernel_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the bad H-invariant sector inside the common jump kernel.</span>
+
+<span class="sd">    The returned columns form an orthonormal basis for the largest subspace of</span>
+<span class="sd">    ``(cap_mu ker J_mu) cap M^perp`` whose Hamiltonian orbit stays inside the</span>
+<span class="sd">    common jump kernel.  An empty ``(dim, 0)`` array means the selected jumps</span>
+<span class="sd">    have no Hamiltonian-stable dark obstruction outside the target manifold.</span>
+
+<span class="sd">    This helper exposes the obstruction basis used internally by</span>
+<span class="sd">    :func:`diagnose_common_kernel_h_invariant_sector`, so jump-design routines</span>
+<span class="sd">    can add a targeted completion stage without recomputing or interpreting a</span>
+<span class="sd">    Liouvillian spectrum.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hamiltonian_sparse</span> <span class="o">=</span> <span class="n">_as_scipy_csr_matrix</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">)</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hamiltonian_sparse</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">hamiltonian_sparse</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hamiltonian must be a square matrix.&quot;</span><span class="p">)</span>
+
+    <span class="n">manifold_basis</span> <span class="o">=</span> <span class="n">_orthonormal_target_state_matrix</span><span class="p">(</span>
+        <span class="n">target_states</span><span class="p">,</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">jumps_sparse</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_as_scipy_csr_matrix</span><span class="p">(</span><span class="n">jump</span><span class="p">)</span> <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps_sparse</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">jump</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Every jump operator must have shape (dim, dim).&quot;</span><span class="p">)</span>
+
+    <span class="n">common_kernel_basis</span> <span class="o">=</span> <span class="n">_common_kernel_basis_from_sparse_operators</span><span class="p">(</span>
+        <span class="n">operators</span><span class="o">=</span><span class="n">jumps_sparse</span><span class="p">,</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">bad_basis</span> <span class="o">=</span> <span class="n">_kernel_basis_orthogonal_to_manifold</span><span class="p">(</span>
+        <span class="n">basis</span><span class="o">=</span><span class="n">common_kernel_basis</span><span class="p">,</span>
+        <span class="n">manifold_basis</span><span class="o">=</span><span class="n">manifold_basis</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">bad_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bad_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">bad_dimension</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">h_bad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">hamiltonian_sparse</span> <span class="o">@</span> <span class="n">bad_basis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">common_kernel_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">projected_to_common</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">h_bad</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">projected_to_common</span> <span class="o">=</span> <span class="n">common_kernel_basis</span> <span class="o">@</span> <span class="p">(</span><span class="n">common_kernel_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">h_bad</span><span class="p">)</span>
+    <span class="n">leakage</span> <span class="o">=</span> <span class="n">h_bad</span> <span class="o">-</span> <span class="n">projected_to_common</span>
+
+    <span class="n">bad_block</span> <span class="o">=</span> <span class="n">bad_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">h_bad</span>
+    <span class="n">bad_block</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bad_block</span> <span class="o">+</span> <span class="n">bad_block</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="n">invariant_coefficients</span> <span class="o">=</span> <span class="n">_largest_h_invariant_subspace_inside_leakage_kernel</span><span class="p">(</span>
+        <span class="n">leakage</span><span class="o">=</span><span class="n">leakage</span><span class="p">,</span>
+        <span class="n">bad_block</span><span class="o">=</span><span class="n">bad_block</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">invariant_basis</span> <span class="o">=</span> <span class="n">bad_basis</span> <span class="o">@</span> <span class="n">invariant_coefficients</span>
+    <span class="k">return</span> <span class="n">_orthonormal_column_basis</span><span class="p">(</span><span class="n">invariant_basis</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="diagnose_common_kernel_h_invariant_sector">
 <a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.diagnose_common_kernel_h_invariant_sector">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">diagnose_common_kernel_h_invariant_sector</span><span class="p">(</span>
@@ -2116,17 +2188,9 @@
     <span class="n">bad_block</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bad_block</span> <span class="o">+</span> <span class="n">bad_block</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
     <span class="n">h_bad_block_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">bad_block</span><span class="p">))</span>
 
-    <span class="c1"># Find vectors c in bad coordinates such that all H-Krylov iterates stay in</span>
-    <span class="c1"># the common jump kernel: L A^n c = 0 for n=0,...,bad_dimension-1, where</span>
-    <span class="c1"># L=(I-P_K)HB and A=B†HB.</span>
-    <span class="n">constraints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">bad_dimension</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">_power_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bad_dimension</span><span class="p">):</span>
-        <span class="n">constraints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">leakage</span> <span class="o">@</span> <span class="n">power</span><span class="p">)</span>
-        <span class="n">power</span> <span class="o">=</span> <span class="n">bad_block</span> <span class="o">@</span> <span class="n">power</span>
-    <span class="n">krylov_constraint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">constraints</span><span class="p">)</span>
-    <span class="n">invariant_coefficients</span> <span class="o">=</span> <span class="n">_nullspace_basis</span><span class="p">(</span>
-        <span class="n">krylov_constraint</span><span class="p">,</span>
+    <span class="n">invariant_coefficients</span> <span class="o">=</span> <span class="n">_largest_h_invariant_subspace_inside_leakage_kernel</span><span class="p">(</span>
+        <span class="n">leakage</span><span class="o">=</span><span class="n">leakage</span><span class="p">,</span>
+        <span class="n">bad_block</span><span class="o">=</span><span class="n">bad_block</span><span class="p">,</span>
         <span class="n">tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -3226,17 +3290,13 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">manifold_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
     <span class="n">overlap</span> <span class="o">=</span> <span class="n">manifold_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">basis</span>
-    <span class="n">_u</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tolerance</span><span class="p">))</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">))</span>
+    <span class="n">overlap_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="s2">&quot;fro&quot;</span><span class="p">))</span>
+    <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tolerance</span><span class="p">))</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">overlap_scale</span><span class="p">))</span>
+    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">_nullspace_basis</span><span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">cutoff</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">rank</span> <span class="o">&gt;=</span> <span class="n">basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">manifold_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">vh</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span>
     <span class="n">complement</span> <span class="o">=</span> <span class="n">basis</span> <span class="o">@</span> <span class="n">coefficients</span>
     <span class="k">return</span> <span class="n">_orthonormal_column_basis</span><span class="p">(</span><span class="n">complement</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
 
@@ -3357,6 +3417,162 @@
     <span class="k">return</span> <span class="n">_nullspace_basis</span><span class="p">(</span><span class="n">stacked</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_largest_h_invariant_subspace_inside_leakage_kernel</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">leakage</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">bad_block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return bad-coordinate vectors in ``ker(leakage)`` invariant under ``bad_block``.</span>
+
+<span class="sd">    The direct Krylov certificate stacks ``leakage @ bad_block**n`` for every</span>
+<span class="sd">    ``n`` and then computes one large dense nullspace.  That is fragile for the</span>
+<span class="sd">    triangular-QDM production cases: the stacked matrix is very tall and can</span>
+<span class="sd">    trigger LAPACK ``SVD did not converge`` failures.  This computes the same</span>
+<span class="sd">    largest invariant subspace by fixed-point intersections,</span>
+
+<span class="sd">    ``S &lt;- {x in S : bad_block @ x in S}``, starting from ``S = ker(leakage)``.</span>
+
+<span class="sd">    Each nullspace problem has only ``bad_dimension`` rows and the current</span>
+<span class="sd">    subspace dimension columns, so the dense linear algebra remains bounded by</span>
+<span class="sd">    the selected jump set rather than by the full Krylov stack.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bad_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bad_block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">bad_dimension</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">leakage</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">bad_block</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;H-invariant kernel diagnostic received non-finite matrix entries.&quot;</span><span class="p">)</span>
+
+    <span class="n">current</span> <span class="o">=</span> <span class="n">_nullspace_basis_by_gram</span><span class="p">(</span><span class="n">leakage</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">_orthonormal_column_basis</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">current</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bad_dimension</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">_iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bad_dimension</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">bad_block</span> <span class="o">@</span> <span class="n">current</span>
+        <span class="n">projected</span> <span class="o">=</span> <span class="n">current</span> <span class="o">@</span> <span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">image</span><span class="p">)</span>
+        <span class="n">escape</span> <span class="o">=</span> <span class="n">image</span> <span class="o">-</span> <span class="n">projected</span>
+        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">escape</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">current</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">surviving_coordinates</span> <span class="o">=</span> <span class="n">_nullspace_basis_by_gram</span><span class="p">(</span>
+            <span class="n">escape</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">surviving_coordinates</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bad_dimension</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+        <span class="n">next_current</span> <span class="o">=</span> <span class="n">current</span> <span class="o">@</span> <span class="n">surviving_coordinates</span>
+        <span class="n">next_current</span> <span class="o">=</span> <span class="n">_orthonormal_column_basis</span><span class="p">(</span><span class="n">next_current</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">next_current</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bad_dimension</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">next_current</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">current</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">next_current</span>
+            <span class="k">continue</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">next_current</span>
+
+    <span class="k">return</span> <span class="n">current</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_nullspace_basis_by_gram</span><span class="p">(</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a right-nullspace basis using the Hermitian Gram matrix.</span>
+
+<span class="sd">    This is a robust fallback for tall matrices where a direct SVD can be both</span>
+<span class="sd">    slow and numerically fragile.  The Gram path squares the condition number,</span>
+<span class="sd">    so it is used only where a production diagnostic prefers a conservative,</span>
+<span class="sd">    non-crashing certificate over an exact singular spectrum.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">matrix</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot compute a nullspace for a matrix with non-finite entries.&quot;</span><span class="p">)</span>
+
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">matrix</span>
+    <span class="k">return</span> <span class="n">_kernel_basis_from_hermitian_gram</span><span class="p">(</span><span class="n">gram</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_kernel_basis_from_hermitian_gram</span><span class="p">(</span>
+    <span class="n">gram</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">gram</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gram</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">gram</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">gram</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;gram matrix must be square.&quot;</span><span class="p">)</span>
+    <span class="n">dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">gram</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">dimension</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">gram</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot diagonalize a Gram matrix with non-finite entries.&quot;</span><span class="p">)</span>
+
+    <span class="n">gram</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">gram</span> <span class="o">+</span> <span class="n">gram</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">gram</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">scipy_linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span>
+            <span class="n">gram</span><span class="p">,</span>
+            <span class="n">check_finite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;evd&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">eigenvalue_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">))</span> <span class="k">if</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="n">roundoff_threshold</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">100.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">eigenvalue_scale</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dimension</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">eigenvalue_threshold</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span> <span class="n">roundoff_threshold</span><span class="p">)</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">eigenvalues</span> <span class="o">&lt;=</span> <span class="n">eigenvalue_threshold</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">keep</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dimension</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_range_basis_from_hermitian_gram</span><span class="p">(</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Orthonormalize columns from a right Gram eigendecomposition fallback.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">matrix</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot orthonormalize a matrix with non-finite entries.&quot;</span><span class="p">)</span>
+
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">matrix</span>
+    <span class="n">gram</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">gram</span> <span class="o">+</span> <span class="n">gram</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">gram</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">scipy_linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span>
+            <span class="n">gram</span><span class="p">,</span>
+            <span class="n">check_finite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;evd&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">eigenvalue_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">))</span> <span class="k">if</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="n">roundoff_threshold</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">100.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">eigenvalue_scale</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="n">eigenvalue_threshold</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span> <span class="n">roundoff_threshold</span><span class="p">)</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">eigenvalues</span> <span class="o">&gt;</span> <span class="n">eigenvalue_threshold</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">keep</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">kept_eigenvectors</span> <span class="o">=</span> <span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">keep</span><span class="p">]</span>
+    <span class="n">kept_eigenvalues</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">matrix</span> <span class="o">@</span> <span class="p">(</span><span class="n">kept_eigenvectors</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">kept_eigenvalues</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>
+    <span class="k">return</span> <span class="n">basis</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_nullspace_basis</span><span class="p">(</span>
     <span class="n">matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -3365,10 +3581,25 @@
     <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-    <span class="n">_left_vectors</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">right_vectors_dagger</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
-        <span class="n">matrix</span><span class="p">,</span>
-        <span class="n">full_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">matrix</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot compute a nullspace for a matrix with non-finite entries.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># A full SVD is only needed for underdetermined matrices.  For tall</span>
+    <span class="c1"># stacked-jump matrices, economy SVD keeps the complete right-singular</span>
+    <span class="c1"># space while avoiding a huge unused left-unitary allocation.</span>
+    <span class="n">full_matrices</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_left_vectors</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">right_vectors_dagger</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+            <span class="n">matrix</span><span class="p">,</span>
+            <span class="n">full_matrices</span><span class="o">=</span><span class="n">full_matrices</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="c1"># LAPACK occasionally fails to converge on very tall, ill-conditioned</span>
+        <span class="c1"># diagnostic matrices even though the right Gram matrix is small.  Fall</span>
+        <span class="c1"># back to the Hermitian path so production diagnostics report a</span>
+        <span class="c1"># conservative kernel instead of crashing.</span>
+        <span class="k">return</span> <span class="n">_nullspace_basis_by_gram</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
 
     <span class="n">n_columns</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">))</span>
@@ -3434,10 +3665,17 @@
     <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-    <span class="n">left_vectors</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">_right_vectors_dagger</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
-        <span class="n">matrix</span><span class="p">,</span>
-        <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">matrix</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot orthonormalize a matrix with non-finite entries.&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">left_vectors</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">_right_vectors_dagger</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+            <span class="n">matrix</span><span class="p">,</span>
+            <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_range_basis_from_hermitian_gram</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
 
     <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">))</span>
 

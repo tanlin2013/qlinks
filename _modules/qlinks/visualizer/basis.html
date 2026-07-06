@@ -359,6 +359,7 @@
 <span class="n">PlaquetteSymbolStyle</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;circulation&quot;</span><span class="p">,</span> <span class="s2">&quot;resonance&quot;</span><span class="p">]</span>
 <span class="n">SiteLabelStyle</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;cell&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_sublattice&quot;</span><span class="p">,</span> <span class="s2">&quot;sublattice_cell&quot;</span><span class="p">,</span> <span class="s2">&quot;site_id&quot;</span><span class="p">]</span>
 <span class="n">VisualizerBackend</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="s2">&quot;networkx&quot;</span><span class="p">]</span>
+<span class="n">MatrixElementValueRole</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;column&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">]</span>
 
 <span class="c1"># This mapping is copied in spirit from the old square-lattice visualizer.</span>
 <span class="c1"># Keys are plaquette-link values converted to binary signs in plaquette order.</span>
@@ -4965,6 +4966,10 @@
         <span class="n">local_operator</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">show_only_nonzero_matrix_elements</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">matrix_element_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+        <span class="n">show_matrix_element_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">matrix_element_value_role</span><span class="p">:</span> <span class="n">MatrixElementValueRole</span> <span class="o">=</span> <span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">max_matrix_element_values_per_pattern</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="n">matrix_element_value_precision</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot local patterns, highlighting only ``variable_indices``.</span>
 
@@ -4986,6 +4991,11 @@
 <span class="sd">            Optional local matrix/operator in the same pattern order.  When</span>
 <span class="sd">            ``show_only_nonzero_matrix_elements=True``, only patterns appearing</span>
 <span class="sd">            in a nonzero row or column of this matrix are drawn.</span>
+<span class="sd">        show_matrix_element_values:</span>
+<span class="sd">            If true, append nonzero local matrix entries touching each displayed</span>
+<span class="sd">            pattern to the subplot title.  Rows are labelled as outgoing</span>
+<span class="sd">            ``&lt;target|O|this&gt;`` entries and columns as incoming</span>
+<span class="sd">            ``&lt;this|O|source&gt;`` entries.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">variable_key</span> <span class="o">=</span> <span class="n">_normalize_local_variable_indices</span><span class="p">(</span><span class="n">variable_indices</span><span class="p">)</span>
         <span class="n">reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_reference_config</span><span class="p">(</span><span class="n">reference_config</span><span class="p">)</span>
@@ -4997,13 +5007,23 @@
         <span class="k">if</span> <span class="n">patterns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;local_patterns must contain at least one pattern.&quot;</span><span class="p">)</span>
 
+        <span class="n">operator_array</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">local_operator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">operator_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_operator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">operator_array</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">patterns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">patterns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;local_operator shape must match the number of local patterns: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">operator_array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="p">(</span><span class="n">patterns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">patterns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="n">displayed_pattern_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">patterns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">show_only_nonzero_matrix_elements</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">local_operator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">operator_array</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;local_operator is required when show_only_nonzero_matrix_elements=True.&quot;</span>
                 <span class="p">)</span>
             <span class="n">selected_pattern_indices</span> <span class="o">=</span> <span class="n">_nonzero_local_operator_pattern_indices</span><span class="p">(</span>
-                <span class="n">local_operator</span><span class="p">,</span>
+                <span class="n">operator_array</span><span class="p">,</span>
                 <span class="n">n_patterns</span><span class="o">=</span><span class="n">patterns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                 <span class="n">tolerance</span><span class="o">=</span><span class="n">matrix_element_tolerance</span><span class="p">,</span>
             <span class="p">)</span>
@@ -5011,6 +5031,20 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No local patterns participate in nonzero matrix elements.&quot;</span><span class="p">)</span>
             <span class="n">patterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">[</span><span class="n">selected_pattern_indices</span><span class="p">]</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="n">_select_local_pattern_labels</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">selected_pattern_indices</span><span class="p">)</span>
+            <span class="n">displayed_pattern_indices</span> <span class="o">=</span> <span class="n">selected_pattern_indices</span>
+
+        <span class="n">matrix_element_labels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">show_matrix_element_values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">operator_array</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;local_operator is required when show_matrix_element_values=True.&quot;</span><span class="p">)</span>
+            <span class="n">matrix_element_labels</span> <span class="o">=</span> <span class="n">_matrix_element_value_labels_for_patterns</span><span class="p">(</span>
+                <span class="n">operator_array</span><span class="p">,</span>
+                <span class="n">displayed_pattern_indices</span><span class="o">=</span><span class="n">displayed_pattern_indices</span><span class="p">,</span>
+                <span class="n">tolerance</span><span class="o">=</span><span class="n">matrix_element_tolerance</span><span class="p">,</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">matrix_element_value_role</span><span class="p">,</span>
+                <span class="n">max_terms_per_pattern</span><span class="o">=</span><span class="n">max_matrix_element_values_per_pattern</span><span class="p">,</span>
+                <span class="n">precision</span><span class="o">=</span><span class="n">matrix_element_value_precision</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">embedded_configs</span> <span class="o">=</span> <span class="n">_embed_local_patterns</span><span class="p">(</span>
             <span class="n">reference_config</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
@@ -5093,6 +5127,9 @@
                 <span class="k">if</span> <span class="n">pattern_text</span><span class="p">:</span>
                     <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">pattern_text</span><span class="si">}</span><span class="s2">&quot;</span>
 
+            <span class="k">if</span> <span class="n">matrix_element_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">matrix_element_labels</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">matrix_element_labels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+
             <span class="n">single_visualizer</span><span class="o">.</span><span class="n">_plot_local_basis_with_grid_render_cache</span><span class="p">(</span>
                 <span class="n">embedded_configs</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                 <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
@@ -5141,6 +5178,10 @@
         <span class="n">suptitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">show_only_nonzero_matrix_elements</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">matrix_element_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+        <span class="n">show_matrix_element_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">matrix_element_value_role</span><span class="p">:</span> <span class="n">MatrixElementValueRole</span> <span class="o">=</span> <span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">max_matrix_element_values_per_pattern</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="n">matrix_element_value_precision</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
         <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot the local patterns exposed by a local-RDM-style readout.</span>
@@ -5148,6 +5189,17 @@
 <span class="sd">        The method intentionally uses duck typing so the visualizer does not</span>
 <span class="sd">        depend on ``qlinks.caging`` or ``qlinks.open_system``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">readout</span><span class="p">,</span> <span class="s2">&quot;local_patterns&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">readout</span><span class="p">,</span> <span class="s2">&quot;variable_indices&quot;</span><span class="p">):</span>
+            <span class="n">readout_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">readout</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;plot_readout expects a local matrix readout with local_patterns &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;and variable_indices; got </span><span class="si">{</span><span class="n">readout_type</span><span class="si">}</span><span class="s2">.  &quot;</span>
+                <span class="s2">&quot;Use workflow.local_operator_readouts(), &quot;</span>
+                <span class="s2">&quot;workflow.recycled_recycler_readouts(), or &quot;</span>
+                <span class="s2">&quot;workflow.targeted_operator_readouts() for local-basis plots.  &quot;</span>
+                <span class="s2">&quot;workflow.detector_readouts() returns global detector coefficient readouts.&quot;</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">suptitle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">component_index</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">readout</span><span class="p">,</span> <span class="s2">&quot;component_index&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">component_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -5184,6 +5236,10 @@
             <span class="n">show_only_nonzero_matrix_elements</span><span class="o">=</span><span class="n">show_only_nonzero_matrix_elements</span>
             <span class="ow">and</span> <span class="n">local_operator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">matrix_element_tolerance</span><span class="o">=</span><span class="n">matrix_element_tolerance</span><span class="p">,</span>
+            <span class="n">show_matrix_element_values</span><span class="o">=</span><span class="n">show_matrix_element_values</span><span class="p">,</span>
+            <span class="n">matrix_element_value_role</span><span class="o">=</span><span class="n">matrix_element_value_role</span><span class="p">,</span>
+            <span class="n">max_matrix_element_values_per_pattern</span><span class="o">=</span><span class="n">max_matrix_element_values_per_pattern</span><span class="p">,</span>
+            <span class="n">matrix_element_value_precision</span><span class="o">=</span><span class="n">matrix_element_value_precision</span><span class="p">,</span>
             <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -5560,6 +5616,83 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
     <span class="n">pattern_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">local_patterns</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pattern_tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">selected_indices</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_matrix_element_value</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">precision</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">real</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="n">imag</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">real</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">real</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">imag</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">imag</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">if</span> <span class="n">imag</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">precision</span><span class="si">}</span><span class="s2">g</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="n">real</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">imag</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">precision</span><span class="si">}</span><span class="s2">g</span><span class="si">}</span><span class="s2">i&quot;</span>
+
+    <span class="n">sign</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span> <span class="k">if</span> <span class="n">imag</span> <span class="o">&gt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">precision</span><span class="si">}</span><span class="s2">g</span><span class="si">}{</span><span class="n">sign</span><span class="si">}{</span><span class="nb">abs</span><span class="p">(</span><span class="n">imag</span><span class="p">)</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">precision</span><span class="si">}</span><span class="s2">g</span><span class="si">}</span><span class="s2">i&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_matrix_element_value_labels_for_patterns</span><span class="p">(</span>
+    <span class="n">local_operator</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">displayed_pattern_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">role</span><span class="p">:</span> <span class="n">MatrixElementValueRole</span><span class="p">,</span>
+    <span class="n">max_terms_per_pattern</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">precision</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">role</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;column&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;matrix_element_value_role must be &#39;row&#39;, &#39;column&#39;, or &#39;both&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="n">max_terms</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_terms_per_pattern</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pattern_index</span> <span class="ow">in</span> <span class="n">displayed_pattern_indices</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pattern_index</span><span class="p">)</span>
+        <span class="n">terms</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">role</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">):</span>
+            <span class="n">row_sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">local_operator</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="p">:])</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">source_index</span> <span class="ow">in</span> <span class="n">row_sources</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">local_operator</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">source_index</span><span class="p">)]</span>
+                <span class="n">value_text</span> <span class="o">=</span> <span class="n">_format_matrix_element_value</span><span class="p">(</span>
+                    <span class="n">value</span><span class="p">,</span>
+                    <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
+                    <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">←</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">source_index</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">value_text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">role</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;column&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">):</span>
+            <span class="n">column_targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">local_operator</span><span class="p">[:,</span> <span class="n">index</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="n">column_targets</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">&quot;both&quot;</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">target_index</span><span class="p">)</span> <span class="o">==</span> <span class="n">index</span><span class="p">:</span>
+                    <span class="c1"># The diagonal element has already appeared in the row list.</span>
+                    <span class="k">continue</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">local_operator</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">target_index</span><span class="p">),</span> <span class="n">index</span><span class="p">]</span>
+                <span class="n">value_text</span> <span class="o">=</span> <span class="n">_format_matrix_element_value</span><span class="p">(</span>
+                    <span class="n">value</span><span class="p">,</span>
+                    <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
+                    <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">target_index</span><span class="p">)</span><span class="si">}</span><span class="s2">←</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">value_text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_terms</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">terms</span><span class="p">:</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">clipped_terms</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[:</span><span class="n">max_terms</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_terms</span><span class="p">:</span>
+            <span class="n">clipped_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;… </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">max_terms</span><span class="si">}</span><span class="s2"> more&quot;</span><span class="p">)</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clipped_terms</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">labels</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_select_local_pattern_labels</span><span class="p">(</span>
@@ -6138,6 +6271,10 @@
     <span class="n">local_operator</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">show_only_nonzero_matrix_elements</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">matrix_element_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">show_matrix_element_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">matrix_element_value_role</span><span class="p">:</span> <span class="n">MatrixElementValueRole</span> <span class="o">=</span> <span class="s2">&quot;both&quot;</span><span class="p">,</span>
+    <span class="n">max_matrix_element_values_per_pattern</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
+    <span class="n">matrix_element_value_precision</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Functional wrapper around :class:`LocalBasisGridVisualizer`.&quot;&quot;&quot;</span>
 
@@ -6175,6 +6312,10 @@
         <span class="n">local_operator</span><span class="o">=</span><span class="n">local_operator</span><span class="p">,</span>
         <span class="n">show_only_nonzero_matrix_elements</span><span class="o">=</span><span class="n">show_only_nonzero_matrix_elements</span><span class="p">,</span>
         <span class="n">matrix_element_tolerance</span><span class="o">=</span><span class="n">matrix_element_tolerance</span><span class="p">,</span>
+        <span class="n">show_matrix_element_values</span><span class="o">=</span><span class="n">show_matrix_element_values</span><span class="p">,</span>
+        <span class="n">matrix_element_value_role</span><span class="o">=</span><span class="n">matrix_element_value_role</span><span class="p">,</span>
+        <span class="n">max_matrix_element_values_per_pattern</span><span class="o">=</span><span class="n">max_matrix_element_values_per_pattern</span><span class="p">,</span>
+        <span class="n">matrix_element_value_precision</span><span class="o">=</span><span class="n">matrix_element_value_precision</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
