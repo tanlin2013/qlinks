@@ -1029,3 +1029,11 @@ def test_recycled_collective_recycler_bundles_region_detector_group():
     assert summary["collective_recycler_strategy"] == "bundle_by_region_detector"
     assert summary["n_unbundled_jumps"] == 2
     assert summary["n_selected_jumps"] == 1
+    assert summary["unbundled_inflow_norm"] is not None
+    assert summary["selected_inflow_norm"] is not None
+    assert summary["final_inflow_norm"] == summary["selected_inflow_norm"]
+    assert summary["collective_inflow_ratio"] is not None
+    assert summary["collective_inflow_ratio"] > 0.0
+    group_summary = summary["collective_groups"][0]
+    assert group_summary["unbundled_inflow_norm"] is not None
+    assert group_summary["bundled_inflow_norm"] is not None

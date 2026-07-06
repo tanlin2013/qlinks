@@ -500,6 +500,14 @@ class DegenerateCageJumpDesignWorkflowReport:
                 self.recycled_selection.complement_common_kernel_removed
             ),
             "recycled_inflow_norm": self.recycled_selection.final_inflow_norm,
+            "recycled_unbundled_inflow_norm": self.recycled_selection.unbundled_inflow_norm,
+            "recycled_collective_inflow_ratio": (self.recycled_selection.collective_inflow_ratio),
+            "recycled_uses_collective_recyclers": (
+                self.recycled_selection.uses_collective_recyclers
+            ),
+            "recycled_collective_jump_reduction": (
+                self.recycled_selection.collective_jump_reduction
+            ),
             "family_candidate_jumps": (
                 None if family_report is None else family_report.n_candidate_jumps
             ),

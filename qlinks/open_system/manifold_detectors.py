@@ -852,6 +852,8 @@ class RecycledManifoldCollectiveRecyclerGroup:
     recycler_frobenius_norm: float
     recycler_nnz: int
     jump_nnz: int
+    unbundled_inflow_norm: float | None = None
+    bundled_inflow_norm: float | None = None
 
     @property
     def n_variables(self) -> int:
@@ -883,6 +885,8 @@ class RecycledManifoldCollectiveRecyclerGroup:
             "recycler_nnz": self.recycler_nnz,
             "jump_frobenius_norm": self.jump_frobenius_norm,
             "jump_nnz": self.jump_nnz,
+            "unbundled_inflow_norm": self.unbundled_inflow_norm,
+            "bundled_inflow_norm": self.bundled_inflow_norm,
         }
 
 
@@ -939,6 +943,8 @@ class RecycledManifoldJumpSelectionReport:
     collective_recycler_strategy: str = "none"
     unbundled_n_jumps: int | None = None
     collective_groups: tuple[RecycledManifoldCollectiveRecyclerGroup, ...] = ()
+    selected_inflow_norm: float | None = None
+    unbundled_inflow_norm: float | None = None
 
     @property
     def n_selected_jumps(self) -> int:
@@ -1026,9 +1032,21 @@ class RecycledManifoldJumpSelectionReport:
 
     @property
     def final_inflow_norm(self) -> float | None:
-        if self.final_diagnostics is None:
+        if self.final_diagnostics is not None:
+            return float(self.final_diagnostics.inflow_norm)
+        if self.selected_inflow_norm is None:
             return None
-        return float(self.final_diagnostics.inflow_norm)
+        return float(self.selected_inflow_norm)
+
+    @property
+    def collective_inflow_ratio(self) -> float | None:
+        if (
+            self.selected_inflow_norm is None
+            or self.unbundled_inflow_norm is None
+            or self.unbundled_inflow_norm <= 0.0
+        ):
+            return None
+        return float(self.selected_inflow_norm / self.unbundled_inflow_norm)
 
     @property
     def complement_common_kernel_removed(self) -> bool | None:
@@ -1125,6 +1143,9 @@ class RecycledManifoldJumpSelectionReport:
             "n_collective_groups": self.n_collective_groups,
             "n_bundled_recyclers": self.n_bundled_recyclers,
             "collective_jump_reduction": self.collective_jump_reduction,
+            "selected_inflow_norm": self.selected_inflow_norm,
+            "unbundled_inflow_norm": self.unbundled_inflow_norm,
+            "collective_inflow_ratio": self.collective_inflow_ratio,
             "collective_groups": tuple(group.to_summary_dict() for group in self.collective_groups),
             "selected_region_indices": self.selected_region_indices,
             "selected_detector_indices": self.selected_detector_indices,
@@ -1848,6 +1869,24 @@ def _projected_inflow_norm(
     target_block_norm_sq = float(np.linalg.norm(target_block) ** 2)
     inflow_sq = max(left_projected_norm_sq - target_block_norm_sq, 0.0)
     return float(np.sqrt(inflow_sq)), float(np.sqrt(target_block_norm_sq))
+
+
+def _multi_jump_projected_inflow_norm(
+    *,
+    jumps: tuple[sp.csr_array, ...] | list[sp.csr_array],
+    state_basis: npt.NDArray[np.complex128],
+) -> float:
+    """Return the incoherent total inflow norm for a jump family.
+
+    This is the cheap part of :func:`diagnose_dark_manifold`: it avoids common
+    kernel and Liouvillian checks, but still measures the actual final jump
+    matrices rather than the pre-bundled candidate scores.
+    """
+    total = 0.0
+    for jump in jumps:
+        inflow_norm, _ = _projected_inflow_norm(jump=jump, state_basis=state_basis)
+        total += float(inflow_norm) ** 2
+    return float(np.sqrt(max(total, 0.0)))
 
 
 def _diagonal_vector_if_diagonal(
@@ -3312,6 +3351,7 @@ def _bundle_recycled_jumps_by_region_detector(
     detector_coefficients: npt.NDArray[np.complex128],
     embedding_contexts: dict[int, Any],
     rdms: dict[int, Any],
+    state_basis: npt.NDArray[np.complex128] | None = None,
     recycler_source: Literal[
         "matrix_units",
         "rdm_support_matrix_units",
@@ -3384,6 +3424,16 @@ def _bundle_recycled_jumps_by_region_detector(
         jump = (recycler @ detector).tocsr()
         if jump.shape != (dim, dim):
             raise ValueError("bundled jump has incompatible shape.")
+        bundled_inflow_norm = None
+        unbundled_inflow_norm = None
+        if state_basis is not None:
+            bundled_inflow_norm, _ = _projected_inflow_norm(
+                jump=jump,
+                state_basis=state_basis,
+            )
+            unbundled_inflow_norm = float(
+                np.sqrt(sum(float(candidate.inflow_norm) ** 2 for candidate in candidates))
+            )
         jumps.append(jump)
         groups.append(
             RecycledManifoldCollectiveRecyclerGroup(
@@ -3402,6 +3452,8 @@ def _bundle_recycled_jumps_by_region_detector(
                 recycler_frobenius_norm=float(sp.linalg.norm(recycler)),
                 recycler_nnz=int(recycler.nnz),
                 jump_nnz=int(jump.nnz),
+                unbundled_inflow_norm=unbundled_inflow_norm,
+                bundled_inflow_norm=bundled_inflow_norm,
             )
         )
 
@@ -4686,6 +4738,7 @@ class TargetedResidualKernelJumpSelectionReport:
     kernel_tolerance: float
     dark_tolerance: float
     inflow_tolerance: float
+    selected_inflow_norm: float | None = None
 
     @property
     def n_selected_jumps(self) -> int:
@@ -4775,9 +4828,11 @@ class TargetedResidualKernelJumpSelectionReport:
 
     @property
     def combined_inflow_norm(self) -> float | None:
-        if self.final_diagnostics is None:
+        if self.final_diagnostics is not None:
+            return float(self.final_diagnostics.inflow_norm)
+        if self.selected_inflow_norm is None:
             return None
-        return float(self.final_diagnostics.inflow_norm)
+        return float(self.selected_inflow_norm)
 
     @property
     def combined_complement_common_kernel_removed(self) -> bool | None:
@@ -4810,6 +4865,7 @@ class TargetedResidualKernelJumpSelectionReport:
             "combined_bad_common_jump_kernel_dimension": (
                 self.combined_bad_common_jump_kernel_dimension
             ),
+            "selected_inflow_norm": self.selected_inflow_norm,
             "combined_inflow_norm": self.combined_inflow_norm,
             "combined_complement_common_kernel_removed": (
                 self.combined_complement_common_kernel_removed
@@ -5971,6 +6027,16 @@ def select_targeted_residual_kernel_jumps(
             )
         )
 
+    selected_inflow_norm = None
+    if states is not None:
+        inflow_basis, _ = _normalize_state_columns(states, tolerance=kernel_tolerance)
+        if inflow_basis.shape[0] != dim:
+            raise ValueError("states has incompatible Hilbert-space dimension.")
+        selected_inflow_norm = _multi_jump_projected_inflow_norm(
+            jumps=base_jump_tuple + tuple(selected_jumps),
+            state_basis=inflow_basis,
+        )
+
     final_diagnostics = None
     if check_manifold_diagnostics and hamiltonian is not None and states is not None:
         final_diagnostics = diagnose_dark_manifold(
@@ -5998,6 +6064,7 @@ def select_targeted_residual_kernel_jumps(
         jumps=tuple(selected_jumps),
         steps=tuple(steps),
         final_diagnostics=final_diagnostics,
+        selected_inflow_norm=selected_inflow_norm,
         kernel_tolerance=float(kernel_tolerance),
         dark_tolerance=float(dark_tolerance),
         inflow_tolerance=float(inflow_tolerance),
@@ -6456,6 +6523,14 @@ def select_recycled_manifold_dark_detector_jumps(
             steps = compressed_steps
 
     unbundled_n_jumps = len(selected_jumps)
+    unbundled_inflow_norm = (
+        _multi_jump_projected_inflow_norm(
+            jumps=tuple(selected_jumps),
+            state_basis=state_basis,
+        )
+        if selected_jumps
+        else 0.0
+    )
     collective_groups: tuple[RecycledManifoldCollectiveRecyclerGroup, ...] = ()
     if selected_jumps and collective_recycler_strategy == "bundle_by_region_detector":
         selected_jumps, collective_groups = _bundle_recycled_jumps_by_region_detector(
@@ -6465,12 +6540,22 @@ def select_recycled_manifold_dark_detector_jumps(
             detector_coefficients=coefficients,
             embedding_contexts=embedding_contexts,
             rdms=rdms,
+            state_basis=state_basis,
             recycler_source=recycler_source,
             weighting=collective_recycler_weighting,
             normalize_recyclers=normalize_collective_recyclers,
             tolerance=tolerance,
         )
         final_diagnostics = None
+
+    selected_inflow_norm = (
+        _multi_jump_projected_inflow_norm(
+            jumps=tuple(selected_jumps),
+            state_basis=state_basis,
+        )
+        if selected_jumps
+        else 0.0
+    )
 
     if selected_jumps and check_final_diagnostics:
         final_diagnostics = diagnose_dark_manifold(
@@ -6503,6 +6588,8 @@ def select_recycled_manifold_dark_detector_jumps(
         collective_recycler_strategy=collective_recycler_strategy,
         unbundled_n_jumps=unbundled_n_jumps,
         collective_groups=collective_groups,
+        selected_inflow_norm=selected_inflow_norm,
+        unbundled_inflow_norm=unbundled_inflow_norm,
     )
 
 
