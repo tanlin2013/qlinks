@@ -976,3 +976,56 @@ def test_recycled_h_invariant_compression_removes_redundant_ranked_recyclers():
         target_states=_single_qutrit_target_state(),
     )
     assert hcert.likely_attractive_by_h_invariant_kernel is True
+
+
+def test_recycled_collective_recycler_bundles_region_detector_group():
+    from qlinks.open_system import (
+        RecycledManifoldCollectiveRecyclerGroup,
+        select_recycled_manifold_dark_detector_jumps,
+    )
+
+    build_result = _single_qutrit_build_result()
+    detector = sp.diags([0.0, 1.0, 1.0], format="csr", dtype=np.complex128)
+
+    selection = select_recycled_manifold_dark_detector_jumps(
+        hamiltonian=build_result.hamiltonian,
+        states=_single_qutrit_target_state(),
+        basis_configs=build_result.basis.states,
+        detector_operators=(detector,),
+        detector_coefficients=np.asarray([1.0]),
+        detector_operator_names=("D12",),
+        local_regions=((0,),),
+        recycler_source="matrix_units",
+        max_candidate_pool=None,
+        max_selected_jumps=2,
+        selection_strategy="ranked_inflow",
+        check_final_diagnostics=True,
+        collective_recycler_strategy="bundle_by_region_detector",
+    )
+
+    assert selection.uses_collective_recyclers is True
+    assert selection.n_unbundled_jumps == 2
+    assert selection.n_selected_jumps == 1
+    assert selection.collective_jump_reduction == 1
+    assert selection.n_collective_groups == 1
+    assert selection.n_bundled_recyclers == 2
+    assert isinstance(selection.collective_groups[0], RecycledManifoldCollectiveRecyclerGroup)
+    assert selection.collective_groups[0].n_bundled_recyclers == 2
+    assert selection.collective_groups[0].detector_index == 0
+    assert selection.collective_groups[0].region_index == 0
+    assert selection.final_diagnostics is not None
+    assert selection.final_diagnostics.max_target_jump_residual < 1e-12
+
+    readouts = selection.selected_recycler_readouts(
+        basis_configs=build_result.basis.states,
+    )
+    assert len(readouts) == 1
+    assert readouts[0].source == "collective_recycled_recycler"
+    assert readouts[0].nnz == 2
+    assert dict(readouts[0].metadata)["n_bundled_recyclers"] == 2
+
+    summary = selection.to_summary_dict()
+    assert summary["uses_collective_recyclers"] is True
+    assert summary["collective_recycler_strategy"] == "bundle_by_region_detector"
+    assert summary["n_unbundled_jumps"] == 2
+    assert summary["n_selected_jumps"] == 1

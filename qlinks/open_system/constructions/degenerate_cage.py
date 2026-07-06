@@ -1348,6 +1348,9 @@ class DegenerateCageLindbladConstruction:
         compression_strategy: Literal["none", "h_invariant"] = "none",
         max_compression_passes: int = 1,
         check_final_diagnostics: bool | None = None,
+        collective_recycler_strategy: Literal["none", "bundle_by_region_detector"] = "none",
+        collective_recycler_weighting: Literal["unit", "inflow", "normalized_inflow"] = "unit",
+        normalize_collective_recyclers: bool = True,
     ) -> RecycledManifoldJumpSelectionReport:
         """Greedily select a small local recycled-detector jump subset.
 
@@ -1386,6 +1389,9 @@ class DegenerateCageLindbladConstruction:
             compression_strategy=compression_strategy,
             max_compression_passes=max_compression_passes,
             check_final_diagnostics=check_final_diagnostics,
+            collective_recycler_strategy=collective_recycler_strategy,
+            collective_recycler_weighting=collective_recycler_weighting,
+            normalize_collective_recyclers=normalize_collective_recyclers,
         )
 
     def design_dark_manifold_jumps(
@@ -1469,6 +1475,16 @@ class DegenerateCageLindbladConstruction:
         recycled_compression_strategy: Literal["none", "h_invariant"] = "none",
         max_recycled_compression_passes: int = 1,
         check_recycled_selection_diagnostics: bool | None = None,
+        recycled_collective_recycler_strategy: Literal[
+            "none",
+            "bundle_by_region_detector",
+        ] = "none",
+        recycled_collective_recycler_weighting: Literal[
+            "unit",
+            "inflow",
+            "normalized_inflow",
+        ] = "unit",
+        normalize_recycled_collective_recyclers: bool = True,
         residual_operator_groups: (
             tuple[
                 tuple[str, tuple[Any, ...] | list[Any], tuple[str, ...] | list[str] | None],
@@ -1635,6 +1651,9 @@ class DegenerateCageLindbladConstruction:
                 compression_strategy=recycled_compression_strategy,
                 max_compression_passes=max_recycled_compression_passes,
                 check_final_diagnostics=check_recycled_selection_diagnostics,
+                collective_recycler_strategy=recycled_collective_recycler_strategy,
+                collective_recycler_weighting=recycled_collective_recycler_weighting,
+                normalize_collective_recyclers=normalize_recycled_collective_recyclers,
             )
 
         if design_mode == "recycled_screening":

@@ -827,6 +827,66 @@ class RecycledManifoldDarkDetectorReport:
 
 
 @dataclass(frozen=True, slots=True)
+class RecycledManifoldCollectiveRecyclerGroup:
+    """One collective local recycler replacing selected microscopic recyclers.
+
+    The bundled jump has the form ``J = R_bundle D`` where ``D`` is the
+    selected dark detector and ``R_bundle`` is a local matrix supported on one
+    region. Bundling only within a fixed ``(detector_index, region_index)``
+    preserves the same real-space support as the selected microscopic
+    recyclers while reducing the number of Lindblad channels.
+    """
+
+    group_index: int
+    detector_index: int
+    detector_name: str
+    region_index: int
+    variable_indices: tuple[int, ...]
+    local_dim: int
+    candidate_indices: tuple[int, ...]
+    recycler_indices: tuple[int, ...]
+    recycler_names: tuple[str, ...]
+    weights: tuple[complex, ...]
+    local_operator: npt.NDArray[np.complex128]
+    jump_frobenius_norm: float
+    recycler_frobenius_norm: float
+    recycler_nnz: int
+    jump_nnz: int
+
+    @property
+    def n_variables(self) -> int:
+        return len(self.variable_indices)
+
+    @property
+    def n_bundled_recyclers(self) -> int:
+        return len(self.candidate_indices)
+
+    @property
+    def recycler_name(self) -> str:
+        return f"collective[{self.n_bundled_recyclers}]"
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "group_index": self.group_index,
+            "detector_index": self.detector_index,
+            "detector_name": self.detector_name,
+            "region_index": self.region_index,
+            "variable_indices": self.variable_indices,
+            "n_variables": self.n_variables,
+            "local_dim": self.local_dim,
+            "n_bundled_recyclers": self.n_bundled_recyclers,
+            "candidate_indices": self.candidate_indices,
+            "recycler_indices": self.recycler_indices,
+            "recycler_names": self.recycler_names,
+            "weights": self.weights,
+            "recycler_frobenius_norm": self.recycler_frobenius_norm,
+            "recycler_nnz": self.recycler_nnz,
+            "jump_frobenius_norm": self.jump_frobenius_norm,
+            "jump_nnz": self.jump_nnz,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class RecycledManifoldJumpSelectionStep:
     """One greedy selection step for recycled dark-detector jumps."""
 
@@ -876,10 +936,35 @@ class RecycledManifoldJumpSelectionReport:
     compression_strategy: str = "none"
     n_compression_passes: int = 0
     n_compressed_jumps_removed: int = 0
+    collective_recycler_strategy: str = "none"
+    unbundled_n_jumps: int | None = None
+    collective_groups: tuple[RecycledManifoldCollectiveRecyclerGroup, ...] = ()
 
     @property
     def n_selected_jumps(self) -> int:
         return len(self.jumps)
+
+    @property
+    def n_unbundled_jumps(self) -> int:
+        if self.unbundled_n_jumps is not None:
+            return int(self.unbundled_n_jumps)
+        return len(self.steps)
+
+    @property
+    def n_collective_groups(self) -> int:
+        return len(self.collective_groups)
+
+    @property
+    def n_bundled_recyclers(self) -> int:
+        return int(sum(group.n_bundled_recyclers for group in self.collective_groups))
+
+    @property
+    def collective_jump_reduction(self) -> int:
+        return max(self.n_unbundled_jumps - self.n_selected_jumps, 0)
+
+    @property
+    def uses_collective_recyclers(self) -> bool:
+        return bool(self.collective_groups)
 
     @property
     def selected_candidates(self) -> tuple[RecycledManifoldDarkDetectorCandidate, ...]:
@@ -962,10 +1047,14 @@ class RecycledManifoldJumpSelectionReport:
 
     @property
     def selected_region_indices(self) -> tuple[int, ...]:
+        if self.collective_groups:
+            return tuple(group.region_index for group in self.collective_groups)
         return tuple(step.candidate.region_index for step in self.steps)
 
     @property
     def selected_detector_indices(self) -> tuple[int, ...]:
+        if self.collective_groups:
+            return tuple(group.detector_index for group in self.collective_groups)
         return tuple(step.candidate.detector_index for step in self.steps)
 
     def selected_recycler_readouts(
@@ -984,6 +1073,18 @@ class RecycledManifoldJumpSelectionReport:
         ``rdm_support_matrix_units`` recyclers, pass the target state/manifold
         through ``states`` so the local RDM support basis can be reconstructed.
         """
+        if self.collective_groups:
+            groups = self.collective_groups
+            if max_readouts is not None:
+                groups = groups[: max(int(max_readouts), 0)]
+            return tuple(
+                _local_operator_from_collective_recycler_group(
+                    group=group,
+                    basis_configs=basis_configs,
+                )
+                for group in groups
+            )
+
         candidates = self.selected_candidates
         if max_readouts is not None:
             candidates = candidates[: max(int(max_readouts), 0)]
@@ -1018,6 +1119,13 @@ class RecycledManifoldJumpSelectionReport:
             "max_selected_jumps": self.max_selected_jumps,
             "target_bad_kernel_dimension": self.target_bad_kernel_dimension,
             "n_selected_jumps": self.n_selected_jumps,
+            "n_unbundled_jumps": self.n_unbundled_jumps,
+            "collective_recycler_strategy": self.collective_recycler_strategy,
+            "uses_collective_recyclers": self.uses_collective_recyclers,
+            "n_collective_groups": self.n_collective_groups,
+            "n_bundled_recyclers": self.n_bundled_recyclers,
+            "collective_jump_reduction": self.collective_jump_reduction,
+            "collective_groups": tuple(group.to_summary_dict() for group in self.collective_groups),
             "selected_region_indices": self.selected_region_indices,
             "selected_detector_indices": self.selected_detector_indices,
             "total_jump_nnz": self.total_jump_nnz,
@@ -2556,6 +2664,38 @@ def _local_operator_from_recycler_candidate(
     )
 
 
+def _local_operator_from_collective_recycler_group(
+    *,
+    group: RecycledManifoldCollectiveRecyclerGroup,
+    basis_configs: npt.NDArray[np.integer],
+) -> LocalOperatorMatrixReadout:
+    variable_indices = tuple(int(value) for value in group.variable_indices)
+    local_patterns = _local_patterns_from_basis_configs(
+        basis_configs=basis_configs,
+        variable_indices=variable_indices,
+    )
+    if len(local_patterns) != int(group.local_dim):
+        raise ValueError("basis_configs/local_patterns are incompatible with the collective group.")
+    return LocalOperatorMatrixReadout(
+        label=f"collective_recycled_{group.group_index}_{group.detector_name}",
+        source="collective_recycled_recycler",
+        variable_indices=variable_indices,
+        local_patterns=local_patterns,
+        local_operator=np.asarray(group.local_operator, dtype=np.complex128),
+        metadata=(
+            ("group_index", int(group.group_index)),
+            ("detector_index", int(group.detector_index)),
+            ("detector_name", group.detector_name),
+            ("region_index", int(group.region_index)),
+            ("n_bundled_recyclers", int(group.n_bundled_recyclers)),
+            ("candidate_indices", group.candidate_indices),
+            ("recycler_indices", group.recycler_indices),
+            ("recycler_names", group.recycler_names),
+            ("jump_nnz", int(group.jump_nnz)),
+        ),
+    )
+
+
 def _local_operator_from_targeted_candidate(
     *,
     candidate: TargetedResidualKernelLinearCandidate,
@@ -3106,6 +3246,166 @@ def _recycled_jump_for_candidate_from_cache(
         local_operator=local_operator,
     )
     return (recycler @ detector).tocsr()
+
+
+def _local_recycler_operator_from_candidate_cache(
+    *,
+    candidate: RecycledManifoldDarkDetectorCandidate,
+    embedding_contexts: dict[int, Any],
+    rdms: dict[int, Any],
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ],
+) -> tuple[str, npt.NDArray[np.complex128]]:
+    """Return a candidate's local recycler matrix from cached local data."""
+    embedding_context = embedding_contexts[candidate.region_index]
+    if recycler_source == "matrix_units":
+        local_dim = int(embedding_context.local_dim)
+        if int(candidate.local_dim) != local_dim:
+            raise ValueError(
+                "candidate.local_dim is incompatible with the cached embedding context."
+            )
+        n_matrix_units = local_dim * local_dim
+        if candidate.recycler_index < 0 or candidate.recycler_index >= n_matrix_units:
+            raise ValueError("candidate.recycler_index is out of range for matrix-unit recyclers.")
+        target_index, source_index = divmod(int(candidate.recycler_index), local_dim)
+        local_operator = np.zeros((local_dim, local_dim), dtype=np.complex128)
+        local_operator[target_index, source_index] = 1.0
+        return candidate.recycler_name, local_operator
+
+    rdm = rdms[candidate.region_index]
+    recycler_specs = _local_recycler_specs(
+        local_patterns=rdm.local_patterns,
+        support_basis=rdm.support_basis,
+        recycler_source=recycler_source,
+    )
+    if candidate.recycler_index < 0 or candidate.recycler_index >= len(recycler_specs):
+        raise ValueError("candidate.recycler_index is out of range for recycler specs.")
+    recycler_name, local_operator = recycler_specs[candidate.recycler_index]
+    return recycler_name, np.asarray(local_operator, dtype=np.complex128)
+
+
+def _collective_recycler_weight(
+    candidate: RecycledManifoldDarkDetectorCandidate,
+    *,
+    weighting: Literal["unit", "inflow", "normalized_inflow"],
+) -> complex:
+    if weighting == "unit":
+        return 1.0 + 0.0j
+    if weighting == "inflow":
+        return complex(float(candidate.inflow_norm))
+    if weighting == "normalized_inflow":
+        return complex(
+            float(candidate.inflow_norm) / max(float(candidate.jump_frobenius_norm), 1.0e-300)
+        )
+    raise ValueError(
+        'collective_recycler_weighting must be "unit", "inflow", or "normalized_inflow".'
+    )
+
+
+def _bundle_recycled_jumps_by_region_detector(
+    *,
+    selected_candidates: tuple[RecycledManifoldDarkDetectorCandidate, ...],
+    dim: int,
+    detector_matrices: tuple[sp.csr_array, ...],
+    detector_coefficients: npt.NDArray[np.complex128],
+    embedding_contexts: dict[int, Any],
+    rdms: dict[int, Any],
+    recycler_source: Literal[
+        "matrix_units",
+        "rdm_support_matrix_units",
+    ],
+    weighting: Literal["unit", "inflow", "normalized_inflow"],
+    normalize_recyclers: bool,
+    tolerance: float,
+) -> tuple[tuple[sp.csr_array, ...], tuple[RecycledManifoldCollectiveRecyclerGroup, ...]]:
+    """Bundle selected microscopic recyclers into collective local recyclers.
+
+    Candidates are grouped only by ``(detector_index, region_index)``. This is
+    locality-safe: every bundled recycler acts on the same local region as the
+    selected microscopic recyclers, and the same dark detector remains on the
+    right.
+    """
+    from qlinks.open_system.local_recycling import _embed_local_pattern_operator_from_context
+
+    grouped: dict[tuple[int, int], list[RecycledManifoldDarkDetectorCandidate]] = {}
+    group_order: list[tuple[int, int]] = []
+    for candidate in selected_candidates:
+        key = (int(candidate.detector_index), int(candidate.region_index))
+        if key not in grouped:
+            grouped[key] = []
+            group_order.append(key)
+        grouped[key].append(candidate)
+
+    detector_cache: dict[int, sp.csr_array] = {}
+    jumps: list[sp.csr_array] = []
+    groups: list[RecycledManifoldCollectiveRecyclerGroup] = []
+
+    for group_index, key in enumerate(group_order):
+        detector_index, region_index = key
+        candidates = tuple(grouped[key])
+        embedding_context = embedding_contexts[region_index]
+        local_dim = int(embedding_context.local_dim)
+        local_operator = np.zeros((local_dim, local_dim), dtype=np.complex128)
+        raw_weights: list[complex] = []
+        recycler_names: list[str] = []
+
+        for candidate in candidates:
+            recycler_name, candidate_operator = _local_recycler_operator_from_candidate_cache(
+                candidate=candidate,
+                embedding_contexts=embedding_contexts,
+                rdms=rdms,
+                recycler_source=recycler_source,
+            )
+            weight = _collective_recycler_weight(candidate, weighting=weighting)
+            raw_weights.append(weight)
+            recycler_names.append(recycler_name)
+            local_operator += weight * candidate_operator
+
+        frobenius_norm = float(np.linalg.norm(local_operator))
+        if normalize_recyclers and frobenius_norm > tolerance:
+            local_operator = local_operator / frobenius_norm
+            weights = tuple(complex(weight / frobenius_norm) for weight in raw_weights)
+        else:
+            weights = tuple(complex(weight) for weight in raw_weights)
+
+        recycler = _embed_local_pattern_operator_from_context(
+            context=embedding_context,
+            local_operator=local_operator,
+        ).tocsr()
+        detector = detector_cache.get(detector_index)
+        if detector is None:
+            detector = _combined_operator(
+                operators=detector_matrices,
+                coefficients=detector_coefficients[:, detector_index],
+            )
+            detector_cache[detector_index] = detector
+        jump = (recycler @ detector).tocsr()
+        if jump.shape != (dim, dim):
+            raise ValueError("bundled jump has incompatible shape.")
+        jumps.append(jump)
+        groups.append(
+            RecycledManifoldCollectiveRecyclerGroup(
+                group_index=int(group_index),
+                detector_index=int(detector_index),
+                detector_name=candidates[0].detector_name,
+                region_index=int(region_index),
+                variable_indices=tuple(int(value) for value in candidates[0].variable_indices),
+                local_dim=local_dim,
+                candidate_indices=tuple(int(candidate.candidate_index) for candidate in candidates),
+                recycler_indices=tuple(int(candidate.recycler_index) for candidate in candidates),
+                recycler_names=tuple(recycler_names),
+                weights=weights,
+                local_operator=np.asarray(local_operator, dtype=np.complex128),
+                jump_frobenius_norm=float(sp.linalg.norm(jump)),
+                recycler_frobenius_norm=float(sp.linalg.norm(recycler)),
+                recycler_nnz=int(recycler.nnz),
+                jump_nnz=int(jump.nnz),
+            )
+        )
+
+    return tuple(jumps), tuple(groups)
 
 
 def _recycled_jump_for_candidate(
@@ -5737,6 +6037,9 @@ def select_recycled_manifold_dark_detector_jumps(
     ] = "diagnostics",
     compression_strategy: Literal["none", "h_invariant"] = "none",
     max_compression_passes: int = 1,
+    collective_recycler_strategy: Literal["none", "bundle_by_region_detector"] = "none",
+    collective_recycler_weighting: Literal["unit", "inflow", "normalized_inflow"] = "unit",
+    normalize_collective_recyclers: bool = True,
     check_final_diagnostics: bool | None = None,
 ) -> RecycledManifoldJumpSelectionReport:
     """Greedily select a small recycled-detector jump subset.
@@ -5780,6 +6083,14 @@ def select_recycled_manifold_dark_detector_jumps(
         )
     if compression_strategy not in {"none", "h_invariant"}:
         raise ValueError('compression_strategy must be "none" or "h_invariant".')
+    if collective_recycler_strategy not in {"none", "bundle_by_region_detector"}:
+        raise ValueError(
+            'collective_recycler_strategy must be "none" or "bundle_by_region_detector".'
+        )
+    if collective_recycler_weighting not in {"unit", "inflow", "normalized_inflow"}:
+        raise ValueError(
+            'collective_recycler_weighting must be "unit", "inflow", or "normalized_inflow".'
+        )
     if check_final_diagnostics is None:
         check_final_diagnostics = selection_strategy != "ranked_inflow"
 
@@ -6144,6 +6455,23 @@ def select_recycled_manifold_dark_detector_jumps(
                 )
             steps = compressed_steps
 
+    unbundled_n_jumps = len(selected_jumps)
+    collective_groups: tuple[RecycledManifoldCollectiveRecyclerGroup, ...] = ()
+    if selected_jumps and collective_recycler_strategy == "bundle_by_region_detector":
+        selected_jumps, collective_groups = _bundle_recycled_jumps_by_region_detector(
+            selected_candidates=tuple(selected_candidates),
+            dim=dim,
+            detector_matrices=detector_matrices,
+            detector_coefficients=coefficients,
+            embedding_contexts=embedding_contexts,
+            rdms=rdms,
+            recycler_source=recycler_source,
+            weighting=collective_recycler_weighting,
+            normalize_recyclers=normalize_collective_recyclers,
+            tolerance=tolerance,
+        )
+        final_diagnostics = None
+
     if selected_jumps and check_final_diagnostics:
         final_diagnostics = diagnose_dark_manifold(
             hamiltonian=hamiltonian,
@@ -6172,6 +6500,9 @@ def select_recycled_manifold_dark_detector_jumps(
         compression_strategy=compression_strategy,
         n_compression_passes=n_compression_passes,
         n_compressed_jumps_removed=n_compressed_jumps_removed,
+        collective_recycler_strategy=collective_recycler_strategy,
+        unbundled_n_jumps=unbundled_n_jumps,
+        collective_groups=collective_groups,
     )
 
 
