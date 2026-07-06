@@ -120,6 +120,11 @@ class DarkDetectorMatrixReadout:
     def n_terms(self) -> int:
         return len(self.terms)
 
+    @property
+    def is_local_matrix_readout(self) -> bool:
+        """Whether this readout can be drawn by ``LocalBasisGridVisualizer``."""
+        return False
+
     def to_summary_dict(self) -> dict[str, object]:
         return {
             "detector_index": self.detector_index,
@@ -156,12 +161,35 @@ class LocalOperatorMatrixReadout:
         return len(self.local_patterns)
 
     @property
+    def is_local_matrix_readout(self) -> bool:
+        """Whether this readout can be drawn by ``LocalBasisGridVisualizer``."""
+        return True
+
+    @property
     def shape(self) -> tuple[int, int]:
         return tuple(int(value) for value in self.local_operator.shape)
 
     @property
     def nnz(self) -> int:
         return int(np.count_nonzero(np.abs(self.local_operator) > 0.0))
+
+    def nonzero_matrix_elements(
+        self,
+        *,
+        tolerance: float = 0.0,
+    ) -> tuple[tuple[int, int, complex], ...]:
+        """Return ``(target_index, source_index, value)`` nonzero local entries."""
+        operator = np.asarray(self.local_operator, dtype=np.complex128)
+        entries: list[tuple[int, int, complex]] = []
+        for target_index, source_index in zip(*np.nonzero(np.abs(operator) > tolerance)):
+            entries.append(
+                (
+                    int(target_index),
+                    int(source_index),
+                    complex(operator[int(target_index), int(source_index)]),
+                )
+            )
+        return tuple(entries)
 
     def to_summary_dict(self) -> dict[str, object]:
         return {
@@ -172,6 +200,7 @@ class LocalOperatorMatrixReadout:
             "local_dim": self.local_dim,
             "shape": self.shape,
             "nnz": self.nnz,
+            "nonzero_matrix_elements": self.nonzero_matrix_elements(),
             "metadata": self.metadata,
         }
 

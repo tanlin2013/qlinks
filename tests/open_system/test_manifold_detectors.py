@@ -850,6 +850,11 @@ def test_dark_detector_and_recycled_matrix_readouts_are_available():
     assert readout.local_patterns == ((0,), (1,), (2,))
     assert readout.local_operator.shape == (3, 3)
     assert readout.nnz == 1
+    assert readout.is_local_matrix_readout is True
+    assert len(readout.nonzero_matrix_elements()) == 1
+    assert readout.to_summary_dict()["nonzero_matrix_elements"] == (
+        readout.nonzero_matrix_elements()
+    )
     assert any(name in dict(readout.metadata)["detector_name"] for name in ("D1", "D2"))
 
     dark_report = diagnose_manifold_dark_operator_basis(
@@ -860,6 +865,7 @@ def test_dark_detector_and_recycled_matrix_readouts_are_available():
     dark_readouts = dark_report.detector_readouts()
     assert isinstance(dark_readouts[0], DarkDetectorMatrixReadout)
     assert dark_readouts[0].n_terms == 2
+    assert dark_readouts[0].is_local_matrix_readout is False
     assert dark_readouts[0].operator_names == ("Z0", "Z1")
 
 

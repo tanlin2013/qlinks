@@ -341,3 +341,48 @@ def test_plot_local_structure_report_wrapper_is_exported() -> None:
     assert "plot_local_structure_report" in visualizer_api.__all__
 
     plt.close(fig)
+
+
+def test_plot_readout_can_annotate_nonzero_matrix_element_values() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+
+    readout = DummyLocalRDMReadout(
+        variable_indices=(0, 1),
+        local_patterns=((0, 0), (1, 0), (0, 1)),
+        density_matrix=np.array(
+            [
+                [0.0, 0.0, 0.25],
+                [0.0, 0.0, 0.0],
+                [0.25, 0.0, 0.0],
+            ],
+            dtype=np.complex128,
+        ),
+    )
+
+    visualizer = LocalBasisGridVisualizer(lattice=lattice)
+    fig, axes = visualizer.plot_readout(
+        readout,
+        ncols=2,
+        mode="values",
+        show=False,
+        show_matrix_element_values=True,
+        single_plot_kwargs={"with_site_labels": False},
+    )
+
+    assert "0←2:0.25" in axes.flat[0].get_title()
+    assert "2←0:0.25" in axes.flat[0].get_title()
+    assert "2←0:0.25" in axes.flat[1].get_title()
+
+    plt.close(fig)
+
+
+class DummyDetectorCoefficientReadout:
+    pass
+
+
+def test_plot_readout_rejects_nonlocal_detector_coefficient_readout() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    visualizer = LocalBasisGridVisualizer(lattice=lattice)
+
+    with pytest.raises(TypeError, match="detector_readouts"):
+        visualizer.plot_readout(DummyDetectorCoefficientReadout(), show=False)

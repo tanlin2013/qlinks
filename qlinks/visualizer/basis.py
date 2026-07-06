@@ -30,6 +30,7 @@ PlaquetteSymbolMode = Literal["binary", "flux"]
 PlaquetteSymbolStyle = Literal["auto", "none", "circulation", "resonance"]
 SiteLabelStyle = Literal["cell", "cell_sublattice", "sublattice_cell", "site_id"]
 VisualizerBackend = Literal["matplotlib", "networkx"]
+MatrixElementValueRole = Literal["row", "column", "both"]
 
 # This mapping is copied in spirit from the old square-lattice visualizer.
 # Keys are plaquette-link values converted to binary signs in plaquette order.
@@ -4593,6 +4594,10 @@ class LocalBasisGridVisualizer:
         local_operator: npt.ArrayLike | None = None,
         show_only_nonzero_matrix_elements: bool = False,
         matrix_element_tolerance: float = 1e-10,
+        show_matrix_element_values: bool = False,
+        matrix_element_value_role: MatrixElementValueRole = "both",
+        max_matrix_element_values_per_pattern: int = 6,
+        matrix_element_value_precision: int = 3,
     ):
         """Plot local patterns, highlighting only ``variable_indices``.
 
@@ -4614,6 +4619,11 @@ class LocalBasisGridVisualizer:
             Optional local matrix/operator in the same pattern order.  When
             ``show_only_nonzero_matrix_elements=True``, only patterns appearing
             in a nonzero row or column of this matrix are drawn.
+        show_matrix_element_values:
+            If true, append nonzero local matrix entries touching each displayed
+            pattern to the subplot title.  Rows are labelled as outgoing
+            ``<target|O|this>`` entries and columns as incoming
+            ``<this|O|source>`` entries.
         """
         variable_key = _normalize_local_variable_indices(variable_indices)
         reference = self._resolve_reference_config(reference_config)
@@ -4625,13 +4635,23 @@ class LocalBasisGridVisualizer:
         if patterns.shape[0] == 0:
             raise ValueError("local_patterns must contain at least one pattern.")
 
+        operator_array = None
+        if local_operator is not None:
+            operator_array = np.asarray(local_operator, dtype=np.complex128)
+            if operator_array.shape != (patterns.shape[0], patterns.shape[0]):
+                raise ValueError(
+                    "local_operator shape must match the number of local patterns: "
+                    f"{operator_array.shape} != {(patterns.shape[0], patterns.shape[0])}."
+                )
+
+        displayed_pattern_indices = np.arange(patterns.shape[0], dtype=np.int64)
         if show_only_nonzero_matrix_elements:
-            if local_operator is None:
+            if operator_array is None:
                 raise ValueError(
                     "local_operator is required when show_only_nonzero_matrix_elements=True."
                 )
             selected_pattern_indices = _nonzero_local_operator_pattern_indices(
-                local_operator,
+                operator_array,
                 n_patterns=patterns.shape[0],
                 tolerance=matrix_element_tolerance,
             )
@@ -4639,6 +4659,20 @@ class LocalBasisGridVisualizer:
                 raise ValueError("No local patterns participate in nonzero matrix elements.")
             patterns = patterns[selected_pattern_indices]
             labels = _select_local_pattern_labels(labels, selected_pattern_indices)
+            displayed_pattern_indices = selected_pattern_indices
+
+        matrix_element_labels = None
+        if show_matrix_element_values:
+            if operator_array is None:
+                raise ValueError("local_operator is required when show_matrix_element_values=True.")
+            matrix_element_labels = _matrix_element_value_labels_for_patterns(
+                operator_array,
+                displayed_pattern_indices=displayed_pattern_indices,
+                tolerance=matrix_element_tolerance,
+                role=matrix_element_value_role,
+                max_terms_per_pattern=max_matrix_element_values_per_pattern,
+                precision=matrix_element_value_precision,
+            )
 
         embedded_configs = _embed_local_patterns(
             reference_config=reference,
@@ -4721,6 +4755,9 @@ class LocalBasisGridVisualizer:
                 if pattern_text:
                     title = f"{title}\n{pattern_text}"
 
+            if matrix_element_labels is not None and matrix_element_labels[k]:
+                title = f"{title}\n{matrix_element_labels[k]}"
+
             single_visualizer._plot_local_basis_with_grid_render_cache(
                 embedded_configs[k],
                 ax=ax,
@@ -4766,6 +4803,10 @@ class LocalBasisGridVisualizer:
         suptitle: str | None = None,
         show_only_nonzero_matrix_elements: bool = True,
         matrix_element_tolerance: float = 1e-10,
+        show_matrix_element_values: bool = False,
+        matrix_element_value_role: MatrixElementValueRole = "both",
+        max_matrix_element_values_per_pattern: int = 6,
+        matrix_element_value_precision: int = 3,
         **plot_kwargs,
     ):
         """Plot the local patterns exposed by a local-RDM-style readout.
@@ -4773,6 +4814,17 @@ class LocalBasisGridVisualizer:
         The method intentionally uses duck typing so the visualizer does not
         depend on ``qlinks.caging`` or ``qlinks.open_system``.
         """
+        if not hasattr(readout, "local_patterns") or not hasattr(readout, "variable_indices"):
+            readout_type = type(readout).__name__
+            raise TypeError(
+                "plot_readout expects a local matrix readout with local_patterns "
+                f"and variable_indices; got {readout_type}.  "
+                "Use workflow.local_operator_readouts(), "
+                "workflow.recycled_recycler_readouts(), or "
+                "workflow.targeted_operator_readouts() for local-basis plots.  "
+                "workflow.detector_readouts() returns global detector coefficient readouts."
+            )
+
         if suptitle is None:
             component_index = getattr(readout, "component_index", None)
             if component_index is None:
@@ -4809,6 +4861,10 @@ class LocalBasisGridVisualizer:
             show_only_nonzero_matrix_elements=show_only_nonzero_matrix_elements
             and local_operator is not None,
             matrix_element_tolerance=matrix_element_tolerance,
+            show_matrix_element_values=show_matrix_element_values,
+            matrix_element_value_role=matrix_element_value_role,
+            max_matrix_element_values_per_pattern=max_matrix_element_values_per_pattern,
+            matrix_element_value_precision=matrix_element_value_precision,
             **plot_kwargs,
         )
 
@@ -5177,6 +5233,83 @@ def _select_local_patterns(
 ) -> tuple[tuple[int, ...], ...]:
     pattern_tuple = tuple(tuple(int(value) for value in pattern) for pattern in local_patterns)
     return tuple(pattern_tuple[int(index)] for index in selected_indices)
+
+
+def _format_matrix_element_value(
+    value: complex,
+    *,
+    precision: int,
+    tolerance: float,
+) -> str:
+    real = float(np.real(value))
+    imag = float(np.imag(value))
+    if abs(real) <= tolerance:
+        real = 0.0
+    if abs(imag) <= tolerance:
+        imag = 0.0
+
+    if imag == 0.0:
+        return f"{real:.{precision}g}"
+    if real == 0.0:
+        return f"{imag:.{precision}g}i"
+
+    sign = "+" if imag >= 0.0 else "-"
+    return f"{real:.{precision}g}{sign}{abs(imag):.{precision}g}i"
+
+
+def _matrix_element_value_labels_for_patterns(
+    local_operator: npt.NDArray[np.complex128],
+    *,
+    displayed_pattern_indices: npt.NDArray[np.int64],
+    tolerance: float,
+    role: MatrixElementValueRole,
+    max_terms_per_pattern: int,
+    precision: int,
+) -> list[str]:
+    if role not in ("row", "column", "both"):
+        raise ValueError("matrix_element_value_role must be 'row', 'column', or 'both'.")
+
+    max_terms = max(int(max_terms_per_pattern), 0)
+    labels: list[str] = []
+    for pattern_index in displayed_pattern_indices:
+        index = int(pattern_index)
+        terms: list[str] = []
+
+        if role in ("row", "both"):
+            row_sources = np.flatnonzero(np.abs(local_operator[index, :]) > tolerance)
+            for source_index in row_sources:
+                value = local_operator[index, int(source_index)]
+                value_text = _format_matrix_element_value(
+                    value,
+                    precision=precision,
+                    tolerance=tolerance,
+                )
+                terms.append(f"{index}←{int(source_index)}:{value_text}")
+
+        if role in ("column", "both"):
+            column_targets = np.flatnonzero(np.abs(local_operator[:, index]) > tolerance)
+            for target_index in column_targets:
+                if role == "both" and int(target_index) == index:
+                    # The diagonal element has already appeared in the row list.
+                    continue
+                value = local_operator[int(target_index), index]
+                value_text = _format_matrix_element_value(
+                    value,
+                    precision=precision,
+                    tolerance=tolerance,
+                )
+                terms.append(f"{int(target_index)}←{index}:{value_text}")
+
+        if max_terms == 0 or not terms:
+            labels.append("")
+            continue
+
+        clipped_terms = terms[:max_terms]
+        if len(terms) > max_terms:
+            clipped_terms.append(f"… {len(terms) - max_terms} more")
+        labels.append("; ".join(clipped_terms))
+
+    return labels
 
 
 def _select_local_pattern_labels(
@@ -5735,6 +5868,10 @@ def plot_local_basis_grid(
     local_operator: npt.ArrayLike | None = None,
     show_only_nonzero_matrix_elements: bool = False,
     matrix_element_tolerance: float = 1e-10,
+    show_matrix_element_values: bool = False,
+    matrix_element_value_role: MatrixElementValueRole = "both",
+    max_matrix_element_values_per_pattern: int = 6,
+    matrix_element_value_precision: int = 3,
 ):
     """Functional wrapper around :class:`LocalBasisGridVisualizer`."""
 
@@ -5772,6 +5909,10 @@ def plot_local_basis_grid(
         local_operator=local_operator,
         show_only_nonzero_matrix_elements=show_only_nonzero_matrix_elements,
         matrix_element_tolerance=matrix_element_tolerance,
+        show_matrix_element_values=show_matrix_element_values,
+        matrix_element_value_role=matrix_element_value_role,
+        max_matrix_element_values_per_pattern=max_matrix_element_values_per_pattern,
+        matrix_element_value_precision=matrix_element_value_precision,
     )
 
 
