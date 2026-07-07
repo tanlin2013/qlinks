@@ -584,6 +584,44 @@ class HamiltonianModelBase:
         """
         return ()
 
+    def natural_region_units(
+        self,
+        *,
+        operator_kind: LocalOperatorKind | None = "kinetic",
+        term_kind: LocalTermKind | None = None,
+    ) -> tuple[tuple[int, ...], ...]:
+        """Return model-natural local units for open-system region builders.
+
+        The default implementation derives the units from
+        :meth:`local_term_descriptors` by deduplicating each descriptor's
+        variable support.  This gives plaquette units for QDM/QLM plaquette
+        terms and bond units for nearest-neighbor hopping models such as the
+        spin-one XY model.  Models with more specialized natural units may
+        override this method.
+
+        Args:
+            operator_kind: Local operator family used to infer the natural
+                unit.  The default kinetic choice gives hopping bonds for
+                XY-like models and resonating plaquettes for QDM-like models.
+            term_kind: Optional descriptor category filter.
+
+        Returns:
+            A tuple of sorted variable-index regions, with duplicates removed
+            while preserving descriptor order.
+        """
+        units: list[tuple[int, ...]] = []
+        seen: set[tuple[int, ...]] = set()
+        for descriptor in self.local_term_descriptors(
+            operator_kind=operator_kind,
+            term_kind=term_kind,
+        ):
+            unit = tuple(sorted(int(index) for index in descriptor.support_variable_set))
+            if len(unit) == 0 or unit in seen:
+                continue
+            seen.add(unit)
+            units.append(unit)
+        return tuple(units)
+
     def make_local_term(
         self,
         descriptor: LocalTermDescriptor,
