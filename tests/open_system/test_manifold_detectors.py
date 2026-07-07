@@ -4,7 +4,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from qlinks.open_system import diagnose_manifold_dark_operator_basis
-from qlinks.open_system.constructions import build_degenerate_cage_lindblad_construction
+from qlinks.open_system.constructions.deprecated import build_degenerate_cage_lindblad_construction
 
 
 class _ArrayBasis:

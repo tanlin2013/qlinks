@@ -32,6 +32,8 @@ EXPECTED_EXPORTS = {
     "qlinks.open_system.constructions": {
         "CageLindbladDesignProblem",
         "CageLindbladDetectorOperators",
+        "CageLindbladDesignResult",
+        "CageLindbladWorkflowReport",
         "build_cage_lindblad_detector_operators",
         "build_cage_lindblad_problem",
     },

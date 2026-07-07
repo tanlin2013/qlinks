@@ -11,7 +11,7 @@ from qlinks.open_system import (
     build_local_recycling_jumps_from_subspace_regions,
     local_reduced_density_matrix_from_state_matrix,
 )
-from qlinks.open_system.constructions import build_degenerate_cage_lindblad_construction
+from qlinks.open_system.constructions.deprecated import build_degenerate_cage_lindblad_construction
 
 
 class _ArrayBasis:

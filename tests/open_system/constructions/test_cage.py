@@ -20,7 +20,7 @@ from qlinks.open_system import (
     LocalReducedDensityMatrix,
     initial_density_matrix,
 )
-from qlinks.open_system.constructions.cage import (
+from qlinks.open_system.constructions.deprecated.cage import (
     CageLindbladConstruction,
     _build_component_decomposition_jump_operators,
     _build_jump_operators,

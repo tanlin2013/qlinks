@@ -102,7 +102,7 @@ def test_unified_problem_raw_detectors_and_solver_packaging():
     )
     detectors = _detector_bundle()
 
-    workflow = problem.design_jumps(
+    result = problem.design_jumps(
         detector_operators=detectors.operators,
         detector_operator_names=detectors.names,
         local_region_mode="construction",
@@ -111,10 +111,11 @@ def test_unified_problem_raw_detectors_and_solver_packaging():
         design_mode="recycled_screening",
         check_recycled_selection_diagnostics=False,
     )
-    lindblad_problem = problem.to_lindblad_problem(jumps=workflow.jumps)
 
-    assert lindblad_problem.hamiltonian is build_result.hamiltonian
-    assert lindblad_problem.jumps == workflow.jumps
+    assert result.lindblad_problem.hamiltonian is build_result.hamiltonian
+    assert result.lindblad_problem.jumps == result.jumps
+    assert result.to_lindblad_problem() is result.lindblad_problem
+    assert result.workflow.jumps == result.jumps
 
 
 def test_deprecated_namespace_keeps_legacy_builder_available():

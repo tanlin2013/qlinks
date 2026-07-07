@@ -7,7 +7,9 @@ from qlinks.open_system.backend import (
 )
 from qlinks.open_system.constructions import (
     CageLindbladDesignProblem,
+    CageLindbladDesignResult,
     CageLindbladDetectorOperators,
+    CageLindbladWorkflowReport,
     build_cage_lindblad_detector_operators,
     build_cage_lindblad_problem,
 )
@@ -146,7 +148,9 @@ __all__ = [
     "AbsorbingProjectorJumpDiagnostics",
     "AbsorbingProjectorSymmetryDiagnostics",
     "CageLindbladDesignProblem",
+    "CageLindbladDesignResult",
     "CageLindbladDetectorOperators",
+    "CageLindbladWorkflowReport",
     "CommonKernelHamiltonianInvariantSectorReport",
     "DarkDetectorMatrixReadout",
     "DarkManifoldDiagnostics",
