@@ -5,6 +5,12 @@ from qlinks.open_system.backend import (
     as_backend_sparse_matrix,
     get_open_system_backend,
 )
+from qlinks.open_system.constructions import (
+    CageLindbladDesignProblem,
+    CageLindbladDetectorOperators,
+    build_cage_lindblad_detector_operators,
+    build_cage_lindblad_problem,
+)
 from qlinks.open_system.diagnostics import (
     AbsorbingProjectorJumpDiagnostics,
     AbsorbingProjectorSymmetryDiagnostics,
@@ -139,6 +145,8 @@ from qlinks.open_system.stochastic_schrodinger import (
 __all__ = [
     "AbsorbingProjectorJumpDiagnostics",
     "AbsorbingProjectorSymmetryDiagnostics",
+    "CageLindbladDesignProblem",
+    "CageLindbladDetectorOperators",
     "CommonKernelHamiltonianInvariantSectorReport",
     "DarkDetectorMatrixReadout",
     "DarkManifoldDiagnostics",
@@ -196,6 +204,8 @@ __all__ = [
     "as_backend_dense_array",
     "as_backend_sparse_matrix",
     "bad_h_invariant_common_kernel_basis",
+    "build_cage_lindblad_detector_operators",
+    "build_cage_lindblad_problem",
     "build_liouvillian",
     "build_liouvillian_from_prepared",
     "build_local_recycling_jumps_from_regions",

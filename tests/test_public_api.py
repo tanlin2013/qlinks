@@ -30,9 +30,10 @@ EXPECTED_EXPORTS = {
         "ValueOrderStrategy",
     },
     "qlinks.open_system.constructions": {
-        "JumpOperatorDesign",
-        "MonitorSource",
-        "ReducedIZMonitorContent",
+        "CageLindbladDesignProblem",
+        "CageLindbladDetectorOperators",
+        "build_cage_lindblad_detector_operators",
+        "build_cage_lindblad_problem",
     },
     "qlinks.models": {
         "DirectedPlaquetteCoupling",
