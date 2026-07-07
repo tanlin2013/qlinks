@@ -152,3 +152,77 @@ def test_detector_operator_bundle_accepts_terms():
 
     assert bundle.to_summary_dict()["n_operators"] == 1
     assert bundle.terms[0].operator_kind == "potential"
+
+
+class _RegionalUnitModel:
+    def local_term_descriptors(self, *, operator_kind=None, term_kind=None):
+        if term_kind not in (None, "bond"):
+            return ()
+        if operator_kind not in (None, "kinetic", "hamiltonian"):
+            return ()
+        return (
+            LocalTermDescriptor(
+                term_id=0,
+                term_kind="bond",
+                operator_kind="kinetic",
+                support_links=(0,),
+                support_variables=(0,),
+                label="B0",
+            ),
+            LocalTermDescriptor(
+                term_id=1,
+                term_kind="bond",
+                operator_kind="kinetic",
+                support_links=(1,),
+                support_variables=(1,),
+                label="B1",
+            ),
+        )
+
+
+def test_problem_infers_model_regional_units_and_uses_unit_cluster_mode():
+    build_result = _two_bit_build_result()
+    problem = build_cage_lindblad_problem(
+        build_result=build_result,
+        target_state=np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128),
+        model=_RegionalUnitModel(),
+        local_term_kind="bond",
+    )
+
+    assert problem.local_regions == ((0,), (1,))
+    assert problem.regional_units == ((0,), (1,))
+    assert problem.construction.regional_unit_cluster_unions(
+        cluster_size=2,
+        cluster_mode="all",
+    ) == ((0, 1),)
+
+    workflow = problem.design_jumps(
+        detector_operators=_detector_bundle(),
+        local_region_mode="regional_unit_clusters",
+        cluster_size=2,
+        cluster_mode="all",
+        recycled_recycler_source="matrix_units",
+        targeted_operator_source="matrix_units",
+        max_recycled_selected_jumps=4,
+        design_mode="recycled_screening",
+        check_recycled_selection_diagnostics=False,
+    )
+
+    summary = workflow.to_summary_dict()
+    assert summary["recycled_region_mode"] == "regional_unit_clusters"
+    assert summary["n_recycled_regions"] == 1
+    assert workflow.recycled_local_regions == ((0, 1),)
+
+
+def test_explicit_local_regions_can_keep_model_regional_units_separate():
+    build_result = _two_bit_build_result()
+    problem = build_cage_lindblad_problem(
+        build_result=build_result,
+        target_state=np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128),
+        model=_RegionalUnitModel(),
+        local_regions=((0, 1),),
+        local_term_kind="bond",
+    )
+
+    assert problem.local_regions == ((0, 1),)
+    assert problem.regional_units == ((0,), (1,))

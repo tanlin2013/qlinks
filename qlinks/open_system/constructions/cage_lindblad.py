@@ -53,6 +53,13 @@ from qlinks.open_system.operators import lindblad_rhs_density_matrix
 from qlinks.open_system.solvers import LindbladProblem
 
 LocalRegionSource = Literal["kinetic", "potential", "all"]
+CageLindbladRegionMode = Literal[
+    "construction",
+    "pair_unions",
+    "cluster_unions",
+    "regional_units",
+    "regional_unit_clusters",
+]
 
 
 def _local_terms_by_operator_kind(
@@ -164,42 +171,89 @@ def _validate_record_signatures(
     return signature
 
 
+def _operator_kind_from_region_source(
+    region_source: LocalRegionSource,
+) -> Literal["kinetic", "potential", "hamiltonian"]:
+    if region_source == "kinetic":
+        return "kinetic"
+    if region_source == "potential":
+        return "potential"
+    if region_source == "all":
+        return "hamiltonian"
+    raise ValueError("region_source must be 'kinetic', 'potential', or 'all'.")
+
+
+def _call_local_term_descriptors(
+    model: Any,
+    *,
+    operator_kind: Literal["kinetic", "potential", "hamiltonian"],
+    term_kind: LocalTermKind | None,
+) -> tuple[LocalTermDescriptor, ...]:
+    """Call ``local_term_descriptors`` while supporting older test doubles."""
+    try:
+        return tuple(
+            model.local_term_descriptors(
+                operator_kind=operator_kind,
+                term_kind=term_kind,
+            )
+        )
+    except TypeError as exc:
+        if "operator_kind" not in str(exc):
+            raise
+        terms = tuple(model.local_term_descriptors(term_kind=term_kind))
+        if operator_kind == "hamiltonian":
+            return terms
+        return tuple(term for term in terms if term.operator_kind == operator_kind)
+
+
 def _local_regions_from_model_terms(
     *,
     model: Any,
     local_term_kind: LocalTermKind | None,
     region_source: LocalRegionSource,
 ) -> tuple[tuple[int, ...], ...]:
-    kinetic_terms, potential_terms, _ = _local_terms_by_operator_kind(
-        model,
-        term_kind=local_term_kind,
-    )
+    """Infer model-natural regional units from local-term metadata.
 
-    if region_source == "kinetic":
-        terms = kinetic_terms
-    elif region_source == "potential":
-        terms = potential_terms
-    elif region_source == "all":
-        terms = kinetic_terms + potential_terms
+    For QDM/QLM this normally returns plaquette supports.  For XY-like
+    nearest-neighbor hopping models it returns bond supports.  The helper uses
+    the model's ``natural_region_units`` method when available, and otherwise
+    falls back to deduplicating local-term descriptor supports.
+    """
+    operator_kind = _operator_kind_from_region_source(region_source)
+
+    if hasattr(model, "natural_region_units"):
+        regions = tuple(
+            tuple(sorted(int(index) for index in region))
+            for region in model.natural_region_units(
+                operator_kind=operator_kind,
+                term_kind=local_term_kind,
+            )
+        )
     else:
-        raise ValueError("region_source must be 'kinetic', 'potential', or 'all'.")
+        terms = _call_local_term_descriptors(
+            model,
+            operator_kind=operator_kind,
+            term_kind=local_term_kind,
+        )
+        regions = tuple(
+            tuple(sorted(int(index) for index in term.support_variable_set)) for term in terms
+        )
 
-    regions: list[tuple[int, ...]] = []
+    deduplicated: list[tuple[int, ...]] = []
     seen: set[tuple[int, ...]] = set()
-    for term in terms:
-        region = tuple(sorted(int(index) for index in term.support_variable_set))
+    for region in regions:
         if len(region) == 0 or region in seen:
             continue
         seen.add(region)
-        regions.append(region)
+        deduplicated.append(region)
 
-    if len(regions) == 0:
+    if len(deduplicated) == 0:
         raise ValueError(
-            "Could not infer local regions from model local terms. "
+            "Could not infer model-natural regional units from local terms. "
             "Pass local_regions explicitly."
         )
 
-    return tuple(regions)
+    return tuple(deduplicated)
 
 
 def _normalize_local_regions(
@@ -774,6 +828,7 @@ class DegenerateCageLindbladConstruction:
     manifold_basis: NDArray[np.complex128]
     jumps: tuple[Any, ...]
     local_regions: tuple[tuple[int, ...], ...]
+    regional_units: tuple[tuple[int, ...], ...]
     recycling_build_result: LocalRecyclingBuildResult
     open_system_backend: OpenSystemBackendName
     recycling_jump_source: RecyclingJumpSource
@@ -818,6 +873,8 @@ class DegenerateCageLindbladConstruction:
             "n_jumps": self.n_jumps,
             "n_regions": len(self.local_regions),
             "local_regions": self.local_regions,
+            "n_regional_units": len(self.regional_units),
+            "regional_units": self.regional_units,
             "recycling_jump_source": self.recycling_jump_source,
             "h_closure_residual": self.hamiltonian_closure_residual,
             "max_jump_residual": self.max_jump_residual,
@@ -1042,6 +1099,33 @@ class DegenerateCageLindbladConstruction:
             min_overlap=min_overlap,
             max_region_size=max_region_size,
             include_single_regions=include_single_regions,
+            include_smaller_clusters=include_smaller_clusters,
+        )
+
+    def regional_unit_cluster_unions(
+        self,
+        *,
+        cluster_size: int = 2,
+        cluster_mode: Literal["overlap_connected", "all"] = "overlap_connected",
+        min_overlap: int = 1,
+        max_region_size: int | None = None,
+        include_single_units: bool = False,
+        include_smaller_clusters: bool = False,
+    ) -> tuple[tuple[int, ...], ...]:
+        """Return supports built from model-natural regional units.
+
+        The base units are model dependent: plaquettes for QDM/QLM-like
+        plaquette Hamiltonians, bonds for nearest-neighbor XY-like hopping
+        models, and any custom units exposed by ``model.natural_region_units``.
+        ``cluster_size`` counts these units, not individual variables.
+        """
+        return expand_local_regions_to_cluster_unions(
+            self.regional_units,
+            cluster_size=cluster_size,
+            cluster_mode=cluster_mode,
+            min_overlap=min_overlap,
+            max_region_size=max_region_size,
+            include_single_regions=include_single_units,
             include_smaller_clusters=include_smaller_clusters,
         )
 
@@ -1441,27 +1525,9 @@ class DegenerateCageLindbladConstruction:
         targeted_report: TargetedResidualKernelLinearSearchReport | None = None,
         recycled_local_regions: Sequence[Sequence[int]] | None = None,
         targeted_local_regions: Sequence[Sequence[int]] | None = None,
-        local_region_mode: Literal[
-            "construction",
-            "pair_unions",
-            "cluster_unions",
-        ] = "pair_unions",
-        recycled_region_mode: (
-            Literal[
-                "construction",
-                "pair_unions",
-                "cluster_unions",
-            ]
-            | None
-        ) = None,
-        targeted_region_mode: (
-            Literal[
-                "construction",
-                "pair_unions",
-                "cluster_unions",
-            ]
-            | None
-        ) = None,
+        local_region_mode: CageLindbladRegionMode = "pair_unions",
+        recycled_region_mode: CageLindbladRegionMode | None = None,
+        targeted_region_mode: CageLindbladRegionMode | None = None,
         pair_mode: Literal["overlap", "all"] = "overlap",
         min_pair_overlap: int = 1,
         max_pair_region_size: int | None = 7,
@@ -1576,13 +1642,15 @@ class DegenerateCageLindbladConstruction:
         def resolve_regions(
             explicit_regions: Sequence[Sequence[int]] | None,
             *,
-            mode: Literal["construction", "pair_unions", "cluster_unions"],
+            mode: CageLindbladRegionMode,
             cluster_size_override: int | None,
         ) -> tuple[tuple[int, ...], ...]:
             if explicit_regions is not None:
                 return _normalize_local_regions(explicit_regions)
             if mode == "construction":
                 return self.local_regions
+            if mode == "regional_units":
+                return self.regional_units
             if mode == "pair_unions":
                 return self.local_region_pair_unions(
                     pair_mode=pair_mode,
@@ -1599,8 +1667,18 @@ class DegenerateCageLindbladConstruction:
                     include_single_regions=include_single_regions_in_clusters,
                     include_smaller_clusters=include_smaller_clusters,
                 )
+            if mode == "regional_unit_clusters":
+                return self.regional_unit_cluster_unions(
+                    cluster_size=cluster_size_override or cluster_size,
+                    cluster_mode=cluster_mode,
+                    min_overlap=min_cluster_overlap,
+                    max_region_size=max_cluster_region_size,
+                    include_single_units=include_single_regions_in_clusters,
+                    include_smaller_clusters=include_smaller_clusters,
+                )
             raise ValueError(
-                'region mode must be "construction", "pair_unions", or "cluster_unions".'
+                'region mode must be "construction", "regional_units", '
+                '"pair_unions", "cluster_unions", or "regional_unit_clusters".'
             )
 
         if design_mode not in {
@@ -2009,6 +2087,7 @@ def build_degenerate_cage_lindblad_construction(
     states: NDArray[np.complex128] | None = None,
     model: Any | None = None,
     local_regions: Sequence[Sequence[int]] | None = None,
+    regional_units: Sequence[Sequence[int]] | None = None,
     local_term_kind: LocalTermKind | None = None,
     region_source: LocalRegionSource = "kinetic",
     recycling_jump_source: RecyclingJumpSource = "local_rdm_block_reset",
@@ -2063,8 +2142,19 @@ def build_degenerate_cage_lindblad_construction(
             local_term_kind=local_term_kind,
             region_source=region_source,
         )
+        resolved_regional_units = regions
     else:
         regions = _normalize_local_regions(local_regions)
+        if regional_units is not None:
+            resolved_regional_units = _normalize_local_regions(regional_units)
+        elif model is not None:
+            resolved_regional_units = _local_regions_from_model_terms(
+                model=model,
+                local_term_kind=local_term_kind,
+                region_source=region_source,
+            )
+        else:
+            resolved_regional_units = regions
 
     basis_configs = basis_configs_from_build_result(build_result)
     recycling_build_result = build_local_recycling_jumps_from_subspace_regions(
@@ -2116,6 +2206,7 @@ def build_degenerate_cage_lindblad_construction(
         manifold_basis=manifold_basis,
         jumps=jumps,
         local_regions=regions,
+        regional_units=resolved_regional_units,
         recycling_build_result=recycling_build_result,
         open_system_backend=open_system_backend,
         recycling_jump_source=recycling_jump_source,
@@ -2233,6 +2324,11 @@ class CageLindbladDesignProblem:
         return self.construction.local_regions
 
     @property
+    def regional_units(self) -> tuple[tuple[int, ...], ...]:
+        """Model-natural region units used by regional-unit modes."""
+        return self.construction.regional_units
+
+    @property
     def record_signature(self) -> tuple[int, int] | None:
         return self.construction.record_signature
 
@@ -2244,6 +2340,8 @@ class CageLindbladDesignProblem:
             "record_signature": self.record_signature,
             "n_local_regions": len(self.local_regions),
             "local_regions": self.local_regions,
+            "n_regional_units": len(self.regional_units),
+            "regional_units": self.regional_units,
             "h_closure_residual": self.construction.hamiltonian_closure_residual,
         }
 
@@ -2440,6 +2538,7 @@ def build_cage_lindblad_problem(
     records: Sequence[CageRecord] | None = None,
     model: Any | None = None,
     local_regions: Sequence[Sequence[int]] | None = None,
+    regional_units: Sequence[Sequence[int]] | None = None,
     local_term_kind: LocalTermKind | None = None,
     region_source: LocalRegionSource = "kinetic",
     validate_record_signature: bool = True,
@@ -2469,6 +2568,7 @@ def build_cage_lindblad_problem(
         states=resolved_states,
         model=model,
         local_regions=local_regions,
+        regional_units=regional_units,
         local_term_kind=local_term_kind,
         region_source=region_source,
         validate_record_signature=validate_record_signature,

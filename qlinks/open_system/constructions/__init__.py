@@ -17,6 +17,7 @@ _CAGE_LINDBLAD_EXPORTS = {
     "CageLindbladDesignResult",
     "CageLindbladDetectorOperators",
     "CageLindbladWorkflowReport",
+    "CageLindbladRegionMode",
     "DetectorOperatorKind",
     "LocalRegionSource",
     "build_cage_lindblad_detector_operators",
