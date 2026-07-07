@@ -226,3 +226,85 @@ def test_explicit_local_regions_can_keep_model_regional_units_separate():
 
     assert problem.local_regions == ((0, 1),)
     assert problem.regional_units == ((0,), (1,))
+
+
+def test_cage_lindblad_design_exports_standard_bundle(tmp_path):
+    import json
+
+    build_result = _two_bit_build_result()
+    detectors = _detector_bundle()
+    problem = build_cage_lindblad_problem(
+        build_result=build_result,
+        target_state=np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128),
+        local_regions=((0, 1),),
+    )
+    design = problem.design_jumps(
+        detector_operators=detectors,
+        local_region_mode="construction",
+        recycled_recycler_source="matrix_units",
+        max_recycled_selected_jumps=2,
+        design_mode="recycled_screening",
+        check_recycled_selection_diagnostics=False,
+    )
+
+    export = design.export(
+        tmp_path / "export",
+        include_global_matrices=True,
+        include_detector_matrices=True,
+    )
+
+    assert export.manifest_path.exists()
+    manifest = json.loads(export.manifest_path.read_text())
+    assert manifest["schema_name"] == "qlinks.cage_lindblad_design"
+    assert manifest["schema_version"] == "1.0"
+    assert manifest["n_jumps"] == design.n_jumps
+    assert manifest["files"]["target"] == "target.json"
+    assert (export.path / "target_basis.npy").exists()
+    assert (export.path / "basis_configs.npy").exists()
+    assert (export.path / "sparse_matrices" / "H.npz").exists()
+    assert (export.path / "detector_matrices" / "detector_0000.npz").exists()
+
+    dark_detector_records = [
+        json.loads(line) for line in (export.path / "dark_detectors.jsonl").read_text().splitlines()
+    ]
+    assert dark_detector_records
+    assert dark_detector_records[0]["form"] == "linear_combination"
+    assert "coefficients" in dark_detector_records[0]
+
+    recycled_records = [
+        json.loads(line) for line in (export.path / "recycled_jumps.jsonl").read_text().splitlines()
+    ]
+    assert recycled_records
+    assert recycled_records[0]["form"] == "R_times_D"
+    assert recycled_records[0]["stage"] == "recycled"
+    assert "recycler" in recycled_records[0]
+    assert recycled_records[0]["recycler"]["matrix_format"] == "coo"
+
+
+def test_public_export_function_matches_design_method(tmp_path):
+    from qlinks.open_system.constructions import export_cage_lindblad_design
+
+    build_result = _two_bit_build_result()
+    problem = build_cage_lindblad_problem(
+        build_result=build_result,
+        target_state=np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128),
+        local_regions=((0, 1),),
+    )
+    design = problem.design_jumps(
+        detector_operators=_detector_bundle(),
+        local_region_mode="construction",
+        recycled_recycler_source="matrix_units",
+        max_recycled_selected_jumps=1,
+        design_mode="recycled_screening",
+        check_recycled_selection_diagnostics=False,
+    )
+
+    export = export_cage_lindblad_design(
+        design,
+        path=tmp_path / "export",
+        include_basis=False,
+    )
+
+    assert export.path.exists()
+    assert not (export.path / "target_basis.npy").exists()
+    assert (export.path / "manifest.json").exists()

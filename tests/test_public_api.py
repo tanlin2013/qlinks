@@ -33,9 +33,11 @@ EXPECTED_EXPORTS = {
         "CageLindbladDesignProblem",
         "CageLindbladDetectorOperators",
         "CageLindbladDesignResult",
+        "CageLindbladExportResult",
         "CageLindbladWorkflowReport",
         "build_cage_lindblad_detector_operators",
         "build_cage_lindblad_problem",
+        "export_cage_lindblad_design",
     },
     "qlinks.models": {
         "DirectedPlaquetteCoupling",

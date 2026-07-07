@@ -9,10 +9,12 @@ from qlinks.open_system.constructions import (
     CageLindbladDesignProblem,
     CageLindbladDesignResult,
     CageLindbladDetectorOperators,
+    CageLindbladExportResult,
     CageLindbladRegionMode,
     CageLindbladWorkflowReport,
     build_cage_lindblad_detector_operators,
     build_cage_lindblad_problem,
+    export_cage_lindblad_design,
 )
 from qlinks.open_system.diagnostics import (
     AbsorbingProjectorJumpDiagnostics,
@@ -151,6 +153,7 @@ __all__ = [
     "CageLindbladDesignProblem",
     "CageLindbladDesignResult",
     "CageLindbladDetectorOperators",
+    "CageLindbladExportResult",
     "CageLindbladRegionMode",
     "CageLindbladWorkflowReport",
     "CommonKernelHamiltonianInvariantSectorReport",
@@ -238,6 +241,7 @@ __all__ = [
     "expand_local_regions_to_cluster_unions",
     "expand_local_regions_to_pair_unions",
     "expectation",
+    "export_cage_lindblad_design",
     "get_open_system_backend",
     "initial_density_matrix",
     "jump_probabilities",

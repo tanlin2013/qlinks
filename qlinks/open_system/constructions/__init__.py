@@ -16,12 +16,14 @@ _CAGE_LINDBLAD_EXPORTS = {
     "CageLindbladDesignProblem",
     "CageLindbladDesignResult",
     "CageLindbladDetectorOperators",
+    "CageLindbladExportResult",
     "CageLindbladWorkflowReport",
     "CageLindbladRegionMode",
     "DetectorOperatorKind",
     "LocalRegionSource",
     "build_cage_lindblad_detector_operators",
     "build_cage_lindblad_problem",
+    "export_cage_lindblad_design",
 }
 
 _SPIN_ONE_XY_EXPORTS = {

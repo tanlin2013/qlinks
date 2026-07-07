@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+import hashlib
+import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
@@ -324,6 +328,193 @@ def _manifold_density_matrix(
 
 def _format_float(value: float) -> str:
     return f"{value:.3e}"
+
+
+def _jsonable(value: Any) -> Any:
+    """Convert qlinks/numpy values to stable JSON-compatible objects."""
+    if isinstance(value, np.generic):
+        return _jsonable(value.item())
+    if isinstance(value, complex):
+        return [float(value.real), float(value.imag)]
+    if isinstance(value, np.ndarray):
+        return _jsonable(value.tolist())
+    if isinstance(value, Mapping):
+        return {str(key): _jsonable(item) for key, item in value.items()}
+    if isinstance(value, tuple | list):
+        return [_jsonable(item) for item in value]
+    if isinstance(value, bool | int | float | str) or value is None:
+        return value
+    if hasattr(value, "to_summary_dict"):
+        return _jsonable(value.to_summary_dict())
+    return str(value)
+
+
+def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
+    path.write_text(
+        json.dumps(_jsonable(payload), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_jsonl(path: Path, records: Sequence[Mapping[str, Any]]) -> None:
+    with path.open("w", encoding="utf-8") as handle:
+        for record in records:
+            handle.write(json.dumps(_jsonable(record), sort_keys=True) + "\n")
+
+
+def _sha256_array(array: Any) -> str:
+    arr = np.ascontiguousarray(np.asarray(array))
+    digest = hashlib.sha256()
+    digest.update(str(arr.dtype).encode("utf-8"))
+    digest.update(str(arr.shape).encode("utf-8"))
+    digest.update(arr.view(np.uint8))
+    return digest.hexdigest()
+
+
+def _sha256_sparse_matrix(matrix: Any) -> str:
+    csr = _as_csr(matrix)
+    digest = hashlib.sha256()
+    digest.update(str(csr.shape).encode("utf-8"))
+    digest.update(str(csr.dtype).encode("utf-8"))
+    for array in (csr.indptr, csr.indices, csr.data):
+        digest.update(np.ascontiguousarray(array).view(np.uint8))
+    return digest.hexdigest()
+
+
+def _local_term_descriptor_to_dict(term: LocalTermDescriptor) -> dict[str, Any]:
+    return {
+        "term_id": int(term.term_id),
+        "term_kind": term.term_kind,
+        "operator_kind": term.operator_kind,
+        "support_links": tuple(int(value) for value in term.support_links),
+        "support_sites": tuple(int(value) for value in term.support_sites),
+        "support_plaquettes": tuple(int(value) for value in term.support_plaquettes),
+        "support_variables": tuple(int(value) for value in term.support_variable_set),
+        "label": term.label,
+    }
+
+
+def _complex_entries_from_local_readout(
+    readout: LocalOperatorMatrixReadout,
+    *,
+    tolerance: float = 0.0,
+) -> tuple[dict[str, Any], ...]:
+    entries: list[dict[str, Any]] = []
+    for target_index, source_index, value in readout.nonzero_matrix_elements(
+        tolerance=tolerance,
+    ):
+        entries.append(
+            {
+                "row": int(target_index),
+                "col": int(source_index),
+                "value": complex(value),
+                "target_pattern": readout.local_patterns[int(target_index)],
+                "source_pattern": readout.local_patterns[int(source_index)],
+            }
+        )
+    return tuple(entries)
+
+
+def _local_readout_to_export_dict(
+    readout: LocalOperatorMatrixReadout,
+    *,
+    tolerance: float = 0.0,
+) -> dict[str, Any]:
+    return {
+        "kind": "local_matrix",
+        "label": readout.label,
+        "source": readout.source,
+        "variable_indices": readout.variable_indices,
+        "local_patterns": readout.local_patterns,
+        "local_dim": readout.local_dim,
+        "shape": readout.shape,
+        "matrix_format": "coo",
+        "nnz": readout.nnz,
+        "entries": _complex_entries_from_local_readout(readout, tolerance=tolerance),
+        "metadata": dict(readout.metadata),
+    }
+
+
+def _detector_readout_to_export_dict(readout: DarkDetectorMatrixReadout) -> dict[str, Any]:
+    return {
+        "detector_index": int(readout.detector_index),
+        "label": readout.label,
+        "form": "linear_combination",
+        "coefficients": tuple(complex(value) for value in readout.coefficients),
+        "operator_names": readout.operator_names,
+        "n_terms": int(readout.n_terms),
+        "terms": tuple(term.to_summary_dict() for term in readout.terms),
+        "action_residual": float(readout.action_residual),
+        "relative_action_residual": float(readout.relative_action_residual),
+        "operator_frobenius_norm": float(readout.operator_frobenius_norm),
+        "coefficient_ipr": float(readout.coefficient_ipr),
+        "effective_operator_count": float(readout.effective_operator_count),
+    }
+
+
+def _ensure_export_directory(
+    path: str | Path,
+    *,
+    overwrite: bool,
+) -> Path:
+    output_path = Path(path)
+    if output_path.exists():
+        if not output_path.is_dir():
+            raise ValueError(f"export path exists and is not a directory: {output_path}")
+        if not overwrite and any(output_path.iterdir()):
+            raise FileExistsError(
+                f"export directory is not empty: {output_path}. "
+                "Pass overwrite=True to replace files."
+            )
+    output_path.mkdir(parents=True, exist_ok=True)
+    return output_path
+
+
+def _detector_family_records(
+    *,
+    names: Sequence[str],
+    terms: Sequence[LocalTermDescriptor],
+    operators: Sequence[Any],
+    matrix_dir: Path | None,
+) -> tuple[dict[str, Any], ...]:
+    records: list[dict[str, Any]] = []
+    has_terms = len(terms) == len(names)
+    has_operators = len(operators) == len(names)
+    for operator_index, name in enumerate(names):
+        matrix_file: str | None = None
+        operator_hash: str | None = None
+        if has_operators:
+            operator = operators[operator_index]
+            operator_hash = _sha256_sparse_matrix(operator)
+            if matrix_dir is not None:
+                matrix_file = f"detector_{operator_index:04d}.npz"
+                sp.save_npz(matrix_dir / matrix_file, _as_csr(operator))
+        records.append(
+            {
+                "operator_index": int(operator_index),
+                "operator_name": str(name),
+                "term": (
+                    None if not has_terms else _local_term_descriptor_to_dict(terms[operator_index])
+                ),
+                "sparse_matrix_file": matrix_file,
+                "sparse_matrix_sha256": operator_hash,
+            }
+        )
+    return tuple(records)
+
+
+@dataclass(frozen=True, slots=True)
+class CageLindbladExportResult:
+    """Paths written by :func:`export_cage_lindblad_design`."""
+
+    path: Path
+    manifest_path: Path
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "path": str(self.path),
+            "manifest_path": str(self.manifest_path),
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -2441,10 +2632,26 @@ class CageLindbladDesignProblem:
             hamiltonian=hamiltonian,
             backend=backend,
         )
+        operators, names = self._resolve_detector_inputs(
+            detector_operators=detector_operators,
+            detector_operator_names=detector_operator_names,
+        )
+        detector_terms = (
+            detector_operators.terms
+            if isinstance(detector_operators, CageLindbladDetectorOperators)
+            else ()
+        )
         return CageLindbladDesignResult(
             problem=self,
             workflow=workflow,
             lindblad_problem=lindblad_problem,
+            detector_operators=operators,
+            detector_operator_names=(
+                tuple(names)
+                if names is not None
+                else tuple(workflow.dark_operator_report.operator_names)
+            ),
+            detector_terms=tuple(detector_terms),
         )
 
     def design_lindblad_problem(
@@ -2475,11 +2682,16 @@ class CageLindbladDesignResult:
     ``workflow`` contains all diagnostic/readout detail. ``lindblad_problem`` is
     the solver-ready object with the final jump set already packaged.  Common
     workflow methods and attributes are delegated for notebook convenience.
+    Detector metadata is retained so the design can be exported as a
+    reconstructable analytical ``J = R D`` data bundle.
     """
 
     problem: CageLindbladDesignProblem
     workflow: DegenerateCageJumpDesignWorkflowReport
     lindblad_problem: LindbladProblem
+    detector_operators: tuple[Any, ...] = ()
+    detector_operator_names: tuple[str, ...] = ()
+    detector_terms: tuple[LocalTermDescriptor, ...] = ()
 
     @property
     def jumps(self) -> tuple[sp.csr_array, ...]:
@@ -2519,6 +2731,35 @@ class CageLindbladDesignResult:
         summary["solver_backend"] = self.lindblad_problem.backend
         return summary
 
+    def export(
+        self,
+        path: str | Path,
+        *,
+        include_basis: bool = True,
+        include_global_matrices: bool = False,
+        include_detector_matrices: bool = False,
+        include_readouts: bool = True,
+        matrix_element_tolerance: float = 0.0,
+        overwrite: bool = False,
+    ) -> CageLindbladExportResult:
+        """Export this design as a versioned JSON/JSONL data bundle.
+
+        The export stores the analytical jump structure by default: dark
+        detectors as coefficient combinations and recycled/targeted local
+        matrices in COO form.  Full sparse matrices are optional and stored as
+        SciPy ``.npz`` files when requested.
+        """
+        return export_cage_lindblad_design(
+            self,
+            path=path,
+            include_basis=include_basis,
+            include_global_matrices=include_global_matrices,
+            include_detector_matrices=include_detector_matrices,
+            include_readouts=include_readouts,
+            matrix_element_tolerance=matrix_element_tolerance,
+            overwrite=overwrite,
+        )
+
     def __rich__(self):
         return self.workflow.__rich__()
 
@@ -2527,6 +2768,309 @@ class CageLindbladDesignResult:
 
     def __getattr__(self, name: str) -> object:
         return getattr(self.workflow, name)
+
+
+def _write_target_export_files(
+    *,
+    design: CageLindbladDesignResult,
+    output_path: Path,
+    include_basis: bool,
+) -> dict[str, Any]:
+    target_basis = np.asarray(design.problem.manifold_basis, dtype=np.complex128)
+    basis_configs = np.asarray(design.problem.basis_configs)
+    target_payload: dict[str, Any] = {
+        "hilbert_dimension": int(design.problem.hilbert_dimension),
+        "manifold_dimension": int(design.problem.manifold_dimension),
+        "is_single_cage_target": bool(design.problem.is_single_cage_target),
+        "target_basis_shape": tuple(int(value) for value in target_basis.shape),
+        "target_basis_sha256": _sha256_array(target_basis),
+        "basis_configs_shape": tuple(int(value) for value in basis_configs.shape),
+        "basis_configs_sha256": _sha256_array(basis_configs),
+        "record_signature": design.problem.record_signature,
+    }
+    if include_basis:
+        np.save(output_path / "target_basis.npy", target_basis)
+        np.save(output_path / "basis_configs.npy", basis_configs)
+        target_payload["target_basis_file"] = "target_basis.npy"
+        target_payload["basis_configs_file"] = "basis_configs.npy"
+    return target_payload
+
+
+def _recycled_jump_export_records(
+    *,
+    design: CageLindbladDesignResult,
+    include_readouts: bool,
+    matrix_element_tolerance: float,
+) -> tuple[dict[str, Any], ...]:
+    selection = design.workflow.recycled_selection
+    basis_configs = design.problem.basis_configs
+    records: list[dict[str, Any]] = []
+
+    if selection.collective_groups:
+        readouts = (
+            selection.selected_recycler_readouts(basis_configs=basis_configs)
+            if include_readouts
+            else ()
+        )
+        for jump_index, group in enumerate(selection.collective_groups):
+            record: dict[str, Any] = {
+                "jump_index": int(jump_index),
+                "stage": "recycled",
+                "form": "collective_R_times_D",
+                "detector_index": int(group.detector_index),
+                "detector_label": group.detector_name,
+                "region_index": int(group.region_index),
+                "variable_indices": group.variable_indices,
+                "candidate_indices": group.candidate_indices,
+                "recycler_indices": group.recycler_indices,
+                "recycler_names": group.recycler_names,
+                "weights": tuple(complex(value) for value in group.weights),
+                "n_bundled_recyclers": int(group.n_bundled_recyclers),
+                "jump_frobenius_norm": float(group.jump_frobenius_norm),
+                "jump_nnz": int(group.jump_nnz),
+                "unbundled_inflow_norm": group.unbundled_inflow_norm,
+                "bundled_inflow_norm": group.bundled_inflow_norm,
+            }
+            if include_readouts and jump_index < len(readouts):
+                record["recycler"] = _local_readout_to_export_dict(
+                    readouts[jump_index],
+                    tolerance=matrix_element_tolerance,
+                )
+            records.append(record)
+        return tuple(records)
+
+    readouts = (
+        selection.selected_recycler_readouts(
+            basis_configs=basis_configs,
+            states=design.problem.manifold_basis,
+        )
+        if include_readouts
+        else ()
+    )
+    for jump_index, candidate in enumerate(selection.selected_candidates):
+        record = {
+            "jump_index": int(jump_index),
+            "stage": "recycled",
+            "form": "R_times_D",
+            "detector_index": int(candidate.detector_index),
+            "detector_label": candidate.detector_name,
+            "region_index": int(candidate.region_index),
+            "variable_indices": candidate.variable_indices,
+            "local_dim": int(candidate.local_dim),
+            "recycler_index": int(candidate.recycler_index),
+            "recycler_name": candidate.recycler_name,
+            "candidate": candidate.to_summary_dict(),
+            "jump_frobenius_norm": float(candidate.jump_frobenius_norm),
+            "jump_nnz": int(candidate.jump_nnz),
+            "inflow_norm": float(candidate.inflow_norm),
+        }
+        if include_readouts and jump_index < len(readouts):
+            record["recycler"] = _local_readout_to_export_dict(
+                readouts[jump_index],
+                tolerance=matrix_element_tolerance,
+            )
+        records.append(record)
+    return tuple(records)
+
+
+def _targeted_jump_export_records(
+    *,
+    design: CageLindbladDesignResult,
+    include_readouts: bool,
+    matrix_element_tolerance: float,
+) -> tuple[dict[str, Any], ...]:
+    selection = design.workflow.targeted_selection
+    if selection is None:
+        return ()
+
+    basis_configs = design.problem.basis_configs
+    readouts = (
+        selection.selected_operator_readouts(basis_configs=basis_configs)
+        if include_readouts
+        else ()
+    )
+    offset = len(design.workflow.recycled_jumps)
+    records: list[dict[str, Any]] = []
+    for local_index, candidate in enumerate(selection.selected_candidates):
+        record: dict[str, Any] = {
+            "jump_index": int(offset + local_index),
+            "targeted_jump_index": int(local_index),
+            "stage": "targeted",
+            "form": "local_dark_operator",
+            "region_index": int(candidate.region_index),
+            "variable_indices": candidate.variable_indices,
+            "local_dim": int(candidate.local_dim),
+            "operator_source": candidate.operator_source,
+            "candidate": candidate.to_summary_dict(),
+            "jump_frobenius_norm": float(candidate.jump_frobenius_norm),
+            "jump_nnz": int(candidate.jump_nnz),
+            "residual_score_norm": float(
+                max(candidate.residual_score_norm, candidate.residual_target_inflow_norm)
+            ),
+        }
+        if include_readouts and local_index < len(readouts):
+            record["operator"] = _local_readout_to_export_dict(
+                readouts[local_index],
+                tolerance=matrix_element_tolerance,
+            )
+        records.append(record)
+    return tuple(records)
+
+
+def export_cage_lindblad_design(
+    design: CageLindbladDesignResult,
+    *,
+    path: str | Path,
+    include_basis: bool = True,
+    include_global_matrices: bool = False,
+    include_detector_matrices: bool = False,
+    include_readouts: bool = True,
+    include_certificates: bool = True,
+    matrix_element_tolerance: float = 0.0,
+    overwrite: bool = False,
+) -> CageLindbladExportResult:
+    """Export a cage-Lindblad design as a versioned JSON/JSONL bundle.
+
+    The default export is intended for papers and arXiv data: it stores
+    detectors as coefficient combinations, recycled jumps as ``R D`` records,
+    targeted jumps as local dark-operator records, and certificates/summary
+    metadata as JSON.  Full sparse matrices can be included with
+    ``include_global_matrices=True`` and detector matrices with
+    ``include_detector_matrices=True``.
+    """
+    output_path = _ensure_export_directory(path, overwrite=overwrite)
+
+    matrix_dir: Path | None = None
+    detector_matrix_dir: Path | None = None
+    matrix_files: dict[str, Any] = {}
+    if include_global_matrices:
+        matrix_dir = output_path / "sparse_matrices"
+        matrix_dir.mkdir(exist_ok=True)
+        sp.save_npz(matrix_dir / "H.npz", _as_csr(design.problem.hamiltonian))
+        jump_files: list[str] = []
+        for jump_index, jump in enumerate(design.jumps):
+            filename = f"jump_{jump_index:04d}.npz"
+            sp.save_npz(matrix_dir / filename, _as_csr(jump))
+            jump_files.append(filename)
+        matrix_files = {
+            "directory": "sparse_matrices",
+            "hamiltonian": "H.npz",
+            "jumps": tuple(jump_files),
+        }
+    if include_detector_matrices:
+        detector_matrix_dir = output_path / "detector_matrices"
+        detector_matrix_dir.mkdir(exist_ok=True)
+
+    detector_names = (
+        design.detector_operator_names
+        if design.detector_operator_names
+        else tuple(design.workflow.dark_operator_report.operator_names)
+    )
+    detector_family = _detector_family_records(
+        names=detector_names,
+        terms=design.detector_terms,
+        operators=design.detector_operators,
+        matrix_dir=detector_matrix_dir,
+    )
+
+    target_payload = _write_target_export_files(
+        design=design,
+        output_path=output_path,
+        include_basis=include_basis,
+    )
+    workflow_summary = design.to_summary_dict()
+    certificates = {
+        "workflow": workflow_summary,
+        "h_invariant_report": (
+            None
+            if design.workflow.h_invariant_report is None
+            else design.workflow.h_invariant_report.to_summary_dict()
+        ),
+        "final_diagnostics": (
+            None
+            if design.workflow.final_diagnostics is None
+            else design.workflow.final_diagnostics.to_summary_dict()
+        ),
+        "likely_successful_h_invariant_design": (
+            design.workflow.likely_successful_h_invariant_design
+        ),
+        "likely_successful_common_kernel_design": (
+            design.workflow.likely_successful_common_kernel_design
+        ),
+    }
+
+    dark_detector_records = tuple(
+        _detector_readout_to_export_dict(readout) for readout in design.detector_readouts()
+    )
+    recycled_records = _recycled_jump_export_records(
+        design=design,
+        include_readouts=include_readouts,
+        matrix_element_tolerance=matrix_element_tolerance,
+    )
+    targeted_records = _targeted_jump_export_records(
+        design=design,
+        include_readouts=include_readouts,
+        matrix_element_tolerance=matrix_element_tolerance,
+    )
+
+    _write_json(output_path / "target.json", target_payload)
+    _write_json(
+        output_path / "regional_units.json",
+        {"regional_units": design.problem.regional_units},
+    )
+    _write_json(
+        output_path / "local_regions.json",
+        {"local_regions": design.problem.local_regions},
+    )
+    _write_json(output_path / "workflow_summary.json", workflow_summary)
+    if include_certificates:
+        _write_json(output_path / "certificates.json", certificates)
+    _write_jsonl(output_path / "detector_family.jsonl", detector_family)
+    _write_jsonl(output_path / "dark_detectors.jsonl", dark_detector_records)
+    _write_jsonl(output_path / "recycled_jumps.jsonl", recycled_records)
+    _write_jsonl(output_path / "targeted_jumps.jsonl", targeted_records)
+
+    manifest = {
+        "schema_name": "qlinks.cage_lindblad_design",
+        "schema_version": "1.0",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "hilbert_dimension": int(design.problem.hilbert_dimension),
+        "manifold_dimension": int(design.problem.manifold_dimension),
+        "n_jumps": int(design.n_jumps),
+        "n_recycled_jumps": int(len(design.recycled_jumps)),
+        "n_targeted_jumps": int(len(design.targeted_jumps)),
+        "jump_forms": tuple(
+            sorted({record["form"] for record in recycled_records + targeted_records})
+        ),
+        "basis_configs_sha256": target_payload["basis_configs_sha256"],
+        "target_basis_sha256": target_payload["target_basis_sha256"],
+        "hamiltonian_sha256": _sha256_sparse_matrix(design.problem.hamiltonian),
+        "workflow_parameters": {
+            "design_mode": design.workflow.design_mode,
+            "recycled_region_mode": design.workflow.recycled_region_mode,
+            "targeted_region_mode": design.workflow.targeted_region_mode,
+            "recycled_recycler_source": design.workflow.recycled_recycler_source,
+            "targeted_operator_source": design.workflow.targeted_operator_source,
+        },
+        "files": {
+            "target": "target.json",
+            "regional_units": "regional_units.json",
+            "local_regions": "local_regions.json",
+            "workflow_summary": "workflow_summary.json",
+            "certificates": "certificates.json" if include_certificates else None,
+            "detector_family": "detector_family.jsonl",
+            "dark_detectors": "dark_detectors.jsonl",
+            "recycled_jumps": "recycled_jumps.jsonl",
+            "targeted_jumps": "targeted_jumps.jsonl",
+            "basis_configs": "basis_configs.npy" if include_basis else None,
+            "target_basis": "target_basis.npy" if include_basis else None,
+            "sparse_matrices": matrix_files or None,
+            "detector_matrices": "detector_matrices" if include_detector_matrices else None,
+        },
+    }
+    manifest_path = output_path / "manifest.json"
+    _write_json(manifest_path, manifest)
+    return CageLindbladExportResult(path=output_path, manifest_path=manifest_path)
 
 
 def build_cage_lindblad_problem(
