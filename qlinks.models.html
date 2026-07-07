@@ -427,6 +427,7 @@
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build_hamiltonian"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_hamiltonian()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.local_term_descriptors"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.local_term_descriptors()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.natural_region_units"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.natural_region_units()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.make_local_term"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_local_term()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build_local_term"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_local_term()</span></code></a></li>
 </ul>
@@ -732,6 +733,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build_hamiltonian"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_hamiltonian()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.local_term_descriptors"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.local_term_descriptors()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.natural_region_units"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.natural_region_units()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.make_local_term"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_local_term()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build_local_term"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_local_term()</span></code></a></li>
 </ul>
@@ -1773,6 +1775,35 @@ an empty tuple because not every model exposes local terms.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference internal" href="#qlinks.models.local_terms.LocalTermDescriptor" title="qlinks.models.local_terms.LocalTermDescriptor"><em>LocalTermDescriptor</em></a>, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.base.HamiltonianModelBase.natural_region_units">
+<span class="sig-name descname"><span class="pre">natural_region_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'kinetic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#HamiltonianModelBase.natural_region_units"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.base.HamiltonianModelBase.natural_region_units" title="Link to this definition">#</a></dt>
+<dd><p>Return model-natural local units for open-system region builders.</p>
+<p>The default implementation derives the units from
+<a class="reference internal" href="#qlinks.models.base.HamiltonianModelBase.local_term_descriptors" title="qlinks.models.base.HamiltonianModelBase.local_term_descriptors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">local_term_descriptors()</span></code></a> by deduplicating each descriptor’s
+variable support.  This gives plaquette units for QDM/QLM plaquette
+terms and bond units for nearest-neighbor hopping models such as the
+spin-one XY model.  Models with more specialized natural units may
+override this method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operator_kind</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'kinetic'</em><em>, </em><em>'potential'</em><em>, </em><em>'hamiltonian'</em><em>] </em><em>| </em><em>None</em>) – Local operator family used to infer the natural
+unit.  The default kinetic choice gives hopping bonds for
+XY-like models and resonating plaquettes for QDM-like models.</p></li>
+<li><p><strong>term_kind</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'plaquette'</em><em>, </em><em>'site'</em><em>, </em><em>'link'</em><em>, </em><em>'bond'</em><em>] </em><em>| </em><em>None</em>) – Optional descriptor category filter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of sorted variable-index regions, with duplicates removed
+while preserving descriptor order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, …], …]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3835,6 +3866,35 @@ an empty tuple because not every model exposes local terms.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference internal" href="#qlinks.models.local_terms.LocalTermDescriptor" title="qlinks.models.local_terms.LocalTermDescriptor"><em>LocalTermDescriptor</em></a>, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qlinks.models.HamiltonianModelBase.natural_region_units">
+<span class="sig-name descname"><span class="pre">natural_region_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'kinetic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/qlinks/models/base.html#HamiltonianModelBase.natural_region_units"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qlinks.models.HamiltonianModelBase.natural_region_units" title="Link to this definition">#</a></dt>
+<dd><p>Return model-natural local units for open-system region builders.</p>
+<p>The default implementation derives the units from
+<a class="reference internal" href="#qlinks.models.HamiltonianModelBase.local_term_descriptors" title="qlinks.models.HamiltonianModelBase.local_term_descriptors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">local_term_descriptors()</span></code></a> by deduplicating each descriptor’s
+variable support.  This gives plaquette units for QDM/QLM plaquette
+terms and bond units for nearest-neighbor hopping models such as the
+spin-one XY model.  Models with more specialized natural units may
+override this method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operator_kind</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'kinetic'</em><em>, </em><em>'potential'</em><em>, </em><em>'hamiltonian'</em><em>] </em><em>| </em><em>None</em>) – Local operator family used to infer the natural
+unit.  The default kinetic choice gives hopping bonds for
+XY-like models and resonating plaquettes for QDM-like models.</p></li>
+<li><p><strong>term_kind</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'plaquette'</em><em>, </em><em>'site'</em><em>, </em><em>'link'</em><em>, </em><em>'bond'</em><em>] </em><em>| </em><em>None</em>) – Optional descriptor category filter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of sorted variable-index regions, with duplicates removed
+while preserving descriptor order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, …], …]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -6192,6 +6252,7 @@ checks.</p></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build_hamiltonian"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_hamiltonian()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.local_term_descriptors"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.local_term_descriptors()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.natural_region_units"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.natural_region_units()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.make_local_term"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_local_term()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.base.HamiltonianModelBase.build_local_term"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_local_term()</span></code></a></li>
 </ul>
@@ -6497,6 +6558,7 @@ checks.</p></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build_hamiltonian"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_hamiltonian()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.local_term_descriptors"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.local_term_descriptors()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.natural_region_units"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.natural_region_units()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.make_local_term"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.make_local_term()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qlinks.models.HamiltonianModelBase.build_local_term"><code class="docutils literal notranslate"><span class="pre">HamiltonianModelBase.build_local_term()</span></code></a></li>
 </ul>

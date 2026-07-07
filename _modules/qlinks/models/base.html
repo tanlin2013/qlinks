@@ -993,6 +993,47 @@
         <span class="k">return</span> <span class="p">()</span></div>
 
 
+<div class="viewcode-block" id="HamiltonianModelBase.natural_region_units">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.HamiltonianModelBase.natural_region_units">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">natural_region_units</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">operator_kind</span><span class="p">:</span> <span class="n">LocalOperatorKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
+        <span class="n">term_kind</span><span class="p">:</span> <span class="n">LocalTermKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return model-natural local units for open-system region builders.</span>
+
+<span class="sd">        The default implementation derives the units from</span>
+<span class="sd">        :meth:`local_term_descriptors` by deduplicating each descriptor&#39;s</span>
+<span class="sd">        variable support.  This gives plaquette units for QDM/QLM plaquette</span>
+<span class="sd">        terms and bond units for nearest-neighbor hopping models such as the</span>
+<span class="sd">        spin-one XY model.  Models with more specialized natural units may</span>
+<span class="sd">        override this method.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operator_kind: Local operator family used to infer the natural</span>
+<span class="sd">                unit.  The default kinetic choice gives hopping bonds for</span>
+<span class="sd">                XY-like models and resonating plaquettes for QDM-like models.</span>
+<span class="sd">            term_kind: Optional descriptor category filter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple of sorted variable-index regions, with duplicates removed</span>
+<span class="sd">            while preserving descriptor order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">units</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">descriptor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_term_descriptors</span><span class="p">(</span>
+            <span class="n">operator_kind</span><span class="o">=</span><span class="n">operator_kind</span><span class="p">,</span>
+            <span class="n">term_kind</span><span class="o">=</span><span class="n">term_kind</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">support_variable_set</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+            <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">units</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="HamiltonianModelBase.make_local_term">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.base.HamiltonianModelBase.make_local_term">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">make_local_term</span><span class="p">(</span>

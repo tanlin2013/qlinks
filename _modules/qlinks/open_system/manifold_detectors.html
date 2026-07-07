@@ -330,6 +330,7 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
 
@@ -413,6 +414,8 @@
     <span class="n">action_residual</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">relative_action_residual</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">operator_frobenius_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">coefficient_ipr</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">effective_operator_count</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DarkOperatorTerm</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 
     <span class="nd">@property</span>
@@ -432,6 +435,8 @@
             <span class="s2">&quot;action_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_residual</span><span class="p">,</span>
             <span class="s2">&quot;relative_action_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_action_residual</span><span class="p">,</span>
             <span class="s2">&quot;operator_frobenius_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator_frobenius_norm</span><span class="p">,</span>
+            <span class="s2">&quot;coefficient_ipr&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficient_ipr</span><span class="p">,</span>
+            <span class="s2">&quot;effective_operator_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_operator_count</span><span class="p">,</span>
             <span class="s2">&quot;n_terms&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_terms</span><span class="p">,</span>
             <span class="s2">&quot;terms&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">),</span>
         <span class="p">}</span></div>
@@ -458,6 +463,8 @@
     <span class="n">action_residual</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">relative_action_residual</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">operator_frobenius_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">coefficient_ipr</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">effective_operator_count</span><span class="p">:</span> <span class="nb">float</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">n_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -481,6 +488,8 @@
             <span class="s2">&quot;action_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_residual</span><span class="p">,</span>
             <span class="s2">&quot;relative_action_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_action_residual</span><span class="p">,</span>
             <span class="s2">&quot;operator_frobenius_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator_frobenius_norm</span><span class="p">,</span>
+            <span class="s2">&quot;coefficient_ipr&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficient_ipr</span><span class="p">,</span>
+            <span class="s2">&quot;effective_operator_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_operator_count</span><span class="p">,</span>
         <span class="p">}</span></div>
 </div>
 
@@ -589,6 +598,7 @@
     <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">candidates</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ManifoldDarkOperatorCandidate</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
     <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">candidate_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;svd_basis&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">n_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -612,6 +622,8 @@
             <span class="n">action_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">action_residual</span><span class="p">),</span>
             <span class="n">relative_action_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">relative_action_residual</span><span class="p">),</span>
             <span class="n">operator_frobenius_norm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">operator_frobenius_norm</span><span class="p">),</span>
+            <span class="n">coefficient_ipr</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">coefficient_ipr</span><span class="p">),</span>
+            <span class="n">effective_operator_count</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">effective_operator_count</span><span class="p">),</span>
         <span class="p">)</span></div>
 
 
@@ -636,6 +648,8 @@
                 <span class="n">action_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">action_residual</span><span class="p">),</span>
                 <span class="n">relative_action_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">relative_action_residual</span><span class="p">),</span>
                 <span class="n">operator_frobenius_norm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">operator_frobenius_norm</span><span class="p">),</span>
+                <span class="n">coefficient_ipr</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">coefficient_ipr</span><span class="p">),</span>
+                <span class="n">effective_operator_count</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">effective_operator_count</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span>
         <span class="p">)</span></div>
@@ -1214,6 +1228,76 @@
 
 
 
+<div class="viewcode-block" id="RecycledManifoldCollectiveRecyclerGroup">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.RecycledManifoldCollectiveRecyclerGroup">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RecycledManifoldCollectiveRecyclerGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One collective local recycler replacing selected microscopic recyclers.</span>
+
+<span class="sd">    The bundled jump has the form ``J = R_bundle D`` where ``D`` is the</span>
+<span class="sd">    selected dark detector and ``R_bundle`` is a local matrix supported on one</span>
+<span class="sd">    region. Bundling only within a fixed ``(detector_index, region_index)``</span>
+<span class="sd">    preserves the same real-space support as the selected microscopic</span>
+<span class="sd">    recyclers while reducing the number of Lindblad channels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">group_index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">detector_index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">detector_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">region_index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">variable_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">local_dim</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">candidate_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">recycler_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">recycler_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">weights</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">local_operator</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">jump_frobenius_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">recycler_frobenius_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">recycler_nnz</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">jump_nnz</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">unbundled_inflow_norm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">bundled_inflow_norm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_bundled_recyclers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_indices</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">recycler_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;collective[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_bundled_recyclers</span><span class="si">}</span><span class="s2">]&quot;</span>
+
+<div class="viewcode-block" id="RecycledManifoldCollectiveRecyclerGroup.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.RecycledManifoldCollectiveRecyclerGroup.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;group_index&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_index</span><span class="p">,</span>
+            <span class="s2">&quot;detector_index&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector_index</span><span class="p">,</span>
+            <span class="s2">&quot;detector_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector_name</span><span class="p">,</span>
+            <span class="s2">&quot;region_index&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_index</span><span class="p">,</span>
+            <span class="s2">&quot;variable_indices&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">,</span>
+            <span class="s2">&quot;n_variables&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_variables</span><span class="p">,</span>
+            <span class="s2">&quot;local_dim&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_dim</span><span class="p">,</span>
+            <span class="s2">&quot;n_bundled_recyclers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bundled_recyclers</span><span class="p">,</span>
+            <span class="s2">&quot;candidate_indices&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_indices</span><span class="p">,</span>
+            <span class="s2">&quot;recycler_indices&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">recycler_indices</span><span class="p">,</span>
+            <span class="s2">&quot;recycler_names&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">recycler_names</span><span class="p">,</span>
+            <span class="s2">&quot;weights&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span>
+            <span class="s2">&quot;recycler_frobenius_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">recycler_frobenius_norm</span><span class="p">,</span>
+            <span class="s2">&quot;recycler_nnz&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">recycler_nnz</span><span class="p">,</span>
+            <span class="s2">&quot;jump_frobenius_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump_frobenius_norm</span><span class="p">,</span>
+            <span class="s2">&quot;jump_nnz&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump_nnz</span><span class="p">,</span>
+            <span class="s2">&quot;unbundled_inflow_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbundled_inflow_norm</span><span class="p">,</span>
+            <span class="s2">&quot;bundled_inflow_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bundled_inflow_norm</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="RecycledManifoldJumpSelectionStep">
 <a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.RecycledManifoldJumpSelectionStep">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1269,10 +1353,40 @@
     <span class="n">candidate_report</span><span class="p">:</span> <span class="n">RecycledManifoldDarkDetectorReport</span>
     <span class="n">candidate_report_was_expanded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">candidate_pool_was_limited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">compression_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+    <span class="n">n_compression_passes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_compressed_jumps_removed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">collective_recycler_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+    <span class="n">unbundled_n_jumps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">collective_groups</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">RecycledManifoldCollectiveRecyclerGroup</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">selected_inflow_norm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">unbundled_inflow_norm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">n_selected_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jumps</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_unbundled_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbundled_n_jumps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unbundled_n_jumps</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_collective_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_bundled_recyclers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">n_bundled_recyclers</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">collective_jump_reduction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_unbundled_jumps</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_selected_jumps</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uses_collective_recyclers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">selected_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -1334,9 +1448,21 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">final_inflow_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_diagnostics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_diagnostics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_diagnostics</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_inflow_norm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_diagnostics</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_inflow_norm</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">collective_inflow_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_inflow_norm</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbundled_inflow_norm</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbundled_inflow_norm</span> <span class="o">&lt;=</span> <span class="mf">0.0</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_inflow_norm</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbundled_inflow_norm</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">complement_common_kernel_removed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -1355,10 +1481,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">selected_region_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">region_index</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">candidate</span><span class="o">.</span><span class="n">region_index</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">selected_detector_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">detector_index</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">candidate</span><span class="o">.</span><span class="n">detector_index</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RecycledManifoldJumpSelectionReport.selected_recycler_readouts">
@@ -1379,6 +1509,18 @@
 <span class="sd">        ``rdm_support_matrix_units`` recyclers, pass the target state/manifold</span>
 <span class="sd">        through ``states`` so the local RDM support basis can be reconstructed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span>
+            <span class="k">if</span> <span class="n">max_readouts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_readouts</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">_local_operator_from_collective_recycler_group</span><span class="p">(</span>
+                    <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span>
+                    <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span>
+            <span class="p">)</span>
+
         <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_candidates</span>
         <span class="k">if</span> <span class="n">max_readouts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_readouts</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
@@ -1407,12 +1549,25 @@
             <span class="s2">&quot;n_tested_candidates&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tested_candidates</span><span class="p">,</span>
             <span class="s2">&quot;candidate_report_was_expanded&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_report_was_expanded</span><span class="p">,</span>
             <span class="s2">&quot;candidate_pool_was_limited&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_pool_was_limited</span><span class="p">,</span>
+            <span class="s2">&quot;compression_strategy&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">compression_strategy</span><span class="p">,</span>
+            <span class="s2">&quot;n_compression_passes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_compression_passes</span><span class="p">,</span>
+            <span class="s2">&quot;n_compressed_jumps_removed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_compressed_jumps_removed</span><span class="p">,</span>
             <span class="s2">&quot;candidate_report_is_truncated&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_report_is_truncated</span><span class="p">,</span>
             <span class="s2">&quot;candidate_pool_is_truncated&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_pool_is_truncated</span><span class="p">,</span>
             <span class="s2">&quot;stopped_with_available_candidates&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopped_with_available_candidates</span><span class="p">,</span>
             <span class="s2">&quot;max_selected_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_selected_jumps</span><span class="p">,</span>
             <span class="s2">&quot;target_bad_kernel_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_bad_kernel_dimension</span><span class="p">,</span>
             <span class="s2">&quot;n_selected_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_selected_jumps</span><span class="p">,</span>
+            <span class="s2">&quot;n_unbundled_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_unbundled_jumps</span><span class="p">,</span>
+            <span class="s2">&quot;collective_recycler_strategy&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_recycler_strategy</span><span class="p">,</span>
+            <span class="s2">&quot;uses_collective_recyclers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">uses_collective_recyclers</span><span class="p">,</span>
+            <span class="s2">&quot;n_collective_groups&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_collective_groups</span><span class="p">,</span>
+            <span class="s2">&quot;n_bundled_recyclers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bundled_recyclers</span><span class="p">,</span>
+            <span class="s2">&quot;collective_jump_reduction&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_jump_reduction</span><span class="p">,</span>
+            <span class="s2">&quot;selected_inflow_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_inflow_norm</span><span class="p">,</span>
+            <span class="s2">&quot;unbundled_inflow_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbundled_inflow_norm</span><span class="p">,</span>
+            <span class="s2">&quot;collective_inflow_ratio&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_inflow_ratio</span><span class="p">,</span>
+            <span class="s2">&quot;collective_groups&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_groups</span><span class="p">),</span>
             <span class="s2">&quot;selected_region_indices&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_region_indices</span><span class="p">,</span>
             <span class="s2">&quot;selected_detector_indices&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_detector_indices</span><span class="p">,</span>
             <span class="s2">&quot;total_jump_nnz&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_jump_nnz</span><span class="p">,</span>
@@ -1461,6 +1616,9 @@
         <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;expanded report&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_report_was_expanded</span><span class="p">))</span>
         <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;pool truncated&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_pool_is_truncated</span><span class="p">))</span>
         <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;selected jumps&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_selected_jumps</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;compression&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">compression_strategy</span><span class="si">}</span><span class="s2">, removed=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_compressed_jumps_removed</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
         <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;target bad-kernel dim&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_bad_kernel_dimension</span><span class="p">))</span>
         <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
             <span class="s2">&quot;final bad-kernel dim&quot;</span><span class="p">,</span>
@@ -1854,6 +2012,180 @@
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">combined</span><span class="p">))</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_coefficient_ipr</span><span class="p">(</span><span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">norm_squared</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">norm_squared</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">**</span> <span class="mi">4</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">norm_squared</span> <span class="o">*</span> <span class="n">norm_squared</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_effective_coefficient_count</span><span class="p">(</span><span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">ipr</span> <span class="o">=</span> <span class="n">_coefficient_ipr</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ipr</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">ipr</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_phase_fixed_normalized_vector</span><span class="p">(</span>
+    <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vector</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">norm</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vector</span> <span class="o">/</span> <span class="n">norm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">pivot</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">normalized</span><span class="p">)))</span>
+    <span class="n">pivot_value</span> <span class="o">=</span> <span class="n">normalized</span><span class="p">[</span><span class="n">pivot</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pivot_value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">normalized</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">pivot_value</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">normalized</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_deduplicate_coefficient_vectors</span><span class="p">(</span>
+    <span class="n">vectors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">overlap_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]:</span>
+    <span class="n">unique</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">existing</span><span class="p">,</span> <span class="n">vector</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">overlap_tolerance</span> <span class="k">for</span> <span class="n">existing</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">unique</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unique</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sparse_ipr_dark_detector_columns</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">nullspace</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">max_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">overlap_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return nullspace vectors biased toward small operator support.</span>
+
+<span class="sd">    The ordinary SVD basis is arbitrary inside a degenerate dark-detector</span>
+<span class="sd">    nullspace.  To get more interpretable detector readouts, project each</span>
+<span class="sd">    coordinate unit vector onto the dark nullspace and rank the resulting</span>
+<span class="sd">    vectors by coefficient IPR.  This is a cheap deterministic proxy for a</span>
+<span class="sd">    sparse/IPR-optimized basis: a high score means the detector is concentrated</span>
+<span class="sd">    on fewer supplied local operators.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nullspace</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nullspace must be two-dimensional.&quot;</span><span class="p">)</span>
+    <span class="n">n_operators</span><span class="p">,</span> <span class="n">nullity</span> <span class="o">=</span> <span class="n">nullspace</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">n_operators</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nullity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_operators</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">projected</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">operator_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_operators</span><span class="p">):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nullspace</span><span class="p">[</span><span class="n">operator_index</span><span class="p">,</span> <span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="c1"># Projection of the coordinate vector e_i onto span(nullspace).</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="n">nullspace</span> <span class="o">@</span> <span class="n">row</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">_phase_fixed_normalized_vector</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">projected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+
+    <span class="n">projected</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">vector</span><span class="p">:</span> <span class="p">(</span>
+            <span class="o">-</span><span class="n">_coefficient_ipr</span><span class="p">(</span><span class="n">vector</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vector</span><span class="p">))),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">unique</span> <span class="o">=</span> <span class="n">_deduplicate_coefficient_vectors</span><span class="p">(</span>
+        <span class="n">projected</span><span class="p">,</span>
+        <span class="n">overlap_tolerance</span><span class="o">=</span><span class="n">overlap_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># If coordinate projections produced fewer vectors than requested, append</span>
+    <span class="c1"># the orthonormal SVD basis as a robust fallback.</span>
+    <span class="k">for</span> <span class="n">column_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nullity</span><span class="p">):</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">_phase_fixed_normalized_vector</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nullspace</span><span class="p">[:,</span> <span class="n">column_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">unique</span> <span class="o">=</span> <span class="n">_deduplicate_coefficient_vectors</span><span class="p">(</span>
+                <span class="n">unique</span> <span class="o">+</span> <span class="p">[</span><span class="n">normalized</span><span class="p">],</span>
+                <span class="n">overlap_tolerance</span><span class="o">=</span><span class="n">overlap_tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_candidates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">unique</span> <span class="o">=</span> <span class="n">unique</span><span class="p">[:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_candidates</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_operators</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_right_nullspace_from_constraint_matrix</span><span class="p">(</span>
+    <span class="n">constraint_matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return singular values, cutoff, rank, and right nullspace.</span>
+
+<span class="sd">    The detector constraint matrix is usually tall in production cage runs:</span>
+<span class="sd">    ``(hilbert_dimension * manifold_dimension) x n_operators``.  Computing a</span>
+<span class="sd">    full/economy SVD of this tall matrix can dominate the dark-detector stage,</span>
+<span class="sd">    even though we only need the right nullspace in operator-coefficient space.</span>
+<span class="sd">    The Hermitian Gram matrix ``C^† C`` has size ``n_operators x n_operators``</span>
+<span class="sd">    and its eigenvectors are the right singular vectors of ``C``.  This path is</span>
+<span class="sd">    therefore substantially cheaper for ``coordinate_ipr`` and regional-unit</span>
+<span class="sd">    workflows with many basis states but modest local-operator families.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;constraint_matrix must be two-dimensional.&quot;</span><span class="p">)</span>
+    <span class="n">n_operators</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">n_operators</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">constraint_matrix</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># Symmetrize away tiny BLAS roundoff so eigh sees an exactly Hermitian input.</span>
+    <span class="n">gram</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">gram</span> <span class="o">+</span> <span class="n">gram</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">gram</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">full_matrices</span> <span class="o">=</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+            <span class="n">constraint_matrix</span><span class="p">,</span>
+            <span class="n">full_matrices</span><span class="o">=</span><span class="n">full_matrices</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
+            <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">1.0</span><span class="p">))</span>
+            <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">singular_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="n">cutoff</span><span class="p">,</span>
+            <span class="n">rank</span><span class="p">,</span>
+            <span class="n">vh</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">singular_values_ascending</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
+    <span class="n">singular_values</span> <span class="o">=</span> <span class="n">singular_values_ascending</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">1.0</span><span class="p">))</span>
+    <span class="n">dark_mask</span> <span class="o">=</span> <span class="n">singular_values_ascending</span> <span class="o">&lt;=</span> <span class="n">cutoff</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_operators</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">dark_mask</span><span class="p">))</span>
+    <span class="n">nullspace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">dark_mask</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">nullspace</span>
+
+
 <div class="viewcode-block" id="diagnose_manifold_dark_operator_basis">
 <a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnose_manifold_dark_operator_basis">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">diagnose_manifold_dark_operator_basis</span><span class="p">(</span>
@@ -1864,6 +2196,8 @@
     <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
     <span class="n">coefficient_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-8</span><span class="p">,</span>
     <span class="n">max_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+    <span class="n">candidate_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;svd_basis&quot;</span><span class="p">,</span> <span class="s2">&quot;coordinate_ipr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;svd_basis&quot;</span><span class="p">,</span>
+    <span class="n">candidate_overlap_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-7</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ManifoldDarkOperatorBasisReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Find linear combinations of supplied operators annihilating a manifold.</span>
 
@@ -1877,6 +2211,13 @@
 <span class="sd">        coefficient_tolerance: Coefficient magnitude threshold for term readout.</span>
 <span class="sd">        max_candidates: Maximum number of nullspace candidates to store.  Use</span>
 <span class="sd">            ``None`` to keep all candidates.</span>
+<span class="sd">        candidate_strategy: ``&quot;svd_basis&quot;`` keeps the numerical nullspace basis.</span>
+<span class="sd">            ``&quot;coordinate_ipr&quot;`` projects individual supplied operators onto the</span>
+<span class="sd">            dark nullspace and ranks the results by coefficient IPR, producing</span>
+<span class="sd">            more localized/interpretable detector combinations when the dark</span>
+<span class="sd">            solution space is degenerate.</span>
+<span class="sd">        candidate_overlap_tolerance: Deduplication tolerance for</span>
+<span class="sd">            ``candidate_strategy=&quot;coordinate_ipr&quot;``.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A report whose candidate coefficient columns define</span>
@@ -1909,32 +2250,25 @@
     <span class="p">]</span>
     <span class="n">constraint_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">action_columns</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="c1"># The constraint matrix is usually tall in production QDM runs:</span>
-    <span class="c1"># ``(hilbert_dimension * manifold_dimension) x n_operators``.  A full SVD</span>
-    <span class="c1"># would materialize the huge left-unitary matrix and can dominate or even</span>
-    <span class="c1"># time out before any jump selection starts.  We only need right singular</span>
-    <span class="c1"># vectors in operator-coefficient space, so the economy SVD is complete</span>
-    <span class="c1"># whenever rows &gt;= columns.  Keep full_matrices=True only for genuinely</span>
-    <span class="c1"># underdetermined systems, where the economy Vh would omit the extra</span>
-    <span class="c1"># nullspace directions.</span>
-    <span class="n">full_matrices</span> <span class="o">=</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+    <span class="n">singular_values</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">nullspace</span> <span class="o">=</span> <span class="n">_right_nullspace_from_constraint_matrix</span><span class="p">(</span>
         <span class="n">constraint_matrix</span><span class="p">,</span>
-        <span class="n">full_matrices</span><span class="o">=</span><span class="n">full_matrices</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
     <span class="p">)</span>
-    <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
-        <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">1.0</span><span class="p">))</span>
-        <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">))</span>
-
-    <span class="n">nullspace</span> <span class="o">=</span> <span class="n">vh</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span>
     <span class="n">detector_nullity</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nullspace</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="n">candidate_columns</span> <span class="o">=</span> <span class="n">nullspace</span>
-    <span class="k">if</span> <span class="n">max_candidates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">candidate_columns</span> <span class="o">=</span> <span class="n">candidate_columns</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_candidates</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">candidate_strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;svd_basis&quot;</span><span class="p">,</span> <span class="s2">&quot;coordinate_ipr&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;candidate_strategy must be &quot;svd_basis&quot; or &quot;coordinate_ipr&quot;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">candidate_strategy</span> <span class="o">==</span> <span class="s2">&quot;svd_basis&quot;</span><span class="p">:</span>
+        <span class="n">candidate_columns</span> <span class="o">=</span> <span class="n">nullspace</span>
+        <span class="k">if</span> <span class="n">max_candidates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">candidate_columns</span> <span class="o">=</span> <span class="n">candidate_columns</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_candidates</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">candidate_columns</span> <span class="o">=</span> <span class="n">_sparse_ipr_dark_detector_columns</span><span class="p">(</span>
+            <span class="n">nullspace</span><span class="o">=</span><span class="n">nullspace</span><span class="p">,</span>
+            <span class="n">max_candidates</span><span class="o">=</span><span class="n">max_candidates</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">coefficient_tolerance</span><span class="p">)),</span>
+            <span class="n">overlap_tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate_overlap_tolerance</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ManifoldDarkOperatorCandidate</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">candidate_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">candidate_columns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
@@ -1949,6 +2283,8 @@
             <span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">relative_residual</span> <span class="o">=</span> <span class="n">residual</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">operator_norm</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">coefficient_ipr</span> <span class="o">=</span> <span class="n">_coefficient_ipr</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+        <span class="n">effective_operator_count</span> <span class="o">=</span> <span class="n">_effective_coefficient_count</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
 
         <span class="n">terms</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="n">DarkOperatorTerm</span><span class="p">(</span>
@@ -1971,6 +2307,8 @@
                 <span class="n">action_residual</span><span class="o">=</span><span class="n">residual</span><span class="p">,</span>
                 <span class="n">relative_action_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">relative_residual</span><span class="p">),</span>
                 <span class="n">operator_frobenius_norm</span><span class="o">=</span><span class="n">operator_norm</span><span class="p">,</span>
+                <span class="n">coefficient_ipr</span><span class="o">=</span><span class="n">coefficient_ipr</span><span class="p">,</span>
+                <span class="n">effective_operator_count</span><span class="o">=</span><span class="n">effective_operator_count</span><span class="p">,</span>
                 <span class="n">terms</span><span class="o">=</span><span class="n">terms</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
@@ -1987,6 +2325,7 @@
         <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span>
         <span class="n">candidates</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">candidates</span><span class="p">),</span>
         <span class="n">tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+        <span class="n">candidate_strategy</span><span class="o">=</span><span class="n">candidate_strategy</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -2018,6 +2357,24 @@
     <span class="n">target_block_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">target_block</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">inflow_sq</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">left_projected_norm_sq</span> <span class="o">-</span> <span class="n">target_block_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">inflow_sq</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">target_block_norm_sq</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_multi_jump_projected_inflow_norm</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">],</span>
+    <span class="n">state_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the incoherent total inflow norm for a jump family.</span>
+
+<span class="sd">    This is the cheap part of :func:`diagnose_dark_manifold`: it avoids common</span>
+<span class="sd">    kernel and Liouvillian checks, but still measures the actual final jump</span>
+<span class="sd">    matrices rather than the pre-bundled candidate scores.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps</span><span class="p">:</span>
+        <span class="n">inflow_norm</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_projected_inflow_norm</span><span class="p">(</span><span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span> <span class="n">state_basis</span><span class="o">=</span><span class="n">state_basis</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">inflow_norm</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_diagonal_vector_if_diagonal</span><span class="p">(</span>
@@ -2596,6 +2953,102 @@
 
 
 
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_expand_normalized_local_regions_to_cluster_unions_cached</span><span class="p">(</span>
+    <span class="n">base_regions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">cluster_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">cluster_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;overlap_connected&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">],</span>
+    <span class="n">min_overlap</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">max_region_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_single_regions</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">include_smaller_clusters</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="n">expanded</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seen_regions</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">maybe_add</span><span class="p">(</span><span class="n">region</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_region_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">region</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_region_size</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">seen_regions</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">seen_regions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+        <span class="n">expanded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">include_single_regions</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">base_regions</span><span class="p">:</span>
+            <span class="n">maybe_add</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+
+    <span class="n">region_sets</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">region</span><span class="p">)</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">base_regions</span><span class="p">)</span>
+    <span class="n">cluster_sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">cluster_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">include_smaller_clusters</span> <span class="k">else</span> <span class="p">(</span><span class="n">cluster_size</span><span class="p">,)</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cluster_mode</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">cluster_sizes</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">base_regions</span><span class="p">)),</span> <span class="n">size</span><span class="p">):</span>
+                <span class="n">union</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                    <span class="n">union</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">base_regions</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+                <span class="n">maybe_add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">union</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">expanded</span><span class="p">)</span>
+
+    <span class="c1"># Optimized connected-cluster enumeration.  The previous implementation</span>
+    <span class="c1"># checked every k-combination and then tested overlap connectivity.  That is</span>
+    <span class="c1"># acceptable for small square/honeycomb runs, but model-regional-unit modes</span>
+    <span class="c1"># can have many plaquette/bond units.  Enumerating connected clusters by</span>
+    <span class="c1"># growing along the overlap graph avoids most disconnected combinations.</span>
+    <span class="n">neighbors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">right_index</span>
+            <span class="k">for</span> <span class="n">right_index</span><span class="p">,</span> <span class="n">right_set</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">region_sets</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">right_index</span> <span class="o">!=</span> <span class="n">left_index</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">left_set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">right_set</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">min_overlap</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">left_index</span><span class="p">,</span> <span class="n">left_set</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">region_sets</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">target_sizes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">cluster_sizes</span><span class="p">)</span>
+    <span class="n">max_cluster_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">target_sizes</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">seen_index_clusters</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">grow</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">cluster</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">union</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span> <span class="ow">in</span> <span class="n">target_sizes</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_index_clusters</span><span class="p">:</span>
+                <span class="n">seen_index_clusters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="n">maybe_add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">union</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_cluster_size</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">cluster_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
+        <span class="n">frontier</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">neighbor</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">cluster</span>
+                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">neighbor</span> <span class="o">&gt;</span> <span class="n">seed</span> <span class="ow">and</span> <span class="n">neighbor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cluster_set</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">frontier</span><span class="p">:</span>
+            <span class="n">new_union</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">union</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">base_regions</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">max_region_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_union</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_region_size</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">grow</span><span class="p">(</span>
+                <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+                <span class="n">cluster</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">cluster</span> <span class="o">+</span> <span class="p">(</span><span class="n">neighbor</span><span class="p">,))),</span>
+                <span class="n">union</span><span class="o">=</span><span class="n">new_union</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">base_regions</span><span class="p">)):</span>
+        <span class="n">grow</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">cluster</span><span class="o">=</span><span class="p">(</span><span class="n">seed</span><span class="p">,),</span> <span class="n">union</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">base_regions</span><span class="p">[</span><span class="n">seed</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">expanded</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="expand_local_regions_to_cluster_unions">
 <a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.expand_local_regions_to_cluster_unions">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">expand_local_regions_to_cluster_unions</span><span class="p">(</span>
@@ -2616,21 +3069,11 @@
 <span class="sd">    regions; this is the natural setting for connected multi-plaquette QDM</span>
 <span class="sd">    patches.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        local_regions: Base local regions, usually single-plaquette supports.</span>
-<span class="sd">        cluster_size: Number of base regions to union in the largest clusters.</span>
-<span class="sd">        cluster_mode: ``&quot;overlap_connected&quot;`` keeps clusters connected through</span>
-<span class="sd">            overlaps of at least ``min_overlap`` variables; ``&quot;all&quot;`` keeps all</span>
-<span class="sd">            unordered clusters.</span>
-<span class="sd">        min_overlap: Minimum overlap used to define adjacency for</span>
-<span class="sd">            ``cluster_mode=&quot;overlap_connected&quot;``.</span>
-<span class="sd">        max_region_size: Optional upper bound on the size of the variable union.</span>
-<span class="sd">        include_single_regions: Whether to include the original base regions.</span>
-<span class="sd">        include_smaller_clusters: Whether to include all cluster sizes from two</span>
-<span class="sd">            through ``cluster_size`` instead of only the requested size.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Deduplicated sorted variable-index unions.</span>
+<span class="sd">    The normalized expansion is cached and the connected mode grows clusters on</span>
+<span class="sd">    the overlap graph directly.  This makes repeated</span>
+<span class="sd">    ``local_region_mode=&quot;regional_unit_clusters&quot;`` calls much cheaper in</span>
+<span class="sd">    notebook sweeps, especially when trying several detector/recycler settings</span>
+<span class="sd">    with the same model-natural plaquette or bond units.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">cluster_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;overlap_connected&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">}:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cluster_mode must be &quot;overlap_connected&quot; or &quot;all&quot;.&#39;</span><span class="p">)</span>
@@ -2642,50 +3085,15 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_region_size must be positive when provided.&quot;</span><span class="p">)</span>
 
     <span class="n">base_regions</span> <span class="o">=</span> <span class="n">_normalize_local_regions</span><span class="p">(</span><span class="n">local_regions</span><span class="p">)</span>
-    <span class="n">expanded</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">maybe_add</span><span class="p">(</span><span class="n">region</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">max_region_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">region</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_region_size</span><span class="p">:</span>
-            <span class="k">return</span>
-        <span class="k">if</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
-            <span class="k">return</span>
-        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
-        <span class="n">expanded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">include_single_regions</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">base_regions</span><span class="p">:</span>
-            <span class="n">maybe_add</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
-
-    <span class="n">region_sets</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">region</span><span class="p">)</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">base_regions</span><span class="p">]</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">is_overlap_connected</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="n">remaining</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-        <span class="n">frontier</span> <span class="o">=</span> <span class="p">[</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-        <span class="n">visited</span> <span class="o">=</span> <span class="p">{</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
-        <span class="k">while</span> <span class="n">frontier</span><span class="p">:</span>
-            <span class="n">left_index</span> <span class="o">=</span> <span class="n">frontier</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-            <span class="n">left_set</span> <span class="o">=</span> <span class="n">region_sets</span><span class="p">[</span><span class="n">left_index</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">right_index</span> <span class="ow">in</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">remaining</span><span class="p">):</span>
-                <span class="n">overlap</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">left_set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">region_sets</span><span class="p">[</span><span class="n">right_index</span><span class="p">]))</span>
-                <span class="k">if</span> <span class="n">overlap</span> <span class="o">&lt;</span> <span class="n">min_overlap</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">remaining</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">right_index</span><span class="p">)</span>
-                <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">right_index</span><span class="p">)</span>
-                <span class="n">frontier</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">right_index</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">visited</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
-
-    <span class="n">cluster_sizes</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">cluster_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">include_smaller_clusters</span> <span class="k">else</span> <span class="p">(</span><span class="n">cluster_size</span><span class="p">,)</span>
-    <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">cluster_sizes</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">base_regions</span><span class="p">)),</span> <span class="n">size</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">cluster_mode</span> <span class="o">==</span> <span class="s2">&quot;overlap_connected&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_overlap_connected</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
-                <span class="k">continue</span>
-            <span class="n">union</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
-                <span class="n">union</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">base_regions</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
-            <span class="n">maybe_add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">union</span><span class="p">)))</span>
+    <span class="n">expanded</span> <span class="o">=</span> <span class="n">_expand_normalized_local_regions_to_cluster_unions_cached</span><span class="p">(</span>
+        <span class="n">base_regions</span><span class="p">,</span>
+        <span class="n">cluster_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">cluster_size</span><span class="p">),</span>
+        <span class="n">cluster_mode</span><span class="o">=</span><span class="n">cluster_mode</span><span class="p">,</span>
+        <span class="n">min_overlap</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">min_overlap</span><span class="p">),</span>
+        <span class="n">max_region_size</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">max_region_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_region_size</span><span class="p">),</span>
+        <span class="n">include_single_regions</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">include_single_regions</span><span class="p">),</span>
+        <span class="n">include_smaller_clusters</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">include_smaller_clusters</span><span class="p">),</span>
+    <span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">expanded</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -2693,7 +3101,7 @@
             <span class="s2">&quot;or max_region_size, reduce cluster_size, or pass include_single_regions=True.&quot;</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">expanded</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">expanded</span></div>
 
 
 
@@ -2839,6 +3247,38 @@
             <span class="p">(</span><span class="s2">&quot;recycler_name&quot;</span><span class="p">,</span> <span class="n">candidate</span><span class="o">.</span><span class="n">recycler_name</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">&quot;inflow_norm&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">)),</span>
             <span class="p">(</span><span class="s2">&quot;jump_nnz&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">jump_nnz</span><span class="p">)),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_local_operator_from_collective_recycler_group</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">group</span><span class="p">:</span> <span class="n">RecycledManifoldCollectiveRecyclerGroup</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalOperatorMatrixReadout</span><span class="p">:</span>
+    <span class="n">variable_indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">)</span>
+    <span class="n">local_patterns</span> <span class="o">=</span> <span class="n">_local_patterns_from_basis_configs</span><span class="p">(</span>
+        <span class="n">basis_configs</span><span class="o">=</span><span class="n">basis_configs</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_patterns</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">local_dim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;basis_configs/local_patterns are incompatible with the collective group.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">LocalOperatorMatrixReadout</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;collective_recycled_</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">group_index</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">detector_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="s2">&quot;collective_recycled_recycler&quot;</span><span class="p">,</span>
+        <span class="n">variable_indices</span><span class="o">=</span><span class="n">variable_indices</span><span class="p">,</span>
+        <span class="n">local_patterns</span><span class="o">=</span><span class="n">local_patterns</span><span class="p">,</span>
+        <span class="n">local_operator</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">local_operator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="p">(</span>
+            <span class="p">(</span><span class="s2">&quot;group_index&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">group_index</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">&quot;detector_index&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">detector_index</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">&quot;detector_name&quot;</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">detector_name</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;region_index&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">region_index</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">&quot;n_bundled_recyclers&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">n_bundled_recyclers</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">&quot;candidate_indices&quot;</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">candidate_indices</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;recycler_indices&quot;</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">recycler_indices</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;recycler_names&quot;</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">recycler_names</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;jump_nnz&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">jump_nnz</span><span class="p">)),</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -3396,6 +3836,179 @@
         <span class="n">local_operator</span><span class="o">=</span><span class="n">local_operator</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">recycler</span> <span class="o">@</span> <span class="n">detector</span><span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_local_recycler_operator_from_candidate_cache</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">candidate</span><span class="p">:</span> <span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">,</span>
+    <span class="n">embedding_contexts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">rdms</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">recycler_source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
+        <span class="s2">&quot;matrix_units&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rdm_support_matrix_units&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a candidate&#39;s local recycler matrix from cached local data.&quot;&quot;&quot;</span>
+    <span class="n">embedding_context</span> <span class="o">=</span> <span class="n">embedding_contexts</span><span class="p">[</span><span class="n">candidate</span><span class="o">.</span><span class="n">region_index</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">recycler_source</span> <span class="o">==</span> <span class="s2">&quot;matrix_units&quot;</span><span class="p">:</span>
+        <span class="n">local_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">local_dim</span><span class="p">)</span> <span class="o">!=</span> <span class="n">local_dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;candidate.local_dim is incompatible with the cached embedding context.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">n_matrix_units</span> <span class="o">=</span> <span class="n">local_dim</span> <span class="o">*</span> <span class="n">local_dim</span>
+        <span class="k">if</span> <span class="n">candidate</span><span class="o">.</span><span class="n">recycler_index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">candidate</span><span class="o">.</span><span class="n">recycler_index</span> <span class="o">&gt;=</span> <span class="n">n_matrix_units</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;candidate.recycler_index is out of range for matrix-unit recyclers.&quot;</span><span class="p">)</span>
+        <span class="n">target_index</span><span class="p">,</span> <span class="n">source_index</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">recycler_index</span><span class="p">),</span> <span class="n">local_dim</span><span class="p">)</span>
+        <span class="n">local_operator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">local_dim</span><span class="p">,</span> <span class="n">local_dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">local_operator</span><span class="p">[</span><span class="n">target_index</span><span class="p">,</span> <span class="n">source_index</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">return</span> <span class="n">candidate</span><span class="o">.</span><span class="n">recycler_name</span><span class="p">,</span> <span class="n">local_operator</span>
+
+    <span class="n">rdm</span> <span class="o">=</span> <span class="n">rdms</span><span class="p">[</span><span class="n">candidate</span><span class="o">.</span><span class="n">region_index</span><span class="p">]</span>
+    <span class="n">recycler_specs</span> <span class="o">=</span> <span class="n">_local_recycler_specs</span><span class="p">(</span>
+        <span class="n">local_patterns</span><span class="o">=</span><span class="n">rdm</span><span class="o">.</span><span class="n">local_patterns</span><span class="p">,</span>
+        <span class="n">support_basis</span><span class="o">=</span><span class="n">rdm</span><span class="o">.</span><span class="n">support_basis</span><span class="p">,</span>
+        <span class="n">recycler_source</span><span class="o">=</span><span class="n">recycler_source</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">candidate</span><span class="o">.</span><span class="n">recycler_index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">candidate</span><span class="o">.</span><span class="n">recycler_index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">recycler_specs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;candidate.recycler_index is out of range for recycler specs.&quot;</span><span class="p">)</span>
+    <span class="n">recycler_name</span><span class="p">,</span> <span class="n">local_operator</span> <span class="o">=</span> <span class="n">recycler_specs</span><span class="p">[</span><span class="n">candidate</span><span class="o">.</span><span class="n">recycler_index</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">recycler_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_operator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collective_recycler_weight</span><span class="p">(</span>
+    <span class="n">candidate</span><span class="p">:</span> <span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">weighting</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="s2">&quot;inflow&quot;</span><span class="p">,</span> <span class="s2">&quot;normalized_inflow&quot;</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">weighting</span> <span class="o">==</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span>
+    <span class="k">if</span> <span class="n">weighting</span> <span class="o">==</span> <span class="s2">&quot;inflow&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">weighting</span> <span class="o">==</span> <span class="s2">&quot;normalized_inflow&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">jump_frobenius_norm</span><span class="p">),</span> <span class="mf">1.0e-300</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s1">&#39;collective_recycler_weighting must be &quot;unit&quot;, &quot;inflow&quot;, or &quot;normalized_inflow&quot;.&#39;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bundle_recycled_jumps_by_region_detector</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">selected_candidates</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">detector_matrices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">detector_coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">embedding_contexts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">rdms</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">state_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">recycler_source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
+        <span class="s2">&quot;matrix_units&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rdm_support_matrix_units&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">weighting</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="s2">&quot;inflow&quot;</span><span class="p">,</span> <span class="s2">&quot;normalized_inflow&quot;</span><span class="p">],</span>
+    <span class="n">normalize_recyclers</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">RecycledManifoldCollectiveRecyclerGroup</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bundle selected microscopic recyclers into collective local recyclers.</span>
+
+<span class="sd">    Candidates are grouped only by ``(detector_index, region_index)``. This is</span>
+<span class="sd">    locality-safe: every bundled recycler acts on the same local region as the</span>
+<span class="sd">    selected microscopic recyclers, and the same dark detector remains on the</span>
+<span class="sd">    right.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.local_recycling</span><span class="w"> </span><span class="kn">import</span> <span class="n">_embed_local_pattern_operator_from_context</span>
+
+    <span class="n">grouped</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">group_order</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">selected_candidates</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">detector_index</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">region_index</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grouped</span><span class="p">:</span>
+            <span class="n">grouped</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">group_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">grouped</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+
+    <span class="n">detector_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RecycledManifoldCollectiveRecyclerGroup</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">group_index</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_order</span><span class="p">):</span>
+        <span class="n">detector_index</span><span class="p">,</span> <span class="n">region_index</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">grouped</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+        <span class="n">embedding_context</span> <span class="o">=</span> <span class="n">embedding_contexts</span><span class="p">[</span><span class="n">region_index</span><span class="p">]</span>
+        <span class="n">local_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">)</span>
+        <span class="n">local_operator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">local_dim</span><span class="p">,</span> <span class="n">local_dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">raw_weights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">recycler_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="n">recycler_name</span><span class="p">,</span> <span class="n">candidate_operator</span> <span class="o">=</span> <span class="n">_local_recycler_operator_from_candidate_cache</span><span class="p">(</span>
+                <span class="n">candidate</span><span class="o">=</span><span class="n">candidate</span><span class="p">,</span>
+                <span class="n">embedding_contexts</span><span class="o">=</span><span class="n">embedding_contexts</span><span class="p">,</span>
+                <span class="n">rdms</span><span class="o">=</span><span class="n">rdms</span><span class="p">,</span>
+                <span class="n">recycler_source</span><span class="o">=</span><span class="n">recycler_source</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="n">_collective_recycler_weight</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="n">weighting</span><span class="p">)</span>
+            <span class="n">raw_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+            <span class="n">recycler_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recycler_name</span><span class="p">)</span>
+            <span class="n">local_operator</span> <span class="o">+=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">candidate_operator</span>
+
+        <span class="n">frobenius_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">local_operator</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">normalize_recyclers</span> <span class="ow">and</span> <span class="n">frobenius_norm</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">local_operator</span> <span class="o">=</span> <span class="n">local_operator</span> <span class="o">/</span> <span class="n">frobenius_norm</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">weight</span> <span class="o">/</span> <span class="n">frobenius_norm</span><span class="p">)</span> <span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">raw_weights</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span> <span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">raw_weights</span><span class="p">)</span>
+
+        <span class="n">recycler</span> <span class="o">=</span> <span class="n">_embed_local_pattern_operator_from_context</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">=</span><span class="n">embedding_context</span><span class="p">,</span>
+            <span class="n">local_operator</span><span class="o">=</span><span class="n">local_operator</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        <span class="n">detector</span> <span class="o">=</span> <span class="n">detector_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">detector_index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">detector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">detector</span> <span class="o">=</span> <span class="n">_combined_operator</span><span class="p">(</span>
+                <span class="n">operators</span><span class="o">=</span><span class="n">detector_matrices</span><span class="p">,</span>
+                <span class="n">coefficients</span><span class="o">=</span><span class="n">detector_coefficients</span><span class="p">[:,</span> <span class="n">detector_index</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">detector_cache</span><span class="p">[</span><span class="n">detector_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">detector</span>
+        <span class="n">jump</span> <span class="o">=</span> <span class="p">(</span><span class="n">recycler</span> <span class="o">@</span> <span class="n">detector</span><span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">jump</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bundled jump has incompatible shape.&quot;</span><span class="p">)</span>
+        <span class="n">bundled_inflow_norm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">unbundled_inflow_norm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">state_basis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bundled_inflow_norm</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_projected_inflow_norm</span><span class="p">(</span>
+                <span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span>
+                <span class="n">state_basis</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">unbundled_inflow_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">jumps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">jump</span><span class="p">)</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">RecycledManifoldCollectiveRecyclerGroup</span><span class="p">(</span>
+                <span class="n">group_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">group_index</span><span class="p">),</span>
+                <span class="n">detector_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">detector_index</span><span class="p">),</span>
+                <span class="n">detector_name</span><span class="o">=</span><span class="n">candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detector_name</span><span class="p">,</span>
+                <span class="n">region_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">region_index</span><span class="p">),</span>
+                <span class="n">variable_indices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">variable_indices</span><span class="p">),</span>
+                <span class="n">local_dim</span><span class="o">=</span><span class="n">local_dim</span><span class="p">,</span>
+                <span class="n">candidate_indices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">candidate_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">),</span>
+                <span class="n">recycler_indices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">recycler_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">),</span>
+                <span class="n">recycler_names</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">recycler_names</span><span class="p">),</span>
+                <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
+                <span class="n">local_operator</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_operator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+                <span class="n">jump_frobenius_norm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jump</span><span class="p">)),</span>
+                <span class="n">recycler_frobenius_norm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">recycler</span><span class="p">)),</span>
+                <span class="n">recycler_nnz</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">recycler</span><span class="o">.</span><span class="n">nnz</span><span class="p">),</span>
+                <span class="n">jump_nnz</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">jump</span><span class="o">.</span><span class="n">nnz</span><span class="p">),</span>
+                <span class="n">unbundled_inflow_norm</span><span class="o">=</span><span class="n">unbundled_inflow_norm</span><span class="p">,</span>
+                <span class="n">bundled_inflow_norm</span><span class="o">=</span><span class="n">bundled_inflow_norm</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">jumps</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_recycled_jump_for_candidate</span><span class="p">(</span>
@@ -4741,6 +5354,7 @@
     <span class="n">kernel_tolerance</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">dark_tolerance</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">inflow_tolerance</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">selected_inflow_norm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">n_selected_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -4833,9 +5447,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">combined_inflow_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_diagnostics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_diagnostics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_diagnostics</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_inflow_norm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_diagnostics</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_inflow_norm</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">combined_complement_common_kernel_removed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -4870,6 +5486,7 @@
             <span class="s2">&quot;combined_bad_common_jump_kernel_dimension&quot;</span><span class="p">:</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">combined_bad_common_jump_kernel_dimension</span>
             <span class="p">),</span>
+            <span class="s2">&quot;selected_inflow_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_inflow_norm</span><span class="p">,</span>
             <span class="s2">&quot;combined_inflow_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_inflow_norm</span><span class="p">,</span>
             <span class="s2">&quot;combined_complement_common_kernel_removed&quot;</span><span class="p">:</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">combined_complement_common_kernel_removed</span>
@@ -6044,6 +6661,16 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
+    <span class="n">selected_inflow_norm</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inflow_basis</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_normalize_state_columns</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">inflow_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;states has incompatible Hilbert-space dimension.&quot;</span><span class="p">)</span>
+        <span class="n">selected_inflow_norm</span> <span class="o">=</span> <span class="n">_multi_jump_projected_inflow_norm</span><span class="p">(</span>
+            <span class="n">jumps</span><span class="o">=</span><span class="n">base_jump_tuple</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">),</span>
+            <span class="n">state_basis</span><span class="o">=</span><span class="n">inflow_basis</span><span class="p">,</span>
+        <span class="p">)</span>
+
     <span class="n">final_diagnostics</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">check_manifold_diagnostics</span> <span class="ow">and</span> <span class="n">hamiltonian</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">final_diagnostics</span> <span class="o">=</span> <span class="n">diagnose_dark_manifold</span><span class="p">(</span>
@@ -6071,6 +6698,7 @@
         <span class="n">jumps</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">),</span>
         <span class="n">steps</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">steps</span><span class="p">),</span>
         <span class="n">final_diagnostics</span><span class="o">=</span><span class="n">final_diagnostics</span><span class="p">,</span>
+        <span class="n">selected_inflow_norm</span><span class="o">=</span><span class="n">selected_inflow_norm</span><span class="p">,</span>
         <span class="n">kernel_tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">kernel_tolerance</span><span class="p">),</span>
         <span class="n">dark_tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">dark_tolerance</span><span class="p">),</span>
         <span class="n">inflow_tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">inflow_tolerance</span><span class="p">),</span>
@@ -6111,6 +6739,11 @@
     <span class="n">selection_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
         <span class="s2">&quot;diagnostics&quot;</span><span class="p">,</span> <span class="s2">&quot;kernel_projection&quot;</span><span class="p">,</span> <span class="s2">&quot;ranked_inflow&quot;</span>
     <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;diagnostics&quot;</span><span class="p">,</span>
+    <span class="n">compression_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;h_invariant&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">max_compression_passes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">collective_recycler_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;bundle_by_region_detector&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">collective_recycler_weighting</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="s2">&quot;inflow&quot;</span><span class="p">,</span> <span class="s2">&quot;normalized_inflow&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;unit&quot;</span><span class="p">,</span>
+    <span class="n">normalize_collective_recyclers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">check_final_diagnostics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecycledManifoldJumpSelectionReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Greedily select a small recycled-detector jump subset.</span>
@@ -6151,6 +6784,16 @@
     <span class="k">if</span> <span class="n">selection_strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;diagnostics&quot;</span><span class="p">,</span> <span class="s2">&quot;kernel_projection&quot;</span><span class="p">,</span> <span class="s2">&quot;ranked_inflow&quot;</span><span class="p">}:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s1">&#39;selection_strategy must be &quot;diagnostics&quot;, &quot;kernel_projection&quot;, or &#39;</span> <span class="s1">&#39;&quot;ranked_inflow&quot;.&#39;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">compression_strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;h_invariant&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;compression_strategy must be &quot;none&quot; or &quot;h_invariant&quot;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">collective_recycler_strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;bundle_by_region_detector&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;collective_recycler_strategy must be &quot;none&quot; or &quot;bundle_by_region_detector&quot;.&#39;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">collective_recycler_weighting</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="s2">&quot;inflow&quot;</span><span class="p">,</span> <span class="s2">&quot;normalized_inflow&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;collective_recycler_weighting must be &quot;unit&quot;, &quot;inflow&quot;, or &quot;normalized_inflow&quot;.&#39;</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">check_final_diagnostics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">check_final_diagnostics</span> <span class="o">=</span> <span class="n">selection_strategy</span> <span class="o">!=</span> <span class="s2">&quot;ranked_inflow&quot;</span>
@@ -6434,6 +7077,123 @@
             <span class="k">if</span> <span class="n">current_bad_dimension</span> <span class="o">&lt;=</span> <span class="n">target_bad_kernel_dimension</span><span class="p">:</span>
                 <span class="k">break</span>
 
+    <span class="n">n_compression_passes</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_compressed_jumps_removed</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">compression_strategy</span> <span class="o">==</span> <span class="s2">&quot;h_invariant&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics</span><span class="w"> </span><span class="kn">import</span> <span class="n">diagnose_common_kernel_h_invariant_sector</span>
+
+        <span class="n">current_h_report</span> <span class="o">=</span> <span class="n">diagnose_common_kernel_h_invariant_sector</span><span class="p">(</span>
+            <span class="n">hamiltonian</span><span class="o">=</span><span class="n">hamiltonian</span><span class="p">,</span>
+            <span class="n">jumps</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">),</span>
+            <span class="n">target_states</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+            <span class="n">kernel_tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_h_report</span><span class="o">.</span><span class="n">likely_attractive_by_h_invariant_kernel</span><span class="p">:</span>
+            <span class="n">max_passes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_compression_passes</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_pass_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_passes</span><span class="p">):</span>
+                <span class="n">removed_this_pass</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">n_compression_passes</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c1"># Try weak/inexpensive jumps first.  A successful removal keeps</span>
+                <span class="c1"># the physical H-invariant certificate true while reducing the</span>
+                <span class="c1"># number of implemented recyclers.</span>
+                <span class="n">order</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                    <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">)),</span>
+                    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">index</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="nb">float</span><span class="p">(</span><span class="n">selected_candidates</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">),</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">selected_candidates</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">jump_nnz</span><span class="p">),</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">selected_candidates</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">region_index</span><span class="p">),</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">selected_candidates</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">recycler_index</span><span class="p">),</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">remove_index</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">break</span>
+                    <span class="n">trial_jumps</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                        <span class="n">jump</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">jump</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">)</span> <span class="k">if</span> <span class="n">index</span> <span class="o">!=</span> <span class="n">remove_index</span>
+                    <span class="p">)</span>
+                    <span class="n">trial_report</span> <span class="o">=</span> <span class="n">diagnose_common_kernel_h_invariant_sector</span><span class="p">(</span>
+                        <span class="n">hamiltonian</span><span class="o">=</span><span class="n">hamiltonian</span><span class="p">,</span>
+                        <span class="n">jumps</span><span class="o">=</span><span class="n">trial_jumps</span><span class="p">,</span>
+                        <span class="n">target_states</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+                        <span class="n">kernel_tolerance</span><span class="o">=</span><span class="n">kernel_tolerance</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">trial_report</span><span class="o">.</span><span class="n">likely_attractive_by_h_invariant_kernel</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">selected_jumps</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">remove_index</span><span class="p">)</span>
+                    <span class="n">selected_candidates</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">remove_index</span><span class="p">)</span>
+                    <span class="n">selected_ids</span> <span class="o">=</span> <span class="p">{</span><span class="nb">id</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span> <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">selected_candidates</span><span class="p">}</span>
+                    <span class="n">current_h_report</span> <span class="o">=</span> <span class="n">trial_report</span>
+                    <span class="n">n_compressed_jumps_removed</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">removed_this_pass</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">removed_this_pass</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+            <span class="c1"># Keep the selected-candidate readouts aligned with the compressed</span>
+            <span class="c1"># jump list.  The per-step kernel metadata comes from the original</span>
+            <span class="c1"># selection trajectory, but the final diagnostics below is recomputed</span>
+            <span class="c1"># on the compressed list when requested.</span>
+            <span class="n">old_step_by_candidate_id</span> <span class="o">=</span> <span class="p">{</span><span class="nb">id</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">candidate</span><span class="p">):</span> <span class="n">step</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">}</span>
+            <span class="n">compressed_steps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RecycledManifoldJumpSelectionStep</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">cumulative_inflow_squared</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">max_target_jump_residual</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">selected_candidates</span><span class="p">:</span>
+                <span class="n">old_step</span> <span class="o">=</span> <span class="n">old_step_by_candidate_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">candidate</span><span class="p">))</span>
+                <span class="n">cumulative_inflow_squared</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="n">max_target_jump_residual</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                    <span class="n">max_target_jump_residual</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">dark_residual</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">compressed_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">RecycledManifoldJumpSelectionStep</span><span class="p">(</span>
+                        <span class="n">step_index</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">compressed_steps</span><span class="p">),</span>
+                        <span class="n">candidate</span><span class="o">=</span><span class="n">candidate</span><span class="p">,</span>
+                        <span class="n">bad_common_jump_kernel_dimension</span><span class="o">=</span><span class="p">(</span>
+                            <span class="n">current_bad_dimension</span>
+                            <span class="k">if</span> <span class="n">old_step</span> <span class="ow">is</span> <span class="kc">None</span>
+                            <span class="k">else</span> <span class="n">old_step</span><span class="o">.</span><span class="n">bad_common_jump_kernel_dimension</span>
+                        <span class="p">),</span>
+                        <span class="n">inflow_norm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">cumulative_inflow_squared</span><span class="p">)),</span>
+                        <span class="n">max_target_jump_residual</span><span class="o">=</span><span class="n">max_target_jump_residual</span><span class="p">,</span>
+                        <span class="n">n_selected_jumps</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">compressed_steps</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">steps</span> <span class="o">=</span> <span class="n">compressed_steps</span>
+
+    <span class="n">unbundled_n_jumps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">)</span>
+    <span class="n">unbundled_inflow_norm</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_multi_jump_projected_inflow_norm</span><span class="p">(</span>
+            <span class="n">jumps</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">),</span>
+            <span class="n">state_basis</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">selected_jumps</span>
+        <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="p">)</span>
+    <span class="n">collective_groups</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">RecycledManifoldCollectiveRecyclerGroup</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">if</span> <span class="n">selected_jumps</span> <span class="ow">and</span> <span class="n">collective_recycler_strategy</span> <span class="o">==</span> <span class="s2">&quot;bundle_by_region_detector&quot;</span><span class="p">:</span>
+        <span class="n">selected_jumps</span><span class="p">,</span> <span class="n">collective_groups</span> <span class="o">=</span> <span class="n">_bundle_recycled_jumps_by_region_detector</span><span class="p">(</span>
+            <span class="n">selected_candidates</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selected_candidates</span><span class="p">),</span>
+            <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">detector_matrices</span><span class="o">=</span><span class="n">detector_matrices</span><span class="p">,</span>
+            <span class="n">detector_coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">,</span>
+            <span class="n">embedding_contexts</span><span class="o">=</span><span class="n">embedding_contexts</span><span class="p">,</span>
+            <span class="n">rdms</span><span class="o">=</span><span class="n">rdms</span><span class="p">,</span>
+            <span class="n">state_basis</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+            <span class="n">recycler_source</span><span class="o">=</span><span class="n">recycler_source</span><span class="p">,</span>
+            <span class="n">weighting</span><span class="o">=</span><span class="n">collective_recycler_weighting</span><span class="p">,</span>
+            <span class="n">normalize_recyclers</span><span class="o">=</span><span class="n">normalize_collective_recyclers</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">final_diagnostics</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">selected_inflow_norm</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_multi_jump_projected_inflow_norm</span><span class="p">(</span>
+            <span class="n">jumps</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selected_jumps</span><span class="p">),</span>
+            <span class="n">state_basis</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">selected_jumps</span>
+        <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="p">)</span>
+
     <span class="k">if</span> <span class="n">selected_jumps</span> <span class="ow">and</span> <span class="n">check_final_diagnostics</span><span class="p">:</span>
         <span class="n">final_diagnostics</span> <span class="o">=</span> <span class="n">diagnose_dark_manifold</span><span class="p">(</span>
             <span class="n">hamiltonian</span><span class="o">=</span><span class="n">hamiltonian</span><span class="p">,</span>
@@ -6459,6 +7219,14 @@
         <span class="n">candidate_report</span><span class="o">=</span><span class="n">candidate_report</span><span class="p">,</span>
         <span class="n">candidate_report_was_expanded</span><span class="o">=</span><span class="n">candidate_report_was_expanded</span><span class="p">,</span>
         <span class="n">candidate_pool_was_limited</span><span class="o">=</span><span class="n">candidate_pool_was_limited</span><span class="p">,</span>
+        <span class="n">compression_strategy</span><span class="o">=</span><span class="n">compression_strategy</span><span class="p">,</span>
+        <span class="n">n_compression_passes</span><span class="o">=</span><span class="n">n_compression_passes</span><span class="p">,</span>
+        <span class="n">n_compressed_jumps_removed</span><span class="o">=</span><span class="n">n_compressed_jumps_removed</span><span class="p">,</span>
+        <span class="n">collective_recycler_strategy</span><span class="o">=</span><span class="n">collective_recycler_strategy</span><span class="p">,</span>
+        <span class="n">unbundled_n_jumps</span><span class="o">=</span><span class="n">unbundled_n_jumps</span><span class="p">,</span>
+        <span class="n">collective_groups</span><span class="o">=</span><span class="n">collective_groups</span><span class="p">,</span>
+        <span class="n">selected_inflow_norm</span><span class="o">=</span><span class="n">selected_inflow_norm</span><span class="p">,</span>
+        <span class="n">unbundled_inflow_norm</span><span class="o">=</span><span class="n">unbundled_inflow_norm</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
