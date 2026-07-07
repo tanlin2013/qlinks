@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from itertools import combinations
 from typing import Any, Literal
 
@@ -1684,6 +1685,73 @@ def _sparse_ipr_dark_detector_columns(
     return np.column_stack(unique).astype(np.complex128, copy=False)
 
 
+def _right_nullspace_from_constraint_matrix(
+    constraint_matrix: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> tuple[npt.NDArray[np.float64], float, int, npt.NDArray[np.complex128]]:
+    """Return singular values, cutoff, rank, and right nullspace.
+
+    The detector constraint matrix is usually tall in production cage runs:
+    ``(hilbert_dimension * manifold_dimension) x n_operators``.  Computing a
+    full/economy SVD of this tall matrix can dominate the dark-detector stage,
+    even though we only need the right nullspace in operator-coefficient space.
+    The Hermitian Gram matrix ``C^† C`` has size ``n_operators x n_operators``
+    and its eigenvectors are the right singular vectors of ``C``.  This path is
+    therefore substantially cheaper for ``coordinate_ipr`` and regional-unit
+    workflows with many basis states but modest local-operator families.
+    """
+    if constraint_matrix.ndim != 2:
+        raise ValueError("constraint_matrix must be two-dimensional.")
+    n_operators = int(constraint_matrix.shape[1])
+    if n_operators == 0:
+        return (
+            np.zeros(0, dtype=np.float64),
+            float(tolerance),
+            0,
+            np.zeros((0, 0), dtype=np.complex128),
+        )
+
+    gram = np.asarray(
+        constraint_matrix.conj().T @ constraint_matrix,
+        dtype=np.complex128,
+    )
+    # Symmetrize away tiny BLAS roundoff so eigh sees an exactly Hermitian input.
+    gram = 0.5 * (gram + gram.conj().T)
+    try:
+        eigenvalues, eigenvectors = np.linalg.eigh(gram)
+    except np.linalg.LinAlgError:
+        full_matrices = constraint_matrix.shape[0] < constraint_matrix.shape[1]
+        _, singular_values, vh = np.linalg.svd(
+            constraint_matrix,
+            full_matrices=full_matrices,
+        )
+        if singular_values.size == 0:
+            cutoff = float(tolerance)
+            rank = 0
+        else:
+            cutoff = float(tolerance * max(float(singular_values[0]), 1.0))
+            rank = int(np.count_nonzero(singular_values > cutoff))
+        return (
+            np.asarray(singular_values, dtype=np.float64),
+            cutoff,
+            rank,
+            vh.conj().T[:, rank:].astype(np.complex128, copy=False),
+        )
+
+    eigenvalues = np.maximum(np.asarray(eigenvalues, dtype=np.float64), 0.0)
+    singular_values_ascending = np.sqrt(eigenvalues)
+    singular_values = singular_values_ascending[::-1].copy()
+    if singular_values.size == 0:
+        cutoff = float(tolerance)
+    else:
+        cutoff = float(tolerance * max(float(singular_values[0]), 1.0))
+    dark_mask = singular_values_ascending <= cutoff
+    rank = int(n_operators - np.count_nonzero(dark_mask))
+    nullspace = np.asarray(eigenvectors[:, dark_mask], dtype=np.complex128)
+    return singular_values, cutoff, rank, nullspace
+
+
 def diagnose_manifold_dark_operator_basis(
     *,
     states: npt.ArrayLike,
@@ -1746,27 +1814,10 @@ def diagnose_manifold_dark_operator_basis(
     ]
     constraint_matrix = np.column_stack(action_columns).astype(np.complex128, copy=False)
 
-    # The constraint matrix is usually tall in production QDM runs:
-    # ``(hilbert_dimension * manifold_dimension) x n_operators``.  A full SVD
-    # would materialize the huge left-unitary matrix and can dominate or even
-    # time out before any jump selection starts.  We only need right singular
-    # vectors in operator-coefficient space, so the economy SVD is complete
-    # whenever rows >= columns.  Keep full_matrices=True only for genuinely
-    # underdetermined systems, where the economy Vh would omit the extra
-    # nullspace directions.
-    full_matrices = constraint_matrix.shape[0] < constraint_matrix.shape[1]
-    _, singular_values, vh = np.linalg.svd(
+    singular_values, cutoff, rank, nullspace = _right_nullspace_from_constraint_matrix(
         constraint_matrix,
-        full_matrices=full_matrices,
+        tolerance=float(tolerance),
     )
-    if singular_values.size == 0:
-        cutoff = float(tolerance)
-        rank = 0
-    else:
-        cutoff = float(tolerance * max(float(singular_values[0]), 1.0))
-        rank = int(np.count_nonzero(singular_values > cutoff))
-
-    nullspace = vh.conj().T[:, rank:]
     detector_nullity = int(nullspace.shape[1])
 
     if candidate_strategy not in {"svd_basis", "coordinate_ipr"}:
@@ -2459,6 +2510,102 @@ def expand_local_regions_to_pair_unions(
     return tuple(expanded)
 
 
+@lru_cache(maxsize=256)
+def _expand_normalized_local_regions_to_cluster_unions_cached(
+    base_regions: tuple[tuple[int, ...], ...],
+    *,
+    cluster_size: int,
+    cluster_mode: Literal["overlap_connected", "all"],
+    min_overlap: int,
+    max_region_size: int | None,
+    include_single_regions: bool,
+    include_smaller_clusters: bool,
+) -> tuple[tuple[int, ...], ...]:
+    expanded: list[tuple[int, ...]] = []
+    seen_regions: set[tuple[int, ...]] = set()
+
+    def maybe_add(region: tuple[int, ...]) -> None:
+        if max_region_size is not None and len(region) > max_region_size:
+            return
+        if region in seen_regions:
+            return
+        seen_regions.add(region)
+        expanded.append(region)
+
+    if include_single_regions:
+        for region in base_regions:
+            maybe_add(region)
+
+    region_sets = tuple(frozenset(region) for region in base_regions)
+    cluster_sizes = tuple(
+        range(2, cluster_size + 1) if include_smaller_clusters else (cluster_size,)
+    )
+
+    if cluster_mode == "all":
+        for size in cluster_sizes:
+            for indices in combinations(range(len(base_regions)), size):
+                union: set[int] = set()
+                for index in indices:
+                    union.update(base_regions[index])
+                maybe_add(tuple(sorted(union)))
+        return tuple(expanded)
+
+    # Optimized connected-cluster enumeration.  The previous implementation
+    # checked every k-combination and then tested overlap connectivity.  That is
+    # acceptable for small square/honeycomb runs, but model-regional-unit modes
+    # can have many plaquette/bond units.  Enumerating connected clusters by
+    # growing along the overlap graph avoids most disconnected combinations.
+    neighbors: tuple[tuple[int, ...], ...] = tuple(
+        tuple(
+            right_index
+            for right_index, right_set in enumerate(region_sets)
+            if right_index != left_index and len(left_set.intersection(right_set)) >= min_overlap
+        )
+        for left_index, left_set in enumerate(region_sets)
+    )
+    target_sizes = set(int(size) for size in cluster_sizes)
+    max_cluster_size = max(target_sizes, default=1)
+    seen_index_clusters: set[tuple[int, ...]] = set()
+
+    def grow(
+        *,
+        seed: int,
+        cluster: tuple[int, ...],
+        union: frozenset[int],
+    ) -> None:
+        if len(cluster) in target_sizes:
+            key = tuple(sorted(cluster))
+            if key not in seen_index_clusters:
+                seen_index_clusters.add(key)
+                maybe_add(tuple(sorted(union)))
+        if len(cluster) >= max_cluster_size:
+            return
+
+        cluster_set = set(cluster)
+        frontier = sorted(
+            {
+                neighbor
+                for index in cluster
+                for neighbor in neighbors[index]
+                if neighbor > seed and neighbor not in cluster_set
+            }
+        )
+        for neighbor in frontier:
+            new_union = frozenset(set(union).union(base_regions[neighbor]))
+            if max_region_size is not None and len(new_union) > max_region_size:
+                continue
+            grow(
+                seed=seed,
+                cluster=tuple(sorted(cluster + (neighbor,))),
+                union=new_union,
+            )
+
+    for seed in range(len(base_regions)):
+        grow(seed=seed, cluster=(seed,), union=frozenset(base_regions[seed]))
+
+    return tuple(expanded)
+
+
 def expand_local_regions_to_cluster_unions(
     local_regions: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | list[list[int]],
     *,
@@ -2477,21 +2624,11 @@ def expand_local_regions_to_cluster_unions(
     regions; this is the natural setting for connected multi-plaquette QDM
     patches.
 
-    Args:
-        local_regions: Base local regions, usually single-plaquette supports.
-        cluster_size: Number of base regions to union in the largest clusters.
-        cluster_mode: ``"overlap_connected"`` keeps clusters connected through
-            overlaps of at least ``min_overlap`` variables; ``"all"`` keeps all
-            unordered clusters.
-        min_overlap: Minimum overlap used to define adjacency for
-            ``cluster_mode="overlap_connected"``.
-        max_region_size: Optional upper bound on the size of the variable union.
-        include_single_regions: Whether to include the original base regions.
-        include_smaller_clusters: Whether to include all cluster sizes from two
-            through ``cluster_size`` instead of only the requested size.
-
-    Returns:
-        Deduplicated sorted variable-index unions.
+    The normalized expansion is cached and the connected mode grows clusters on
+    the overlap graph directly.  This makes repeated
+    ``local_region_mode="regional_unit_clusters"`` calls much cheaper in
+    notebook sweeps, especially when trying several detector/recycler settings
+    with the same model-natural plaquette or bond units.
     """
     if cluster_mode not in {"overlap_connected", "all"}:
         raise ValueError('cluster_mode must be "overlap_connected" or "all".')
@@ -2503,50 +2640,15 @@ def expand_local_regions_to_cluster_unions(
         raise ValueError("max_region_size must be positive when provided.")
 
     base_regions = _normalize_local_regions(local_regions)
-    expanded: list[tuple[int, ...]] = []
-    seen: set[tuple[int, ...]] = set()
-
-    def maybe_add(region: tuple[int, ...]) -> None:
-        if max_region_size is not None and len(region) > max_region_size:
-            return
-        if region in seen:
-            return
-        seen.add(region)
-        expanded.append(region)
-
-    if include_single_regions:
-        for region in base_regions:
-            maybe_add(region)
-
-    region_sets = [set(region) for region in base_regions]
-
-    def is_overlap_connected(indices: tuple[int, ...]) -> bool:
-        if len(indices) <= 1:
-            return True
-        remaining = set(indices[1:])
-        frontier = [indices[0]]
-        visited = {indices[0]}
-        while frontier:
-            left_index = frontier.pop()
-            left_set = region_sets[left_index]
-            for right_index in tuple(remaining):
-                overlap = len(left_set.intersection(region_sets[right_index]))
-                if overlap < min_overlap:
-                    continue
-                remaining.remove(right_index)
-                visited.add(right_index)
-                frontier.append(right_index)
-        return len(visited) == len(indices)
-
-    cluster_sizes = range(2, cluster_size + 1) if include_smaller_clusters else (cluster_size,)
-    for size in cluster_sizes:
-        for indices in combinations(range(len(base_regions)), size):
-            if cluster_mode == "overlap_connected" and not is_overlap_connected(indices):
-                continue
-            union: set[int] = set()
-            for index in indices:
-                union.update(base_regions[index])
-            maybe_add(tuple(sorted(union)))
+    expanded = _expand_normalized_local_regions_to_cluster_unions_cached(
+        base_regions,
+        cluster_size=int(cluster_size),
+        cluster_mode=cluster_mode,
+        min_overlap=int(min_overlap),
+        max_region_size=None if max_region_size is None else int(max_region_size),
+        include_single_regions=bool(include_single_regions),
+        include_smaller_clusters=bool(include_smaller_clusters),
+    )
 
     if len(expanded) == 0:
         raise ValueError(
@@ -2554,7 +2656,7 @@ def expand_local_regions_to_cluster_unions(
             "or max_region_size, reduce cluster_size, or pass include_single_regions=True."
         )
 
-    return tuple(expanded)
+    return expanded
 
 
 def _pattern_name(pattern: tuple[int, ...]) -> str:
