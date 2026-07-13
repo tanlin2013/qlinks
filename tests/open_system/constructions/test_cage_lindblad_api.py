@@ -192,6 +192,10 @@ def test_problem_infers_model_regional_units_and_uses_unit_cluster_mode():
     assert problem.local_regions == ((0,), (1,))
     assert problem.regional_units == ((0,), (1,))
     assert problem.construction.regional_unit_cluster_unions(
+        cluster_size=1,
+        cluster_mode="all",
+    ) == ((0,), (1,))
+    assert problem.construction.regional_unit_cluster_unions(
         cluster_size=2,
         cluster_mode="all",
     ) == ((0, 1),)
@@ -199,7 +203,7 @@ def test_problem_infers_model_regional_units_and_uses_unit_cluster_mode():
     workflow = problem.design_jumps(
         detector_operators=_detector_bundle(),
         local_region_mode="regional_unit_clusters",
-        cluster_size=2,
+        cluster_size=1,
         cluster_mode="all",
         recycled_recycler_source="matrix_units",
         targeted_operator_source="matrix_units",
@@ -210,8 +214,8 @@ def test_problem_infers_model_regional_units_and_uses_unit_cluster_mode():
 
     summary = workflow.to_summary_dict()
     assert summary["recycled_region_mode"] == "regional_unit_clusters"
-    assert summary["n_recycled_regions"] == 1
-    assert workflow.recycled_local_regions == ((0, 1),)
+    assert summary["n_recycled_regions"] == 2
+    assert workflow.recycled_local_regions == ((0,), (1,))
 
 
 def test_explicit_local_regions_can_keep_model_regional_units_separate():

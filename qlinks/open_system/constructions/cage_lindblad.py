@@ -1309,6 +1309,9 @@ class DegenerateCageLindbladConstruction:
         plaquette Hamiltonians, bonds for nearest-neighbor XY-like hopping
         models, and any custom units exposed by ``model.natural_region_units``.
         ``cluster_size`` counts these units, not individual variables.
+        ``cluster_size=1`` returns each model-natural unit directly; for QDM
+        this is still a plaquette/rhombus/hexagon-local object rather than an
+        onsite/link-local object.
         """
         return expand_local_regions_to_cluster_unions(
             self.regional_units,

@@ -2618,11 +2618,13 @@ def expand_local_regions_to_cluster_unions(
 ) -> tuple[tuple[int, ...], ...]:
     """Return bounded unions of multiple local regions.
 
-    This generalizes :func:`expand_local_regions_to_pair_unions` to three- or
-    four-region recycler/patch supports.  ``cluster_mode="overlap_connected"``
-    keeps only clusters that are connected in the overlap graph of the base
-    regions; this is the natural setting for connected multi-plaquette QDM
-    patches.
+    This generalizes :func:`expand_local_regions_to_pair_unions` to one or
+    more regional units.  ``cluster_size=1`` returns the normalized base
+    regions themselves, which is useful when each base region is already a
+    model-natural non-onsite unit such as a plaquette, rhombus, hexagon, or
+    bond.  ``cluster_mode="overlap_connected"`` keeps larger clusters that are
+    connected in the overlap graph of the base regions; this is the natural
+    setting for connected multi-plaquette QDM patches.
 
     The normalized expansion is cached and the connected mode grows clusters on
     the overlap graph directly.  This makes repeated
@@ -2632,8 +2634,8 @@ def expand_local_regions_to_cluster_unions(
     """
     if cluster_mode not in {"overlap_connected", "all"}:
         raise ValueError('cluster_mode must be "overlap_connected" or "all".')
-    if cluster_size < 2:
-        raise ValueError("cluster_size must be at least two.")
+    if cluster_size < 1:
+        raise ValueError("cluster_size must be at least one.")
     if min_overlap < 0:
         raise ValueError("min_overlap must be non-negative.")
     if max_region_size is not None and max_region_size <= 0:

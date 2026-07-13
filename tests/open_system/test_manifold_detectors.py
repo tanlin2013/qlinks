@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 import scipy.sparse as sp
 
 from qlinks.open_system import diagnose_manifold_dark_operator_basis
@@ -501,6 +502,37 @@ def test_expand_local_regions_to_cluster_unions_overlap_connected_and_all_modes(
     assert (0, 1) in with_smaller
     assert (0, 1, 2) in with_smaller
     assert (1, 2, 3) in with_smaller
+
+
+def test_expand_local_regions_to_cluster_unions_accepts_single_unit_clusters():
+    from qlinks.open_system import expand_local_regions_to_cluster_unions
+
+    regions = ((0, 1), (1, 2), (3, 4))
+
+    assert (
+        expand_local_regions_to_cluster_unions(
+            regions,
+            cluster_size=1,
+            cluster_mode="overlap_connected",
+        )
+        == regions
+    )
+
+    assert (
+        expand_local_regions_to_cluster_unions(
+            regions,
+            cluster_size=1,
+            cluster_mode="all",
+        )
+        == regions
+    )
+
+
+def test_expand_local_regions_to_cluster_unions_rejects_zero_cluster_size():
+    from qlinks.open_system import expand_local_regions_to_cluster_unions
+
+    with pytest.raises(ValueError, match="cluster_size must be at least one"):
+        expand_local_regions_to_cluster_unions(((0, 1),), cluster_size=0)
 
 
 def test_degenerate_construction_local_region_pair_unions():
