@@ -312,3 +312,56 @@ def test_public_export_function_matches_design_method(tmp_path):
     assert export.path.exists()
     assert not (export.path / "target_basis.npy").exists()
     assert (export.path / "manifest.json").exists()
+
+
+def test_cage_lindblad_design_computes_target_manifold_weights():
+    build_result = _two_bit_build_result()
+    target_states = np.asarray(
+        [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+        dtype=np.complex128,
+    )
+    problem = build_cage_lindblad_problem(
+        build_result=build_result,
+        target_states=target_states,
+        local_regions=((0, 1),),
+    )
+    design = problem.design_jumps(
+        detector_operators=_detector_bundle(),
+        local_region_mode="construction",
+        recycled_recycler_source="matrix_units",
+        max_recycled_selected_jumps=1,
+        design_mode="recycled_screening",
+        check_recycled_selection_diagnostics=False,
+    )
+
+    rho_target = np.diag([1.0, 0.0, 0.0, 0.0]).astype(np.complex128)
+    rho_bad = np.diag([0.0, 1.0, 0.0, 0.0]).astype(np.complex128)
+    rho_mixed = np.diag([0.25, 0.25, 0.25, 0.25]).astype(np.complex128)
+
+    weights = design.target_manifold_weight_series(
+        density_matrices=(rho_target, rho_bad, rho_mixed),
+    )
+    np.testing.assert_allclose(weights, [1.0, 0.0, 0.5])
+
+    evolution_result = SimpleNamespace(density_matrices=(rho_bad, rho_target))
+    np.testing.assert_allclose(
+        design.target_manifold_weight_series(evolution_result=evolution_result),
+        [0.0, 1.0],
+    )
+
+    snapshot = np.column_stack(
+        [
+            np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128),
+            np.asarray([0.0, 1.0, 0.0, 0.0], dtype=np.complex128),
+        ]
+    )
+    np.testing.assert_allclose(
+        design.target_manifold_weight_series(state_snapshots=(snapshot,)),
+        [0.5],
+    )
+
+    projector = design.target_manifold_projector
+    np.testing.assert_allclose(projector, np.diag([1.0, 0.0, 0.0, 1.0]))

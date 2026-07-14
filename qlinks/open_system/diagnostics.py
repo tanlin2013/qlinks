@@ -52,6 +52,200 @@ class EvolutionDiagnostics:
     state_norm_errors: np.ndarray | None = None
 
 
+def _orthonormal_target_basis(
+    target_states: npt.ArrayLike,
+    *,
+    dim: int | None = None,
+    tolerance: float = 1.0e-10,
+) -> np.ndarray:
+    """Return orthonormal target states as columns."""
+    matrix = np.asarray(target_states, dtype=np.complex128)
+
+    if matrix.ndim == 1:
+        if dim is not None and matrix.size != dim:
+            raise ValueError(f"target state has dimension {matrix.size}; expected {dim}.")
+        matrix = matrix.reshape(matrix.size, 1)
+    elif matrix.ndim == 2:
+        if dim is not None:
+            if matrix.shape[0] == dim:
+                pass
+            elif matrix.shape[1] == dim:
+                matrix = matrix.T
+            else:
+                raise ValueError(
+                    "target states must have shape (dim, n_states) or " "(n_states, dim)."
+                )
+        elif matrix.shape[0] < matrix.shape[1]:
+            # Common notebook convention for a small manifold is one state per row.
+            matrix = matrix.T
+    else:
+        raise ValueError("target states must be one- or two-dimensional.")
+
+    if matrix.shape[1] == 0:
+        raise ValueError("target_states must contain at least one state.")
+
+    q, r = np.linalg.qr(matrix)
+    diagonal = np.abs(np.diag(r))
+    rank = int(np.count_nonzero(diagonal > tolerance))
+    if rank == 0:
+        raise ValueError("target_states have numerical rank zero.")
+
+    return np.asarray(q[:, :rank], dtype=np.complex128)
+
+
+def target_manifold_projector(
+    target_states: npt.ArrayLike,
+    *,
+    tolerance: float = 1.0e-10,
+) -> np.ndarray:
+    """Return the projector onto a target manifold.
+
+    ``target_states`` may be one target vector, a ``(dim, n_states)`` matrix, or
+    an ``(n_states, dim)`` matrix.  The columns/rows are orthonormalized before
+    building the projector, so linearly dependent target vectors are harmless.
+    """
+    target_basis = _orthonormal_target_basis(target_states, tolerance=tolerance)
+    return target_basis @ target_basis.conj().T
+
+
+def target_manifold_weight(
+    density_matrix: npt.ArrayLike,
+    *,
+    target_states: npt.ArrayLike | None = None,
+    target_basis: npt.ArrayLike | None = None,
+    projector: npt.ArrayLike | None = None,
+    tolerance: float = 1.0e-10,
+) -> float:
+    """Return ``Tr(P_target rho)`` for one density matrix.
+
+    Pass either ``target_states``/``target_basis`` or an explicit ``projector``.
+    When a target basis is supplied, the computation uses
+    ``Tr(Q^dagger rho Q)`` and avoids materializing the full projector.
+    """
+    rho = np.asarray(density_matrix, dtype=np.complex128)
+    if rho.ndim != 2 or rho.shape[0] != rho.shape[1]:
+        raise ValueError("density_matrix must be square.")
+
+    n_target_specs = sum(spec is not None for spec in (target_states, target_basis, projector))
+    if n_target_specs != 1:
+        raise ValueError("Pass exactly one of target_states, target_basis, or projector.")
+
+    if projector is not None:
+        p_target = np.asarray(projector, dtype=np.complex128)
+        if p_target.shape != rho.shape:
+            raise ValueError("projector must have the same shape as density_matrix.")
+        value = np.trace(p_target @ rho)
+        return float(np.real_if_close(value).real)
+
+    raw_basis = target_basis if target_basis is not None else target_states
+    q = _orthonormal_target_basis(raw_basis, dim=rho.shape[0], tolerance=tolerance)
+    value = np.trace(q.conj().T @ rho @ q)
+    return float(np.real_if_close(value).real)
+
+
+def target_manifold_weight_series(
+    *,
+    density_matrices: Sequence[npt.ArrayLike] | None = None,
+    evolution_result: Any | None = None,
+    ensemble_result: Any | None = None,
+    state_snapshots: Sequence[npt.ArrayLike] | None = None,
+    target_states: npt.ArrayLike | None = None,
+    target_basis: npt.ArrayLike | None = None,
+    projector: npt.ArrayLike | None = None,
+    tolerance: float = 1.0e-10,
+) -> np.ndarray:
+    """Return ``Tr(P_target rho(t))`` for evolution or MCWF output.
+
+    Exactly one data source must be supplied: ``density_matrices``, a
+    ``LindbladEvolutionResult`` via ``evolution_result``, an ``EnsembleResult``
+    via ``ensemble_result``, or MCWF ``state_snapshots``.  For state snapshots,
+    each snapshot is expected to be a ``(dim, n_trajectories)`` state matrix and
+    the returned weight is the trajectory average of ``<psi|P_target|psi>``.
+    """
+    sources = (density_matrices, evolution_result, ensemble_result, state_snapshots)
+    if sum(source is not None for source in sources) != 1:
+        raise ValueError(
+            "Pass exactly one of density_matrices, evolution_result, "
+            "ensemble_result, or state_snapshots."
+        )
+
+    resolved_density_matrices = density_matrices
+    resolved_state_snapshots = state_snapshots
+
+    if evolution_result is not None:
+        resolved_density_matrices = getattr(evolution_result, "density_matrices", None)
+        if resolved_density_matrices is None:
+            raise ValueError("evolution_result does not contain density_matrices.")
+
+    if ensemble_result is not None:
+        rho_t = tuple(getattr(ensemble_result, "rho_t", ()) or ())
+        if rho_t:
+            resolved_density_matrices = rho_t
+        else:
+            snapshots = getattr(ensemble_result, "state_snapshots", None)
+            if snapshots is None:
+                raise ValueError(
+                    "ensemble_result must contain rho_t or state_snapshots for "
+                    "target-manifold weights."
+                )
+            resolved_state_snapshots = tuple(snapshots)
+
+    n_target_specs = sum(spec is not None for spec in (target_states, target_basis, projector))
+    if n_target_specs != 1:
+        raise ValueError("Pass exactly one of target_states, target_basis, or projector.")
+
+    if resolved_density_matrices is not None:
+        return np.asarray(
+            [
+                target_manifold_weight(
+                    density_matrix,
+                    target_states=target_states,
+                    target_basis=target_basis,
+                    projector=projector,
+                    tolerance=tolerance,
+                )
+                for density_matrix in resolved_density_matrices
+            ],
+            dtype=np.float64,
+        )
+
+    assert resolved_state_snapshots is not None
+    snapshot_tuple = tuple(resolved_state_snapshots)
+    if len(snapshot_tuple) == 0:
+        raise ValueError("state_snapshots must be non-empty.")
+
+    first_snapshot = np.asarray(snapshot_tuple[0], dtype=np.complex128)
+    if first_snapshot.ndim != 2:
+        raise ValueError("state snapshots must be 2D state matrices.")
+
+    if projector is not None:
+        p_target = np.asarray(projector, dtype=np.complex128)
+        if p_target.shape != (first_snapshot.shape[0], first_snapshot.shape[0]):
+            raise ValueError("projector has incompatible shape for state_snapshots.")
+        weights = []
+        for snapshot in snapshot_tuple:
+            states = np.asarray(snapshot, dtype=np.complex128)
+            values = np.einsum("ij,ij->j", states.conj(), p_target @ states)
+            weights.append(float(np.real(np.mean(values))))
+        return np.asarray(weights, dtype=np.float64)
+
+    raw_basis = target_basis if target_basis is not None else target_states
+    q = _orthonormal_target_basis(
+        raw_basis,
+        dim=first_snapshot.shape[0],
+        tolerance=tolerance,
+    )
+    weights = []
+    for snapshot in snapshot_tuple:
+        states = np.asarray(snapshot, dtype=np.complex128)
+        if states.ndim != 2 or states.shape[0] != q.shape[0]:
+            raise ValueError("state snapshot has incompatible shape.")
+        overlaps = q.conj().T @ states
+        values = np.sum(np.abs(overlaps) ** 2, axis=0)
+        weights.append(float(np.real(np.mean(values))))
+    return np.asarray(weights, dtype=np.float64)
+
+
 @dataclass(frozen=True, slots=True)
 class JumpSpanDiagnostics:
     """Hilbert-Schmidt span diagnostics for a Lindblad jump list."""

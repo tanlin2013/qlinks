@@ -23,6 +23,8 @@ from qlinks.open_system.diagnostics import (
     bad_h_invariant_common_kernel_basis,
     diagnose_common_kernel_h_invariant_sector,
     diagnose_dark_manifold,
+    target_manifold_projector,
+    target_manifold_weight_series,
 )
 from qlinks.open_system.local_recycling import (
     LocalRecyclingBuildResult,
@@ -2502,6 +2504,24 @@ class CageLindbladDesignProblem:
         return self.construction.target_density_matrix
 
     @property
+    def target_manifold_projector(self) -> NDArray[np.complex128]:
+        """Projector onto the target dark/cage manifold."""
+        return target_manifold_projector(self.manifold_basis)
+
+    def target_manifold_weight_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return ``Tr(P_target rho(t))`` for solver or MCWF output.
+
+        The method forwards data-source keywords such as ``evolution_result``,
+        ``density_matrices``, ``ensemble_result``, or ``state_snapshots`` to
+        :func:`qlinks.open_system.diagnostics.target_manifold_weight_series`
+        and automatically supplies this problem's target basis.
+        """
+        return target_manifold_weight_series(
+            target_basis=self.manifold_basis,
+            **kwargs,
+        )
+
+    @property
     def hilbert_dimension(self) -> int:
         return self.construction.hilbert_dimension
 
@@ -2724,6 +2744,42 @@ class CageLindbladDesignResult:
     def solver_problem(self) -> LindbladProblem:
         """Alias for ``lindblad_problem`` used by some solver-oriented notebooks."""
         return self.lindblad_problem
+
+    @property
+    def target_manifold_projector(self) -> NDArray[np.complex128]:
+        """Projector onto this design's target dark/cage manifold."""
+        return self.problem.target_manifold_projector
+
+    def target_manifold_weight_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return ``Tr(P_target rho(t))`` for evolution or MCWF output.
+
+        Examples:
+            ``design.target_manifold_weight_series(evolution_result=result)``
+            for Lindblad density-matrix solvers, or
+            ``design.target_manifold_weight_series(ensemble_result=mcwf)`` for
+            MCWF results containing ``rho_t`` or ``state_snapshots``.
+        """
+        return self.problem.target_manifold_weight_series(**kwargs)
+
+    def evolve_with_target_weight(
+        self,
+        density_matrix_initial: Any,
+        times: NDArray[np.float64],
+        *,
+        options: Any | None = None,
+    ) -> tuple[Any, NDArray[np.float64]]:
+        """Evolve this Lindblad problem and return target-manifold weights.
+
+        This is a convenience wrapper around ``self.lindblad_problem.evolve``
+        followed by ``Tr(P_target rho(t))``.
+        """
+        result = self.lindblad_problem.evolve(
+            density_matrix_initial,
+            times,
+            options=options,
+        )
+        weights = self.target_manifold_weight_series(evolution_result=result)
+        return result, weights
 
     def to_lindblad_problem(self) -> LindbladProblem:
         """Return the already packaged solver problem."""
