@@ -4539,7 +4539,11 @@ class LocalBasisGridVisualizer:
     collapse_duplicate_visual_links: bool = True
     coordinate_scale: float = 1.0
     coordinate_transform: npt.ArrayLike | None = None
-    site_label_style: SiteLabelStyle = "cell_sublattice"
+    # Use the same compact sublattice-first convention commonly used for
+    # honeycomb full-basis plots, e.g. ``A(0, 0)`` rather than ``(0, 0), A``.
+    # Single-sublattice lattices are unaffected because the base formatter
+    # omits the sublattice label when there is only one basis offset.
+    site_label_style: SiteLabelStyle = "sublattice_cell"
 
     def _single_visualizer(self) -> BasisConfigurationVisualizer:
         return BasisConfigurationVisualizer(
@@ -5857,7 +5861,7 @@ def plot_local_basis_grid(
     collapse_duplicate_visual_links: bool = True,
     coordinate_scale: float = 1.0,
     coordinate_transform: npt.ArrayLike | None = None,
-    site_label_style: SiteLabelStyle = "cell_sublattice",
+    site_label_style: SiteLabelStyle = "sublattice_cell",
     style: LinkVisualStyle | None = None,
     shadow_style: LocalBasisShadowStyle | None = None,
     figsize: tuple[float, float] | None = None,
@@ -5936,7 +5940,7 @@ def plot_local_structure_readout(
     collapse_duplicate_visual_links: bool = True,
     coordinate_scale: float = 1.0,
     coordinate_transform: npt.ArrayLike | None = None,
-    site_label_style: SiteLabelStyle = "cell_sublattice",
+    site_label_style: SiteLabelStyle = "sublattice_cell",
     style: LinkVisualStyle | None = None,
     shadow_style: LocalBasisShadowStyle | None = None,
     figsize: tuple[float, float] | None = None,
@@ -5997,7 +6001,7 @@ def plot_local_structure_report(
     collapse_duplicate_visual_links: bool = True,
     coordinate_scale: float = 1.0,
     coordinate_transform: npt.ArrayLike | None = None,
-    site_label_style: SiteLabelStyle = "cell_sublattice",
+    site_label_style: SiteLabelStyle = "sublattice_cell",
     style: LinkVisualStyle | None = None,
     shadow_style: LocalBasisShadowStyle | None = None,
     figsize: tuple[float, float] | None = None,

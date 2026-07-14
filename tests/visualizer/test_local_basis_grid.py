@@ -7,7 +7,7 @@ import pytest
 from matplotlib.collections import LineCollection
 
 import qlinks.visualizer as visualizer_api
-from qlinks.lattice import SquareLattice
+from qlinks.lattice import HoneycombLattice, SquareLattice
 from qlinks.variables import LocalSpace, VariableLayout
 from qlinks.visualizer import (
     LocalBasisGridVisualizer,
@@ -60,6 +60,58 @@ class DummyLocalStructureReadoutReport:
 @dataclass(frozen=True)
 class DummyCageLocalStructureReport:
     readout_reports: tuple[DummyLocalStructureReadoutReport, ...]
+
+
+def test_local_basis_grid_honeycomb_uses_sublattice_first_site_labels() -> None:
+    lattice = HoneycombLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    reference = np.zeros(layout.n_variables, dtype=np.int64)
+
+    visualizer = LocalBasisGridVisualizer(lattice=lattice, layout=layout)
+
+    fig, _ = visualizer.plot(
+        np.array([[1]], dtype=np.int64),
+        variable_indices=(0,),
+        reference_config=reference,
+        mode="dimers",
+        show=False,
+        single_plot_kwargs={"with_site_labels": True},
+    )
+
+    labels = {text.get_text() for ax in fig.axes for text in ax.texts}
+
+    assert "A(0, 0)" in labels
+    assert "B(0, 0)" in labels
+    assert "(0, 0)A" not in labels
+    assert "(0, 0), A" not in labels
+
+    plt.close(fig)
+
+
+def test_plot_local_basis_grid_honeycomb_uses_sublattice_first_site_labels() -> None:
+    lattice = HoneycombLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    reference = np.zeros(layout.n_variables, dtype=np.int64)
+
+    fig, _ = plot_local_basis_grid(
+        lattice=lattice,
+        layout=layout,
+        local_patterns=np.array([[1]], dtype=np.int64),
+        variable_indices=(0,),
+        reference_config=reference,
+        mode="dimers",
+        show=False,
+        single_plot_kwargs={"with_site_labels": True},
+    )
+
+    labels = {text.get_text() for ax in fig.axes for text in ax.texts}
+
+    assert "A(0, 0)" in labels
+    assert "B(0, 0)" in labels
+    assert "(0, 0)A" not in labels
+    assert "(0, 0), A" not in labels
+
+    plt.close(fig)
 
 
 def test_plot_local_basis_grid_shadows_links_outside_support() -> None:
