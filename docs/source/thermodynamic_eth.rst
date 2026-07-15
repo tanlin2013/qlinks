@@ -205,10 +205,33 @@ All nonempty sectors can be counted without constructing the global basis::
    )
 
 For the square ``4x4`` QDM, this reproduces the known decomposition, including
-``counts[(0, 0)] = 132`` after indexing by ``sector.label``.  Sector-resolved
-periodic contractions currently use charge-resolved dynamic programming and
-are limited to ``Ly <= 9``.  The local insertion must not cross the canonical x
-seam; choose ``insertion_x`` explicitly when necessary.
+``counts[(0, 0)] = 132`` after indexing by ``sector.label``.
+
+Two winding-projection backends are available.  The charge-resolved dynamic
+program is the small-width reference implementation.  The Fourier backend
+introduces a phase for every positive y-winding charge, evaluates the twisted
+transfer product at roots of unity, and extracts the requested coefficient by
+a discrete Fourier transform::
+
+   w00_fourier = transfer.evaluate_witness(
+       placement,
+       length=reference_model.lx,
+       boundary_x="periodic",
+       winding_sector=(0, 0),
+       winding_projection="fourier",
+   )
+
+``winding_projection="auto"`` uses dynamic programming for at most 512
+boundary states and Fourier projection beyond that point.  Exact projection
+uses ``length + 1`` roots of unity by default.  A smaller ``fourier_points``
+value gives an explicitly labelled aliased approximation, useful for exploratory
+long-strip scans.  The metadata fields ``exact_fourier_projection`` and
+``aliased_fourier_projection`` distinguish these cases.
+
+The dense Fourier backend supports at most 1024 states in one x-winding block,
+which reaches the central sector through ``Ly=12``.  Unlike the dynamic program,
+it also permits a local insertion that crosses the canonical x seam.  The
+current Fourier implementation assumes even ``Lx`` and ``Ly``.
 
 Evaluate a common cage witness family
 -------------------------------------

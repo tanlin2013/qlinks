@@ -225,6 +225,7 @@ from qlinks.caging.strip_transfer import (
     SquareQDMWitnessFamilyStripRecord,
     SquareQDMWitnessFamilyStripReport,
     SquareQDMWitnessPlacement,
+    WindingProjectionMethod,
     evaluate_square_qdm_witness_family_on_strips,
 )
 from qlinks.caging.support import (
@@ -384,6 +385,7 @@ __all__ = [
     "SupportSizeFilter",
     "UniformSelfLoopFilter",
     "VertexSignature",
+    "WindingProjectionMethod",
     "ZeroInternalKineticFilter",
     "analyze_local_rdm_structure",
     "as_dense_array",

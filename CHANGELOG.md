@@ -17,4 +17,5 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Add Fourier-projected square-QDM winding-sector strip contractions for local ETH witnesses.
 - Initial API stable release.

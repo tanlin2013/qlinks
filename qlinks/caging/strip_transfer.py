@@ -21,6 +21,7 @@ from qlinks.variables import VariableKind
 SquareQDMLinkKind = Literal["x", "y"]
 StripBoundaryCondition = Literal["open", "periodic"]
 SquareQDMWindingConvention = Literal["electric"]
+WindingProjectionMethod = Literal["auto", "dynamic_programming", "fourier"]
 
 
 def _bit(mask: int, index: int) -> int:
@@ -424,6 +425,7 @@ class SquareQDMStripTransferMatrix:
         init=False,
         repr=False,
     )
+    _transfer_scale: float | None = field(init=False, repr=False, default=None)
 
     def __post_init__(self) -> None:
         if self.circumference < 2:
@@ -661,6 +663,8 @@ class SquareQDMStripTransferMatrix:
         boundary_x: StripBoundaryCondition = "open",
         insertion_x: int | None = None,
         winding_sector: SquareQDMStripWindingSector | tuple[int, int] | None = None,
+        winding_projection: WindingProjectionMethod = "auto",
+        fourier_points: int | None = None,
     ) -> SquareQDMStripWitnessEvaluation:
         """Evaluate ``Tr(Q_R)/dim(H)`` without enumerating dimer coverings."""
         self._validate_placement(placement)
@@ -685,11 +689,20 @@ class SquareQDMStripTransferMatrix:
 
         if sector is not None:
             periodic_insertion_x = 0 if insertion_x is None else int(insertion_x)
-            return self._evaluate_periodic_sector(
+            projection = self._resolve_winding_projection_method(winding_projection)
+            if projection == "dynamic_programming":
+                return self._evaluate_periodic_sector(
+                    placement,
+                    length=length,
+                    insertion_x=periodic_insertion_x,
+                    winding_sector=sector,
+                )
+            return self._evaluate_periodic_sector_fourier(
                 placement,
                 length=length,
                 insertion_x=periodic_insertion_x,
                 winding_sector=sector,
+                fourier_points=fourier_points,
             )
 
         if insertion_x is not None:
@@ -713,10 +726,13 @@ class SquareQDMStripTransferMatrix:
         centered: bool = True,
         winding_sector: SquareQDMStripWindingSector | tuple[int, int] | None = None,
         periodic_insertion_x: int = 0,
+        winding_projection: WindingProjectionMethod = "auto",
+        fourier_points: int | None = None,
     ) -> SquareQDMStripScalingReport:
         """Evaluate a fixed witness over several strip lengths."""
         self._validate_placement(placement)
         sector = _normalize_square_qdm_strip_winding_sector(winding_sector)
+        projection = self._resolve_winding_projection_method(winding_projection)
         if boundary_x not in ("open", "periodic"):
             raise ValueError("boundary_x must be 'open' or 'periodic'.")
         if sector is not None and boundary_x != "periodic":
@@ -742,12 +758,20 @@ class SquareQDMStripTransferMatrix:
                         length=length,
                         spectrum=periodic_spectrum,
                     )
-                else:
+                elif projection == "dynamic_programming":
                     evaluation = self._evaluate_periodic_sector(
                         placement,
                         length=length,
                         insertion_x=int(periodic_insertion_x),
                         winding_sector=sector,
+                    )
+                else:
+                    evaluation = self._evaluate_periodic_sector_fourier(
+                        placement,
+                        length=length,
+                        insertion_x=int(periodic_insertion_x),
+                        winding_sector=sector,
+                        fourier_points=fourier_points,
                     )
             else:
                 assert insertion is not None
@@ -769,14 +793,22 @@ class SquareQDMStripTransferMatrix:
         self,
         *,
         length: int,
+        winding_projection: WindingProjectionMethod = "auto",
+        fourier_points: int | None = None,
     ) -> dict[SquareQDMStripWindingSector, float]:
         """Count periodic dimer coverings in every electric winding sector."""
         if length <= 0:
             raise ValueError("length must be positive.")
+        projection = self._resolve_winding_projection_method(winding_projection)
+        if projection == "fourier":
+            return self._periodic_winding_sector_counts_fourier(
+                length=length,
+                fourier_points=fourier_points,
+            )
         if self.n_boundary_states > 512:
             raise ValueError(
-                "winding-resolved periodic contraction is currently limited to at most "
-                "512 boundary states (Ly <= 9)."
+                "dynamic-programming winding resolution is limited to at most "
+                "512 boundary states (Ly <= 9); use winding_projection='fourier'."
             )
 
         factors = tuple(
@@ -989,6 +1021,287 @@ class SquareQDMStripTransferMatrix:
             },
         )
 
+    def _resolve_winding_projection_method(
+        self,
+        method: WindingProjectionMethod,
+    ) -> Literal["dynamic_programming", "fourier"]:
+        if method not in ("auto", "dynamic_programming", "fourier"):
+            raise ValueError(
+                "winding_projection must be 'auto', 'dynamic_programming', or 'fourier'."
+            )
+        if method == "auto":
+            return "dynamic_programming" if self.n_boundary_states <= 512 else "fourier"
+        return method
+
+    def _evaluate_periodic_sector_fourier(
+        self,
+        placement: SquareQDMWitnessPlacement,
+        *,
+        length: int,
+        insertion_x: int,
+        winding_sector: SquareQDMStripWindingSector,
+        fourier_points: int | None,
+    ) -> SquareQDMStripWitnessEvaluation:
+        self._validate_fourier_winding_problem(length=length)
+        transfer_scale = self._fourier_transfer_scale()
+        points = _normalize_fourier_points(length=length, fourier_points=fourier_points)
+        target_degree = _winding_y_to_positive_charge_count(
+            winding_sector.winding_y,
+            length=length,
+        )
+        if target_degree is None:
+            raise ValueError("the requested periodic winding sector has no dimer coverings.")
+
+        groups = self._boundary_states_grouped_by_winding_x(length=length)
+        boundary_states = groups.get(winding_sector.winding_x, ())
+        if not boundary_states:
+            raise ValueError(
+                "the requested winding_x sector has no compatible transfer boundary states."
+            )
+        self._validate_fourier_sector_size(groups, winding_sector.winding_x)
+
+        insertion_x_mod = int(insertion_x) % length
+        regular_blocks: dict[tuple[int, int], dict[int, npt.NDArray[np.complex128]]] = {}
+
+        def regular_charge_blocks(
+            *,
+            column_parity: int,
+            source_sector: int,
+        ) -> dict[int, npt.NDArray[np.complex128]]:
+            key = (int(column_parity) % 2, int(source_sector))
+            cached = regular_blocks.get(key)
+            if cached is not None:
+                return cached
+            source_states = groups.get(int(source_sector), ())
+            target_states = groups.get(-int(source_sector), ())
+            if not source_states or not target_states:
+                raise ValueError("the requested winding_x sector has no transfer path.")
+            blocks: dict[int, npt.NDArray[np.complex128]] = {}
+            for charge, matrix in self._electric_y_transfer_by_parity[key[0]].items():
+                degree = (int(charge) + 1) // 2
+                blocks[degree] = (
+                    matrix[np.ix_(source_states, target_states)].toarray().astype(np.complex128)
+                    / transfer_scale
+                )
+            regular_blocks[key] = blocks
+            return blocks
+
+        start_sector = (
+            winding_sector.winding_x if insertion_x_mod % 2 == 0 else -winding_sector.winding_x
+        )
+        insertion_end_sector = start_sector if placement.window_width % 2 == 0 else -start_sector
+        insertion_source_states = groups.get(start_sector, ())
+        insertion_target_states = groups.get(insertion_end_sector, ())
+        if not insertion_source_states or not insertion_target_states:
+            raise ValueError("the witness insertion is incompatible with the winding_x sector.")
+
+        insertion_by_charge = self.witness_insertion_matrices_by_winding_y(
+            placement,
+            insertion_x=insertion_x_mod,
+        )
+        insertion_blocks: dict[int, npt.NDArray[np.complex128]] = {}
+        insertion_scale = transfer_scale**placement.window_width
+        for charge, matrix in insertion_by_charge.items():
+            shifted = int(charge) + placement.window_width
+            if shifted % 2 != 0:
+                raise ValueError("witness insertion carries an invalid winding-charge parity.")
+            degree = shifted // 2
+            insertion_blocks[degree] = (
+                matrix[np.ix_(insertion_source_states, insertion_target_states)]
+                .toarray()
+                .astype(np.complex128)
+                / insertion_scale
+            )
+
+        denominator_samples = np.empty(points, dtype=np.complex128)
+        numerator_samples = np.empty(points, dtype=np.complex128)
+        for phase_index in range(points):
+            root = np.exp(2.0j * np.pi * phase_index / points)
+            denominator_matrix = _twisted_regular_segment_matrix(
+                start_column=0,
+                steps=length,
+                start_sector=winding_sector.winding_x,
+                root=root,
+                regular_charge_blocks=regular_charge_blocks,
+            )
+            denominator_samples[phase_index] = np.trace(denominator_matrix)
+
+            insertion_matrix = _evaluate_twisted_blocks(insertion_blocks, root=root)
+            environment_matrix = _twisted_regular_segment_matrix(
+                start_column=insertion_x_mod + placement.window_width,
+                steps=length - placement.window_width,
+                start_sector=insertion_end_sector,
+                root=root,
+                regular_charge_blocks=regular_charge_blocks,
+            )
+            numerator_samples[phase_index] = np.trace(insertion_matrix @ environment_matrix)
+
+        partition_scaled = _fourier_project_coefficient(
+            denominator_samples,
+            target_degree=target_degree,
+        )
+        if partition_scaled <= 0.0:
+            raise ValueError("the requested periodic winding sector has no dimer coverings.")
+        weighted_scaled = _fourier_project_coefficient(
+            numerator_samples,
+            target_degree=target_degree,
+        )
+
+        common_log_scale = length * log(transfer_scale)
+        log_partition_count = common_log_scale + log(partition_scaled)
+        log_weighted_count = (
+            float("-inf") if weighted_scaled <= 0.0 else common_log_scale + log(weighted_scaled)
+        )
+        expectation = float(weighted_scaled / partition_scaled)
+        exact_projection = points >= length + 1
+        return SquareQDMStripWitnessEvaluation(
+            circumference=self.circumference,
+            length=length,
+            boundary_x="periodic",
+            insertion_x=insertion_x_mod,
+            window_width=placement.window_width,
+            expectation=expectation,
+            log_partition_count=log_partition_count,
+            log_weighted_count=log_weighted_count,
+            partition_count=_safe_exp(log_partition_count),
+            weighted_count=_safe_exp(log_weighted_count),
+            winding_sector=winding_sector,
+            metadata={
+                "contraction": "electric_winding_fourier_projected_dense_transfer",
+                "fourier_points": points,
+                "exact_fourier_projection": exact_projection,
+                "aliased_fourier_projection": not exact_projection,
+                "n_x_boundary_states": len(boundary_states),
+                "transfer_scale": transfer_scale,
+                "insertion_crosses_canonical_seam": (
+                    insertion_x_mod + placement.window_width > length
+                ),
+            },
+        )
+
+    def _periodic_winding_sector_counts_fourier(
+        self,
+        *,
+        length: int,
+        fourier_points: int | None,
+    ) -> dict[SquareQDMStripWindingSector, float]:
+        self._validate_fourier_winding_problem(length=length)
+        transfer_scale = self._fourier_transfer_scale()
+        points = _normalize_fourier_points(length=length, fourier_points=fourier_points)
+        if points < length + 1:
+            raise ValueError(
+                "periodic_winding_sector_counts requires at least length + 1 Fourier points "
+                "so that all winding_y sectors are resolved without aliasing."
+            )
+
+        groups = self._boundary_states_grouped_by_winding_x(length=length)
+        result: dict[SquareQDMStripWindingSector, float] = {}
+        for winding_x, _boundary_states in groups.items():
+            self._validate_fourier_sector_size(groups, winding_x)
+            regular_blocks: dict[
+                tuple[int, int],
+                dict[int, npt.NDArray[np.complex128]],
+            ] = {}
+
+            def regular_charge_blocks(
+                *,
+                column_parity: int,
+                source_sector: int,
+                cache: dict[
+                    tuple[int, int],
+                    dict[int, npt.NDArray[np.complex128]],
+                ] = regular_blocks,
+            ) -> dict[int, npt.NDArray[np.complex128]]:
+                key = (int(column_parity) % 2, int(source_sector))
+                cached = cache.get(key)
+                if cached is not None:
+                    return cached
+                source_states = groups.get(int(source_sector), ())
+                target_states = groups.get(-int(source_sector), ())
+                blocks = {
+                    (int(charge) + 1)
+                    // 2: (
+                        matrix[np.ix_(source_states, target_states)].toarray().astype(np.complex128)
+                        / transfer_scale
+                    )
+                    for charge, matrix in self._electric_y_transfer_by_parity[key[0]].items()
+                }
+                cache[key] = blocks
+                return blocks
+
+            samples = np.empty(points, dtype=np.complex128)
+            for phase_index in range(points):
+                root = np.exp(2.0j * np.pi * phase_index / points)
+                matrix = _twisted_regular_segment_matrix(
+                    start_column=0,
+                    steps=length,
+                    start_sector=winding_x,
+                    root=root,
+                    regular_charge_blocks=regular_charge_blocks,
+                )
+                samples[phase_index] = np.trace(matrix)
+
+            coefficients = np.fft.fft(samples) / points
+            for positive_charge_count in range(length + 1):
+                scaled_count = _nonnegative_real_fourier_value(
+                    coefficients[positive_charge_count],
+                    reference_scale=float(np.max(np.abs(coefficients))),
+                )
+                if scaled_count <= 0.0:
+                    continue
+                winding_y = 2 * positive_charge_count - length
+                log_count = length * log(transfer_scale) + log(scaled_count)
+                result[
+                    SquareQDMStripWindingSector(
+                        winding_x=winding_x,
+                        winding_y=winding_y,
+                    )
+                ] = _safe_exp(log_count)
+        return result
+
+    def _fourier_transfer_scale(self) -> float:
+        cached = self._transfer_scale
+        if cached is not None:
+            return cached
+        if self.n_boundary_states <= 8:
+            scale = float(np.max(np.linalg.eigvalsh(self.transfer_matrix.toarray())))
+        else:
+            scale = float(
+                sp.linalg.eigsh(
+                    self.transfer_matrix,
+                    k=1,
+                    which="LA",
+                    return_eigenvectors=False,
+                )[0]
+            )
+        if not isfinite(scale) or scale <= 0.0:
+            raise ValueError("transfer matrix has no positive spectral radius.")
+        object.__setattr__(self, "_transfer_scale", scale)
+        return scale
+
+    def _validate_fourier_winding_problem(self, *, length: int) -> None:
+        if length <= 0:
+            raise ValueError("length must be positive.")
+        if length % 2 != 0 or self.circumference % 2 != 0:
+            raise ValueError(
+                "Fourier-projected electric winding currently requires even Lx and Ly."
+            )
+
+    def _validate_fourier_sector_size(
+        self,
+        groups: Mapping[int, Sequence[int]],
+        winding_x: int,
+    ) -> None:
+        sector_size = max(
+            len(groups.get(int(winding_x), ())),
+            len(groups.get(-int(winding_x), ())),
+        )
+        if sector_size > 1024:
+            raise ValueError(
+                "dense Fourier winding projection currently supports at most 1024 states "
+                "in one winding_x block (typically Ly <= 12)."
+            )
+
     def _boundary_states_grouped_by_winding_x(
         self,
         *,
@@ -1053,6 +1366,8 @@ def evaluate_square_qdm_witness_family_on_strips(
         | None
     ) = None,
     embedding_index: int = 0,
+    winding_projection: WindingProjectionMethod = "auto",
+    fourier_points: int | None = None,
 ) -> SquareQDMWitnessFamilyStripReport:
     """Evaluate one common cage-derived witness family on square-QDM strips.
 
@@ -1087,6 +1402,8 @@ def evaluate_square_qdm_witness_family_on_strips(
             lengths=local_lengths,
             boundary_x=boundary_x,
             winding_sector=local_sector,
+            winding_projection=winding_projection,
+            fourier_points=fourier_points,
         )
         records.append(
             SquareQDMWitnessFamilyStripRecord(
@@ -1100,6 +1417,114 @@ def evaluate_square_qdm_witness_family_on_strips(
     return SquareQDMWitnessFamilyStripReport(
         family=family,
         records=tuple(records),
+    )
+
+
+def _normalize_fourier_points(
+    *,
+    length: int,
+    fourier_points: int | None,
+) -> int:
+    points = length + 1 if fourier_points is None else int(fourier_points)
+    if points <= 0:
+        raise ValueError("fourier_points must be positive.")
+    return points
+
+
+def _winding_y_to_positive_charge_count(
+    winding_y: int,
+    *,
+    length: int,
+) -> int | None:
+    shifted = int(winding_y) + int(length)
+    if shifted % 2 != 0:
+        return None
+    count = shifted // 2
+    if count < 0 or count > length:
+        return None
+    return count
+
+
+def _evaluate_twisted_blocks(
+    blocks: Mapping[int, npt.NDArray[np.complex128]],
+    *,
+    root: complex,
+) -> npt.NDArray[np.complex128]:
+    if not blocks:
+        raise ValueError("twisted transfer blocks must not be empty.")
+    first = next(iter(blocks.values()))
+    result = np.zeros_like(first, dtype=np.complex128)
+    for degree, block in blocks.items():
+        result += (root ** int(degree)) * block
+    return result
+
+
+def _twisted_regular_segment_matrix(
+    *,
+    start_column: int,
+    steps: int,
+    start_sector: int,
+    root: complex,
+    regular_charge_blocks,
+) -> npt.NDArray[np.complex128]:
+    if steps < 0:
+        raise ValueError("steps must be non-negative.")
+    first_blocks = regular_charge_blocks(
+        column_parity=int(start_column) % 2,
+        source_sector=int(start_sector),
+    )
+    first = _evaluate_twisted_blocks(first_blocks, root=root)
+    if steps == 0:
+        return np.eye(first.shape[0], dtype=np.complex128)
+    if steps == 1:
+        return first
+
+    second_blocks = regular_charge_blocks(
+        column_parity=(int(start_column) + 1) % 2,
+        source_sector=-int(start_sector),
+    )
+    second = _evaluate_twisted_blocks(second_blocks, root=root)
+    pair = first @ second
+    result = np.linalg.matrix_power(pair, steps // 2)
+    if steps % 2 != 0:
+        result = result @ first
+    return result
+
+
+def _nonnegative_real_fourier_value(
+    value: complex,
+    *,
+    reference_scale: float,
+) -> float:
+    scale = max(1.0, float(reference_scale))
+    tolerance = 1.0e-9 * scale
+    if abs(float(np.imag(value))) > tolerance:
+        raise ValueError(
+            "Fourier projection retained a non-negligible imaginary component; "
+            "increase fourier_points or reduce the requested strip size."
+        )
+    real_value = float(np.real(value))
+    if real_value < -tolerance:
+        raise ValueError(
+            "Fourier projection produced a negative sector weight beyond numerical tolerance."
+        )
+    if abs(real_value) <= tolerance:
+        return 0.0
+    return real_value
+
+
+def _fourier_project_coefficient(
+    samples: npt.NDArray[np.complex128],
+    *,
+    target_degree: int,
+) -> float:
+    if samples.ndim != 1 or samples.size == 0:
+        raise ValueError("Fourier samples must be a non-empty vector.")
+    coefficients = np.fft.fft(samples) / samples.size
+    value = coefficients[int(target_degree) % samples.size]
+    return _nonnegative_real_fourier_value(
+        value,
+        reference_scale=float(np.max(np.abs(coefficients))),
     )
 
 

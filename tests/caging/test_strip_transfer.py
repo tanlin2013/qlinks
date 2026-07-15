@@ -269,6 +269,7 @@ def test_common_witness_family_can_be_evaluated_directly_on_strips() -> None:
         lengths={"4x4": (4,), "6x4": (6,)},
         boundary_x="periodic",
         winding_sector=(0, 0),
+        winding_projection="fourier",
     )
 
     assert report.system_labels == ("4x4", "6x4")
@@ -277,3 +278,90 @@ def test_common_witness_family_can_be_evaluated_directly_on_strips() -> None:
         20.0 / 132.0,
     )
     assert report.record_for("6x4").scaling_report.winding_sector is not None
+    assert (
+        report.record_for("4x4").scaling_report.evaluations[0].metadata["exact_fourier_projection"]
+        is True
+    )
+
+
+def test_fourier_winding_projection_matches_dynamic_programming() -> None:
+    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
+    witness = _plaquette_flip_witness(model)
+    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
+    transfer = SquareQDMStripTransferMatrix(circumference=4)
+
+    dynamic = transfer.evaluate_witness(
+        placement,
+        length=4,
+        boundary_x="periodic",
+        winding_sector=(0, 0),
+        winding_projection="dynamic_programming",
+    )
+    fourier = transfer.evaluate_witness(
+        placement,
+        length=4,
+        boundary_x="periodic",
+        winding_sector=(0, 0),
+        winding_projection="fourier",
+    )
+
+    assert np.isclose(fourier.partition_count, dynamic.partition_count)
+    assert np.isclose(fourier.weighted_count, dynamic.weighted_count)
+    assert np.isclose(fourier.expectation, dynamic.expectation)
+    assert fourier.metadata["exact_fourier_projection"] is True
+
+
+def test_fourier_projection_allows_insertion_across_canonical_seam() -> None:
+    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
+    witness = _plaquette_flip_witness(model)
+    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
+    transfer = SquareQDMStripTransferMatrix(circumference=4)
+
+    result = transfer.evaluate_witness(
+        placement,
+        length=4,
+        boundary_x="periodic",
+        insertion_x=3,
+        winding_sector=(0, 0),
+        winding_projection="fourier",
+    )
+
+    assert np.isclose(result.partition_count, 132.0)
+    assert np.isclose(result.weighted_count, 20.0)
+    assert result.metadata["insertion_crosses_canonical_seam"] is True
+
+
+def test_fourier_sector_counts_match_dynamic_programming() -> None:
+    transfer = SquareQDMStripTransferMatrix(circumference=4)
+
+    dynamic = transfer.periodic_winding_sector_counts(
+        length=4,
+        winding_projection="dynamic_programming",
+    )
+    fourier = transfer.periodic_winding_sector_counts(
+        length=4,
+        winding_projection="fourier",
+    )
+
+    significant_dynamic = {sector: count for sector, count in dynamic.items() if count > 1.0e-8}
+    assert set(significant_dynamic) == set(fourier)
+    for sector, count in significant_dynamic.items():
+        assert np.isclose(fourier[sector], count)
+
+
+def test_auto_winding_projection_lifts_boundary_state_ceiling() -> None:
+    model = SquareQDMModel(lx=4, ly=10, boundary_condition="periodic")
+    witness = _plaquette_flip_witness(model)
+    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
+    transfer = SquareQDMStripTransferMatrix(circumference=10)
+
+    result = transfer.evaluate_witness(
+        placement,
+        length=4,
+        boundary_x="periodic",
+        winding_sector=(0, 0),
+    )
+
+    assert transfer.n_boundary_states == 1024
+    assert result.expectation > 0.0
+    assert result.metadata["contraction"] == ("electric_winding_fourier_projected_dense_transfer")
