@@ -104,3 +104,76 @@ is controlled by the largest individual block support and the number of local
 Hamiltonian terms, not by the Cartesian product support.  Sector validation is
 performed on a reference configuration and every single-block support
 variation; the report records this validation mode explicitly.
+
+Square-QDM strip transfer matrix
+--------------------------------
+
+For the square QDM, the constrained infinite-temperature expectation can be
+computed without constructing the global dimer basis.  The y direction is a
+periodic cylinder of fixed circumference ``Ly``.  A transfer state is the bit
+mask of horizontal dimers entering one site column.  Each allowed column
+transition specifies the outgoing horizontal dimers and the vertical dimers
+inside that column.
+
+A local witness is first converted from finite-system variable indices to
+size-independent strip coordinates::
+
+   from qlinks.caging import (
+       SquareQDMStripTransferMatrix,
+       SquareQDMWitnessPlacement,
+   )
+
+   placement = SquareQDMWitnessPlacement.from_local_witness(
+       reference_model,
+       witness,
+   )
+   transfer = SquareQDMStripTransferMatrix(
+       circumference=reference_model.ly,
+   )
+
+The conversion automatically unwraps a witness that crosses the x seam of a
+periodic reference torus.  The local-variable order is preserved exactly.
+
+Evaluate a finite torus with periodic x boundaries::
+
+   finite_torus = transfer.evaluate_witness(
+       placement,
+       length=reference_model.lx,
+       boundary_x="periodic",
+   )
+
+``finite_torus.expectation`` is
+
+.. math::
+
+   \frac{\operatorname{Tr}_{\mathcal H_{\rm dimer}} Q_R}
+        {\dim \mathcal H_{\rm dimer}}.
+
+The contraction reproduces the projected constrained-basis operator, not a
+naive local trace.  For each source local pattern it tests whether replacing it
+by a target pattern leaves every incident dimer constraint satisfied while the
+exterior configuration is kept fixed.  Consequently, a one-link lowering
+operator has zero projected weight, whereas a plaquette flip has the expected
+flippability probability.
+
+For an infinite-cylinder sequence, keep ``Ly`` fixed and increase the x
+length::
+
+   scaling = transfer.scan_witness(
+       placement,
+       lengths=(8, 12, 16, 24, 32),
+       boundary_x="open",
+   )
+   scaling.tail_estimate(tail_points=3)
+
+The open-strip contraction places the witness in the center by default and
+normalizes the left and right transfer vectors at every step, so lengths can be
+increased without overflowing the raw number of coverings.  Periodic-x
+contractions use a symmetric transfer-matrix eigendecomposition and are
+currently limited to at most 2048 boundary states.
+
+The current backend sums all winding sectors.  This is already useful for
+establishing a nonzero thermodynamic local weight and for validating explicit
+finite-size calculations.  A sector-resolved transfer matrix, obtained by
+attaching winding charges to the boundary states, remains the next extension
+needed for a strict same-sector ETH comparison.

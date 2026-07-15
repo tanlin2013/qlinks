@@ -1,0 +1,1559 @@
+diff --git a/docs/source/thermodynamic_eth.rst b/docs/source/thermodynamic_eth.rst
+index 99d89ab8d566f631a70fc3b5a843cd4ad0d849ef..9e4ec373c3b42f762c9c747f6a0c195be4d8977e 100644
+--- a/docs/source/thermodynamic_eth.rst
++++ b/docs/source/thermodynamic_eth.rst
+@@ -104,3 +104,76 @@ is controlled by the largest individual block support and the number of local
+ Hamiltonian terms, not by the Cartesian product support.  Sector validation is
+ performed on a reference configuration and every single-block support
+ variation; the report records this validation mode explicitly.
++
++Square-QDM strip transfer matrix
++--------------------------------
++
++For the square QDM, the constrained infinite-temperature expectation can be
++computed without constructing the global dimer basis.  The y direction is a
++periodic cylinder of fixed circumference ``Ly``.  A transfer state is the bit
++mask of horizontal dimers entering one site column.  Each allowed column
++transition specifies the outgoing horizontal dimers and the vertical dimers
++inside that column.
++
++A local witness is first converted from finite-system variable indices to
++size-independent strip coordinates::
++
++   from qlinks.caging import (
++       SquareQDMStripTransferMatrix,
++       SquareQDMWitnessPlacement,
++   )
++
++   placement = SquareQDMWitnessPlacement.from_local_witness(
++       reference_model,
++       witness,
++   )
++   transfer = SquareQDMStripTransferMatrix(
++       circumference=reference_model.ly,
++   )
++
++The conversion automatically unwraps a witness that crosses the x seam of a
++periodic reference torus.  The local-variable order is preserved exactly.
++
++Evaluate a finite torus with periodic x boundaries::
++
++   finite_torus = transfer.evaluate_witness(
++       placement,
++       length=reference_model.lx,
++       boundary_x="periodic",
++   )
++
++``finite_torus.expectation`` is
++
++.. math::
++
++   \frac{\operatorname{Tr}_{\mathcal H_{\rm dimer}} Q_R}
++        {\dim \mathcal H_{\rm dimer}}.
++
++The contraction reproduces the projected constrained-basis operator, not a
++naive local trace.  For each source local pattern it tests whether replacing it
++by a target pattern leaves every incident dimer constraint satisfied while the
++exterior configuration is kept fixed.  Consequently, a one-link lowering
++operator has zero projected weight, whereas a plaquette flip has the expected
++flippability probability.
++
++For an infinite-cylinder sequence, keep ``Ly`` fixed and increase the x
++length::
++
++   scaling = transfer.scan_witness(
++       placement,
++       lengths=(8, 12, 16, 24, 32),
++       boundary_x="open",
++   )
++   scaling.tail_estimate(tail_points=3)
++
++The open-strip contraction places the witness in the center by default and
++normalizes the left and right transfer vectors at every step, so lengths can be
++increased without overflowing the raw number of coverings.  Periodic-x
++contractions use a symmetric transfer-matrix eigendecomposition and are
++currently limited to at most 2048 boundary states.
++
++The current backend sums all winding sectors.  This is already useful for
++establishing a nonzero thermodynamic local weight and for validating explicit
++finite-size calculations.  A sector-resolved transfer matrix, obtained by
++attaching winding charges to the boundary states, remains the next extension
++needed for a strict same-sector ETH comparison.
+diff --git a/experimental/notebooks/thermodynamic_eth.ipynb b/experimental/notebooks/thermodynamic_eth.ipynb
+new file mode 100644
+index 0000000000000000000000000000000000000000..c3b49e3cca3fc68db063ecabd4232508755debff
+--- /dev/null
++++ b/experimental/notebooks/thermodynamic_eth.ipynb
+@@ -0,0 +1,437 @@
++{
++ "cells": [
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "# Thermodynamic ETH diagnostics for square-QDM cage witnesses\n",
++    "\n",
++    "This notebook demonstrates the first thermodynamic-limit workflow in `qlinks`:\n",
++    "\n",
++    "1. define or extract a size-independent local row operator $L_R$;\n",
++    "2. evaluate $Q_R=L_R^\\dagger L_R$ in the exact constrained basis;\n",
++    "3. reproduce the same infinite-temperature expectation with a strip transfer matrix;\n",
++    "4. increase the strip length without enumerating the global dimer basis.\n",
++    "\n",
++    "The current transfer backend is exact for the fully packed square QDM and sums all winding sectors. Sector-resolved transfer matrices are a later extension.\n"
++   ],
++   "id": "thermo-00"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "%load_ext autoreload\n",
++    "%autoreload 2\n",
++    "%config InlineBackend.figure_format = \"retina\"\n"
++   ],
++   "id": "thermo-01"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "import matplotlib.pyplot as plt\n",
++    "import numpy as np\n",
++    "import pandas as pd\n",
++    "\n",
++    "from qlinks.caging import (\n",
++    "    ReducedIZPatternSupport,\n",
++    "    SquareQDMStripTransferMatrix,\n",
++    "    SquareQDMWitnessPlacement,\n",
++    "    evaluate_local_witness_on_diagonal_ensemble,\n",
++    "    local_witness_template_from_pattern_support,\n",
++    ")\n",
++    "from qlinks.models import SquareQDMModel\n"
++   ],
++   "id": "thermo-02"
++  },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "## 1. Build a local witness\n",
++    "\n",
++    "For a cage calculation, the usual entry point is\n",
++    "`local_witnesses_from_classification_report(report)`.  To keep this notebook self-contained, we use one directed plaquette flip,\n",
++    "\n",
++    "$$\n",
++    "L_R = |0101\\rangle\\langle 1010|,\n",
++    "$$\n",
++    "\n",
++    "on the four ordered links of one square plaquette.  Then $Q_R$ is the projector onto the source flippable orientation after projection into the constrained dimer Hilbert space.\n"
++   ],
++   "id": "thermo-03"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "reference_model = SquareQDMModel(\n",
++    "    lx=4,\n",
++    "    ly=4,\n",
++    "    boundary_condition=\"periodic\",\n",
++    ")\n",
++    "\n",
++    "plaquette_id = reference_model.lattice.plaquette_id_from_cell(0, 0)\n",
++    "variable_indices = tuple(\n",
++    "    reference_model.layout.link_variable_index(int(link_id))\n",
++    "    for link_id in reference_model.lattice.plaquette_links(plaquette_id)\n",
++    ")\n",
++    "\n",
++    "pattern_support = ReducedIZPatternSupport(\n",
++    "    pattern_key=(\n",
++    "        (\n",
++    "            (1, 0, 1, 0),\n",
++    "            (0, 1, 0, 1),\n",
++    "            (1.0, 0.0),\n",
++    "        ),\n",
++    "    ),\n",
++    "    variable_indices=variable_indices,\n",
++    "    source_zero_indices=(),\n",
++    "    mechanism_labels=(),\n",
++    ")\n",
++    "\n",
++    "template = local_witness_template_from_pattern_support(pattern_support)\n",
++    "witness = template.instantiate(variable_indices)\n",
++    "template.to_summary_dict()\n"
++   ],
++   "id": "thermo-04"
++  },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "## 2. Exact constrained-basis value on the $4\\times4$ torus\n",
++    "\n",
++    "This is the reference calculation.  It constructs all dimer coverings but does not require diagonalizing the Hamiltonian because the infinite-temperature state is diagonal and uniform in the constrained basis.\n"
++   ],
++   "id": "thermo-05"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "reference_basis = reference_model.build_basis(solver=\"dfs\")\n",
++    "exact_4x4 = evaluate_local_witness_on_diagonal_ensemble(\n",
++    "    witness,\n",
++    "    basis_configs=reference_basis.states,\n",
++    ")\n",
++    "\n",
++    "pd.DataFrame(\n",
++    "    [\n",
++    "        {\n",
++    "            \"basis dimension\": reference_basis.n_states,\n",
++    "            \"<Q_R>_infinite_temperature\": exact_4x4.expectation,\n",
++    "            \"Var(Q_R)\": exact_4x4.variance,\n",
++    "        }\n",
++    "    ]\n",
++    ")\n"
++   ],
++   "id": "thermo-06"
++  },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "## 3. Convert the finite embedding to strip coordinates\n",
++    "\n",
++    "`SquareQDMWitnessPlacement.from_local_witness` removes global variable labels and records the physical square-lattice link coordinates.  If the witness crosses the periodic x seam, the shortest unwrapped interval is chosen automatically.\n"
++   ],
++   "id": "thermo-07"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "placement = SquareQDMWitnessPlacement.from_local_witness(\n",
++    "    reference_model,\n",
++    "    witness,\n",
++    ")\n",
++    "transfer = SquareQDMStripTransferMatrix(circumference=reference_model.ly)\n",
++    "\n",
++    "{\n",
++    "    \"link_coordinates\": placement.link_coordinates,\n",
++    "    \"window_width\": placement.window_width,\n",
++    "    \"affected_sites\": placement.affected_sites,\n",
++    "    \"reference_origin_x\": placement.reference_origin_x,\n",
++    "    \"boundary_state_count\": transfer.n_boundary_states,\n",
++    "}\n"
++   ],
++   "id": "thermo-08"
++  },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "## 4. Exact transfer-matrix check on the same torus\n",
++    "\n",
++    "For periodic x boundaries, the transfer calculation counts the same $4\\times4$ torus coverings.  The weighted count is the exact trace of $Q_R$ over that constrained Hilbert space.\n"
++   ],
++   "id": "thermo-09"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "transfer_4x4 = transfer.evaluate_witness(\n",
++    "    placement,\n",
++    "    length=reference_model.lx,\n",
++    "    boundary_x=\"periodic\",\n",
++    ")\n",
++    "\n",
++    "comparison = pd.DataFrame(\n",
++    "    [\n",
++    "        {\n",
++    "            \"method\": \"explicit constrained basis\",\n",
++    "            \"partition count\": reference_basis.n_states,\n",
++    "            \"weighted count\": exact_4x4.expectation * reference_basis.n_states,\n",
++    "            \"<Q_R>\": exact_4x4.expectation,\n",
++    "        },\n",
++    "        {\n",
++    "            \"method\": \"strip transfer matrix\",\n",
++    "            \"partition count\": transfer_4x4.partition_count,\n",
++    "            \"weighted count\": transfer_4x4.weighted_count,\n",
++    "            \"<Q_R>\": transfer_4x4.expectation,\n",
++    "        },\n",
++    "    ]\n",
++    ")\n",
++    "\n",
++    "assert np.isclose(transfer_4x4.expectation, exact_4x4.expectation)\n",
++    "comparison\n"
++   ],
++   "id": "thermo-10"
++  },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "## 5. Increase the x length at fixed circumference\n",
++    "\n",
++    "The open-x sequence places the witness in the center.  The transfer vectors are normalized after every column, so very long strips do not overflow even though the number of coverings grows exponentially.\n",
++    "\n",
++    "Use even and odd length sequences separately when parity oscillations are visible.\n"
++   ],
++   "id": "thermo-11"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "lengths = tuple(range(4, 66, 2))\n",
++    "strip_scaling = transfer.scan_witness(\n",
++    "    placement,\n",
++    "    lengths=lengths,\n",
++    "    boundary_x=\"open\",\n",
++    ")\n",
++    "\n",
++    "strip_table = pd.DataFrame(\n",
++    "    {\n",
++    "        \"Lx\": strip_scaling.lengths,\n",
++    "        \"<Q_R>\": strip_scaling.expectations,\n",
++    "        \"log number of coverings\": [\n",
++    "            evaluation.log_partition_count\n",
++    "            for evaluation in strip_scaling.evaluations\n",
++    "        ],\n",
++    "    }\n",
++    ")\n",
++    "strip_table.tail()\n"
++   ],
++   "id": "thermo-12"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "fig, ax = plt.subplots(figsize=(6.5, 4.0))\n",
++    "ax.plot(strip_table[\"Lx\"], strip_table[\"<Q_R>\"], marker=\"o\")\n",
++    "ax.set_xlabel(\"strip length $L_x$\")\n",
++    "ax.set_ylabel(r\"$\\langle Q_R\\rangle_{\\beta=0}$\")\n",
++    "ax.set_title(f\"Square-QDM cylinder, circumference $L_y={reference_model.ly}$\")\n",
++    "ax.grid(alpha=0.25)\n",
++    "plt.show()\n",
++    "\n",
++    "strip_scaling.tail_estimate(tail_points=5)\n"
++   ],
++   "id": "thermo-13"
++  },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "## 6. Repeat at several circumferences\n",
++    "\n",
++    "The controlled route toward the two-dimensional limit is nested:\n",
++    "\n",
++    "1. extrapolate $L_x\\to\\infty$ at each fixed $L_y$;\n",
++    "2. then inspect the dependence on $L_y$.\n",
++    "\n",
++    "The cell below uses a centered open strip and the same local plaquette witness at each circumference.  Increasing `environment_columns` improves the first extrapolation without changing the boundary-state dimension $2^{L_y}$.\n"
++   ],
++   "id": "thermo-14"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "def plaquette_flip_placement(circumference: int):\n",
++    "    model = SquareQDMModel(\n",
++    "        lx=4,\n",
++    "        ly=circumference,\n",
++    "        boundary_condition=\"periodic\",\n",
++    "    )\n",
++    "    pid = model.lattice.plaquette_id_from_cell(0, 0)\n",
++    "    indices = tuple(\n",
++    "        model.layout.link_variable_index(int(link_id))\n",
++    "        for link_id in model.lattice.plaquette_links(pid)\n",
++    "    )\n",
++    "    support = ReducedIZPatternSupport(\n",
++    "        pattern_key=(\n",
++    "            (\n",
++    "                (1, 0, 1, 0),\n",
++    "                (0, 1, 0, 1),\n",
++    "                (1.0, 0.0),\n",
++    "            ),\n",
++    "        ),\n",
++    "        variable_indices=indices,\n",
++    "        source_zero_indices=(),\n",
++    "        mechanism_labels=(),\n",
++    "    )\n",
++    "    local_template = local_witness_template_from_pattern_support(support)\n",
++    "    local_witness = local_template.instantiate(indices)\n",
++    "    return SquareQDMWitnessPlacement.from_local_witness(model, local_witness)\n",
++    "\n",
++    "\n",
++    "environment_columns = 32\n",
++    "width_rows = []\n",
++    "for circumference in (2, 4, 6, 8):\n",
++    "    local_placement = plaquette_flip_placement(circumference)\n",
++    "    local_transfer = SquareQDMStripTransferMatrix(circumference)\n",
++    "    total_length = 2 * environment_columns + local_placement.window_width\n",
++    "    evaluation = local_transfer.evaluate_witness(\n",
++    "        local_placement,\n",
++    "        length=total_length,\n",
++    "        boundary_x=\"open\",\n",
++    "        insertion_x=environment_columns,\n",
++    "    )\n",
++    "    width_rows.append(\n",
++    "        {\n",
++    "            \"Ly\": circumference,\n",
++    "            \"boundary states\": local_transfer.n_boundary_states,\n",
++    "            \"Lx\": total_length,\n",
++    "            \"<Q_R>\": evaluation.expectation,\n",
++    "        }\n",
++    "    )\n",
++    "\n",
++    "width_table = pd.DataFrame(width_rows)\n",
++    "width_table\n"
++   ],
++   "id": "thermo-15"
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "fig, ax = plt.subplots(figsize=(6.5, 4.0))\n",
++    "ax.plot(width_table[\"Ly\"], width_table[\"<Q_R>\"], marker=\"o\")\n",
++    "ax.set_xlabel(\"cylinder circumference $L_y$\")\n",
++    "ax.set_ylabel(r\"centered-strip $\\langle Q_R\\rangle_{\\beta=0}$\")\n",
++    "ax.grid(alpha=0.25)\n",
++    "plt.show()\n"
++   ],
++   "id": "thermo-16"
++  },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "## 7. Replace the demonstration witness by a cage-derived witness\n",
++    "\n",
++    "After classifying a cage state, the same workflow starts with:\n",
++    "\n",
++    "```python\n",
++    "from qlinks.caging import local_witnesses_from_classification_report\n",
++    "\n",
++    "witnesses = local_witnesses_from_classification_report(classification_report)\n",
++    "witness = witnesses[0]\n",
++    "placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)\n",
++    "transfer = SquareQDMStripTransferMatrix(circumference=model.ly)\n",
++    "scaling = transfer.scan_witness(\n",
++    "    placement,\n",
++    "    lengths=(8, 12, 16, 24, 32, 48),\n",
++    "    boundary_x=\"open\",\n",
++    ")\n",
++    "```\n",
++    "\n",
++    "For an ETH claim, additionally verify on each finite cage state that\n",
++    "$\\langle Q_R\\rangle=\\operatorname{Var}(Q_R)=0$, and compare within the same exact symmetry sector.  The present transfer backend sums all winding sectors; the sector-resolved extension is therefore the next required step for the strictest comparison.\n"
++   ],
++   "id": "thermo-17"
++  },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "## 8. Factorized cage-family certification\n",
++    "\n",
++    "The complementary eigenstate-side API avoids materializing the Cartesian product support of separated cage blocks:\n",
++    "\n",
++    "```python\n",
++    "from qlinks.caging import (\n",
++    "    certify_qdm_factorized_product_state,\n",
++    "    find_factorized_qdm_block_paddings,\n",
++    ")\n",
++    "\n",
++    "paddings = find_factorized_qdm_block_paddings(\n",
++    "    model,\n",
++    "    selected_blocks,\n",
++    "    config=padding_config,\n",
++    ")\n",
++    "certificate = certify_qdm_factorized_product_state(\n",
++    "    model,\n",
++    "    selected_blocks,\n",
++    "    paddings[0],\n",
++    "    config=padding_config,\n",
++    ")\n",
++    "certificate.to_summary_dict()\n",
++    "```\n",
++    "\n",
++    "This is the eigenstate certificate; the strip transfer matrix supplies the independent thermal expectation of the local witness.\n"
++   ],
++   "id": "thermo-18"
++  }
++ ],
++ "metadata": {
++  "kernelspec": {
++   "display_name": "Python 3",
++   "language": "python",
++   "name": "python3"
++  },
++  "language_info": {
++   "name": "python",
++   "version": "3.11"
++  }
++ },
++ "nbformat": 4,
++ "nbformat_minor": 5
++}
+diff --git a/qlinks/caging/__init__.py b/qlinks/caging/__init__.py
+index 4be20fb9c05f6ab617cb1a30af9b726a9bffbff1..7010813816673a88e18191efbb0b4db01c3381a8 100644
+--- a/qlinks/caging/__init__.py
++++ b/qlinks/caging/__init__.py
+@@ -222,6 +222,14 @@ from qlinks.caging.support import (
+     distinct_reduced_iz_pattern_supports,
+     extract_cage_region_support,
+ )
++from qlinks.caging.strip_transfer import (
++    SquareQDMColumnTransition,
++    SquareQDMLinkCoordinate,
++    SquareQDMStripScalingReport,
++    SquareQDMStripTransferMatrix,
++    SquareQDMStripWitnessEvaluation,
++    SquareQDMWitnessPlacement,
++)
+ from qlinks.caging.thermodynamic import (
+     ETHScalingPoint,
+     ETHScalingReport,
+@@ -348,6 +356,12 @@ __all__ = [
+     "SGATransition",
+     "SameBipartitionSideFilter",
+     "SectorPolicy",
++    "SquareQDMColumnTransition",
++    "SquareQDMLinkCoordinate",
++    "SquareQDMStripScalingReport",
++    "SquareQDMStripTransferMatrix",
++    "SquareQDMStripWitnessEvaluation",
++    "SquareQDMWitnessPlacement",
+     "SnakeStripeRegionProposal",
+     "SnakeStripeRegionProposalRecord",
+     "StripeMotifComponentRegionProposal",
+diff --git a/qlinks/caging/strip_transfer.py b/qlinks/caging/strip_transfer.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..4986b8228a0bbac44821a32fc4611fe1364f9e4f
+--- /dev/null
++++ b/qlinks/caging/strip_transfer.py
+@@ -0,0 +1,835 @@
++from __future__ import annotations
++
++from collections.abc import Mapping, Sequence
++from dataclasses import dataclass, field
++from math import exp, isfinite, log
++from typing import Literal
++
++import numpy as np
++import numpy.typing as npt
++import scipy.sparse as sp
++
++from qlinks.caging.thermodynamic import LocalWitness, LocalWitnessTemplate
++from qlinks.lattice import BoundaryCondition, SquareLattice
++from qlinks.models import SquareQDMModel
++from qlinks.variables import VariableKind
++
++SquareQDMLinkKind = Literal["x", "y"]
++StripBoundaryCondition = Literal["open", "periodic"]
++
++
++def _bit(mask: int, index: int) -> int:
++    return (int(mask) >> int(index)) & 1
++
++
++def _rotate_left(mask: int, *, width: int) -> int:
++    all_bits = (1 << width) - 1
++    return ((int(mask) << 1) & all_bits) | (int(mask) >> (width - 1))
++
++
++def _submasks(mask: int):
++    current = int(mask)
++    while True:
++        yield current
++        if current == 0:
++            break
++        current = (current - 1) & int(mask)
++
++
++def _safe_exp(log_value: float) -> float:
++    if not isfinite(log_value):
++        return 0.0 if log_value < 0.0 else float("inf")
++    if log_value > log(np.finfo(np.float64).max):
++        return float("inf")
++    return float(exp(log_value))
++
++
++@dataclass(frozen=True, slots=True, order=True)
++class SquareQDMLinkCoordinate:
++    """One square-QDM link in strip coordinates.
++
++    ``x`` labels the site column anchoring the link.  An ``x`` link joins
++    ``(x, y)`` to ``(x + 1, y)``; a ``y`` link joins ``(x, y)`` to
++    ``(x, y + 1 mod circumference)``.
++    """
++
++    x: int
++    y: int
++    kind: SquareQDMLinkKind
++
++    def __post_init__(self) -> None:
++        if self.x < 0:
++            raise ValueError("x must be non-negative.")
++        if self.y < 0:
++            raise ValueError("y must be non-negative.")
++        if self.kind not in ("x", "y"):
++            raise ValueError("kind must be 'x' or 'y'.")
++
++
++@dataclass(frozen=True, slots=True)
++class SquareQDMWitnessPlacement:
++    """Place a local witness on an infinite square-QDM cylinder.
++
++    The local-variable ordering is exactly the ordering used by
++    :class:`LocalWitnessTemplate`.  ``link_coordinates`` are normalized so the
++    first affected site column is zero.  This makes the placement independent
++    of the finite reference system from which the witness was extracted.
++    """
++
++    template: LocalWitnessTemplate
++    circumference: int
++    link_coordinates: tuple[SquareQDMLinkCoordinate, ...]
++    reference_origin_x: int | None = None
++    metadata: dict[str, object] = field(default_factory=dict)
++
++    def __post_init__(self) -> None:
++        if self.circumference < 2:
++            raise ValueError("circumference must be at least two.")
++
++        coordinates = tuple(self.link_coordinates)
++        if len(coordinates) != self.template.n_variables:
++            raise ValueError(
++                "link_coordinates length must match the witness width: "
++                f"{len(coordinates)} != {self.template.n_variables}."
++            )
++        if len(set(coordinates)) != len(coordinates):
++            raise ValueError("link_coordinates must not contain duplicates.")
++        if min(coordinate.x for coordinate in coordinates) != 0:
++            raise ValueError("link_coordinates must be normalized to start at x=0.")
++        if any(coordinate.y >= self.circumference for coordinate in coordinates):
++            raise ValueError("link-coordinate y values must lie inside the circumference.")
++
++        for pattern in self.template.local_patterns:
++            if any(value not in (0, 1) for value in pattern):
++                raise ValueError("square-QDM strip witnesses require binary local patterns.")
++
++        object.__setattr__(self, "link_coordinates", coordinates)
++        object.__setattr__(self, "metadata", dict(self.metadata))
++
++    @property
++    def affected_sites(self) -> tuple[tuple[int, int], ...]:
++        sites: set[tuple[int, int]] = set()
++        for coordinate in self.link_coordinates:
++            sites.add((coordinate.x, coordinate.y))
++            if coordinate.kind == "x":
++                sites.add((coordinate.x + 1, coordinate.y))
++            else:
++                sites.add((coordinate.x, (coordinate.y + 1) % self.circumference))
++        return tuple(sorted(sites))
++
++    @property
++    def window_width(self) -> int:
++        return 1 + max(site_x for site_x, _site_y in self.affected_sites)
++
++    @classmethod
++    def from_local_witness(
++        cls,
++        model: SquareQDMModel,
++        witness: LocalWitness,
++        *,
++        metadata: Mapping[str, object] | None = None,
++    ) -> SquareQDMWitnessPlacement:
++        """Extract strip link coordinates from a finite square-QDM embedding.
++
++        For a periodic reference lattice, the shortest unwrapped interval is
++        selected automatically.  A witness crossing the finite-system x seam
++        therefore becomes an ordinary bounded placement on the infinite strip.
++        """
++        lattice = model.lattice
++        if not isinstance(lattice, SquareLattice):
++            raise TypeError("model must use SquareLattice geometry.")
++        if int(lattice.ly) < 2:
++            raise ValueError("the reference square lattice must have ly >= 2.")
++
++        raw_coordinates: list[SquareQDMLinkCoordinate] = []
++        for variable_index in witness.variable_indices:
++            spec = model.layout.spec(int(variable_index))
++            if spec.kind != VariableKind.LINK:
++                raise ValueError("square-QDM strip witnesses must act only on link variables.")
++
++            link = lattice.links[int(spec.geometry_index)]
++            if link.kind not in ("x", "y"):
++                raise ValueError(f"unsupported square-lattice link kind: {link.kind!r}.")
++            source_cell = lattice.sites[int(link.source)].cell
++            raw_coordinates.append(
++                SquareQDMLinkCoordinate(
++                    x=int(source_cell[0]),
++                    y=int(source_cell[1]) % int(lattice.ly),
++                    kind=link.kind,
++                )
++            )
++
++        normalized, origin_x = _normalize_square_qdm_x_coordinates(
++            raw_coordinates,
++            lx=int(lattice.lx),
++            periodic=lattice.boundary_condition == BoundaryCondition.PERIODIC,
++        )
++        placement_metadata = {
++            "reference_lx": int(lattice.lx),
++            "reference_ly": int(lattice.ly),
++            "reference_boundary_condition": lattice.boundary_condition.value,
++            "reference_variable_indices": tuple(witness.variable_indices),
++        }
++        if metadata is not None:
++            placement_metadata.update(dict(metadata))
++
++        return cls(
++            template=witness.template,
++            circumference=int(lattice.ly),
++            link_coordinates=normalized,
++            reference_origin_x=origin_x,
++            metadata=placement_metadata,
++        )
++
++
++@dataclass(frozen=True, slots=True)
++class SquareQDMColumnTransition:
++    """One allowed column of a fully packed square-lattice dimer covering."""
++
++    incoming_mask: int
++    outgoing_mask: int
++    vertical_mask: int
++
++
++@dataclass(frozen=True, slots=True)
++class SquareQDMStripWitnessEvaluation:
++    """Infinite-temperature expectation from an exact strip contraction."""
++
++    circumference: int
++    length: int
++    boundary_x: StripBoundaryCondition
++    insertion_x: int | None
++    window_width: int
++    expectation: float
++    log_partition_count: float
++    log_weighted_count: float
++    partition_count: float
++    weighted_count: float
++    metadata: dict[str, object] = field(default_factory=dict)
++
++    def __post_init__(self) -> None:
++        object.__setattr__(self, "metadata", dict(self.metadata))
++
++    def to_summary_dict(self) -> dict[str, object]:
++        return {
++            "circumference": self.circumference,
++            "length": self.length,
++            "boundary_x": self.boundary_x,
++            "insertion_x": self.insertion_x,
++            "window_width": self.window_width,
++            "expectation": self.expectation,
++            "log_partition_count": self.log_partition_count,
++            "log_weighted_count": self.log_weighted_count,
++            "partition_count": self.partition_count,
++            "weighted_count": self.weighted_count,
++            "metadata": dict(self.metadata),
++        }
++
++
++@dataclass(frozen=True, slots=True)
++class SquareQDMStripScalingReport:
++    """A fixed-circumference sequence of strip witness expectations."""
++
++    placement: SquareQDMWitnessPlacement
++    evaluations: tuple[SquareQDMStripWitnessEvaluation, ...]
++
++    def __post_init__(self) -> None:
++        ordered = tuple(sorted(self.evaluations, key=lambda evaluation: evaluation.length))
++        if not ordered:
++            raise ValueError("evaluations must not be empty.")
++        if len({evaluation.length for evaluation in ordered}) != len(ordered):
++            raise ValueError("evaluations must have distinct lengths.")
++        if len({evaluation.boundary_x for evaluation in ordered}) != 1:
++            raise ValueError("all evaluations must use the same x boundary condition.")
++        if any(
++            evaluation.circumference != self.placement.circumference
++            for evaluation in ordered
++        ):
++            raise ValueError("evaluation circumferences must match the placement.")
++        object.__setattr__(self, "evaluations", ordered)
++
++    @property
++    def lengths(self) -> tuple[int, ...]:
++        return tuple(evaluation.length for evaluation in self.evaluations)
++
++    @property
++    def expectations(self) -> tuple[float, ...]:
++        return tuple(evaluation.expectation for evaluation in self.evaluations)
++
++    @property
++    def boundary_x(self) -> StripBoundaryCondition:
++        return self.evaluations[0].boundary_x
++
++    def tail_estimate(self, *, tail_points: int = 3) -> dict[str, object]:
++        """Return a descriptive tail mean and spread.
++
++        The result is deliberately not named a thermodynamic-limit fit.  Strip
++        transfer sequences can retain parity oscillations, especially at small
++        circumference, so the tail spread should be inspected explicitly.
++        """
++        if tail_points <= 0:
++            raise ValueError("tail_points must be positive.")
++        tail = self.evaluations[-min(tail_points, len(self.evaluations)) :]
++        values = np.asarray([evaluation.expectation for evaluation in tail], dtype=float)
++        return {
++            "lengths": tuple(evaluation.length for evaluation in tail),
++            "mean": float(np.mean(values)),
++            "minimum": float(np.min(values)),
++            "maximum": float(np.max(values)),
++            "spread": float(np.max(values) - np.min(values)),
++        }
++
++    def to_summary_dict(self) -> dict[str, object]:
++        return {
++            "circumference": self.placement.circumference,
++            "boundary_x": self.boundary_x,
++            "lengths": self.lengths,
++            "expectations": self.expectations,
++            "evaluations": tuple(evaluation.to_summary_dict() for evaluation in self.evaluations),
++        }
++
++
++@dataclass(frozen=True, slots=True)
++class _PeriodicTransferSpectrum:
++    eigenvalues: npt.NDArray[np.float64]
++    insertion_diagonal: npt.NDArray[np.float64]
++    scale: float
++
++
++@dataclass(frozen=True, slots=True)
++class SquareQDMStripTransferMatrix:
++    """Exact transfer matrix for fully packed dimers on a square cylinder.
++
++    The y direction is periodic and has fixed ``circumference``.  Boundary
++    states are bit masks of horizontal dimers entering a site column.  A column
++    transition stores the outgoing horizontal mask and the occupied vertical
++    links inside that column.
++    """
++
++    circumference: int
++    transitions: tuple[SquareQDMColumnTransition, ...] = field(init=False, repr=False)
++    transfer_matrix: sp.csr_array = field(init=False, repr=False)
++    _transitions_by_incoming: tuple[tuple[SquareQDMColumnTransition, ...], ...] = field(
++        init=False,
++        repr=False,
++    )
++
++    def __post_init__(self) -> None:
++        if self.circumference < 2:
++            raise ValueError("circumference must be at least two.")
++        if self.circumference > 16:
++            raise ValueError(
++                "circumference above 16 is disabled because the boundary-state space is 2^Ly."
++            )
++
++        transitions = _square_qdm_column_transitions(self.circumference)
++        n_states = 1 << self.circumference
++        rows = np.fromiter(
++            (transition.incoming_mask for transition in transitions),
++            dtype=np.int64,
++        )
++        cols = np.fromiter(
++            (transition.outgoing_mask for transition in transitions),
++            dtype=np.int64,
++        )
++        data = np.ones(len(transitions), dtype=np.float64)
++        matrix = sp.coo_array(
++            (data, (rows, cols)),
++            shape=(n_states, n_states),
++            dtype=np.float64,
++        ).tocsr()
++
++        by_incoming: list[list[SquareQDMColumnTransition]] = [
++            [] for _ in range(n_states)
++        ]
++        for transition in transitions:
++            by_incoming[transition.incoming_mask].append(transition)
++
++        object.__setattr__(self, "transitions", transitions)
++        object.__setattr__(self, "transfer_matrix", matrix)
++        object.__setattr__(
++            self,
++            "_transitions_by_incoming",
++            tuple(tuple(group) for group in by_incoming),
++        )
++
++    @property
++    def n_boundary_states(self) -> int:
++        return 1 << self.circumference
++
++    def witness_insertion_matrix(
++        self,
++        placement: SquareQDMWitnessPlacement,
++    ) -> sp.csr_array:
++        """Contract the exact local ``Q_R`` weight into one strip insertion."""
++        self._validate_placement(placement)
++        coordinate_to_index = {
++            coordinate: index for index, coordinate in enumerate(placement.link_coordinates)
++        }
++        pattern_to_index = {
++            pattern: index for index, pattern in enumerate(placement.template.local_patterns)
++        }
++        operator = placement.template.local_operator
++        affected_sites = placement.affected_sites
++        window_width = placement.window_width
++
++        entries: dict[tuple[int, int], float] = {}
++
++        def source_link_value(
++            path: Sequence[SquareQDMColumnTransition],
++            coordinate: SquareQDMLinkCoordinate,
++        ) -> int:
++            transition = path[coordinate.x]
++            mask = (
++                transition.outgoing_mask
++                if coordinate.kind == "x"
++                else transition.vertical_mask
++            )
++            return _bit(mask, coordinate.y)
++
++        def target_site_is_valid(
++            path: Sequence[SquareQDMColumnTransition],
++            *,
++            site: tuple[int, int],
++            target_pattern: tuple[int, ...],
++        ) -> bool:
++            site_x, site_y = site
++            transition = path[site_x]
++            incident_coordinates = (
++                SquareQDMLinkCoordinate(site_x - 1, site_y, "x")
++                if site_x > 0
++                else None,
++                SquareQDMLinkCoordinate(site_x, site_y, "x"),
++                SquareQDMLinkCoordinate(
++                    site_x,
++                    (site_y - 1) % self.circumference,
++                    "y",
++                ),
++                SquareQDMLinkCoordinate(site_x, site_y, "y"),
++            )
++
++            occupied = 0
++            for position, coordinate in enumerate(incident_coordinates):
++                if coordinate is not None and coordinate in coordinate_to_index:
++                    occupied += int(target_pattern[coordinate_to_index[coordinate]])
++                    continue
++
++                if position == 0:
++                    occupied += _bit(transition.incoming_mask, site_y)
++                elif position == 1:
++                    occupied += _bit(transition.outgoing_mask, site_y)
++                elif position == 2:
++                    occupied += _bit(
++                        transition.vertical_mask,
++                        (site_y - 1) % self.circumference,
++                    )
++                else:
++                    occupied += _bit(transition.vertical_mask, site_y)
++
++            return occupied == 1
++
++        def path_q_weight(path: Sequence[SquareQDMColumnTransition]) -> float:
++            source_pattern = tuple(
++                source_link_value(path, coordinate)
++                for coordinate in placement.link_coordinates
++            )
++            source_index = pattern_to_index.get(source_pattern)
++            if source_index is None:
++                return 0.0
++
++            q_weight = 0.0
++            for target_index, target_pattern in enumerate(placement.template.local_patterns):
++                coefficient = operator[target_index, source_index]
++                if coefficient == 0.0:
++                    continue
++                if all(
++                    target_site_is_valid(
++                        path,
++                        site=site,
++                        target_pattern=target_pattern,
++                    )
++                    for site in affected_sites
++                ):
++                    q_weight += float(abs(coefficient) ** 2)
++            return q_weight
++
++        def extend_path(
++            path: list[SquareQDMColumnTransition],
++            *,
++            incoming_mask: int,
++        ) -> None:
++            if len(path) == window_width:
++                weight = path_q_weight(path)
++                if weight != 0.0:
++                    key = (path[0].incoming_mask, path[-1].outgoing_mask)
++                    entries[key] = entries.get(key, 0.0) + weight
++                return
++
++            for transition in self._transitions_by_incoming[incoming_mask]:
++                path.append(transition)
++                extend_path(path, incoming_mask=transition.outgoing_mask)
++                path.pop()
++
++        for incoming_mask in range(self.n_boundary_states):
++            extend_path([], incoming_mask=incoming_mask)
++
++        if not entries:
++            return sp.csr_array(
++                (self.n_boundary_states, self.n_boundary_states),
++                dtype=np.float64,
++            )
++
++        rows = np.fromiter((key[0] for key in entries), dtype=np.int64)
++        cols = np.fromiter((key[1] for key in entries), dtype=np.int64)
++        data = np.fromiter(entries.values(), dtype=np.float64)
++        return sp.coo_array(
++            (data, (rows, cols)),
++            shape=(self.n_boundary_states, self.n_boundary_states),
++            dtype=np.float64,
++        ).tocsr()
++
++    def evaluate_witness(
++        self,
++        placement: SquareQDMWitnessPlacement,
++        *,
++        length: int,
++        boundary_x: StripBoundaryCondition = "open",
++        insertion_x: int | None = None,
++    ) -> SquareQDMStripWitnessEvaluation:
++        """Evaluate ``Tr(Q_R)/dim(H)`` without enumerating dimer coverings."""
++        self._validate_placement(placement)
++        if length < placement.window_width:
++            raise ValueError("length must be at least the witness window width.")
++        if boundary_x not in ("open", "periodic"):
++            raise ValueError("boundary_x must be 'open' or 'periodic'.")
++
++        insertion = self.witness_insertion_matrix(placement)
++        if boundary_x == "open":
++            if insertion_x is None:
++                insertion_x = (length - placement.window_width) // 2
++            return self._evaluate_open(
++                placement,
++                insertion=insertion,
++                length=length,
++                insertion_x=int(insertion_x),
++            )
++
++        if insertion_x is not None:
++            raise ValueError("insertion_x is not used for periodic x boundaries.")
++        return self._evaluate_periodic(
++            placement,
++            insertion=insertion,
++            length=length,
++        )
++
++    def scan_witness(
++        self,
++        placement: SquareQDMWitnessPlacement,
++        *,
++        lengths: Sequence[int],
++        boundary_x: StripBoundaryCondition = "open",
++        centered: bool = True,
++    ) -> SquareQDMStripScalingReport:
++        """Evaluate a fixed witness over several strip lengths."""
++        self._validate_placement(placement)
++        if boundary_x not in ("open", "periodic"):
++            raise ValueError("boundary_x must be 'open' or 'periodic'.")
++
++        insertion = self.witness_insertion_matrix(placement)
++        periodic_spectrum = (
++            self._periodic_spectrum(insertion) if boundary_x == "periodic" else None
++        )
++        evaluations: list[SquareQDMStripWitnessEvaluation] = []
++        for raw_length in lengths:
++            length = int(raw_length)
++            if length < placement.window_width:
++                raise ValueError("all lengths must be at least the witness window width.")
++            if boundary_x == "periodic":
++                evaluation = self._evaluate_periodic(
++                    placement,
++                    insertion=insertion,
++                    length=length,
++                    spectrum=periodic_spectrum,
++                )
++            else:
++                insertion_x = (length - placement.window_width) // 2 if centered else 0
++                evaluation = self._evaluate_open(
++                    placement,
++                    insertion=insertion,
++                    length=length,
++                    insertion_x=insertion_x,
++                )
++            evaluations.append(evaluation)
++
++        return SquareQDMStripScalingReport(
++            placement=placement,
++            evaluations=tuple(evaluations),
++        )
++
++    def _evaluate_open(
++        self,
++        placement: SquareQDMWitnessPlacement,
++        *,
++        insertion: sp.csr_array,
++        length: int,
++        insertion_x: int,
++    ) -> SquareQDMStripWitnessEvaluation:
++        if insertion_x < 0 or insertion_x + placement.window_width > length:
++            raise ValueError("insertion_x places the witness outside the open strip.")
++
++        left = np.zeros(self.n_boundary_states, dtype=np.float64)
++        left[0] = 1.0
++        right = left.copy()
++        left, log_left_scale = _propagate_normalized(
++            left,
++            matrix=self.transfer_matrix,
++            steps=insertion_x,
++            side="left",
++        )
++        right, log_right_scale = _propagate_normalized(
++            right,
++            matrix=self.transfer_matrix,
++            steps=length - insertion_x - placement.window_width,
++            side="right",
++        )
++
++        middle_right = right.copy()
++        for _ in range(placement.window_width):
++            middle_right = np.asarray(self.transfer_matrix @ middle_right).reshape(-1)
++
++        denominator_scaled = float(np.dot(left, middle_right))
++        numerator_scaled = float(np.dot(left, np.asarray(insertion @ right).reshape(-1)))
++        if denominator_scaled <= 0.0:
++            raise ValueError("the requested open strip has no dimer coverings.")
++
++        expectation = float(numerator_scaled / denominator_scaled)
++        common_log_scale = log_left_scale + log_right_scale
++        log_partition_count = common_log_scale + log(denominator_scaled)
++        log_weighted_count = (
++            float("-inf")
++            if numerator_scaled <= 0.0
++            else common_log_scale + log(numerator_scaled)
++        )
++        return SquareQDMStripWitnessEvaluation(
++            circumference=self.circumference,
++            length=length,
++            boundary_x="open",
++            insertion_x=insertion_x,
++            window_width=placement.window_width,
++            expectation=expectation,
++            log_partition_count=log_partition_count,
++            log_weighted_count=log_weighted_count,
++            partition_count=_safe_exp(log_partition_count),
++            weighted_count=_safe_exp(log_weighted_count),
++            metadata={"contraction": "normalized_open_boundary_vectors"},
++        )
++
++    def _evaluate_periodic(
++        self,
++        placement: SquareQDMWitnessPlacement,
++        *,
++        insertion: sp.csr_array,
++        length: int,
++        spectrum: _PeriodicTransferSpectrum | None = None,
++    ) -> SquareQDMStripWitnessEvaluation:
++        periodic_spectrum = spectrum or self._periodic_spectrum(insertion)
++        eigenvalues = periodic_spectrum.eigenvalues
++        insertion_diagonal = periodic_spectrum.insertion_diagonal
++        scale = periodic_spectrum.scale
++        ratios = eigenvalues / scale
++        denominator_scaled = float(np.sum(ratios**length))
++        if denominator_scaled <= 0.0:
++            raise ValueError("the requested periodic strip has no dimer coverings.")
++
++        numerator_scaled = float(
++            np.real(
++                np.sum(
++                    ratios ** (length - placement.window_width)
++                    * insertion_diagonal
++                )
++            )
++        )
++        expectation = float(
++            numerator_scaled
++            / (scale**placement.window_width * denominator_scaled)
++        )
++        log_partition_count = length * log(scale) + log(denominator_scaled)
++        log_weighted_count = (
++            float("-inf")
++            if numerator_scaled <= 0.0
++            else (
++                (length - placement.window_width) * log(scale)
++                + log(numerator_scaled)
++            )
++        )
++        return SquareQDMStripWitnessEvaluation(
++            circumference=self.circumference,
++            length=length,
++            boundary_x="periodic",
++            insertion_x=None,
++            window_width=placement.window_width,
++            expectation=expectation,
++            log_partition_count=log_partition_count,
++            log_weighted_count=log_weighted_count,
++            partition_count=_safe_exp(log_partition_count),
++            weighted_count=_safe_exp(log_weighted_count),
++            metadata={"contraction": "symmetric_transfer_eigendecomposition"},
++        )
++
++    def _periodic_spectrum(
++        self,
++        insertion: sp.csr_array,
++    ) -> _PeriodicTransferSpectrum:
++        if self.n_boundary_states > 2048:
++            raise ValueError(
++                "periodic contraction currently requires dense diagonalization and is limited "
++                "to at most 2048 boundary states; use boundary_x='open' for larger widths."
++            )
++
++        transfer_dense = self.transfer_matrix.toarray()
++        eigenvalues, eigenvectors = np.linalg.eigh(transfer_dense)
++        scale = float(np.max(np.abs(eigenvalues)))
++        if scale == 0.0:
++            raise ValueError("transfer matrix has zero spectral radius.")
++
++        insertion_dense = insertion.toarray()
++        insertion_diagonal = np.einsum(
++            "ij,ij->j",
++            eigenvectors,
++            insertion_dense @ eigenvectors,
++        ).real
++        return _PeriodicTransferSpectrum(
++            eigenvalues=np.asarray(eigenvalues, dtype=np.float64),
++            insertion_diagonal=np.asarray(insertion_diagonal, dtype=np.float64),
++            scale=scale,
++        )
++
++    def _validate_placement(self, placement: SquareQDMWitnessPlacement) -> None:
++        if placement.circumference != self.circumference:
++            raise ValueError(
++                "placement circumference does not match the transfer matrix: "
++                f"{placement.circumference} != {self.circumference}."
++            )
++
++
++def _normalize_square_qdm_x_coordinates(
++    coordinates: Sequence[SquareQDMLinkCoordinate],
++    *,
++    lx: int,
++    periodic: bool,
++) -> tuple[tuple[SquareQDMLinkCoordinate, ...], int]:
++    if not coordinates:
++        raise ValueError("coordinates must not be empty.")
++    if lx <= 0:
++        raise ValueError("lx must be positive.")
++
++    if not periodic:
++        origin = min(coordinate.x for coordinate in coordinates)
++        return (
++            tuple(
++                SquareQDMLinkCoordinate(
++                    x=coordinate.x - origin,
++                    y=coordinate.y,
++                    kind=coordinate.kind,
++                )
++                for coordinate in coordinates
++            ),
++            origin,
++        )
++
++    candidates: list[
++        tuple[int, tuple[SquareQDMLinkCoordinate, ...], int]
++    ] = []
++    for cut in range(lx):
++        unwrapped = tuple(
++            SquareQDMLinkCoordinate(
++                x=(coordinate.x - cut) % lx,
++                y=coordinate.y,
++                kind=coordinate.kind,
++            )
++            for coordinate in coordinates
++        )
++        minimum = min(coordinate.x for coordinate in unwrapped)
++        normalized = tuple(
++            SquareQDMLinkCoordinate(
++                x=coordinate.x - minimum,
++                y=coordinate.y,
++                kind=coordinate.kind,
++            )
++            for coordinate in unwrapped
++        )
++        span = max(
++            coordinate.x + (1 if coordinate.kind == "x" else 0)
++            for coordinate in normalized
++        )
++        origin = (cut + minimum) % lx
++        candidates.append((span, normalized, origin))
++
++    _span, normalized, origin = min(
++        candidates,
++        key=lambda item: (
++            item[0],
++            tuple((coordinate.x, coordinate.y, coordinate.kind) for coordinate in item[1]),
++        ),
++    )
++    return normalized, origin
++
++
++def _square_qdm_column_transitions(
++    circumference: int,
++) -> tuple[SquareQDMColumnTransition, ...]:
++    all_bits = (1 << circumference) - 1
++    transitions: list[SquareQDMColumnTransition] = []
++
++    for vertical_mask in range(1 << circumference):
++        shifted = _rotate_left(vertical_mask, width=circumference)
++        if vertical_mask & shifted:
++            continue
++
++        vertically_covered = vertical_mask | shifted
++        horizontally_covered = all_bits ^ vertically_covered
++        for incoming_mask in _submasks(horizontally_covered):
++            outgoing_mask = horizontally_covered ^ incoming_mask
++            transitions.append(
++                SquareQDMColumnTransition(
++                    incoming_mask=int(incoming_mask),
++                    outgoing_mask=int(outgoing_mask),
++                    vertical_mask=int(vertical_mask),
++                )
++            )
++
++    transitions.sort(
++        key=lambda transition: (
++            transition.incoming_mask,
++            transition.outgoing_mask,
++            transition.vertical_mask,
++        )
++    )
++    return tuple(transitions)
++
++
++def _propagate_normalized(
++    vector: npt.NDArray[np.float64],
++    *,
++    matrix: sp.csr_array,
++    steps: int,
++    side: Literal["left", "right"],
++) -> tuple[npt.NDArray[np.float64], float]:
++    if steps < 0:
++        raise ValueError("steps must be non-negative.")
++
++    result = np.asarray(vector, dtype=np.float64).reshape(-1)
++    log_scale = 0.0
++    for _ in range(steps):
++        if side == "left":
++            result = np.asarray(result @ matrix).reshape(-1)
++        else:
++            result = np.asarray(matrix @ result).reshape(-1)
++
++        scale = float(np.sum(result))
++        if scale <= 0.0:
++            return result, float("-inf")
++        result /= scale
++        log_scale += log(scale)
++
++    return result, log_scale
+diff --git a/tests/caging/test_strip_transfer.py b/tests/caging/test_strip_transfer.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..41f03538a91919a4149aac0acea695fe0f866c4f
+--- /dev/null
++++ b/tests/caging/test_strip_transfer.py
+@@ -0,0 +1,156 @@
++from __future__ import annotations
++
++import numpy as np
++
++from qlinks.caging import (
++    ReducedIZPatternSupport,
++    SquareQDMStripTransferMatrix,
++    SquareQDMWitnessPlacement,
++    evaluate_local_witness_on_diagonal_ensemble,
++    local_witness_template_from_pattern_support,
++)
++from qlinks.models import SquareQDMModel
++
++
++def _plaquette_flip_witness(
++    model: SquareQDMModel,
++    *,
++    x: int = 0,
++    y: int = 0,
++):
++    plaquette_id = model.lattice.plaquette_id_from_cell(x, y)
++    variable_indices = tuple(
++        model.layout.link_variable_index(int(link_id))
++        for link_id in model.lattice.plaquette_links(plaquette_id)
++    )
++    pattern_support = ReducedIZPatternSupport(
++        pattern_key=(
++            (
++                (1, 0, 1, 0),
++                (0, 1, 0, 1),
++                (1.0, 0.0),
++            ),
++        ),
++        variable_indices=variable_indices,
++        source_zero_indices=(),
++        mechanism_labels=(),
++    )
++    template = local_witness_template_from_pattern_support(pattern_support)
++    return template.instantiate(variable_indices)
++
++
++def test_square_qdm_column_transfer_counts_small_open_cylinders() -> None:
++    transfer = SquareQDMStripTransferMatrix(circumference=4)
++    matrix = transfer.transfer_matrix
++
++    assert matrix.shape == (16, 16)
++    assert np.isclose(matrix[0, 0], 2.0)
++    assert np.isclose((matrix @ matrix)[0, 0], 9.0)
++
++
++def test_periodic_strip_witness_matches_explicit_constrained_basis() -> None:
++    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
++    witness = _plaquette_flip_witness(model)
++    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
++    transfer = SquareQDMStripTransferMatrix(circumference=4)
++
++    strip = transfer.evaluate_witness(
++        placement,
++        length=4,
++        boundary_x="periodic",
++    )
++    basis = model.build_basis(solver="dfs")
++    exact = evaluate_local_witness_on_diagonal_ensemble(
++        witness,
++        basis_configs=basis.states,
++    )
++
++    assert placement.window_width == 2
++    assert np.isclose(strip.partition_count, basis.n_states)
++    assert np.isclose(strip.weighted_count, 32.0)
++    assert np.isclose(strip.expectation, exact.expectation)
++
++
++def test_periodic_reference_seam_is_unwrapped_to_a_bounded_placement() -> None:
++    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
++    witness = _plaquette_flip_witness(model, x=3, y=0)
++    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
++    transfer = SquareQDMStripTransferMatrix(circumference=4)
++
++    strip = transfer.evaluate_witness(
++        placement,
++        length=4,
++        boundary_x="periodic",
++    )
++
++    assert placement.reference_origin_x == 3
++    assert placement.window_width == 2
++    assert max(coordinate.x for coordinate in placement.link_coordinates) == 1
++    assert np.isclose(strip.expectation, 32.0 / 272.0)
++
++
++def test_single_link_lowering_has_zero_projected_qdm_weight() -> None:
++    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
++    variable_index = model.layout.link_variable_index(0)
++    pattern_support = ReducedIZPatternSupport(
++        pattern_key=(((1,), (0,), (1.0, 0.0)),),
++        variable_indices=(variable_index,),
++        source_zero_indices=(),
++        mechanism_labels=(),
++    )
++    witness = local_witness_template_from_pattern_support(pattern_support).instantiate(
++        (variable_index,)
++    )
++    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
++    transfer = SquareQDMStripTransferMatrix(circumference=4)
++
++    strip = transfer.evaluate_witness(
++        placement,
++        length=4,
++        boundary_x="periodic",
++    )
++    basis = model.build_basis(solver="dfs")
++    exact = evaluate_local_witness_on_diagonal_ensemble(
++        witness,
++        basis_configs=basis.states,
++    )
++
++    assert np.isclose(strip.expectation, 0.0)
++    assert np.isclose(exact.expectation, 0.0)
++
++
++def test_open_strip_scan_centers_the_witness_and_reports_tail_spread() -> None:
++    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
++    witness = _plaquette_flip_witness(model)
++    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
++    transfer = SquareQDMStripTransferMatrix(circumference=4)
++
++    report = transfer.scan_witness(
++        placement,
++        lengths=(4, 6, 8, 10),
++        boundary_x="open",
++    )
++    tail = report.tail_estimate(tail_points=3)
++
++    assert report.lengths == (4, 6, 8, 10)
++    assert tuple(evaluation.insertion_x for evaluation in report.evaluations) == (1, 2, 3, 4)
++    assert tail["lengths"] == (6, 8, 10)
++    assert float(tail["spread"]) > 0.0
++    assert all(expectation > 0.0 for expectation in report.expectations)
++
++
++def test_periodic_strip_scan_reuses_one_spectral_contraction() -> None:
++    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
++    witness = _plaquette_flip_witness(model)
++    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
++    transfer = SquareQDMStripTransferMatrix(circumference=4)
++
++    report = transfer.scan_witness(
++        placement,
++        lengths=(4, 6),
++        boundary_x="periodic",
++    )
++
++    assert report.lengths == (4, 6)
++    assert np.isclose(report.expectations[0], 32.0 / 272.0)
++    assert all(evaluation.insertion_x is None for evaluation in report.evaluations)

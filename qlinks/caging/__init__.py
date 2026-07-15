@@ -215,6 +215,14 @@ from qlinks.caging.solver import (
     solve_candidate_for_kinetic_targets,
     solve_candidates,
 )
+from qlinks.caging.strip_transfer import (
+    SquareQDMColumnTransition,
+    SquareQDMLinkCoordinate,
+    SquareQDMStripScalingReport,
+    SquareQDMStripTransferMatrix,
+    SquareQDMStripWitnessEvaluation,
+    SquareQDMWitnessPlacement,
+)
 from qlinks.caging.support import (
     CageRegionSupport,
     CageSupportExtractionPolicy,
@@ -350,6 +358,12 @@ __all__ = [
     "SectorPolicy",
     "SnakeStripeRegionProposal",
     "SnakeStripeRegionProposalRecord",
+    "SquareQDMColumnTransition",
+    "SquareQDMLinkCoordinate",
+    "SquareQDMStripScalingReport",
+    "SquareQDMStripTransferMatrix",
+    "SquareQDMStripWitnessEvaluation",
+    "SquareQDMWitnessPlacement",
     "StripeMotifComponentRegionProposal",
     "StripeMotifComponentRegionProposalRecord",
     "StripeMotifComponentSubsetMode",
