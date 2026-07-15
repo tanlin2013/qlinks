@@ -365,3 +365,29 @@ def test_cage_lindblad_design_computes_target_manifold_weights():
 
     projector = design.target_manifold_projector
     np.testing.assert_allclose(projector, np.diag([1.0, 0.0, 0.0, 1.0]))
+
+    reduced = design.target_manifold_density_matrix_series(
+        density_matrices=(rho_target, rho_mixed),
+    )
+    np.testing.assert_allclose(reduced[0], np.diag([1.0, 0.0]))
+    np.testing.assert_allclose(reduced[1], 0.5 * np.eye(2))
+    np.testing.assert_allclose(
+        design.target_manifold_populations_series(density_matrices=(rho_mixed,)),
+        [[0.5, 0.5]],
+    )
+    np.testing.assert_allclose(
+        design.target_manifold_purity_series(density_matrices=(rho_mixed,)),
+        [0.5],
+    )
+    np.testing.assert_allclose(
+        design.target_manifold_coherence_series(density_matrices=(rho_mixed,)),
+        [0.0],
+    )
+    np.testing.assert_allclose(
+        design.target_manifold_entropy_series(density_matrices=(rho_mixed,)),
+        [np.log(2.0)],
+    )
+
+    activity = design.jump_activity_series(density_matrices=(rho_target, rho_bad))
+    assert activity.shape == (2,)
+    assert np.all(activity >= -1.0e-12)

@@ -23,7 +23,13 @@ from qlinks.open_system.diagnostics import (
     bad_h_invariant_common_kernel_basis,
     diagnose_common_kernel_h_invariant_sector,
     diagnose_dark_manifold,
+    jump_activity_series,
+    target_manifold_coherence_series,
+    target_manifold_density_matrix_series,
+    target_manifold_entropy_series,
+    target_manifold_populations_series,
     target_manifold_projector,
+    target_manifold_purity_series,
     target_manifold_weight_series,
 )
 from qlinks.open_system.local_recycling import (
@@ -2521,6 +2527,41 @@ class CageLindbladDesignProblem:
             **kwargs,
         )
 
+    def target_manifold_density_matrix_series(self, **kwargs: Any) -> NDArray[np.complex128]:
+        """Return the conditioned density matrix inside the target manifold."""
+        return target_manifold_density_matrix_series(
+            target_basis=self.manifold_basis,
+            **kwargs,
+        )
+
+    def target_manifold_populations_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return target-basis populations inside the target manifold."""
+        return target_manifold_populations_series(
+            target_basis=self.manifold_basis,
+            **kwargs,
+        )
+
+    def target_manifold_coherence_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return off-diagonal target-manifold coherence over time."""
+        return target_manifold_coherence_series(
+            target_basis=self.manifold_basis,
+            **kwargs,
+        )
+
+    def target_manifold_purity_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return purity of the conditioned target-manifold state over time."""
+        return target_manifold_purity_series(
+            target_basis=self.manifold_basis,
+            **kwargs,
+        )
+
+    def target_manifold_entropy_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return entropy of the conditioned target-manifold state over time."""
+        return target_manifold_entropy_series(
+            target_basis=self.manifold_basis,
+            **kwargs,
+        )
+
     @property
     def hilbert_dimension(self) -> int:
         return self.construction.hilbert_dimension
@@ -2760,6 +2801,30 @@ class CageLindbladDesignResult:
             MCWF results containing ``rho_t`` or ``state_snapshots``.
         """
         return self.problem.target_manifold_weight_series(**kwargs)
+
+    def target_manifold_density_matrix_series(self, **kwargs: Any) -> NDArray[np.complex128]:
+        """Return the conditioned density matrix inside the target manifold."""
+        return self.problem.target_manifold_density_matrix_series(**kwargs)
+
+    def target_manifold_populations_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return target-basis populations inside the target manifold."""
+        return self.problem.target_manifold_populations_series(**kwargs)
+
+    def target_manifold_coherence_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return off-diagonal target-manifold coherence over time."""
+        return self.problem.target_manifold_coherence_series(**kwargs)
+
+    def target_manifold_purity_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return purity of the conditioned target-manifold state over time."""
+        return self.problem.target_manifold_purity_series(**kwargs)
+
+    def target_manifold_entropy_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return entropy of the conditioned target-manifold state over time."""
+        return self.problem.target_manifold_entropy_series(**kwargs)
+
+    def jump_activity_series(self, **kwargs: Any) -> NDArray[np.float64]:
+        """Return total jump activity ``sum_mu Tr(J_mu^dag J_mu rho(t))``."""
+        return jump_activity_series(jumps=self.jumps, **kwargs)
 
     def evolve_with_target_weight(
         self,

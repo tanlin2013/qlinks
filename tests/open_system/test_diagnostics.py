@@ -10,9 +10,115 @@ from qlinks.open_system import (
     diagnose_dark_subspace,
     diagnose_jump_span,
     diagnose_monitor_kernel_closure,
+    jump_activity_series,
+    target_manifold_coherence_series,
+    target_manifold_density_matrix_series,
+    target_manifold_entropy_series,
+    target_manifold_populations_series,
+    target_manifold_purity_series,
     verify_density_matrix,
     verify_lindblad_final_state,
 )
+
+
+def test_target_manifold_reduced_observables_for_density_matrices():
+    target_basis = np.asarray(
+        [
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [0.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    rho0 = np.diag([0.25, 0.25, 0.5]).astype(np.complex128)
+    psi = np.asarray([1.0, 1.0, 0.0], dtype=np.complex128) / np.sqrt(2.0)
+    rho1 = np.outer(psi, psi.conj())
+
+    reduced = target_manifold_density_matrix_series(
+        density_matrices=(rho0, rho1),
+        target_basis=target_basis,
+    )
+
+    np.testing.assert_allclose(reduced[0], 0.5 * np.eye(2))
+    np.testing.assert_allclose(reduced[1], np.full((2, 2), 0.5))
+    np.testing.assert_allclose(
+        target_manifold_populations_series(
+            density_matrices=(rho0, rho1),
+            target_basis=target_basis,
+        ),
+        [[0.5, 0.5], [0.5, 0.5]],
+    )
+    np.testing.assert_allclose(
+        target_manifold_coherence_series(
+            density_matrices=(rho0, rho1),
+            target_basis=target_basis,
+        ),
+        [0.0, np.sqrt(0.5)],
+    )
+    np.testing.assert_allclose(
+        target_manifold_purity_series(
+            density_matrices=(rho0, rho1),
+            target_basis=target_basis,
+        ),
+        [0.5, 1.0],
+    )
+    np.testing.assert_allclose(
+        target_manifold_entropy_series(
+            density_matrices=(rho0, rho1),
+            target_basis=target_basis,
+        ),
+        [np.log(2.0), 0.0],
+        atol=1e-12,
+    )
+
+
+def test_target_manifold_reduced_observables_for_state_snapshots():
+    target_basis = np.eye(2, dtype=np.complex128)
+    snapshot = np.column_stack(
+        [
+            np.asarray([1.0, 0.0], dtype=np.complex128),
+            np.asarray([0.0, 1.0], dtype=np.complex128),
+        ]
+    )
+
+    reduced = target_manifold_density_matrix_series(
+        state_snapshots=(snapshot,),
+        target_basis=target_basis,
+    )
+
+    np.testing.assert_allclose(reduced[0], 0.5 * np.eye(2))
+    np.testing.assert_allclose(
+        target_manifold_purity_series(
+            state_snapshots=(snapshot,),
+            target_basis=target_basis,
+        ),
+        [0.5],
+    )
+
+
+def test_jump_activity_series_for_density_matrices_and_state_snapshots():
+    lowering = np.asarray([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128)
+    rho_excited = np.diag([0.0, 1.0]).astype(np.complex128)
+    rho_ground = np.diag([1.0, 0.0]).astype(np.complex128)
+
+    np.testing.assert_allclose(
+        jump_activity_series(
+            jumps=(lowering,),
+            density_matrices=(rho_excited, rho_ground),
+        ),
+        [1.0, 0.0],
+    )
+
+    snapshot = np.column_stack(
+        [
+            np.asarray([0.0, 1.0], dtype=np.complex128),
+            np.asarray([1.0, 0.0], dtype=np.complex128),
+        ]
+    )
+    np.testing.assert_allclose(
+        jump_activity_series(jumps=(lowering,), state_snapshots=(snapshot,)),
+        [0.5],
+    )
 
 
 def test_diagnose_jump_span_detects_dense_dependencies():
