@@ -23,6 +23,7 @@ understand compact and regional cage states.
    overview
    installation
    workflow
+   thermodynamic_eth
    examples
    development_status
 

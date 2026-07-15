@@ -15,6 +15,7 @@ one or more global winding sectors.
 from __future__ import annotations
 
 import itertools
+import math
 from collections import defaultdict
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field, replace
@@ -2127,6 +2128,84 @@ class MultiLocalQDMPadding:
 
 
 @dataclass(frozen=True, slots=True)
+class FactorizedLocalQDMPadding:
+    """Shared exterior for a product of local blocks without support expansion.
+
+    Unlike :class:`MultiLocalQDMPadding`, this object never forms the Cartesian
+    product of block support configurations.  Its memory cost is therefore
+    independent of ``prod(block.support_size)``.
+    """
+
+    block_ids: tuple[int, ...]
+    exterior_link_ids: npt.NDArray[np.int64]
+    exterior_config: npt.NDArray[np.int64]
+
+    def __post_init__(self) -> None:
+        link_ids = np.asarray(self.exterior_link_ids, dtype=np.int64)
+        config = np.asarray(self.exterior_config, dtype=np.int64)
+        if link_ids.ndim != 1 or config.ndim != 1:
+            raise ValueError("exterior_link_ids and exterior_config must be one-dimensional.")
+        if link_ids.size != config.size:
+            raise ValueError("exterior_config must have one value per exterior link.")
+        if np.unique(link_ids).size != link_ids.size:
+            raise ValueError("exterior_link_ids must not contain duplicates.")
+        if np.any((config != 0) & (config != 1)):
+            raise ValueError("exterior_config must be binary.")
+        object.__setattr__(self, "block_ids", tuple(int(value) for value in self.block_ids))
+        object.__setattr__(self, "exterior_link_ids", link_ids.copy())
+        object.__setattr__(self, "exterior_config", config.copy())
+
+
+@dataclass(frozen=True, slots=True)
+class QDMFactorizedProductCertificationReport:
+    """Polynomial-cost certificate for a separated product of QDM cage blocks."""
+
+    block_ids: tuple[int, ...]
+    padding: FactorizedLocalQDMPadding
+    support_size: int
+    kinetic_eigenvalue: complex
+    self_loop_value: complex
+    energy: complex
+    kinetic_residual: float
+    potential_residual: float
+    hamiltonian_residual: float
+    signature: tuple[int, int] | None
+    n_kinetic_product_terms: int
+    n_potential_product_terms: int
+    max_blocks_touched_by_plaquette: int
+    sector_validation: str
+    failure_reason: str | None = None
+
+    @property
+    def is_certified(self) -> bool:
+        return self.failure_reason is None and self.signature is not None
+
+    @property
+    def avoids_support_materialization(self) -> bool:
+        return True
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "block_ids": self.block_ids,
+            "support_size": self.support_size,
+            "kinetic_eigenvalue": self.kinetic_eigenvalue,
+            "self_loop_value": self.self_loop_value,
+            "energy": self.energy,
+            "kinetic_residual": self.kinetic_residual,
+            "potential_residual": self.potential_residual,
+            "hamiltonian_residual": self.hamiltonian_residual,
+            "signature": self.signature,
+            "n_kinetic_product_terms": self.n_kinetic_product_terms,
+            "n_potential_product_terms": self.n_potential_product_terms,
+            "max_blocks_touched_by_plaquette": self.max_blocks_touched_by_plaquette,
+            "sector_validation": self.sector_validation,
+            "failure_reason": self.failure_reason,
+            "is_certified": self.is_certified,
+            "avoids_support_materialization": self.avoids_support_materialization,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class MultiLocalQDMCertificationReport:
     """Numerical certificate for one multi-block QDM padding."""
 
@@ -2339,6 +2418,64 @@ class _QDMGlobalPlaquetteAction:
     forward: complex
     backward: complex
     potential: complex
+
+
+@dataclass(frozen=True, slots=True)
+class _FactorizedProductTerm:
+    """One coefficient times a tensor product of sparse factor vectors."""
+
+    coefficient: complex
+    factors: tuple[dict[tuple[int, ...], complex], ...]
+
+
+def _sparse_factor_inner_product(
+    left: dict[tuple[int, ...], complex],
+    right: dict[tuple[int, ...], complex],
+) -> complex:
+    if len(left) > len(right):
+        left, right = right, left
+        return np.conj(_sparse_factor_inner_product(left, right))
+    return sum(np.conj(value) * right.get(key, 0.0 + 0.0j) for key, value in left.items())
+
+
+def _factorized_product_inner_product(
+    left: _FactorizedProductTerm,
+    right: _FactorizedProductTerm,
+) -> complex:
+    if len(left.factors) != len(right.factors):
+        raise ValueError("factorized product terms must have the same number of factors.")
+    value = np.conj(left.coefficient) * right.coefficient
+    for left_factor, right_factor in zip(left.factors, right.factors, strict=True):
+        value *= _sparse_factor_inner_product(left_factor, right_factor)
+        if value == 0.0:
+            break
+    return complex(value)
+
+
+def _factorized_sum_norm(terms: Sequence[_FactorizedProductTerm]) -> float:
+    contributions: list[complex] = []
+    for left_index, left in enumerate(terms):
+        contributions.append(_factorized_product_inner_product(left, left))
+        for right in terms[left_index + 1 :]:
+            overlap = _factorized_product_inner_product(left, right)
+            contributions.extend((overlap, np.conj(overlap)))
+
+    real_value = math.fsum(float(np.real(value)) for value in contributions)
+    imaginary_value = math.fsum(float(np.imag(value)) for value in contributions)
+    absolute_scale = math.fsum(abs(value) for value in contributions)
+    roundoff_bound = 128.0 * np.finfo(np.float64).eps * max(absolute_scale, 1.0)
+    if abs(real_value) <= roundoff_bound and abs(imaginary_value) <= roundoff_bound:
+        return 0.0
+    if real_value < -roundoff_bound:
+        raise ArithmeticError("factorized norm contraction produced a negative norm square.")
+    return float(np.sqrt(max(real_value, 0.0)))
+
+
+def _factorized_sum_expectation(
+    reference: _FactorizedProductTerm,
+    terms: Sequence[_FactorizedProductTerm],
+) -> complex:
+    return complex(sum(_factorized_product_inner_product(reference, term) for term in terms))
 
 
 @dataclass(frozen=True, slots=True)
@@ -5592,7 +5729,8 @@ def _iter_qdm_exterior_paddings_for_blocks(
     blocks: Sequence[LocalQDMCageBlock],
     *,
     config: LocalQDMMultiPaddingConfig,
-) -> Iterator[MultiLocalQDMPadding]:
+    factorized: bool = False,
+) -> Iterator[MultiLocalQDMPadding | FactorizedLocalQDMPadding]:
     fixed_blocks = tuple(blocks)
     if not fixed_blocks:
         return
@@ -5640,14 +5778,29 @@ def _iter_qdm_exterior_paddings_for_blocks(
 
     if n_exterior == 0:
         exterior_config = np.zeros(0, dtype=np.int64)
-        padding = _make_qdm_multi_padding_from_exterior(
-            model,
-            fixed_blocks,
-            exterior_link_ids=exterior_link_ids,
-            exterior_config=exterior_config,
-        )
-        if _multi_padding_passes_global_filters(model, padding, fixed_blocks, config):
-            yield padding
+        if factorized:
+            padding = FactorizedLocalQDMPadding(
+                block_ids=tuple(int(block.block_id) for block in fixed_blocks),
+                exterior_link_ids=exterior_link_ids,
+                exterior_config=exterior_config,
+            )
+            reason, _sector_validation, _max_touched = _factorized_padding_validation_reason(
+                model,
+                fixed_blocks,
+                padding,
+                config,
+            )
+            if reason is None:
+                yield padding
+        else:
+            padding = _make_qdm_multi_padding_from_exterior(
+                model,
+                fixed_blocks,
+                exterior_link_ids=exterior_link_ids,
+                exterior_config=exterior_config,
+            )
+            if _multi_padding_passes_global_filters(model, padding, fixed_blocks, config):
+                yield padding
         return
 
     variable_order = _qdm_exterior_variable_order(
@@ -5717,13 +5870,35 @@ def _iter_qdm_exterior_paddings_for_blocks(
 
         if depth == n_exterior:
             if full_check():
-                padding = _make_qdm_multi_padding_from_exterior(
-                    model,
-                    fixed_blocks,
-                    exterior_link_ids=exterior_link_ids,
-                    exterior_config=exterior_config.copy(),
-                )
-                if _multi_padding_passes_global_filters(model, padding, fixed_blocks, config):
+                if factorized:
+                    padding = FactorizedLocalQDMPadding(
+                        block_ids=tuple(int(block.block_id) for block in fixed_blocks),
+                        exterior_link_ids=exterior_link_ids,
+                        exterior_config=exterior_config.copy(),
+                    )
+                    reason, _sector_validation, _max_touched = (
+                        _factorized_padding_validation_reason(
+                            model,
+                            fixed_blocks,
+                            padding,
+                            config,
+                        )
+                    )
+                    passes_filters = reason is None
+                else:
+                    padding = _make_qdm_multi_padding_from_exterior(
+                        model,
+                        fixed_blocks,
+                        exterior_link_ids=exterior_link_ids,
+                        exterior_config=exterior_config.copy(),
+                    )
+                    passes_filters = _multi_padding_passes_global_filters(
+                        model,
+                        padding,
+                        fixed_blocks,
+                        config,
+                    )
+                if passes_filters:
                     yielded_count += 1
                     yield padding
             return
@@ -5961,6 +6136,576 @@ def _qdm_blocks_are_kinetically_separated(
         if len(owners) > 1:
             return False
     return True
+
+
+def factorized_qdm_padding_from_multi_padding(
+    padding: MultiLocalQDMPadding,
+) -> FactorizedLocalQDMPadding:
+    """Drop the materialized Cartesian-product support from an old padding."""
+    return FactorizedLocalQDMPadding(
+        block_ids=padding.block_ids,
+        exterior_link_ids=padding.exterior_link_ids,
+        exterior_config=padding.exterior_config,
+    )
+
+
+def iter_factorized_qdm_block_paddings(
+    model: object,
+    block_pool: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+    max_yielded: int | None = None,
+) -> Iterator[FactorizedLocalQDMPadding]:
+    """Yield exterior assignments without materializing block support products.
+
+    This mirrors :func:`iter_multi_qdm_block_paddings`, but the returned object
+    contains only the block ids and shared exterior configuration.  The search
+    therefore remains usable when ``prod(block.support_size)`` is too large to
+    enumerate.  ``max_product_support_size`` is intentionally not applied on
+    this path because the Cartesian-product support is never materialized.
+    """
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    yielded_limit = multi_config.max_padding_attempts if max_yielded is None else max_yielded
+    if yielded_limit is not None and yielded_limit <= 0:
+        return
+
+    blocks_tuple = tuple(block_pool)
+    block_ids = [int(block.block_id) for block in blocks_tuple]
+    if len(block_ids) != len(set(block_ids)):
+        raise ValueError("block_pool contains duplicate block_id values.")
+    max_blocks = (
+        len(blocks_tuple)
+        if multi_config.max_blocks is None
+        else min(int(multi_config.max_blocks), len(blocks_tuple))
+    )
+    yielded = 0
+
+    for block_count in range(multi_config.min_blocks, max_blocks + 1):
+        for blocks in itertools.combinations(blocks_tuple, block_count):
+            if yielded_limit is not None and yielded >= yielded_limit:
+                return
+            if not _qdm_blocks_are_pairwise_link_disjoint(blocks):
+                continue
+            separated = _qdm_blocks_are_kinetically_separated(model, blocks)
+            if multi_config.require_kinetic_separation and not separated:
+                continue
+            for padding in _iter_qdm_exterior_paddings_for_blocks(
+                model,
+                blocks,
+                config=multi_config,
+                factorized=True,
+            ):
+                if not isinstance(padding, FactorizedLocalQDMPadding):
+                    raise TypeError("factorized padding iterator returned an unexpected object.")
+                yield padding
+                yielded += 1
+                if yielded_limit is not None and yielded >= yielded_limit:
+                    return
+
+
+def find_factorized_qdm_block_paddings(
+    model: object,
+    block_pool: Sequence[LocalQDMCageBlock],
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> list[FactorizedLocalQDMPadding]:
+    """Materialize a bounded list of factorized QDM exterior assignments."""
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    if multi_config.max_paddings == 0:
+        return []
+    return list(
+        itertools.islice(
+            iter_factorized_qdm_block_paddings(
+                model,
+                block_pool,
+                config=multi_config,
+                max_yielded=multi_config.max_paddings,
+            ),
+            multi_config.max_paddings,
+        )
+    )
+
+
+def _factorized_block_state_factor(
+    block: LocalQDMCageBlock,
+) -> dict[tuple[int, ...], complex]:
+    factor: dict[tuple[int, ...], complex] = defaultdict(complex)
+    for config, amplitude in zip(block.support_configs, block.amplitudes, strict=True):
+        factor[_config_key(config)] += complex(amplitude)
+    return {key: value for key, value in factor.items() if value != 0.0}
+
+
+def _factorized_reference_term(
+    blocks: Sequence[LocalQDMCageBlock],
+    padding: FactorizedLocalQDMPadding,
+) -> _FactorizedProductTerm:
+    block_factors = tuple(_factorized_block_state_factor(block) for block in blocks)
+    exterior_factor = {_config_key(padding.exterior_config): 1.0 + 0.0j}
+    return _FactorizedProductTerm(
+        coefficient=1.0 + 0.0j,
+        factors=block_factors + (exterior_factor,),
+    )
+
+
+def _factorized_padding_reference_config(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    padding: FactorizedLocalQDMPadding,
+    *,
+    support_indices: Sequence[int] | None = None,
+) -> npt.NDArray[np.int64]:
+    config = np.zeros(int(model.lattice.num_links), dtype=np.int64)
+    config[padding.exterior_link_ids] = padding.exterior_config
+    indices = [0] * len(blocks) if support_indices is None else list(support_indices)
+    if len(indices) != len(blocks):
+        raise ValueError("support_indices must have one entry per block.")
+    for block, support_index in zip(blocks, indices, strict=True):
+        config[block.link_ids] = block.support_configs[int(support_index)]
+    return config
+
+
+def _factorized_padding_validation_reason(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    padding: FactorizedLocalQDMPadding,
+    config: LocalQDMMultiPaddingConfig,
+) -> tuple[str | None, str, int]:
+    fixed_blocks = tuple(blocks)
+    if not fixed_blocks:
+        return "no_blocks", "not_checked", 0
+    if tuple(int(block.block_id) for block in fixed_blocks) != padding.block_ids:
+        return "block_id_mismatch", "not_checked", 0
+    if not _qdm_blocks_are_pairwise_link_disjoint(fixed_blocks):
+        return "overlapping_block_links", "not_checked", 0
+
+    owner_by_link: dict[int, int] = {}
+    for block_index, block in enumerate(fixed_blocks):
+        for link_id in block.link_ids:
+            owner_by_link[int(link_id)] = int(block_index)
+    exterior_ids = set(int(link_id) for link_id in padding.exterior_link_ids)
+    expected_exterior = set(range(int(model.lattice.num_links))) - set(owner_by_link)
+    if exterior_ids != expected_exterior:
+        return "incomplete_link_partition", "not_checked", 0
+
+    max_touched = 0
+    for action in _qdm_global_plaquette_actions(model):
+        owners = {
+            owner_by_link[int(link_id)] for link_id in action.links if int(link_id) in owner_by_link
+        }
+        max_touched = max(max_touched, len(owners))
+    if max_touched > 1:
+        return "plaquette_touches_multiple_blocks", "not_checked", max_touched
+
+    reference = _factorized_padding_reference_config(model, fixed_blocks, padding)
+    if not _global_configs_satisfy_qdm_constraints(model, reference):
+        return "constraint_violation", "not_checked", max_touched
+
+    sector_validation = "disabled"
+    if config.include_sectors:
+        sector_validation = "reference_and_single_block_variations"
+        if not _global_configs_satisfy_model_sectors(model, reference):
+            return "sector_violation", sector_validation, max_touched
+        for block_index, block in enumerate(fixed_blocks):
+            for support_index in range(block.support_size):
+                support_indices = [0] * len(fixed_blocks)
+                support_indices[block_index] = int(support_index)
+                varied = _factorized_padding_reference_config(
+                    model,
+                    fixed_blocks,
+                    padding,
+                    support_indices=support_indices,
+                )
+                if not _global_configs_satisfy_model_sectors(model, varied):
+                    return "sector_variation", sector_validation, max_touched
+
+    if config.require_static_exterior:
+        block_link_set = set(owner_by_link)
+        for action in _qdm_global_plaquette_actions(model):
+            if any(int(link_id) in block_link_set for link_id in action.links):
+                continue
+            if _qdm_plaquette_is_flippable_from_action(reference, action):
+                return "nonstatic_exterior", sector_validation, max_touched
+
+    return None, sector_validation, max_touched
+
+
+def _factorized_action_context(
+    blocks: Sequence[LocalQDMCageBlock],
+    padding: FactorizedLocalQDMPadding,
+) -> tuple[dict[int, tuple[int, int]], dict[int, int]]:
+    block_position_by_link: dict[int, tuple[int, int]] = {}
+    for block_index, block in enumerate(blocks):
+        for local_index, link_id in enumerate(block.link_ids):
+            block_position_by_link[int(link_id)] = (int(block_index), int(local_index))
+    exterior_position_by_link = {
+        int(link_id): int(index) for index, link_id in enumerate(padding.exterior_link_ids)
+    }
+    return block_position_by_link, exterior_position_by_link
+
+
+def _factorized_pattern_matches(
+    *,
+    action: _QDMGlobalPlaquetteAction,
+    pattern: npt.NDArray[np.int64],
+    block_config: tuple[int, ...] | None,
+    block_index: int | None,
+    block_position_by_link: dict[int, tuple[int, int]],
+    exterior_config: npt.NDArray[np.int64],
+    exterior_position_by_link: dict[int, int],
+) -> bool:
+    for action_position, link_id_raw in enumerate(action.links):
+        link_id = int(link_id_raw)
+        owner = block_position_by_link.get(link_id)
+        if owner is None:
+            value = int(exterior_config[exterior_position_by_link[link_id]])
+        else:
+            owner_index, local_index = owner
+            if block_index is None or owner_index != block_index or block_config is None:
+                raise ValueError("inconsistent block ownership in factorized action.")
+            value = int(block_config[local_index])
+        if value != int(pattern[action_position]):
+            return False
+    return True
+
+
+def _factorized_updated_outputs(
+    *,
+    action: _QDMGlobalPlaquetteAction,
+    target_pattern: npt.NDArray[np.int64],
+    block_config: tuple[int, ...] | None,
+    block_index: int | None,
+    block_position_by_link: dict[int, tuple[int, int]],
+    exterior_config: npt.NDArray[np.int64],
+    exterior_position_by_link: dict[int, int],
+) -> tuple[tuple[int, ...] | None, tuple[int, ...]]:
+    updated_block = None if block_config is None else list(block_config)
+    updated_exterior = np.asarray(exterior_config, dtype=np.int64).copy()
+    for action_position, link_id_raw in enumerate(action.links):
+        link_id = int(link_id_raw)
+        owner = block_position_by_link.get(link_id)
+        target_value = int(target_pattern[action_position])
+        if owner is None:
+            updated_exterior[exterior_position_by_link[link_id]] = target_value
+        else:
+            owner_index, local_index = owner
+            if block_index is None or owner_index != block_index or updated_block is None:
+                raise ValueError("inconsistent block ownership in factorized output.")
+            updated_block[local_index] = target_value
+    return (
+        None if updated_block is None else tuple(int(value) for value in updated_block),
+        _config_key(updated_exterior),
+    )
+
+
+def _factorized_kinetic_terms_for_action(
+    action: _QDMGlobalPlaquetteAction,
+    *,
+    padding: FactorizedLocalQDMPadding,
+    reference: _FactorizedProductTerm,
+    block_position_by_link: dict[int, tuple[int, int]],
+    exterior_position_by_link: dict[int, int],
+) -> list[_FactorizedProductTerm]:
+    owners = {
+        block_position_by_link[int(link_id)][0]
+        for link_id in action.links
+        if int(link_id) in block_position_by_link
+    }
+    if len(owners) > 1:
+        raise ValueError("factorized certification requires kinetic separation.")
+    block_index = next(iter(owners)) if owners else None
+
+    terms: list[_FactorizedProductTerm] = []
+    directions = (
+        (action.pattern0, action.pattern1, action.forward),
+        (action.pattern1, action.pattern0, action.backward),
+    )
+    if block_index is None:
+        for source_pattern, target_pattern, coefficient in directions:
+            if coefficient == 0.0:
+                continue
+            if not _factorized_pattern_matches(
+                action=action,
+                pattern=source_pattern,
+                block_config=None,
+                block_index=None,
+                block_position_by_link=block_position_by_link,
+                exterior_config=padding.exterior_config,
+                exterior_position_by_link=exterior_position_by_link,
+            ):
+                continue
+            _unused_block, exterior_output = _factorized_updated_outputs(
+                action=action,
+                target_pattern=target_pattern,
+                block_config=None,
+                block_index=None,
+                block_position_by_link=block_position_by_link,
+                exterior_config=padding.exterior_config,
+                exterior_position_by_link=exterior_position_by_link,
+            )
+            factors = reference.factors[:-1] + ({exterior_output: 1.0 + 0.0j},)
+            terms.append(_FactorizedProductTerm(coefficient=coefficient, factors=factors))
+        return terms
+
+    source_factor = reference.factors[block_index]
+    for source_pattern, target_pattern, coefficient in directions:
+        if coefficient == 0.0:
+            continue
+        output_factor: dict[tuple[int, ...], complex] = defaultdict(complex)
+        exterior_output: tuple[int, ...] | None = None
+        for block_config, amplitude in source_factor.items():
+            if not _factorized_pattern_matches(
+                action=action,
+                pattern=source_pattern,
+                block_config=block_config,
+                block_index=block_index,
+                block_position_by_link=block_position_by_link,
+                exterior_config=padding.exterior_config,
+                exterior_position_by_link=exterior_position_by_link,
+            ):
+                continue
+            block_output, current_exterior = _factorized_updated_outputs(
+                action=action,
+                target_pattern=target_pattern,
+                block_config=block_config,
+                block_index=block_index,
+                block_position_by_link=block_position_by_link,
+                exterior_config=padding.exterior_config,
+                exterior_position_by_link=exterior_position_by_link,
+            )
+            if block_output is None:
+                raise ValueError("missing block output for a block-touching action.")
+            output_factor[block_output] += amplitude
+            if exterior_output is None:
+                exterior_output = current_exterior
+            elif exterior_output != current_exterior:
+                raise ValueError("one kinetic direction produced inconsistent exterior outputs.")
+        if not output_factor or exterior_output is None:
+            continue
+        factors = list(reference.factors)
+        factors[block_index] = dict(output_factor)
+        factors[-1] = {exterior_output: 1.0 + 0.0j}
+        terms.append(
+            _FactorizedProductTerm(
+                coefficient=coefficient,
+                factors=tuple(factors),
+            )
+        )
+    return terms
+
+
+def _factorized_potential_term_for_action(
+    action: _QDMGlobalPlaquetteAction,
+    *,
+    padding: FactorizedLocalQDMPadding,
+    reference: _FactorizedProductTerm,
+    block_position_by_link: dict[int, tuple[int, int]],
+    exterior_position_by_link: dict[int, int],
+) -> _FactorizedProductTerm | None:
+    if action.potential == 0.0:
+        return None
+    owners = {
+        block_position_by_link[int(link_id)][0]
+        for link_id in action.links
+        if int(link_id) in block_position_by_link
+    }
+    if len(owners) > 1:
+        raise ValueError("factorized certification requires kinetic separation.")
+    block_index = next(iter(owners)) if owners else None
+
+    if block_index is None:
+        flippable = any(
+            _factorized_pattern_matches(
+                action=action,
+                pattern=pattern,
+                block_config=None,
+                block_index=None,
+                block_position_by_link=block_position_by_link,
+                exterior_config=padding.exterior_config,
+                exterior_position_by_link=exterior_position_by_link,
+            )
+            for pattern in (action.pattern0, action.pattern1)
+        )
+        if not flippable:
+            return None
+        return _FactorizedProductTerm(
+            coefficient=action.potential,
+            factors=reference.factors,
+        )
+
+    source_factor = reference.factors[block_index]
+    output_factor: dict[tuple[int, ...], complex] = {}
+    for block_config, amplitude in source_factor.items():
+        flippable = any(
+            _factorized_pattern_matches(
+                action=action,
+                pattern=pattern,
+                block_config=block_config,
+                block_index=block_index,
+                block_position_by_link=block_position_by_link,
+                exterior_config=padding.exterior_config,
+                exterior_position_by_link=exterior_position_by_link,
+            )
+            for pattern in (action.pattern0, action.pattern1)
+        )
+        if flippable:
+            output_factor[block_config] = amplitude
+    if not output_factor:
+        return None
+    factors = list(reference.factors)
+    factors[block_index] = output_factor
+    return _FactorizedProductTerm(
+        coefficient=action.potential,
+        factors=tuple(factors),
+    )
+
+
+def _factorized_eigen_residual(
+    action_terms: Sequence[_FactorizedProductTerm],
+    *,
+    reference: _FactorizedProductTerm,
+    eigenvalue: complex,
+) -> float:
+    residual_terms = list(action_terms)
+    residual_terms.append(
+        _FactorizedProductTerm(
+            coefficient=-complex(eigenvalue),
+            factors=reference.factors,
+        )
+    )
+    return _factorized_sum_norm(residual_terms)
+
+
+def certify_qdm_factorized_product_state(
+    model: object,
+    blocks: Sequence[LocalQDMCageBlock],
+    padding: FactorizedLocalQDMPadding | MultiLocalQDMPadding,
+    *,
+    config: LocalQDMMultiPaddingConfig | None = None,
+) -> QDMFactorizedProductCertificationReport:
+    """Certify a separated product cage without forming its global support.
+
+    The Hamiltonian action is represented as a sum of tensor-product vectors.
+    Norms and expectation values are evaluated by factor contractions.  The
+    cost is polynomial in the number of blocks and plaquettes and exponential
+    only in the largest *single-block* support, rather than in the product of
+    all block support sizes.
+
+    Exact factorization currently requires every plaquette to touch at most one
+    selected block.  This is precisely the kinetic-separation condition used by
+    the strict multi-padding workflow.
+    """
+    multi_config = LocalQDMMultiPaddingConfig() if config is None else config
+    factorized_padding = (
+        factorized_qdm_padding_from_multi_padding(padding)
+        if isinstance(padding, MultiLocalQDMPadding)
+        else padding
+    )
+    fixed_blocks = tuple(blocks)
+    failure_reason, sector_validation, max_touched = _factorized_padding_validation_reason(
+        model,
+        fixed_blocks,
+        factorized_padding,
+        multi_config,
+    )
+    support_size = int(np.prod([block.support_size for block in fixed_blocks], dtype=object))
+    if failure_reason is not None:
+        return QDMFactorizedProductCertificationReport(
+            block_ids=tuple(int(block.block_id) for block in fixed_blocks),
+            padding=factorized_padding,
+            support_size=support_size,
+            kinetic_eigenvalue=0.0 + 0.0j,
+            self_loop_value=0.0 + 0.0j,
+            energy=0.0 + 0.0j,
+            kinetic_residual=float("inf"),
+            potential_residual=float("inf"),
+            hamiltonian_residual=float("inf"),
+            signature=None,
+            n_kinetic_product_terms=0,
+            n_potential_product_terms=0,
+            max_blocks_touched_by_plaquette=max_touched,
+            sector_validation=sector_validation,
+            failure_reason=failure_reason,
+        )
+
+    reference = _factorized_reference_term(fixed_blocks, factorized_padding)
+    block_position_by_link, exterior_position_by_link = _factorized_action_context(
+        fixed_blocks,
+        factorized_padding,
+    )
+    kinetic_terms: list[_FactorizedProductTerm] = []
+    potential_terms: list[_FactorizedProductTerm] = []
+    for action in _qdm_global_plaquette_actions(model):
+        kinetic_terms.extend(
+            _factorized_kinetic_terms_for_action(
+                action,
+                padding=factorized_padding,
+                reference=reference,
+                block_position_by_link=block_position_by_link,
+                exterior_position_by_link=exterior_position_by_link,
+            )
+        )
+        potential_term = _factorized_potential_term_for_action(
+            action,
+            padding=factorized_padding,
+            reference=reference,
+            block_position_by_link=block_position_by_link,
+            exterior_position_by_link=exterior_position_by_link,
+        )
+        if potential_term is not None:
+            potential_terms.append(potential_term)
+
+    kinetic_eigenvalue = _factorized_sum_expectation(reference, kinetic_terms)
+    self_loop_value = _factorized_sum_expectation(reference, potential_terms)
+    energy = kinetic_eigenvalue + self_loop_value
+    kinetic_residual = _factorized_eigen_residual(
+        kinetic_terms,
+        reference=reference,
+        eigenvalue=kinetic_eigenvalue,
+    )
+    potential_residual = _factorized_eigen_residual(
+        potential_terms,
+        reference=reference,
+        eigenvalue=self_loop_value,
+    )
+    hamiltonian_residual = _factorized_eigen_residual(
+        tuple(kinetic_terms) + tuple(potential_terms),
+        reference=reference,
+        eigenvalue=energy,
+    )
+
+    signature = signature_from_energy_and_self_loop(
+        energy,
+        self_loop_value,
+        tolerance=max(multi_config.tolerance, 1.0e-15) * 10.0,
+        potential_unit=_infer_potential_unit_from_model(model),
+    )
+    residual_failure = None
+    if kinetic_residual > multi_config.tolerance:
+        residual_failure = "kinetic_residual"
+    elif potential_residual > multi_config.tolerance:
+        residual_failure = "potential_residual"
+    elif hamiltonian_residual > multi_config.tolerance:
+        residual_failure = "hamiltonian_residual"
+    elif signature is None:
+        residual_failure = "signature_inference_failed"
+
+    return QDMFactorizedProductCertificationReport(
+        block_ids=tuple(int(block.block_id) for block in fixed_blocks),
+        padding=factorized_padding,
+        support_size=support_size,
+        kinetic_eigenvalue=kinetic_eigenvalue,
+        self_loop_value=self_loop_value,
+        energy=energy,
+        kinetic_residual=kinetic_residual,
+        potential_residual=potential_residual,
+        hamiltonian_residual=hamiltonian_residual,
+        signature=signature,
+        n_kinetic_product_terms=len(kinetic_terms),
+        n_potential_product_terms=len(potential_terms),
+        max_blocks_touched_by_plaquette=max_touched,
+        sector_validation=sector_validation,
+        failure_reason=residual_failure,
+    )
 
 
 def _make_qdm_multi_padding_from_exterior(
