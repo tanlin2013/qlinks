@@ -172,8 +172,68 @@ increased without overflowing the raw number of coverings.  Periodic-x
 contractions use a symmetric transfer-matrix eigendecomposition and are
 currently limited to at most 2048 boundary states.
 
-The current backend sums all winding sectors.  This is already useful for
-establishing a nonzero thermodynamic local weight and for validating explicit
-finite-size calculations.  A sector-resolved transfer matrix, obtained by
-attaching winding charges to the boundary states, remains the next extension
-needed for a strict same-sector ETH comparison.
+Winding-resolved periodic contractions
+--------------------------------------
+
+For a strict ETH comparison, the finite torus can be projected into the same
+electric winding sector as the cage state.  The labels use the same convention
+as ``SquareQDMModel(winding_convention="electric")``::
+
+   from qlinks.caging import SquareQDMStripWindingSector
+
+   sector = SquareQDMStripWindingSector(
+       winding_x=0,
+       winding_y=0,
+   )
+   w00 = transfer.evaluate_witness(
+       placement,
+       length=reference_model.lx,
+       boundary_x="periodic",
+       winding_sector=sector,
+   )
+
+The x winding is selected from the transfer boundary mask.  The y winding is
+accumulated as an integer charge on each column transition.  The witness
+insertion is resolved by the same charge before the numerator is contracted.
+Thus both the partition count and ``Tr(Q_R)`` are evaluated inside one exact
+winding sector.
+
+All nonempty sectors can be counted without constructing the global basis::
+
+   counts = transfer.periodic_winding_sector_counts(
+       length=reference_model.lx,
+   )
+
+For the square ``4x4`` QDM, this reproduces the known decomposition, including
+``counts[(0, 0)] = 132`` after indexing by ``sector.label``.  Sector-resolved
+periodic contractions currently use charge-resolved dynamic programming and
+are limited to ``Ly <= 9``.  The local insertion must not cross the canonical x
+seam; choose ``insertion_x`` explicitly when necessary.
+
+Evaluate a common cage witness family
+-------------------------------------
+
+The output of :func:`qlinks.caging.common_local_witness_families` can be sent
+directly to the strip backend::
+
+   from qlinks.caging import evaluate_square_qdm_witness_family_on_strips
+
+   strip_family = evaluate_square_qdm_witness_family_on_strips(
+       family,
+       models={
+           "4x4": model_4x4,
+           "6x4": model_6x4,
+           "8x4": model_8x4,
+       },
+       lengths={
+           "4x4": (4,),
+           "6x4": (6,),
+           "8x4": (8,),
+       },
+       boundary_x="periodic",
+       winding_sector=(0, 0),
+   )
+
+Each record retains the finite-system embedding, the normalized strip
+placement, and its scaling report.  This closes the loop between a reduced-IZ
+classification report and a same-sector thermal witness calculation.

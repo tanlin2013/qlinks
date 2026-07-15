@@ -3,10 +3,13 @@ from __future__ import annotations
 import numpy as np
 
 from qlinks.caging import (
+    LocalWitnessEmbeddingRecord,
+    LocalWitnessFamily,
     ReducedIZPatternSupport,
     SquareQDMStripTransferMatrix,
     SquareQDMWitnessPlacement,
     evaluate_local_witness_on_diagonal_ensemble,
+    evaluate_square_qdm_witness_family_on_strips,
     local_witness_template_from_pattern_support,
 )
 from qlinks.models import SquareQDMModel
@@ -154,3 +157,123 @@ def test_periodic_strip_scan_reuses_one_spectral_contraction() -> None:
     assert report.lengths == (4, 6)
     assert np.isclose(report.expectations[0], 32.0 / 272.0)
     assert all(evaluation.insertion_x is None for evaluation in report.evaluations)
+
+
+def test_periodic_winding_sector_counts_match_known_4x4_decomposition() -> None:
+    transfer = SquareQDMStripTransferMatrix(circumference=4)
+
+    counts = transfer.periodic_winding_sector_counts(length=4)
+    by_label = {sector.label: count for sector, count in counts.items()}
+
+    assert np.isclose(sum(by_label.values()), 272.0)
+    assert np.isclose(by_label[(0, 0)], 132.0)
+    assert np.isclose(by_label[(0, 2)], 32.0)
+    assert np.isclose(by_label[(2, 0)], 32.0)
+    assert np.isclose(by_label[(0, 4)], 1.0)
+    assert np.isclose(by_label[(4, 0)], 1.0)
+
+
+def test_winding_resolved_witness_matches_explicit_w00_basis() -> None:
+    reference_model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
+    witness = _plaquette_flip_witness(reference_model)
+    placement = SquareQDMWitnessPlacement.from_local_witness(reference_model, witness)
+    transfer = SquareQDMStripTransferMatrix(circumference=4)
+
+    strip = transfer.evaluate_witness(
+        placement,
+        length=4,
+        boundary_x="periodic",
+        winding_sector=(0, 0),
+    )
+    sector_model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+    )
+    basis = sector_model.build_basis(solver="dfs")
+    exact = evaluate_local_witness_on_diagonal_ensemble(
+        witness,
+        basis_configs=basis.states,
+    )
+
+    assert strip.winding_sector is not None
+    assert strip.winding_sector.label == (0, 0)
+    assert np.isclose(strip.partition_count, 132.0)
+    assert np.isclose(strip.weighted_count, 20.0)
+    assert np.isclose(strip.expectation, exact.expectation)
+
+
+def test_winding_resolved_periodic_scan_tracks_one_sector() -> None:
+    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
+    witness = _plaquette_flip_witness(model)
+    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
+    transfer = SquareQDMStripTransferMatrix(circumference=4)
+
+    report = transfer.scan_witness(
+        placement,
+        lengths=(4, 6, 8),
+        boundary_x="periodic",
+        winding_sector=(0, 0),
+    )
+
+    assert report.winding_sector is not None
+    assert report.winding_sector.label == (0, 0)
+    assert report.lengths == (4, 6, 8)
+    assert all(
+        evaluation.winding_sector == report.winding_sector for evaluation in report.evaluations
+    )
+    assert all(expectation > 0.0 for expectation in report.expectations)
+
+
+def test_winding_resolution_rejects_open_x_boundaries() -> None:
+    model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
+    witness = _plaquette_flip_witness(model)
+    placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
+    transfer = SquareQDMStripTransferMatrix(circumference=4)
+
+    with np.testing.assert_raises_regex(ValueError, "requires periodic x"):
+        transfer.evaluate_witness(
+            placement,
+            length=8,
+            boundary_x="open",
+            winding_sector=(0, 0),
+        )
+
+
+def test_common_witness_family_can_be_evaluated_directly_on_strips() -> None:
+    model_4x4 = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
+    model_6x4 = SquareQDMModel(lx=6, ly=4, boundary_condition="periodic")
+    witness_4x4 = _plaquette_flip_witness(model_4x4)
+    witness_6x4_embedding = _plaquette_flip_witness(model_6x4)
+    witness_6x4 = witness_4x4.template.instantiate(witness_6x4_embedding.variable_indices)
+    family = LocalWitnessFamily(
+        template=witness_4x4.template,
+        embeddings=(
+            LocalWitnessEmbeddingRecord(
+                system_label="4x4",
+                witnesses=(witness_4x4,),
+            ),
+            LocalWitnessEmbeddingRecord(
+                system_label="6x4",
+                witnesses=(witness_6x4,),
+            ),
+        ),
+    )
+
+    report = evaluate_square_qdm_witness_family_on_strips(
+        family,
+        models={"4x4": model_4x4, "6x4": model_6x4},
+        lengths={"4x4": (4,), "6x4": (6,)},
+        boundary_x="periodic",
+        winding_sector=(0, 0),
+    )
+
+    assert report.system_labels == ("4x4", "6x4")
+    assert np.isclose(
+        report.record_for("4x4").scaling_report.expectations[0],
+        20.0 / 132.0,
+    )
+    assert report.record_for("6x4").scaling_report.winding_sector is not None

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field
 from math import exp, isfinite, log
 from typing import Literal
@@ -9,13 +9,18 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
-from qlinks.caging.thermodynamic import LocalWitness, LocalWitnessTemplate
+from qlinks.caging.thermodynamic import (
+    LocalWitness,
+    LocalWitnessFamily,
+    LocalWitnessTemplate,
+)
 from qlinks.lattice import BoundaryCondition, SquareLattice
 from qlinks.models import SquareQDMModel
 from qlinks.variables import VariableKind
 
 SquareQDMLinkKind = Literal["x", "y"]
 StripBoundaryCondition = Literal["open", "periodic"]
+SquareQDMWindingConvention = Literal["electric"]
 
 
 def _bit(mask: int, index: int) -> int:
@@ -42,6 +47,38 @@ def _safe_exp(log_value: float) -> float:
     if log_value > log(np.finfo(np.float64).max):
         return float("inf")
     return float(exp(log_value))
+
+
+@dataclass(frozen=True, slots=True, order=True)
+class SquareQDMStripWindingSector:
+    """One electric winding sector of a periodic square-QDM strip.
+
+    The labels use the same convention as
+    :class:`qlinks.constraints.SquareQDMElectricWindingSector`.  The x label is
+    measured on the x-wrapping horizontal links, while the y label is measured
+    on the y-wrapping vertical links.
+    """
+
+    winding_x: int
+    winding_y: int
+    convention: SquareQDMWindingConvention = "electric"
+
+    def __post_init__(self) -> None:
+        if self.convention != "electric":
+            raise ValueError("only the square-QDM electric winding convention is supported.")
+        object.__setattr__(self, "winding_x", int(self.winding_x))
+        object.__setattr__(self, "winding_y", int(self.winding_y))
+
+    @property
+    def label(self) -> tuple[int, int]:
+        return (self.winding_x, self.winding_y)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "winding_x": self.winding_x,
+            "winding_y": self.winding_y,
+            "convention": self.convention,
+        }
 
 
 @dataclass(frozen=True, slots=True, order=True)
@@ -205,6 +242,7 @@ class SquareQDMStripWitnessEvaluation:
     log_weighted_count: float
     partition_count: float
     weighted_count: float
+    winding_sector: SquareQDMStripWindingSector | None = None
     metadata: dict[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -222,6 +260,9 @@ class SquareQDMStripWitnessEvaluation:
             "log_weighted_count": self.log_weighted_count,
             "partition_count": self.partition_count,
             "weighted_count": self.weighted_count,
+            "winding_sector": (
+                None if self.winding_sector is None else self.winding_sector.to_summary_dict()
+            ),
             "metadata": dict(self.metadata),
         }
 
@@ -241,6 +282,8 @@ class SquareQDMStripScalingReport:
             raise ValueError("evaluations must have distinct lengths.")
         if len({evaluation.boundary_x for evaluation in ordered}) != 1:
             raise ValueError("all evaluations must use the same x boundary condition.")
+        if len({evaluation.winding_sector for evaluation in ordered}) != 1:
+            raise ValueError("all evaluations must use the same winding sector.")
         if any(evaluation.circumference != self.placement.circumference for evaluation in ordered):
             raise ValueError("evaluation circumferences must match the placement.")
         object.__setattr__(self, "evaluations", ordered)
@@ -256,6 +299,10 @@ class SquareQDMStripScalingReport:
     @property
     def boundary_x(self) -> StripBoundaryCondition:
         return self.evaluations[0].boundary_x
+
+    @property
+    def winding_sector(self) -> SquareQDMStripWindingSector | None:
+        return self.evaluations[0].winding_sector
 
     def tail_estimate(self, *, tail_points: int = 3) -> dict[str, object]:
         """Return a descriptive tail mean and spread.
@@ -280,9 +327,66 @@ class SquareQDMStripScalingReport:
         return {
             "circumference": self.placement.circumference,
             "boundary_x": self.boundary_x,
+            "winding_sector": (
+                None if self.winding_sector is None else self.winding_sector.to_summary_dict()
+            ),
             "lengths": self.lengths,
             "expectations": self.expectations,
             "evaluations": tuple(evaluation.to_summary_dict() for evaluation in self.evaluations),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMWitnessFamilyStripRecord:
+    """One finite-system embedding of a common witness family on a strip."""
+
+    system_label: Hashable
+    embedding_index: int
+    placement: SquareQDMWitnessPlacement
+    scaling_report: SquareQDMStripScalingReport
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "system_label": self.system_label,
+            "embedding_index": self.embedding_index,
+            "placement": {
+                "circumference": self.placement.circumference,
+                "window_width": self.placement.window_width,
+                "link_coordinates": self.placement.link_coordinates,
+                "metadata": dict(self.placement.metadata),
+            },
+            "scaling_report": self.scaling_report.to_summary_dict(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMWitnessFamilyStripReport:
+    """Strip evaluations of one cage-derived local witness family."""
+
+    family: LocalWitnessFamily
+    records: tuple[SquareQDMWitnessFamilyStripRecord, ...]
+
+    def __post_init__(self) -> None:
+        if not self.records:
+            raise ValueError("records must not be empty.")
+        if len({record.system_label for record in self.records}) != len(self.records):
+            raise ValueError("records must have distinct system labels.")
+
+    @property
+    def system_labels(self) -> tuple[Hashable, ...]:
+        return tuple(record.system_label for record in self.records)
+
+    def record_for(self, system_label: Hashable) -> SquareQDMWitnessFamilyStripRecord:
+        for record in self.records:
+            if record.system_label == system_label:
+                return record
+        raise KeyError(system_label)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "system_labels": self.system_labels,
+            "template": self.family.template.to_summary_dict(),
+            "records": tuple(record.to_summary_dict() for record in self.records),
         }
 
 
@@ -291,6 +395,12 @@ class _PeriodicTransferSpectrum:
     eigenvalues: npt.NDArray[np.float64]
     insertion_diagonal: npt.NDArray[np.float64]
     scale: float
+
+
+@dataclass(frozen=True, slots=True)
+class _ChargeResolvedTrace:
+    log_counts: dict[int, float]
+    counts: dict[int, float]
 
 
 @dataclass(frozen=True, slots=True)
@@ -307,6 +417,10 @@ class SquareQDMStripTransferMatrix:
     transitions: tuple[SquareQDMColumnTransition, ...] = field(init=False, repr=False)
     transfer_matrix: sp.csr_array = field(init=False, repr=False)
     _transitions_by_incoming: tuple[tuple[SquareQDMColumnTransition, ...], ...] = field(
+        init=False,
+        repr=False,
+    )
+    _electric_y_transfer_by_parity: tuple[dict[int, sp.csr_array], ...] = field(
         init=False,
         repr=False,
     )
@@ -347,6 +461,18 @@ class SquareQDMStripTransferMatrix:
             "_transitions_by_incoming",
             tuple(tuple(group) for group in by_incoming),
         )
+        object.__setattr__(
+            self,
+            "_electric_y_transfer_by_parity",
+            tuple(
+                _electric_y_charge_resolved_transfer_matrices(
+                    transitions,
+                    circumference=self.circumference,
+                    column_parity=parity,
+                )
+                for parity in (0, 1)
+            ),
+        )
 
     @property
     def n_boundary_states(self) -> int:
@@ -357,6 +483,38 @@ class SquareQDMStripTransferMatrix:
         placement: SquareQDMWitnessPlacement,
     ) -> sp.csr_array:
         """Contract the exact local ``Q_R`` weight into one strip insertion."""
+        resolved = self._witness_insertion_matrices(
+            placement,
+            insertion_x=0,
+            resolve_electric_winding_y=False,
+        )
+        return resolved[0]
+
+    def witness_insertion_matrices_by_winding_y(
+        self,
+        placement: SquareQDMWitnessPlacement,
+        *,
+        insertion_x: int = 0,
+    ) -> dict[int, sp.csr_array]:
+        """Return insertion matrices resolved by electric y-winding charge.
+
+        The dictionary key is the contribution of the witness window to the
+        electric winding measured across the y-wrapping links.  ``insertion_x``
+        fixes the checkerboard parity of the first column in the window.
+        """
+        return self._witness_insertion_matrices(
+            placement,
+            insertion_x=int(insertion_x),
+            resolve_electric_winding_y=True,
+        )
+
+    def _witness_insertion_matrices(
+        self,
+        placement: SquareQDMWitnessPlacement,
+        *,
+        insertion_x: int,
+        resolve_electric_winding_y: bool,
+    ) -> dict[int, sp.csr_array]:
         self._validate_placement(placement)
         coordinate_to_index = {
             coordinate: index for index, coordinate in enumerate(placement.link_coordinates)
@@ -368,7 +526,7 @@ class SquareQDMStripTransferMatrix:
         affected_sites = placement.affected_sites
         window_width = placement.window_width
 
-        entries: dict[tuple[int, int], float] = {}
+        entries_by_charge: dict[int, dict[tuple[int, int], float]] = {}
 
         def source_link_value(
             path: Sequence[SquareQDMColumnTransition],
@@ -441,6 +599,18 @@ class SquareQDMStripTransferMatrix:
                     q_weight += float(abs(coefficient) ** 2)
             return q_weight
 
+        def path_winding_y_charge(path: Sequence[SquareQDMColumnTransition]) -> int:
+            if not resolve_electric_winding_y:
+                return 0
+            return sum(
+                _electric_winding_y_transition_value(
+                    transition,
+                    circumference=self.circumference,
+                    column_x=insertion_x + offset,
+                )
+                for offset, transition in enumerate(path)
+            )
+
         def extend_path(
             path: list[SquareQDMColumnTransition],
             *,
@@ -449,6 +619,8 @@ class SquareQDMStripTransferMatrix:
             if len(path) == window_width:
                 weight = path_q_weight(path)
                 if weight != 0.0:
+                    charge = path_winding_y_charge(path)
+                    entries = entries_by_charge.setdefault(charge, {})
                     key = (path[0].incoming_mask, path[-1].outgoing_mask)
                     entries[key] = entries.get(key, 0.0) + weight
                 return
@@ -461,20 +633,25 @@ class SquareQDMStripTransferMatrix:
         for incoming_mask in range(self.n_boundary_states):
             extend_path([], incoming_mask=incoming_mask)
 
-        if not entries:
-            return sp.csr_array(
-                (self.n_boundary_states, self.n_boundary_states),
-                dtype=np.float64,
-            )
+        if not entries_by_charge:
+            return {
+                0: sp.csr_array(
+                    (self.n_boundary_states, self.n_boundary_states),
+                    dtype=np.float64,
+                )
+            }
 
-        rows = np.fromiter((key[0] for key in entries), dtype=np.int64)
-        cols = np.fromiter((key[1] for key in entries), dtype=np.int64)
-        data = np.fromiter(entries.values(), dtype=np.float64)
-        return sp.coo_array(
-            (data, (rows, cols)),
-            shape=(self.n_boundary_states, self.n_boundary_states),
-            dtype=np.float64,
-        ).tocsr()
+        result: dict[int, sp.csr_array] = {}
+        for charge, entries in entries_by_charge.items():
+            rows = np.fromiter((key[0] for key in entries), dtype=np.int64)
+            cols = np.fromiter((key[1] for key in entries), dtype=np.int64)
+            data = np.fromiter(entries.values(), dtype=np.float64)
+            result[int(charge)] = sp.coo_array(
+                (data, (rows, cols)),
+                shape=(self.n_boundary_states, self.n_boundary_states),
+                dtype=np.float64,
+            ).tocsr()
+        return result
 
     def evaluate_witness(
         self,
@@ -483,16 +660,20 @@ class SquareQDMStripTransferMatrix:
         length: int,
         boundary_x: StripBoundaryCondition = "open",
         insertion_x: int | None = None,
+        winding_sector: SquareQDMStripWindingSector | tuple[int, int] | None = None,
     ) -> SquareQDMStripWitnessEvaluation:
         """Evaluate ``Tr(Q_R)/dim(H)`` without enumerating dimer coverings."""
         self._validate_placement(placement)
+        sector = _normalize_square_qdm_strip_winding_sector(winding_sector)
         if length < placement.window_width:
             raise ValueError("length must be at least the witness window width.")
         if boundary_x not in ("open", "periodic"):
             raise ValueError("boundary_x must be 'open' or 'periodic'.")
+        if sector is not None and boundary_x != "periodic":
+            raise ValueError("winding-sector resolution requires periodic x boundaries.")
 
-        insertion = self.witness_insertion_matrix(placement)
         if boundary_x == "open":
+            insertion = self.witness_insertion_matrix(placement)
             if insertion_x is None:
                 insertion_x = (length - placement.window_width) // 2
             return self._evaluate_open(
@@ -502,8 +683,21 @@ class SquareQDMStripTransferMatrix:
                 insertion_x=int(insertion_x),
             )
 
+        if sector is not None:
+            periodic_insertion_x = 0 if insertion_x is None else int(insertion_x)
+            return self._evaluate_periodic_sector(
+                placement,
+                length=length,
+                insertion_x=periodic_insertion_x,
+                winding_sector=sector,
+            )
+
         if insertion_x is not None:
-            raise ValueError("insertion_x is not used for periodic x boundaries.")
+            raise ValueError(
+                "insertion_x is only used for open boundaries or winding-resolved periodic "
+                "contractions."
+            )
+        insertion = self.witness_insertion_matrix(placement)
         return self._evaluate_periodic(
             placement,
             insertion=insertion,
@@ -517,27 +711,46 @@ class SquareQDMStripTransferMatrix:
         lengths: Sequence[int],
         boundary_x: StripBoundaryCondition = "open",
         centered: bool = True,
+        winding_sector: SquareQDMStripWindingSector | tuple[int, int] | None = None,
+        periodic_insertion_x: int = 0,
     ) -> SquareQDMStripScalingReport:
         """Evaluate a fixed witness over several strip lengths."""
         self._validate_placement(placement)
+        sector = _normalize_square_qdm_strip_winding_sector(winding_sector)
         if boundary_x not in ("open", "periodic"):
             raise ValueError("boundary_x must be 'open' or 'periodic'.")
+        if sector is not None and boundary_x != "periodic":
+            raise ValueError("winding-sector resolution requires periodic x boundaries.")
 
-        insertion = self.witness_insertion_matrix(placement)
-        periodic_spectrum = self._periodic_spectrum(insertion) if boundary_x == "periodic" else None
+        insertion = self.witness_insertion_matrix(placement) if sector is None else None
+        periodic_spectrum = (
+            self._periodic_spectrum(insertion)
+            if boundary_x == "periodic" and sector is None and insertion is not None
+            else None
+        )
         evaluations: list[SquareQDMStripWitnessEvaluation] = []
         for raw_length in lengths:
             length = int(raw_length)
             if length < placement.window_width:
                 raise ValueError("all lengths must be at least the witness window width.")
             if boundary_x == "periodic":
-                evaluation = self._evaluate_periodic(
-                    placement,
-                    insertion=insertion,
-                    length=length,
-                    spectrum=periodic_spectrum,
-                )
+                if sector is None:
+                    assert insertion is not None
+                    evaluation = self._evaluate_periodic(
+                        placement,
+                        insertion=insertion,
+                        length=length,
+                        spectrum=periodic_spectrum,
+                    )
+                else:
+                    evaluation = self._evaluate_periodic_sector(
+                        placement,
+                        length=length,
+                        insertion_x=int(periodic_insertion_x),
+                        winding_sector=sector,
+                    )
             else:
+                assert insertion is not None
                 insertion_x = (length - placement.window_width) // 2 if centered else 0
                 evaluation = self._evaluate_open(
                     placement,
@@ -551,6 +764,42 @@ class SquareQDMStripTransferMatrix:
             placement=placement,
             evaluations=tuple(evaluations),
         )
+
+    def periodic_winding_sector_counts(
+        self,
+        *,
+        length: int,
+    ) -> dict[SquareQDMStripWindingSector, float]:
+        """Count periodic dimer coverings in every electric winding sector."""
+        if length <= 0:
+            raise ValueError("length must be positive.")
+        if self.n_boundary_states > 512:
+            raise ValueError(
+                "winding-resolved periodic contraction is currently limited to at most "
+                "512 boundary states (Ly <= 9)."
+            )
+
+        factors = tuple(
+            self._electric_y_transfer_by_parity[column_x % 2] for column_x in range(length)
+        )
+        result: dict[SquareQDMStripWindingSector, float] = {}
+        sectors_by_x = self._boundary_states_grouped_by_winding_x(length=length)
+        for winding_x, boundary_states in sectors_by_x.items():
+            trace = _charge_resolved_trace(
+                factors,
+                start_states=boundary_states,
+                n_boundary_states=self.n_boundary_states,
+            )
+            for winding_y, count in trace.counts.items():
+                if count <= 0.0:
+                    continue
+                result[
+                    SquareQDMStripWindingSector(
+                        winding_x=winding_x,
+                        winding_y=winding_y,
+                    )
+                ] = count
+        return result
 
     def _evaluate_open(
         self,
@@ -649,6 +898,112 @@ class SquareQDMStripTransferMatrix:
             metadata={"contraction": "symmetric_transfer_eigendecomposition"},
         )
 
+    def _evaluate_periodic_sector(
+        self,
+        placement: SquareQDMWitnessPlacement,
+        *,
+        length: int,
+        insertion_x: int,
+        winding_sector: SquareQDMStripWindingSector,
+    ) -> SquareQDMStripWitnessEvaluation:
+        if insertion_x < 0 or insertion_x + placement.window_width > length:
+            raise ValueError(
+                "winding-resolved insertion must not cross the canonical x seam; "
+                "choose insertion_x so the local window lies inside [0, length)."
+            )
+        if self.n_boundary_states > 512:
+            raise ValueError(
+                "winding-resolved periodic contraction is currently limited to at most "
+                "512 boundary states (Ly <= 9)."
+            )
+
+        boundary_states = self._boundary_states_grouped_by_winding_x(length=length).get(
+            winding_sector.winding_x,
+            (),
+        )
+        if not boundary_states:
+            raise ValueError(
+                "the requested winding_x sector has no compatible transfer boundary states."
+            )
+
+        denominator_factors = tuple(
+            self._electric_y_transfer_by_parity[column_x % 2] for column_x in range(length)
+        )
+        denominator = _charge_resolved_trace(
+            denominator_factors,
+            start_states=boundary_states,
+            n_boundary_states=self.n_boundary_states,
+        )
+        log_partition_count = denominator.log_counts.get(
+            winding_sector.winding_y,
+            float("-inf"),
+        )
+        if not isfinite(log_partition_count):
+            raise ValueError("the requested periodic winding sector has no dimer coverings.")
+
+        insertion = self.witness_insertion_matrices_by_winding_y(
+            placement,
+            insertion_x=insertion_x,
+        )
+        numerator_factors: list[dict[int, sp.csr_array]] = []
+        numerator_factors.extend(
+            self._electric_y_transfer_by_parity[column_x % 2] for column_x in range(insertion_x)
+        )
+        numerator_factors.append(insertion)
+        numerator_factors.extend(
+            self._electric_y_transfer_by_parity[column_x % 2]
+            for column_x in range(
+                insertion_x + placement.window_width,
+                length,
+            )
+        )
+        numerator = _charge_resolved_trace(
+            tuple(numerator_factors),
+            start_states=boundary_states,
+            n_boundary_states=self.n_boundary_states,
+        )
+        log_weighted_count = numerator.log_counts.get(
+            winding_sector.winding_y,
+            float("-inf"),
+        )
+        expectation = (
+            0.0
+            if not isfinite(log_weighted_count)
+            else float(exp(log_weighted_count - log_partition_count))
+        )
+        return SquareQDMStripWitnessEvaluation(
+            circumference=self.circumference,
+            length=length,
+            boundary_x="periodic",
+            insertion_x=insertion_x,
+            window_width=placement.window_width,
+            expectation=expectation,
+            log_partition_count=log_partition_count,
+            log_weighted_count=log_weighted_count,
+            partition_count=_safe_exp(log_partition_count),
+            weighted_count=_safe_exp(log_weighted_count),
+            winding_sector=winding_sector,
+            metadata={
+                "contraction": "electric_winding_charge_resolved_dynamic_programming",
+                "n_x_boundary_states": len(boundary_states),
+            },
+        )
+
+    def _boundary_states_grouped_by_winding_x(
+        self,
+        *,
+        length: int,
+    ) -> dict[int, tuple[int, ...]]:
+        grouped: dict[int, list[int]] = {}
+        for mask in range(self.n_boundary_states):
+            winding_x = _electric_winding_x_boundary_value(
+                mask,
+                circumference=self.circumference,
+                length=length,
+            )
+            grouped.setdefault(winding_x, []).append(mask)
+        return {value: tuple(states) for value, states in grouped.items()}
+
     def _periodic_spectrum(
         self,
         insertion: sp.csr_array,
@@ -683,6 +1038,197 @@ class SquareQDMStripTransferMatrix:
                 "placement circumference does not match the transfer matrix: "
                 f"{placement.circumference} != {self.circumference}."
             )
+
+
+def evaluate_square_qdm_witness_family_on_strips(
+    family: LocalWitnessFamily,
+    *,
+    models: Mapping[Hashable, SquareQDMModel],
+    lengths: Sequence[int] | Mapping[Hashable, Sequence[int]],
+    boundary_x: StripBoundaryCondition = "periodic",
+    winding_sector: (
+        SquareQDMStripWindingSector
+        | tuple[int, int]
+        | Mapping[Hashable, SquareQDMStripWindingSector | tuple[int, int] | None]
+        | None
+    ) = None,
+    embedding_index: int = 0,
+) -> SquareQDMWitnessFamilyStripReport:
+    """Evaluate one common cage-derived witness family on square-QDM strips.
+
+    ``family`` is usually produced by :func:`common_local_witness_families`.
+    Each family embedding is paired with the model carrying the same system
+    label, converted to strip coordinates, and evaluated without rebuilding a
+    global dimer basis.
+    """
+    records: list[SquareQDMWitnessFamilyStripRecord] = []
+    for embedding in family.embeddings:
+        system_label = embedding.system_label
+        if system_label not in models:
+            raise KeyError(f"missing square-QDM model for system label {system_label!r}.")
+        if embedding_index < 0 or embedding_index >= len(embedding.witnesses):
+            raise IndexError(
+                f"embedding_index={embedding_index} is unavailable for system label "
+                f"{system_label!r}; found {len(embedding.witnesses)} embeddings."
+            )
+
+        model = models[system_label]
+        witness = embedding.witnesses[embedding_index]
+        placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
+        transfer = SquareQDMStripTransferMatrix(circumference=placement.circumference)
+        local_lengths = lengths[system_label] if isinstance(lengths, Mapping) else lengths
+        local_sector = (
+            winding_sector.get(system_label)
+            if isinstance(winding_sector, Mapping)
+            else winding_sector
+        )
+        scaling = transfer.scan_witness(
+            placement,
+            lengths=local_lengths,
+            boundary_x=boundary_x,
+            winding_sector=local_sector,
+        )
+        records.append(
+            SquareQDMWitnessFamilyStripRecord(
+                system_label=system_label,
+                embedding_index=embedding_index,
+                placement=placement,
+                scaling_report=scaling,
+            )
+        )
+
+    return SquareQDMWitnessFamilyStripReport(
+        family=family,
+        records=tuple(records),
+    )
+
+
+def _normalize_square_qdm_strip_winding_sector(
+    sector: SquareQDMStripWindingSector | tuple[int, int] | None,
+) -> SquareQDMStripWindingSector | None:
+    if sector is None:
+        return None
+    if isinstance(sector, SquareQDMStripWindingSector):
+        return sector
+    if len(sector) != 2:
+        raise ValueError("winding sector tuples must have the form (winding_x, winding_y).")
+    return SquareQDMStripWindingSector(
+        winding_x=int(sector[0]),
+        winding_y=int(sector[1]),
+    )
+
+
+def _electric_winding_x_boundary_value(
+    mask: int,
+    *,
+    circumference: int,
+    length: int,
+) -> int:
+    source_x = length - 1
+    return sum(
+        (1 if (source_x + y) % 2 == 0 else -1) * (2 * _bit(mask, y) - 1)
+        for y in range(circumference)
+    )
+
+
+def _electric_winding_y_transition_value(
+    transition: SquareQDMColumnTransition,
+    *,
+    circumference: int,
+    column_x: int,
+) -> int:
+    source_y = circumference - 1
+    staggered_sign = 1 if (column_x + source_y) % 2 == 0 else -1
+    wrapping_occupation = _bit(transition.vertical_mask, source_y)
+    return staggered_sign * (2 * wrapping_occupation - 1)
+
+
+def _electric_y_charge_resolved_transfer_matrices(
+    transitions: Sequence[SquareQDMColumnTransition],
+    *,
+    circumference: int,
+    column_parity: int,
+) -> dict[int, sp.csr_array]:
+    n_states = 1 << circumference
+    entries_by_charge: dict[int, list[SquareQDMColumnTransition]] = {}
+    for transition in transitions:
+        charge = _electric_winding_y_transition_value(
+            transition,
+            circumference=circumference,
+            column_x=int(column_parity),
+        )
+        entries_by_charge.setdefault(charge, []).append(transition)
+
+    result: dict[int, sp.csr_array] = {}
+    for charge, selected in entries_by_charge.items():
+        rows = np.fromiter(
+            (transition.incoming_mask for transition in selected),
+            dtype=np.int64,
+        )
+        cols = np.fromiter(
+            (transition.outgoing_mask for transition in selected),
+            dtype=np.int64,
+        )
+        data = np.ones(len(selected), dtype=np.float64)
+        result[int(charge)] = sp.coo_array(
+            (data, (rows, cols)),
+            shape=(n_states, n_states),
+            dtype=np.float64,
+        ).tocsr()
+    return result
+
+
+def _charge_resolved_trace(
+    factors: Sequence[Mapping[int, sp.csr_array]],
+    *,
+    start_states: Sequence[int],
+    n_boundary_states: int,
+) -> _ChargeResolvedTrace:
+    states = tuple(int(state) for state in start_states)
+    if not states:
+        return _ChargeResolvedTrace(log_counts={}, counts={})
+
+    initial = np.zeros((len(states), n_boundary_states), dtype=np.float64)
+    initial[np.arange(len(states), dtype=np.int64), np.asarray(states, dtype=np.int64)] = 1.0
+    rows_by_charge: dict[int, npt.NDArray[np.float64]] = {0: initial}
+    log_scale = 0.0
+
+    for factor in factors:
+        next_rows: dict[int, npt.NDArray[np.float64]] = {}
+        for accumulated_charge, rows in rows_by_charge.items():
+            for factor_charge, matrix in factor.items():
+                charge = int(accumulated_charge + factor_charge)
+                contribution = np.asarray(rows @ matrix, dtype=np.float64)
+                if not np.any(contribution):
+                    continue
+                existing = next_rows.get(charge)
+                if existing is None:
+                    next_rows[charge] = contribution
+                else:
+                    existing += contribution
+
+        if not next_rows:
+            return _ChargeResolvedTrace(log_counts={}, counts={})
+
+        scale = float(sum(np.sum(rows) for rows in next_rows.values()))
+        if scale <= 0.0 or not isfinite(scale):
+            raise ValueError("charge-resolved transfer contraction became non-finite.")
+        for rows in next_rows.values():
+            rows /= scale
+        rows_by_charge = next_rows
+        log_scale += log(scale)
+
+    state_array = np.asarray(states, dtype=np.int64)
+    log_counts: dict[int, float] = {}
+    counts: dict[int, float] = {}
+    for charge, rows in rows_by_charge.items():
+        coefficient = float(np.sum(rows[np.arange(len(states)), state_array]))
+        if coefficient <= 0.0:
+            continue
+        log_count = log_scale + log(coefficient)
+        log_counts[int(charge)] = log_count
+        counts[int(charge)] = _safe_exp(log_count)
+    return _ChargeResolvedTrace(log_counts=log_counts, counts=counts)
 
 
 def _normalize_square_qdm_x_coordinates(
