@@ -21,3 +21,6 @@ Changelog
 - Add exact arbitrary-repeat square-QDM stripe cage certificates, normalized cage-derived ETH witnesses, and beta-zero energy-density matching.
 - Add Fourier-projected square-QDM winding-sector strip contractions for local ETH witnesses.
 - Initial API stable release.
+- Add square-QDM two-plaquette singlet-product leakage diagnostics, exact-cover
+  scans, a boundary-resolved halo tile basis, an optional quimb MPS handoff,
+  and an interactive singlet/TN section in ``experimental/notebooks/cage_padding.ipynb``.

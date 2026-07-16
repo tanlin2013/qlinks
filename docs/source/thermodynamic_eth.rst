@@ -469,3 +469,69 @@ backend.  If finite static gluing fails at moderate periods, the boundary
 signatures and local action maps produced here should become the physical and
 virtual data supplied to an established tensor-network library rather than a
 new contraction engine implemented inside qlinks.
+
+Singlet-product stripes and the tensor-network handoff
+------------------------------------------------------
+
+The square-QDM helper :func:`qlinks.caging.square_qdm_two_plaquette_singlet_blocks`
+collects every translated antisymmetric two-plaquette block.  A proposed stripe
+of independent singlets can be tested without diagonalizing the global model::
+
+   from qlinks.caging import analyze_square_qdm_singlet_stripe_product
+
+   stripe = analyze_square_qdm_singlet_stripe_product(
+       model,
+       direction="x",
+       transverse_coordinate=0,
+   )
+   report = stripe.subspace_reports[0]
+
+The report constructs two finite matrices.  ``support_hamiltonian`` is the
+Hamiltonian projected into the complete Cartesian product of the selected local
+supports.  ``leakage_matrix`` maps that product space to all one-hop
+configurations outside it.  Therefore
+
+.. math::
+
+   \operatorname{nullity} K_{\rm leak}=0
+
+is a no-go statement for every coefficient tensor on the same local singlet
+labels.  It rules out not only the equal-amplitude product state, but an MPS or
+PEPS of arbitrary virtual bond dimension whose local physical space remains the
+two singlet configurations.
+
+For a finite-density two-dimensional test, enumerate exact covers of all sites
+by the ``3 x 2`` and ``2 x 3`` singlet rectangles::
+
+   from qlinks.caging import (
+       analyze_square_qdm_singlet_product_tilings,
+       enumerate_square_qdm_singlet_exact_covers,
+   )
+
+   tilings = enumerate_square_qdm_singlet_exact_covers(model_6x6)
+   scan = analyze_square_qdm_singlet_product_tilings(
+       model_6x6,
+       max_tilings=4,
+   )
+
+On the pure-kinetic periodic ``6 x 6`` square QDM there are 120 exact covers.
+The current calculation finds full-column-rank leakage for every cover, so the
+bare singlet-product physical support is insufficient.
+
+The next tensor-network stage begins by enlarging one singlet with a finite
+plaquette halo::
+
+   from qlinks.caging import build_square_qdm_singlet_boundary_tile
+
+   tile = build_square_qdm_singlet_boundary_tile(
+       model_6x6,
+       horizontal_singlet,
+       halo_layers=1,
+   )
+
+``tile.basis`` groups all locally valid halo configurations by the dimer deficit
+on every boundary site.  These support-dependent deficit patterns are the
+natural virtual labels for a constrained MPS or PEPS.  This preprocessing is
+backend-neutral.  :class:`qlinks.caging.QDMSingletTNProblem` provides an
+optional bridge to ``quimb`` for dense-to-MPS initialization and later tensor
+network optimization experiments.
