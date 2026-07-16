@@ -9,10 +9,13 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
+from qlinks.caging.classification import CageClassificationReport
 from qlinks.caging.thermodynamic import (
     LocalWitness,
     LocalWitnessFamily,
     LocalWitnessTemplate,
+    WitnessNormalization,
+    local_witnesses_from_classification_report,
 )
 from qlinks.lattice import BoundaryCondition, SquareLattice
 from qlinks.models import SquareQDMModel
@@ -158,6 +161,19 @@ class SquareQDMWitnessPlacement:
     @property
     def window_width(self) -> int:
         return 1 + max(site_x for site_x, _site_y in self.affected_sites)
+
+    def with_circumference(self, circumference: int) -> SquareQDMWitnessPlacement:
+        """Reuse the same local operator and link coordinates on a wider cylinder."""
+        return SquareQDMWitnessPlacement(
+            template=self.template,
+            circumference=int(circumference),
+            link_coordinates=self.link_coordinates,
+            reference_origin_x=self.reference_origin_x,
+            metadata={
+                **self.metadata,
+                "rescaled_from_circumference": self.circumference,
+            },
+        )
 
     @classmethod
     def from_local_witness(
@@ -388,6 +404,143 @@ class SquareQDMWitnessFamilyStripReport:
             "system_labels": self.system_labels,
             "template": self.family.template.to_summary_dict(),
             "records": tuple(record.to_summary_dict() for record in self.records),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMClassificationWitnessStripRecord:
+    """One actual reduced-IZ witness extracted from a cage classification."""
+
+    witness_index: int
+    witness: LocalWitness
+    placement: SquareQDMWitnessPlacement
+    scaling_report: SquareQDMStripScalingReport
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "witness_index": self.witness_index,
+            "q_operator_norm": self.witness.q_operator_norm,
+            "source_zero_indices": self.witness.template.source_zero_indices,
+            "placement": {
+                "circumference": self.placement.circumference,
+                "window_width": self.placement.window_width,
+                "link_coordinates": self.placement.link_coordinates,
+            },
+            "scaling_report": self.scaling_report.to_summary_dict(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMClassificationWitnessStripReport:
+    """Transfer results for every trusted reduced-IZ witness of one cage."""
+
+    records: tuple[SquareQDMClassificationWitnessStripRecord, ...]
+    normalization: WitnessNormalization
+
+    @property
+    def minimum_tail_expectation(self) -> float:
+        if not self.records:
+            raise ValueError("records must not be empty.")
+        return float(
+            min(record.scaling_report.tail_estimate()["minimum"] for record in self.records)
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "normalization": self.normalization,
+            "n_witnesses": len(self.records),
+            "minimum_tail_expectation": (
+                None if not self.records else self.minimum_tail_expectation
+            ),
+            "records": tuple(record.to_summary_dict() for record in self.records),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMBetaZeroEnergyDensityEvaluation:
+    """Infinite-temperature square-QDM energy-density estimate."""
+
+    circumference: int
+    length: int
+    horizontal_flippability: float
+    vertical_flippability: float
+    potential_coupling: float
+    winding_sector: SquareQDMStripWindingSector | None
+    metadata: dict[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "metadata", dict(self.metadata))
+
+    @property
+    def total_flippability(self) -> float:
+        return float(self.horizontal_flippability + self.vertical_flippability)
+
+    @property
+    def kinetic_energy_density(self) -> float:
+        return 0.0
+
+    @property
+    def potential_energy_density(self) -> float:
+        return float(self.potential_coupling * self.total_flippability)
+
+    @property
+    def energy_density(self) -> float:
+        return self.potential_energy_density
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "circumference": self.circumference,
+            "length": self.length,
+            "horizontal_flippability": self.horizontal_flippability,
+            "vertical_flippability": self.vertical_flippability,
+            "total_flippability": self.total_flippability,
+            "kinetic_energy_density": self.kinetic_energy_density,
+            "potential_energy_density": self.potential_energy_density,
+            "energy_density": self.energy_density,
+            "potential_coupling": self.potential_coupling,
+            "winding_sector": (
+                None if self.winding_sector is None else self.winding_sector.to_summary_dict()
+            ),
+            "metadata": dict(self.metadata),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMBetaZeroEnergyDensityScalingReport:
+    """Two-dimensional finite-size sequence for the beta-zero energy density."""
+
+    evaluations: tuple[SquareQDMBetaZeroEnergyDensityEvaluation, ...]
+
+    def __post_init__(self) -> None:
+        ordered = tuple(
+            sorted(self.evaluations, key=lambda item: (item.circumference, item.length))
+        )
+        if not ordered:
+            raise ValueError("evaluations must not be empty.")
+        object.__setattr__(self, "evaluations", ordered)
+
+    @property
+    def energy_densities(self) -> tuple[float, ...]:
+        return tuple(item.energy_density for item in self.evaluations)
+
+    def tail_estimate(self, *, tail_points: int = 3) -> dict[str, object]:
+        if tail_points <= 0:
+            raise ValueError("tail_points must be positive.")
+        tail = self.evaluations[-min(tail_points, len(self.evaluations)) :]
+        values = np.asarray([item.energy_density for item in tail], dtype=float)
+        return {
+            "sizes": tuple((item.length, item.circumference) for item in tail),
+            "mean": float(np.mean(values)),
+            "minimum": float(np.min(values)),
+            "maximum": float(np.max(values)),
+            "spread": float(np.max(values) - np.min(values)),
+        }
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "energy_densities": self.energy_densities,
+            "tail_estimate": self.tail_estimate(),
+            "evaluations": tuple(item.to_summary_dict() for item in self.evaluations),
         }
 
 
@@ -1418,6 +1571,184 @@ def evaluate_square_qdm_witness_family_on_strips(
         family=family,
         records=tuple(records),
     )
+
+
+def evaluate_square_qdm_classification_witnesses_on_strips(
+    report: CageClassificationReport,
+    *,
+    model: SquareQDMModel,
+    lengths: Sequence[int],
+    boundary_x: StripBoundaryCondition = "periodic",
+    winding_sector: SquareQDMStripWindingSector | tuple[int, int] | None = None,
+    normalization: WitnessNormalization = "operator_norm",
+    include_projector_like: bool = True,
+    winding_projection: WindingProjectionMethod = "auto",
+    fourier_points: int | None = None,
+) -> SquareQDMClassificationWitnessStripReport:
+    """Evaluate the actual cage-derived reduced-IZ witnesses on strips.
+
+    The default operator-norm normalization fixes ``||Q_R|| = 1``.  This
+    removes the arbitrary coefficient scale from comparisons between distinct
+    interference-zero rows and between different system sizes.
+    """
+    witnesses = local_witnesses_from_classification_report(
+        report,
+        include_projector_like=include_projector_like,
+        normalization=normalization,
+    )
+    records: list[SquareQDMClassificationWitnessStripRecord] = []
+    for witness_index, witness in enumerate(witnesses):
+        placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
+        transfer = SquareQDMStripTransferMatrix(circumference=placement.circumference)
+        scaling = transfer.scan_witness(
+            placement,
+            lengths=lengths,
+            boundary_x=boundary_x,
+            winding_sector=winding_sector,
+            winding_projection=winding_projection,
+            fourier_points=fourier_points,
+        )
+        records.append(
+            SquareQDMClassificationWitnessStripRecord(
+                witness_index=witness_index,
+                witness=witness,
+                placement=placement,
+                scaling_report=scaling,
+            )
+        )
+    return SquareQDMClassificationWitnessStripReport(
+        records=tuple(records),
+        normalization=normalization,
+    )
+
+
+def square_qdm_directed_plaquette_witness_placement(
+    *,
+    circumference: int,
+    orientation: Literal["horizontal", "vertical"],
+) -> SquareQDMWitnessPlacement:
+    """Return a unit-normalized directed plaquette-flip witness.
+
+    ``Q_R`` is the projector onto one of the two flippable plaquette
+    orientations.  Summing the two expectations gives the total local
+    flippability probability and therefore the beta-zero potential-energy
+    density for a uniform square QDM.
+    """
+    if orientation not in ("horizontal", "vertical"):
+        raise ValueError("orientation must be 'horizontal' or 'vertical'.")
+    horizontal = (1, 0, 1, 0)
+    vertical = (0, 1, 0, 1)
+    source = horizontal if orientation == "horizontal" else vertical
+    target = vertical if orientation == "horizontal" else horizontal
+    patterns = (horizontal, vertical)
+    pattern_to_index = {pattern: index for index, pattern in enumerate(patterns)}
+    operator = np.zeros((2, 2), dtype=np.complex128)
+    operator[pattern_to_index[target], pattern_to_index[source]] = 1.0
+    template = LocalWitnessTemplate(
+        pattern_key=((source, target, (1.0, 0.0)),),
+        local_patterns=patterns,
+        local_operator=operator,
+        metadata={
+            "source": "square_qdm_directed_plaquette",
+            "orientation": orientation,
+            "normalization": "operator_norm",
+        },
+    )
+    return SquareQDMWitnessPlacement(
+        template=template,
+        circumference=int(circumference),
+        link_coordinates=(
+            SquareQDMLinkCoordinate(x=0, y=0, kind="x"),
+            SquareQDMLinkCoordinate(x=1, y=0, kind="y"),
+            SquareQDMLinkCoordinate(x=0, y=1, kind="x"),
+            SquareQDMLinkCoordinate(x=0, y=0, kind="y"),
+        ),
+        metadata={"orientation": orientation},
+    )
+
+
+def evaluate_square_qdm_beta_zero_energy_density(
+    *,
+    circumference: int,
+    length: int,
+    potential_coupling: float = 1.0,
+    winding_sector: SquareQDMStripWindingSector | tuple[int, int] | None = None,
+    winding_projection: WindingProjectionMethod = "auto",
+    fourier_points: int | None = None,
+) -> SquareQDMBetaZeroEnergyDensityEvaluation:
+    """Evaluate the beta-zero energy density of a uniform square QDM.
+
+    The kinetic term is off-diagonal in the dimer basis and has zero trace.
+    The potential part is the coupling times the probability that a plaquette
+    is flippable in either orientation.
+    """
+    if not np.isfinite(potential_coupling):
+        raise ValueError("potential_coupling must be finite.")
+    transfer = SquareQDMStripTransferMatrix(circumference=int(circumference))
+    horizontal = transfer.evaluate_witness(
+        square_qdm_directed_plaquette_witness_placement(
+            circumference=circumference,
+            orientation="horizontal",
+        ),
+        length=int(length),
+        boundary_x="periodic",
+        winding_sector=winding_sector,
+        winding_projection=winding_projection,
+        fourier_points=fourier_points,
+    )
+    vertical = transfer.evaluate_witness(
+        square_qdm_directed_plaquette_witness_placement(
+            circumference=circumference,
+            orientation="vertical",
+        ),
+        length=int(length),
+        boundary_x="periodic",
+        winding_sector=winding_sector,
+        winding_projection=winding_projection,
+        fourier_points=fourier_points,
+    )
+    sector = _normalize_square_qdm_strip_winding_sector(winding_sector)
+    return SquareQDMBetaZeroEnergyDensityEvaluation(
+        circumference=int(circumference),
+        length=int(length),
+        horizontal_flippability=float(horizontal.expectation),
+        vertical_flippability=float(vertical.expectation),
+        potential_coupling=float(potential_coupling),
+        winding_sector=sector,
+        metadata={
+            "winding_projection": winding_projection,
+            "fourier_points": fourier_points,
+            "kinetic_trace_argument": "off_diagonal_in_dimer_basis",
+        },
+    )
+
+
+def scan_square_qdm_beta_zero_energy_density(
+    sizes: Sequence[int] | Sequence[tuple[int, int]],
+    *,
+    potential_coupling: float = 1.0,
+    winding_sector: SquareQDMStripWindingSector | tuple[int, int] | None = (0, 0),
+    winding_projection: WindingProjectionMethod = "auto",
+    fourier_points: int | None = None,
+) -> SquareQDMBetaZeroEnergyDensityScalingReport:
+    """Evaluate beta-zero energy densities for square tori or ``(Lx, Ly)`` pairs."""
+    evaluations: list[SquareQDMBetaZeroEnergyDensityEvaluation] = []
+    for size in sizes:
+        if isinstance(size, tuple):
+            length, circumference = int(size[0]), int(size[1])
+        else:
+            length = circumference = int(size)
+        evaluations.append(
+            evaluate_square_qdm_beta_zero_energy_density(
+                circumference=circumference,
+                length=length,
+                potential_coupling=potential_coupling,
+                winding_sector=winding_sector,
+                winding_projection=winding_projection,
+                fourier_points=fourier_points,
+            )
+        )
+    return SquareQDMBetaZeroEnergyDensityScalingReport(tuple(evaluations))
 
 
 def _normalize_fourier_points(

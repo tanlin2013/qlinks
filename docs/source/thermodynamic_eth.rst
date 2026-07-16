@@ -260,3 +260,140 @@ directly to the strip backend::
 Each record retains the finite-system embedding, the normalized strip
 placement, and its scaling report.  This closes the loop between a reduced-IZ
 classification report and a same-sector thermal witness calculation.
+
+Normalize and evaluate the actual cage-derived witness
+-------------------------------------------------------
+
+A reduced-IZ row has an arbitrary overall coefficient.  For thermodynamic
+comparisons use operator-norm normalization, which fixes
+``||Q_R|| = ||L_R||^2 = 1``::
+
+   witnesses = local_witnesses_from_classification_report(
+       classification,
+       normalization="operator_norm",
+   )
+
+The whole classification report can be sent directly to the strip backend::
+
+   actual_witnesses = evaluate_square_qdm_classification_witnesses_on_strips(
+       classification,
+       model=model_4x4,
+       lengths=(4, 6, 8, 10, 16),
+       winding_sector=(0, 0),
+       normalization="operator_norm",
+   )
+
+The returned records retain the original interference-zero indices and local
+matrix-unit pattern.  This is the preferred API for replacing the pedagogical
+directed-plaquette witness by the operator that actually annihilates a cage.
+A bounded placement can also be reused on a wider cylinder with
+``placement.with_circumference(new_ly)``.
+
+Exact arbitrary-repeat cage sequences
+-------------------------------------
+
+For the square-QDM stripe cages, the global product support need not be formed.
+Construct a coordinate-level unit cell from one certified multi-block padding::
+
+   from qlinks.caging import (
+       SquareQDMPeriodicProductUnitCell,
+       certify_square_qdm_periodic_product_sequence,
+   )
+
+   unit_cell = SquareQDMPeriodicProductUnitCell.from_padding(
+       model_4x4,
+       search_context.blocks,
+       certified.reports[0].padding,
+       repeat_axis="y",
+   )
+   sequence = certify_square_qdm_periodic_product_sequence(unit_cell)
+
+The certificate checks the following local identities.
+
+* Every block contributes a support-independent dimer count at each site.
+* Plaquettes touching more than one coherent factor are nonflippable for every
+  combination of the local support patterns.
+* All plaquettes touching exactly one factor close on that factor with a fixed
+  kinetic eigenvalue and a constant potential value.
+* The unit cell is repeated by an exact coordinate translation and the
+  couplings are translation invariant.
+
+Three repeats expose both neighboring cells for a range-one plaquette
+Hamiltonian.  Once these local action classes pass, the same identities hold
+for every larger repeat count without diagonalizing or even materializing the
+formal product support.  The smaller one- and two-cell rings are checked
+separately, so a successful report certifies every positive integer ``n``.
+The electric winding label is evaluated without materializing the product
+support and propagated to every repeat.  For the rotated current ``4x4`` stripe unit cell, all members lie in
+``(w_x,w_y)=(0,0)`` and the result is an exact sequence on ``(4 n) x 4``
+tori with
+
+.. math::
+
+   E_n = 4 n,
+   \qquad
+   \frac{E_n}{N_n} = \frac{1}{4},
+   \qquad
+   |\operatorname{supp}\Psi_n| = 4^n,
+
+while the stored representation grows only linearly in ``n``.
+
+Propagate a local ETH witness to the whole sequence::
+
+   sequence_witness = certify_local_witness_on_square_qdm_periodic_sequence(
+       sequence,
+       witnesses[0],
+       normalization="operator_norm",
+   )
+   assert sequence_witness.is_infinite_sequence_witness
+
+This proves ``L_R |Psi_n> = 0`` for every certified repeat, not merely for the
+finite reference state.
+
+This is a rigorous fixed-width thermodynamic sequence: ``N=16 n`` diverges and
+the local ETH discrepancy can remain order one, but the transverse width is
+still four.  It should therefore be described as a strip or quasi-one-dimensional
+thermodynamic theorem.  Establishing a genuine two-dimensional sequence with
+both linear dimensions diverging remains a separate construction problem.
+
+Match the cage energy density to beta zero
+------------------------------------------
+
+For a uniform square QDM, the kinetic term is off-diagonal in the dimer basis
+and has zero infinite-temperature trace.  The potential energy density is the
+potential coupling times the probability that a plaquette is flippable in
+either orientation.
+
+For the fixed-width sequence with a nonzero potential coupling, the cage value
+``e_cage = 1/4`` does not coincide exactly with the fixed-width beta-zero value.
+That Hamiltonian therefore requires a finite-temperature calculation at
+``beta_*`` determined by ``e_th(beta_*) = e_cage``; the beta-zero API alone must
+not be used to claim energy-shell matching.
+
+An exact beta-zero match is already available for the pure kinetic square QDM.
+Reuse the certified geometry while setting the potential coupling to zero::
+
+   kinetic_cell = unit_cell.with_couplings(coup_pot=0.0)
+   kinetic_sequence = certify_square_qdm_periodic_product_sequence(kinetic_cell)
+
+Then ``E_n = 0`` and ``e_cage = 0`` exactly.  Because the pure kinetic
+Hamiltonian is off-diagonal in the dimer basis, ``Tr H = 0`` in every finite
+winding sector.  Hence the beta-zero energy density is also exactly zero at
+every size::
+
+   beta_zero = scan_square_qdm_beta_zero_energy_density(
+       ((4, 4), (8, 4), (12, 4), (16, 4)),
+       potential_coupling=0.0,
+       winding_sector=(0, 0),
+   )
+   match = kinetic_sequence.match_energy_density(
+       beta_zero.evaluations[-1].energy_density,
+       tolerance=1.0e-12,
+   )
+   assert match.is_matched
+
+Thus the pure kinetic family supplies the cleanest current strong-ETH test:
+an exact infinite cage sequence, an exactly matched beta-zero energy density,
+and an operator-norm-normalized local cage witness with nonzero same-sector
+thermal weight.  The nonzero-potential model remains a finite-temperature
+extension rather than an established beta-zero result.

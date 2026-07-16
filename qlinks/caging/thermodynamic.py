@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -15,6 +16,7 @@ from qlinks.caging.support import (
 from qlinks.open_system.local_recycling import embed_local_pattern_operator
 
 ReducedIZPatternKey = tuple[tuple[tuple[int, ...], tuple[int, ...], tuple[float, float]], ...]
+WitnessNormalization = Literal["none", "operator_norm", "frobenius_norm"]
 
 
 def _complex_from_key(value: tuple[float, float]) -> complex:
@@ -136,6 +138,49 @@ class LocalWitnessTemplate:
     def q_operator_norm(self) -> float:
         return float(self.operator_norm**2)
 
+    @property
+    def frobenius_norm(self) -> float:
+        return float(np.linalg.norm(self.local_operator, ord="fro"))
+
+    def normalized(
+        self,
+        normalization: WitnessNormalization = "operator_norm",
+    ) -> LocalWitnessTemplate:
+        """Return a canonically normalized copy of the local row operator.
+
+        ``operator_norm`` is the preferred ETH convention because it fixes
+        ``||Q_R|| = ||L_R||^2 = 1``.  Thermal expectations are then directly
+        comparable between witnesses and system sizes.
+        """
+        if normalization == "none":
+            return self
+        if normalization == "operator_norm":
+            scale = self.operator_norm
+        elif normalization == "frobenius_norm":
+            scale = self.frobenius_norm
+        else:
+            raise ValueError(f"Unsupported witness normalization: {normalization!r}.")
+        if scale <= 0.0 or not np.isfinite(scale):
+            raise ValueError("Cannot normalize a zero or non-finite local witness.")
+
+        metadata = dict(self.metadata)
+        metadata.update(
+            {
+                "normalization": normalization,
+                "normalization_divisor": float(scale),
+                "unnormalized_operator_norm": self.operator_norm,
+                "unnormalized_frobenius_norm": self.frobenius_norm,
+            }
+        )
+        return LocalWitnessTemplate(
+            pattern_key=self.pattern_key,
+            local_patterns=self.local_patterns,
+            local_operator=self.local_operator / scale,
+            source_zero_indices=self.source_zero_indices,
+            mechanism_labels=self.mechanism_labels,
+            metadata=metadata,
+        )
+
     def instantiate(self, variable_indices: Sequence[int]) -> LocalWitness:
         return LocalWitness(
             template=self,
@@ -148,6 +193,7 @@ class LocalWitnessTemplate:
             "local_dim": self.local_dim,
             "operator_norm": self.operator_norm,
             "q_operator_norm": self.q_operator_norm,
+            "frobenius_norm": self.frobenius_norm,
             "source_zero_indices": self.source_zero_indices,
             "mechanism_labels": self.mechanism_labels,
             "local_patterns": self.local_patterns,
@@ -432,9 +478,54 @@ class ETHScalingReport:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class EnergyDensityMatchReport:
+    """Compare a cage-family energy density with a thermal comparator."""
+
+    cage_energy_density: float
+    thermal_energy_density: float
+    tolerance: float = 1.0e-8
+    comparator: str = "beta_zero"
+    metadata: dict[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.tolerance < 0.0:
+            raise ValueError("tolerance must be non-negative.")
+        if not np.isfinite(self.cage_energy_density):
+            raise ValueError("cage_energy_density must be finite.")
+        if not np.isfinite(self.thermal_energy_density):
+            raise ValueError("thermal_energy_density must be finite.")
+        object.__setattr__(self, "metadata", dict(self.metadata))
+
+    @property
+    def difference(self) -> float:
+        return float(self.cage_energy_density - self.thermal_energy_density)
+
+    @property
+    def absolute_difference(self) -> float:
+        return abs(self.difference)
+
+    @property
+    def is_matched(self) -> bool:
+        return self.absolute_difference <= self.tolerance
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "cage_energy_density": self.cage_energy_density,
+            "thermal_energy_density": self.thermal_energy_density,
+            "difference": self.difference,
+            "absolute_difference": self.absolute_difference,
+            "tolerance": self.tolerance,
+            "is_matched": self.is_matched,
+            "comparator": self.comparator,
+            "metadata": dict(self.metadata),
+        }
+
+
 def local_witness_template_from_pattern_support(
     pattern_support: ReducedIZPatternSupport,
     *,
+    normalization: WitnessNormalization = "none",
     metadata: Mapping[str, object] | None = None,
 ) -> LocalWitnessTemplate:
     """Reconstruct a local row operator from a reduced-IZ transition pattern."""
@@ -462,7 +553,7 @@ def local_witness_template_from_pattern_support(
     if metadata is not None:
         template_metadata.update(dict(metadata))
 
-    return LocalWitnessTemplate(
+    template = LocalWitnessTemplate(
         pattern_key=pattern_support.pattern_key,
         local_patterns=tuple(patterns),
         local_operator=operator,
@@ -470,12 +561,14 @@ def local_witness_template_from_pattern_support(
         mechanism_labels=pattern_support.mechanism_labels,
         metadata=template_metadata,
     )
+    return template.normalized(normalization)
 
 
 def local_witnesses_from_classification_report(
     report: CageClassificationReport,
     *,
     include_projector_like: bool = True,
+    normalization: WitnessNormalization = "none",
 ) -> tuple[LocalWitness, ...]:
     """Return all trusted reduced-IZ witness embeddings in one finite system."""
     witnesses: list[LocalWitness] = []
@@ -483,7 +576,10 @@ def local_witnesses_from_classification_report(
         report,
         include_projector_like=include_projector_like,
     ):
-        template = local_witness_template_from_pattern_support(pattern_support)
+        template = local_witness_template_from_pattern_support(
+            pattern_support,
+            normalization=normalization,
+        )
         witnesses.append(template.instantiate(pattern_support.variable_indices))
     return tuple(witnesses)
 
@@ -493,6 +589,7 @@ def common_local_witness_families(
     *,
     include_projector_like: bool = True,
     require_all_systems: bool = True,
+    normalization: WitnessNormalization = "none",
 ) -> tuple[LocalWitnessFamily, ...]:
     """Match identical reduced-IZ local patterns across system sizes.
 
@@ -513,7 +610,10 @@ def common_local_witness_families(
             report,
             include_projector_like=include_projector_like,
         ):
-            template = local_witness_template_from_pattern_support(pattern_support)
+            template = local_witness_template_from_pattern_support(
+                pattern_support,
+                normalization=normalization,
+            )
             witness = template.instantiate(pattern_support.variable_indices)
             grouped.setdefault(template.pattern_key, {}).setdefault(system_label, []).append(
                 (pattern_support, witness)
@@ -526,7 +626,10 @@ def common_local_witness_families(
             continue
 
         first_support, _first_witness = next(iter(next(iter(by_system.values()))))
-        template = local_witness_template_from_pattern_support(first_support)
+        template = local_witness_template_from_pattern_support(
+            first_support,
+            normalization=normalization,
+        )
         embeddings = tuple(
             LocalWitnessEmbeddingRecord(
                 system_label=system_label,
